@@ -1,0 +1,54 @@
+name: ShouDeng
+options:
+  bundleIdPrefix: com.shoudeng
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "16.0"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+
+targets:
+  ShouDeng:
+    type: application
+    platform: iOS
+    sources:
+      - path: ShouDeng
+        excludes:
+          - "**/*.md"
+    info:
+      path: ShouDeng/Info.plist
+      properties:
+        CFBundleDisplayName: "守灯"
+        CFBundleName: "ShouDeng"
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIBackgroundModes:
+          - location
+          - fetch
+          - remote-notification
+        NSLocationAlwaysAndWhenInUseUsageDescription: "守灯需要始终访问您的位置，以便在紧急情况下向家人报告您的位置，并在您进出安全区时通知守护者。"
+        NSLocationWhenInUseUsageDescription: "守灯需要访问您的位置以显示您的当前位置，并在紧急求助时向家人发送位置信息。"
+        NSMotionUsageDescription: "守灯使用运动传感器检测跌倒等异常情况，在您无法主动求助时自动通知家人。"
+    settings:
+      base:
+        INFOPLIST_FILE: ShouDeng/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.shoudeng.app
+        CODE_SIGN_STYLE: Automatic
+    entitlements:
+      path: ShouDeng/ShouDeng.entitlements
+      properties:
+        com.apple.developer.usernotifications.critical-alerts: true
+        aps-environment: development
