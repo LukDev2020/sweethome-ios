@@ -14,6 +14,7 @@ struct ProtectedHomeView: View {
     @State private var isSOSPressed = false
     @State private var sosProgress: Double = 0
     @State private var showSOSActive = false
+    @State private var sosDisclosureTrigger = false
 
     // Design system colors from the HTML
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
@@ -63,6 +64,7 @@ struct ProtectedHomeView: View {
             .sheet(isPresented: $showSOSActive) {
                 SOSActiveView()
             }
+            .featureDisclosure(.sos, trigger: $sosDisclosureTrigger)
         }
     }
 
@@ -151,6 +153,7 @@ struct ProtectedHomeView: View {
             LongPressGesture(minimumDuration: 3.0)
                 .onChanged { _ in
                     isSOSPressed = true
+                    sosDisclosureTrigger = true
                     withAnimation(.linear(duration: 3.0)) {
                         sosProgress = 1.0
                     }

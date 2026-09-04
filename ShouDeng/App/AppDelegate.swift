@@ -10,15 +10,13 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
 
-        // Register for push notifications
-        appCoordinator.pushService.registerForPushNotifications()
-        application.registerForRemoteNotifications()
-
-        // Start heartbeat service
-        appCoordinator.heartbeatService.start()
-
-        // Start location service
-        appCoordinator.locationManager.start()
+        // Defer all permission-requiring services until after onboarding
+        if UserDefaults.standard.bool(forKey: "onboardingComplete") {
+            appCoordinator.pushService.registerForPushNotifications()
+            application.registerForRemoteNotifications()
+            appCoordinator.heartbeatService.start()
+            appCoordinator.locationManager.start()
+        }
 
         // Check if launched from significant location change
         if launchOptions?[.location] != nil {

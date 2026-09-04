@@ -2,19 +2,30 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @AppStorage("onboardingComplete") private var onboardingComplete = false
 
     var body: some View {
-        Group {
-            switch coordinator.userRole {
-            case .protected_:
-                ProtectedTabView()
-            case .guardian:
-                GuardianTabView()
+        if !onboardingComplete {
+            OnboardingView(isComplete: $onboardingComplete)
+        } else {
+            ZStack(alignment: .top) {
+                Group {
+                    switch coordinator.userRole {
+                    case .protected_:
+                        ProtectedTabView()
+                    case .guardian:
+                        GuardianTabView()
+                    }
+                }
+                // Dev-only: long press anywhere to switch portal
+                .overlay(alignment: .topTrailing) {
+                    portalSwitcher
+                }
+
+                // Degradation banner
+                DegradationBannerView()
+                    .environmentObject(coordinator)
             }
-        }
-        // Dev-only: long press anywhere to switch portal
-        .overlay(alignment: .topTrailing) {
-            portalSwitcher
         }
     }
 

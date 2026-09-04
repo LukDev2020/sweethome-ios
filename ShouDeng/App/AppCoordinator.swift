@@ -27,6 +27,7 @@ final class AppCoordinator: ObservableObject {
     let escalationEngine = EscalationEngine()
     let baselineScorer = BaselineScorer()
     let dutyScheduler = DutyScheduler()
+    let deviceHealthMonitor = DeviceHealthMonitor()
 
     // MARK: - Init
 

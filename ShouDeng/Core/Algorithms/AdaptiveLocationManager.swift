@@ -68,7 +68,7 @@ final class AdaptiveLocationManager: NSObject {
 
     // MARK: - Properties
 
-    private let locationManager = CLLocationManager()
+    private lazy var locationManager = CLLocationManager()
     private let config: Config
     private(set) var currentMode: LocationMode = .safe
     private var safeZones: [SafeZone] = []
@@ -95,20 +95,25 @@ final class AdaptiveLocationManager: NSObject {
     init(config: Config = Config()) {
         self.config = config
         super.init()
-        locationManager.delegate = self
-        locationManager.allowsBackgroundLocationUpdates = true
-        locationManager.pausesLocationUpdatesAutomatically = false
-        locationManager.showsBackgroundLocationIndicator = false
     }
 
     // MARK: - Start / Stop
 
     func start() {
+        // Set delegate here (not in init) to avoid triggering
+        // the location authorization dialog before onboarding completes.
+        locationManager.delegate = self
+
         let status = locationManager.authorizationStatus
         guard status == .authorizedAlways || status == .authorizedWhenInUse else {
             locationManager.requestAlwaysAuthorization()
             return
         }
+
+        // Configure after authorization
+        locationManager.allowsBackgroundLocationUpdates = true
+        locationManager.pausesLocationUpdatesAutomatically = false
+        locationManager.showsBackgroundLocationIndicator = false
 
         // Always monitor significant location changes (survives app termination)
         locationManager.startMonitoringSignificantLocationChanges()

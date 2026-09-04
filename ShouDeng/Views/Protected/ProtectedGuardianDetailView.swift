@@ -20,6 +20,8 @@ struct ProtectedGuardianDetailView: View {
     @State private var shareHealth = true
     @State private var sharePhoneActivity = false
     @State private var shareEmergencyAudio = true
+    @State private var locationDisclosureTrigger = false
+    @State private var audioDisclosureTrigger = false
 
     var body: some View {
         ScrollView {
@@ -47,6 +49,17 @@ struct ProtectedGuardianDetailView: View {
         .background(Color(.systemBackground))
         .navigationTitle("守护者详情")
         .navigationBarTitleDisplayMode(.inline)
+        .featureDisclosure(.location, trigger: $locationDisclosureTrigger)
+        .featureDisclosure(.emergencyAudio, trigger: $audioDisclosureTrigger)
+        .onAppear {
+            // Trigger location disclosure on first visit
+            locationDisclosureTrigger = true
+        }
+        .onChange(of: shareEmergencyAudio) { _, newValue in
+            if newValue {
+                audioDisclosureTrigger = true
+            }
+        }
     }
 
     // MARK: - Guardian Header
