@@ -5,14 +5,17 @@ import SwiftUI
 // Shown once per feature on first use. Tracked by AppStorage
 // with versioned key — if legal updates the copy, it re-shows.
 //
-// From revised plan, section 5.3:
-//   "其余告知随功能触发，在首次使用时就地弹出"
-//   "此种做法可证明用户在具体那一刻被具体告知，
+// From PDF section 3:
+//   "其余告知不进入引导流程，在各功能首次使用时就地弹出。
+//    此种做法可证明用户在具体那一刻被具体告知，
 //    举证效力远强于注册时的一次性打包同意。"
+//
+//   Features with requiresOptIn show "开启 | 暂不开启" buttons.
+//   Others show a single acknowledge button.
 
 struct FeatureDisclosureView: View {
     let feature: DisclaimerCopy.FeatureDisclosure
-    let onAcknowledge: () -> Void
+    let onAcknowledge: (Bool) -> Void  // true = granted, false = denied
 
     // Design system
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
@@ -52,18 +55,50 @@ struct FeatureDisclosureView: View {
 
             Spacer().frame(height: 32)
 
-            // Button
-            Button {
-                ConsentLogger.shared.logFeatureDisclosure(feature)
-                onAcknowledge()
-            } label: {
-                Text("我明白了")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(ink)
-                    .clipShape(RoundedRectangle(cornerRadius: 13))
+            if feature.requiresOptIn {
+                // Two buttons: 开启 | 暂不开启
+                HStack(spacing: 12) {
+                    Button {
+                        ConsentLogger.shared.logFeatureDisclosure(feature, granted: false)
+                        onAcknowledge(false)
+                    } label: {
+                        Text("暂不开启")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(ink.opacity(0.6))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(Color(.systemGray6))
+                            .clipShape(RoundedRectangle(cornerRadius: 13))
+                    }
+
+                    Button {
+                        ConsentLogger.shared.logFeatureDisclosure(feature, granted: true)
+                        onAcknowledge(true)
+                    } label: {
+                        Text("开启")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(ink)
+                            .clipShape(RoundedRectangle(cornerRadius: 13))
+                    }
+                }
+            } else {
+                // Single button
+                let buttonText = feature == .sos ? "我明白，发出求助" : "我明白了"
+                Button {
+                    ConsentLogger.shared.logFeatureDisclosure(feature, granted: true)
+                    onAcknowledge(true)
+                } label: {
+                    Text(buttonText)
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(ink)
+                        .clipShape(RoundedRectangle(cornerRadius: 13))
+                }
             }
 
             Spacer().frame(height: 16)
@@ -98,9 +133,10 @@ struct FeatureDisclosureModifier: ViewModifier {
                 }
             }
             .sheet(isPresented: $showSheet) {
-                FeatureDisclosureView(feature: feature) {
+                FeatureDisclosureView(feature: feature) { granted in
                     acknowledged = true
                     showSheet = false
+                    _ = granted
                 }
             }
     }

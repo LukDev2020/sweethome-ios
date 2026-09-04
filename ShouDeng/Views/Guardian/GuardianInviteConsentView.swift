@@ -57,7 +57,7 @@ struct GuardianInviteConsentView: View {
                 }
                 .padding(.top, 4)
 
-                Text("这一屏是过审的关键证据：应用商店要求证明监控类功能获得了双方明确同意。")
+                Text("这一屏是过审的关键证据：应用商店要求证明守护类功能获得了双方明确同意。")
                     .font(.system(size: 10.5))
                     .foregroundStyle(.secondary.opacity(0.7))
                     .padding(.top, 8)

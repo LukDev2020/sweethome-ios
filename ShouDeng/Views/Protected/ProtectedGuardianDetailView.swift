@@ -140,7 +140,7 @@ struct ProtectedGuardianDetailView: View {
             Text("紧急时自动开启")
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
-            fixedRow("实时位置", value: "始终开启", isOk: true)
+            fixedRow("高频位置上报", value: "始终开启", isOk: true)
             HStack {
                 Text("环境录音").font(.system(size: 13))
                 Spacer()

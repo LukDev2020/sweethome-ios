@@ -337,42 +337,52 @@ struct SOSActiveView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    // SOS circle
-                    ZStack {
-                        Circle()
-                            .fill(alert)
-                            .frame(width: 142, height: 142)
-                        VStack(spacing: 2) {
-                            Text("已发出")
-                                .font(.system(size: 26, weight: .black, design: .serif))
-                                .foregroundStyle(.white)
-                            Text("14:07 · 基辅市中心")
-                                .font(.system(size: 10.5))
-                                .foregroundStyle(.white.opacity(0.8))
+            VStack(spacing: 0) {
+                // Persistent SOS banner — PDF: "SOS 进行中界面须常驻一行"
+                Text(DisclaimerCopy.SOS.persistentBanner)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(alert)
+
+                ScrollView {
+                    VStack(spacing: 16) {
+                        // SOS circle
+                        ZStack {
+                            Circle()
+                                .fill(alert)
+                                .frame(width: 142, height: 142)
+                            VStack(spacing: 2) {
+                                Text("已发出")
+                                    .font(.system(size: 26, weight: .black, design: .serif))
+                                    .foregroundStyle(.white)
+                                Text("14:07 · 基辅市中心")
+                                    .font(.system(size: 10.5))
+                                    .foregroundStyle(.white.opacity(0.8))
+                            }
                         }
+                        .padding(.top, 16)
+
+                        // Escalation steps
+                        escalationSteps
+
+                        // Auto-enabled during SOS
+                        autoEnabledPanel
+
+                        // Cancel button
+                        Button {
+                            coordinator.cancelSOS()
+                            dismiss()
+                        } label: {
+                            Text("取消求助（我没事）")
+                                .font(.system(size: 14))
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.top, 8)
                     }
-                    .padding(.top, 16)
-
-                    // Escalation steps
-                    escalationSteps
-
-                    // Auto-enabled during SOS
-                    autoEnabledPanel
-
-                    // Cancel button
-                    Button {
-                        coordinator.cancelSOS()
-                        dismiss()
-                    } label: {
-                        Text("取消求助（我没事）")
-                            .font(.system(size: 14))
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.top, 8)
+                    .padding(.horizontal, 16)
                 }
-                .padding(.horizontal, 16)
             }
             .navigationTitle("求助已发出")
             .navigationBarTitleDisplayMode(.inline)
@@ -392,7 +402,7 @@ struct SOSActiveView: View {
 
             stepRow(number: "1", title: "家人已收到", detail: "妈妈 14:08 已读，正在拨号", state: .done)
             stepRow(number: "2", title: "备用联系人已通知", detail: "姑姑、邻居 Olena 已收到", state: .live)
-            stepRow(number: "3", title: "专员将于 48 秒后接手", detail: "将代为联络基辅急救与警方", state: .waiting)
+            stepRow(number: "3", title: "自动语音外呼", detail: "系统将依次拨打家人电话，直到有人接听确认", state: .waiting)
         }
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(
@@ -439,7 +449,7 @@ struct SOSActiveView: View {
             Text("求助期间自动开启，结束后恢复")
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
-            statusRow("实时位置上报", value: "进行中", isActive: true)
+            statusRow("高频位置上报", value: "进行中", isActive: true)
             statusRow("环境录音留证", value: "进行中", isActive: true)
             statusRow("低电量省电模式", value: "已启用", isActive: true)
         }

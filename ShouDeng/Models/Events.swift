@@ -45,10 +45,9 @@ enum EscalationState: String, Codable {
     case initiated           // SOS just fired
     case hop1_notified       // On-duty guardian notified, waiting response
     case hop1_acknowledged   // Guardian saw it
-    case hop2_allNotified    // All guardians + backup contacts notified
-    case hop3_responderQueue // Response center queued (paid tier)
-    case hop3_responderActive // Responder has taken over
-    case hop4_localRescue    // Responder contacted local rescue
+    case hop2_allNotified    // All guardians + backup contacts notified (push + SMS)
+    case hop3_voiceCalling   // Auto voice call loop in progress
+    case hop3_exhausted      // All voice call attempts exhausted, no pickup
     case frozen              // Someone clicked "I've taken over"
     case resolved
 }

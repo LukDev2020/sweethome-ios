@@ -106,6 +106,14 @@ final class AppCoordinator: ObservableObject {
             )
             _ = self  // Silence unused warning
         }
+
+        // Voice call → server API (Twilio/CPaaS)
+        escalationEngine.onInitiateVoiceCall = { [weak self] guardianId, sosEventId in
+            // In production, POST to /v1/voice-call with guardianId + sosEventId
+            // Server triggers Twilio outbound call with TTS message
+            print("[Coordinator] Initiating voice call to guardian \(guardianId) for SOS \(sosEventId)")
+            _ = self
+        }
     }
 
     // MARK: - SOS Trigger

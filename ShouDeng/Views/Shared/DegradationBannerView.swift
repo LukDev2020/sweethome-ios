@@ -3,14 +3,15 @@ import SwiftUI
 // MARK: - Degradation Banner
 //
 // Non-dismissable banner that appears below the nav bar
-// when protection is compromised. From revised plan:
+// when protection is compromised. From PDF section 4:
 //
-//   "宁可打扰用户，不可让其误判。"
+//   原则：宁可误报状态，不可漏报状态。
+//         宁可打扰用户，不可让其误判。
 //
 // - LAMP color for caution (location reduced, no duty, etc.)
 // - ALERT color for critical (offline, battery dying, etc.)
 // - Cannot be dismissed — disappears only when condition resolves
-// - Tap opens detail sheet
+// - Tap opens detail sheet with action buttons
 
 struct DegradationBannerView: View {
     @EnvironmentObject var coordinator: AppCoordinator
@@ -48,7 +49,6 @@ struct DegradationBannerView: View {
                     .font(.system(size: 12))
                     .foregroundStyle(tintColor)
 
-                // Show appropriate message based on user role
                 Text(messageForCurrentRole(warning))
                     .font(.system(size: 11.5, weight: .medium))
                     .foregroundStyle(ink.opacity(0.85))
@@ -101,10 +101,56 @@ struct DegradationBannerView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
+            Spacer().frame(height: 28)
+
+            // Action buttons
+            let actions = actionsForCurrentRole(warning)
+            if !actions.isEmpty {
+                VStack(spacing: 10) {
+                    ForEach(Array(actions.enumerated()), id: \.offset) { _, action in
+                        actionButton(action)
+                    }
+                }
+            }
+
             Spacer()
         }
         .padding(.horizontal, 24)
         .presentationDetents([.medium])
+    }
+
+    // MARK: - Action Button
+
+    private func actionButton(_ action: DisclaimerCopy.Degradation.Warning.Action) -> some View {
+        Button {
+            handleAction(action)
+        } label: {
+            Text(action.title)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(action.type == .dismiss ? ink.opacity(0.6) : .white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(action.type == .dismiss ? Color(.systemGray6) : ink)
+                .clipShape(RoundedRectangle(cornerRadius: 13))
+        }
+    }
+
+    private func handleAction(_ action: DisclaimerCopy.Degradation.Warning.Action) {
+        switch action.type {
+        case .openSettings:
+            if let url = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(url)
+            }
+            selectedWarning = nil
+        case .dismiss:
+            selectedWarning = nil
+        case .call:
+            // In production, would open phone dialer for the protected person
+            selectedWarning = nil
+        case .message:
+            // In production, would open messaging
+            selectedWarning = nil
+        }
     }
 
     // MARK: - Helpers
@@ -115,6 +161,15 @@ struct DegradationBannerView: View {
             return warning.protectedMessage
         case .guardian:
             return warning.guardianMessage
+        }
+    }
+
+    private func actionsForCurrentRole(_ warning: DisclaimerCopy.Degradation.Warning) -> [DisclaimerCopy.Degradation.Warning.Action] {
+        switch coordinator.userRole {
+        case .protected_:
+            return warning.protectedActions
+        case .guardian:
+            return warning.guardianActions
         }
     }
 }

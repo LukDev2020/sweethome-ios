@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 // MARK: - Consent Logger
 //
@@ -6,11 +7,10 @@ import Foundation
 // every permission toggle, every disclosure acknowledgment
 // gets recorded with full context for legal evidence.
 //
-// Requirements from revised plan:
-//   - User ID + timestamp + specific item + copy version
-//   - Not just a boolean — full record
-//   - Write-once, append-only
-//   - Ready for server sync
+// From PDF section 5:
+//   consent_log { user_id, timestamp, consent_key,
+//     copy_version, locale, action, device_id, app_version }
+//   版本号一项不可省略。
 
 final class ConsentLogger {
 
@@ -19,11 +19,12 @@ final class ConsentLogger {
     struct ConsentRecord: Codable {
         let userId: String
         let timestamp: Date
-        let item: String           // e.g. "onboarding_1", "disclosure_sos_v1"
-        let copyVersion: String    // e.g. "v1.0"
-        let granted: Bool
+        let item: String           // consent key, e.g. "onboard.not_emergency"
+        let copyVersion: String    // e.g. "v1.1"
+        let action: String         // "granted", "denied", "revoked"
         let appVersion: String
         let locale: String
+        let deviceId: String
     }
 
     // MARK: - Singleton
@@ -48,16 +49,17 @@ final class ConsentLogger {
         userId: String,
         item: String,
         copyVersion: String,
-        granted: Bool = true
+        action: String = "granted"
     ) {
         let record = ConsentRecord(
             userId: userId,
             timestamp: Date(),
             item: item,
             copyVersion: copyVersion,
-            granted: granted,
+            action: action,
             appVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0",
-            locale: Locale.current.identifier
+            locale: Locale.current.identifier,
+            deviceId: UIDevice.current.identifierForVendor?.uuidString ?? "unknown"
         )
 
         queue.async { [weak self] in
@@ -75,11 +77,28 @@ final class ConsentLogger {
         )
     }
 
-    func logFeatureDisclosure(_ feature: DisclaimerCopy.FeatureDisclosure) {
+    func logFeatureDisclosure(_ feature: DisclaimerCopy.FeatureDisclosure, granted: Bool = true) {
         log(
             userId: currentUserId,
-            item: feature.storageKey,
-            copyVersion: feature.version
+            item: feature.consentKey,
+            copyVersion: feature.version,
+            action: granted ? "granted" : "denied"
+        )
+    }
+
+    func logSOSFirstUse() {
+        log(
+            userId: currentUserId,
+            item: "sos.first_use",
+            copyVersion: DisclaimerCopy.FeatureDisclosure.sos.version
+        )
+    }
+
+    func logDegradation(_ warningId: String) {
+        log(
+            userId: currentUserId,
+            item: "degrade.\(warningId)",
+            copyVersion: "v1.1"
         )
     }
 
@@ -117,7 +136,6 @@ final class ConsentLogger {
     }
 
     private var currentUserId: String {
-        // In production, pull from auth. For now, use device identifier.
         UserDefaults.standard.string(forKey: "currentUserId") ?? "anonymous"
     }
 }

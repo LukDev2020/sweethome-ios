@@ -18,6 +18,7 @@
 		424C26E0D54CBC317BF0EFC7 /* ProtectedTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C974A21D52F2544D4735C712 /* ProtectedTabView.swift */; };
 		445FC9E110BFEAD1DAB39BAB /* GuardianHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 323C5F3CDB46FE9F3750B9AA /* GuardianHomeView.swift */; };
 		46FBA23EB18A93044DAF495C /* ProtectedGuardianDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 219089B647D70FDE60419C11 /* ProtectedGuardianDetailView.swift */; };
+		47CD6276A165F690D3747109 /* TrajectoryProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C499DEA1B2756F167118B7 /* TrajectoryProcessor.swift */; };
 		515DEBEED36CE6BFDCA41A8C /* BaselineScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4B372E0DD08D48F4588BBEA /* BaselineScorer.swift */; };
 		5BF317DDA31D8A059C33D9FC /* ProtectedCoverageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2CBED579613C2FC6F68B5B6 /* ProtectedCoverageView.swift */; };
 		61586C8E3D663CC027C5804E /* GuardianAlertResponseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43D8A8B0CD131E9E09E02BF6 /* GuardianAlertResponseView.swift */; };
@@ -80,6 +81,7 @@
 		E9B16BBF77C02115152E9C88 /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
 		F19D2204A1EC532BE980B3A4 /* ShouDeng.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ShouDeng.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F1C3DE3DA8E9EEE6CEB01B71 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		F1C499DEA1B2756F167118B7 /* TrajectoryProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrajectoryProcessor.swift; sourceTree = "<group>"; };
 		F2FC646F35FAFF4899339BE7 /* AdaptiveLocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptiveLocationManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -289,6 +291,7 @@
 				F2FC646F35FAFF4899339BE7 /* AdaptiveLocationManager.swift */,
 				C4B372E0DD08D48F4588BBEA /* BaselineScorer.swift */,
 				3D922CFCBCCE8F87BD686AD8 /* FallDetector.swift */,
+				F1C499DEA1B2756F167118B7 /* TrajectoryProcessor.swift */,
 			);
 			path = Algorithms;
 			sourceTree = "<group>";
@@ -394,6 +397,7 @@
 				83EB2936CCAAB952FCE2D393 /* PushService.swift in Sources */,
 				23C37917DA8CF259C7E01CC3 /* RootView.swift in Sources */,
 				A1302B34EE4C90A44A1ED47C /* ShouDengApp.swift in Sources */,
+				47CD6276A165F690D3747109 /* TrajectoryProcessor.swift in Sources */,
 				35159B7DB49900FACD831968 /* User.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

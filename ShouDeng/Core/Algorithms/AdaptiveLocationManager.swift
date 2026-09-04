@@ -1,20 +1,23 @@
 import Foundation
 import CoreLocation
+import UIKit
 
 // MARK: - Adaptive Location Manager
 //
-// Algorithm 4: Location & Battery Optimization
+// Algorithm from PDF section 6: 位置采集与自适应采样
 //
-// Four sampling modes that switch automatically based on state:
-//   - Safe:    In known safe zone → significant changes only (~0% battery)
-//   - Unknown: Stationary in unknown area → every 10 min
-//   - Moving:  In transit → every 60 sec
-//   - SOS:     Emergency → every 5 sec, best accuracy
+// Five sampling modes that switch automatically based on state:
+//   - Safe:       In known safe zone → significant changes only (~0% battery)
+//   - Unknown:    Stationary in unknown area → every 10 min
+//   - Moving:     In transit → every 60 sec
+//   - SOS:        Emergency → every 5 sec, best accuracy
+//   - LowBattery: Battery < 15% → halve frequency, reduce accuracy
 //
 // Also handles:
-//   - iOS 20-region geofence limit via dynamic swap scheduling
-//   - Dwell-point clustering to auto-discover safe zones
+//   - iOS 20-region geofence limit via dynamic swap scheduling (section 9)
+//   - Dwell-point clustering to auto-discover safe zones (section 8)
 //   - Deduplication to avoid flooding the server
+//   - Hysteresis zone to avoid border flickering
 
 final class AdaptiveLocationManager: NSObject {
 
@@ -25,6 +28,7 @@ final class AdaptiveLocationManager: NSObject {
         case unknown        // Stationary but not in safe zone
         case moving         // In transit
         case sos            // Emergency — max accuracy
+        case lowBattery     // Battery < 15% — halve frequency, reduce accuracy
 
         var desiredAccuracy: CLLocationAccuracy {
             switch self {
@@ -32,15 +36,17 @@ final class AdaptiveLocationManager: NSObject {
             case .unknown: return kCLLocationAccuracyHundredMeters
             case .moving: return kCLLocationAccuracyNearestTenMeters
             case .sos: return kCLLocationAccuracyBest
+            case .lowBattery: return kCLLocationAccuracyHundredMeters
             }
         }
 
         var distanceFilter: CLLocationDistance {
             switch self {
-            case .safe: return kCLDistanceFilterNone  // Using significant changes instead
+            case .safe: return kCLDistanceFilterNone
             case .unknown: return 50
             case .moving: return 30
             case .sos: return kCLDistanceFilterNone
+            case .lowBattery: return 100
             }
         }
 
@@ -50,6 +56,7 @@ final class AdaptiveLocationManager: NSObject {
             case .unknown: return 600        // 10 minutes
             case .moving: return 60          // 1 minute
             case .sos: return 5              // 5 seconds
+            case .lowBattery: return 1200    // 20 minutes (double unknown)
             }
         }
     }
@@ -61,9 +68,11 @@ final class AdaptiveLocationManager: NSObject {
         var stationarySpeedThreshold: Double = 0.5     // m/s
         var deduplicationDistanceMeters: Double = 50    // Don't report if moved < 50m
         var deduplicationTimeSec: TimeInterval = 120    // Don't report more than once per 2 min (except SOS)
-        var maxGeofenceRegions: Int = 18                // Reserve 2 of iOS's 20 for system use
+        var maxGeofenceRegions: Int = 19                // Reserve 1 of iOS's 20 for buffer zone
         var dwellPointRadiusMeters: Double = 200
         var dwellPointMinDurationSec: TimeInterval = 1200  // 20 minutes
+        var safeZoneHysteresisMeters: Double = 50      // Extra buffer to prevent border flickering
+        var lowBatteryThreshold: Double = 0.15         // 15%
     }
 
     // MARK: - Properties
@@ -73,6 +82,10 @@ final class AdaptiveLocationManager: NSObject {
     private(set) var currentMode: LocationMode = .safe
     private var safeZones: [SafeZone] = []
     private var monitoredRegionIds: Set<String> = []
+
+    // Buffer zone for geofence rebalancing
+    private var bufferZoneCenter: CLLocation?
+    private let bufferZoneRadius: CLLocationDistance = 2000  // 2km radius
 
     // Reporting
     private var lastReportedLocation: CLLocation?
@@ -142,12 +155,10 @@ final class AdaptiveLocationManager: NSObject {
 
         switch newMode {
         case .safe:
-            // Rely on significant location changes + geofence exit events
-            // Near-zero battery impact
             locationManager.startMonitoringSignificantLocationChanges()
             locationManager.showsBackgroundLocationIndicator = false
 
-        case .unknown:
+        case .unknown, .lowBattery:
             locationManager.desiredAccuracy = newMode.desiredAccuracy
             locationManager.distanceFilter = newMode.distanceFilter
             locationManager.showsBackgroundLocationIndicator = false
@@ -162,7 +173,7 @@ final class AdaptiveLocationManager: NSObject {
         case .sos:
             locationManager.desiredAccuracy = newMode.desiredAccuracy
             locationManager.distanceFilter = newMode.distanceFilter
-            locationManager.showsBackgroundLocationIndicator = true  // Blue bar — user should see this
+            locationManager.showsBackgroundLocationIndicator = true
             locationManager.startUpdatingLocation()
         }
 
@@ -177,7 +188,6 @@ final class AdaptiveLocationManager: NSObject {
 
     /// Exit SOS mode — return to automatic mode selection
     func exitSOSMode() {
-        // Re-evaluate based on current position
         if let lastLocation = lastReportedLocation {
             autoSelectMode(for: lastLocation)
         } else {
@@ -190,6 +200,16 @@ final class AdaptiveLocationManager: NSObject {
     private func autoSelectMode(for location: CLLocation) {
         // Don't downgrade during SOS
         if currentMode == .sos { return }
+
+        // Check low battery first — overrides other modes except SOS
+        let batteryLevel = Double(UIDevice.current.batteryLevel)
+        if batteryLevel >= 0 && batteryLevel <= config.lowBatteryThreshold
+            && UIDevice.current.batteryState != .charging {
+            if currentMode != .lowBattery {
+                switchMode(.lowBattery)
+            }
+            return
+        }
 
         let speed = location.speed
         let inSafeZone = isInAnySafeZone(location: location)
@@ -217,6 +237,14 @@ final class AdaptiveLocationManager: NSObject {
         }
     }
 
+    /// Uses hysteresis: enter at radius, exit at radius + hysteresis buffer
+    private func isExitingSafeZone(location: CLLocation) -> Bool {
+        !safeZones.contains { zone in
+            let center = CLLocation(latitude: zone.latitude, longitude: zone.longitude)
+            return location.distance(from: center) <= (zone.radius + config.safeZoneHysteresisMeters)
+        }
+    }
+
     private func safeZoneContaining(location: CLLocation) -> SafeZone? {
         safeZones.first { zone in
             let center = CLLocation(latitude: zone.latitude, longitude: zone.longitude)
@@ -224,12 +252,22 @@ final class AdaptiveLocationManager: NSObject {
         }
     }
 
-    // MARK: - iOS 20-Region Geofence Scheduling
+    // MARK: - iOS 20-Region Geofence Scheduling (PDF section 9)
+    //
+    // Algorithm:
+    //   1. Sort all safe zones by distance from current position
+    //   2. Take closest N (iOS: 19, reserve 1 for buffer zone)
+    //   3. Register 1 extra large zone around current position as buffer
+    //   4. Only rebalance when leaving the buffer zone
 
-    /// Dynamic swap: keep the N closest safe zones monitored,
-    /// swap in/out as the user moves.
     func rebalanceGeofences(currentLocation: CLLocation?) {
         guard let current = currentLocation else { return }
+
+        // Check if we're still inside the buffer zone — skip rebalancing if so
+        if let bufferCenter = bufferZoneCenter,
+           current.distance(from: bufferCenter) < bufferZoneRadius * 0.8 {
+            return
+        }
 
         // Sort all safe zones by distance from current location
         let sorted = safeZones.sorted { a, b in
@@ -240,13 +278,13 @@ final class AdaptiveLocationManager: NSObject {
             return distA < distB
         }
 
-        // Take the closest N zones (reserve 2 slots for system use)
+        // Take the closest N zones
         let toMonitor = Array(sorted.prefix(config.maxGeofenceRegions))
         let targetIds = Set(toMonitor.map { $0.id })
 
         // Remove regions no longer needed
         for region in locationManager.monitoredRegions {
-            if !targetIds.contains(region.identifier) {
+            if region.identifier != "buffer_zone" && !targetIds.contains(region.identifier) {
                 locationManager.stopMonitoring(for: region)
             }
         }
@@ -264,6 +302,22 @@ final class AdaptiveLocationManager: NSObject {
             region.notifyOnExit = true
             locationManager.startMonitoring(for: region)
         }
+
+        // Register buffer zone around current position
+        locationManager.stopMonitoring(for: CLCircularRegion(
+            center: current.coordinate,
+            radius: bufferZoneRadius,
+            identifier: "buffer_zone"
+        ))
+        let bufferRegion = CLCircularRegion(
+            center: current.coordinate,
+            radius: bufferZoneRadius,
+            identifier: "buffer_zone"
+        )
+        bufferRegion.notifyOnEntry = false
+        bufferRegion.notifyOnExit = true
+        locationManager.startMonitoring(for: bufferRegion)
+        bufferZoneCenter = current
 
         monitoredRegionIds = targetIds
     }
@@ -350,27 +404,31 @@ extension AdaptiveLocationManager: CLLocationManagerDelegate {
         guard let circularRegion = region as? CLCircularRegion else { return }
         if let zone = safeZones.first(where: { $0.id == circularRegion.identifier }) {
             onSafeZoneEnter?(zone)
-            // Entering safe zone — can downgrade to safe mode
             switchMode(.safe)
         }
     }
 
     func locationManager(_ manager: CLLocationManager, didExitRegion region: CLRegion) {
         guard let circularRegion = region as? CLCircularRegion else { return }
-        if let zone = safeZones.first(where: { $0.id == circularRegion.identifier }) {
-            onSafeZoneExit?(zone)
-            // Left safe zone — upgrade to unknown or moving
-            switchMode(.unknown)
+
+        // Buffer zone exit → rebalance geofences
+        if circularRegion.identifier == "buffer_zone" {
+            if let lastLocation = lastReportedLocation {
+                rebalanceGeofences(currentLocation: lastLocation)
+            }
+            return
         }
 
-        // Rebalance geofences based on new position
-        if let lastLocation = lastReportedLocation {
-            rebalanceGeofences(currentLocation: lastLocation)
+        if let zone = safeZones.first(where: { $0.id == circularRegion.identifier }) {
+            // Use hysteresis — only fire exit if truly outside the buffer
+            if let lastLocation = lastReportedLocation, isExitingSafeZone(location: lastLocation) {
+                onSafeZoneExit?(zone)
+                switchMode(.unknown)
+            }
         }
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        // In SOS mode, failures are critical — switch to significant changes as fallback
         if currentMode == .sos {
             locationManager.startMonitoringSignificantLocationChanges()
         }
@@ -383,7 +441,13 @@ extension AdaptiveLocationManager: CLLocationManagerDelegate {
     }
 }
 
-// MARK: - Dwell-Point Clustering (Auto-discovers safe zones from history)
+// MARK: - Dwell-Point Clustering (PDF section 8)
+//
+// Classification rules:
+//   住所:       nighttime (22:00-06:00) highest frequency
+//   学校/工作地: weekday daytime highest, distance > 500m from home
+//   常去地点:    ≥ 2 visits per week
+//   陌生地点:    never seen or ≤ 1 visit
 
 extension AdaptiveLocationManager {
 
@@ -403,28 +467,32 @@ extension AdaptiveLocationManager {
         let longitude: Double
         let totalVisits: Int
         let averageDurationMin: Double
-        let suggestedName: String?       // "Home", "Work", etc. based on time patterns
-        let typicalHours: [Int]          // Hours of day when visits occur
+        let suggestedName: String?
+        let typicalHours: [Int]
+        let classification: DwellClassification
+    }
+
+    enum DwellClassification: String {
+        case home = "住所"
+        case workSchool = "学校/工作地"
+        case frequent = "常去地点"
+        case unfamiliar = "陌生地点"
     }
 
     private func trackDwellPoint(_ location: CLLocation) {
         let now = Date()
 
-        // Check if location matches an existing candidate
         if let idx = dwellCandidates.firstIndex(where: {
             location.distance(from: $0.center) < config.dwellPointRadiusMeters
         }) {
-            // Update existing candidate
             dwellCandidates[idx].lastSeen = now
             dwellCandidates[idx].pointCount += 1
 
-            // Check if this candidate qualifies as a dwell point
             if dwellCandidates[idx].durationSec >= config.dwellPointMinDurationSec
                 && dwellCandidates[idx].pointCount >= 3 {
                 promoteToDwellPoint(dwellCandidates[idx])
             }
         } else {
-            // New candidate
             dwellCandidates.append(DwellCandidate(
                 center: location,
                 firstSeen: now,
@@ -433,7 +501,6 @@ extension AdaptiveLocationManager {
             ))
         }
 
-        // Clean up old candidates (> 1 hour old and never promoted)
         dwellCandidates.removeAll {
             now.timeIntervalSince($0.lastSeen) > 3600 && $0.durationSec < config.dwellPointMinDurationSec
         }
@@ -443,34 +510,62 @@ extension AdaptiveLocationManager {
         let calendar = Calendar.current
         let hour = calendar.component(.hour, from: candidate.firstSeen)
 
-        // Suggest a name based on time patterns
-        let suggestedName: String?
-        switch hour {
-        case 22...23, 0...6:
-            suggestedName = "住所"       // Home — nighttime dwell
-        case 9...17:
-            suggestedName = "工作/学校"   // Work/School — business hours
-        default:
-            suggestedName = nil
-        }
+        let classification = classifyDwellPoint(
+            hour: hour,
+            location: candidate.center,
+            visitCount: candidate.pointCount
+        )
 
         let dwellPoint = DwellPoint(
             latitude: candidate.center.coordinate.latitude,
             longitude: candidate.center.coordinate.longitude,
             totalVisits: candidate.pointCount,
             averageDurationMin: candidate.durationSec / 60.0,
-            suggestedName: suggestedName,
-            typicalHours: [hour]
+            suggestedName: classification.rawValue,
+            typicalHours: [hour],
+            classification: classification
         )
 
         onDwellPointDiscovered?(dwellPoint)
+    }
+
+    private func classifyDwellPoint(
+        hour: Int,
+        location: CLLocation,
+        visitCount: Int
+    ) -> DwellClassification {
+        // Nighttime dwell → home
+        if hour >= 22 || hour <= 6 {
+            return .home
+        }
+
+        // Check distance from home zones
+        let homeSafeZones = safeZones.filter { $0.name == "住所" }
+        let isFarFromHome = homeSafeZones.allSatisfy { zone in
+            let center = CLLocation(latitude: zone.latitude, longitude: zone.longitude)
+            return location.distance(from: center) > 500
+        }
+
+        // Weekday business hours + far from home → work/school
+        let calendar = Calendar.current
+        let weekday = calendar.component(.weekday, from: Date())
+        let isWeekday = weekday >= 2 && weekday <= 6
+        if isWeekday && hour >= 9 && hour <= 17 && isFarFromHome {
+            return .workSchool
+        }
+
+        // Frequent visitor
+        if visitCount >= 2 {
+            return .frequent
+        }
+
+        return .unfamiliar
     }
 
     /// Run full clustering on historical data — called periodically (e.g., daily)
     func clusterDwellPoints() -> [DwellPoint] {
         guard locationHistory.count > 20 else { return [] }
 
-        // Simple density-based clustering
         var clusters: [(center: CLLocation, points: [CLLocation], times: [Date])] = []
 
         for location in locationHistory {
@@ -479,7 +574,6 @@ extension AdaptiveLocationManager {
                 if location.distance(from: clusters[i].center) < config.dwellPointRadiusMeters {
                     clusters[i].points.append(location)
                     clusters[i].times.append(location.timestamp)
-                    // Recompute center
                     let avgLat = clusters[i].points.reduce(0) { $0 + $1.coordinate.latitude } / Double(clusters[i].points.count)
                     let avgLng = clusters[i].points.reduce(0) { $0 + $1.coordinate.longitude } / Double(clusters[i].points.count)
                     clusters[i].center = CLLocation(latitude: avgLat, longitude: avgLng)
@@ -493,7 +587,6 @@ extension AdaptiveLocationManager {
             }
         }
 
-        // Filter to significant clusters (≥ 3 visits, ≥ 20 min total dwell)
         let calendar = Calendar.current
         return clusters
             .filter { $0.points.count >= 3 }
@@ -506,26 +599,22 @@ extension AdaptiveLocationManager {
 
                 let hours = cluster.times.map { calendar.component(.hour, from: $0) }
                 let mostCommonHour = hours.reduce(into: [Int: Int]()) { $0[$1, default: 0] += 1 }
-                    .max(by: { $0.value < $1.value })?.key
+                    .max(by: { $0.value < $1.value })?.key ?? 12
 
-                let suggestedName: String?
-                if let h = mostCommonHour {
-                    switch h {
-                    case 22...23, 0...6: suggestedName = "住所"
-                    case 9...17: suggestedName = "工作/学校"
-                    default: suggestedName = nil
-                    }
-                } else {
-                    suggestedName = nil
-                }
+                let classification = classifyDwellPoint(
+                    hour: mostCommonHour,
+                    location: cluster.center,
+                    visitCount: cluster.points.count
+                )
 
                 return DwellPoint(
                     latitude: cluster.center.coordinate.latitude,
                     longitude: cluster.center.coordinate.longitude,
                     totalVisits: cluster.points.count,
                     averageDurationMin: duration / 60.0,
-                    suggestedName: suggestedName,
-                    typicalHours: Array(Set(hours)).sorted()
+                    suggestedName: classification.rawValue,
+                    typicalHours: Array(Set(hours)).sorted(),
+                    classification: classification
                 )
             }
             .sorted { $0.totalVisits > $1.totalVisits }
