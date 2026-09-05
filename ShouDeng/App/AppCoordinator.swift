@@ -17,6 +17,15 @@ final class AppCoordinator: ObservableObject {
     @Published var activeSOSEvent: SOSEvent?
     @Published var currentRiskScores: [String: BaselineScorer.RiskScore] = [:]
     @Published var currentCoverage: DutyScheduler.DayCoverage?
+    @Published var showSignup = false
+    @Published var timeline: [TimelineEntry] = []
+
+    // MARK: - Infrastructure
+
+    let offlineQueue = OfflineQueue()
+    let apiClient: APIClient
+    let authManager: AuthManager
+    let localStore = LocalStore.shared
 
     // MARK: - Services
 
@@ -29,17 +38,189 @@ final class AppCoordinator: ObservableObject {
     let dutyScheduler = DutyScheduler()
     let deviceHealthMonitor = DeviceHealthMonitor()
 
+    private var cancellables = Set<AnyCancellable>()
+
     // MARK: - Init
 
     init() {
+        let config = APIClient.Config(
+            baseURL: Self.resolveBaseURL()
+        )
+        apiClient = APIClient(config: config, offlineQueue: offlineQueue)
+        authManager = AuthManager(api: apiClient)
+
         wireServices()
+        restoreLocalState()
+        observeAuthState()
+    }
+
+    // MARK: - Base URL
+
+    private static func resolveBaseURL() -> String {
+        if let override = Bundle.main.infoDictionary?["API_BASE_URL"] as? String, !override.isEmpty {
+            return override
+        }
+        #if DEBUG
+        return "http://localhost:8080"
+        #else
+        return "https://api.shoudeng.app"
+        #endif
+    }
+
+    // MARK: - Restore Local State
+
+    private func restoreLocalState() {
+        if let user = localStore.loadCurrentUser() {
+            currentUser = user
+        }
+        if let role = localStore.loadUserRole() {
+            userRole = role
+        }
+        myGuardians = localStore.loadGuardians()
+        protectedPersons = localStore.loadProtectedPersons()
+        activeSOSEvent = localStore.loadActiveSOSEvent()
+        timeline = localStore.loadTimeline()
+
+        // Load safe zones into location manager
+        let zones = localStore.loadSafeZones()
+        if !zones.isEmpty {
+            locationManager.updateSafeZones(zones)
+        }
+    }
+
+    // MARK: - Auth State Observer
+
+    private func observeAuthState() {
+        authManager.$state
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] state in
+                guard let self else { return }
+                switch state {
+                case .loggedIn(let userId):
+                    UserDefaults.standard.set(userId, forKey: "currentUserId")
+                    self.onLoginComplete()
+                case .loggedOut:
+                    self.onLogout()
+                case .unknown:
+                    break
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func onLoginComplete() {
+        // Flush any queued offline requests
+        Task { await apiClient.flushOfflineQueue() }
+
+        // Fetch fresh data from server
+        Task { await fetchUserProfile() }
+    }
+
+    private func onLogout() {
+        currentUser = nil
+        protectedPersons = []
+        myGuardians = []
+        activeSOSEvent = nil
+        timeline = []
+        localStore.clearAll()
+        UserDefaults.standard.set(false, forKey: "onboardingComplete")
+    }
+
+    // MARK: - Fetch User Profile
+
+    func fetchUserProfile() async {
+        do {
+            let profile: UserProfileResponse = try await apiClient.get("/v1/user/me")
+            let user = User(
+                id: profile.id,
+                displayName: profile.displayName,
+                role: UserRole(rawValue: profile.role) ?? .protected_,
+                avatarInitial: profile.avatarInitial,
+                timeZone: TimeZone(identifier: profile.timeZone) ?? .current,
+                countryCode: profile.countryCode,
+                cityName: profile.cityName,
+                createdAt: profile.createdAt
+            )
+            await MainActor.run {
+                self.currentUser = user
+                self.userRole = user.role
+                self.localStore.saveCurrentUser(user)
+                self.localStore.saveUserRole(user.role)
+            }
+        } catch {
+            #if DEBUG
+            print("[Coordinator] Failed to fetch profile: \(error)")
+            #endif
+        }
+    }
+
+    // MARK: - Fetch Data
+
+    func fetchProtectedPersons() async {
+        do {
+            let persons: [ProtectedPersonStatusResponse] = try await apiClient.get("/v1/guardian/protected-persons")
+            let mapped = persons.map { p in
+                ProtectedPerson(
+                    id: p.personId,
+                    user: User(
+                        id: p.personId,
+                        displayName: p.displayName,
+                        role: .protected_,
+                        avatarInitial: String(p.displayName.prefix(1)),
+                        timeZone: .current,
+                        countryCode: "",
+                        cityName: p.locationAddress ?? "",
+                        createdAt: Date()
+                    ),
+                    guardians: [],
+                    protectionLayers: p.protectionLayers,
+                    lastCheckIn: p.lastCheckIn,
+                    lastKnownLocation: p.latitude.flatMap { lat in
+                        p.longitude.map { lng in
+                            Location(
+                                latitude: lat, longitude: lng,
+                                accuracy: 0, altitude: nil, speed: nil,
+                                timestamp: p.locationTimestamp ?? Date(),
+                                address: p.locationAddress
+                            )
+                        }
+                    },
+                    batteryLevel: p.batteryLevel,
+                    batteryState: p.batteryState,
+                    lastPhoneActivity: p.lastPhoneActivity,
+                    status: p.status
+                )
+            }
+            await MainActor.run {
+                self.protectedPersons = mapped
+                self.localStore.saveProtectedPersons(mapped)
+            }
+        } catch {
+            #if DEBUG
+            print("[Coordinator] Failed to fetch protected persons: \(error)")
+            #endif
+        }
+    }
+
+    func fetchGuardians() async {
+        do {
+            let guardians: [Guardian] = try await apiClient.get("/v1/protected/guardians")
+            await MainActor.run {
+                self.myGuardians = guardians
+                self.localStore.saveGuardians(guardians)
+            }
+        } catch {
+            #if DEBUG
+            print("[Coordinator] Failed to fetch guardians: \(error)")
+            #endif
+        }
     }
 
     // MARK: - Service Wiring
 
     private func wireServices() {
 
-        // Location → Heartbeat
+        // Location → Heartbeat + Server
         locationManager.onLocationReport = { [weak self] location in
             self?.heartbeatService.recordBeat(source: .significantLocation, location: location)
             self?.handleLocationUpdate(location)
@@ -55,20 +236,10 @@ final class AppCoordinator: ObservableObject {
         }
 
         // Location → Auto-discover safe zones
-        locationManager.onDwellPointDiscovered = { [weak self] dwellPoint in
-            guard let self else { return }
-            let suggestedZone = SafeZone(
-                id: UUID().uuidString,
-                name: dwellPoint.suggestedName ?? "常去地点",
-                latitude: dwellPoint.latitude,
-                longitude: dwellPoint.longitude,
-                radius: 200,
-                isAutoSuggested: true,
-                visitFrequency: dwellPoint.totalVisits,
-                typicalHours: nil
-            )
-            // In production, surface this to UI for user confirmation
-            print("[Coordinator] Discovered dwell point: \(suggestedZone.name) at (\(suggestedZone.latitude), \(suggestedZone.longitude))")
+        locationManager.onDwellPointDiscovered = { dwellPoint in
+            #if DEBUG
+            print("[Coordinator] Discovered dwell point: \(dwellPoint.suggestedName ?? "常去地点") at (\(dwellPoint.latitude), \(dwellPoint.longitude))")
+            #endif
         }
 
         // Motion → Fall detection
@@ -104,15 +275,13 @@ final class AppCoordinator: ObservableObject {
                 type: .sosResolved,
                 description: "守护者已接手处理"
             )
-            _ = self  // Silence unused warning
+            _ = session
+            _ = guardianId
         }
 
-        // Voice call → server API (Twilio/CPaaS)
+        // Voice call → server API
         escalationEngine.onInitiateVoiceCall = { [weak self] guardianId, sosEventId in
-            // In production, POST to /v1/voice-call with guardianId + sosEventId
-            // Server triggers Twilio outbound call with TTS message
-            print("[Coordinator] Initiating voice call to guardian \(guardianId) for SOS \(sosEventId)")
-            _ = self
+            self?.initiateVoiceCall(guardianId: guardianId, sosEventId: sosEventId)
         }
     }
 
@@ -124,7 +293,7 @@ final class AppCoordinator: ObservableObject {
             protectedPersonId: currentUser?.id ?? "",
             triggeredAt: Date(),
             triggerMethod: method,
-            location: nil,  // Will be filled by location manager
+            location: nil,
             batteryLevel: Double(UIDevice.current.batteryLevel),
             escalationState: .initiated,
             resolvedAt: nil,
@@ -133,17 +302,21 @@ final class AppCoordinator: ObservableObject {
         )
 
         activeSOSEvent = sosEvent
+        localStore.saveActiveSOSEvent(sosEvent)
 
-        // Switch location to SOS mode (max accuracy, max frequency)
+        // Switch location to SOS mode
         locationManager.enterSOSMode()
 
-        // Add to timeline
         addTimelineEntry(type: .sosTriggered, description: "触发紧急求助（\(method.rawValue)）")
 
-        // Start escalation chain
-        // In production, this would go through the server
-        // For now, handle locally for the on-device demo
-        print("[Coordinator] SOS triggered via \(method.rawValue)")
+        // Report to server
+        apiClient.postQueued("/v1/sos/trigger", body: SOSTriggerRequest(
+            protectedPersonId: currentUser?.id ?? "",
+            triggerMethod: method,
+            latitude: nil,
+            longitude: nil,
+            batteryLevel: Double(UIDevice.current.batteryLevel)
+        ))
     }
 
     func cancelSOS() {
@@ -151,10 +324,16 @@ final class AppCoordinator: ObservableObject {
 
         escalationEngine.resolve(by: currentUser?.id ?? "", resolution: .protectedCancelled)
         activeSOSEvent = nil
+        localStore.saveActiveSOSEvent(nil)
         locationManager.exitSOSMode()
 
         addTimelineEntry(type: .sosResolved, description: "取消了紧急求助")
-        _ = sos  // Used for any cleanup
+
+        apiClient.postQueued("/v1/sos/resolve", body: SOSResolveRequest(
+            sosEventId: sos.id,
+            resolvedBy: currentUser?.id ?? "",
+            resolution: .protectedCancelled
+        ))
     }
 
     // MARK: - Check-In
@@ -166,56 +345,99 @@ final class AppCoordinator: ObservableObject {
 
         addTimelineEntry(type: .checkIn, description: note ?? "报平安")
 
-        // Report to server
-        print("[Coordinator] Check-in recorded: \(checkIn.id)")
+        apiClient.postQueued("/v1/checkin", body: CheckInRequest(
+            userId: userId,
+            latitude: nil,
+            longitude: nil,
+            note: note
+        ))
+        _ = checkIn
     }
 
     // MARK: - Event Handlers
 
     private func handleLocationUpdate(_ location: Location) {
-        // In production, report to server for guardian visibility
+        apiClient.postQueued("/v1/location/report", body: LocationReportRequest(
+            userId: currentUser?.id ?? "",
+            latitude: location.latitude,
+            longitude: location.longitude,
+            accuracy: location.accuracy,
+            altitude: location.altitude,
+            speed: location.speed,
+            timestamp: location.timestamp,
+            isInSafeZone: location.isInSafeZone,
+            safeZoneName: location.safeZoneName
+        ))
     }
 
     private func handleFallCandidate() {
-        // Show 60-second confirmation dialog
-        // If user doesn't respond → handleFallConfirmed()
+        #if DEBUG
         print("[Coordinator] Fall candidate detected — showing confirmation dialog")
+        #endif
     }
 
     private func handleFallConfirmed() {
-        // User didn't respond to fall confirmation → trigger SOS
         triggerSOS(method: .fallDetection)
     }
 
     private func handleSOSTakenOver(sosId: String) {
-        // Guardian pressed "I've taken over"
-        escalationEngine.freeze(by: "guardian")  // Would use real guardian ID
+        escalationEngine.freeze(by: "guardian")
     }
 
     private func reportHeartbeatToServer(_ signal: HeartbeatSignal) {
-        // In production, POST to /v1/heartbeat
-        #if DEBUG
-        print("[Coordinator] Heartbeat: \(signal.source.rawValue) at \(signal.timestamp)")
-        #endif
+        apiClient.postQueued("/v1/heartbeat", body: HeartbeatRequest(
+            userId: signal.userId,
+            timestamp: signal.timestamp,
+            source: signal.source,
+            batteryLevel: signal.batteryLevel,
+            batteryState: signal.batteryState,
+            latitude: signal.location?.latitude,
+            longitude: signal.location?.longitude,
+            accuracy: signal.location?.accuracy
+        ))
+    }
+
+    private func initiateVoiceCall(guardianId: String, sosEventId: String) {
+        apiClient.postQueued("/v1/voice-call", body: VoiceCallRequest(
+            guardianId: guardianId,
+            sosEventId: sosEventId,
+            protectedPersonName: currentUser?.displayName ?? "被守护者",
+            locationDescription: nil
+        ))
     }
 
     private func sendNotification(_ request: NotificationRequest) {
-        // In production, POST to server which sends via APNs/FCM
-        // For local demo, fire a local notification
         if request.priority == .critical {
             pushService.fireCriticalSOSAlert(
-                protectedPersonName: "被守护者",
+                protectedPersonName: currentUser?.displayName ?? "被守护者",
                 locationDescription: request.body,
                 sosEventId: request.data["sos_id"] ?? ""
             )
         }
     }
 
+    // MARK: - Device Token
+
+    func registerDeviceToken(_ token: Data) {
+        pushService.didRegisterForRemoteNotifications(withDeviceToken: token)
+
+        let tokenString = token.map { String(format: "%02x", $0) }.joined()
+        apiClient.postQueued("/v1/device/token", body: DeviceTokenRequest(
+            token: tokenString,
+            platform: "ios",
+            environment: {
+                #if DEBUG
+                return "development"
+                #else
+                return "production"
+                #endif
+            }()
+        ))
+    }
+
     // MARK: - Timeline
 
-    private var timeline: [TimelineEntry] = []
-
-    private func addTimelineEntry(type: TimelineEntryType, description: String) {
+    func addTimelineEntry(type: TimelineEntryType, description: String) {
         let entry = TimelineEntry(
             id: UUID().uuidString,
             timestamp: Date(),
@@ -224,6 +446,12 @@ final class AppCoordinator: ObservableObject {
             detail: nil
         )
         timeline.insert(entry, at: 0)
+
+        // Keep last 200 entries in memory
+        if timeline.count > 200 {
+            timeline = Array(timeline.prefix(200))
+        }
+        localStore.saveTimeline(timeline)
     }
 
     // MARK: - Risk Score Refresh
@@ -237,7 +465,7 @@ final class AppCoordinator: ObservableObject {
                 currentLocation: person.lastKnownLocation,
                 batteryLevel: person.batteryLevel,
                 batteryState: person.batteryState,
-                regionRiskLevel: 0.3,  // Would come from server
+                regionRiskLevel: 0.3,
                 timeZone: person.user.timeZone
             )
             currentRiskScores[person.id] = score
@@ -252,11 +480,5 @@ final class AppCoordinator: ObservableObject {
             protectedPerson: firstPerson,
             guardians: firstPerson.guardians
         )
-    }
-
-    // MARK: - Import
-
-    func importDeviceToken(_ token: Data) {
-        pushService.didRegisterForRemoteNotifications(withDeviceToken: token)
     }
 }

@@ -76,7 +76,7 @@ struct GuardianHomeView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Text("多伦多 07:07")
+                    Text(toolbarLocation)
                         .font(.system(size: 10.5))
                         .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.42))
                 }
@@ -86,7 +86,27 @@ struct GuardianHomeView: View {
                         .foregroundStyle(safe)
                 }
             }
+            .navigationDestination(for: String.self) { personId in
+                if coordinator.activeSOSEvent?.protectedPersonId == personId {
+                    GuardianAlertResponseView()
+                } else {
+                    GuardianMemberDetailView()
+                }
+            }
+            .task {
+                await coordinator.fetchProtectedPersons()
+            }
         }
+    }
+
+    private var toolbarLocation: String {
+        if let user = coordinator.currentUser {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "HH:mm"
+            formatter.timeZone = user.timeZone
+            return "\(user.cityName) \(formatter.string(from: Date()))"
+        }
+        return "多伦多 07:07"
     }
 
     // MARK: - Globe Section
@@ -179,54 +199,122 @@ struct GuardianHomeView: View {
     // MARK: - Needs Attention
 
     private var needsAttentionSection: some View {
-        VStack(alignment: .leading, spacing: 7) {
-            Text("需要处理")
-                .font(.system(size: 10.5))
-                .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
-                .padding(.horizontal, 18)
-                .padding(.top, 12)
+        let warningPersons = coordinator.protectedPersons.filter { $0.isOverdue || $0.status == .overdue || $0.status == .alert }
 
-            protectedPersonCard(
-                initial: "奶", name: "奶奶",
-                tag: "14 小时未打卡", tagColor: Color(red: 138/255, green: 100/255, blue: 40/255),
-                tagBg: lamp,
-                detail: "上海 · 当地已是晚上八点",
-                layers: 2, isWarning: true
-            )
+        return Group {
+            if !warningPersons.isEmpty {
+                VStack(alignment: .leading, spacing: 7) {
+                    Text("需要处理")
+                        .font(.system(size: 10.5))
+                        .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
+                        .padding(.horizontal, 18)
+                        .padding(.top, 12)
+
+                    ForEach(warningPersons) { person in
+                        NavigationLink(value: person.id) {
+                            protectedPersonCard(
+                                initial: person.user.avatarInitial, name: person.user.displayName,
+                                tag: person.status == .alert ? "求助中" : "未打卡",
+                                tagColor: person.status == .alert ? alert : Color(red: 138/255, green: 100/255, blue: 40/255),
+                                tagBg: person.status == .alert ? alert : lamp,
+                                detail: "\(person.user.cityName) · \(statusDetail(person))",
+                                layers: person.protectionLayers, isWarning: true
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            } else {
+                // Demo fallback when no real data
+                VStack(alignment: .leading, spacing: 7) {
+                    Text("需要处理")
+                        .font(.system(size: 10.5))
+                        .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
+                        .padding(.horizontal, 18)
+                        .padding(.top, 12)
+
+                    protectedPersonCard(
+                        initial: "奶", name: "奶奶",
+                        tag: "14 小时未打卡", tagColor: Color(red: 138/255, green: 100/255, blue: 40/255),
+                        tagBg: lamp,
+                        detail: "上海 · 当地已是晚上八点",
+                        layers: 2, isWarning: true
+                    )
+                }
+            }
         }
     }
 
     // MARK: - All Normal
 
     private var allNormalSection: some View {
-        VStack(alignment: .leading, spacing: 7) {
-            Text("一切正常")
-                .font(.system(size: 10.5))
-                .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
-                .padding(.horizontal, 18)
-                .padding(.top, 12)
+        let normalPersons = coordinator.protectedPersons.filter { !$0.isOverdue && $0.status != .overdue && $0.status != .alert }
 
-            protectedPersonCard(
-                initial: "雨", name: "小雨",
-                tag: "专业响应", tagColor: pro,
-                detail: "基辅 · 12 分钟前报平安",
-                layers: 3
-            )
+        return Group {
+            if !normalPersons.isEmpty {
+                VStack(alignment: .leading, spacing: 7) {
+                    Text("一切正常")
+                        .font(.system(size: 10.5))
+                        .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
+                        .padding(.horizontal, 18)
+                        .padding(.top, 12)
 
-            protectedPersonCard(
-                initial: "弟", name: "弟弟",
-                tag: nil, tagColor: nil,
-                detail: "伦敦 · 在学校 · 电量 82%",
-                layers: 1
-            )
+                    ForEach(normalPersons) { person in
+                        NavigationLink(value: person.id) {
+                            protectedPersonCard(
+                                initial: person.user.avatarInitial, name: person.user.displayName,
+                                tag: nil, tagColor: nil,
+                                detail: "\(person.user.cityName) · \(statusDetail(person))",
+                                layers: person.protectionLayers
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            } else {
+                // Demo fallback
+                VStack(alignment: .leading, spacing: 7) {
+                    Text("一切正常")
+                        .font(.system(size: 10.5))
+                        .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
+                        .padding(.horizontal, 18)
+                        .padding(.top, 12)
 
-            protectedPersonCard(
-                initial: "爸", name: "爸爸",
-                tag: nil, tagColor: nil,
-                detail: "多伦多 · 在家 · 在线",
-                layers: 2, isDimmed: true
-            )
+                    protectedPersonCard(
+                        initial: "雨", name: "小雨",
+                        tag: "专业响应", tagColor: pro,
+                        detail: "基辅 · 12 分钟前报平安",
+                        layers: 3
+                    )
+
+                    protectedPersonCard(
+                        initial: "弟", name: "弟弟",
+                        tag: nil, tagColor: nil,
+                        detail: "伦敦 · 在学校 · 电量 82%",
+                        layers: 1
+                    )
+
+                    protectedPersonCard(
+                        initial: "爸", name: "爸爸",
+                        tag: nil, tagColor: nil,
+                        detail: "多伦多 · 在家 · 在线",
+                        layers: 2, isDimmed: true
+                    )
+                }
+            }
         }
+    }
+
+    private func statusDetail(_ person: ProtectedPerson) -> String {
+        if let checkIn = person.lastCheckIn {
+            let minutes = Int(Date().timeIntervalSince(checkIn) / 60)
+            if minutes < 60 {
+                return "\(minutes) 分钟前报平安"
+            } else {
+                return "\(minutes / 60) 小时前报平安"
+            }
+        }
+        return "尚未报平安"
     }
 
     // MARK: - Protected Person Card

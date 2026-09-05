@@ -37,7 +37,12 @@ struct GuardianAlertResponseView: View {
 
                     // Action buttons
                     HStack(spacing: 8) {
-                        Button {} label: {
+                        Button {
+                            // Open phone dialer — in production would use protected person's phone
+                            if let url = URL(string: "tel://112") {
+                                UIApplication.shared.open(url)
+                            }
+                        } label: {
                             Text("立即拨号")
                                 .font(.system(size: 13.5, weight: .medium))
                                 .foregroundStyle(.white)
@@ -106,7 +111,7 @@ struct GuardianAlertResponseView: View {
     private var escalationChain: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("升级链 · 专员待命中")
+                Text("升级链")
                     .font(.system(size: 11.5, weight: .medium))
                     .foregroundStyle(alert)
                 Spacer()
@@ -116,7 +121,7 @@ struct GuardianAlertResponseView: View {
 
             stepRow(number: "1", title: "你已收到并查看", detail: "07:07 送达 · 07:08 已读", state: .done)
             stepRow(number: "2", title: "备用联系人已通知", detail: "姑姑、邻居 Olena · 等待确认", state: .live)
-            stepRow(number: "3", title: "专员 48 秒后介入", detail: "点「我已接手」可停止升级", state: .waiting)
+            stepRow(number: "3", title: "自动语音外呼", detail: "系统将拨打电话直到有人接听 · 点「我已接手」可停止", state: .waiting)
         }
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(

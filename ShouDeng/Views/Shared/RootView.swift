@@ -5,28 +5,60 @@ struct RootView: View {
     @AppStorage("onboardingComplete") private var onboardingComplete = false
 
     var body: some View {
-        if !onboardingComplete {
-            OnboardingView(isComplete: $onboardingComplete)
-        } else {
-            ZStack(alignment: .top) {
-                Group {
-                    switch coordinator.userRole {
-                    case .protected_:
-                        ProtectedTabView()
-                    case .guardian:
-                        GuardianTabView()
+        Group {
+            switch coordinator.authManager.state {
+            case .unknown:
+                // Splash / loading
+                splashView
+
+            case .loggedOut:
+                // Auth flow
+                LoginView()
+                    .sheet(isPresented: $coordinator.showSignup) {
+                        SignupView()
+                    }
+
+            case .loggedIn:
+                // Authenticated — check onboarding
+                if !onboardingComplete {
+                    OnboardingView(isComplete: $onboardingComplete)
+                } else {
+                    ZStack(alignment: .top) {
+                        Group {
+                            switch coordinator.userRole {
+                            case .protected_:
+                                ProtectedTabView()
+                            case .guardian:
+                                GuardianTabView()
+                            }
+                        }
+                        // Dev-only: long press anywhere to switch portal
+                        .overlay(alignment: .topTrailing) {
+                            portalSwitcher
+                        }
+
+                        // Degradation banner
+                        DegradationBannerView()
+                            .environmentObject(coordinator)
                     }
                 }
-                // Dev-only: long press anywhere to switch portal
-                .overlay(alignment: .topTrailing) {
-                    portalSwitcher
-                }
-
-                // Degradation banner
-                DegradationBannerView()
-                    .environmentObject(coordinator)
             }
         }
+    }
+
+    // MARK: - Splash
+
+    private var splashView: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "light.beacon.max")
+                .font(.system(size: 48))
+                .foregroundStyle(Color(red: 232/255, green: 163/255, blue: 61/255))
+            Text("守灯")
+                .font(.system(size: 24, weight: .bold, design: .serif))
+                .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255))
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemBackground))
     }
 
     // MARK: - Portal Switcher (development tool)
@@ -36,12 +68,18 @@ struct RootView: View {
             Button {
                 withAnimation { coordinator.userRole = .protected_ }
             } label: {
-                Label("被守护者 · 小雨在基辅", systemImage: "shield.fill")
+                Label("被守护者", systemImage: "shield.fill")
             }
             Button {
                 withAnimation { coordinator.userRole = .guardian }
             } label: {
-                Label("守护者 · 妈妈在多伦多", systemImage: "eye.fill")
+                Label("守护者", systemImage: "eye.fill")
+            }
+            Divider()
+            Button(role: .destructive) {
+                coordinator.authManager.logout()
+            } label: {
+                Label("退出登录", systemImage: "rectangle.portrait.and.arrow.right")
             }
         } label: {
             HStack(spacing: 4) {

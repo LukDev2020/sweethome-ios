@@ -12,10 +12,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
         // Defer all permission-requiring services until after onboarding
         if UserDefaults.standard.bool(forKey: "onboardingComplete") {
-            appCoordinator.pushService.registerForPushNotifications()
-            application.registerForRemoteNotifications()
-            appCoordinator.heartbeatService.start()
-            appCoordinator.locationManager.start()
+            startServices(application)
         }
 
         // Check if launched from significant location change
@@ -32,20 +29,30 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         return true
     }
 
+    func startServices(_ application: UIApplication) {
+        appCoordinator.pushService.registerForPushNotifications()
+        application.registerForRemoteNotifications()
+        appCoordinator.heartbeatService.start()
+        appCoordinator.locationManager.start()
+        appCoordinator.deviceHealthMonitor.beginMonitoring()
+    }
+
     // MARK: - Push Token
 
     func application(
         _ application: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
-        appCoordinator.pushService.didRegisterForRemoteNotifications(withDeviceToken: deviceToken)
+        appCoordinator.registerDeviceToken(deviceToken)
     }
 
     func application(
         _ application: UIApplication,
         didFailToRegisterForRemoteNotificationsWithError error: Error
     ) {
+        #if DEBUG
         print("[AppDelegate] Push registration failed: \(error)")
+        #endif
     }
 
     // MARK: - Silent Push (Background Fetch)
@@ -58,15 +65,14 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // Silent push received — record heartbeat
         appCoordinator.heartbeatService.silentPushReceived()
 
-        // Perform background sensor burst (piggyback on wake-up)
+        // Perform background sensor burst
         appCoordinator.motionService.performBackgroundBurst { result in
             switch result {
             case .prolongedStillness:
-                // Person hasn't moved — this is a signal for the baseline scorer
+                #if DEBUG
                 print("[AppDelegate] Background burst: prolonged stillness detected")
-            case .normal:
-                break
-            case .unavailable:
+                #endif
+            case .normal, .unavailable:
                 break
             }
             completionHandler(.newData)
@@ -77,13 +83,13 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
     func applicationDidBecomeActive(_ application: UIApplication) {
         appCoordinator.heartbeatService.appDidBecomeActive()
-
-        // Start foreground motion monitoring
         appCoordinator.motionService.startForegroundMonitoring()
+
+        // Flush offline queue when we come back online
+        Task { await appCoordinator.apiClient.flushOfflineQueue() }
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
-        // Stop foreground motion monitoring (iOS will kill it anyway)
         appCoordinator.motionService.stopForegroundMonitoring()
     }
 }

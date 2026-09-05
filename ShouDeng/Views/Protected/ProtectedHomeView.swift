@@ -51,21 +51,45 @@ struct ProtectedHomeView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Text("基辅 14:07")
+                    Text(toolbarLocation)
                         .font(.system(size: 10.5))
                         .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.42))
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Text("电量 78%")
+                    Text(toolbarBattery)
                         .font(.system(size: 10.5))
                         .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.42))
                 }
+            }
+            .navigationDestination(for: String.self) { _ in
+                ProtectedGuardianDetailView()
             }
             .sheet(isPresented: $showSOSActive) {
                 SOSActiveView()
             }
             .featureDisclosure(.sos, trigger: $sosDisclosureTrigger)
+            .task {
+                await coordinator.fetchGuardians()
+            }
         }
+    }
+
+    private var toolbarLocation: String {
+        if let user = coordinator.currentUser {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "HH:mm"
+            formatter.timeZone = user.timeZone
+            return "\(user.cityName) \(formatter.string(from: Date()))"
+        }
+        return "基辅 14:07"
+    }
+
+    private var toolbarBattery: String {
+        let level = UIDevice.current.batteryLevel
+        if level >= 0 {
+            return "电量 \(Int(level * 100))%"
+        }
+        return "电量 --%"
     }
 
     // MARK: - Globe Section
@@ -201,40 +225,74 @@ struct ProtectedHomeView: View {
 
     private var guardianList: some View {
         VStack(alignment: .leading, spacing: 7) {
-            // On duty
-            sectionHeader("正在值班")
-            guardianCard(
-                initial: "妈", name: "妈妈", tag: "值班中", tagColor: safe,
-                detail: "多伦多 · 位置、电量、健康",
-                time: "07:07", timeNote: "清晨",
-                isOnDuty: true
-            )
+            if !coordinator.myGuardians.isEmpty {
+                let onDuty = coordinator.myGuardians.filter { $0.isOnDuty }
+                let offDuty = coordinator.myGuardians.filter { !$0.isOnDuty }
 
-            // Awake
-            sectionHeader("醒着")
-            guardianCard(
-                initial: "姑", name: "姑姑", tag: nil, tagColor: nil,
-                detail: "悉尼 · 仅紧急时可见位置",
-                time: "22:07", timeNote: "夜晚",
-                isOnDuty: false
-            )
+                if !onDuty.isEmpty {
+                    sectionHeader("正在值班")
+                    ForEach(onDuty) { g in
+                        NavigationLink(value: g.id) {
+                            guardianCard(
+                                initial: g.user.avatarInitial, name: g.user.displayName,
+                                tag: "值班中", tagColor: safe,
+                                detail: "\(g.user.cityName) · \(permissionSummary(g.permissions))",
+                                time: localTime(g.user.timeZone), timeNote: timeOfDay(g.user.timeZone),
+                                isOnDuty: true
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
 
-            // Resting
-            sectionHeader("在休息")
-            guardianCard(
-                initial: "爸", name: "爸爸", tag: nil, tagColor: nil,
-                detail: "多伦多 · 位置、电量",
-                time: "07:07", timeNote: "清晨",
-                isOnDuty: false, isDimmed: true
-            )
+                if !offDuty.isEmpty {
+                    sectionHeader("其他守护者")
+                    ForEach(offDuty) { g in
+                        NavigationLink(value: g.id) {
+                            guardianCard(
+                                initial: g.user.avatarInitial, name: g.user.displayName,
+                                tag: nil, tagColor: nil,
+                                detail: "\(g.user.cityName) · \(permissionSummary(g.permissions))",
+                                time: localTime(g.user.timeZone), timeNote: timeOfDay(g.user.timeZone),
+                                isOnDuty: false
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            } else {
+                // Demo fallback
+                sectionHeader("正在值班")
+                guardianCard(
+                    initial: "妈", name: "妈妈", tag: "值班中", tagColor: safe,
+                    detail: "多伦多 · 位置、电量、健康",
+                    time: "07:07", timeNote: "清晨",
+                    isOnDuty: true
+                )
 
-            // Response center
-            guardianCard(
-                initial: "中", name: "响应中心", tag: "24h", tagColor: pro,
-                detail: "中英俄语 · 家人无响应时接手",
-                time: "在岗", timeNote: "常驻",
-                isOnDuty: false, isPro: true
-            )
+                sectionHeader("醒着")
+                guardianCard(
+                    initial: "姑", name: "姑姑", tag: nil, tagColor: nil,
+                    detail: "悉尼 · 仅紧急时可见位置",
+                    time: "22:07", timeNote: "夜晚",
+                    isOnDuty: false
+                )
+
+                sectionHeader("在休息")
+                guardianCard(
+                    initial: "爸", name: "爸爸", tag: nil, tagColor: nil,
+                    detail: "多伦多 · 位置、电量",
+                    time: "07:07", timeNote: "清晨",
+                    isOnDuty: false, isDimmed: true
+                )
+
+                guardianCard(
+                    initial: "中", name: "响应中心", tag: "24h", tagColor: pro,
+                    detail: "中英俄语 · 家人无响应时接手",
+                    time: "在岗", timeNote: "常驻",
+                    isOnDuty: false, isPro: true
+                )
+            }
 
             // Footer
             VStack(spacing: 0) {
@@ -249,6 +307,34 @@ struct ProtectedHomeView: View {
             .padding(.top, 11)
             .padding(.bottom, 16)
         }
+    }
+
+    private func permissionSummary(_ p: GuardianPermissions) -> String {
+        var parts: [String] = []
+        if p.canSeeLocation { parts.append("位置") }
+        if p.canSeeBattery { parts.append("电量") }
+        if p.canSeeHealth { parts.append("健康") }
+        return parts.isEmpty ? "仅紧急时可见" : parts.joined(separator: "、")
+    }
+
+    private func localTime(_ tz: TimeZone) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        formatter.timeZone = tz
+        return formatter.string(from: Date())
+    }
+
+    private func timeOfDay(_ tz: TimeZone) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH"
+        formatter.timeZone = tz
+        let hour = Int(formatter.string(from: Date())) ?? 12
+        if hour >= 6 && hour < 9 { return "清晨" }
+        if hour >= 9 && hour < 12 { return "上午" }
+        if hour >= 12 && hour < 14 { return "中午" }
+        if hour >= 14 && hour < 18 { return "下午" }
+        if hour >= 18 && hour < 22 { return "晚上" }
+        return "深夜"
     }
 
     private func sectionHeader(_ title: String) -> some View {

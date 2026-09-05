@@ -46,18 +46,43 @@ struct ProtectedRecordsView: View {
 
     private var timelineSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            timelineRow(date: "今天", event: "14:07 触发 SOS，4 分 12 秒后由妈妈确认安全", isBlurred: false)
-            timelineRow(date: "今天", event: "09:12 报平安", isBlurred: false)
-            timelineRow(date: "昨天", event: "21:40 离开安全区「住所」", isBlurred: false)
-            timelineRow(date: "昨天", event: "08:55 报平安", isBlurred: false)
-            timelineRow(date: "3天前", event: "18:20 在未知区域停留超过两小时", isBlurred: true)
-            timelineRow(date: "5天前", event: "07:30 报平安", isBlurred: true)
+            if coordinator.timeline.isEmpty {
+                // Demo fallback
+                timelineRow(date: "今天", event: "14:07 触发 SOS，4 分 12 秒后由妈妈确认安全", isBlurred: false)
+                timelineRow(date: "今天", event: "09:12 报平安", isBlurred: false)
+                timelineRow(date: "昨天", event: "21:40 离开安全区「住所」", isBlurred: false)
+                timelineRow(date: "昨天", event: "08:55 报平安", isBlurred: false)
+                timelineRow(date: "3天前", event: "18:20 在未知区域停留超过两小时", isBlurred: true)
+                timelineRow(date: "5天前", event: "07:30 报平安", isBlurred: true)
+            } else {
+                ForEach(coordinator.timeline.prefix(20)) { entry in
+                    timelineRow(
+                        date: formatDate(entry.timestamp),
+                        event: "\(formatTime(entry.timestamp)) \(entry.description)",
+                        isBlurred: false
+                    )
+                }
+            }
         }
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
         )
+    }
+
+    private func formatDate(_ date: Date) -> String {
+        let cal = Calendar.current
+        if cal.isDateInToday(date) { return "今天" }
+        if cal.isDateInYesterday(date) { return "昨天" }
+        let days = cal.dateComponents([.day], from: date, to: Date()).day ?? 0
+        return "\(days)天前"
+    }
+
+    private func formatTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter.string(from: date)
     }
 
     private func timelineRow(date: String, event: String, isBlurred: Bool) -> some View {
