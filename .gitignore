@@ -36,6 +36,17 @@ fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
 
+# Firebase credentials
+GoogleService-Info.plist
+
+# Node
+node_modules/
+
+# Firebase emulator data
+*-debug.log
+firestore-debug.log
+ui-debug.log
+
 # Temporary
 *.swp
 *~

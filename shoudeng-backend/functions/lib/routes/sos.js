@@ -1,0 +1,222 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const admin = __importStar(require("firebase-admin"));
+const uuid_1 = require("uuid");
+const auth_1 = require("../middleware/auth");
+const fcm_1 = require("../services/fcm");
+const router = (0, express_1.Router)();
+const db = admin.firestore();
+router.use(auth_1.authMiddleware);
+/**
+ * POST /v1/sos/trigger
+ * Trigger an SOS event from the protected person's device.
+ * Creates a Firestore document which triggers the onSOSCreated escalation chain.
+ */
+router.post("/trigger", async (req, res) => {
+    const { protectedPersonId, triggerMethod, latitude, longitude, batteryLevel, } = req.body;
+    if (!protectedPersonId) {
+        res.status(400).json({ error: "protectedPersonId is required" });
+        return;
+    }
+    const sosId = (0, uuid_1.v4)();
+    const now = admin.firestore.Timestamp.now();
+    try {
+        // Check for existing active SOS
+        const activeSnapshot = await db
+            .collection("sos_events")
+            .where("protectedPersonId", "==", protectedPersonId)
+            .where("resolvedAt", "==", null)
+            .limit(1)
+            .get();
+        if (!activeSnapshot.empty) {
+            // Return existing SOS event
+            const existing = activeSnapshot.docs[0];
+            res.json({
+                sosEventId: existing.id,
+                escalationState: existing.data().escalationState,
+                message: "SOS already active",
+            });
+            return;
+        }
+        const sosDoc = {
+            protectedPersonId,
+            triggeredAt: now,
+            triggerMethod: triggerMethod || "longPress",
+            latitude: latitude || null,
+            longitude: longitude || null,
+            accuracy: null,
+            batteryLevel: batteryLevel || null,
+            escalationState: "initiated",
+            resolvedAt: null,
+            resolvedBy: null,
+            resolution: null,
+            escalationLog: [],
+        };
+        await db.collection("sos_events").doc(sosId).set(sosDoc);
+        // Add timeline entry
+        const triggerLabels = {
+            longPress: "长按",
+            fallDetection: "摔倒检测",
+            watchQuickAction: "手表快捷操作",
+            bluetoothButton: "蓝牙按钮",
+            duressPassword: "胁迫密码",
+            voiceWakeWord: "语音唤醒",
+        };
+        const triggerLabel = triggerLabels[triggerMethod || "longPress"] || triggerMethod;
+        await db.collection("timeline_entries").add({
+            userId: protectedPersonId,
+            timestamp: now,
+            type: "sosTriggered",
+            description: `触发紧急求助（${triggerLabel}）`,
+            detail: null,
+        });
+        res.status(201).json({
+            sosEventId: sosId,
+            escalationState: "initiated",
+        });
+    }
+    catch (error) {
+        console.error("[SOS] trigger error:", error);
+        res.status(500).json({ error: "Failed to trigger SOS" });
+    }
+});
+/**
+ * POST /v1/sos/resolve
+ * Resolve an active SOS event (guardian "I've taken over" or protected person cancel).
+ */
+router.post("/resolve", async (req, res) => {
+    const { sosEventId, resolvedBy, resolution } = req.body;
+    if (!sosEventId || !resolvedBy || !resolution) {
+        res
+            .status(400)
+            .json({ error: "sosEventId, resolvedBy, and resolution are required" });
+        return;
+    }
+    try {
+        const sosRef = db.collection("sos_events").doc(sosEventId);
+        const sosDoc = await sosRef.get();
+        if (!sosDoc.exists) {
+            res.status(404).json({ error: "SOS event not found" });
+            return;
+        }
+        const sosData = sosDoc.data();
+        if (sosData.resolvedAt) {
+            res.status(409).json({ error: "SOS already resolved" });
+            return;
+        }
+        const now = admin.firestore.Timestamp.now();
+        await sosRef.update({
+            escalationState: "resolved",
+            resolvedAt: now,
+            resolvedBy,
+            resolution,
+        });
+        // Add timeline entry
+        const resolutionLabels = {
+            guardianConfirmedSafe: "守护者确认安全",
+            protectedCancelled: "取消了紧急求助",
+            responderHandled: "专员已处理",
+            falseAlarm: "误触",
+            timeout: "超时自动解除",
+        };
+        const resolutionLabel = resolutionLabels[resolution] || resolution;
+        await db.collection("timeline_entries").add({
+            userId: sosData.protectedPersonId,
+            timestamp: now,
+            type: "sosResolved",
+            description: resolutionLabel,
+            detail: null,
+        });
+        // Notify the protected person that a guardian has taken over
+        if (resolution === "guardianConfirmedSafe") {
+            const resolverDoc = await db.collection("users").doc(resolvedBy).get();
+            const resolverName = resolverDoc.exists
+                ? resolverDoc.data().displayName
+                : "守护者";
+            await (0, fcm_1.sendSOSResolvedNotification)(sosData.protectedPersonId, resolverName);
+        }
+        res.json({ success: true });
+    }
+    catch (error) {
+        console.error("[SOS] resolve error:", error);
+        res.status(500).json({ error: "Failed to resolve SOS" });
+    }
+});
+/**
+ * POST /v1/voice-call
+ * Request a voice call to a guardian as part of escalation.
+ * Delegates to Twilio service.
+ */
+router.post("/voice-call", async (req, res) => {
+    const { guardianId, sosEventId, protectedPersonName } = req.body;
+    if (!guardianId || !sosEventId) {
+        res
+            .status(400)
+            .json({ error: "guardianId and sosEventId are required" });
+        return;
+    }
+    try {
+        // Import dynamically to avoid initialization issues
+        const { initiateVoiceCall } = await Promise.resolve().then(() => __importStar(require("../services/twilio")));
+        const callbackUrl = `${req.protocol}://${req.get("host")}/v1/voice-callback`;
+        const callSid = await initiateVoiceCall(guardianId, sosEventId, protectedPersonName || "被守护者", callbackUrl);
+        // Update escalation log
+        if (callSid) {
+            const sosRef = db.collection("sos_events").doc(sosEventId);
+            await sosRef.update({
+                escalationState: "hop3_voiceCalling",
+                escalationLog: admin.firestore.FieldValue.arrayUnion({
+                    hop: 3,
+                    targetId: guardianId,
+                    sentAt: admin.firestore.Timestamp.now(),
+                    deliveredAt: null,
+                    readAt: null,
+                    respondedAt: null,
+                    response: null,
+                    callSid,
+                }),
+            });
+        }
+        res.json({ success: true, callSid });
+    }
+    catch (error) {
+        console.error("[SOS] voice-call error:", error);
+        res.status(500).json({ error: "Failed to initiate voice call" });
+    }
+});
+exports.default = router;
+//# sourceMappingURL=sos.js.map

@@ -40,7 +40,7 @@ final class LocalStore {
             guard let self else { return }
             let url = self.storeDir.appendingPathComponent(filename)
             guard let data = try? self.encoder.encode(value) else { return }
-            try? data.write(to: url, options: .atomic)
+            try? data.write(to: url, options: [.atomic, .completeFileProtection])
         }
     }
 

@@ -20,10 +20,14 @@ final class APIClient {
 
     private let config: Config
     private let session: URLSession
-    private let encoder: JSONEncoder
-    private let decoder: JSONDecoder
+    let encoder: JSONEncoder
+    let decoder: JSONDecoder
     private var accessToken: String?
     private let offlineQueue: OfflineQueue
+
+    /// Called when a 401 is received. The closure should attempt a token refresh
+    /// and return true if the token was refreshed successfully.
+    var onUnauthorized: (() async -> Bool)?
 
     init(config: Config, offlineQueue: OfflineQueue) {
         self.config = config
@@ -35,11 +39,9 @@ final class APIClient {
 
         self.encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
-        encoder.keyEncodingStrategy = .convertToSnakeCase
 
         self.decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
     }
 
     // MARK: - Token
@@ -156,6 +158,18 @@ final class APIClient {
                 }
                 return try decoder.decode(T.self, from: data)
             case 401:
+                // Attempt token refresh on first 401
+                if attempt == 0, let refresh = onUnauthorized {
+                    let refreshed = await refresh()
+                    if refreshed {
+                        // Rebuild request with new token
+                        var retryRequest = request
+                        if let token = self.accessToken {
+                            retryRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                        }
+                        return try await execute(retryRequest, attempt: attempt + 1)
+                    }
+                }
                 throw APIError.unauthorized
             case 403:
                 throw APIError.forbidden

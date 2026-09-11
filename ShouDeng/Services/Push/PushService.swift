@@ -48,7 +48,9 @@ final class PushService: NSObject {
 
         center.requestAuthorization(options: options) { [weak self] granted, error in
             if let error {
+                #if DEBUG
                 print("[PushService] Authorization error: \(error)")
+                #endif
             }
 
             self?.hasCriticalAlertPermission = granted
@@ -218,7 +220,9 @@ final class PushService: NSObject {
 
         UNUserNotificationCenter.current().add(request) { error in
             if let error {
+                #if DEBUG
                 print("[PushService] Failed to fire critical alert: \(error)")
+                #endif
             }
         }
     }

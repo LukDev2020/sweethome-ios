@@ -52,7 +52,7 @@ final class OfflineQueue {
                 handle.write(data)
                 handle.closeFile()
             } else {
-                try? data.write(to: self.fileURL, options: .atomic)
+                try? data.write(to: self.fileURL, options: [.atomic, .completeFileProtection])
             }
         }
     }

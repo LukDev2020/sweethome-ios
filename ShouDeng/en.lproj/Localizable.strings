@@ -1,0 +1,42 @@
+/* Login */
+"app.name" = "Velar Care";
+"app.tagline" = "Reach your family faster in emergencies";
+"login.phone.placeholder" = "Phone number";
+"login.code.placeholder" = "Verification code";
+"login.get.code" = "Get Code";
+"login.button" = "Log In";
+"login.countdown" = "%ds";
+"login.no.account" = "Don't have an account? ";
+"login.signup" = "Sign Up";
+
+/* Errors */
+"error.no.code" = "Please get a verification code first";
+"error.not.configured" = "Authentication service not configured";
+"error.invalid.code" = "Invalid code, please try again";
+"error.sms.failed" = "Failed to send code: ";
+"error.too.many" = "Too many requests. Please wait a few minutes and try again, or use a test phone number.";
+"error.region" = "SMS is not available in your region. Please contact support.";
+"error.user.not.found" = "This phone number is not registered. Redirecting to sign up...";
+
+/* Login - Security */
+"login.reset" = "Start Over";
+"login.locked.title" = "Account Locked";
+"login.locked.message" = "Too many failed attempts. Please contact the Velar Care team for assistance.";
+"login.locked.contact" = "Contact Support";
+"login.attempts.warning" = "%d attempts remaining";
+
+/* Signup */
+"signup.title" = "Sign Up";
+"signup.enter.phone" = "Enter phone number";
+"signup.enter.code" = "Enter verification code";
+"signup.code.sent" = "Sent to %@ %@";
+"signup.next" = "Next";
+"signup.profile.title" = "Complete Profile";
+"signup.name.placeholder" = "Your name";
+"signup.role.title" = "Your role";
+"signup.role.protected" = "Protected";
+"signup.role.protected.desc" = "Family will receive your safety signals";
+"signup.role.guardian" = "Guardian";
+"signup.role.guardian.desc" = "You will monitor family safety status";
+"signup.finish" = "Complete";
+"signup.back" = "Back";

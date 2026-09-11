@@ -4,42 +4,60 @@ struct RootView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @AppStorage("onboardingComplete") private var onboardingComplete = false
 
+    // TEMP: Set to true to bypass login during development
+    private let devBypassLogin = true
+
     var body: some View {
         Group {
-            switch coordinator.authManager.state {
-            case .unknown:
-                // Splash / loading
-                splashView
-
-            case .loggedOut:
-                // Auth flow
-                LoginView()
-                    .sheet(isPresented: $coordinator.showSignup) {
-                        SignupView()
+            if devBypassLogin {
+                // DEV BYPASS: skip login and onboarding
+                ZStack(alignment: .top) {
+                    Group {
+                        switch coordinator.userRole {
+                        case .protected_:
+                            ProtectedTabView()
+                        case .guardian:
+                            GuardianTabView()
+                        }
                     }
-
-            case .loggedIn:
-                // Authenticated — check onboarding
-                if !onboardingComplete {
-                    OnboardingView(isComplete: $onboardingComplete)
-                } else {
-                    ZStack(alignment: .top) {
-                        Group {
-                            switch coordinator.userRole {
-                            case .protected_:
-                                ProtectedTabView()
-                            case .guardian:
-                                GuardianTabView()
+                    #if DEBUG
+                    .overlay(alignment: .topTrailing) {
+                        portalSwitcher
+                    }
+                    #endif
+                    DegradationBannerView()
+                        .environmentObject(coordinator)
+                }
+            } else {
+                switch coordinator.authManager.state {
+                case .unknown:
+                    splashView
+                case .loggedOut:
+                    LoginView()
+                        .sheet(isPresented: $coordinator.showSignup) {
+                            SignupView()
+                        }
+                case .loggedIn:
+                    if !onboardingComplete {
+                        OnboardingView(isComplete: $onboardingComplete)
+                    } else {
+                        ZStack(alignment: .top) {
+                            Group {
+                                switch coordinator.userRole {
+                                case .protected_:
+                                    ProtectedTabView()
+                                case .guardian:
+                                    GuardianTabView()
+                                }
                             }
+                            #if DEBUG
+                            .overlay(alignment: .topTrailing) {
+                                portalSwitcher
+                            }
+                            #endif
+                            DegradationBannerView()
+                                .environmentObject(coordinator)
                         }
-                        // Dev-only: long press anywhere to switch portal
-                        .overlay(alignment: .topTrailing) {
-                            portalSwitcher
-                        }
-
-                        // Degradation banner
-                        DegradationBannerView()
-                            .environmentObject(coordinator)
                     }
                 }
             }
@@ -50,9 +68,11 @@ struct RootView: View {
 
     private var splashView: some View {
         VStack(spacing: 12) {
-            Image(systemName: "light.beacon.max")
-                .font(.system(size: 48))
-                .foregroundStyle(Color(red: 232/255, green: 163/255, blue: 61/255))
+            Image("AppLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 96, height: 96)
+                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
             Text("守灯")
                 .font(.system(size: 24, weight: .bold, design: .serif))
                 .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255))
@@ -61,6 +81,7 @@ struct RootView: View {
         .background(Color(.systemBackground))
     }
 
+    #if DEBUG
     // MARK: - Portal Switcher (development tool)
 
     private var portalSwitcher: some View {
@@ -96,4 +117,5 @@ struct RootView: View {
         .padding(.top, 54)
         .padding(.trailing, 16)
     }
+    #endif
 }

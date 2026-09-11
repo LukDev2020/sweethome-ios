@@ -325,10 +325,9 @@ struct ProtectedHomeView: View {
     }
 
     private func timeOfDay(_ tz: TimeZone) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH"
-        formatter.timeZone = tz
-        let hour = Int(formatter.string(from: Date())) ?? 12
+        var cal = Calendar.current
+        cal.timeZone = tz
+        let hour = cal.component(.hour, from: Date())
         if hour >= 6 && hour < 9 { return "清晨" }
         if hour >= 9 && hour < 12 { return "上午" }
         if hour >= 12 && hour < 14 { return "中午" }

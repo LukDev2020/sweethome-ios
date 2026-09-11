@@ -18,6 +18,8 @@ final class AppCoordinator: ObservableObject {
     @Published var currentRiskScores: [String: BaselineScorer.RiskScore] = [:]
     @Published var currentCoverage: DutyScheduler.DayCoverage?
     @Published var showSignup = false
+    @Published var signupPhone: String?
+    @Published var signupCountry: CountryCode?
     @Published var timeline: [TimelineEntry] = []
 
     // MARK: - Infrastructure
@@ -37,6 +39,8 @@ final class AppCoordinator: ObservableObject {
     let baselineScorer = BaselineScorer()
     let dutyScheduler = DutyScheduler()
     let deviceHealthMonitor = DeviceHealthMonitor()
+    let crashReporter = CrashReporter.shared
+    let storeKitManager: StoreKitManager
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -47,7 +51,23 @@ final class AppCoordinator: ObservableObject {
             baseURL: Self.resolveBaseURL()
         )
         apiClient = APIClient(config: config, offlineQueue: offlineQueue)
+        #if DEBUG
+        print("[AppCoordinator] API base URL: \(config.baseURL)")
+        #endif
         authManager = AuthManager(api: apiClient)
+        storeKitManager = StoreKitManager(apiClient: apiClient)
+
+        // Wire 401 auto-refresh: when server returns 401, attempt token refresh
+        apiClient.onUnauthorized = { [weak self] in
+            guard let self else { return false }
+            do {
+                try await self.authManager.refreshToken()
+                return true
+            } catch {
+                await MainActor.run { self.authManager.logout() }
+                return false
+            }
+        }
 
         wireServices()
         restoreLocalState()
@@ -61,7 +81,7 @@ final class AppCoordinator: ObservableObject {
             return override
         }
         #if DEBUG
-        return "http://localhost:8080"
+        return "http://127.0.0.1:5001/sweethome-d1edd/us-central1/api"
         #else
         return "https://api.shoudeng.app"
         #endif
@@ -98,6 +118,12 @@ final class AppCoordinator: ObservableObject {
                 switch state {
                 case .loggedIn(let userId):
                     UserDefaults.standard.set(userId, forKey: "currentUserId")
+                    // Set role from login/signup response immediately
+                    if let roleStr = self.authManager.lastLoginRole,
+                       let role = UserRole(rawValue: roleStr) {
+                        self.userRole = role
+                        self.localStore.saveUserRole(role)
+                    }
                     self.onLoginComplete()
                 case .loggedOut:
                     self.onLogout()
@@ -122,6 +148,9 @@ final class AppCoordinator: ObservableObject {
         myGuardians = []
         activeSOSEvent = nil
         timeline = []
+        showSignup = false
+        signupPhone = nil
+        signupCountry = nil
         localStore.clearAll()
         UserDefaults.standard.set(false, forKey: "onboardingComplete")
     }
@@ -452,6 +481,12 @@ final class AppCoordinator: ObservableObject {
             timeline = Array(timeline.prefix(200))
         }
         localStore.saveTimeline(timeline)
+    }
+
+    // MARK: - Subscription
+
+    func fetchSubscription() async {
+        await storeKitManager.refreshSubscriptionStatus()
     }
 
     // MARK: - Risk Score Refresh

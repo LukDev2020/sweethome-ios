@@ -3,6 +3,7 @@ import SwiftUI
 // MARK: - Signup View
 //
 // Phone + verification code + name + role selection.
+// Supports international phone numbers with country code picker.
 // Role determines which portal (Protected/Guardian) the user enters.
 
 struct SignupView: View {
@@ -13,6 +14,7 @@ struct SignupView: View {
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
 
+    @State private var selectedCountry = CountryCode.deviceDefault
     @State private var phone = ""
     @State private var code = ""
     @State private var displayName = ""
@@ -22,6 +24,7 @@ struct SignupView: View {
     @State private var errorMessage: String?
     @State private var countdown = 0
     @State private var countdownTimer: Timer?
+    @State private var showCountryPicker = false
 
     enum Step {
         case phone
@@ -72,11 +75,25 @@ struct SignupView: View {
                 Spacer()
             }
             .background(Color(.systemBackground))
-            .navigationTitle("注册")
+            .navigationTitle(NSLocalizedString("signup.title", comment: ""))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("返回") { dismiss() }
+                    Button(NSLocalizedString("signup.back", comment: "")) { dismiss() }
+                }
+            }
+            .sheet(isPresented: $showCountryPicker) {
+                CountryCodePicker(selected: $selectedCountry)
+            }
+            .onAppear {
+                // Pre-fill phone if redirected from login (unregistered user)
+                if let prefillPhone = coordinator.signupPhone {
+                    phone = prefillPhone
+                    coordinator.signupPhone = nil
+                }
+                if let prefillCountry = coordinator.signupCountry {
+                    selectedCountry = prefillCountry
+                    coordinator.signupCountry = nil
                 }
             }
             .onDisappear {
@@ -85,24 +102,49 @@ struct SignupView: View {
         }
     }
 
+    /// Full E.164 phone number
+    private var fullPhoneNumber: String {
+        let cleaned = phone.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
+        return "\(selectedCountry.dialCode)\(cleaned)"
+    }
+
     @ViewBuilder
     private var stepContent: some View {
         switch step {
         case .phone:
             VStack(spacing: 16) {
-                Text("输入手机号码")
+                Text(NSLocalizedString("signup.enter.phone", comment: ""))
                     .font(.system(size: 20, weight: .bold))
-                HStack {
-                    Text("+86")
-                        .font(.system(size: 15))
-                        .foregroundStyle(ink)
-                        .frame(width: 44)
-                    TextField("手机号码", text: $phone)
+                HStack(spacing: 0) {
+                    // Country code button
+                    Button {
+                        showCountryPicker = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(selectedCountry.flag)
+                                .font(.system(size: 18))
+                            Text(selectedCountry.dialCode)
+                                .font(.system(size: 15))
+                                .foregroundStyle(ink)
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 9, weight: .semibold))
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color(.secondarySystemBackground))
+                        )
+                    }
+
+                    TextField(NSLocalizedString("login.phone.placeholder", comment: ""), text: $phone)
                         .font(.system(size: 15))
                         .keyboardType(.phonePad)
                         .textContentType(.telephoneNumber)
+                        .padding(12)
                 }
-                .padding(12)
+                .padding(.horizontal, 4)
                 .background(
                     RoundedRectangle(cornerRadius: 10)
                         .stroke(Color(.separator).opacity(0.4), lineWidth: 1)
@@ -112,12 +154,12 @@ struct SignupView: View {
 
         case .code:
             VStack(spacing: 16) {
-                Text("输入验证码")
+                Text(NSLocalizedString("signup.enter.code", comment: ""))
                     .font(.system(size: 20, weight: .bold))
-                Text("已发送至 \(phone)")
+                Text(String(format: NSLocalizedString("signup.code.sent", comment: ""), selectedCountry.dialCode, phone))
                     .font(.system(size: 13))
                     .foregroundStyle(.secondary)
-                TextField("验证码", text: $code)
+                TextField(NSLocalizedString("login.code.placeholder", comment: ""), text: $code)
                     .font(.system(size: 15))
                     .keyboardType(.numberPad)
                     .textContentType(.oneTimeCode)
@@ -131,9 +173,9 @@ struct SignupView: View {
 
         case .profile:
             VStack(spacing: 16) {
-                Text("完善资料")
+                Text(NSLocalizedString("signup.profile.title", comment: ""))
                     .font(.system(size: 20, weight: .bold))
-                TextField("你的称呼", text: $displayName)
+                TextField(NSLocalizedString("signup.name.placeholder", comment: ""), text: $displayName)
                     .font(.system(size: 15))
                     .textContentType(.name)
                     .padding(12)
@@ -143,11 +185,15 @@ struct SignupView: View {
                     )
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("你的角色")
+                    Text(NSLocalizedString("signup.role.title", comment: ""))
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
-                    roleOption(.protected_, icon: "shield.fill", title: "被守护者", desc: "家人会收到你的安全信号")
-                    roleOption(.guardian, icon: "eye.fill", title: "守护者", desc: "你将关注家人的安全状态")
+                    roleOption(.protected_, icon: "shield.fill",
+                               title: NSLocalizedString("signup.role.protected", comment: ""),
+                               desc: NSLocalizedString("signup.role.protected.desc", comment: ""))
+                    roleOption(.guardian, icon: "eye.fill",
+                               title: NSLocalizedString("signup.role.guardian", comment: ""),
+                               desc: NSLocalizedString("signup.role.guardian.desc", comment: ""))
                 }
             }
             .padding(.horizontal, 32)
@@ -185,21 +231,24 @@ struct SignupView: View {
 
     private var buttonTitle: String {
         switch step {
-        case .phone: return countdown > 0 ? "\(countdown) 秒后重发" : "获取验证码"
-        case .code:  return "下一步"
-        case .profile: return "完成注册"
+        case .phone: return countdown > 0
+            ? String(format: NSLocalizedString("login.countdown", comment: ""), countdown)
+            : NSLocalizedString("login.get.code", comment: "")
+        case .code:  return NSLocalizedString("signup.next", comment: "")
+        case .profile: return NSLocalizedString("signup.finish", comment: "")
         }
     }
 
     private var buttonDisabled: Bool {
         if isLoading { return true }
         switch step {
-        case .phone: return phone.count < 8 || countdown > 0
+        case .phone: return phone.count < 4 || countdown > 0
         case .code: return code.count < 4
         case .profile: return displayName.trimmingCharacters(in: .whitespaces).isEmpty
         }
     }
 
+    @MainActor
     private func handleAction() async {
         errorMessage = nil
         isLoading = true
@@ -208,30 +257,34 @@ struct SignupView: View {
         do {
             switch step {
             case .phone:
-                try await coordinator.authManager.requestCode(phone: phone)
+                try await coordinator.authManager.requestCode(phone: fullPhoneNumber)
                 step = .code
                 startCountdown()
             case .code:
                 step = .profile
             case .profile:
                 try await coordinator.authManager.signup(
-                    phone: phone,
+                    phone: fullPhoneNumber,
                     code: code,
                     displayName: displayName,
                     role: selectedRole.rawValue
                 )
                 coordinator.userRole = selectedRole
+                coordinator.showSignup = false
             }
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
+    @MainActor
     private func startCountdown() {
         countdown = 60
-        countdownTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-            if countdown > 0 { countdown -= 1 }
-            else { countdownTimer?.invalidate() }
+        countdownTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [self] _ in
+            Task { @MainActor in
+                if countdown > 0 { countdown -= 1 }
+                else { countdownTimer?.invalidate() }
+            }
         }
     }
 }

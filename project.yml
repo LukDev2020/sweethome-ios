@@ -13,6 +13,11 @@ settings:
     MARKETING_VERSION: "1.0.0"
     CURRENT_PROJECT_VERSION: "1"
 
+packages:
+  firebase-ios-sdk:
+    url: https://github.com/firebase/firebase-ios-sdk
+    from: "11.0.0"
+
 targets:
   ShouDeng:
     type: application
@@ -21,6 +26,9 @@ targets:
       - path: ShouDeng
         excludes:
           - "**/*.md"
+    dependencies:
+      - package: firebase-ios-sdk
+        product: FirebaseAuth
     info:
       path: ShouDeng/Info.plist
       properties:
@@ -28,6 +36,7 @@ targets:
         CFBundleName: "ShouDeng"
         CFBundleShortVersionString: "1.0.0"
         CFBundleVersion: "1"
+        ITSAppUsesNonExemptEncryption: false
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
@@ -39,16 +48,45 @@ targets:
           - location
           - fetch
           - remote-notification
+          - processing
         NSLocationAlwaysAndWhenInUseUsageDescription: "守灯需要始终访问您的位置，以便在紧急情况下向家人报告您的位置，并在您进出安全区时通知守护者。"
         NSLocationWhenInUseUsageDescription: "守灯需要访问您的位置以显示您的当前位置，并在紧急求助时向家人发送位置信息。"
         NSMotionUsageDescription: "守灯使用运动传感器检测跌倒等异常情况，在您无法主动求助时自动通知家人。"
+        CFBundleURLTypes:
+          - CFBundleURLSchemes:
+              - "com.googleusercontent.apps.561070924965-7ggg6418ktbb9bndt30oqpm9fireoq2j"
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: false
+          NSExceptionDomains:
+            localhost:
+              NSExceptionAllowsInsecureHTTPLoads: true
+              NSIncludesSubdomains: true
     settings:
       base:
         INFOPLIST_FILE: ShouDeng/Info.plist
         PRODUCT_BUNDLE_IDENTIFIER: com.shoudeng.app
         CODE_SIGN_STYLE: Automatic
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     entitlements:
       path: ShouDeng/ShouDeng.entitlements
       properties:
         com.apple.developer.usernotifications.critical-alerts: true
-        aps-environment: development
+        aps-environment: production
+        com.apple.developer.in-app-payments:
+          - merchant.app.shoudeng
+
+  ShouDengTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: ShouDengTests
+        excludes:
+          - "**/*.md"
+    dependencies:
+      - target: ShouDeng
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.shoudeng.app.tests
+        GENERATE_INFOPLIST_FILE: "YES"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/ShouDeng.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ShouDeng"
+        BUNDLE_LOADER: "$(TEST_HOST)"

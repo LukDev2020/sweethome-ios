@@ -1,4 +1,5 @@
 import SwiftUI
+import StoreKit
 
 // MARK: - Screen B6: Plan & Billing
 //
@@ -6,6 +7,7 @@ import SwiftUI
 //   - Current plan card with line items & monthly total
 //   - "What this money did this month" panel
 //   - Upsell for family package
+//   - StoreKit 2 purchase integration
 
 struct GuardianPlanBillingView: View {
     @EnvironmentObject var coordinator: AppCoordinator
@@ -13,6 +15,8 @@ struct GuardianPlanBillingView: View {
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let pro = Color(red: 107/255, green: 92/255, blue: 165/255)
+
+    @State private var showRestoreAlert = false
 
     var body: some View {
         ScrollView {
@@ -27,48 +31,82 @@ struct GuardianPlanBillingView: View {
                 }
                 .padding(.top, 8)
 
-                // Bill card
-                billCard
+                // Current subscription status
+                currentPlanCard
+
+                // Available plans
+                if !coordinator.storeKitManager.products.isEmpty {
+                    plansList
+                }
 
                 // Value recap
                 valueRecapPanel
 
-                // Upsell
-                upsellCard
+                // Restore purchases
+                restoreButton
+
+                // Error message
+                if let error = coordinator.storeKitManager.errorMessage {
+                    Text(error)
+                        .font(.system(size: 12))
+                        .foregroundStyle(.red)
+                        .padding(.horizontal, 12)
+                }
             }
             .padding(.horizontal, 16)
         }
         .background(Color(.systemBackground))
         .navigationTitle("方案与账单")
         .navigationBarTitleDisplayMode(.inline)
+        .task {
+            await coordinator.storeKitManager.fetchProducts()
+            await coordinator.storeKitManager.refreshSubscriptionStatus()
+        }
+        .alert("恢复购买", isPresented: $showRestoreAlert) {
+            Button("确定") {}
+        } message: {
+            Text(coordinator.storeKitManager.purchasedPlanId != nil
+                 ? "已恢复您的订阅"
+                 : "未找到可恢复的订阅")
+        }
     }
 
-    // MARK: - Bill Card
+    // MARK: - Current Plan Card
 
-    private var billCard: some View {
+    private var currentPlanCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("守护团队 + 专业响应")
-                .font(.system(size: 14, weight: .semibold))
-            Text("下次扣款 10 月 2 日")
-                .font(.system(size: 11.5))
-                .foregroundStyle(.secondary)
+            if let status = coordinator.storeKitManager.subscriptionStatus, status.isActive {
+                HStack {
+                    Image(systemName: "checkmark.seal.fill")
+                        .foregroundStyle(safe)
+                    Text(coordinator.storeKitManager.planName(for: status.productId))
+                        .font(.system(size: 14, weight: .semibold))
+                }
 
-            Divider().padding(.vertical, 4)
+                if let expires = status.expiresDate {
+                    Text("有效期至 \(expires.formatted(.dateTime.year().month().day()))")
+                        .font(.system(size: 11.5))
+                        .foregroundStyle(.secondary)
+                }
 
-            billLine("守护团队 · 全家共用", amount: "¥28")
-            billLine("专业响应 · 小雨", amount: "¥98")
-            billLine("专业响应 · 奶奶", amount: "¥98")
-
-            Divider().padding(.vertical, 4)
-
-            HStack {
-                Text("每月合计")
-                    .font(.system(size: 13, weight: .medium))
-                Spacer()
-                Text("¥224")
-                    .font(.system(size: 15, weight: .bold, design: .serif))
+                if status.willAutoRenew {
+                    Text("自动续订已开启")
+                        .font(.system(size: 11))
+                        .foregroundStyle(safe)
+                }
+            } else {
+                HStack {
+                    Image(systemName: "gift")
+                        .foregroundStyle(.secondary)
+                    Text("免费版")
+                        .font(.system(size: 14, weight: .semibold))
+                }
+                Text("升级获得更强大的守护功能")
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(.secondary)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 12)
@@ -76,16 +114,81 @@ struct GuardianPlanBillingView: View {
         )
     }
 
-    private func billLine(_ label: String, amount: String) -> some View {
-        HStack {
-            Text(label)
-                .font(.system(size: 13))
-                .foregroundStyle(.secondary)
-            Spacer()
-            Text(amount)
-                .font(.system(size: 13, design: .serif))
+    // MARK: - Plans List
+
+    private var plansList: some View {
+        VStack(spacing: 8) {
+            ForEach(coordinator.storeKitManager.products, id: \.id) { product in
+                planCard(product)
+            }
         }
-        .padding(.vertical, 2)
+    }
+
+    private func planCard(_ product: Product) -> some View {
+        let planId = coordinator.storeKitManager.planId(for: product)
+        let isCurrentPlan = coordinator.storeKitManager.purchasedPlanId == planId
+
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(coordinator.storeKitManager.planName(for: product.id))
+                        .font(.system(size: 14, weight: .semibold))
+                    Text(planDescription(planId))
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                VStack(alignment: .trailing) {
+                    Text(product.displayPrice)
+                        .font(.system(size: 15, weight: .bold, design: .serif))
+                    Text("/月")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            if isCurrentPlan {
+                Text("当前方案")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(safe)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(safe.opacity(0.1))
+                    .clipShape(Capsule())
+            } else {
+                Button {
+                    Task {
+                        let success = await coordinator.storeKitManager.purchase(product)
+                        if success {
+                            await coordinator.fetchSubscription()
+                        }
+                    }
+                } label: {
+                    Text("订阅")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .background(pro)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+                .disabled(coordinator.storeKitManager.isLoading)
+            }
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(isCurrentPlan ? safe.opacity(0.5) : Color(.separator).opacity(0.3), lineWidth: isCurrentPlan ? 2 : 1)
+        )
+    }
+
+    private func planDescription(_ planId: String) -> String {
+        switch planId {
+        case "guardian_team": return "无限守护者 · 90天时间线 · 值班表 · PDF导出"
+        case "pro_response": return "语音呼叫升级 · 短信回退 · 优先支持"
+        case "family_bundle": return "全部Pro功能 · 最多4位被守护者 · 家庭仪表板"
+        default: return ""
+        }
     }
 
     // MARK: - Value Recap
@@ -96,7 +199,6 @@ struct GuardianPlanBillingView: View {
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
             valueRow("响应中心待命", value: "720 小时")
-            valueRow("专员实际介入", value: "1 次 · 8 月 14 日")
             valueRow("失联预警拦截", value: "3 次")
             valueRow("覆盖的时区缺口", value: "每日 4 小时")
         }
@@ -118,23 +220,20 @@ struct GuardianPlanBillingView: View {
         .padding(.vertical, 2)
     }
 
-    // MARK: - Upsell
+    // MARK: - Restore Button
 
-    private var upsellCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("爸爸和弟弟尚未开通专业响应。四人套餐 ¥288，比单独订阅省 ¥104。")
-                .font(.system(size: 12))
-                .foregroundStyle(.secondary)
-            Button {} label: {
-                Text("查看全家套餐")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(pro)
+    private var restoreButton: some View {
+        Button {
+            Task {
+                await coordinator.storeKitManager.restorePurchases()
+                showRestoreAlert = true
             }
+        } label: {
+            Text("恢复购买")
+                .font(.system(size: 13))
+                .foregroundStyle(pro)
         }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(pro.opacity(0.06))
-        )
+        .disabled(coordinator.storeKitManager.isLoading)
+        .padding(.top, 4)
     }
 }

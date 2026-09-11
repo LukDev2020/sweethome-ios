@@ -5,6 +5,10 @@
 	<key>com.apple.developer.usernotifications.critical-alerts</key>
 	<true/>
 	<key>aps-environment</key>
-	<string>development</string>
+	<string>production</string>
+	<key>com.apple.developer.in-app-payments</key>
+	<array>
+		<string>merchant.app.shoudeng</string>
+	</array>
 </dict>
 </plist>

@@ -170,3 +170,23 @@ struct TimelineResponse: Codable {
     let entries: [TimelineEntry]
     let hasMore: Bool
 }
+
+// MARK: - Subscription
+
+struct SubscriptionResponse: Codable {
+    let planId: String
+    let status: String
+    let expiresAt: String?
+    let features: [String]
+}
+
+// MARK: - Data Export
+
+struct DataExportRequest: Codable {
+    let userId: String
+    let format: String
+}
+
+// MARK: - Empty Body (for POST with no payload)
+
+struct EmptyBody: Codable {}

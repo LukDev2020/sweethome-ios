@@ -17,6 +17,10 @@ struct ProtectedSettingsView: View {
     @State private var longPressEnabled = true
     @State private var watchEnabled = true
     @State private var silentMode = false
+    @State private var showPrivacy = false
+    @State private var showAbout = false
+    @State private var showDeleteConfirm = false
+    @State private var showExportAlert = false
 
     var body: some View {
         ScrollView {
@@ -40,6 +44,9 @@ struct ProtectedSettingsView: View {
                 // Data
                 dataPanel
 
+                // Legal & About
+                legalPanel
+
                 Text("求助方式给三种冗余：手机没在手上时，手表或实体按钮仍能触发。")
                     .font(.system(size: 10.5))
                     .foregroundStyle(.secondary.opacity(0.7))
@@ -51,6 +58,25 @@ struct ProtectedSettingsView: View {
         .background(Color(.systemBackground))
         .navigationTitle("设置")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showPrivacy) {
+            PrivacyPolicyView()
+        }
+        .sheet(isPresented: $showAbout) {
+            AboutView()
+        }
+        .alert("确认注销", isPresented: $showDeleteConfirm) {
+            Button("取消", role: .cancel) {}
+            Button("永久删除", role: .destructive) {
+                Task { await deleteAccount() }
+            }
+        } message: {
+            Text("注销账号将永久删除您的所有数据，此操作不可撤销。")
+        }
+        .alert("数据导出", isPresented: $showExportAlert) {
+            Button("确定") {}
+        } message: {
+            Text("导出请求已发送，数据将在 24 小时内通过邮件发送给您。")
+        }
     }
 
     // MARK: - SOS Trigger Panel
@@ -97,14 +123,63 @@ struct ProtectedSettingsView: View {
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
             fixedRow("位置保留时长", value: "90 天后自动删除", isWarning: false)
-            fixedRow("导出我的全部数据", value: "可用", isWarning: false)
-            fixedRow("注销账号", value: "永久删除", isWarning: true)
+            Button { showExportAlert = true } label: {
+                fixedRow("导出我的全部数据", value: "请求导出 →", isWarning: false)
+            }
+            .buttonStyle(.plain)
+            Button { showDeleteConfirm = true } label: {
+                fixedRow("注销账号", value: "永久删除", isWarning: true)
+            }
+            .buttonStyle(.plain)
         }
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
         )
+    }
+
+    // MARK: - Legal Panel
+
+    private var legalPanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("法律与关于")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+            Button { showPrivacy = true } label: {
+                fixedRow("隐私政策与服务条款", value: "查看 →", isWarning: false)
+            }
+            .buttonStyle(.plain)
+            Button { showAbout = true } label: {
+                fixedRow("关于守灯", value: "v1.0.0", isWarning: false)
+            }
+            .buttonStyle(.plain)
+            Button { coordinator.authManager.logout() } label: {
+                fixedRow("退出登录", value: "", isWarning: true)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    // MARK: - Account Deletion
+
+    private func deleteAccount() async {
+        do {
+            let _: EmptyResponse = try await coordinator.apiClient.post(
+                "/v1/user/delete",
+                body: EmptyBody()
+            )
+            coordinator.authManager.logout()
+        } catch {
+            #if DEBUG
+            print("[Settings] Delete account failed: \(error)")
+            #endif
+        }
     }
 
     private func toggleRow(_ label: String, isOn: Binding<Bool>) -> some View {

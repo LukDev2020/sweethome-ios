@@ -271,7 +271,9 @@ final class EscalationEngine {
 
             if let lastHop = session.hops.last, !lastHop.isAcknowledged {
                 self.activeSession?.state = .exhausted
+                #if DEBUG
                 print("[EscalationEngine] All voice call attempts exhausted")
+                #endif
             }
         }
     }

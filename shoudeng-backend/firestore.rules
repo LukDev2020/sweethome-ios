@@ -1,0 +1,93 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: check if request is from authenticated user
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Helper: check if request user matches document owner
+    function isOwner(userId) {
+      return isAuth() && request.auth.uid == userId;
+    }
+
+    // Helper: check if user is a guardian of the protected person
+    function isGuardianOf(protectedPersonId) {
+      return isAuth() && exists(/databases/$(database)/documents/guardian_links/$(request.auth.uid + '_' + protectedPersonId))
+        && get(/databases/$(database)/documents/guardian_links/$(request.auth.uid + '_' + protectedPersonId)).data.status == 'active';
+    }
+
+    // Users — read/write own profile only
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
+    }
+
+    // Guardian links — read if you are either side
+    match /guardian_links/{linkId} {
+      allow read: if isAuth() && (
+        resource.data.guardianId == request.auth.uid ||
+        resource.data.protectedPersonId == request.auth.uid
+      );
+      allow create: if isAuth();
+      allow update: if isAuth() && (
+        resource.data.guardianId == request.auth.uid ||
+        resource.data.protectedPersonId == request.auth.uid
+      );
+    }
+
+    // SOS events — read if involved, write via Cloud Functions only
+    match /sos_events/{sosId} {
+      allow read: if isAuth();
+      allow write: if false; // Server-side only via admin SDK
+    }
+
+    // Safe zones — owner only
+    match /safe_zones/{zoneId} {
+      allow read, write: if isAuth() && resource.data.userId == request.auth.uid;
+      allow create: if isAuth();
+    }
+
+    // Duty schedules — read if involved
+    match /duty_schedules/{scheduleId} {
+      allow read: if isAuth();
+      allow write: if false; // Server-side only
+    }
+
+    // Invites — creator can read, anyone can accept
+    match /invites/{inviteId} {
+      allow read: if isAuth();
+      allow create: if isAuth();
+      allow update: if isAuth();
+    }
+
+    // Device tokens — own tokens only
+    match /device_tokens/{tokenId} {
+      allow read, write: if isAuth();
+    }
+
+    // Timeline entries — own entries only
+    match /timeline_entries/{entryId} {
+      allow read: if isAuth() && resource.data.userId == request.auth.uid;
+      allow write: if false; // Server-side only
+    }
+
+    // Evidence holds — guardians create, server manages
+    match /evidence_holds/{holdId} {
+      allow read: if isAuth();
+      allow write: if false; // Server-side only
+    }
+
+    // Integrity proofs — read only
+    match /integrity_proofs/{date} {
+      allow read: if isAuth();
+      allow write: if false; // Server-side only
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
