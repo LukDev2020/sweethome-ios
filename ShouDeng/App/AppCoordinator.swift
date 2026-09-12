@@ -8,6 +8,9 @@ import Combine
 
 final class AppCoordinator: ObservableObject {
 
+    // TEMP: Set to true to bypass login during development
+    let devBypassLogin = true
+
     // MARK: - Published State
 
     @Published var currentUser: User?
@@ -58,9 +61,13 @@ final class AppCoordinator: ObservableObject {
         authManager = AuthManager(api: apiClient)
         storeKitManager = StoreKitManager(apiClient: apiClient)
 
-        // Wire 401 auto-refresh: when server returns 401, attempt token refresh
+        // Wire 401 auto-refresh: when server returns 401, attempt token refresh.
+        // In dev bypass mode, suppress logout to avoid wiping local state.
         apiClient.onUnauthorized = { [weak self] in
             guard let self else { return false }
+            #if DEBUG
+            if self.devBypassLogin { return false }
+            #endif
             do {
                 try await self.authManager.refreshToken()
                 return true
@@ -94,6 +101,25 @@ final class AppCoordinator: ObservableObject {
         if let user = localStore.loadCurrentUser() {
             currentUser = user
         }
+        #if DEBUG
+        // In dev bypass mode, ensure a default user exists so profile/settings work
+        if devBypassLogin && currentUser == nil {
+            let devUser = User(
+                id: "dev_local_user",
+                displayName: "",
+                role: .protected_,
+                avatarInitial: "?",
+                timeZone: .current,
+                countryCode: "CN",
+                cityName: "",
+                createdAt: Date()
+            )
+            currentUser = devUser
+            print("[AppCoordinator] Created dev seed user (empty profile)")
+        } else if let u = currentUser {
+            print("[AppCoordinator] Restored user: '\(u.displayName)' city='\(u.cityName)'")
+        }
+        #endif
         if let role = localStore.loadUserRole() {
             userRole = role
         }
@@ -101,6 +127,7 @@ final class AppCoordinator: ObservableObject {
         protectedPersons = localStore.loadProtectedPersons()
         activeSOSEvent = localStore.loadActiveSOSEvent()
         timeline = localStore.loadTimeline()
+        familyPosts = localStore.loadFamilyPosts()
 
         // Load safe zones into location manager
         let zones = localStore.loadSafeZones()
@@ -492,14 +519,22 @@ final class AppCoordinator: ObservableObject {
 
     func fetchFamilyPosts() async {
         do {
-            let posts: [FamilyPost] = try await apiClient.get("/v1/family/posts")
+            let serverPosts: [FamilyPost] = try await apiClient.get("/v1/family/posts")
             await MainActor.run {
-                self.familyPosts = posts
+                // Merge: keep local-only posts, add/update server posts
+                let serverIds = Set(serverPosts.map(\.id))
+                let localOnly = familyPosts.filter { !serverIds.contains($0.id) }
+                var merged = serverPosts
+                merged.append(contentsOf: localOnly)
+                merged.sort { $0.createdAt > $1.createdAt }
+                self.familyPosts = merged
+                persistFamilyPosts()
             }
         } catch {
             #if DEBUG
             print("[Coordinator] Failed to fetch family posts: \(error)")
             #endif
+            // On failure, keep existing local posts — do NOT clear
         }
     }
 
@@ -514,6 +549,7 @@ final class AppCoordinator: ObservableObject {
             authorId: currentUser?.id ?? "",
             authorName: currentUser?.displayName ?? "",
             authorInitial: currentUser?.avatarInitial ?? "?",
+            authorAvatarPath: currentUser?.avatarLocalPath,
             text: text,
             mediaURLs: mediaURLs,
             createdAt: Date(),
@@ -522,6 +558,7 @@ final class AppCoordinator: ObservableObject {
         )
         await MainActor.run {
             familyPosts.insert(post, at: 0)
+            persistFamilyPosts()
         }
     }
 
@@ -537,6 +574,7 @@ final class AppCoordinator: ObservableObject {
                 authorId: currentUser?.id ?? "",
                 authorName: currentUser?.displayName ?? "",
                 authorInitial: currentUser?.avatarInitial ?? "?",
+                authorAvatarPath: currentUser?.avatarLocalPath,
                 text: text,
                 createdAt: Date()
             )
@@ -545,12 +583,17 @@ final class AppCoordinator: ObservableObject {
                     familyPosts[idx].comments.append(comment)
                     familyPosts[idx].commentCount += 1
                 }
+                persistFamilyPosts()
             }
         } catch {
             #if DEBUG
             print("[Coordinator] Failed to add comment: \(error)")
             #endif
         }
+    }
+
+    func persistFamilyPosts() {
+        localStore.saveFamilyPosts(familyPosts)
     }
 
     func uploadMedia(data: Data, mimeType: String) async throws -> String {

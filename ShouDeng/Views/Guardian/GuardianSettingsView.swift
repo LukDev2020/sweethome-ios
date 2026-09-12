@@ -13,11 +13,14 @@ struct GuardianSettingsView: View {
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
 
+    private let pro = Color(red: 107/255, green: 92/255, blue: 165/255)
+
     @State private var showProfileEdit = false
     @State private var showPrivacy = false
     @State private var showAbout = false
     @State private var showDeleteConfirm = false
     @State private var showExportAlert = false
+    @State private var showRoleSwitchInfo = false
 
     @AppStorage("notif_sos_alerts") private var notifSOS = true
     @AppStorage("notif_checkin_overdue") private var notifCheckinOverdue = true
@@ -28,17 +31,16 @@ struct GuardianSettingsView: View {
             ScrollView {
                 VStack(spacing: 12) {
                     // Header
-                    VStack(spacing: 2) {
-                        Text("设置")
-                            .font(.system(size: 20, weight: .bold))
-                        Text("守护者偏好")
-                            .font(.system(size: 12))
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.top, 8)
+                    Text("守护者偏好")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 8)
 
                     // Profile
                     profilePanel
+
+                    // Role
+                    rolePanel
 
                     // Subscription
                     subscriptionPanel
@@ -54,6 +56,12 @@ struct GuardianSettingsView: View {
 
                     // Legal & About
                     legalPanel
+
+                    #if DEBUG
+                    devPanel
+                    #endif
+
+                    Spacer().frame(height: 24)
                 }
                 .padding(.horizontal, 16)
             }
@@ -83,6 +91,11 @@ struct GuardianSettingsView: View {
             } message: {
                 Text("导出请求已发送，数据将在 24 小时内通过邮件发送给您。")
             }
+            .alert("切换角色", isPresented: $showRoleSwitchInfo) {
+                Button("我知道了") {}
+            } message: {
+                Text("切换为被守护者后，您将不再收到被守护者的安全信号，且需要至少添加一位守护者才能获得保护。")
+            }
             .onChange(of: notifSOS) { coordinator.syncNotificationPrefs() }
             .onChange(of: notifCheckinOverdue) { coordinator.syncNotificationPrefs() }
             .onChange(of: notifFamilyFeed) { coordinator.syncNotificationPrefs() }
@@ -99,14 +112,7 @@ struct GuardianSettingsView: View {
 
             Button { showProfileEdit = true } label: {
                 HStack(spacing: 10) {
-                    ZStack {
-                        Circle()
-                            .fill(Color(.systemGray5))
-                            .frame(width: 36, height: 36)
-                        Text(coordinator.currentUser?.avatarInitial ?? "?")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(ink)
-                    }
+                    AvatarView(user: coordinator.currentUser, size: 36)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(coordinator.currentUser?.displayName ?? "未设置")
                             .font(.system(size: 13, weight: .medium))
@@ -219,6 +225,11 @@ struct GuardianSettingsView: View {
                 .tint(safe)
             }
             .padding(.vertical, 2)
+            if !langManager.current.isFullySupported {
+                Text("当前仅登录页面支持此语言，主界面将逐步适配")
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(.secondary.opacity(0.7))
+            }
         }
         .padding(12)
         .background(
@@ -294,6 +305,105 @@ struct GuardianSettingsView: View {
                 .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
         )
     }
+
+    // MARK: - Role Panel
+
+    private var rolePanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("当前角色")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 8) {
+                Image(systemName: "eye.fill")
+                    .font(.system(size: 14))
+                    .foregroundStyle(pro)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("守护者")
+                        .font(.system(size: 13, weight: .medium))
+                    Text("您正在关注家人的安全状态")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+            .padding(.vertical, 2)
+
+            Button { showRoleSwitchInfo = true } label: {
+                HStack {
+                    Text("申请切换为被守护者")
+                        .font(.system(size: 13))
+                    Spacer()
+                    Text("需确认")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.vertical, 2)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    // MARK: - Dev Panel
+
+    #if DEBUG
+    private var devPanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("开发者选项")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+
+            HStack {
+                Text("切换角色视图").font(.system(size: 13))
+                Spacer()
+                Button {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                        coordinator.userRole = coordinator.userRole == .protected_ ? .guardian : .protected_
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: coordinator.userRole == .protected_ ? "shield.fill" : "eye.fill")
+                            .font(.system(size: 10))
+                        Text(coordinator.userRole == .protected_ ? "被守护者" : "守护者")
+                            .font(.system(size: 11, weight: .medium))
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.system(size: 9))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(
+                        Capsule()
+                            .fill(coordinator.userRole == .protected_ ? safe : pro)
+                    )
+                }
+            }
+            .padding(.vertical, 2)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.orange.opacity(0.4), lineWidth: 1)
+        )
+        .overlay(alignment: .topTrailing) {
+            Text("DEV")
+                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 5)
+                .padding(.vertical, 2)
+                .background(Capsule().fill(.orange))
+                .offset(x: -8, y: -8)
+        }
+    }
+    #endif
 
     // MARK: - Helpers
 

@@ -134,6 +134,16 @@ final class LocalStore {
         load(filename: "timeline.json") ?? []
     }
 
+    // MARK: - Family Posts
+
+    func saveFamilyPosts(_ posts: [FamilyPost]) {
+        save(posts, filename: "family_posts.json")
+    }
+
+    func loadFamilyPosts() -> [FamilyPost] {
+        load(filename: "family_posts.json") ?? []
+    }
+
     // MARK: - Clear All
 
     func clearAll() {

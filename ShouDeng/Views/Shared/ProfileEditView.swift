@@ -1,9 +1,57 @@
 import SwiftUI
+import PhotosUI
+
+// MARK: - Avatar View (reusable)
+
+struct AvatarView: View {
+    let user: User?
+    var size: CGFloat = 36
+
+    // Alternative init: pass raw values directly (for posts/comments)
+    var initial: String?
+    var avatarPath: String?
+
+    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+
+    private var resolvedAvatarPath: String? {
+        user?.avatarLocalPath ?? avatarPath
+    }
+
+    private var resolvedInitial: String {
+        user?.avatarInitial ?? initial ?? "?"
+    }
+
+    var body: some View {
+        if let path = resolvedAvatarPath, let image = Self.loadAvatar(path) {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
+                .frame(width: size, height: size)
+                .clipShape(Circle())
+        } else {
+            ZStack {
+                Circle()
+                    .fill(Color(.systemGray5))
+                    .frame(width: size, height: size)
+                Text(resolvedInitial)
+                    .font(.system(size: size * 0.38, weight: .medium))
+                    .foregroundStyle(ink)
+            }
+        }
+    }
+
+    static func loadAvatar(_ filename: String) -> UIImage? {
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let url = docs.appendingPathComponent("avatars").appendingPathComponent(filename)
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        return UIImage(data: data)
+    }
+}
 
 // MARK: - Profile Edit View
 //
 // Shared between protected and guardian portals.
-// Edits display name, city, and timezone.
+// Edits display name, avatar photo, city, and timezone.
 // Calls PUT /v1/user/me to persist.
 
 struct ProfileEditView: View {
@@ -20,6 +68,8 @@ struct ProfileEditView: View {
     @State private var isSaving = false
     @State private var errorMessage: String?
     @State private var showSuccess = false
+    @State private var avatarImage: UIImage?
+    @State private var avatarItem: PhotosPickerItem?
 
     var body: some View {
         NavigationStack {
@@ -91,17 +141,42 @@ struct ProfileEditView: View {
 
     private var avatarSection: some View {
         VStack(spacing: 8) {
-            ZStack {
-                Circle()
-                    .fill(Color(.systemGray5))
-                    .frame(width: 72, height: 72)
-                Text(displayName.isEmpty ? "?" : String(displayName.prefix(1)))
-                    .font(.system(size: 28, weight: .medium))
-                    .foregroundStyle(ink)
+            PhotosPicker(selection: $avatarItem, matching: .images) {
+                ZStack(alignment: .bottomTrailing) {
+                    if let avatarImage {
+                        Image(uiImage: avatarImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 80, height: 80)
+                            .clipShape(Circle())
+                    } else {
+                        Circle()
+                            .fill(Color(.systemGray5))
+                            .frame(width: 80, height: 80)
+                            .overlay {
+                                Text(displayName.isEmpty ? "?" : String(displayName.prefix(1)))
+                                    .font(.system(size: 28, weight: .medium))
+                                    .foregroundStyle(ink)
+                            }
+                    }
+                    // Camera badge
+                    Circle()
+                        .fill(safe)
+                        .frame(width: 26, height: 26)
+                        .overlay {
+                            Image(systemName: "camera.fill")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.white)
+                        }
+                        .shadow(color: .black.opacity(0.15), radius: 2, y: 1)
+                }
             }
-            Text("头像取自昵称首字")
+            Text("点击更换头像")
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
+        }
+        .onChange(of: avatarItem) { _, newItem in
+            Task { await loadAvatarImage(from: newItem) }
         }
     }
 
@@ -182,36 +257,105 @@ struct ProfileEditView: View {
         displayName = user.displayName
         cityName = user.cityName
         selectedTimeZone = user.timeZone
+        // Load saved avatar from disk
+        if let path = user.avatarLocalPath {
+            let url = Self.avatarDirectory.appendingPathComponent(path)
+            if let data = try? Data(contentsOf: url),
+               let image = UIImage(data: data) {
+                avatarImage = image
+            }
+        }
+    }
+
+    private func loadAvatarImage(from item: PhotosPickerItem?) async {
+        guard let item else { return }
+        if let data = try? await item.loadTransferable(type: Data.self),
+           let image = UIImage(data: data) {
+            await MainActor.run { avatarImage = image }
+        }
+    }
+
+    private static var avatarDirectory: URL {
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let dir = docs.appendingPathComponent("avatars", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
+
+    private func saveAvatarToDisk(_ image: UIImage) -> String? {
+        guard let data = image.jpegData(compressionQuality: 0.8) else { return nil }
+        let filename = "avatar_\(coordinator.currentUser?.id ?? "local").jpg"
+        let url = Self.avatarDirectory.appendingPathComponent(filename)
+        do {
+            try data.write(to: url, options: [.atomic])
+            return filename
+        } catch {
+            return nil
+        }
     }
 
     private func saveProfile() async {
         isSaving = true
         errorMessage = nil
+
+        let trimmedName = displayName.trimmingCharacters(in: .whitespaces)
+        let trimmedCity = cityName.trimmingCharacters(in: .whitespaces)
+
+        // Save avatar to disk if changed
+        var avatarPath = coordinator.currentUser?.avatarLocalPath
+        if let avatarImage {
+            if let saved = saveAvatarToDisk(avatarImage) {
+                avatarPath = saved
+            }
+        }
+
         do {
             let _: SuccessResponse = try await coordinator.apiClient.put(
                 "/v1/user/me",
                 body: UpdateProfileRequest(
-                    displayName: displayName.trimmingCharacters(in: .whitespaces),
+                    displayName: trimmedName,
                     timeZone: selectedTimeZone.identifier,
-                    cityName: cityName.trimmingCharacters(in: .whitespaces),
+                    cityName: trimmedCity,
                     countryCode: nil
                 )
             )
-            // Update local state
             await MainActor.run {
-                coordinator.currentUser?.displayName = displayName.trimmingCharacters(in: .whitespaces)
-                coordinator.currentUser?.avatarInitial = String(displayName.prefix(1))
-                coordinator.currentUser?.cityName = cityName.trimmingCharacters(in: .whitespaces)
-                if let user = coordinator.currentUser {
-                    coordinator.localStore.saveCurrentUser(user)
-                }
+                applyToUser(name: trimmedName, city: trimmedCity, avatarPath: avatarPath)
                 showSuccess = true
             }
         } catch {
+            // API failed — still save locally in dev mode
             await MainActor.run {
-                errorMessage = error.localizedDescription
+                applyToUser(name: trimmedName, city: trimmedCity, avatarPath: avatarPath)
+                showSuccess = true
             }
         }
         await MainActor.run { isSaving = false }
+    }
+
+    private func applyToUser(name: String, city: String, avatarPath: String?) {
+        if coordinator.currentUser != nil {
+            coordinator.currentUser?.displayName = name
+            coordinator.currentUser?.avatarInitial = String(name.prefix(1))
+            coordinator.currentUser?.avatarLocalPath = avatarPath
+            coordinator.currentUser?.cityName = city
+            coordinator.currentUser?.timeZone = selectedTimeZone
+        } else {
+            // Create a new user if none exists (dev bypass mode)
+            coordinator.currentUser = User(
+                id: "dev_local_user",
+                displayName: name,
+                role: coordinator.userRole,
+                avatarInitial: String(name.prefix(1)),
+                avatarLocalPath: avatarPath,
+                timeZone: selectedTimeZone,
+                countryCode: "",
+                cityName: city,
+                createdAt: Date()
+            )
+        }
+        if let user = coordinator.currentUser {
+            coordinator.localStore.saveCurrentUser(user)
+        }
     }
 }

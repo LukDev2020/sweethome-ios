@@ -25,28 +25,30 @@ struct ProtectedSettingsView: View {
     @AppStorage("notif_checkin_reminder") private var notifCheckin = true
     @AppStorage("notif_family_feed") private var notifFamilyFeed = true
 
+    private let pro = Color(red: 107/255, green: 92/255, blue: 165/255)
+
     @State private var showProfileEdit = false
     @State private var showPrivacy = false
     @State private var showAbout = false
     @State private var showDeleteConfirm = false
     @State private var showExportAlert = false
+    @State private var showRoleSwitchInfo = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 12) {
                     // Header
-                    VStack(spacing: 2) {
-                        Text("设置")
-                            .font(.system(size: 20, weight: .bold))
-                        Text("求助方式与隐私")
-                            .font(.system(size: 12))
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.top, 8)
+                    Text("求助方式与隐私")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 8)
 
                     // Profile
                     profilePanel
+
+                    // Role
+                    rolePanel
 
                     // SOS trigger methods
                     sosTriggerPanel
@@ -65,6 +67,10 @@ struct ProtectedSettingsView: View {
 
                     // Legal & About
                     legalPanel
+
+                    #if DEBUG
+                    devPanel
+                    #endif
 
                     Text("求助方式给三种冗余：手机没在手上时，手表或实体按钮仍能触发。")
                         .font(.system(size: 10.5))
@@ -100,6 +106,11 @@ struct ProtectedSettingsView: View {
             } message: {
                 Text("导出请求已发送，数据将在 24 小时内通过邮件发送给您。")
             }
+            .alert("切换角色", isPresented: $showRoleSwitchInfo) {
+                Button("我知道了") {}
+            } message: {
+                Text("切换角色需要守护者同意。请联系您的守护者发起角色变更申请。")
+            }
             .onChange(of: notifSOS) { coordinator.syncNotificationPrefs() }
             .onChange(of: notifCheckin) { coordinator.syncNotificationPrefs() }
             .onChange(of: notifFamilyFeed) { coordinator.syncNotificationPrefs() }
@@ -116,14 +127,7 @@ struct ProtectedSettingsView: View {
 
             Button { showProfileEdit = true } label: {
                 HStack(spacing: 10) {
-                    ZStack {
-                        Circle()
-                            .fill(Color(.systemGray5))
-                            .frame(width: 36, height: 36)
-                        Text(coordinator.currentUser?.avatarInitial ?? "?")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(ink)
-                    }
+                    AvatarView(user: coordinator.currentUser, size: 36)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(coordinator.currentUser?.displayName ?? "未设置")
                             .font(.system(size: 13, weight: .medium))
@@ -203,6 +207,11 @@ struct ProtectedSettingsView: View {
                 .tint(safe)
             }
             .padding(.vertical, 2)
+            if !langManager.current.isFullySupported {
+                Text("当前仅登录页面支持此语言，主界面将逐步适配")
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(.secondary.opacity(0.7))
+            }
         }
         .padding(12)
         .background(
@@ -279,6 +288,105 @@ struct ProtectedSettingsView: View {
                 .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
         )
     }
+
+    // MARK: - Role Panel
+
+    private var rolePanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("当前角色")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 8) {
+                Image(systemName: "shield.fill")
+                    .font(.system(size: 14))
+                    .foregroundStyle(safe)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("被守护者")
+                        .font(.system(size: 13, weight: .medium))
+                    Text("家人会收到您的安全信号")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+            .padding(.vertical, 2)
+
+            Button { showRoleSwitchInfo = true } label: {
+                HStack {
+                    Text("申请切换为守护者")
+                        .font(.system(size: 13))
+                    Spacer()
+                    Text("需守护者同意")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.vertical, 2)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    // MARK: - Dev Panel
+
+    #if DEBUG
+    private var devPanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("开发者选项")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+
+            HStack {
+                Text("切换角色视图").font(.system(size: 13))
+                Spacer()
+                Button {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                        coordinator.userRole = coordinator.userRole == .protected_ ? .guardian : .protected_
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: coordinator.userRole == .protected_ ? "shield.fill" : "eye.fill")
+                            .font(.system(size: 10))
+                        Text(coordinator.userRole == .protected_ ? "被守护者" : "守护者")
+                            .font(.system(size: 11, weight: .medium))
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.system(size: 9))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(
+                        Capsule()
+                            .fill(coordinator.userRole == .protected_ ? safe : pro)
+                    )
+                }
+            }
+            .padding(.vertical, 2)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.orange.opacity(0.4), lineWidth: 1)
+        )
+        .overlay(alignment: .topTrailing) {
+            Text("DEV")
+                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 5)
+                .padding(.vertical, 2)
+                .background(Capsule().fill(.orange))
+                .offset(x: -8, y: -8)
+        }
+    }
+    #endif
 
     // MARK: - Account Deletion
 

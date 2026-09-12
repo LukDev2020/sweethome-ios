@@ -30,7 +30,7 @@ struct GuardianRecordsView: View {
 
     enum RecordTab: String, CaseIterable {
         case timeline = "时间线"
-        case schedule = "值班排班"
+        case schedule = "排班"
         case contacts = "联络人"
     }
 

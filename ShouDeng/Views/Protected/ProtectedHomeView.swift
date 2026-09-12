@@ -50,16 +50,31 @@ struct ProtectedHomeView: View {
             .background(Color(.systemBackground))
             .navigationTitle("守灯")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(safe.opacity(0.08), for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Text(toolbarLocation)
-                        .font(.system(size: 10.5))
-                        .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.42))
+                    HStack(spacing: 5) {
+                        AvatarView(user: coordinator.currentUser, size: 22)
+                        if let name = coordinator.currentUser?.displayName, !name.isEmpty {
+                            Text(name)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(ink)
+                        }
+                        Text("·")
+                            .font(.system(size: 9))
+                            .foregroundStyle(safe.opacity(0.4))
+                        Image(systemName: "shield.fill")
+                            .font(.system(size: 8))
+                            .foregroundStyle(safe)
+                        Text(toolbarLocation)
+                            .font(.system(size: 10))
+                            .foregroundStyle(ink.opacity(0.42))
+                    }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Text(toolbarBattery)
                         .font(.system(size: 10.5))
-                        .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.42))
+                        .foregroundStyle(ink.opacity(0.42))
                 }
             }
             .navigationDestination(for: String.self) { guardianId in
@@ -84,9 +99,10 @@ struct ProtectedHomeView: View {
             let formatter = DateFormatter()
             formatter.dateFormat = "HH:mm"
             formatter.timeZone = user.timeZone
-            return "\(user.cityName) \(formatter.string(from: Date()))"
+            let time = formatter.string(from: Date())
+            return user.cityName.isEmpty ? time : "\(user.cityName) \(time)"
         }
-        return "基辅 14:07"
+        return ""
     }
 
     private var toolbarBattery: String {
@@ -243,7 +259,8 @@ struct ProtectedHomeView: View {
                                 tag: "值班中", tagColor: safe,
                                 detail: "\(g.user.cityName) · \(permissionSummary(g.permissions))",
                                 time: localTime(g.user.timeZone), timeNote: timeOfDay(g.user.timeZone),
-                                isOnDuty: true
+                                isOnDuty: true,
+                                avatarPath: g.user.avatarLocalPath
                             )
                         }
                         .buttonStyle(.plain)
@@ -259,7 +276,8 @@ struct ProtectedHomeView: View {
                                 tag: nil, tagColor: nil,
                                 detail: "\(g.user.cityName) · \(permissionSummary(g.permissions))",
                                 time: localTime(g.user.timeZone), timeNote: timeOfDay(g.user.timeZone),
-                                isOnDuty: false
+                                isOnDuty: false,
+                                avatarPath: g.user.avatarLocalPath
                             )
                         }
                         .buttonStyle(.plain)
@@ -372,17 +390,13 @@ struct ProtectedHomeView: View {
         initial: String, name: String,
         tag: String?, tagColor: Color?,
         detail: String, time: String, timeNote: String,
-        isOnDuty: Bool, isDimmed: Bool = false, isPro: Bool = false
+        isOnDuty: Bool, isDimmed: Bool = false, isPro: Bool = false,
+        avatarPath: String? = nil
     ) -> some View {
         HStack(spacing: 10) {
             // Avatar
             ZStack {
-                Circle()
-                    .fill(isPro ? pro.opacity(0.15) : Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.08))
-                    .frame(width: 34, height: 34)
-                Text(initial)
-                    .font(.system(size: 12.5, weight: .medium))
-                    .foregroundStyle(isPro ? pro : ink)
+                AvatarView(user: nil, size: 34, initial: initial, avatarPath: avatarPath)
 
                 if isOnDuty {
                     Circle()

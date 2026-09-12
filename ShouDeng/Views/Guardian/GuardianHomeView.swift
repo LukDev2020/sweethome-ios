@@ -74,11 +74,26 @@ struct GuardianHomeView: View {
             .background(Color(.systemBackground))
             .navigationTitle("守灯")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(pro.opacity(0.06), for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Text(toolbarLocation)
-                        .font(.system(size: 10.5))
-                        .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.42))
+                    HStack(spacing: 5) {
+                        AvatarView(user: coordinator.currentUser, size: 22)
+                        if let name = coordinator.currentUser?.displayName, !name.isEmpty {
+                            Text(name)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(ink)
+                        }
+                        Text("·")
+                            .font(.system(size: 9))
+                            .foregroundStyle(pro.opacity(0.4))
+                        Image(systemName: "eye.fill")
+                            .font(.system(size: 8))
+                            .foregroundStyle(pro)
+                        Text(toolbarLocation)
+                            .font(.system(size: 10))
+                            .foregroundStyle(ink.opacity(0.42))
+                    }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Text("你正在值班")
@@ -104,9 +119,10 @@ struct GuardianHomeView: View {
             let formatter = DateFormatter()
             formatter.dateFormat = "HH:mm"
             formatter.timeZone = user.timeZone
-            return "\(user.cityName) \(formatter.string(from: Date()))"
+            let time = formatter.string(from: Date())
+            return user.cityName.isEmpty ? time : "\(user.cityName) \(time)"
         }
-        return "多伦多 07:07"
+        return ""
     }
 
     // MARK: - Globe Section
@@ -218,7 +234,8 @@ struct GuardianHomeView: View {
                                 tagColor: person.status == .alert ? alert : Color(red: 138/255, green: 100/255, blue: 40/255),
                                 tagBg: person.status == .alert ? alert : lamp,
                                 detail: "\(person.user.cityName) · \(statusDetail(person))",
-                                layers: person.protectionLayers, isWarning: true
+                                layers: person.protectionLayers, isWarning: true,
+                                avatarPath: person.user.avatarLocalPath
                             )
                         }
                         .buttonStyle(.plain)
@@ -265,7 +282,8 @@ struct GuardianHomeView: View {
                                 initial: person.user.avatarInitial, name: person.user.displayName,
                                 tag: nil, tagColor: nil,
                                 detail: "\(person.user.cityName) · \(statusDetail(person))",
-                                layers: person.protectionLayers
+                                layers: person.protectionLayers,
+                                avatarPath: person.user.avatarLocalPath
                             )
                         }
                         .buttonStyle(.plain)
@@ -324,19 +342,13 @@ struct GuardianHomeView: View {
         tag: String?, tagColor: Color?,
         tagBg: Color? = nil,
         detail: String, layers: Int,
-        isWarning: Bool = false, isDimmed: Bool = false
+        isWarning: Bool = false, isDimmed: Bool = false,
+        avatarPath: String? = nil
     ) -> some View {
         HStack(spacing: 10) {
             // Avatar
-            ZStack {
-                Circle()
-                    .fill(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.08))
-                    .frame(width: 34, height: 34)
-                Text(initial)
-                    .font(.system(size: 12.5, weight: .medium))
-                    .foregroundStyle(ink)
-            }
-            .opacity(isDimmed ? 0.5 : 1.0)
+            AvatarView(user: nil, size: 34, initial: initial, avatarPath: avatarPath)
+                .opacity(isDimmed ? 0.5 : 1.0)
 
             // Body
             VStack(alignment: .leading, spacing: 1) {

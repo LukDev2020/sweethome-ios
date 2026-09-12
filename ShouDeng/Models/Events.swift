@@ -140,6 +140,7 @@ struct FamilyPost: Codable, Identifiable {
     let authorId: String
     let authorName: String
     let authorInitial: String
+    var authorAvatarPath: String?
     var text: String
     var mediaURLs: [String]
     let createdAt: Date
@@ -152,6 +153,7 @@ struct FamilyComment: Codable, Identifiable {
     let authorId: String
     let authorName: String
     let authorInitial: String
+    var authorAvatarPath: String?
     let text: String
     let createdAt: Date
 }

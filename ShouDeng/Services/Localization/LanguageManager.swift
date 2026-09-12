@@ -16,10 +16,14 @@ enum AppLanguage: String, CaseIterable {
 
     var fullName: String {
         switch self {
-        case .english: return "English"
+        case .english: return "英语 (English)"
         case .chinese: return "中文"
-        case .french:  return "Français"
+        case .french:  return "法语 (Français)"
         }
+    }
+
+    var isFullySupported: Bool {
+        self == .chinese
     }
 }
 

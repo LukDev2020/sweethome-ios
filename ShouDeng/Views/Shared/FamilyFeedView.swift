@@ -17,6 +17,7 @@ struct FamilyFeedView: View {
     private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
 
     @State private var isLoading = false
+    @State private var hasFetched = false
     @State private var messageText = ""
     @State private var selectedItems: [PhotosPickerItem] = []
     @State private var selectedImages: [UIImage] = []
@@ -42,6 +43,8 @@ struct FamilyFeedView: View {
             .navigationTitle("家庭圈")
             .navigationBarTitleDisplayMode(.inline)
             .task {
+                guard !hasFetched else { return }
+                hasFetched = true
                 await loadPosts()
             }
         }
@@ -180,6 +183,8 @@ struct FamilyFeedView: View {
 
             // Input row
             HStack(alignment: .bottom, spacing: 8) {
+                AvatarView(user: coordinator.currentUser, size: 28)
+
                 PhotosPicker(
                     selection: $selectedItems,
                     maxSelectionCount: 9,
@@ -311,6 +316,7 @@ struct FamilyFeedView: View {
                 authorId: coordinator.currentUser?.id ?? "local",
                 authorName: coordinator.currentUser?.displayName ?? "我",
                 authorInitial: coordinator.currentUser?.avatarInitial ?? "我",
+                authorAvatarPath: coordinator.currentUser?.avatarLocalPath,
                 text: text,
                 mediaURLs: finalMediaURLs,
                 createdAt: Date(),
@@ -319,6 +325,7 @@ struct FamilyFeedView: View {
             )
             await MainActor.run {
                 coordinator.familyPosts.insert(localPost, at: 0)
+                coordinator.persistFamilyPosts()
             }
         }
 
@@ -350,15 +357,10 @@ struct MessageBubbleView: View {
             if isOwnMessage { Spacer(minLength: 48) }
 
             if !isOwnMessage {
-                // Avatar
-                ZStack {
-                    Circle()
-                        .fill(Color(.systemGray5))
-                        .frame(width: 30, height: 30)
-                    Text(post.authorInitial)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(ink)
-                }
+                // Other user's avatar — use post data
+                AvatarView(user: nil, size: 30,
+                           initial: post.authorInitial,
+                           avatarPath: post.authorAvatarPath)
             }
 
             VStack(alignment: isOwnMessage ? .trailing : .leading, spacing: 3) {
@@ -455,6 +457,11 @@ struct MessageBubbleView: View {
                 }
             }
 
+            if isOwnMessage {
+                // Own avatar — always use live user data
+                AvatarView(user: coordinator.currentUser, size: 30)
+            }
+
             if !isOwnMessage { Spacer(minLength: 48) }
         }
         .padding(.vertical, 2)
@@ -516,12 +523,10 @@ struct MessageBubbleView: View {
         VStack(alignment: .leading, spacing: 6) {
             ForEach(post.comments) { comment in
                 HStack(alignment: .top, spacing: 5) {
-                    Text(comment.authorInitial)
-                        .font(.system(size: 8, weight: .medium))
-                        .foregroundStyle(ink)
-                        .frame(width: 18, height: 18)
-                        .background(Color(.systemGray6))
-                        .clipShape(Circle())
+                    AvatarView(user: comment.authorId == coordinator.currentUser?.id ? coordinator.currentUser : nil,
+                               size: 18,
+                               initial: comment.authorInitial,
+                               avatarPath: comment.authorAvatarPath)
                     VStack(alignment: .leading, spacing: 1) {
                         HStack(spacing: 3) {
                             Text(comment.authorName)
@@ -567,16 +572,17 @@ struct MessageBubbleView: View {
     private func saveEdit() {
         let newText = editText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !newText.isEmpty else { return }
-        // Update locally
         if let idx = coordinator.familyPosts.firstIndex(where: { $0.id == post.id }) {
             coordinator.familyPosts[idx].text = newText
         }
+        coordinator.persistFamilyPosts()
         // TODO: API call PUT /v1/family/posts/:id
         isEditing = false
     }
 
     private func deletePost() {
         coordinator.familyPosts.removeAll { $0.id == post.id }
+        coordinator.persistFamilyPosts()
         // TODO: API call DELETE /v1/family/posts/:id
     }
 
