@@ -15,6 +15,7 @@ struct ProtectedHomeView: View {
     @State private var sosProgress: Double = 0
     @State private var showSOSActive = false
     @State private var sosDisclosureTrigger = false
+    @State private var showInviteGuardian = false
 
     // Design system colors from the HTML
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
@@ -61,11 +62,15 @@ struct ProtectedHomeView: View {
                         .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.42))
                 }
             }
-            .navigationDestination(for: String.self) { _ in
-                ProtectedGuardianDetailView()
+            .navigationDestination(for: String.self) { guardianId in
+                ProtectedGuardianDetailView(guardianId: guardianId)
             }
             .sheet(isPresented: $showSOSActive) {
                 SOSActiveView()
+            }
+            .sheet(isPresented: $showInviteGuardian) {
+                InviteGuardianView()
+                    .environmentObject(coordinator)
             }
             .featureDisclosure(.sos, trigger: $sosDisclosureTrigger)
             .task {
@@ -293,6 +298,25 @@ struct ProtectedHomeView: View {
                     isOnDuty: false, isPro: true
                 )
             }
+
+            // Add guardian button
+            Button {
+                showInviteGuardian = true
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 16))
+                    Text("邀请新的守护者")
+                        .font(.system(size: 13, weight: .medium))
+                }
+                .foregroundStyle(safe)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(safe.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
 
             // Footer
             VStack(spacing: 0) {

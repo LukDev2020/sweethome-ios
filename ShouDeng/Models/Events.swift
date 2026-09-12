@@ -133,6 +133,29 @@ enum AlertLevel: String, Codable {
     case critical   // Red — SOS or severe anomaly
 }
 
+// MARK: - Family Feed
+
+struct FamilyPost: Codable, Identifiable {
+    let id: String
+    let authorId: String
+    let authorName: String
+    let authorInitial: String
+    var text: String
+    var mediaURLs: [String]
+    let createdAt: Date
+    var comments: [FamilyComment]
+    var commentCount: Int
+}
+
+struct FamilyComment: Codable, Identifiable {
+    let id: String
+    let authorId: String
+    let authorName: String
+    let authorInitial: String
+    let text: String
+    let createdAt: Date
+}
+
 // MARK: - Heartbeat Signal
 
 struct HeartbeatSignal: Codable {

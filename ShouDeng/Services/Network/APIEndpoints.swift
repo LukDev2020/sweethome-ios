@@ -78,20 +78,38 @@ struct CheckInResponse: Codable {
 
 // MARK: - Relationships
 
-struct InviteGuardianRequest: Codable {
-    let protectedPersonId: String
-    let guardianPhone: String
-    let permissions: GuardianPermissions
-    let message: String
+struct CreateInviteRequest: Codable {
+    let role: String
 }
 
-struct InviteResponse: Codable {
+struct CreateInviteResponse: Codable {
     let inviteId: String
+    let code: String
+    let expiresAt: String
     let status: String
 }
 
 struct AcceptInviteRequest: Codable {
-    let inviteId: String
+    let code: String
+}
+
+struct AcceptInviteResponse: Codable {
+    let success: Bool
+    let guardianId: String
+    let protectedPersonId: String
+    let linkId: String
+}
+
+struct UpdatePermissionsRequest: Codable {
+    let canSeeLocation: Bool
+    let canSeeBattery: Bool
+    let canSeeHealth: Bool
+    let canSeePhoneActivity: Bool
+    let canHearEmergencyAudio: Bool
+}
+
+struct SuccessResponse: Codable {
+    let success: Bool
 }
 
 // MARK: - User Profile
@@ -185,6 +203,38 @@ struct SubscriptionResponse: Codable {
 struct DataExportRequest: Codable {
     let userId: String
     let format: String
+}
+
+// MARK: - Family Feed
+
+struct CreatePostRequest: Codable {
+    let text: String
+    let mediaURLs: [String]
+}
+
+struct CreatePostResponse: Codable {
+    let postId: String
+}
+
+struct AddCommentRequest: Codable {
+    let text: String
+}
+
+struct AddCommentResponse: Codable {
+    let commentId: String
+}
+
+struct MediaUploadResponse: Codable {
+    let url: String
+}
+
+// MARK: - Notification Preferences
+
+struct NotificationPrefsRequest: Codable {
+    let sosAlerts: Bool
+    let checkinReminder: Bool
+    let checkinOverdue: Bool
+    let familyFeed: Bool
 }
 
 // MARK: - Empty Body (for POST with no payload)

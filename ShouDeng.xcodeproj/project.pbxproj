@@ -30,8 +30,14 @@
 		424C26E0D54CBC317BF0EFC7 /* ProtectedTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C974A21D52F2544D4735C712 /* ProtectedTabView.swift */; };
 		42EB6C1D6EF94947A335FBD7 /* DutySchedulerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7EB063E62540D4BB03A491D /* DutySchedulerTests.swift */; };
 		445FC9E110BFEAD1DAB39BAB /* GuardianHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 323C5F3CDB46FE9F3750B9AA /* GuardianHomeView.swift */; };
+		BB22CC33DD44EE55FF66AA11 /* GuardianRecordsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF66 /* GuardianRecordsView.swift */; };
+		DD44EE55FF66AA11BB22CC33 /* EmergencyContactsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD44EE55FF66AA11BB22 /* EmergencyContactsView.swift */; };
 		45A5AB5BE4B4EEB984EC2246 /* CrashReporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 218FC0E8E38C528F3D664893 /* CrashReporterTests.swift */; };
 		46FBA23EB18A93044DAF495C /* ProtectedGuardianDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 219089B647D70FDE60419C11 /* ProtectedGuardianDetailView.swift */; };
+		A1B2C3D4E5F60718293A4B5C /* InviteGuardianView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4E5F6A1B2C30718293A4B5C /* InviteGuardianView.swift */; };
+		B1C2D3E4F5A60819304B5C6D /* ProfileEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F6A1B2C3D40819304B5C6D /* ProfileEditView.swift */; };
+		C2D3E4F5A6B70920415C6D7E /* GuardianSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A1B2C3D4E50920415C6D7E /* GuardianSettingsView.swift */; };
+		D3E4F5A6B7C81031526D7E8F /* FamilyFeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F61031526D7E8F /* FamilyFeedView.swift */; };
 		47CD6276A165F690D3747109 /* TrajectoryProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C499DEA1B2756F167118B7 /* TrajectoryProcessor.swift */; };
 		515DEBEED36CE6BFDCA41A8C /* BaselineScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4B372E0DD08D48F4588BBEA /* BaselineScorer.swift */; };
 		55B3FA5666AEEBB98BD2FC7A /* ModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 232C5CB09F4889DBED05B084 /* ModelTests.swift */; };
@@ -93,10 +99,16 @@
 		2045C1ED8DC5B6CCC03AC6C3 /* GuardianPlanBillingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianPlanBillingView.swift; sourceTree = "<group>"; };
 		218FC0E8E38C528F3D664893 /* CrashReporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporterTests.swift; sourceTree = "<group>"; };
 		219089B647D70FDE60419C11 /* ProtectedGuardianDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtectedGuardianDetailView.swift; sourceTree = "<group>"; };
+		D4E5F6A1B2C30718293A4B5C /* InviteGuardianView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteGuardianView.swift; sourceTree = "<group>"; };
+		E5F6A1B2C3D40819304B5C6D /* ProfileEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileEditView.swift; sourceTree = "<group>"; };
+		F6A1B2C3D4E50920415C6D7E /* GuardianSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianSettingsView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F61031526D7E8F /* FamilyFeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyFeedView.swift; sourceTree = "<group>"; };
 		232C5CB09F4889DBED05B084 /* ModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelTests.swift; sourceTree = "<group>"; };
 		2E138FA50B18713B668BAA89 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
 		31619A304E944F8752AA75E9 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		323C5F3CDB46FE9F3750B9AA /* GuardianHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianHomeView.swift; sourceTree = "<group>"; };
+		AA11BB22CC33DD44EE55FF66 /* GuardianRecordsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianRecordsView.swift; sourceTree = "<group>"; };
+		CC33DD44EE55FF66AA11BB22 /* EmergencyContactsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyContactsView.swift; sourceTree = "<group>"; };
 		3466851E2976AD062984576F /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		35327FBDA1338FA0E3A57540 /* ConsentLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsentLogger.swift; sourceTree = "<group>"; };
 		37E2174A14C8BD5D344A7E54 /* GuardianTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianTabView.swift; sourceTree = "<group>"; };
@@ -223,6 +235,7 @@
 			children = (
 				A2CBED579613C2FC6F68B5B6 /* ProtectedCoverageView.swift */,
 				219089B647D70FDE60419C11 /* ProtectedGuardianDetailView.swift */,
+				D4E5F6A1B2C30718293A4B5C /* InviteGuardianView.swift */,
 				06711676C420190B6BF2FB41 /* ProtectedHomeView.swift */,
 				D199DA3C341478E8441C8FED /* ProtectedRecordsView.swift */,
 				9BEAFFBD653265D29795FC10 /* ProtectedSettingsView.swift */,
@@ -287,6 +300,9 @@
 				3D4BC3608A17EB87F1339C43 /* LegalView.swift */,
 				3466851E2976AD062984576F /* OnboardingView.swift */,
 				997CD81ED07E07D1FF5E0291 /* RootView.swift */,
+				E5F6A1B2C3D40819304B5C6D /* ProfileEditView.swift */,
+				A1B2C3D4E5F61031526D7E8F /* FamilyFeedView.swift */,
+				CC33DD44EE55FF66AA11BB22 /* EmergencyContactsView.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -305,9 +321,11 @@
 				BAA9F22E2D872D3B7AE014A1 /* GuardianDutyScheduleView.swift */,
 				323C5F3CDB46FE9F3750B9AA /* GuardianHomeView.swift */,
 				D0C39F3E4C79A188D9324AFF /* GuardianInviteConsentView.swift */,
+				AA11BB22CC33DD44EE55FF66 /* GuardianRecordsView.swift */,
 				D3AAC199D8ECB3D24D78FCB1 /* GuardianMemberDetailView.swift */,
 				2045C1ED8DC5B6CCC03AC6C3 /* GuardianPlanBillingView.swift */,
 				37E2174A14C8BD5D344A7E54 /* GuardianTabView.swift */,
+				F6A1B2C3D4E50920415C6D7E /* GuardianSettingsView.swift */,
 			);
 			path = Guardian;
 			sourceTree = "<group>";
@@ -598,9 +616,14 @@
 				C59757EA88DF0C1DF1A90CB4 /* GuardianDutyScheduleView.swift in Sources */,
 				445FC9E110BFEAD1DAB39BAB /* GuardianHomeView.swift in Sources */,
 				DFA762487F1BEF905EB3E10E /* GuardianInviteConsentView.swift in Sources */,
+				BB22CC33DD44EE55FF66AA11 /* GuardianRecordsView.swift in Sources */,
+				DD44EE55FF66AA11BB22CC33 /* EmergencyContactsView.swift in Sources */,
 				41A00CCAAED5F20C14441CDC /* GuardianMemberDetailView.swift in Sources */,
 				A406EE8717C42C064E08EA50 /* GuardianPlanBillingView.swift in Sources */,
 				85D32E8D7B8E0F1943CB35A4 /* GuardianTabView.swift in Sources */,
+				B1C2D3E4F5A60819304B5C6D /* ProfileEditView.swift in Sources */,
+				C2D3E4F5A6B70920415C6D7E /* GuardianSettingsView.swift in Sources */,
+				D3E4F5A6B7C81031526D7E8F /* FamilyFeedView.swift in Sources */,
 				E0B50EFCF0CD8FBB2F740008 /* HeartbeatService.swift in Sources */,
 				28B38BF21CF13BC8E8879F8B /* KeychainHelper.swift in Sources */,
 				9CB0FF8A248F056D774B567D /* LanguageManager.swift in Sources */,
@@ -612,6 +635,7 @@
 				647CECC1E71D0A4EF094D5C7 /* OnboardingView.swift in Sources */,
 				5BF317DDA31D8A059C33D9FC /* ProtectedCoverageView.swift in Sources */,
 				46FBA23EB18A93044DAF495C /* ProtectedGuardianDetailView.swift in Sources */,
+				A1B2C3D4E5F60718293A4B5C /* InviteGuardianView.swift in Sources */,
 				C5289F9240B30DC097151387 /* ProtectedHomeView.swift in Sources */,
 				40EF71539180883E92FD63B8 /* ProtectedRecordsView.swift in Sources */,
 				0B892C8BFA3A8FE116B892CF /* ProtectedSettingsView.swift in Sources */,

@@ -49,6 +49,37 @@ struct GuardianMemberDetailView: View {
                 // Timeline
                 timelineSection
 
+                // Emergency contacts
+                NavigationLink {
+                    EmergencyContactsView(
+                        personName: "小雨",
+                        countryCode: "UA"
+                    )
+                    .environmentObject(coordinator)
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "phone.arrow.up.right.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(.red)
+                        Text("紧急救援电话")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(ink)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.red.opacity(0.05))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.red.opacity(0.15), lineWidth: 1)
+                    )
+                }
+
                 // Action buttons
                 HStack(spacing: 8) {
                     actionButton("发消息")

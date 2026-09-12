@@ -23,7 +23,9 @@ router.get("/plans", (_req: Request, res: Response) => {
     id: p.id,
     name: p.name,
     price: p.price,
-    appleProductId: "appleProductId" in p ? p.appleProductId : null,
+    appleProductIds: "appleProductIds" in p ? p.appleProductIds : [],
+    maxGuardians: p.maxGuardians,
+    maxProtected: p.maxProtected,
     features: p.features,
   }));
   res.json(plans);
@@ -186,8 +188,11 @@ function mapProductToPlan(productId?: string): PlanId {
   if (!productId) return "free";
 
   for (const [planId, plan] of Object.entries(PLANS)) {
-    if ("appleProductId" in plan && plan.appleProductId === productId) {
-      return planId as PlanId;
+    if ("appleProductIds" in plan) {
+      const ids = (plan as { appleProductIds: readonly string[] }).appleProductIds;
+      if (ids.includes(productId)) {
+        return planId as PlanId;
+      }
     }
   }
   return "free";

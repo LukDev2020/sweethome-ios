@@ -21,6 +21,7 @@ final class AppCoordinator: ObservableObject {
     @Published var signupPhone: String?
     @Published var signupCountry: CountryCode?
     @Published var timeline: [TimelineEntry] = []
+    @Published var familyPosts: [FamilyPost] = []
 
     // MARK: - Infrastructure
 
@@ -140,6 +141,9 @@ final class AppCoordinator: ObservableObject {
 
         // Fetch fresh data from server
         Task { await fetchUserProfile() }
+
+        // Sync local notification preferences to server
+        syncNotificationPrefs()
     }
 
     private func onLogout() {
@@ -148,6 +152,7 @@ final class AppCoordinator: ObservableObject {
         myGuardians = []
         activeSOSEvent = nil
         timeline = []
+        familyPosts = []
         showSignup = false
         signupPhone = nil
         signupCountry = nil
@@ -481,6 +486,136 @@ final class AppCoordinator: ObservableObject {
             timeline = Array(timeline.prefix(200))
         }
         localStore.saveTimeline(timeline)
+    }
+
+    // MARK: - Family Feed
+
+    func fetchFamilyPosts() async {
+        do {
+            let posts: [FamilyPost] = try await apiClient.get("/v1/family/posts")
+            await MainActor.run {
+                self.familyPosts = posts
+            }
+        } catch {
+            #if DEBUG
+            print("[Coordinator] Failed to fetch family posts: \(error)")
+            #endif
+        }
+    }
+
+    func createFamilyPost(text: String, mediaURLs: [String]) async throws {
+        let response: CreatePostResponse = try await apiClient.post(
+            "/v1/family/posts",
+            body: CreatePostRequest(text: text, mediaURLs: mediaURLs)
+        )
+        // Add to local state immediately
+        let post = FamilyPost(
+            id: response.postId,
+            authorId: currentUser?.id ?? "",
+            authorName: currentUser?.displayName ?? "",
+            authorInitial: currentUser?.avatarInitial ?? "?",
+            text: text,
+            mediaURLs: mediaURLs,
+            createdAt: Date(),
+            comments: [],
+            commentCount: 0
+        )
+        await MainActor.run {
+            familyPosts.insert(post, at: 0)
+        }
+    }
+
+    func addComment(postId: String, text: String) async {
+        do {
+            let _: AddCommentResponse = try await apiClient.post(
+                "/v1/family/posts/\(postId)/comments",
+                body: AddCommentRequest(text: text)
+            )
+            // Add comment locally
+            let comment = FamilyComment(
+                id: UUID().uuidString,
+                authorId: currentUser?.id ?? "",
+                authorName: currentUser?.displayName ?? "",
+                authorInitial: currentUser?.avatarInitial ?? "?",
+                text: text,
+                createdAt: Date()
+            )
+            await MainActor.run {
+                if let idx = familyPosts.firstIndex(where: { $0.id == postId }) {
+                    familyPosts[idx].comments.append(comment)
+                    familyPosts[idx].commentCount += 1
+                }
+            }
+        } catch {
+            #if DEBUG
+            print("[Coordinator] Failed to add comment: \(error)")
+            #endif
+        }
+    }
+
+    func uploadMedia(data: Data, mimeType: String) async throws -> String {
+        // For now, use a simple base64 upload endpoint.
+        // In production, this would upload to Firebase Storage directly.
+        let base64 = data.base64EncodedString()
+        let response: MediaUploadResponse = try await apiClient.post(
+            "/v1/family/upload",
+            body: ["data": base64, "mimeType": mimeType]
+        )
+        return response.url
+    }
+
+    // MARK: - Notification Preferences
+
+    func syncNotificationPrefs() {
+        let prefs = NotificationPrefsRequest(
+            sosAlerts: UserDefaults.standard.object(forKey: "notif_sos_alerts") as? Bool ?? true,
+            checkinReminder: UserDefaults.standard.object(forKey: "notif_checkin_reminder") as? Bool ?? true,
+            checkinOverdue: UserDefaults.standard.object(forKey: "notif_checkin_overdue") as? Bool ?? true,
+            familyFeed: UserDefaults.standard.object(forKey: "notif_family_feed") as? Bool ?? true
+        )
+        Task {
+            do {
+                let _: SuccessResponse = try await apiClient.put(
+                    "/v1/user/notification-preferences",
+                    body: prefs
+                )
+            } catch {
+                #if DEBUG
+                print("[Coordinator] Failed to sync notification prefs: \(error)")
+                #endif
+            }
+        }
+    }
+
+    // MARK: - Guardian Management
+
+    func createInviteCode() async throws -> CreateInviteResponse {
+        let response: CreateInviteResponse = try await apiClient.post(
+            "/v1/invite/create",
+            body: CreateInviteRequest(role: userRole.rawValue)
+        )
+        return response
+    }
+
+    func updateGuardianPermissions(guardianId: String, permissions: GuardianPermissions) async throws {
+        let _: SuccessResponse = try await apiClient.put(
+            "/v1/protected/guardians/\(guardianId)/permissions",
+            body: UpdatePermissionsRequest(
+                canSeeLocation: permissions.canSeeLocation,
+                canSeeBattery: permissions.canSeeBattery,
+                canSeeHealth: permissions.canSeeHealth,
+                canSeePhoneActivity: permissions.canSeePhoneActivity,
+                canHearEmergencyAudio: permissions.canHearEmergencyAudio
+            )
+        )
+    }
+
+    func removeGuardian(guardianId: String) async throws {
+        let _: SuccessResponse = try await apiClient.delete("/v1/protected/guardians/\(guardianId)")
+        await MainActor.run {
+            myGuardians.removeAll { $0.id == guardianId }
+            localStore.saveGuardians(myGuardians)
+        }
     }
 
     // MARK: - Subscription

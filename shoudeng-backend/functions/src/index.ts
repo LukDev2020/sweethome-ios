@@ -23,6 +23,7 @@ import deviceRoutes from "./routes/device";
 import safezoneRoutes from "./routes/safezone";
 import dutyRoutes from "./routes/duty";
 import evidenceRoutes from "./routes/evidence";
+import familyRoutes from "./routes/family";
 import paymentRoutes from "./routes/payment";
 import webhookRoutes from "./routes/webhooks";
 import { createRateLimiter, RATE_LIMITS } from "./middleware/rateLimit";
@@ -39,6 +40,9 @@ app.use("/v1/protected", protectedRoutes);
 app.use("/v1/safe-zone", safezoneRoutes);
 app.use("/v1/safe-zones", safezoneRoutes);
 app.use("/v1/duty-schedule", dutyRoutes);
+
+// Phase 2.5: Family Feed
+app.use("/v1/family", familyRoutes);
 
 // Phase 3: Telemetry
 app.use("/v1", telemetryRoutes);

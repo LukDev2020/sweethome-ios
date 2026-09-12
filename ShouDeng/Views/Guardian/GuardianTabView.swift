@@ -2,9 +2,8 @@ import SwiftUI
 
 // MARK: - Guardian Tab Container
 //
-// Wraps all Guardian screens (B1-B6) in a TabView.
-// B1 (Home) is the default tab. B4/B5/B6 are reachable via tabs.
-// B2 (Alert Response) and B3 (Member Detail) are push-navigated from B1.
+// Wraps all Guardian screens in a TabView.
+// Tabs: Home, Family Feed, Records (timeline + schedule), Settings
 
 struct GuardianTabView: View {
     var body: some View {
@@ -15,22 +14,22 @@ struct GuardianTabView: View {
                     Text("首页")
                 }
 
-            GuardianDutyScheduleView()
+            FamilyFeedView()
                 .tabItem {
-                    Image(systemName: "calendar.badge.clock")
-                    Text("排班")
+                    Image(systemName: "bubble.left.and.bubble.right")
+                    Text("家庭圈")
                 }
 
-            GuardianInviteConsentView()
+            GuardianRecordsView()
                 .tabItem {
-                    Image(systemName: "person.badge.plus")
-                    Text("邀请")
+                    Image(systemName: "clock.arrow.circlepath")
+                    Text("记录")
                 }
 
-            GuardianPlanBillingView()
+            GuardianSettingsView()
                 .tabItem {
-                    Image(systemName: "creditcard")
-                    Text("方案")
+                    Image(systemName: "gearshape")
+                    Text("设置")
                 }
         }
     }

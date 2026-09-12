@@ -1,16 +1,11 @@
 import SwiftUI
 
-// MARK: - Screen A6: Settings
+// MARK: - Guardian Settings View
 //
-// Design from shoudeng-full-design.html:
-//   - Profile section (name, avatar, city)
-//   - SOS trigger methods (long press, watch, BT button, silent mode)
-//   - Check-in schedule (reminder times, overdue threshold)
-//   - Language selection
-//   - Notification preferences
-//   - Data (retention, export, account deletion)
+// Settings for the guardian portal: profile, language, notifications,
+// data, legal, logout, and account deletion.
 
-struct ProtectedSettingsView: View {
+struct GuardianSettingsView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var langManager = LanguageManager.shared
 
@@ -18,18 +13,15 @@ struct ProtectedSettingsView: View {
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
 
-    @AppStorage("sos_longPress") private var longPressEnabled = true
-    @AppStorage("sos_watch") private var watchEnabled = true
-    @AppStorage("sos_silentMode") private var silentMode = false
-    @AppStorage("notif_sos_alerts") private var notifSOS = true
-    @AppStorage("notif_checkin_reminder") private var notifCheckin = true
-    @AppStorage("notif_family_feed") private var notifFamilyFeed = true
-
     @State private var showProfileEdit = false
     @State private var showPrivacy = false
     @State private var showAbout = false
     @State private var showDeleteConfirm = false
     @State private var showExportAlert = false
+
+    @AppStorage("notif_sos_alerts") private var notifSOS = true
+    @AppStorage("notif_checkin_overdue") private var notifCheckinOverdue = true
+    @AppStorage("notif_family_feed") private var notifFamilyFeed = true
 
     var body: some View {
         NavigationStack {
@@ -39,7 +31,7 @@ struct ProtectedSettingsView: View {
                     VStack(spacing: 2) {
                         Text("设置")
                             .font(.system(size: 20, weight: .bold))
-                        Text("求助方式与隐私")
+                        Text("守护者偏好")
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                     }
@@ -48,11 +40,8 @@ struct ProtectedSettingsView: View {
                     // Profile
                     profilePanel
 
-                    // SOS trigger methods
-                    sosTriggerPanel
-
-                    // Check-in schedule
-                    checkInPanel
+                    // Subscription
+                    subscriptionPanel
 
                     // Language
                     languagePanel
@@ -65,12 +54,6 @@ struct ProtectedSettingsView: View {
 
                     // Legal & About
                     legalPanel
-
-                    Text("求助方式给三种冗余：手机没在手上时，手表或实体按钮仍能触发。")
-                        .font(.system(size: 10.5))
-                        .foregroundStyle(.secondary.opacity(0.7))
-                        .padding(.top, 8)
-                        .padding(.bottom, 24)
                 }
                 .padding(.horizontal, 16)
             }
@@ -101,7 +84,7 @@ struct ProtectedSettingsView: View {
                 Text("导出请求已发送，数据将在 24 小时内通过邮件发送给您。")
             }
             .onChange(of: notifSOS) { coordinator.syncNotificationPrefs() }
-            .onChange(of: notifCheckin) { coordinator.syncNotificationPrefs() }
+            .onChange(of: notifCheckinOverdue) { coordinator.syncNotificationPrefs() }
             .onChange(of: notifFamilyFeed) { coordinator.syncNotificationPrefs() }
         }
     }
@@ -148,40 +131,73 @@ struct ProtectedSettingsView: View {
         )
     }
 
-    // MARK: - SOS Trigger Panel
+    // MARK: - Subscription Panel
 
-    private var sosTriggerPanel: some View {
+    private var subscriptionPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("怎样触发求助")
+            Text("订阅与账单")
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
-            toggleRow("App 内长按 3 秒", isOn: $longPressEnabled)
-            toggleRow("手表快捷键", isOn: $watchEnabled)
-            fixedRow("蓝牙实体按钮", value: "未配对", isWarning: true)
-            toggleRow("静默模式 · 本机无提示", isOn: $silentMode)
+
+            if let status = coordinator.storeKitManager.subscriptionStatus, status.isActive {
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .foregroundStyle(safe)
+                        .font(.system(size: 14))
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(coordinator.storeKitManager.planDisplayName(for: status.planId))
+                            .font(.system(size: 13, weight: .medium))
+                        if let expires = status.expiresDate {
+                            Text("有效期至 \(expires.formatted(.dateTime.year().month().day()))")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    Spacer()
+                }
+                .padding(.vertical, 2)
+            } else {
+                HStack(spacing: 8) {
+                    Image(systemName: "gift")
+                        .foregroundStyle(.secondary)
+                        .font(.system(size: 14))
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("免费版")
+                            .font(.system(size: 13, weight: .medium))
+                        Text("升级解锁更强守护功能")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                }
+                .padding(.vertical, 2)
+            }
+
+            NavigationLink {
+                GuardianPlanBillingView()
+                    .environmentObject(coordinator)
+            } label: {
+                HStack {
+                    Text(coordinator.storeKitManager.subscriptionStatus?.isActive == true
+                         ? "管理方案与账单" : "查看方案")
+                        .font(.system(size: 13))
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.vertical, 2)
+            }
+            .buttonStyle(.plain)
         }
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
         )
-    }
-
-    // MARK: - Check-in Panel
-
-    private var checkInPanel: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("定时报平安")
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-            fixedRow("每天提醒", value: "09:00、21:00", isWarning: false)
-            fixedRow("超时多久算失联", value: "4 小时", isWarning: false)
+        .task {
+            await coordinator.storeKitManager.refreshSubscriptionStatus()
         }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
-        )
     }
 
     // MARK: - Language Panel
@@ -219,7 +235,7 @@ struct ProtectedSettingsView: View {
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
             toggleRow("紧急求助 (SOS)", isOn: $notifSOS)
-            toggleRow("报平安提醒", isOn: $notifCheckin)
+            toggleRow("报平安超时提醒", isOn: $notifCheckinOverdue)
             toggleRow("家庭圈新动态", isOn: $notifFamilyFeed)
         }
         .padding(12)
@@ -236,7 +252,6 @@ struct ProtectedSettingsView: View {
             Text("数据")
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
-            fixedRow("位置保留时长", value: "90 天后自动删除", isWarning: false)
             Button { showExportAlert = true } label: {
                 fixedRow("导出我的全部数据", value: "请求导出 →", isWarning: false)
             }
@@ -280,7 +295,7 @@ struct ProtectedSettingsView: View {
         )
     }
 
-    // MARK: - Account Deletion
+    // MARK: - Helpers
 
     private func deleteAccount() async {
         do {
@@ -291,7 +306,7 @@ struct ProtectedSettingsView: View {
             coordinator.authManager.logout()
         } catch {
             #if DEBUG
-            print("[Settings] Delete account failed: \(error)")
+            print("[GuardianSettings] Delete account failed: \(error)")
             #endif
         }
     }

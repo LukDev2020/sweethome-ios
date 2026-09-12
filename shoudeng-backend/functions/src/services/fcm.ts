@@ -14,6 +14,21 @@ async function getTokensForUser(userId: string): Promise<string[]> {
 }
 
 /**
+ * Check if a user has a specific notification type enabled.
+ * Returns true by default if no preference is stored.
+ */
+async function isNotifEnabled(
+  userId: string,
+  prefKey: string
+): Promise<boolean> {
+  const userDoc = await db.collection("users").doc(userId).get();
+  if (!userDoc.exists) return true;
+  const prefs = userDoc.data()?.notificationPrefs;
+  if (!prefs || prefs[prefKey] === undefined) return true;
+  return prefs[prefKey] === true;
+}
+
+/**
  * Send SOS critical alert to a guardian.
  */
 export async function sendSOSAlert(
@@ -75,6 +90,8 @@ export async function sendCheckinReminder(
   guardianId: string,
   protectedPersonName: string
 ): Promise<void> {
+  if (!(await isNotifEnabled(guardianId, "checkinOverdue"))) return;
+
   const tokens = await getTokensForUser(guardianId);
   if (tokens.length === 0) return;
 
@@ -112,6 +129,8 @@ export async function sendHeartbeatMissingAlert(
   protectedPersonName: string,
   lastSeenMinutes: number
 ): Promise<void> {
+  if (!(await isNotifEnabled(guardianId, "checkinOverdue"))) return;
+
   const tokens = await getTokensForUser(guardianId);
   if (tokens.length === 0) return;
 

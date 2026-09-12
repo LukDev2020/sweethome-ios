@@ -2,8 +2,8 @@ import SwiftUI
 
 // MARK: - Protected Person Tab Container
 //
-// Wraps all Protected Person screens (A1-A6) in a TabView.
-// A1 (Home) is the default tab. A3/A4/A5/A6 are reachable via tabs.
+// Wraps all Protected Person screens in a TabView.
+// Home is the default tab.
 
 struct ProtectedTabView: View {
     var body: some View {
@@ -14,16 +14,16 @@ struct ProtectedTabView: View {
                     Text("首页")
                 }
 
+            FamilyFeedView()
+                .tabItem {
+                    Image(systemName: "heart.text.square")
+                    Text("家庭圈")
+                }
+
             ProtectedRecordsView()
                 .tabItem {
                     Image(systemName: "clock.arrow.circlepath")
                     Text("记录")
-                }
-
-            ProtectedCoverageView()
-                .tabItem {
-                    Image(systemName: "globe.asia.australia")
-                    Text("覆盖")
                 }
 
             ProtectedSettingsView()

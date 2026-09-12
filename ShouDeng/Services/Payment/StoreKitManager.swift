@@ -9,6 +9,8 @@ import Foundation
 //   - Transaction observation (background renewals, refunds)
 //   - Receipt forwarding to backend for server-side validation
 //   - Purchase restoration
+//
+// Plans: Duo (双人守护) and Family (家庭守护), each with monthly/yearly.
 
 final class StoreKitManager: ObservableObject {
 
@@ -31,15 +33,21 @@ final class StoreKitManager: ObservableObject {
     // MARK: - Product IDs (must match App Store Connect)
 
     static let productIds: Set<String> = [
-        "app.shoudeng.guardian_team.monthly",
-        "app.shoudeng.pro_response.monthly",
-        "app.shoudeng.family_bundle.monthly",
+        "app.shoudeng.duo.monthly",
+        "app.shoudeng.duo.yearly",
+        "app.shoudeng.family.monthly",
+        "app.shoudeng.family.yearly",
+        "app.shoudeng.familyplus.monthly",
+        "app.shoudeng.familyplus.yearly",
     ]
 
     private static let productToPlan: [String: String] = [
-        "app.shoudeng.guardian_team.monthly": "guardian_team",
-        "app.shoudeng.pro_response.monthly": "pro_response",
-        "app.shoudeng.family_bundle.monthly": "family_bundle",
+        "app.shoudeng.duo.monthly": "duo",
+        "app.shoudeng.duo.yearly": "duo",
+        "app.shoudeng.family.monthly": "family",
+        "app.shoudeng.family.yearly": "family",
+        "app.shoudeng.familyplus.monthly": "familyplus",
+        "app.shoudeng.familyplus.yearly": "familyplus",
     ]
 
     // MARK: - Dependencies
@@ -74,6 +82,29 @@ final class StoreKitManager: ObservableObject {
         }
 
         isLoading = false
+    }
+
+    // MARK: - Product Accessors
+
+    @MainActor
+    func duoProducts() -> (monthly: Product?, yearly: Product?) {
+        let m = products.first { $0.id == "app.shoudeng.duo.monthly" }
+        let y = products.first { $0.id == "app.shoudeng.duo.yearly" }
+        return (m, y)
+    }
+
+    @MainActor
+    func familyProducts() -> (monthly: Product?, yearly: Product?) {
+        let m = products.first { $0.id == "app.shoudeng.family.monthly" }
+        let y = products.first { $0.id == "app.shoudeng.family.yearly" }
+        return (m, y)
+    }
+
+    @MainActor
+    func familyPlusProducts() -> (monthly: Product?, yearly: Product?) {
+        let m = products.first { $0.id == "app.shoudeng.familyplus.monthly" }
+        let y = products.first { $0.id == "app.shoudeng.familyplus.yearly" }
+        return (m, y)
     }
 
     // MARK: - Purchase
@@ -182,7 +213,7 @@ final class StoreKitManager: ObservableObject {
         Task.detached { [weak self] in
             for await result in Transaction.updates {
                 guard let self else { return }
-                if let transaction = try? await self.checkVerified(result) {
+                if let transaction = try? self.checkVerified(result) {
                     await self.handleVerifiedTransaction(transaction)
                     await transaction.finish()
                 }
@@ -201,9 +232,7 @@ final class StoreKitManager: ObservableObject {
             purchasedPlanId = planId
         }
 
-        // Forward signed transaction to backend for server-side verification
         forwardToBackend(transaction)
-
         await refreshSubscriptionStatus()
     }
 
@@ -221,8 +250,6 @@ final class StoreKitManager: ObservableObject {
     }
 
     private func encodeTransactionJWS(_ transaction: Transaction) -> String {
-        // Transaction.jsonRepresentation is the decoded payload.
-        // For server verification, we encode the original transaction ID + product info.
         let payload: [String: Any] = [
             "productId": transaction.productID,
             "originalTransactionId": String(transaction.originalID),
@@ -238,7 +265,6 @@ final class StoreKitManager: ObservableObject {
             .replacingOccurrences(of: "/", with: "_")
             .replacingOccurrences(of: "=", with: "")
 
-        // Construct minimal JWS: header.payload.signature
         return "eyJhbGciOiJub25lIn0.\(base64)."
     }
 
@@ -259,16 +285,21 @@ final class StoreKitManager: ObservableObject {
         Self.productToPlan[product.id] ?? "free"
     }
 
-    func displayPrice(for product: Product) -> String {
-        product.displayPrice
-    }
-
     func planName(for productId: String) -> String {
         switch productId {
-        case "app.shoudeng.guardian_team.monthly": return "守护团队"
-        case "app.shoudeng.pro_response.monthly": return "专业响应"
-        case "app.shoudeng.family_bundle.monthly": return "全家套餐"
-        default: return "未知"
+        case let id where id.contains("familyplus"): return "家庭守护+"
+        case let id where id.contains("family"): return "家庭守护"
+        case let id where id.contains("duo"): return "双人守护"
+        default: return "免费版"
+        }
+    }
+
+    func planDisplayName(for planId: String) -> String {
+        switch planId {
+        case "duo": return "双人守护"
+        case "family": return "家庭守护"
+        case "familyplus": return "家庭守护+"
+        default: return "免费版"
         }
     }
 }
