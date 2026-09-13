@@ -12,6 +12,7 @@ import MapKit
 
 struct GuardianHomeView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @State private var mapFocusId: String?
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
     private let inkDeep = Color(red: 8/255, green: 15/255, blue: 27/255)
@@ -247,7 +248,8 @@ struct GuardianHomeView: View {
         return LocationCardView(
             pins: pins.isEmpty ? demoPins : pins,
             lastUpdateMinutes: 12,
-            label: "家人位置"
+            label: "家人位置",
+            focusedPinId: $mapFocusId
         )
     }
 
@@ -278,6 +280,9 @@ struct GuardianHomeView: View {
                             )
                         }
                         .buttonStyle(.plain)
+                        .simultaneousGesture(TapGesture().onEnded {
+                            withAnimation { mapFocusId = person.id }
+                        })
                     }
                 }
             } else {
@@ -296,6 +301,7 @@ struct GuardianHomeView: View {
                         detail: "上海 · 当地已是晚上八点",
                         layers: 2, isWarning: true
                     )
+                    .onTapGesture { withAnimation { mapFocusId = mapFocusId == "nainai" ? nil : "nainai" } }
                 }
             }
         }
@@ -326,6 +332,9 @@ struct GuardianHomeView: View {
                             )
                         }
                         .buttonStyle(.plain)
+                        .simultaneousGesture(TapGesture().onEnded {
+                            withAnimation { mapFocusId = person.id }
+                        })
                     }
                 }
             } else {
@@ -343,6 +352,7 @@ struct GuardianHomeView: View {
                         detail: "基辅 · 12 分钟前报平安",
                         layers: 3
                     )
+                    .onTapGesture { withAnimation { mapFocusId = mapFocusId == "xiaoyu" ? nil : "xiaoyu" } }
 
                     protectedPersonCard(
                         initial: "弟", name: "弟弟",
@@ -350,6 +360,7 @@ struct GuardianHomeView: View {
                         detail: "伦敦 · 在学校 · 电量 82%",
                         layers: 1
                     )
+                    .onTapGesture { withAnimation { mapFocusId = mapFocusId == "didi" ? nil : "didi" } }
 
                     protectedPersonCard(
                         initial: "爸", name: "爸爸",
@@ -357,6 +368,7 @@ struct GuardianHomeView: View {
                         detail: "多伦多 · 在家 · 在线",
                         layers: 2, isDimmed: true
                     )
+                    .onTapGesture { withAnimation { mapFocusId = mapFocusId == "baba" ? nil : "baba" } }
                 }
             }
         }

@@ -17,6 +17,7 @@ struct ProtectedHomeView: View {
     @State private var showSOSActive = false
     @State private var sosDisclosureTrigger = false
     @State private var showInviteGuardian = false
+    @State private var mapFocusId: String?
 
     // Design system colors from the HTML
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
@@ -198,7 +199,8 @@ struct ProtectedHomeView: View {
             pins: pins,
             centerCoordinate: myCoord,
             lastUpdateMinutes: 2,
-            label: "我的位置"
+            label: "我的位置",
+            focusedPinId: $mapFocusId
         )
     }
 
