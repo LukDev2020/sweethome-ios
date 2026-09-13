@@ -576,14 +576,36 @@ struct MessageBubbleView: View {
             coordinator.familyPosts[idx].text = newText
         }
         coordinator.persistFamilyPosts()
-        // TODO: API call PUT /v1/family/posts/:id
+        Task {
+            do {
+                let _: EmptyResponse = try await coordinator.apiClient.put(
+                    "/v1/family/posts/\(post.id)",
+                    body: ["text": newText]
+                )
+            } catch {
+                #if DEBUG
+                print("[FamilyFeed] Edit post failed: \(error)")
+                #endif
+            }
+        }
         isEditing = false
     }
 
     private func deletePost() {
-        coordinator.familyPosts.removeAll { $0.id == post.id }
+        let postId = post.id
+        coordinator.familyPosts.removeAll { $0.id == postId }
         coordinator.persistFamilyPosts()
-        // TODO: API call DELETE /v1/family/posts/:id
+        Task {
+            do {
+                let _: EmptyResponse = try await coordinator.apiClient.delete(
+                    "/v1/family/posts/\(postId)"
+                )
+            } catch {
+                #if DEBUG
+                print("[FamilyFeed] Delete post failed: \(error)")
+                #endif
+            }
+        }
     }
 
     private func timeString(_ date: Date) -> String {

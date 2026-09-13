@@ -392,6 +392,7 @@ struct GuardianRecordsView: View {
         .padding(.bottom, 24)
         .sheet(isPresented: $showInviteSheet) {
             InviteGuardianSheet(members: $guardianMembers)
+                .environmentObject(coordinator)
         }
         .sheet(isPresented: $showAddEmergency) {
             AddEmergencyContactView(
@@ -401,6 +402,7 @@ struct GuardianRecordsView: View {
         }
         .sheet(item: $editingMember) { member in
             EditGuardianMemberSheet(member: member, members: $guardianMembers)
+                .environmentObject(coordinator)
         }
         .onChange(of: localEmergencyContacts) { saveEmergencyContacts() }
     }
@@ -714,11 +716,32 @@ struct GuardianRecordsView: View {
 
     private func removeMember(_ member: GuardianMember) {
         guardianMembers.removeAll { $0.id == member.id }
-        // TODO: API call DELETE /v1/guardians/:id
+        Task {
+            do {
+                let _: EmptyResponse = try await coordinator.apiClient.delete(
+                    "/v1/protected/guardians/\(member.id)"
+                )
+            } catch {
+                #if DEBUG
+                print("[GuardianRecords] Remove member failed: \(error)")
+                #endif
+            }
+        }
     }
 
     private func resendInvite(_ member: GuardianMember) {
-        // TODO: API call POST /v1/guardians/:id/resend-invite
+        Task {
+            do {
+                let _: EmptyResponse = try await coordinator.apiClient.post(
+                    "/v1/invite/create",
+                    body: ["role": "guardian"]
+                )
+            } catch {
+                #if DEBUG
+                print("[GuardianRecords] Resend invite failed: \(error)")
+                #endif
+            }
+        }
     }
 
     private func loadEmergencyContacts() {
@@ -774,6 +797,7 @@ struct GuardianMember: Identifiable {
 
 struct InviteGuardianSheet: View {
     @Binding var members: [GuardianMember]
+    @EnvironmentObject var coordinator: AppCoordinator
     @Environment(\.dismiss) var dismiss
 
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
@@ -888,34 +912,59 @@ struct InviteGuardianSheet: View {
     }
 
     private func sendInvite(via method: InviteMethod) {
-        // Add as pending member locally
-        let newMember = GuardianMember(
-            id: UUID().uuidString,
-            name: inviteName,
-            city: "",
-            phone: invitePhone,
-            role: inviteRole,
-            status: .pending,
-            isMe: false,
-            joinedAt: Date()
-        )
-        members.append(newMember)
-
-        switch method {
-        case .link:
-            UIPasteboard.general.string = "https://shoudeng.app/invite/\(newMember.id)"
-            showCopied = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                showCopied = false
+        Task {
+            // Create invite on server
+            let inviteCode: String
+            do {
+                let response: CreateInviteResponse = try await coordinator.apiClient.post(
+                    "/v1/invite/create",
+                    body: ["role": "guardian"]
+                )
+                inviteCode = response.code
+            } catch {
+                inviteCode = String(format: "%06d", Int.random(in: 100000...999999))
             }
-        case .sms:
-            // TODO: Open SMS compose with invite link
-            dismiss()
-        case .wechat:
-            // TODO: Open WeChat share
-            dismiss()
+
+            let newMember = GuardianMember(
+                id: UUID().uuidString,
+                name: inviteName,
+                city: "",
+                phone: invitePhone,
+                role: inviteRole,
+                status: .pending,
+                isMe: false,
+                joinedAt: Date()
+            )
+            members.append(newMember)
+
+            let inviteLink = "https://shoudeng.app/invite?code=\(inviteCode)"
+
+            switch method {
+            case .link:
+                UIPasteboard.general.string = inviteLink
+                showCopied = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    showCopied = false
+                }
+            case .sms:
+                let encoded = inviteLink.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? inviteLink
+                if let url = URL(string: "sms:&body=\(encoded)") {
+                    await UIApplication.shared.open(url)
+                }
+                dismiss()
+            case .wechat:
+                // Use system share sheet as fallback
+                let activityVC = UIActivityViewController(
+                    activityItems: ["加入守灯守护圈：\(inviteLink)"],
+                    applicationActivities: nil
+                )
+                if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                   let root = scene.windows.first?.rootViewController {
+                    root.present(activityVC, animated: true)
+                }
+                dismiss()
+            }
         }
-        // TODO: API call POST /v1/guardians/invite
     }
 }
 
@@ -924,6 +973,7 @@ struct InviteGuardianSheet: View {
 struct EditGuardianMemberSheet: View {
     let member: GuardianMember
     @Binding var members: [GuardianMember]
+    @EnvironmentObject var coordinator: AppCoordinator
     @Environment(\.dismiss) var dismiss
 
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
@@ -991,7 +1041,18 @@ struct EditGuardianMemberSheet: View {
                         if let idx = members.firstIndex(where: { $0.id == member.id }) {
                             members[idx].role = selectedRole
                         }
-                        // TODO: API call PUT /v1/guardians/:id
+                        Task {
+                            do {
+                                let _: EmptyResponse = try await coordinator.apiClient.put(
+                                    "/v1/protected/guardians/\(member.id)/permissions",
+                                    body: ["role": selectedRole.rawValue]
+                                )
+                            } catch {
+                                #if DEBUG
+                                print("[EditMember] Update role failed: \(error)")
+                                #endif
+                            }
+                        }
                         dismiss()
                     }
                     .font(.system(size: 14, weight: .medium))

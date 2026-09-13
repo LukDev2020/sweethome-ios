@@ -227,8 +227,7 @@ final class FirebasePhoneAuthProvider: PhoneAuthProviding {
             throw AuthError.firebaseNotConfigured
         }
         #if DEBUG
-        print("[FirebaseAuth] verifyPhoneNumber called for: \(phoneNumber)")
-        print("[FirebaseAuth] isAppVerificationDisabled: \(Auth.auth().settings?.isAppVerificationDisabledForTesting ?? false)")
+        print("[FirebaseAuth] verifyPhoneNumber called")
         #endif
         do {
             let verificationID = try await PhoneAuthProvider.provider().verifyPhoneNumber(

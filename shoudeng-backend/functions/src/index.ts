@@ -26,6 +26,7 @@ import evidenceRoutes from "./routes/evidence";
 import familyRoutes from "./routes/family";
 import paymentRoutes from "./routes/payment";
 import webhookRoutes from "./routes/webhooks";
+import timelineRoutes from "./routes/timeline";
 import { createRateLimiter, RATE_LIMITS } from "./middleware/rateLimit";
 
 // --- Mount Routes ---
@@ -60,6 +61,9 @@ app.use("/v1/evidence", evidenceRoutes);
 // Phase 6: Payment & Webhooks
 app.use("/v1/payment", paymentRoutes);
 app.use("/v1/webhooks", webhookRoutes);
+
+// Phase 5.5: Timeline
+app.use("/v1/timeline", timelineRoutes);
 
 // Diagnostics (crash reports) — uses user route prefix
 app.use("/v1", userRoutes);

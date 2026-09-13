@@ -59,18 +59,11 @@ router.post("/accept", async (req: Request, res: Response) => {
   const { inviteId, code } = req.body;
 
   try {
-    // Find invite by ID or code
+    // Find invite by ID or code (outside transaction for query support)
     let inviteRef: FirebaseFirestore.DocumentReference;
-    let inviteData: FirebaseFirestore.DocumentData;
 
     if (inviteId) {
       inviteRef = db.collection("invites").doc(inviteId);
-      const doc = await inviteRef.get();
-      if (!doc.exists) {
-        res.status(404).json({ error: "Invite not found" });
-        return;
-      }
-      inviteData = doc.data()!;
     } else if (code) {
       const snapshot = await db
         .collection("invites")
@@ -83,62 +76,64 @@ router.post("/accept", async (req: Request, res: Response) => {
         return;
       }
       inviteRef = snapshot.docs[0].ref;
-      inviteData = snapshot.docs[0].data();
     } else {
       res.status(400).json({ error: "inviteId or code is required" });
       return;
     }
 
-    // Check expiry
-    if (inviteData.expiresAt.toDate() < new Date()) {
-      await inviteRef.update({ status: "expired" });
-      res.status(410).json({ error: "Invite has expired" });
-      return;
-    }
+    // Run accept logic inside a transaction to prevent race conditions
+    const result = await db.runTransaction(async (transaction) => {
+      const inviteDoc = await transaction.get(inviteRef);
+      if (!inviteDoc.exists) {
+        throw new Error("NOT_FOUND");
+      }
+      const inviteData = inviteDoc.data()!;
 
-    if (inviteData.status !== "pending") {
-      res.status(409).json({ error: "Invite already used" });
-      return;
-    }
+      // Check expiry
+      if (inviteData.expiresAt.toDate() < new Date()) {
+        transaction.update(inviteRef, { status: "expired" });
+        throw new Error("EXPIRED");
+      }
 
-    // Cannot accept your own invite
-    if (inviteData.createdBy === uid) {
-      res.status(400).json({ error: "Cannot accept your own invite" });
-      return;
-    }
+      if (inviteData.status !== "pending") {
+        throw new Error("ALREADY_USED");
+      }
 
-    // Determine who is guardian and who is protected
-    const creatorDoc = await db
-      .collection("users")
-      .doc(inviteData.createdBy)
-      .get();
-    const acceptorDoc = await db.collection("users").doc(uid).get();
+      // Cannot accept your own invite
+      if (inviteData.createdBy === uid) {
+        throw new Error("SELF_ACCEPT");
+      }
 
-    if (!creatorDoc.exists || !acceptorDoc.exists) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
+      // Determine who is guardian and who is protected
+      const creatorRef = db.collection("users").doc(inviteData.createdBy);
+      const acceptorRef = db.collection("users").doc(uid);
+      const [creatorDoc, acceptorDoc] = await Promise.all([
+        transaction.get(creatorRef),
+        transaction.get(acceptorRef),
+      ]);
 
-    const creatorRole = creatorDoc.data()!.role;
-    let guardianId: string;
-    let protectedPersonId: string;
+      if (!creatorDoc.exists || !acceptorDoc.exists) {
+        throw new Error("USER_NOT_FOUND");
+      }
 
-    if (creatorRole === "protected") {
-      protectedPersonId = inviteData.createdBy;
-      guardianId = uid;
-    } else {
-      guardianId = inviteData.createdBy;
-      protectedPersonId = uid;
-    }
+      const creatorRole = creatorDoc.data()!.role;
+      let guardianId: string;
+      let protectedPersonId: string;
 
-    const now = admin.firestore.Timestamp.now();
+      if (creatorRole === "protected") {
+        protectedPersonId = inviteData.createdBy;
+        guardianId = uid;
+      } else {
+        guardianId = inviteData.createdBy;
+        protectedPersonId = uid;
+      }
 
-    // Create guardian link
-    const linkId = `${guardianId}_${protectedPersonId}`;
-    await db
-      .collection("guardian_links")
-      .doc(linkId)
-      .set({
+      const now = admin.firestore.Timestamp.now();
+      const linkId = `${guardianId}_${protectedPersonId}`;
+      const linkRef = db.collection("guardian_links").doc(linkId);
+
+      // Atomically create link + mark invite as accepted
+      transaction.set(linkRef, {
         guardianId,
         protectedPersonId,
         status: "active",
@@ -148,30 +143,42 @@ router.post("/accept", async (req: Request, res: Response) => {
         protectionLayers: ["location", "heartbeat", "sos"],
       });
 
-    // Update invite
-    await inviteRef.update({
-      status: "accepted",
-      acceptedBy: uid,
+      transaction.update(inviteRef, {
+        status: "accepted",
+        acceptedBy: uid,
+      });
+
+      return { guardianId, protectedPersonId, linkId };
     });
 
-    // Log consent
+    // Log consent (outside transaction — non-critical)
     await insertConsentAudit({
-      userId: protectedPersonId,
+      userId: result.protectedPersonId,
       consentType: "guardian_link",
       action: "granted",
-      grantedTo: guardianId,
+      grantedTo: result.guardianId,
       detail: `Guardian link established via invite ${inviteRef.id}`,
     });
 
     res.json({
       success: true,
-      guardianId,
-      protectedPersonId,
-      linkId,
+      ...result,
     });
-  } catch (error) {
-    console.error("[Invite] accept error:", error);
-    res.status(500).json({ error: "Failed to accept invite" });
+  } catch (error: any) {
+    if (error.message === "NOT_FOUND") {
+      res.status(404).json({ error: "Invite not found" });
+    } else if (error.message === "EXPIRED") {
+      res.status(410).json({ error: "Invite has expired" });
+    } else if (error.message === "ALREADY_USED") {
+      res.status(409).json({ error: "Invite already used" });
+    } else if (error.message === "SELF_ACCEPT") {
+      res.status(400).json({ error: "Cannot accept your own invite" });
+    } else if (error.message === "USER_NOT_FOUND") {
+      res.status(404).json({ error: "User not found" });
+    } else {
+      console.error("[Invite] accept error:", error);
+      res.status(500).json({ error: "Failed to accept invite" });
+    }
   }
 });
 

@@ -13,8 +13,9 @@ const db = admin.firestore();
  *   Hop 3 (90s): Twilio voice call loop
  *   Hop 4 (120s): Generate emergency share link
  */
-export const onSOSCreated = functions.firestore
-  .document("sos_events/{sosId}")
+export const onSOSCreated = functions
+  .runWith({ timeoutSeconds: 300, memory: "512MB" })
+  .firestore.document("sos_events/{sosId}")
   .onCreate(async (snapshot, context) => {
     const sosId = context.params.sosId;
     const sosData = snapshot.data();

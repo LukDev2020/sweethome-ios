@@ -614,6 +614,20 @@ struct SOSActiveView: View {
                     .padding(.vertical, 10)
                     .background(alert)
 
+                // Network failure warning
+                if coordinator.sosDeliveryFailed {
+                    HStack(spacing: 6) {
+                        Image(systemName: "wifi.slash")
+                            .font(.system(size: 12))
+                        Text("求助信号暂未送达服务器，已存入离线队列，恢复网络后将自动重发")
+                            .font(.system(size: 11))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color.orange)
+                }
+
                 ScrollView {
                     VStack(spacing: 16) {
                         // SOS circle

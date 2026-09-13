@@ -18,53 +18,73 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/guardian_links/$(request.auth.uid + '_' + protectedPersonId)).data.status == 'active';
     }
 
-    // Users — read/write own profile only
+    // Users — read/write own profile only, with field validation
     match /users/{userId} {
       allow read: if isOwner(userId);
-      allow write: if isOwner(userId);
+      allow write: if isOwner(userId)
+        && request.resource.data.displayName is string
+        && request.resource.data.role in ['protected', 'guardian']
+        && request.resource.data.phone is string;
     }
 
-    // Guardian links — read if you are either side
+    // Guardian links — read if you are either side, create only if you are one party
     match /guardian_links/{linkId} {
       allow read: if isAuth() && (
         resource.data.guardianId == request.auth.uid ||
         resource.data.protectedPersonId == request.auth.uid
       );
-      allow create: if isAuth();
+      allow create: if isAuth() && (
+        request.resource.data.guardianId == request.auth.uid ||
+        request.resource.data.protectedPersonId == request.auth.uid
+      ) && request.resource.data.status in ['pending', 'active']
+        && request.resource.data.guardianId is string
+        && request.resource.data.protectedPersonId is string;
       allow update: if isAuth() && (
+        resource.data.guardianId == request.auth.uid ||
+        resource.data.protectedPersonId == request.auth.uid
+      );
+      allow delete: if isAuth() && (
         resource.data.guardianId == request.auth.uid ||
         resource.data.protectedPersonId == request.auth.uid
       );
     }
 
-    // SOS events — read if involved, write via Cloud Functions only
+    // SOS events — read if authenticated, write via Cloud Functions only
     match /sos_events/{sosId} {
       allow read: if isAuth();
       allow write: if false; // Server-side only via admin SDK
     }
 
-    // Safe zones — owner only
+    // Safe zones — owner only with validation on create
     match /safe_zones/{zoneId} {
-      allow read, write: if isAuth() && resource.data.userId == request.auth.uid;
-      allow create: if isAuth();
+      allow read: if isAuth() && resource.data.userId == request.auth.uid;
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuth() && resource.data.userId == request.auth.uid;
     }
 
-    // Duty schedules — read if involved
+    // Duty schedules — read if authenticated, write server-side only
     match /duty_schedules/{scheduleId} {
       allow read: if isAuth();
       allow write: if false; // Server-side only
     }
 
-    // Invites — creator can read, anyone can accept
+    // Invites — creator validation, acceptor can update pending invites
     match /invites/{inviteId} {
       allow read: if isAuth();
-      allow create: if isAuth();
-      allow update: if isAuth();
+      allow create: if isAuth()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.code is string;
+      allow update: if isAuth()
+        && (resource.data.createdBy == request.auth.uid || resource.data.status == 'pending');
     }
 
-    // Device tokens — own tokens only
+    // Device tokens — own tokens only (fixed: was allowing any auth user)
     match /device_tokens/{tokenId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && resource.data.userId == request.auth.uid;
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuth() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuth() && resource.data.userId == request.auth.uid;
     }
 
     // Timeline entries — own entries only
@@ -73,7 +93,20 @@ service cloud.firestore {
       allow write: if false; // Server-side only
     }
 
-    // Evidence holds — guardians create, server manages
+    // Family posts — author can edit/delete, family members can read
+    match /family_posts/{postId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isAuth() && resource.data.authorId == request.auth.uid;
+      allow delete: if isAuth() && resource.data.authorId == request.auth.uid;
+
+      match /comments/{commentId} {
+        allow read: if isAuth();
+        allow create: if isAuth() && request.resource.data.authorId == request.auth.uid;
+      }
+    }
+
+    // Evidence holds — read if authenticated, write server-side only
     match /evidence_holds/{holdId} {
       allow read: if isAuth();
       allow write: if false; // Server-side only
@@ -83,6 +116,18 @@ service cloud.firestore {
     match /integrity_proofs/{date} {
       allow read: if isAuth();
       allow write: if false; // Server-side only
+    }
+
+    // Subscriptions — read own only, write server-side
+    match /subscriptions/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if false; // Server-side only
+    }
+
+    // Crash reports — create own only
+    match /crash_reports/{reportId} {
+      allow create: if isAuth();
+      allow read, update, delete: if false;
     }
 
     // Default deny

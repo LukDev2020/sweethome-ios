@@ -21,6 +21,8 @@ struct GuardianSettingsView: View {
     @State private var showDeleteConfirm = false
     @State private var showExportAlert = false
     @State private var showRoleSwitchInfo = false
+    @State private var showDeleteError = false
+    @State private var showExportSent = false
 
     @AppStorage("notif_sos_alerts") private var notifSOS = true
     @AppStorage("notif_checkin_overdue") private var notifCheckinOverdue = true
@@ -92,9 +94,22 @@ struct GuardianSettingsView: View {
                 Text("注销账号将永久删除您的所有数据，此操作不可撤销。")
             }
             .alert("数据导出", isPresented: $showExportAlert) {
+                Button("请求导出") {
+                    Task { await requestDataExport() }
+                }
+                Button("取消", role: .cancel) {}
+            } message: {
+                Text("确认后，数据将在 24 小时内通过邮件发送给您。")
+            }
+            .alert("导出已提交", isPresented: $showExportSent) {
                 Button("确定") {}
             } message: {
                 Text("导出请求已发送，数据将在 24 小时内通过邮件发送给您。")
+            }
+            .alert("操作失败", isPresented: $showDeleteError) {
+                Button("确定") {}
+            } message: {
+                Text("操作未能完成，请检查网络连接后重试。")
             }
             .alert("切换角色", isPresented: $showRoleSwitchInfo) {
                 Button("我知道了") {}
@@ -420,9 +435,19 @@ struct GuardianSettingsView: View {
             )
             coordinator.authManager.logout()
         } catch {
-            #if DEBUG
-            print("[GuardianSettings] Delete account failed: \(error)")
-            #endif
+            showDeleteError = true
+        }
+    }
+
+    private func requestDataExport() async {
+        do {
+            let _: EmptyResponse = try await coordinator.apiClient.post(
+                "/v1/user/export",
+                body: EmptyBody()
+            )
+            showExportSent = true
+        } catch {
+            showDeleteError = true
         }
     }
 

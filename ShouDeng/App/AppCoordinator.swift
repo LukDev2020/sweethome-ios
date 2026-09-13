@@ -18,6 +18,7 @@ final class AppCoordinator: ObservableObject {
     @Published var protectedPersons: [ProtectedPerson] = []  // Guardian sees these
     @Published var myGuardians: [Guardian] = []               // Protected person sees these
     @Published var activeSOSEvent: SOSEvent?
+    @Published var sosDeliveryFailed = false
     @Published var currentRiskScores: [String: BaselineScorer.RiskScore] = [:]
     @Published var currentCoverage: DutyScheduler.DayCoverage?
     @Published var showSignup = false
@@ -370,14 +371,19 @@ final class AppCoordinator: ObservableObject {
 
         addTimelineEntry(type: .sosTriggered, description: "触发紧急求助（\(method.rawValue)）")
 
-        // Report to server
+        // Report to server (with delivery feedback)
+        sosDeliveryFailed = false
         apiClient.postQueued("/v1/sos/trigger", body: SOSTriggerRequest(
             protectedPersonId: currentUser?.id ?? "",
             triggerMethod: method,
             latitude: nil,
             longitude: nil,
             batteryLevel: Double(UIDevice.current.batteryLevel)
-        ))
+        )) { [weak self] success in
+            if !success {
+                self?.sosDeliveryFailed = true
+            }
+        }
     }
 
     func cancelSOS() {

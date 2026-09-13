@@ -212,6 +212,82 @@ router.post("/posts/:postId/comments", async (req: Request, res: Response) => {
 });
 
 /**
+ * PUT /v1/family/posts/:postId
+ * Edit a post (author only).
+ */
+router.put("/posts/:postId", async (req: Request, res: Response) => {
+  const uid = req.uid!;
+  const { postId } = req.params;
+  const { text } = req.body;
+
+  if (!text || text.trim().length === 0) {
+    res.status(400).json({ error: "Post text is required" });
+    return;
+  }
+
+  try {
+    const postRef = db.collection("family_posts").doc(postId);
+    const postDoc = await postRef.get();
+
+    if (!postDoc.exists) {
+      res.status(404).json({ error: "Post not found" });
+      return;
+    }
+
+    if (postDoc.data()!.authorId !== uid) {
+      res.status(403).json({ error: "Only the author can edit this post" });
+      return;
+    }
+
+    await postRef.update({
+      text: text.trim(),
+      updatedAt: admin.firestore.Timestamp.now(),
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("[Family] edit post error:", error);
+    res.status(500).json({ error: "Failed to edit post" });
+  }
+});
+
+/**
+ * DELETE /v1/family/posts/:postId
+ * Delete a post and its comments (author only).
+ */
+router.delete("/posts/:postId", async (req: Request, res: Response) => {
+  const uid = req.uid!;
+  const { postId } = req.params;
+
+  try {
+    const postRef = db.collection("family_posts").doc(postId);
+    const postDoc = await postRef.get();
+
+    if (!postDoc.exists) {
+      res.status(404).json({ error: "Post not found" });
+      return;
+    }
+
+    if (postDoc.data()!.authorId !== uid) {
+      res.status(403).json({ error: "Only the author can delete this post" });
+      return;
+    }
+
+    // Delete comments subcollection
+    const commentsSnap = await postRef.collection("comments").get();
+    const batch = db.batch();
+    commentsSnap.docs.forEach((doc) => batch.delete(doc.ref));
+    batch.delete(postRef);
+    await batch.commit();
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("[Family] delete post error:", error);
+    res.status(500).json({ error: "Failed to delete post" });
+  }
+});
+
+/**
  * POST /v1/family/upload
  * Upload media (base64 encoded) and return the download URL.
  * In production, clients should upload directly to Firebase Storage.

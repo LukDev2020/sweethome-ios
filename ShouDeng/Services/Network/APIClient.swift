@@ -81,7 +81,15 @@ final class APIClient {
     // MARK: - Fire-and-Forget (queues offline if network fails)
 
     func postQueued<B: Encodable>(_ path: String, body: B) {
-        guard let bodyData = try? encoder.encode(body) else { return }
+        postQueued(path, body: body, onResult: nil)
+    }
+
+    /// Fire-and-forget with optional result callback for critical operations (e.g. SOS).
+    func postQueued<B: Encodable>(_ path: String, body: B, onResult: ((Bool) -> Void)?) {
+        guard let bodyData = try? encoder.encode(body) else {
+            onResult?(false)
+            return
+        }
         let item = OfflineQueue.Item(
             method: "POST",
             path: path,
@@ -94,9 +102,13 @@ final class APIClient {
                 let (_, response) = try await session.data(for: request)
                 if let http = response as? HTTPURLResponse, http.statusCode >= 500 {
                     offlineQueue.enqueue(item)
+                    await MainActor.run { onResult?(false) }
+                } else {
+                    await MainActor.run { onResult?(true) }
                 }
             } catch {
                 offlineQueue.enqueue(item)
+                await MainActor.run { onResult?(false) }
             }
         }
     }
