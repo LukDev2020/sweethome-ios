@@ -34,6 +34,10 @@ struct ProtectedHomeView: View {
                     // Globe placeholder
                     globeSection
 
+                    // World clocks
+                    worldClocks
+                        .padding(.top, 4)
+
                     // Location card
                     locationCard
                         .padding(.top, 10)
@@ -177,6 +181,71 @@ struct ProtectedHomeView: View {
         }
     }
 
+    // MARK: - World Clocks
+
+    private var worldClocks: some View {
+        let clocks: [(city: String, time: String, note: String, isMe: Bool)] = {
+            var result: [(String, String, String, Bool)] = []
+            // My time
+            if let user = coordinator.currentUser {
+                result.append((
+                    user.cityName.isEmpty ? "我" : user.cityName,
+                    localTime(user.timeZone),
+                    "我在这",
+                    true
+                ))
+            } else {
+                result.append(("基辅", "14:07", "我在这", true))
+            }
+            // Guardian times
+            if !coordinator.myGuardians.isEmpty {
+                for g in coordinator.myGuardians {
+                    result.append((
+                        g.user.cityName.isEmpty ? g.user.displayName : g.user.cityName,
+                        localTime(g.user.timeZone),
+                        timeOfDay(g.user.timeZone),
+                        false
+                    ))
+                }
+            } else {
+                // Demo
+                result.append(contentsOf: [
+                    ("多伦多", "07:07", "清晨", false),
+                    ("悉尼", "22:07", "夜晚", false),
+                ])
+            }
+            return result
+        }()
+
+        return HStack(spacing: 6) {
+            ForEach(Array(clocks.enumerated()), id: \.offset) { _, clock in
+                VStack(spacing: 2) {
+                    Text(clock.city)
+                        .font(.system(size: 9.5))
+                        .foregroundStyle(ink.opacity(0.55))
+                        .lineLimit(1)
+                    Text(clock.time)
+                        .font(.system(size: 14, weight: .semibold, design: .serif))
+                        .foregroundStyle(clock.isMe ? lamp : ink)
+                    Text(clock.note)
+                        .font(.system(size: 9))
+                        .foregroundStyle(clock.isMe ? lamp : ink.opacity(0.45))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 7)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(clock.isMe ? lamp.opacity(0.11) : Color.clear)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(clock.isMe ? lamp.opacity(0.4) : ink.opacity(0.13), lineWidth: 1)
+                )
+            }
+        }
+        .padding(.horizontal, 16)
+    }
+
     // MARK: - Location Card
 
     private var locationCard: some View {
@@ -184,16 +253,25 @@ struct ProtectedHomeView: View {
         var pins: [LocationPin] = [
             LocationPin(id: "me", name: "我", coordinate: myCoord, color: lamp, isMe: true)
         ]
-        // Show nearest guardian if available
-        if let onDuty = coordinator.myGuardians.first(where: { $0.isOnDuty }) {
-            if let loc = onDuty.user.cityName.isEmpty ? nil : onDuty.user.cityName {
-                // Use demo coords for guardians (real GPS via backend later)
+        // Show all guardians on the map
+        if !coordinator.myGuardians.isEmpty {
+            for g in coordinator.myGuardians {
+                let coord = Self.demoCoord(for: g.user.cityName)
                 pins.append(LocationPin(
-                    id: onDuty.id, name: loc,
-                    coordinate: CLLocationCoordinate2D(latitude: 43.65, longitude: -79.38),
-                    color: safe
+                    id: g.id,
+                    name: g.user.displayName,
+                    coordinate: coord,
+                    color: g.isOnDuty ? safe : Color(.systemGray3),
+                    status: g.isOnDuty ? "值班中" : timeOfDay(g.user.timeZone)
                 ))
             }
+        } else {
+            // Demo guardians
+            pins.append(contentsOf: [
+                LocationPin(id: "mama", name: "妈妈", coordinate: CLLocationCoordinate2D(latitude: 43.65, longitude: -79.38), color: safe, status: "值班中"),
+                LocationPin(id: "gugu", name: "姑姑", coordinate: CLLocationCoordinate2D(latitude: -33.87, longitude: 151.21), color: safe, status: "夜晚"),
+                LocationPin(id: "baba", name: "爸爸", coordinate: CLLocationCoordinate2D(latitude: 43.65, longitude: -79.38), color: Color(.systemGray3), status: "清晨"),
+            ])
         }
         return LocationCardView(
             pins: pins,
@@ -202,6 +280,19 @@ struct ProtectedHomeView: View {
             label: "我的位置",
             focusedPinId: $mapFocusId
         )
+    }
+
+    private static func demoCoord(for city: String) -> CLLocationCoordinate2D {
+        switch city {
+        case "多伦多": return CLLocationCoordinate2D(latitude: 43.65, longitude: -79.38)
+        case "上海": return CLLocationCoordinate2D(latitude: 31.23, longitude: 121.47)
+        case "悉尼": return CLLocationCoordinate2D(latitude: -33.87, longitude: 151.21)
+        case "伦敦": return CLLocationCoordinate2D(latitude: 51.50, longitude: -0.12)
+        case "基辅": return CLLocationCoordinate2D(latitude: 50.45, longitude: 30.52)
+        case "北京": return CLLocationCoordinate2D(latitude: 39.90, longitude: 116.40)
+        case "东京": return CLLocationCoordinate2D(latitude: 35.68, longitude: 139.69)
+        default: return CLLocationCoordinate2D(latitude: 40.0, longitude: -74.0)
+        }
     }
 
     // MARK: - SOS Button
@@ -297,6 +388,9 @@ struct ProtectedHomeView: View {
                             )
                         }
                         .buttonStyle(.plain)
+                        .simultaneousGesture(TapGesture().onEnded {
+                            withAnimation { mapFocusId = g.id }
+                        })
                     }
                 }
 
@@ -314,6 +408,9 @@ struct ProtectedHomeView: View {
                             )
                         }
                         .buttonStyle(.plain)
+                        .simultaneousGesture(TapGesture().onEnded {
+                            withAnimation { mapFocusId = g.id }
+                        })
                     }
                 }
             } else {
@@ -325,6 +422,7 @@ struct ProtectedHomeView: View {
                     time: "07:07", timeNote: "清晨",
                     isOnDuty: true
                 )
+                .onTapGesture { withAnimation { mapFocusId = mapFocusId == "mama" ? nil : "mama" } }
 
                 sectionHeader("醒着")
                 guardianCard(
@@ -333,6 +431,7 @@ struct ProtectedHomeView: View {
                     time: "22:07", timeNote: "夜晚",
                     isOnDuty: false
                 )
+                .onTapGesture { withAnimation { mapFocusId = mapFocusId == "gugu" ? nil : "gugu" } }
 
                 sectionHeader("在休息")
                 guardianCard(
@@ -341,6 +440,7 @@ struct ProtectedHomeView: View {
                     time: "07:07", timeNote: "清晨",
                     isOnDuty: false, isDimmed: true
                 )
+                .onTapGesture { withAnimation { mapFocusId = mapFocusId == "baba" ? nil : "baba" } }
 
                 guardianCard(
                     initial: "中", name: "响应中心", tag: "24h", tagColor: pro,

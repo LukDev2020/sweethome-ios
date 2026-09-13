@@ -633,6 +633,20 @@ final class AppCoordinator: ObservableObject {
     // MARK: - Guardian Management
 
     func createInviteCode() async throws -> CreateInviteResponse {
+        #if DEBUG
+        if devBypassLogin {
+            // Generate a fake invite code for dev testing
+            try await Task.sleep(nanoseconds: 500_000_000) // simulate network
+            let code = String(format: "%06d", Int.random(in: 100000...999999))
+            let expiry = ISO8601DateFormatter().string(from: Date().addingTimeInterval(86400))
+            return CreateInviteResponse(
+                inviteId: UUID().uuidString,
+                code: code,
+                expiresAt: expiry,
+                status: "active"
+            )
+        }
+        #endif
         let response: CreateInviteResponse = try await apiClient.post(
             "/v1/invite/create",
             body: CreateInviteRequest(role: userRole.rawValue)
