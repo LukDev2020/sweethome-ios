@@ -1,4 +1,5 @@
 import SwiftUI
+import ContactsUI
 
 // MARK: - Emergency Contacts View
 //
@@ -284,12 +285,30 @@ struct AddEmergencyContactView: View {
     @State private var phone = ""
     @State private var email = ""
     @State private var address = ""
+    @State private var showContactPicker = false
 
     private let relationshipOptions = ["邻居", "社区工作人员", "当地医院", "朋友", "房东", "同事", "其他"]
 
     var body: some View {
         NavigationStack {
             Form {
+                // Import from contacts
+                Section {
+                    Button {
+                        showContactPicker = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "person.crop.circle.badge.plus")
+                                .font(.system(size: 18))
+                            Text("从通讯录选择")
+                                .font(.system(size: 14, weight: .medium))
+                        }
+                        .foregroundStyle(safe)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 4)
+                    }
+                }
+
                 Section("基本信息") {
                     TextField("姓名", text: $name)
                     Picker("关系", selection: $relationship) {
@@ -335,6 +354,55 @@ struct AddEmergencyContactView: View {
                     .foregroundStyle(safe)
                 }
             }
+            .sheet(isPresented: $showContactPicker) {
+                ContactPicker { contact in
+                    populateFromContact(contact)
+                }
+            }
+        }
+    }
+
+    private func populateFromContact(_ contact: CNContact) {
+        name = CNContactFormatter.string(from: contact, style: .fullName) ?? ""
+        if let phoneValue = contact.phoneNumbers.first?.value {
+            phone = phoneValue.stringValue
+        }
+        if let emailValue = contact.emailAddresses.first?.value {
+            email = emailValue as String
+        }
+        if let postal = contact.postalAddresses.first?.value {
+            let parts = [postal.street, postal.city, postal.state, postal.postalCode, postal.country]
+            address = parts.filter { !$0.isEmpty }.joined(separator: ", ")
+        }
+    }
+}
+
+// MARK: - CNContactPicker SwiftUI Wrapper
+
+struct ContactPicker: UIViewControllerRepresentable {
+    let onSelect: (CNContact) -> Void
+
+    func makeUIViewController(context: Context) -> CNContactPickerViewController {
+        let picker = CNContactPickerViewController()
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: CNContactPickerViewController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onSelect: onSelect)
+    }
+
+    class Coordinator: NSObject, CNContactPickerDelegate {
+        let onSelect: (CNContact) -> Void
+
+        init(onSelect: @escaping (CNContact) -> Void) {
+            self.onSelect = onSelect
+        }
+
+        func contactPicker(_ picker: CNContactPickerViewController, didSelect contact: CNContact) {
+            onSelect(contact)
         }
     }
 }

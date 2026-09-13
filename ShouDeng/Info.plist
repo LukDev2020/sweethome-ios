@@ -46,6 +46,8 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSContactsUsageDescription</key>
+	<string>守灯需要访问您的通讯录，以便快速添加紧急联络人信息。</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>守灯需要始终访问您的位置，以便在紧急情况下向家人报告您的位置，并在您进出安全区时通知守护者。</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
