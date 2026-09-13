@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>守灯 - 紧急提示系统技术架构</title>
+<style>
+  @page { size: A4; margin: 2cm 2.2cm; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 11pt;
+    line-height: 1.7;
+    color: #12203a;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+  h1 {
+    font-size: 22pt;
+    text-align: center;
+    border-bottom: 3px solid #3f8f6e;
+    padding-bottom: 12px;
+    margin-bottom: 6px;
+  }
+  .subtitle {
+    text-align: center;
+    color: #666;
+    font-size: 10pt;
+    margin-bottom: 30px;
+  }
+  h2 {
+    font-size: 15pt;
+    color: #3f8f6e;
+    border-left: 4px solid #3f8f6e;
+    padding-left: 10px;
+    margin-top: 32px;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 12pt;
+    color: #12203a;
+    margin-top: 20px;
+    page-break-after: avoid;
+  }
+  h4 {
+    font-size: 11pt;
+    color: #6b5ca5;
+    margin-top: 14px;
+  }
+  code {
+    font-family: "SF Mono", "Fira Code", Menlo, monospace;
+    background: #f4f4f4;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 9.5pt;
+  }
+  pre {
+    background: #1a1f2e;
+    color: #e0e0e0;
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-size: 9pt;
+    line-height: 1.5;
+    overflow-x: auto;
+    page-break-inside: avoid;
+  }
+  pre .keyword { color: #c678dd; }
+  pre .type { color: #e5c07b; }
+  pre .string { color: #98c379; }
+  pre .comment { color: #5c6370; font-style: italic; }
+  pre .func { color: #61afef; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 10pt;
+    page-break-inside: avoid;
+  }
+  th {
+    background: #3f8f6e;
+    color: white;
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 500;
+  }
+  td {
+    padding: 7px 10px;
+    border-bottom: 1px solid #e8e8e8;
+  }
+  tr:nth-child(even) td { background: #f8faf9; }
+  .alert-box {
+    background: #c4453c10;
+    border: 1px solid #c4453c40;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin: 12px 0;
+  }
+  .alert-box strong { color: #c4453c; }
+  .info-box {
+    background: #3f8f6e10;
+    border: 1px solid #3f8f6e40;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin: 12px 0;
+  }
+  .info-box strong { color: #3f8f6e; }
+  .purple-box {
+    background: #6b5ca510;
+    border: 1px solid #6b5ca540;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin: 12px 0;
+  }
+  .purple-box strong { color: #6b5ca5; }
+  .flow-diagram {
+    background: #fafbfc;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 14px 0;
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 9pt;
+    line-height: 1.6;
+    white-space: pre;
+    page-break-inside: avoid;
+  }
+  .toc {
+    background: #f8faf9;
+    border: 1px solid #3f8f6e30;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 20px 0;
+  }
+  .toc h3 { margin-top: 0; color: #3f8f6e; }
+  .toc ol { margin: 0; padding-left: 20px; }
+  .toc li { margin: 4px 0; font-size: 10.5pt; }
+  .page-break { page-break-before: always; }
+  .label {
+    display: inline-block;
+    font-size: 8pt;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .label-red { background: #c4453c20; color: #c4453c; }
+  .label-green { background: #3f8f6e20; color: #3f8f6e; }
+  .label-purple { background: #6b5ca520; color: #6b5ca5; }
+  .label-orange { background: #e8a33d20; color: #b07a20; }
+  .footer {
+    text-align: center;
+    color: #999;
+    font-size: 9pt;
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid #eee;
+  }
+</style>
+</head>
+<body>
+
+<h1>守灯 ShouDeng</h1>
+<h1 style="font-size:16pt; border:none; margin-top:0; padding:0;">紧急提示系统 - 技术架构文档</h1>
+<div class="subtitle">
+  版本 1.0 | 2026年9月 | 内部技术文档<br>
+  涵盖: 数据模型、iOS 推送架构、SOS 触发流程、警报面板、升级状态机
+</div>
+
+<div class="toc">
+  <h3>目录</h3>
+  <ol>
+    <li>系统总览</li>
+    <li>数据模型设计</li>
+    <li>紧急联络人录入流程</li>
+    <li>SOS 触发与数据收集</li>
+    <li>iOS 推送通知架构 (核心)</li>
+    <li>服务端推送架构</li>
+    <li>守护者警报面板 (SOSAlertDashboardView)</li>
+    <li>被守护者 SOS 进行中页</li>
+    <li>升级状态机集成</li>
+    <li>端到端数据流</li>
+    <li>离线与降级策略</li>
+    <li>安全与隐私</li>
+    <li>实现优先级</li>
+  </ol>
+</div>
+
+<!-- ================================================================== -->
+<h2>1. 系统总览</h2>
+
+<p>紧急提示系统是守灯 App 的核心功能链路。从被守护者按下 SOS 的瞬间起，系统必须在 <strong>秒级</strong> 内完成信息收集、推送、弹窗展示，让守护者能够立即掌握现场态势并采取行动。</p>
+
+<div class="flow-diagram">
+[被守护者]                    [服务端]                     [守护者]
+    |                           |                           |
+    |-- 长按 SOS 3秒 ---------> |                           |
+    |   收集 GPS/电量/状态       |                           |
+    |   构建 SOSSnapshot        |                           |
+    |                           |                           |
+    |-- POST /v1/sos/trigger -> |                           |
+    |                           |-- APNs Critical Alert --> |
+    |                           |-- SMS (hop2 备用) ------> |
+    |                           |-- VoIP Call (hop3) -----> |
+    |                           |                           |
+    |   SOSActiveView 弹出      |                  自动弹出  |
+    |   实时显示升级进度          |          SOSAlertDashboard |
+    |                           |          地图+联络人+操作   |
+    |                           |                           |
+    |                           | <-- "我已接手" ----------- |
+    |                           |-- freeze 通知 ---------> all
+    |   显示 "妈妈已接手"        |                           |
+</div>
+
+<h3>设计原则</h3>
+<table>
+  <tr><th>原则</th><th>说明</th></tr>
+  <tr><td>秒级响应</td><td>SOS 触发到守护者手机弹窗 &lt; 3 秒 (APNs Critical Alert)</td></tr>
+  <tr><td>穿透免打扰</td><td>使用 iOS Critical Alert，即使手机静音/勿扰模式也会响铃振动</td></tr>
+  <tr><td>多通道冗余</td><td>推送 → SMS → 语音电话，三层升级，确保必达</td></tr>
+  <tr><td>离线可用</td><td>无网时本地缓存 SOS，恢复后自动上报；守护者离线时 SMS 兜底</td></tr>
+  <tr><td>一键冻结</td><td>"我已接手" 立即停止所有后续升级，防止惊动全家</td></tr>
+  <tr><td>态势感知</td><td>地图 + 当地资源 + 现场信息，让远在异国的守护者也能有效行动</td></tr>
+</table>
+
+<!-- ================================================================== -->
+<h2 class="page-break">2. 数据模型设计</h2>
+
+<h3>2.1 SOSSnapshot — 紧急快照</h3>
+<p>SOS 触发瞬间的完整状态快照，打包发送给所有守护者。</p>
+
+<pre>
+<span class="keyword">struct</span> <span class="type">SOSSnapshot</span>: Codable {
+    <span class="keyword">let</span> sosEvent: <span class="type">SOSEvent</span>              <span class="comment">// 触发事件 (时间、方式、位置)</span>
+    <span class="keyword">let</span> protectedPerson: <span class="type">SnapshotPerson</span> <span class="comment">// 被守护者基本信息</span>
+    <span class="keyword">let</span> lastLocation: <span class="type">Location</span>?         <span class="comment">// 最后已知 GPS 坐标</span>
+    <span class="keyword">let</span> locationTrail: [<span class="type">Location</span>]      <span class="comment">// 最近 10 分钟位置轨迹</span>
+    <span class="keyword">let</span> batteryLevel: <span class="type">Double</span>?           <span class="comment">// 0.0-1.0</span>
+    <span class="keyword">let</span> batteryState: <span class="type">BatteryState</span>      <span class="comment">// charging/unplugged</span>
+    <span class="keyword">let</span> localContacts: [<span class="type">LocalEmergencyContact</span>]  <span class="comment">// 当地预录联络人</span>
+    <span class="keyword">let</span> regionalInfo: <span class="type">RegionalEmergencyInfo</span>    <span class="comment">// 当地急救号码</span>
+    <span class="keyword">let</span> nearbyGuardians: [<span class="type">GuardianDistance</span>]    <span class="comment">// 守护者按距离排序</span>
+    <span class="keyword">let</span> safeZones: [<span class="type">SafeZone</span>]          <span class="comment">// 附近安全区域</span>
+    <span class="keyword">let</span> lastCheckIn: <span class="type">Date</span>?             <span class="comment">// 最后一次报平安</span>
+    <span class="keyword">let</span> lastPhoneActivity: <span class="type">Date</span>?      <span class="comment">// 最后一次手机交互</span>
+    <span class="keyword">let</span> createdAt: <span class="type">Date</span>
+}
+
+<span class="keyword">struct</span> <span class="type">SnapshotPerson</span>: Codable {
+    <span class="keyword">let</span> id: <span class="type">String</span>
+    <span class="keyword">let</span> displayName: <span class="type">String</span>
+    <span class="keyword">let</span> avatarInitial: <span class="type">String</span>
+    <span class="keyword">let</span> countryCode: <span class="type">String</span>
+    <span class="keyword">let</span> cityName: <span class="type">String</span>
+    <span class="keyword">let</span> timeZone: <span class="type">String</span>             <span class="comment">// identifier</span>
+    <span class="keyword">let</span> phone: <span class="type">String</span>?               <span class="comment">// 可直拨号码</span>
+}
+
+<span class="keyword">struct</span> <span class="type">GuardianDistance</span>: Codable {
+    <span class="keyword">let</span> guardian: <span class="type">Guardian</span>
+    <span class="keyword">let</span> distanceKm: <span class="type">Double</span>?         <span class="comment">// 与被守护者的直线距离</span>
+    <span class="keyword">let</span> isOnDuty: <span class="type">Bool</span>
+}
+</pre>
+
+<h3>2.2 LocalEmergencyContact — 扩展</h3>
+<p>在现有模型基础上增加类型、坐标、可用时间。</p>
+
+<pre>
+<span class="keyword">struct</span> <span class="type">LocalEmergencyContact</span>: Codable, Identifiable {
+    <span class="keyword">let</span> id: <span class="type">String</span>
+    <span class="keyword">var</span> name: <span class="type">String</span>
+    <span class="keyword">var</span> relationship: <span class="type">String</span>        <span class="comment">// "邻居", "社区医院", "大使馆"</span>
+    <span class="keyword">var</span> type: <span class="type">ContactType</span>           <span class="comment">// .personal / .institution / .neighbor</span>
+    <span class="keyword">var</span> phone: <span class="type">String</span>
+    <span class="keyword">var</span> email: <span class="type">String</span>
+    <span class="keyword">var</span> address: <span class="type">String</span>
+    <span class="keyword">var</span> latitude: <span class="type">Double</span>?           <span class="comment">// 机构可标注地图</span>
+    <span class="keyword">var</span> longitude: <span class="type">Double</span>?
+    <span class="keyword">var</span> availableHours: <span class="type">String</span>?    <span class="comment">// "24h", "09:00-17:00"</span>
+    <span class="keyword">var</span> notes: <span class="type">String</span>?             <span class="comment">// "会说中文", "5分钟可到"</span>
+    <span class="keyword">var</span> countryCode: <span class="type">String</span>
+
+    <span class="keyword">enum</span> <span class="type">ContactType</span>: String, Codable {
+        <span class="keyword">case</span> personal      <span class="comment">// 亲友、熟人</span>
+        <span class="keyword">case</span> institution    <span class="comment">// 医院、警局、大使馆</span>
+        <span class="keyword">case</span> neighbor       <span class="comment">// 邻居、房东、社区</span>
+    }
+}
+</pre>
+
+<!-- ================================================================== -->
+<h2 class="page-break">3. 紧急联络人录入流程</h2>
+
+<h3>3.1 录入入口</h3>
+<table>
+  <tr><th>角色</th><th>入口位置</th><th>说明</th></tr>
+  <tr><td>守护者</td><td>成员详情页 → "当地紧急资源"</td><td>为每位被守护者预录当地联络人</td></tr>
+  <tr><td>被守护者</td><td>设置 → "紧急联络人"</td><td>自己录入身边的联络人</td></tr>
+  <tr><td>守护者</td><td>首次绑定引导流</td><td>绑定被守护者时引导录入 1-3 个联络人</td></tr>
+</table>
+
+<h3>3.2 录入界面设计</h3>
+<p>分三个 Tab: <span class="label label-green">亲友熟人</span> <span class="label label-purple">当地机构</span> <span class="label label-orange">邻居/社区</span></p>
+
+<p><strong>亲友熟人</strong>: 姓名、关系、电话、备注 (如 "在当地，开车 10 分钟可到")</p>
+
+<p><strong>当地机构</strong>: 名称、类型 (医院/警局/大使馆/学校)、电话、地址。使用 <code>MKLocalSearch</code> 搜索附近机构，自动填入坐标和地址。</p>
+
+<p><strong>邻居/社区</strong>: 姓名、关系 (邻居/房东/物业/社区工作人员)、电话、楼栋门牌号。</p>
+
+<h3>3.3 存储策略</h3>
+<p>联络人按被守护者 ID 分别存储，而非全局共享:</p>
+<pre>
+<span class="comment">// LocalStore</span>
+<span class="keyword">func</span> <span class="func">saveEmergencyContacts</span>(_ contacts: [<span class="type">LocalEmergencyContact</span>],
+                            forPerson id: <span class="type">String</span>) {
+    save(contacts, filename: <span class="string">"emergency_contacts_\(id).json"</span>)
+}
+
+<span class="keyword">func</span> <span class="func">loadEmergencyContacts</span>(forPerson id: <span class="type">String</span>) -> [<span class="type">LocalEmergencyContact</span>] {
+    load(filename: <span class="string">"emergency_contacts_\(id).json"</span>) ?? []
+}
+</pre>
+
+<!-- ================================================================== -->
+<h2 class="page-break">4. SOS 触发与数据收集</h2>
+
+<h3>4.1 触发方式</h3>
+<table>
+  <tr><th>方式</th><th>触发条件</th><th>优先级</th></tr>
+  <tr><td>长按 SOS 按钮</td><td>主屏长按 3 秒</td><td>用户主动</td></tr>
+  <tr><td>Apple Watch</td><td>表盘 complication 或摇晃手势</td><td>用户主动</td></tr>
+  <tr><td>蓝牙按钮</td><td>外接实体紧急按钮</td><td>用户主动</td></tr>
+  <tr><td>胁迫密码</td><td>输入预设的伪装密码解锁</td><td>静默触发</td></tr>
+  <tr><td>跌倒检测</td><td>加速度 + 陀螺仪算法判定</td><td>自动触发</td></tr>
+  <tr><td>语音唤醒词</td><td>"救命" 等自定义短语 (V3)</td><td>自动触发</td></tr>
+</table>
+
+<h3>4.2 触发瞬间的数据收集</h3>
+<pre>
+<span class="comment">// AppCoordinator.swift</span>
+<span class="keyword">func</span> <span class="func">triggerSOS</span>(method: <span class="type">SOSTriggerMethod</span>) {
+    <span class="comment">// 1. 请求最精确的 GPS (kCLLocationAccuracyBest)</span>
+    locationManager.requestPreciseLocation()
+
+    <span class="comment">// 2. 读取当前电量</span>
+    <span class="keyword">let</span> battery = UIDevice.current.batteryLevel
+    <span class="keyword">let</span> batteryState = UIDevice.current.batteryState
+
+    <span class="comment">// 3. 构建 SOSEvent</span>
+    <span class="keyword">let</span> event = SOSEvent(
+        id: UUID().uuidString,
+        protectedPersonId: currentUser?.id ?? <span class="string">""</span>,
+        triggeredAt: Date(),
+        triggerMethod: method,
+        location: locationManager.lastKnownLocation,
+        batteryLevel: Double(battery),
+        escalationState: .initiated
+    )
+
+    <span class="comment">// 4. 构建 SOSSnapshot</span>
+    <span class="keyword">let</span> snapshot = SOSSnapshot(
+        sosEvent: event,
+        protectedPerson: buildSnapshotPerson(),
+        lastLocation: locationManager.lastKnownLocation,
+        locationTrail: locationManager.recentTrail(minutes: 10),
+        batteryLevel: Double(battery),
+        batteryState: mapBatteryState(batteryState),
+        localContacts: localStore.loadEmergencyContacts(
+            forPerson: currentUser?.id ?? <span class="string">""</span>
+        ),
+        regionalInfo: RegionalEmergencyInfo.forCountry(
+            currentUser?.countryCode ?? <span class="string">"CN"</span>
+        ),
+        nearbyGuardians: computeGuardianDistances(),
+        safeZones: localStore.loadSafeZones(),
+        lastCheckIn: ...,
+        lastPhoneActivity: ...,
+        createdAt: Date()
+    )
+
+    <span class="comment">// 5. 本地持久化 (离线兜底)</span>
+    localStore.saveActiveSOSSnapshot(snapshot)
+    activeSOSEvent = event
+
+    <span class="comment">// 6. 上报服务端 → 服务端负责推送</span>
+    Task {
+        <span class="keyword">try</span> <span class="keyword">await</span> apiClient.post(<span class="string">"/v1/sos/trigger"</span>, body: snapshot)
+    }
+
+    <span class="comment">// 7. 启动高频位置上报 (每 5 秒)</span>
+    locationManager.startHighFrequencyTracking()
+
+    <span class="comment">// 8. 启动升级状态机</span>
+    escalationEngine.startEscalation(
+        sosEvent: event,
+        protectedPerson: ...,
+        allGuardians: myGuardians
+    )
+
+    <span class="comment">// 9. 触觉反馈</span>
+    UINotificationFeedbackGenerator().notificationOccurred(.warning)
+}
+</pre>
+
+<!-- ================================================================== -->
+<h2 class="page-break">5. iOS 推送通知架构 (核心)</h2>
+
+<p>这是整个紧急系统的技术关键。iOS 推送有多种类型，针对紧急场景需要组合使用。</p>
+
+<h3>5.1 iOS 推送类型对比</h3>
+<table>
+  <tr>
+    <th>类型</th>
+    <th>唤醒 App</th>
+    <th>穿透免打扰</th>
+    <th>显示通知</th>
+    <th>延迟</th>
+    <th>适用场景</th>
+  </tr>
+  <tr>
+    <td><strong>普通推送</strong><br>(Alert Push)</td>
+    <td>否</td>
+    <td>否</td>
+    <td>是</td>
+    <td>秒级</td>
+    <td>日常通知</td>
+  </tr>
+  <tr>
+    <td><strong>Critical Alert</strong><br>(关键警报)</td>
+    <td>否</td>
+    <td><span class="label label-red">是</span></td>
+    <td>是 (有声音)</td>
+    <td>秒级</td>
+    <td><strong>SOS 首选</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Silent Push</strong><br>(静默推送)</td>
+    <td><span class="label label-green">是</span></td>
+    <td>否</td>
+    <td>否</td>
+    <td>不保证</td>
+    <td>后台数据同步</td>
+  </tr>
+  <tr>
+    <td><strong>VoIP Push</strong><br>(PushKit)</td>
+    <td><span class="label label-green">是</span></td>
+    <td><span class="label label-red">是</span></td>
+    <td>CallKit UI</td>
+    <td>&lt;1秒</td>
+    <td>Hop3 语音外呼</td>
+  </tr>
+  <tr>
+    <td><strong>Notification<br>Service Extension</strong></td>
+    <td>Extension 可运行</td>
+    <td>跟随原推送</td>
+    <td>修改后显示</td>
+    <td>+几十ms</td>
+    <td>富内容修改</td>
+  </tr>
+</table>
+
+<h3>5.2 Critical Alert — SOS 的核心推送通道</h3>
+
+<div class="alert-box">
+  <strong>Critical Alert 是什么?</strong><br>
+  iOS 提供的最高优先级通知类型。即使用户开启了「勿扰模式」「静音模式」甚至「睡眠专注模式」，
+  Critical Alert 仍会发出声音和震动。这正是紧急安全 App 所需要的。
+</div>
+
+<h4>5.2.1 获取 Critical Alert 权限</h4>
+<p>Critical Alert 需要 Apple 的 <strong>特殊授权 (Entitlement)</strong>，不是所有 App 都能使用:</p>
+
+<ol>
+  <li>在 <a href="https://developer.apple.com/contact/request/notifications-critical-alerts-entitlement/">Apple Developer</a> 提交申请表</li>
+  <li>说明 App 用途: 人身安全紧急警报 (Personal Safety Emergency Alert)</li>
+  <li>Apple 审核通过后，在 App ID 中启用 Critical Alerts 能力</li>
+  <li>在 Xcode 的 entitlements 文件中添加:
+    <pre><span class="comment">&lt;!-- ShouDeng.entitlements --&gt;</span>
+&lt;key&gt;com.apple.developer.usernotifications.critical-alerts&lt;/key&gt;
+&lt;true/&gt;</pre>
+  </li>
+</ol>
+
+<h4>5.2.2 客户端请求授权</h4>
+<pre>
+<span class="keyword">import</span> UserNotifications
+
+<span class="keyword">func</span> <span class="func">requestNotificationPermissions</span>() {
+    <span class="keyword">let</span> center = UNUserNotificationCenter.current()
+    center.requestAuthorization(
+        options: [.alert, .sound, .badge, <span class="comment">// 普通权限</span>
+                  .criticalAlert]              <span class="comment">// Critical Alert 权限</span>
+    ) { granted, error <span class="keyword">in</span>
+        <span class="keyword">if</span> granted {
+            <span class="comment">// 用户同意 → 注册远程推送</span>
+            DispatchQueue.main.async {
+                UIApplication.shared.registerForRemoteNotifications()
+            }
+        }
+    }
+}
+</pre>
+
+<div class="info-box">
+  <strong>用户授权体验:</strong> iOS 会弹出两次授权窗口 — 一次为普通通知，一次专门为 Critical Alert。
+  Critical Alert 的弹窗会明确告知用户 "即使设备静音或开启勿扰模式，此 App 仍可发出声音"。
+  用户可以单独关闭 Critical Alert 而保留普通通知。
+</div>
+
+<h4>5.2.3 Device Token 注册</h4>
+<pre>
+<span class="comment">// AppDelegate.swift</span>
+<span class="keyword">func</span> <span class="func">application</span>(_ application: UIApplication,
+    didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+    <span class="comment">// 将 token 转为 hex string</span>
+    <span class="keyword">let</span> token = deviceToken.map { String(format: <span class="string">"%02x"</span>, $0) }.joined()
+
+    <span class="comment">// 上传到服务端，绑定当前用户</span>
+    Task {
+        <span class="keyword">try</span> <span class="keyword">await</span> apiClient.put(
+            <span class="string">"/v1/user/me/push-token"</span>,
+            body: [<span class="string">"token"</span>: token, <span class="string">"platform"</span>: <span class="string">"ios"</span>]
+        )
+    }
+}
+</pre>
+
+<h4>5.2.4 APNs Payload — Critical Alert 格式</h4>
+<pre>
+{
+  <span class="string">"aps"</span>: {
+    <span class="string">"alert"</span>: {
+      <span class="string">"title"</span>: <span class="string">"小雨正在求助"</span>,
+      <span class="string">"subtitle"</span>: <span class="string">"基辅市中心 | 手动触发"</span>,
+      <span class="string">"body"</span>: <span class="string">"电量 12% | 4 分钟前最后活动 | 点击查看地图和当地资源"</span>
+    },
+    <span class="string">"sound"</span>: {
+      <span class="string">"critical"</span>: 1,           <span class="comment">// 标记为 Critical Alert</span>
+      <span class="string">"name"</span>: <span class="string">"sos_alarm.caf"</span>,  <span class="comment">// 自定义紧急音效</span>
+      <span class="string">"volume"</span>: 1.0            <span class="comment">// 系统最大音量 (0.0-1.0)</span>
+    },
+    <span class="string">"interruption-level"</span>: <span class="string">"critical"</span>,
+    <span class="string">"relevance-score"</span>: 1.0,
+    <span class="string">"category"</span>: <span class="string">"SOS_ALERT"</span>,    <span class="comment">// 关联通知操作按钮</span>
+    <span class="string">"thread-id"</span>: <span class="string">"sos_event_xxx"</span>,
+    <span class="string">"mutable-content"</span>: 1      <span class="comment">// 触发 Notification Service Extension</span>
+  },
+  <span class="string">"sos_snapshot"</span>: {            <span class="comment">// 自定义数据</span>
+    <span class="string">"event_id"</span>: <span class="string">"sos_abc123"</span>,
+    <span class="string">"person_id"</span>: <span class="string">"user_xiaoyu"</span>,
+    <span class="string">"person_name"</span>: <span class="string">"小雨"</span>,
+    <span class="string">"latitude"</span>: 50.4501,
+    <span class="string">"longitude"</span>: 30.5234,
+    <span class="string">"battery"</span>: 0.12,
+    <span class="string">"trigger_method"</span>: <span class="string">"longPress"</span>,
+    <span class="string">"escalation_hop"</span>: <span class="string">"1"</span>,
+    <span class="string">"snapshot_url"</span>: <span class="string">"https://api.shoudeng.app/v1/sos/sos_abc123/snapshot"</span>
+  }
+}
+</pre>
+
+<div class="purple-box">
+  <strong>Payload 大小限制:</strong> APNs payload 最大 4KB。SOSSnapshot 完整数据可能超过此限制，
+  因此 payload 中只放关键字段 (位置、电量、人名)，完整 snapshot 通过 <code>snapshot_url</code>
+  在 App 打开后异步拉取。Notification Service Extension 也可以在后台预拉取。
+</div>
+
+<h4>5.2.5 Notification Service Extension — 后台预处理</h4>
+<p>在通知显示给用户之前，Extension 有约 30 秒的后台运行时间，用于:</p>
+<ul>
+  <li>拉取完整 SOSSnapshot (通过 snapshot_url)</li>
+  <li>反向地理编码 (坐标 → 地址文字)</li>
+  <li>缓存地图缩略图</li>
+  <li>本地化通知内容</li>
+</ul>
+
+<pre>
+<span class="comment">// NotificationService.swift (Notification Service Extension target)</span>
+<span class="keyword">class</span> <span class="type">NotificationService</span>: UNNotificationServiceExtension {
+
+    <span class="keyword">override func</span> <span class="func">didReceive</span>(
+        _ request: UNNotificationRequest,
+        withContentHandler handler: @escaping (UNNotificationContent) -> Void
+    ) {
+        <span class="keyword">guard let</span> content = request.content.mutableCopy()
+            <span class="keyword">as?</span> UNMutableNotificationContent <span class="keyword">else</span> { <span class="keyword">return</span> }
+
+        <span class="keyword">let</span> userInfo = request.content.userInfo
+
+        <span class="comment">// 1. 拉取完整 snapshot</span>
+        <span class="keyword">if let</span> urlStr = userInfo[<span class="string">"snapshot_url"</span>] <span class="keyword">as?</span> String,
+           <span class="keyword">let</span> url = URL(string: urlStr) {
+            <span class="keyword">let</span> data = <span class="keyword">try?</span> Data(contentsOf: url)
+            <span class="comment">// 存入 App Group 共享容器，主 App 打开后可直接读取</span>
+            <span class="keyword">if let</span> data {
+                <span class="keyword">let</span> container = FileManager.default
+                    .containerURL(forSecurityApplicationGroupIdentifier:
+                        <span class="string">"group.com.shoudeng.app"</span>)!
+                <span class="keyword">try?</span> data.write(to: container
+                    .appendingPathComponent(<span class="string">"latest_sos_snapshot.json"</span>))
+            }
+        }
+
+        <span class="comment">// 2. 增强通知内容</span>
+        <span class="keyword">if let</span> lat = userInfo[<span class="string">"latitude"</span>] <span class="keyword">as?</span> Double,
+           <span class="keyword">let</span> lon = userInfo[<span class="string">"longitude"</span>] <span class="keyword">as?</span> Double {
+            <span class="comment">// 反向地理编码</span>
+            <span class="keyword">let</span> geocoder = CLGeocoder()
+            <span class="keyword">let</span> location = CLLocation(latitude: lat, longitude: lon)
+            geocoder.reverseGeocodeLocation(location) { places, _ <span class="keyword">in</span>
+                <span class="keyword">if let</span> place = places?.first {
+                    content.subtitle = place.name ?? content.subtitle
+                }
+                handler(content)
+            }
+            <span class="keyword">return</span>
+        }
+
+        handler(content)
+    }
+}
+</pre>
+
+<h4>5.2.6 Notification Actions — 通知上的快捷操作</h4>
+<pre>
+<span class="comment">// 注册通知分类和操作按钮</span>
+<span class="keyword">func</span> <span class="func">registerNotificationCategories</span>() {
+    <span class="keyword">let</span> takeOverAction = UNNotificationAction(
+        identifier: <span class="string">"TAKE_OVER"</span>,
+        title: <span class="string">"我已接手"</span>,
+        options: [.authenticationRequired, .foreground]
+    )
+    <span class="keyword">let</span> callAction = UNNotificationAction(
+        identifier: <span class="string">"CALL_PERSON"</span>,
+        title: <span class="string">"立即拨号"</span>,
+        options: [.foreground]
+    )
+    <span class="keyword">let</span> viewAction = UNNotificationAction(
+        identifier: <span class="string">"VIEW_MAP"</span>,
+        title: <span class="string">"查看地图"</span>,
+        options: [.foreground]
+    )
+
+    <span class="keyword">let</span> sosCategory = UNNotificationCategory(
+        identifier: <span class="string">"SOS_ALERT"</span>,
+        actions: [takeOverAction, callAction, viewAction],
+        intentIdentifiers: [],
+        options: [.customDismissAction]
+    )
+
+    UNUserNotificationCenter.current()
+        .setNotificationCategories([sosCategory])
+}
+</pre>
+
+<h3 class="page-break">5.3 Silent Push — 后台数据同步</h3>
+<p>用于 SOS 期间的实时位置更新同步 (非紧急, 补充数据):</p>
+
+<pre>
+<span class="comment">// Silent push payload</span>
+{
+  <span class="string">"aps"</span>: {
+    <span class="string">"content-available"</span>: 1    <span class="comment">// 标记为 silent push</span>
+  },
+  <span class="string">"type"</span>: <span class="string">"location_update"</span>,
+  <span class="string">"sos_id"</span>: <span class="string">"sos_abc123"</span>,
+  <span class="string">"latitude"</span>: 50.4505,
+  <span class="string">"longitude"</span>: 30.5230,
+  <span class="string">"timestamp"</span>: <span class="string">"2026-09-12T14:07:05Z"</span>
+}
+</pre>
+
+<div class="alert-box">
+  <strong>Silent Push 限制:</strong> iOS 不保证 silent push 的即时送达。系统会根据电量、用户使用习惯等
+  动态调节频率。如果 App 被系统杀死, silent push 可能不会唤醒 App。因此 silent push 只用于补充数据,
+  不能作为 SOS 的主通道。
+</div>
+
+<h3>5.4 VoIP Push (PushKit) — Hop3 语音外呼</h3>
+<p>用于升级链第三步: 自动语音拨打守护者电话。</p>
+
+<pre>
+<span class="keyword">import</span> PushKit
+
+<span class="keyword">class</span> <span class="type">VoIPPushHandler</span>: NSObject, PKPushRegistryDelegate {
+
+    <span class="keyword">private let</span> registry = PKPushRegistry(queue: .main)
+
+    <span class="keyword">func</span> <span class="func">setup</span>() {
+        registry.delegate = <span class="keyword">self</span>
+        registry.desiredPushTypes = [.voIP]
+    }
+
+    <span class="comment">// 收到 VoIP token</span>
+    <span class="keyword">func</span> <span class="func">pushRegistry</span>(_ registry: PKPushRegistry,
+        didUpdate pushCredentials: PKPushCredentials,
+        <span class="keyword">for</span> type: PKPushType) {
+        <span class="keyword">let</span> token = pushCredentials.token
+            .map { String(format: <span class="string">"%02x"</span>, $0) }.joined()
+        <span class="comment">// 上传 VoIP token 到服务端</span>
+        Task {
+            <span class="keyword">try</span> <span class="keyword">await</span> apiClient.put(<span class="string">"/v1/user/me/voip-token"</span>,
+                body: [<span class="string">"token"</span>: token])
+        }
+    }
+
+    <span class="comment">// 收到 VoIP 推送 → 必须立即弹出 CallKit UI</span>
+    <span class="keyword">func</span> <span class="func">pushRegistry</span>(_ registry: PKPushRegistry,
+        didReceiveIncomingPushWith payload: PKPushPayload,
+        <span class="keyword">for</span> type: PKPushType,
+        completion: @escaping () -> Void) {
+
+        <span class="keyword">let</span> data = payload.dictionaryPayload
+        <span class="keyword">let</span> callerName = data[<span class="string">"person_name"</span>] <span class="keyword">as?</span> String ?? <span class="string">"紧急求助"</span>
+
+        <span class="comment">// 必须调用 CallKit reportNewIncomingCall</span>
+        <span class="comment">// 否则 iOS 会终止 App (iOS 13+ 强制要求)</span>
+        CallKitManager.shared.reportIncomingCall(
+            from: callerName,
+            sosEventId: data[<span class="string">"sos_id"</span>] <span class="keyword">as?</span> String
+        )
+
+        completion()
+    }
+}
+</pre>
+
+<div class="alert-box">
+  <strong>VoIP Push 重要限制 (iOS 13+):</strong><br>
+  1. 收到 VoIP push 后<strong>必须</strong>立即调用 <code>CXProvider.reportNewIncomingCall()</code>，否则 iOS 会杀死 App 并可能吊销推送权限<br>
+  2. Apple 审核时会检查 VoIP push 是否真正用于通话场景<br>
+  3. 守灯的 Hop3 自动外呼属于合理的 VoIP 使用: 服务端通过 Twilio 发起真实语音通话，VoIP push 用于唤醒 App 显示来电界面
+</div>
+
+<h3>5.5 Xcode 工程配置</h3>
+
+<h4>Required Capabilities (项目 → Signing & Capabilities)</h4>
+<table>
+  <tr><th>Capability</th><th>用途</th></tr>
+  <tr><td>Push Notifications</td><td>基础推送</td></tr>
+  <tr><td>Background Modes → Remote notifications</td><td>Silent push 后台唤醒</td></tr>
+  <tr><td>Background Modes → Voice over IP</td><td>VoIP push (PushKit)</td></tr>
+  <tr><td>Background Modes → Location updates</td><td>SOS 期间高频 GPS</td></tr>
+  <tr><td>App Groups</td><td>主 App 与 Notification Extension 共享数据</td></tr>
+</table>
+
+<h4>Entitlements 文件</h4>
+<pre>
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;plist version="1.0"&gt;
+&lt;dict&gt;
+    &lt;key&gt;aps-environment&lt;/key&gt;
+    &lt;string&gt;production&lt;/string&gt;
+    &lt;key&gt;com.apple.developer.usernotifications.critical-alerts&lt;/key&gt;
+    &lt;true/&gt;
+    &lt;key&gt;com.apple.security.application-groups&lt;/key&gt;
+    &lt;array&gt;
+        &lt;string&gt;group.com.shoudeng.app&lt;/string&gt;
+    &lt;/array&gt;
+&lt;/dict&gt;
+&lt;/plist&gt;
+</pre>
+
+<!-- ================================================================== -->
+<h2 class="page-break">6. 服务端推送架构</h2>
+
+<h3>6.1 架构选择: Firebase Cloud Messaging (FCM) + 直连 APNs</h3>
+
+<div class="flow-diagram">
+                         +------------------+
+                         |   守灯 Backend   |
+                         |  (Cloud Functions)|
+                         +--------+---------+
+                                  |
+                    +-------------+-------------+
+                    |                           |
+            +-------v-------+          +--------v--------+
+            |     FCM       |          |  Direct APNs    |
+            | (普通 + 静默)  |          | (Critical Alert)|
+            +-------+-------+          +--------+--------+
+                    |                           |
+            +-------v-------+          +--------v--------+
+            |   APNs        |          |     APNs        |
+            | (standard)    |          |  (priority 10)  |
+            +-------+-------+          +--------+--------+
+                    |                           |
+                    +-------------+-------------+
+                                  |
+                         +--------v---------+
+                         |   守护者 iPhone   |
+                         +------------------+
+</div>
+
+<h3>6.2 为什么需要直连 APNs?</h3>
+<table>
+  <tr><th>通道</th><th>方式</th><th>原因</th></tr>
+  <tr>
+    <td>日常通知</td>
+    <td>FCM</td>
+    <td>简单易用，FCM 自动管理 token 映射、topic 订阅、Android 兼容</td>
+  </tr>
+  <tr>
+    <td>Critical Alert</td>
+    <td><strong>直连 APNs</strong></td>
+    <td>FCM 不完全支持 Critical Alert 的 <code>sound.critical</code> 字段。直连 APNs 可完全控制 payload 格式，确保 <code>interruption-level: critical</code> 正确送达</td>
+  </tr>
+  <tr>
+    <td>VoIP Push</td>
+    <td><strong>直连 APNs</strong></td>
+    <td>VoIP push 使用独立的 PushKit token，不经过 FCM</td>
+  </tr>
+</table>
+
+<h3>6.3 APNs 认证: Token-Based (p8 密钥)</h3>
+<pre>
+<span class="comment">// 服务端 (Node.js / Cloud Functions)</span>
+<span class="keyword">const</span> apn = require(<span class="string">'@parse/node-apn'</span>);
+
+<span class="keyword">const</span> provider = <span class="keyword">new</span> apn.Provider({
+  token: {
+    key: <span class="string">'./AuthKey_XXXXXXXXXX.p8'</span>,  <span class="comment">// Apple Developer 下载</span>
+    keyId: <span class="string">'XXXXXXXXXX'</span>,             <span class="comment">// Key ID</span>
+    teamId: <span class="string">'YYYYYYYYYY'</span>,            <span class="comment">// Team ID</span>
+  },
+  production: <span class="keyword">true</span>
+});
+
+<span class="keyword">async function</span> <span class="func">sendCriticalSOSAlert</span>(deviceToken, snapshot) {
+  <span class="keyword">const</span> note = <span class="keyword">new</span> apn.Notification();
+
+  note.expiry = Math.floor(Date.now() / 1000) + 300; <span class="comment">// 5分钟内送达</span>
+  note.priority = 10;                                 <span class="comment">// 立即送达</span>
+  note.pushType = <span class="string">'alert'</span>;
+  note.topic = <span class="string">'com.shoudeng.app'</span>;
+
+  note.aps = {
+    <span class="string">'alert'</span>: {
+      <span class="string">'title'</span>: `${snapshot.person_name}正在求助`,
+      <span class="string">'subtitle'</span>: `${snapshot.city} | ${snapshot.trigger_method}`,
+      <span class="string">'body'</span>: `电量 ${Math.round(snapshot.battery*100)}%`
+    },
+    <span class="string">'sound'</span>: {
+      <span class="string">'critical'</span>: 1,
+      <span class="string">'name'</span>: <span class="string">'sos_alarm.caf'</span>,
+      <span class="string">'volume'</span>: 1.0
+    },
+    <span class="string">'interruption-level'</span>: <span class="string">'critical'</span>,
+    <span class="string">'relevance-score'</span>: 1.0,
+    <span class="string">'category'</span>: <span class="string">'SOS_ALERT'</span>,
+    <span class="string">'mutable-content'</span>: 1
+  };
+
+  note.payload = {
+    sos_snapshot: {
+      event_id: snapshot.event_id,
+      person_id: snapshot.person_id,
+      person_name: snapshot.person_name,
+      latitude: snapshot.latitude,
+      longitude: snapshot.longitude,
+      battery: snapshot.battery,
+      trigger_method: snapshot.trigger_method,
+      escalation_hop: <span class="string">'1'</span>,
+      snapshot_url: `https://api.shoudeng.app/v1/sos/${snapshot.event_id}/snapshot`
+    }
+  };
+
+  <span class="keyword">const</span> result = <span class="keyword">await</span> provider.send(note, deviceToken);
+  <span class="keyword">return</span> result;
+}
+</pre>
+
+<h3>6.4 服务端 SOS 处理流程</h3>
+<pre>
+<span class="comment">// Cloud Function: onSOSTrigger</span>
+exports.onSOSTrigger = functions.https.onCall(<span class="keyword">async</span> (data, context) => {
+  <span class="keyword">const</span> snapshot = data.snapshot;
+  <span class="keyword">const</span> protectedPersonId = snapshot.sosEvent.protectedPersonId;
+
+  <span class="comment">// 1. 存入 Firestore</span>
+  <span class="keyword">await</span> db.collection(<span class="string">'sos_events'</span>).doc(snapshot.sosEvent.id).set(snapshot);
+
+  <span class="comment">// 2. 查询所有守护者</span>
+  <span class="keyword">const</span> guardians = <span class="keyword">await</span> getGuardiansForPerson(protectedPersonId);
+
+  <span class="comment">// 3. Hop 1: 找到值班守护者，发 Critical Alert</span>
+  <span class="keyword">const</span> onDuty = guardians.find(g => g.isOnDuty) || guardians[0];
+  <span class="keyword">if</span> (onDuty) {
+    <span class="keyword">const</span> token = <span class="keyword">await</span> getAPNsToken(onDuty.id);
+    <span class="keyword">await</span> sendCriticalSOSAlert(token, snapshot);
+  }
+
+  <span class="comment">// 4. 启动升级定时器</span>
+  <span class="comment">// Hop 2: 3分钟后如无人应答 → 通知所有守护者 + SMS</span>
+  <span class="keyword">await</span> scheduleEscalation(snapshot.sosEvent.id, <span class="string">'hop2'</span>, 180);
+
+  <span class="comment">// Hop 3: 5分钟后如仍无人应答 → VoIP 语音外呼</span>
+  <span class="keyword">await</span> scheduleEscalation(snapshot.sosEvent.id, <span class="string">'hop3'</span>, 300);
+
+  <span class="keyword">return</span> { success: <span class="keyword">true</span>, eventId: snapshot.sosEvent.id };
+});
+</pre>
+
+<h3>6.5 SMS 兜底 (Hop 2)</h3>
+<p>通过 Twilio 发送 SMS，确保即使 App 未安装或推送失败也能通知到:</p>
+<pre>
+<span class="keyword">const</span> twilio = require(<span class="string">'twilio'</span>)(accountSid, authToken);
+
+<span class="keyword">async function</span> <span class="func">sendSOSSMS</span>(phoneNumber, personName, location) {
+  <span class="keyword">await</span> twilio.messages.create({
+    body: `[守灯紧急] ${personName}正在求助！`
+        + `位置: ${location}。`
+        + `打开守灯App查看详情，或回复"接手"确认处理。`,
+    from: <span class="string">'+1XXXXXXXXXX'</span>,
+    to: phoneNumber
+  });
+}
+</pre>
+
+<!-- ================================================================== -->
+<h2 class="page-break">7. 守护者警报面板 (SOSAlertDashboardView)</h2>
+
+<h3>7.1 客户端接收推送后的处理</h3>
+<pre>
+<span class="comment">// AppDelegate.swift</span>
+<span class="keyword">func</span> <span class="func">userNotificationCenter</span>(
+    _ center: UNUserNotificationCenter,
+    didReceive response: UNNotificationResponse,
+    withCompletionHandler handler: @escaping () -> Void
+) {
+    <span class="keyword">let</span> userInfo = response.notification.request.content.userInfo
+
+    <span class="keyword">switch</span> response.actionIdentifier {
+    <span class="keyword">case</span> <span class="string">"TAKE_OVER"</span>:
+        <span class="comment">// 直接冻结升级链</span>
+        coordinator.handleTakeOver(
+            sosId: userInfo[<span class="string">"event_id"</span>] <span class="keyword">as?</span> String
+        )
+
+    <span class="keyword">case</span> <span class="string">"CALL_PERSON"</span>:
+        <span class="comment">// 拨打被守护者电话</span>
+        coordinator.callProtectedPerson(
+            sosId: userInfo[<span class="string">"event_id"</span>] <span class="keyword">as?</span> String
+        )
+
+    <span class="keyword">default</span>:
+        <span class="comment">// 点击通知本体 → 打开 App → 弹出警报面板</span>
+        coordinator.openSOSAlert(
+            sosId: userInfo[<span class="string">"event_id"</span>] <span class="keyword">as?</span> String
+        )
+    }
+
+    handler()
+}
+</pre>
+
+<h3>7.2 自动弹出机制</h3>
+<pre>
+<span class="comment">// RootView.swift</span>
+<span class="keyword">struct</span> <span class="type">RootView</span>: View {
+    @EnvironmentObject <span class="keyword">var</span> coordinator: AppCoordinator
+
+    <span class="keyword">var</span> body: <span class="keyword">some</span> View {
+        ZStack {
+            <span class="comment">// ... 正常 Tab 界面</span>
+        }
+        .fullScreenCover(
+            item: $coordinator.activeSOSEvent
+        ) { event <span class="keyword">in</span>
+            SOSAlertDashboardView(sosEvent: event)
+                .environmentObject(coordinator)
+                .interactiveDismissDisabled()  <span class="comment">// 不可下滑关闭</span>
+        }
+    }
+}
+</pre>
+
+<h3>7.3 SOSAlertDashboardView 页面布局</h3>
+
+<table>
+  <tr><th>区域</th><th>内容</th><th>数据来源</th></tr>
+  <tr>
+    <td><span class="label label-red">红色横幅</span></td>
+    <td>"小雨正在求助" + 触发方式 + 实时计时器</td>
+    <td><code>SOSEvent</code></td>
+  </tr>
+  <tr>
+    <td>地图</td>
+    <td>MapKit <code>Map</code> 显示:<br>
+      - 红色脉冲 pin: 被守护者最后位置<br>
+      - 蓝色 pin: 附近机构联络人<br>
+      - 绿色圆圈: 安全区域<br>
+      - 紫色 pin: 守护者位置<br>
+      - 虚线: 最近移动轨迹</td>
+    <td><code>SOSSnapshot</code></td>
+  </tr>
+  <tr>
+    <td>操作按钮</td>
+    <td>"立即拨号" (打给被守护者) + "我已接手" (冻结升级链)</td>
+    <td><code>EscalationEngine</code></td>
+  </tr>
+  <tr>
+    <td>现场信息卡</td>
+    <td>电量 + 电量趋势、GPS 精度、最后活动时间、触发方式、是否在安全区</td>
+    <td><code>SOSSnapshot</code></td>
+  </tr>
+  <tr>
+    <td>当地资源<br>(3 组)</td>
+    <td>1. 熟人亲友 (可拨号)<br>
+        2. 当地机构 (医院/警局, 可拨号+地图导航)<br>
+        3. 官方急救号码 (按国家自动匹配)</td>
+    <td><code>LocalEmergencyContact</code><br><code>RegionalEmergencyInfo</code></td>
+  </tr>
+  <tr>
+    <td>升级链状态</td>
+    <td>3-hop 实时进度 (通知 → 全员 → 语音外呼)</td>
+    <td><code>EscalationEngine.Session</code></td>
+  </tr>
+</table>
+
+<h3>7.4 地图实现</h3>
+<pre>
+<span class="keyword">import</span> MapKit
+
+<span class="keyword">struct</span> <span class="type">SOSMapView</span>: View {
+    <span class="keyword">let</span> snapshot: SOSSnapshot
+
+    <span class="keyword">var</span> body: <span class="keyword">some</span> View {
+        Map {
+            <span class="comment">// 被守护者最后位置 (红色脉冲)</span>
+            <span class="keyword">if let</span> loc = snapshot.lastLocation {
+                Annotation(<span class="string">"求助位置"</span>,
+                    coordinate: CLLocationCoordinate2D(
+                        latitude: loc.latitude,
+                        longitude: loc.longitude)) {
+                    SOSPulsingPin()  <span class="comment">// 自定义脉冲动画</span>
+                }
+            }
+
+            <span class="comment">// 附近机构 (蓝色 pin)</span>
+            ForEach(institutionContacts) { contact <span class="keyword">in</span>
+                <span class="keyword">if let</span> lat = contact.latitude,
+                   <span class="keyword">let</span> lon = contact.longitude {
+                    Annotation(contact.name,
+                        coordinate: CLLocationCoordinate2D(
+                            latitude: lat, longitude: lon)) {
+                        InstitutionPin(contact: contact)
+                    }
+                }
+            }
+
+            <span class="comment">// 安全区域 (绿色圆圈)</span>
+            ForEach(snapshot.safeZones) { zone <span class="keyword">in</span>
+                MapCircle(
+                    center: CLLocationCoordinate2D(
+                        latitude: zone.latitude,
+                        longitude: zone.longitude),
+                    radius: zone.radius
+                )
+                .foregroundStyle(.green.opacity(0.15))
+                .stroke(.green, lineWidth: 1)
+            }
+
+            <span class="comment">// 移动轨迹 (虚线)</span>
+            <span class="keyword">if</span> !snapshot.locationTrail.isEmpty {
+                MapPolyline(coordinates: trailCoordinates)
+                    .stroke(.red.opacity(0.5), lineWidth: 2)
+            }
+        }
+        .mapStyle(.standard(elevation: .flat))
+    }
+}
+</pre>
+
+<!-- ================================================================== -->
+<h2 class="page-break">8. 被守护者 SOS 进行中页</h2>
+
+<h3>8.1 SOSActiveView 改造</h3>
+<p>当前 SOSActiveView 使用硬编码 demo 数据，需接入真实 SOS 状态:</p>
+
+<table>
+  <tr><th>信息</th><th>来源</th></tr>
+  <tr><td>触发时间 + 持续计时</td><td><code>SOSEvent.triggeredAt</code></td></tr>
+  <tr><td>触发位置</td><td><code>SOSEvent.location</code> (反向地理编码)</td></tr>
+  <tr><td>升级进度</td><td><code>EscalationEngine.activeSession</code></td></tr>
+  <tr><td>守护者响应状态</td><td>WebSocket 实时推送 / 轮询</td></tr>
+  <tr><td>"妈妈已接手"</td><td><code>EscalationEngine.Session.frozenBy</code></td></tr>
+</table>
+
+<h3>8.2 实时状态同步</h3>
+<p>SOS 期间，被守护者端需实时知道谁已读、谁接手。两种方案:</p>
+
+<table>
+  <tr><th>方案</th><th>优点</th><th>缺点</th></tr>
+  <tr>
+    <td><strong>Firestore 实时监听</strong></td>
+    <td>简单可靠，Firebase SDK 自带</td>
+    <td>依赖网络，费用随监听数增长</td>
+  </tr>
+  <tr>
+    <td><strong>WebSocket</strong></td>
+    <td>延迟最低 (&lt;100ms)，灵活</td>
+    <td>需自建 WebSocket 服务</td>
+  </tr>
+</table>
+
+<p>推荐: <strong>Firestore 实时监听</strong> (MVP 阶段)，SOS 事件作为一个文档，所有相关方监听同一文档变化:</p>
+<pre>
+<span class="comment">// 被守护者端: 监听 SOS 事件变化</span>
+<span class="keyword">let</span> listener = db.collection(<span class="string">"sos_events"</span>)
+    .document(sosEventId)
+    .addSnapshotListener { snapshot, error <span class="keyword">in</span>
+        <span class="keyword">guard let</span> data = snapshot?.data() <span class="keyword">else</span> { <span class="keyword">return</span> }
+
+        <span class="comment">// 更新 UI: 谁已读、谁接手</span>
+        <span class="keyword">if let</span> frozenBy = data[<span class="string">"frozen_by"</span>] <span class="keyword">as?</span> String {
+            <span class="comment">// 显示 "妈妈已接手"</span>
+            showFrozenBanner(guardianName: frozenBy)
+        }
+
+        <span class="comment">// 更新升级链步骤状态</span>
+        <span class="keyword">if let</span> hop = data[<span class="string">"current_hop"</span>] <span class="keyword">as?</span> Int {
+            updateEscalationUI(hop: hop)
+        }
+    }
+</pre>
+
+<!-- ================================================================== -->
+<h2 class="page-break">9. 升级状态机集成</h2>
+
+<h3>9.1 现有 EscalationEngine 与推送的对接</h3>
+
+<div class="flow-diagram">
+触发 SOS
+  │
+  ▼
+Hop 1: onDutyGuardian (Critical Alert → APNs)
+  │  等待 3 分钟 (夜间 1.5 分钟)
+  │  无应答?
+  ▼
+Hop 2: allGuardians (Critical Alert + SMS → APNs + Twilio)
+  │  等待 2 分钟
+  │  无应答?
+  ▼
+Hop 3: voiceCall (VoIP Push → PushKit + Twilio Voice)
+  │  每人最多拨 3 次，间隔 30 秒
+  │  全部未接?
+  ▼
+EXHAUSTED → 通知被守护者 "所有守护者暂无法联系"
+             → 显示当地急救号码一键拨打
+
+任何一步: 守护者点 "我已接手"
+  → freeze() → 立即停止所有后续动作
+  → 通知所有人 "已有人接手"
+</div>
+
+<h3>9.2 Callback 与推送通道映射</h3>
+<pre>
+<span class="comment">// AppCoordinator 中配置 EscalationEngine 回调</span>
+<span class="keyword">func</span> <span class="func">setupEscalationCallbacks</span>() {
+    escalationEngine.onSendNotification = { request <span class="keyword">in</span>
+        Task {
+            <span class="keyword">switch</span> request.priority {
+            <span class="keyword">case</span> .critical:
+                <span class="comment">// 通过服务端发 Critical Alert (直连 APNs)</span>
+                <span class="keyword">try await</span> self.apiClient.post(
+                    <span class="string">"/v1/push/critical"</span>, body: request)
+            <span class="keyword">case</span> .high:
+                <span class="comment">// 通过 FCM 发普通高优先级推送</span>
+                <span class="keyword">try await</span> self.apiClient.post(
+                    <span class="string">"/v1/push/send"</span>, body: request)
+            <span class="keyword">case</span> .normal:
+                <span class="comment">// 通过 FCM 发普通推送</span>
+                <span class="keyword">try await</span> self.apiClient.post(
+                    <span class="string">"/v1/push/send"</span>, body: request)
+            }
+        }
+    }
+
+    escalationEngine.onInitiateVoiceCall = { guardianId, sosId <span class="keyword">in</span>
+        Task {
+            <span class="comment">// 服务端通过 Twilio 发起语音外呼</span>
+            <span class="comment">// 同时发 VoIP push 唤醒守护者 App</span>
+            <span class="keyword">try await</span> self.apiClient.post(
+                <span class="string">"/v1/sos/\(sosId)/voice-call"</span>,
+                body: [<span class="string">"guardian_id"</span>: guardianId])
+        }
+    }
+
+    escalationEngine.onEscalationFrozen = { session, guardianId <span class="keyword">in</span>
+        <span class="comment">// 更新 Firestore SOS 文档</span>
+        Task {
+            <span class="keyword">try await</span> self.apiClient.post(
+                <span class="string">"/v1/sos/\(session.sosEvent.id)/freeze"</span>,
+                body: [<span class="string">"guardian_id"</span>: guardianId])
+        }
+    }
+}
+</pre>
+
+<!-- ================================================================== -->
+<h2 class="page-break">10. 端到端数据流</h2>
+
+<h3>10.1 完整时序图</h3>
+<div class="flow-diagram">
+时间   被守护者 iPhone        守灯 Backend          守护者 iPhone
+─────────────────────────────────────────────────────────────────
+T+0s   长按 SOS 3秒
+       收集 GPS/电量
+       构建 SOSSnapshot
+       本地存储 snapshot
+       弹出 SOSActiveView
+       高频 GPS 启动 (5s)
+       ──POST /sos/trigger──>
+                              存入 Firestore
+                              查找值班守护者
+                              ──APNs Critical──>
+T+2s                                               Critical Alert 响铃
+                                                   (穿透免打扰)
+                                                   锁屏显示:
+                                                   "小雨正在求助"
+                                                   [我已接手] [立即拨号]
+                              ──Silent Push────>
+T+3s                                               后台拉取完整 snapshot
+                                                   缓存到 App Group
+T+5s                                               用户点击通知
+                                                   App 打开
+                                                   fullScreenCover 弹出
+                                                   SOSAlertDashboardView
+                                                   地图 + 联络人 + 操作
+T+10s                                              点击 "我已接手"
+                              <──POST /freeze────
+                              更新 Firestore
+                              状态 = frozen
+       Firestore 监听触发
+       显示 "妈妈已接手"
+                              ──Push "已有人接手"──> 其他守护者
+T+15s  升级链停止
+       GPS 恢复正常频率
+
+─── 如果 Hop 1 无人应答 (3分钟后): ─────────────────────────────
+
+T+180s                        Hop 2 触发
+                              ──APNs Critical──> 所有守护者
+                              ──SMS via Twilio──> 所有守护者手机
+
+─── 如果 Hop 2 也无人应答 (再过 2分钟): ────────────────────────
+
+T+300s                        Hop 3 触发
+                              ──VoIP Push──────> 守护者 (CallKit UI)
+                              ──Twilio Voice───> 守护者手机 (真实来电)
+</div>
+
+<h3>10.2 数据流向图</h3>
+<div class="flow-diagram">
++------------------+        +------------------+        +------------------+
+|   被守护者 App    |        |    守灯 Backend   |        |    守护者 App     |
++------------------+        +------------------+        +------------------+
+|                  |        |                  |        |                  |
+| SOSSnapshot      |------->| Firestore        |------->| SOSSnapshot      |
+| (本地构建)        | POST   | (持久化)          | Push   | (推送+拉取)       |
+|                  |        |                  |        |                  |
+| LocationTrail    |------->| Location         |------->| Map Annotations  |
+| (高频 GPS)        | Stream | (实时流)          | Listen | (实时更新)        |
+|                  |        |                  |        |                  |
+| SOSActiveView    |<-------| Escalation State |------->| AlertDashboard   |
+| (显示进度)        | Listen | (状态机)          | Push   | (显示进度)        |
+|                  |        |                  |        |                  |
+| "妈妈已接手"      |<-------| Freeze Event     |<-------| "我已接手"        |
+|                  | Listen |                  | POST   |                  |
++------------------+        +------------------+        +------------------+
+                                    |
+                            +-------v--------+
+                            |    Twilio      |
+                            | SMS + Voice    |
+                            +----------------+
+</div>
+
+<!-- ================================================================== -->
+<h2 class="page-break">11. 离线与降级策略</h2>
+
+<h3>11.1 被守护者离线</h3>
+<table>
+  <tr><th>场景</th><th>策略</th></tr>
+  <tr>
+    <td>SOS 时无网络</td>
+    <td>本地存储 SOSSnapshot + 加入 <code>OfflineQueue</code>。<br>恢复网络后自动上报 (已有 <code>OfflineQueue</code> 机制)</td>
+  </tr>
+  <tr>
+    <td>GPS 无信号</td>
+    <td>使用最后已知位置 + WiFi/基站定位。<br><code>Location.accuracy</code> 标注精度供守护者参考</td>
+  </tr>
+  <tr>
+    <td>手机关机/没电</td>
+    <td>服务端检测心跳中断 → 自动升级为 "失联" 状态 → 通知守护者</td>
+  </tr>
+</table>
+
+<h3>11.2 守护者离线</h3>
+<table>
+  <tr><th>场景</th><th>策略</th></tr>
+  <tr>
+    <td>App 未安装</td>
+    <td>SMS 兜底 (Hop 2)</td>
+  </tr>
+  <tr>
+    <td>手机关机</td>
+    <td>APNs 会暂存推送，开机后送达。<br>同时 SMS + 语音外呼确保备用通道</td>
+  </tr>
+  <tr>
+    <td>网络差</td>
+    <td>Notification Service Extension 预拉取 snapshot 并缓存。<br>App 打开后优先读缓存</td>
+  </tr>
+</table>
+
+<h3>11.3 服务端降级</h3>
+<table>
+  <tr><th>场景</th><th>策略</th></tr>
+  <tr>
+    <td>Firebase 宕机</td>
+    <td>直连 APNs 不经过 FCM，Critical Alert 仍可送达。<br>Twilio SMS/Voice 独立于 Firebase</td>
+  </tr>
+  <tr>
+    <td>API 超时</td>
+    <td>客户端本地运行 <code>EscalationEngine</code>，<br>以 P2P 方式发送通知 (需要守护者设备的 push token 本地缓存)</td>
+  </tr>
+</table>
+
+<!-- ================================================================== -->
+<h2>12. 安全与隐私</h2>
+
+<table>
+  <tr><th>措施</th><th>说明</th></tr>
+  <tr><td>传输加密</td><td>所有 API 通信使用 TLS 1.3。APNs 原生 TLS</td></tr>
+  <tr><td>存储加密</td><td>SOSSnapshot 本地使用 iOS Data Protection (NSFileProtectionComplete)</td></tr>
+  <tr><td>位置数据</td><td>GPS 轨迹仅在 SOS 期间收集，事件结束后按保留策略清除</td></tr>
+  <tr><td>推送内容</td><td>Critical Alert 中不包含精确坐标文字 (防止锁屏泄露)。<br>仅显示城市级位置，详细信息需解锁后在 App 内查看</td></tr>
+  <tr><td>VoIP Token</td><td>VoIP push token 和 APNs token 分别管理，服务端加密存储</td></tr>
+  <tr><td>SMS 内容</td><td>SMS 不包含精确位置，仅提示 "打开 App 查看"</td></tr>
+</table>
+
+<!-- ================================================================== -->
+<h2 class="page-break">13. 实现优先级</h2>
+
+<h3>Phase 1: 核心链路 (MVP)</h3>
+<table>
+  <tr><th>#</th><th>任务</th><th>文件</th></tr>
+  <tr><td>1</td><td>SOSSnapshot 模型</td><td><code>Events.swift</code></td></tr>
+  <tr><td>2</td><td>triggerSOS() 构建 snapshot</td><td><code>AppCoordinator.swift</code></td></tr>
+  <tr><td>3</td><td>新建 SOSAlertDashboardView (地图+联络人+操作)</td><td>新文件</td></tr>
+  <tr><td>4</td><td>RootView fullScreenCover 自动弹出</td><td><code>RootView.swift</code></td></tr>
+  <tr><td>5</td><td>Notification Service Extension target</td><td>新 target</td></tr>
+  <tr><td>6</td><td>Critical Alert 权限申请 + 客户端授权</td><td>Entitlements + <code>PushService.swift</code></td></tr>
+  <tr><td>7</td><td>服务端: APNs 直连 Critical Alert 发送</td><td>Cloud Function</td></tr>
+</table>
+
+<h3>Phase 2: 升级链</h3>
+<table>
+  <tr><th>#</th><th>任务</th><th>文件</th></tr>
+  <tr><td>8</td><td>EscalationEngine callback → 服务端推送</td><td><code>AppCoordinator.swift</code></td></tr>
+  <tr><td>9</td><td>Hop 2: SMS via Twilio</td><td>Cloud Function</td></tr>
+  <tr><td>10</td><td>Hop 3: VoIP Push + Twilio Voice + CallKit</td><td>新文件 + Cloud Function</td></tr>
+  <tr><td>11</td><td>Firestore 实时监听 (双端同步)</td><td><code>AppCoordinator.swift</code></td></tr>
+</table>
+
+<h3>Phase 3: 当地资源</h3>
+<table>
+  <tr><th>#</th><th>任务</th><th>文件</th></tr>
+  <tr><td>12</td><td>扩展 LocalEmergencyContact 模型 + per-person 存储</td><td><code>EmergencyContactsView.swift</code>, <code>LocalStore.swift</code></td></tr>
+  <tr><td>13</td><td>机构搜索 (MKLocalSearch)</td><td><code>EmergencyContactsView.swift</code></td></tr>
+  <tr><td>14</td><td>SOSActiveView 接入真实数据</td><td><code>ProtectedHomeView.swift</code></td></tr>
+  <tr><td>15</td><td>离线队列串联</td><td><code>OfflineQueue.swift</code></td></tr>
+</table>
+
+<div class="footer">
+  守灯 ShouDeng | 紧急提示系统技术架构 v1.0 | 2026年9月 | 内部文档
+</div>
+
+</body>
+</html>
