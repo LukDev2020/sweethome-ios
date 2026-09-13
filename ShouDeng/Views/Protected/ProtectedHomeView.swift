@@ -1,4 +1,5 @@
 import SwiftUI
+import MapKit
 
 // MARK: - Screen A1: Protected Person Home
 //
@@ -32,10 +33,14 @@ struct ProtectedHomeView: View {
                     // Globe placeholder
                     globeSection
 
+                    // Location card
+                    locationCard
+                        .padding(.top, 10)
+
                     // SOS Button
                     sosButton
                         .padding(.horizontal, 16)
-                        .padding(.top, 16)
+                        .padding(.top, 12)
 
                     // Check-in Button
                     checkInButton
@@ -169,6 +174,32 @@ struct ProtectedHomeView: View {
                 .font(.system(size: 9.5))
                 .foregroundStyle(.white.opacity(0.65))
         }
+    }
+
+    // MARK: - Location Card
+
+    private var locationCard: some View {
+        let myCoord = CLLocationCoordinate2D(latitude: 50.45, longitude: 30.52) // demo: Kyiv
+        var pins: [LocationPin] = [
+            LocationPin(id: "me", name: "我", coordinate: myCoord, color: lamp, isMe: true)
+        ]
+        // Show nearest guardian if available
+        if let onDuty = coordinator.myGuardians.first(where: { $0.isOnDuty }) {
+            if let loc = onDuty.user.cityName.isEmpty ? nil : onDuty.user.cityName {
+                // Use demo coords for guardians (real GPS via backend later)
+                pins.append(LocationPin(
+                    id: onDuty.id, name: loc,
+                    coordinate: CLLocationCoordinate2D(latitude: 43.65, longitude: -79.38),
+                    color: safe
+                ))
+            }
+        }
+        return LocationCardView(
+            pins: pins,
+            centerCoordinate: myCoord,
+            lastUpdateMinutes: 2,
+            label: "我的位置"
+        )
     }
 
     // MARK: - SOS Button

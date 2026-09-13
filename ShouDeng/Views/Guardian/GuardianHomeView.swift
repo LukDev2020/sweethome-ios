@@ -1,4 +1,5 @@
 import SwiftUI
+import MapKit
 
 // MARK: - Screen B1: Guardian Home
 //
@@ -34,6 +35,10 @@ struct GuardianHomeView: View {
                     globeSection
                     worldClocks
                         .padding(.top, 4)
+
+                    // Location card
+                    locationCard
+                        .padding(.top, 10)
 
                     // Needs attention
                     needsAttentionSection
@@ -210,6 +215,40 @@ struct GuardianHomeView: View {
             }
         }
         .padding(.horizontal, 16)
+    }
+
+    // MARK: - Location Card
+
+    private var locationCard: some View {
+        // Demo pins for protected persons
+        let demoPins: [LocationPin] = [
+            LocationPin(id: "xiaoyu", name: "小雨", coordinate: CLLocationCoordinate2D(latitude: 50.45, longitude: 30.52), color: lamp, status: "12分钟前"),
+            LocationPin(id: "nainai", name: "奶奶", coordinate: CLLocationCoordinate2D(latitude: 31.23, longitude: 121.47), color: lamp, status: "14小时前"),
+            LocationPin(id: "didi", name: "弟弟", coordinate: CLLocationCoordinate2D(latitude: 51.50, longitude: -0.12), color: lamp, status: "在线"),
+            LocationPin(id: "baba", name: "爸爸", coordinate: CLLocationCoordinate2D(latitude: 43.65, longitude: -79.38), color: safe, isMe: true, status: "在线"),
+        ]
+
+        // Use real data if available, else demo
+        let pins: [LocationPin]
+        if !coordinator.protectedPersons.isEmpty {
+            pins = coordinator.protectedPersons.compactMap { person -> LocationPin? in
+                guard let loc = person.lastKnownLocation else { return nil }
+                return LocationPin(
+                    id: person.id,
+                    name: person.user.displayName,
+                    coordinate: CLLocationCoordinate2D(latitude: loc.latitude, longitude: loc.longitude),
+                    color: person.status == .alert ? alert : lamp
+                )
+            }
+        } else {
+            pins = demoPins
+        }
+
+        return LocationCardView(
+            pins: pins.isEmpty ? demoPins : pins,
+            lastUpdateMinutes: 12,
+            label: "家人位置"
+        )
     }
 
     // MARK: - Needs Attention

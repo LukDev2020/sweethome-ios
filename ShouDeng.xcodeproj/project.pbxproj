@@ -64,6 +64,7 @@
 		A406EE8717C42C064E08EA50 /* GuardianPlanBillingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2045C1ED8DC5B6CCC03AC6C3 /* GuardianPlanBillingView.swift */; };
 		C0B0BE414A87C5344A38B4E4 /* MotionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47FDC4CC1E52AABFD1C2926E /* MotionService.swift */; };
 		C443EE3E317212A2697B78C0 /* GlobeMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794BD85D0F41F07ABDBAED46 /* GlobeMapView.swift */; };
+		47816649B79F75EDB27FE1A7 /* LocationCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81656C4D8D0698BD59582535 /* LocationCardView.swift */; };
 		C5289F9240B30DC097151387 /* ProtectedHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06711676C420190B6BF2FB41 /* ProtectedHomeView.swift */; };
 		C59757EA88DF0C1DF1A90CB4 /* GuardianDutyScheduleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA9F22E2D872D3B7AE014A1 /* GuardianDutyScheduleView.swift */; };
 		C62234B70752947FCA30189A /* EscalationEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE810FC84014C69B9D77A58F /* EscalationEngineTests.swift */; };
@@ -131,6 +132,7 @@
 		67C305CFAAFD54663F090DC3 /* DisclaimerCopy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisclaimerCopy.swift; sourceTree = "<group>"; };
 		6D380C2024773F6C6EF07A8B /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
 		794BD85D0F41F07ABDBAED46 /* GlobeMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobeMapView.swift; sourceTree = "<group>"; };
+		81656C4D8D0698BD59582535 /* LocationCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationCardView.swift; sourceTree = "<group>"; };
 		7A8653AAB32EF5A2540EA607 /* DutyScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DutyScheduler.swift; sourceTree = "<group>"; };
 		7BC3B8E4A971D9B9EDE21F15 /* APIEndpoints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIEndpoints.swift; sourceTree = "<group>"; };
 		840E27551F35299D52DBA9E9 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -297,6 +299,7 @@
 				50C6D87FF7D442419388289E /* DegradationBannerView.swift */,
 				C180202B726745C4D4136747 /* FeatureDisclosureView.swift */,
 				794BD85D0F41F07ABDBAED46 /* GlobeMapView.swift */,
+				81656C4D8D0698BD59582535 /* LocationCardView.swift */,
 				3D4BC3608A17EB87F1339C43 /* LegalView.swift */,
 				3466851E2976AD062984576F /* OnboardingView.swift */,
 				997CD81ED07E07D1FF5E0291 /* RootView.swift */,
@@ -612,6 +615,7 @@
 				ED58D0933C87B251E8F7BD1D /* FallDetector.swift in Sources */,
 				677EF24901E9EE3C564AA7E2 /* FeatureDisclosureView.swift in Sources */,
 				C443EE3E317212A2697B78C0 /* GlobeMapView.swift in Sources */,
+				47816649B79F75EDB27FE1A7 /* LocationCardView.swift in Sources */,
 				61586C8E3D663CC027C5804E /* GuardianAlertResponseView.swift in Sources */,
 				C59757EA88DF0C1DF1A90CB4 /* GuardianDutyScheduleView.swift in Sources */,
 				445FC9E110BFEAD1DAB39BAB /* GuardianHomeView.swift in Sources */,
