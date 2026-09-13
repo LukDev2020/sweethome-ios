@@ -21,13 +21,41 @@ struct GuardianHomeView: View {
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
     private let pro = Color(red: 107/255, green: 92/255, blue: 165/255)
 
-    // Demo data
-    private let clocks: [(city: String, time: String, note: String, isYou: Bool)] = [
-        ("基辅", "14:07", "白天", false),
-        ("上海", "20:07", "夜晚", false),
-        ("多伦多", "07:07", "你在这", true),
-        ("伦敦", "12:07", "白天", false),
-    ]
+    private var dynamicClocks: [(city: String, time: String, note: String, isYou: Bool)] {
+        var result: [(String, String, String, Bool)] = []
+        // My time (guardian)
+        if let user = coordinator.currentUser {
+            result.append((
+                user.cityName.isEmpty ? "我" : user.cityName,
+                localTime(user.timeZone),
+                "你在这",
+                true
+            ))
+        }
+        // Protected persons' times
+        if !coordinator.protectedPersons.isEmpty {
+            for p in coordinator.protectedPersons {
+                let tz = p.user.timeZone
+                result.append((
+                    p.user.cityName.isEmpty ? p.user.displayName : p.user.cityName,
+                    localTime(tz),
+                    timeOfDay(tz),
+                    false
+                ))
+            }
+        } else {
+            // Demo fallback
+            result.append(contentsOf: [
+                ("基辅", "14:07", "白天", false),
+                ("上海", "20:07", "夜晚", false),
+                ("伦敦", "12:07", "白天", false),
+            ])
+            if result.isEmpty {
+                result.insert(("多伦多", "07:07", "你在这", true), at: 0)
+            }
+        }
+        return result
+    }
 
     var body: some View {
         NavigationStack {
@@ -116,6 +144,7 @@ struct GuardianHomeView: View {
             }
             .task {
                 await coordinator.fetchProtectedPersons()
+                await coordinator.fetchFamilyPosts()
             }
         }
     }
@@ -190,7 +219,7 @@ struct GuardianHomeView: View {
 
     private var worldClocks: some View {
         HStack(spacing: 6) {
-            ForEach(Array(clocks.enumerated()), id: \.offset) { _, clock in
+            ForEach(Array(dynamicClocks.enumerated()), id: \.offset) { _, clock in
                 VStack(spacing: 2) {
                     Text(clock.city)
                         .font(.system(size: 9.5))
@@ -288,11 +317,17 @@ struct GuardianHomeView: View {
             } else {
                 // Demo fallback when no real data
                 VStack(alignment: .leading, spacing: 7) {
-                    Text("需要处理")
-                        .font(.system(size: 10.5))
-                        .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
-                        .padding(.horizontal, 18)
-                        .padding(.top, 12)
+                    HStack {
+                        Text("需要处理")
+                            .font(.system(size: 10.5))
+                            .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
+                        Spacer()
+                        Text("演示数据")
+                            .font(.system(size: 9))
+                            .foregroundStyle(.orange.opacity(0.6))
+                    }
+                    .padding(.horizontal, 18)
+                    .padding(.top, 12)
 
                     protectedPersonCard(
                         initial: "奶", name: "奶奶",
@@ -340,11 +375,17 @@ struct GuardianHomeView: View {
             } else {
                 // Demo fallback
                 VStack(alignment: .leading, spacing: 7) {
-                    Text("一切正常")
-                        .font(.system(size: 10.5))
-                        .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
-                        .padding(.horizontal, 18)
-                        .padding(.top, 12)
+                    HStack {
+                        Text("一切正常")
+                            .font(.system(size: 10.5))
+                            .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
+                        Spacer()
+                        Text("演示数据")
+                            .font(.system(size: 9))
+                            .foregroundStyle(.orange.opacity(0.6))
+                    }
+                    .padding(.horizontal, 18)
+                    .padding(.top, 12)
 
                     protectedPersonCard(
                         initial: "雨", name: "小雨",
@@ -372,6 +413,25 @@ struct GuardianHomeView: View {
                 }
             }
         }
+    }
+
+    private func localTime(_ tz: TimeZone) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        formatter.timeZone = tz
+        return formatter.string(from: Date())
+    }
+
+    private func timeOfDay(_ tz: TimeZone) -> String {
+        var cal = Calendar.current
+        cal.timeZone = tz
+        let hour = cal.component(.hour, from: Date())
+        if hour >= 6 && hour < 9 { return "清晨" }
+        if hour >= 9 && hour < 12 { return "上午" }
+        if hour >= 12 && hour < 14 { return "中午" }
+        if hour >= 14 && hour < 18 { return "下午" }
+        if hour >= 18 && hour < 22 { return "晚上" }
+        return "深夜"
     }
 
     private func statusDetail(_ person: ProtectedPerson) -> String {

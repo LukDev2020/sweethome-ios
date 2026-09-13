@@ -147,6 +147,10 @@ struct ProtectedPersonStatusResponse: Codable {
     let lastCheckIn: Date?
     let lastPhoneActivity: Date?
     let protectionLayers: Int
+    // Profile fields for cross-timezone display
+    var timeZoneId: String?
+    var countryCode: String?
+    var cityName: String?
 }
 
 // MARK: - Device Token Registration

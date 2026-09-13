@@ -228,9 +228,9 @@ final class AppCoordinator: ObservableObject {
                         displayName: p.displayName,
                         role: .protected_,
                         avatarInitial: String(p.displayName.prefix(1)),
-                        timeZone: .current,
-                        countryCode: "",
-                        cityName: p.locationAddress ?? "",
+                        timeZone: p.timeZoneId.flatMap { TimeZone(identifier: $0) } ?? .current,
+                        countryCode: p.countryCode ?? "",
+                        cityName: p.cityName ?? p.locationAddress ?? "",
                         createdAt: Date()
                     ),
                     guardians: [],
@@ -497,6 +497,27 @@ final class AppCoordinator: ObservableObject {
     }
 
     // MARK: - Timeline
+
+    func fetchTimeline() async {
+        do {
+            let response: TimelineResponse = try await apiClient.get("/v1/timeline")
+            await MainActor.run {
+                // Merge server entries with local-only entries
+                let serverIds = Set(response.entries.map(\.id))
+                let localOnly = timeline.filter { !serverIds.contains($0.id) }
+                var merged = response.entries
+                merged.append(contentsOf: localOnly)
+                merged.sort { $0.timestamp > $1.timestamp }
+                self.timeline = Array(merged.prefix(200))
+                localStore.saveTimeline(self.timeline)
+            }
+        } catch {
+            #if DEBUG
+            print("[Coordinator] Failed to fetch timeline: \(error)")
+            #endif
+            // Keep local timeline on failure
+        }
+    }
 
     func addTimelineEntry(type: TimelineEntryType, description: String) {
         let entry = TimelineEntry(

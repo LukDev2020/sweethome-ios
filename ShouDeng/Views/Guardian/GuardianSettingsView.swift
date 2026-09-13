@@ -68,7 +68,12 @@ struct GuardianSettingsView: View {
             .background(Color(.systemBackground))
             .navigationTitle("设置")
             .navigationBarTitleDisplayMode(.inline)
-            .sheet(isPresented: $showProfileEdit) {
+            .sheet(isPresented: $showProfileEdit, onDismiss: {
+                Task {
+                    await coordinator.fetchUserProfile()
+                    await coordinator.fetchProtectedPersons()
+                }
+            }) {
                 ProfileEditView()
                     .environmentObject(coordinator)
             }

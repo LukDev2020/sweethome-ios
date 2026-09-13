@@ -83,7 +83,12 @@ struct ProtectedSettingsView: View {
             .background(Color(.systemBackground))
             .navigationTitle("设置")
             .navigationBarTitleDisplayMode(.inline)
-            .sheet(isPresented: $showProfileEdit) {
+            .sheet(isPresented: $showProfileEdit, onDismiss: {
+                Task {
+                    await coordinator.fetchUserProfile()
+                    await coordinator.fetchGuardians()
+                }
+            }) {
                 ProfileEditView()
                     .environmentObject(coordinator)
             }

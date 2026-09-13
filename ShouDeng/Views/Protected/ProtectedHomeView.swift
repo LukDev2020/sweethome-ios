@@ -100,6 +100,8 @@ struct ProtectedHomeView: View {
             .featureDisclosure(.sos, trigger: $sosDisclosureTrigger)
             .task {
                 await coordinator.fetchGuardians()
+                await coordinator.fetchFamilyPosts()
+                await coordinator.fetchTimeline()
             }
         }
     }
@@ -415,7 +417,17 @@ struct ProtectedHomeView: View {
                 }
             } else {
                 // Demo fallback
-                sectionHeader("正在值班")
+                HStack {
+                    Text("正在值班")
+                        .font(.system(size: 10.5))
+                        .foregroundStyle(ink.opacity(0.45))
+                    Spacer()
+                    Text("演示数据")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.orange.opacity(0.6))
+                }
+                .padding(.horizontal, 18)
+                .padding(.top, 12)
                 guardianCard(
                     initial: "妈", name: "妈妈", tag: "值班中", tagColor: safe,
                     detail: "多伦多 · 位置、电量、健康",
@@ -613,7 +625,7 @@ struct SOSActiveView: View {
                                 Text("已发出")
                                     .font(.system(size: 26, weight: .black, design: .serif))
                                     .foregroundStyle(.white)
-                                Text("14:07 · 基辅市中心")
+                                Text(sosTimeLocation)
                                     .font(.system(size: 10.5))
                                     .foregroundStyle(.white.opacity(0.8))
                             }
@@ -645,10 +657,43 @@ struct SOSActiveView: View {
         }
     }
 
+    private var sosTimeLocation: String {
+        if let sos = coordinator.activeSOSEvent {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "HH:mm"
+            let time = formatter.string(from: sos.triggeredAt)
+            let city = coordinator.currentUser?.cityName ?? ""
+            return city.isEmpty ? time : "\(time) · \(city)"
+        }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter.string(from: Date())
+    }
+
     private var escalationSteps: some View {
-        VStack(spacing: 0) {
+        let state = coordinator.activeSOSEvent?.escalationState ?? .initiated
+        let guardianNames = escalationGuardianNames
+
+        // Determine step states based on escalation
+        let hop1Done: Bool = [.hop1_acknowledged, .hop2_allNotified, .hop3_voiceCalling, .hop3_exhausted, .frozen, .resolved].contains(state)
+        let hop1Started: Bool = state == .hop1_notified || hop1Done
+        let hop2Done: Bool = [.hop3_voiceCalling, .hop3_exhausted, .frozen, .resolved].contains(state)
+        let hop2Started: Bool = state == .hop2_allNotified || hop2Done
+        let hop3Started: Bool = [.hop3_voiceCalling, .hop3_exhausted].contains(state)
+
+        let step1State: StepState = hop1Done ? .done : (hop1Started ? .live : .live)
+        let step2State: StepState = hop2Done ? .done : (hop2Started ? .live : .waiting)
+        let step3State: StepState = hop3Started ? .live : .waiting
+
+        let elapsed = coordinator.activeSOSEvent.map {
+            Int(Date().timeIntervalSince($0.triggeredAt))
+        } ?? 0
+        let mins = elapsed / 60
+        let secs = elapsed % 60
+
+        return VStack(spacing: 0) {
             HStack {
-                Text("已进行 4 分 12 秒")
+                Text("已进行 \(mins) 分 \(secs) 秒")
                     .font(.system(size: 11.5, weight: .medium))
                     .foregroundStyle(alert)
                 Spacer()
@@ -656,15 +701,28 @@ struct SOSActiveView: View {
             .padding(12)
             .background(alert.opacity(0.09))
 
-            stepRow(number: "1", title: "家人已收到", detail: "妈妈 14:08 已读，正在拨号", state: .done)
-            stepRow(number: "2", title: "备用联系人已通知", detail: "姑姑、邻居 Olena 已收到", state: .live)
-            stepRow(number: "3", title: "自动语音外呼", detail: "系统将依次拨打家人电话，直到有人接听确认", state: .waiting)
+            stepRow(number: "1", title: "家人已收到",
+                    detail: guardianNames.first.map { "\($0) 已通知" } ?? "正在通知家人",
+                    state: step1State)
+            stepRow(number: "2", title: "备用联系人已通知",
+                    detail: guardianNames.count > 1 ? "\(guardianNames.dropFirst().joined(separator: "、")) 已收到" : "等待通知备用联系人",
+                    state: step2State)
+            stepRow(number: "3", title: "自动语音外呼",
+                    detail: "系统将依次拨打家人电话，直到有人接听确认",
+                    state: step3State)
         }
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
         )
+    }
+
+    private var escalationGuardianNames: [String] {
+        if !coordinator.myGuardians.isEmpty {
+            return coordinator.myGuardians.map(\.user.displayName)
+        }
+        return ["妈妈", "姑姑"]
     }
 
     enum StepState { case done, live, waiting }
