@@ -17,6 +17,15 @@ struct ProtectedCoverageView: View {
     @State private var smsDowngrade = true
     @State private var lowPowerSaving = true
 
+    private var countryName: String {
+        let code = coordinator.currentUser?.countryCode ?? "CN"
+        return Locale.current.localizedString(forRegionCode: code) ?? code
+    }
+
+    private var cityName: String {
+        coordinator.currentUser?.cityName ?? ""
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 12) {
@@ -56,7 +65,7 @@ struct ProtectedCoverageView: View {
 
     private var localResourcesPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("乌克兰 · 基辅（已自动识别）")
+            Text("\(countryName)\(cityName.isEmpty ? "" : " · \(cityName)")（已自动识别）")
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
             resourceRow("当地紧急号码", value: "112 已预置", isOk: true)
@@ -80,7 +89,7 @@ struct ProtectedCoverageView: View {
                 .foregroundStyle(.secondary)
             resourceRow("紧急号码与使馆信息", value: "已下载", isOk: true)
             resourceRow("短信求助模板", value: "已下载", isOk: true)
-            resourceRow("离线地图 · 基辅", value: "未下载 · 42MB", isOk: false)
+            resourceRow("离线地图\(cityName.isEmpty ? "" : " · \(cityName)")", value: "未下载 · 42MB", isOk: false)
         }
         .padding(12)
         .background(

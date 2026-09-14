@@ -26,19 +26,26 @@ struct ProtectedTabView: View {
                 }
                 .tag(1)
 
+            ProtectedCoverageView()
+                .tabItem {
+                    Image(systemName: "globe.americas")
+                    Text("覆盖")
+                }
+                .tag(2)
+
             ProtectedRecordsView()
                 .tabItem {
                     Image(systemName: "clock.arrow.circlepath")
                     Text("记录")
                 }
-                .tag(2)
+                .tag(3)
 
             ProtectedSettingsView()
                 .tabItem {
                     Image(systemName: "gearshape")
                     Text("设置")
                 }
-                .tag(3)
+                .tag(4)
         }
         .tint(safe)
     }

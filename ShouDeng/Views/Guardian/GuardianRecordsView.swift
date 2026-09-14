@@ -24,9 +24,15 @@ struct GuardianRecordsView: View {
     @State private var showInviteSheet = false
     @State private var showAddEmergency = false
     @State private var editingMember: GuardianMember? = nil
-    @State private var guardianMembers: [GuardianMember] = GuardianMember.demoData
+    @State private var guardianMembers: [GuardianMember] = []
     @AppStorage("local_emergency_contacts_v2") private var emergencyData: Data = Data()
     @State private var localEmergencyContacts: [LocalEmergencyContact] = []
+
+    private var scheduleSubtitle: String {
+        let name = coordinator.protectedPersons.first?.user.displayName ?? "被守护者"
+        let city = coordinator.protectedPersons.first?.user.cityName ?? ""
+        return "\(name)的一天\(city.isEmpty ? "" : " · \(city)时间")"
+    }
 
     enum RecordTab: String, CaseIterable {
         case timeline = "时间线"
@@ -62,7 +68,10 @@ struct GuardianRecordsView: View {
             .background(Color(.systemBackground))
             .navigationTitle("记录")
             .navigationBarTitleDisplayMode(.inline)
-            .onAppear { loadEmergencyContacts() }
+            .onAppear {
+                loadEmergencyContacts()
+                loadGuardianMembers()
+            }
         }
     }
 
@@ -230,7 +239,7 @@ struct GuardianRecordsView: View {
     private var scheduleContent: some View {
         VStack(spacing: 12) {
             VStack(spacing: 2) {
-                Text("小雨的一天 · 基辅时间")
+                Text(scheduleSubtitle)
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }
@@ -742,6 +751,35 @@ struct GuardianRecordsView: View {
                 #endif
             }
         }
+    }
+
+    private func loadGuardianMembers() {
+        // If we already have members loaded (e.g. from invite), keep them
+        guard guardianMembers.isEmpty else { return }
+
+        // Build from real data: current user + any known guardians
+        var members: [GuardianMember] = []
+
+        // Add self (the current guardian user)
+        if let user = coordinator.currentUser {
+            members.append(GuardianMember(
+                id: user.id,
+                name: user.displayName.isEmpty ? "我" : user.displayName,
+                city: user.cityName,
+                phone: "",
+                role: .primary,
+                status: .active,
+                isMe: true,
+                joinedAt: user.createdAt
+            ))
+        }
+
+        // If no real data yet, show demo to indicate what populated state looks like
+        if members.count <= 1 && coordinator.protectedPersons.isEmpty {
+            members.append(contentsOf: GuardianMember.demoData.filter { !$0.isMe })
+        }
+
+        guardianMembers = members
     }
 
     private func loadEmergencyContacts() {

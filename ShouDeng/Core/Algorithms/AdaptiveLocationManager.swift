@@ -88,7 +88,7 @@ final class AdaptiveLocationManager: NSObject {
     private let bufferZoneRadius: CLLocationDistance = 2000  // 2km radius
 
     // Reporting
-    private var lastReportedLocation: CLLocation?
+    private(set) var lastReportedLocation: CLLocation?
     private var lastReportTime: Date?
 
     // Dwell-point tracking

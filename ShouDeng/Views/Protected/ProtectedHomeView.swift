@@ -18,6 +18,7 @@ struct ProtectedHomeView: View {
     @State private var sosDisclosureTrigger = false
     @State private var showInviteGuardian = false
     @State private var mapFocusId: String?
+    @State private var checkInDone = false
 
     // Design system colors from the HTML
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
@@ -251,7 +252,18 @@ struct ProtectedHomeView: View {
     // MARK: - Location Card
 
     private var locationCard: some View {
-        let myCoord = CLLocationCoordinate2D(latitude: 50.45, longitude: 30.52) // demo: Kyiv
+        // Use real device location if available, else fall back to user's city or default
+        let deviceLocation = coordinator.locationManager.lastReportedLocation
+        let myCoord: CLLocationCoordinate2D = {
+            if let loc = deviceLocation {
+                return CLLocationCoordinate2D(latitude: loc.coordinate.latitude, longitude: loc.coordinate.longitude)
+            }
+            if let user = coordinator.currentUser, !user.cityName.isEmpty {
+                return Self.demoCoord(for: user.cityName)
+            }
+            return CLLocationCoordinate2D(latitude: 39.9, longitude: 116.4) // fallback: Beijing
+        }()
+
         var pins: [LocationPin] = [
             LocationPin(id: "me", name: "我", coordinate: myCoord, color: lamp, isMe: true)
         ]
@@ -278,7 +290,7 @@ struct ProtectedHomeView: View {
         return LocationCardView(
             pins: pins,
             centerCoordinate: myCoord,
-            lastUpdateMinutes: 2,
+            lastUpdateMinutes: deviceLocation != nil ? Int(Date().timeIntervalSince(deviceLocation!.timestamp) / 60) : nil,
             label: "我的位置",
             focusedPinId: $mapFocusId
         )
@@ -325,6 +337,7 @@ struct ProtectedHomeView: View {
                 .onChanged { _ in
                     isSOSPressed = true
                     sosDisclosureTrigger = true
+                    UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
                     withAnimation(.linear(duration: 3.0)) {
                         sosProgress = 1.0
                     }
@@ -332,6 +345,7 @@ struct ProtectedHomeView: View {
                 .onEnded { _ in
                     isSOSPressed = false
                     sosProgress = 0
+                    UINotificationFeedbackGenerator().notificationOccurred(.warning)
                     coordinator.triggerSOS(method: .longPress)
                     showSOSActive = true
                 }
@@ -355,17 +369,34 @@ struct ProtectedHomeView: View {
     private var checkInButton: some View {
         Button {
             coordinator.performCheckIn()
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            withAnimation(.easeInOut(duration: 0.3)) {
+                checkInDone = true
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                withAnimation { checkInDone = false }
+            }
         } label: {
-            HStack {
-                Text("今天我很好，报个平安")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(Color(red: 44/255, green: 107/255, blue: 81/255))
+            HStack(spacing: 6) {
+                if checkInDone {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundStyle(Color(red: 44/255, green: 107/255, blue: 81/255))
+                    Text("已报平安")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(Color(red: 44/255, green: 107/255, blue: 81/255))
+                } else {
+                    Text("今天我很好，报个平安")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(Color(red: 44/255, green: 107/255, blue: 81/255))
+                }
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
-            .background(safe.opacity(0.1))
+            .background(checkInDone ? safe.opacity(0.2) : safe.opacity(0.1))
             .clipShape(RoundedRectangle(cornerRadius: 13))
         }
+        .disabled(checkInDone)
     }
 
     // MARK: - Guardian List

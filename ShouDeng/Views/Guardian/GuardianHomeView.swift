@@ -13,6 +13,7 @@ import MapKit
 struct GuardianHomeView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @State private var mapFocusId: String?
+    @State private var showInviteSheet = false
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
     private let inkDeep = Color(red: 8/255, green: 15/255, blue: 27/255)
@@ -76,7 +77,7 @@ struct GuardianHomeView: View {
                     allNormalSection
 
                     // Add button
-                    Button {} label: {
+                    Button { showInviteSheet = true } label: {
                         Text("添加要守护的人")
                             .font(.system(size: 13))
                             .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.6))
@@ -137,10 +138,14 @@ struct GuardianHomeView: View {
             }
             .navigationDestination(for: String.self) { personId in
                 if coordinator.activeSOSEvent?.protectedPersonId == personId {
-                    GuardianAlertResponseView()
+                    GuardianAlertResponseView(personId: personId)
                 } else {
-                    GuardianMemberDetailView()
+                    GuardianMemberDetailView(personId: personId)
                 }
+            }
+            .sheet(isPresented: $showInviteSheet) {
+                InviteGuardianView()
+                    .environmentObject(coordinator)
             }
             .task {
                 await coordinator.fetchProtectedPersons()

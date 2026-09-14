@@ -324,11 +324,17 @@ struct ProfileEditView: View {
                 showSuccess = true
             }
         } catch {
-            // API failed — still save locally in dev mode
+            #if DEBUG
+            // In dev mode, save locally despite API failure
             await MainActor.run {
                 applyToUser(name: trimmedName, city: trimmedCity, avatarPath: avatarPath)
                 showSuccess = true
             }
+            #else
+            await MainActor.run {
+                errorMessage = "保存失败：\(error.localizedDescription)"
+            }
+            #endif
         }
         await MainActor.run { isSaving = false }
     }

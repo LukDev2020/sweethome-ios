@@ -20,6 +20,14 @@ struct GuardianDutyScheduleView: View {
     @State private var routeToCenter = true
     @State private var handoffReminder = true
 
+    private var firstProtectedName: String {
+        coordinator.protectedPersons.first?.user.displayName ?? "被守护者"
+    }
+
+    private var firstProtectedCity: String {
+        coordinator.protectedPersons.first?.user.cityName ?? ""
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 12) {
@@ -27,7 +35,7 @@ struct GuardianDutyScheduleView: View {
                 VStack(spacing: 2) {
                     Text("值班排程")
                         .font(.system(size: 20, weight: .bold))
-                    Text("小雨的一天 · 基辅时间")
+                    Text("\(firstProtectedName)的一天\(firstProtectedCity.isEmpty ? "" : " · \(firstProtectedCity)时间")")
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                 }
