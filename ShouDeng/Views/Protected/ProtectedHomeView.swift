@@ -19,6 +19,13 @@ struct ProtectedHomeView: View {
     @State private var showInviteGuardian = false
     @State private var mapFocusId: String?
     @State private var checkInDone = false
+    @State private var showHomeTimer = false
+    @State private var showArrivalReport = false
+    @State private var showItinerary = false
+    @State private var showMedicalCard = false
+    @State private var showEmergencyText = false
+    @State private var showConsulate = false
+    @State private var showClaimMaterials = false
 
     // Design system colors from the HTML
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
@@ -52,6 +59,22 @@ struct ProtectedHomeView: View {
                     checkInButton
                         .padding(.horizontal, 16)
                         .padding(.top, 10)
+
+                    // Pinned hotline card
+                    if let hotline = coordinator.selectedHotline {
+                        HotlineCardView(
+                            hotline: hotline,
+                            onTapChange: { showConsulate = true },
+                            onRemove: { coordinator.removeSelectedHotline() }
+                        )
+                        .padding(.horizontal, 16)
+                        .padding(.top, 12)
+                    }
+
+                    // Quick Actions (Iteration 1 & 2 features)
+                    quickActions
+                        .padding(.horizontal, 16)
+                        .padding(.top, 12)
 
                     // Guardian list
                     guardianList
@@ -98,6 +121,34 @@ struct ProtectedHomeView: View {
                 InviteGuardianView()
                     .environmentObject(coordinator)
             }
+            .sheet(isPresented: $showHomeTimer) {
+                HomeTimerView()
+                    .environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showArrivalReport) {
+                ArrivalReportView()
+                    .environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showItinerary) {
+                SharedItineraryView()
+                    .environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showMedicalCard) {
+                MedicalCardView()
+                    .environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showEmergencyText) {
+                EmergencyTextCardView()
+                    .environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showConsulate) {
+                ConsulateView()
+                    .environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showClaimMaterials) {
+                ClaimMaterialsView()
+                    .environmentObject(coordinator)
+            }
             .featureDisclosure(.sos, trigger: $sosDisclosureTrigger)
             .task {
                 await coordinator.fetchGuardians()
@@ -129,15 +180,71 @@ struct ProtectedHomeView: View {
     // MARK: - Globe Section
 
     private var globeSection: some View {
-        ZStack {
+        let dynamicPins: [GlobeMapView.Pin]
+        let dynamicLinks: [GlobeMapView.Link]
+        let layersText: String
+        let subtitleText: String
+
+        if !coordinator.myGuardians.isEmpty {
+            var p: [GlobeMapView.Pin] = []
+            let myCity = coordinator.currentUser?.cityName ?? ""
+            let myLabel = myCity.isEmpty ? "我" : "我 · \(myCity)"
+            let myCoord: CLLocationCoordinate2D = {
+                if let loc = coordinator.locationManager.lastReportedLocation {
+                    return loc.coordinate
+                }
+                if let user = coordinator.currentUser, !user.cityName.isEmpty {
+                    return Self.coordForCity( user.cityName)
+                }
+                return CLLocationCoordinate2D(latitude: 39.9, longitude: 116.4)
+            }()
+            p.append(.init(label: myLabel, latitude: myCoord.latitude, longitude: myCoord.longitude, color: lamp, isMe: true))
+            for g in coordinator.myGuardians {
+                let c = Self.coordForCity( g.user.cityName)
+                p.append(.init(label: g.user.displayName, latitude: c.latitude, longitude: c.longitude, color: safe, isMe: false))
+            }
+            p.append(.init(label: "响应中心", latitude: 25.20, longitude: 55.27, color: pro, isMe: false))
+            p.append(.init(label: "响应中心", latitude: 50.11, longitude: 8.68, color: pro, isMe: false))
+            dynamicPins = p
+            dynamicLinks = (1..<p.count).map { GlobeMapView.Link(from: $0, to: 0) }
+
+            var countries = Set<String>()
+            if let cc = coordinator.currentUser?.countryCode, !cc.isEmpty { countries.insert(cc) }
+            for g in coordinator.myGuardians { if !g.user.countryCode.isEmpty { countries.insert(g.user.countryCode) } }
+            layersText = "\(min(3, coordinator.myGuardians.count + 1)) 层保护"
+            subtitleText = "\(coordinator.myGuardians.count) 位家人在 \(max(countries.count, 1)) 个国家"
+        } else {
+            // No guardians yet — show just me + response centers
+            var p: [GlobeMapView.Pin] = []
+            let myCity = coordinator.currentUser?.cityName ?? ""
+            let myLabel = myCity.isEmpty ? "我" : "我 · \(myCity)"
+            let fallbackCoord: CLLocationCoordinate2D = {
+                if let loc = coordinator.locationManager.lastReportedLocation {
+                    return loc.coordinate
+                }
+                if let user = coordinator.currentUser, !user.cityName.isEmpty {
+                    return Self.coordForCity( user.cityName)
+                }
+                return CLLocationCoordinate2D(latitude: 39.9, longitude: 116.4)
+            }()
+            p.append(.init(label: myLabel, latitude: fallbackCoord.latitude, longitude: fallbackCoord.longitude, color: lamp, isMe: true))
+            p.append(.init(label: "响应中心", latitude: 25.20, longitude: 55.27, color: pro, isMe: false))
+            p.append(.init(label: "响应中心", latitude: 50.11, longitude: 8.68, color: pro, isMe: false))
+            dynamicPins = p
+            dynamicLinks = [.init(from: 1, to: 0), .init(from: 2, to: 0)]
+            layersText = "1 层保护"
+            subtitleText = "邀请家人加入守护"
+        }
+
+        return ZStack {
             // Dark card background
             RoundedRectangle(cornerRadius: 16)
                 .fill(inkDeep)
 
             // Rotating globe with pins and arcs
             GlobeMapView(
-                pins: GlobeMapView.protectedPersonPins,
-                links: GlobeMapView.protectedPersonLinks,
+                pins: dynamicPins,
+                links: dynamicLinks,
                 initialLongitude: -30
             )
 
@@ -145,10 +252,10 @@ struct ProtectedHomeView: View {
             VStack {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("3 层保护")
+                        Text(layersText)
                             .font(.system(size: 14, weight: .semibold, design: .serif))
                             .foregroundStyle(lamp)
-                        Text("4 位家人在 3 个国家")
+                        Text(subtitleText)
                             .font(.system(size: 10.5))
                             .foregroundStyle(.white.opacity(0.6))
                     }
@@ -210,12 +317,6 @@ struct ProtectedHomeView: View {
                         false
                     ))
                 }
-            } else {
-                // Demo
-                result.append(contentsOf: [
-                    ("多伦多", "07:07", "清晨", false),
-                    ("悉尼", "22:07", "夜晚", false),
-                ])
             }
             return result
         }()
@@ -259,7 +360,7 @@ struct ProtectedHomeView: View {
                 return CLLocationCoordinate2D(latitude: loc.coordinate.latitude, longitude: loc.coordinate.longitude)
             }
             if let user = coordinator.currentUser, !user.cityName.isEmpty {
-                return Self.demoCoord(for: user.cityName)
+                return Self.coordForCity( user.cityName)
             }
             return CLLocationCoordinate2D(latitude: 39.9, longitude: 116.4) // fallback: Beijing
         }()
@@ -270,7 +371,7 @@ struct ProtectedHomeView: View {
         // Show all guardians on the map
         if !coordinator.myGuardians.isEmpty {
             for g in coordinator.myGuardians {
-                let coord = Self.demoCoord(for: g.user.cityName)
+                let coord = Self.coordForCity( g.user.cityName)
                 pins.append(LocationPin(
                     id: g.id,
                     name: g.user.displayName,
@@ -279,13 +380,6 @@ struct ProtectedHomeView: View {
                     status: g.isOnDuty ? "值班中" : timeOfDay(g.user.timeZone)
                 ))
             }
-        } else {
-            // Demo guardians
-            pins.append(contentsOf: [
-                LocationPin(id: "mama", name: "妈妈", coordinate: CLLocationCoordinate2D(latitude: 43.65, longitude: -79.38), color: safe, status: "值班中"),
-                LocationPin(id: "gugu", name: "姑姑", coordinate: CLLocationCoordinate2D(latitude: -33.87, longitude: 151.21), color: safe, status: "夜晚"),
-                LocationPin(id: "baba", name: "爸爸", coordinate: CLLocationCoordinate2D(latitude: 43.65, longitude: -79.38), color: Color(.systemGray3), status: "清晨"),
-            ])
         }
         return LocationCardView(
             pins: pins,
@@ -296,7 +390,7 @@ struct ProtectedHomeView: View {
         )
     }
 
-    private static func demoCoord(for city: String) -> CLLocationCoordinate2D {
+    private static func coordForCity(_ city: String) -> CLLocationCoordinate2D {
         switch city {
         case "多伦多": return CLLocationCoordinate2D(latitude: 43.65, longitude: -79.38)
         case "上海": return CLLocationCoordinate2D(latitude: 31.23, longitude: 121.47)
@@ -399,6 +493,77 @@ struct ProtectedHomeView: View {
         .disabled(checkInDone)
     }
 
+    // MARK: - Quick Actions
+
+    private var quickActions: some View {
+        VStack(spacing: 8) {
+            // Row 1: Daily use tools
+            HStack(spacing: 8) {
+                quickActionButton(
+                    icon: "house.fill", label: "回家计时",
+                    color: safe
+                ) { showHomeTimer = true }
+
+                quickActionButton(
+                    icon: "mappin.circle.fill", label: "到达报告",
+                    color: safe
+                ) { showArrivalReport = true }
+
+                quickActionButton(
+                    icon: "airplane", label: "共享行程",
+                    color: safe
+                ) { showItinerary = true }
+            }
+
+            // Row 2: Emergency tools
+            HStack(spacing: 8) {
+                quickActionButton(
+                    icon: "staroflife.fill", label: "医疗卡",
+                    color: alert
+                ) { showMedicalCard = true }
+
+                quickActionButton(
+                    icon: "text.bubble.fill", label: "多语言急救",
+                    color: alert
+                ) { showEmergencyText = true }
+
+                quickActionButton(
+                    icon: "building.columns.fill", label: "领事电话",
+                    color: pro
+                ) { showConsulate = true }
+            }
+
+            // Row 3: Insurance & records
+            HStack(spacing: 8) {
+                quickActionButton(
+                    icon: "doc.text.magnifyingglass", label: "理赔材料",
+                    color: safe
+                ) { showClaimMaterials = true }
+
+                Color.clear.frame(maxWidth: .infinity, maxHeight: 1)
+                Color.clear.frame(maxWidth: .infinity, maxHeight: 1)
+            }
+        }
+    }
+
+    private func quickActionButton(icon: String, label: String, color: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 5) {
+                Image(systemName: icon)
+                    .font(.system(size: 16))
+                    .foregroundStyle(color)
+                Text(label)
+                    .font(.system(size: 11))
+                    .foregroundStyle(ink.opacity(0.7))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(color.opacity(0.06))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+        }
+        .buttonStyle(.plain)
+    }
+
     // MARK: - Guardian List
 
     private var guardianList: some View {
@@ -447,50 +612,23 @@ struct ProtectedHomeView: View {
                     }
                 }
             } else {
-                // Demo fallback
-                HStack {
-                    Text("正在值班")
-                        .font(.system(size: 10.5))
-                        .foregroundStyle(ink.opacity(0.45))
-                    Spacer()
-                    Text("演示数据")
-                        .font(.system(size: 9))
-                        .foregroundStyle(.orange.opacity(0.6))
+                // Empty state — no guardians linked yet
+                VStack(spacing: 12) {
+                    Image(systemName: "person.2.slash")
+                        .font(.system(size: 28))
+                        .foregroundStyle(ink.opacity(0.25))
+                    Text("还没有守护者")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(ink.opacity(0.6))
+                    Text("邀请家人成为你的守护者，他们可以在紧急时刻收到你的求助信号。")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
                 }
-                .padding(.horizontal, 18)
-                .padding(.top, 12)
-                guardianCard(
-                    initial: "妈", name: "妈妈", tag: "值班中", tagColor: safe,
-                    detail: "多伦多 · 位置、电量、健康",
-                    time: "07:07", timeNote: "清晨",
-                    isOnDuty: true
-                )
-                .onTapGesture { withAnimation { mapFocusId = mapFocusId == "mama" ? nil : "mama" } }
-
-                sectionHeader("醒着")
-                guardianCard(
-                    initial: "姑", name: "姑姑", tag: nil, tagColor: nil,
-                    detail: "悉尼 · 仅紧急时可见位置",
-                    time: "22:07", timeNote: "夜晚",
-                    isOnDuty: false
-                )
-                .onTapGesture { withAnimation { mapFocusId = mapFocusId == "gugu" ? nil : "gugu" } }
-
-                sectionHeader("在休息")
-                guardianCard(
-                    initial: "爸", name: "爸爸", tag: nil, tagColor: nil,
-                    detail: "多伦多 · 位置、电量",
-                    time: "07:07", timeNote: "清晨",
-                    isOnDuty: false, isDimmed: true
-                )
-                .onTapGesture { withAnimation { mapFocusId = mapFocusId == "baba" ? nil : "baba" } }
-
-                guardianCard(
-                    initial: "中", name: "响应中心", tag: "24h", tagColor: pro,
-                    detail: "中英俄语 · 家人无响应时接手",
-                    time: "在岗", timeNote: "常驻",
-                    isOnDuty: false, isPro: true
-                )
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 32)
+                .padding(.horizontal, 16)
             }
 
             // Add guardian button
@@ -630,6 +768,10 @@ struct ProtectedHomeView: View {
 struct SOSActiveView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @Environment(\.dismiss) var dismiss
+    @State private var tick = Date()
+    @State private var showClaimMaterialsPrompt = false
+    @State private var showClaimMaterials = false
+    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
@@ -686,7 +828,7 @@ struct SOSActiveView: View {
                         // Cancel button
                         Button {
                             coordinator.cancelSOS()
-                            dismiss()
+                            showClaimMaterialsPrompt = true
                         } label: {
                             Text("取消求助（我没事）")
                                 .font(.system(size: 14))
@@ -699,6 +841,16 @@ struct SOSActiveView: View {
             }
             .navigationTitle("求助已发出")
             .navigationBarTitleDisplayMode(.inline)
+            .onReceive(timer) { tick = $0 }
+            .alert("需要整理相关记录吗？", isPresented: $showClaimMaterialsPrompt) {
+                Button("整理材料") { showClaimMaterials = true }
+                Button("不需要", role: .cancel) { dismiss() }
+            } message: {
+                Text("导出事件前后的设备记录，供您自行使用。")
+            }
+            .sheet(isPresented: $showClaimMaterials, onDismiss: { dismiss() }) {
+                ClaimMaterialsView().environmentObject(coordinator)
+            }
         }
     }
 
@@ -731,7 +883,7 @@ struct SOSActiveView: View {
         let step3State: StepState = hop3Started ? .live : .waiting
 
         let elapsed = coordinator.activeSOSEvent.map {
-            Int(Date().timeIntervalSince($0.triggeredAt))
+            Int(tick.timeIntervalSince($0.triggeredAt))
         } ?? 0
         let mins = elapsed / 60
         let secs = elapsed % 60

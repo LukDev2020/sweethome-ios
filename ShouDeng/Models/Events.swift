@@ -94,6 +94,11 @@ enum TimelineEntryType: String, Codable {
     case phoneInactive
     case fallDetected
     case locationUpdate
+    case homeTimerSet
+    case homeTimerDismissed
+    case homeTimerExpired
+    case arrivalReport
+    case itineraryAdded
 }
 
 // MARK: - Safe Zone

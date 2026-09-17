@@ -14,7 +14,7 @@ final class AppCoordinator: ObservableObject {
     // MARK: - Published State
 
     @Published var currentUser: User?
-    @Published var userRole: UserRole = .protected_
+    @Published var userRole: UserRole = .guardian
     @Published var protectedPersons: [ProtectedPerson] = []  // Guardian sees these
     @Published var myGuardians: [Guardian] = []               // Protected person sees these
     @Published var activeSOSEvent: SOSEvent?
@@ -26,6 +26,7 @@ final class AppCoordinator: ObservableObject {
     @Published var signupCountry: CountryCode?
     @Published var timeline: [TimelineEntry] = []
     @Published var familyPosts: [FamilyPost] = []
+    @Published var selectedHotline: SelectedHotline?
 
     // MARK: - Infrastructure
 
@@ -45,7 +46,9 @@ final class AppCoordinator: ObservableObject {
     let dutyScheduler = DutyScheduler()
     let deviceHealthMonitor = DeviceHealthMonitor()
     let crashReporter = CrashReporter.shared
+    let liveActivityManager = GuardianActivityManager()
     let storeKitManager: StoreKitManager
+    let paymentMethodManager: PaymentMethodManager
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -61,6 +64,7 @@ final class AppCoordinator: ObservableObject {
         #endif
         authManager = AuthManager(api: apiClient)
         storeKitManager = StoreKitManager(apiClient: apiClient)
+        paymentMethodManager = PaymentMethodManager(apiClient: apiClient)
 
         // Wire 401 auto-refresh: when server returns 401, attempt token refresh.
         // In dev bypass mode, suppress logout to avoid wiping local state.
@@ -81,6 +85,7 @@ final class AppCoordinator: ObservableObject {
         wireServices()
         restoreLocalState()
         observeAuthState()
+        startLiveActivityIfNeeded()
     }
 
     // MARK: - Base URL
@@ -92,7 +97,7 @@ final class AppCoordinator: ObservableObject {
         #if DEBUG
         return "http://127.0.0.1:5001/sweethome-d1edd/us-central1/api"
         #else
-        return "https://api.shoudeng.app"
+        return "https://us-central1-sweethome-d1edd.cloudfunctions.net/api"
         #endif
     }
 
@@ -103,32 +108,60 @@ final class AppCoordinator: ObservableObject {
             currentUser = user
         }
         #if DEBUG
-        // In dev bypass mode, ensure a default user exists so profile/settings work
-        if devBypassLogin && currentUser == nil {
-            let devUser = User(
-                id: "dev_local_user",
-                displayName: "",
-                role: .protected_,
-                avatarInitial: "?",
-                timeZone: .current,
-                countryCode: "CN",
-                cityName: "",
-                createdAt: Date()
-            )
-            currentUser = devUser
-            print("[AppCoordinator] Created dev seed user (empty profile)")
-        } else if let u = currentUser {
-            print("[AppCoordinator] Restored user: '\(u.displayName)' city='\(u.cityName)'")
+        if !devBypassLogin {
+            if let role = localStore.loadUserRole() {
+                userRole = role
+            }
         }
-        #endif
+        #else
         if let role = localStore.loadUserRole() {
             userRole = role
         }
+        #endif
         myGuardians = localStore.loadGuardians()
         protectedPersons = localStore.loadProtectedPersons()
         activeSOSEvent = localStore.loadActiveSOSEvent()
         timeline = localStore.loadTimeline()
         familyPosts = localStore.loadFamilyPosts()
+
+        #if DEBUG
+        // In dev bypass mode, ensure a default user exists and seed mock data
+        if devBypassLogin && currentUser == nil {
+            let devUser = User(
+                id: "dev_local_user",
+                displayName: "陈明远",
+                role: userRole,
+                avatarInitial: "陈",
+                timeZone: TimeZone(identifier: "America/Toronto") ?? .current,
+                countryCode: "CA",
+                cityName: "多伦多",
+                createdAt: Date()
+            )
+            currentUser = devUser
+            print("[AppCoordinator] Created dev seed user: \(devUser.displayName) role=\(userRole.rawValue)")
+        } else if let u = currentUser {
+            print("[AppCoordinator] Restored user: '\(u.displayName)' city='\(u.cityName)'")
+        }
+        // Seed mock data AFTER local store loading, so empty stores get filled
+        if devBypassLogin {
+            if userRole == .guardian && protectedPersons.isEmpty {
+                protectedPersons = Self.devMockProtectedPersons
+                print("[AppCoordinator] Seeded \(protectedPersons.count) mock protected persons")
+            }
+            if userRole == .protected_ && myGuardians.isEmpty {
+                myGuardians = Self.devMockGuardians
+                print("[AppCoordinator] Seeded \(myGuardians.count) mock guardians")
+            }
+            // Seed default hotline based on user's country
+            if selectedHotline == nil {
+                selectedHotline = SelectedHotline(
+                    countryCode: "CA", countryName: "加拿大", flag: "🇨🇦",
+                    emergency: "911", embassy: "+1-613-562-1616",
+                    selectedPhone: "+1-416-594-2308", selectedLabel: "多伦多"
+                )
+            }
+        }
+        #endif
 
         // Load safe zones into location manager
         let zones = localStore.loadSafeZones()
@@ -175,6 +208,10 @@ final class AppCoordinator: ObservableObject {
     }
 
     private func onLogout() {
+        #if DEBUG
+        if devBypassLogin { return }
+        #endif
+        liveActivityManager.endAllActivities()
         currentUser = nil
         protectedPersons = []
         myGuardians = []
@@ -219,6 +256,9 @@ final class AppCoordinator: ObservableObject {
     // MARK: - Fetch Data
 
     func fetchProtectedPersons() async {
+        #if DEBUG
+        if devBypassLogin && !protectedPersons.isEmpty { return }
+        #endif
         do {
             let persons: [ProtectedPersonStatusResponse] = try await apiClient.get("/v1/guardian/protected-persons")
             let mapped = persons.map { p in
@@ -238,13 +278,16 @@ final class AppCoordinator: ObservableObject {
                     protectionLayers: p.protectionLayers,
                     lastCheckIn: p.lastCheckIn,
                     lastKnownLocation: p.latitude.flatMap { lat in
-                        p.longitude.map { lng in
-                            Location(
-                                latitude: lat, longitude: lng,
-                                accuracy: 0, altitude: nil, speed: nil,
-                                timestamp: p.locationTimestamp ?? Date(),
-                                address: p.locationAddress
-                            )
+                        p.longitude.flatMap { lng in
+                            p.locationTimestamp.map { ts in
+                                Location(
+                                    latitude: lat, longitude: lng,
+                                    accuracy: p.locationAccuracy ?? 0,
+                                    altitude: nil, speed: nil,
+                                    timestamp: ts,
+                                    address: p.locationAddress
+                                )
+                            }
                         }
                     },
                     batteryLevel: p.batteryLevel,
@@ -265,6 +308,9 @@ final class AppCoordinator: ObservableObject {
     }
 
     func fetchGuardians() async {
+        #if DEBUG
+        if devBypassLogin && !myGuardians.isEmpty { return }
+        #endif
         do {
             let guardians: [Guardian] = try await apiClient.get("/v1/protected/guardians")
             await MainActor.run {
@@ -275,6 +321,77 @@ final class AppCoordinator: ObservableObject {
             #if DEBUG
             print("[Coordinator] Failed to fetch guardians: \(error)")
             #endif
+        }
+    }
+
+    // MARK: - Selected Hotline
+
+    func loadSelectedHotline() {
+        // Try local cache first
+        if let data = UserDefaults.standard.data(forKey: "selected_hotline"),
+           let hotline = try? JSONDecoder().decode(SelectedHotline.self, from: data) {
+            selectedHotline = hotline
+        }
+        // Then try server
+        Task {
+            do {
+                let hotline: SelectedHotline? = try await apiClient.get("/v1/consulate/selected/me")
+                if let hotline {
+                    await MainActor.run {
+                        self.selectedHotline = hotline
+                        self.cacheSelectedHotline(hotline)
+                    }
+                }
+            } catch {
+                #if DEBUG
+                print("[Coordinator] Failed to fetch selected hotline: \(error)")
+                #endif
+            }
+        }
+    }
+
+    func saveSelectedHotline(_ hotline: SelectedHotline) {
+        selectedHotline = hotline
+        cacheSelectedHotline(hotline)
+        Task {
+            do {
+                let _: SuccessResponse = try await apiClient.put(
+                    "/v1/consulate/selected",
+                    body: SelectedHotlineRequest(
+                        countryCode: hotline.countryCode,
+                        countryName: hotline.countryName,
+                        flag: hotline.flag,
+                        emergency: hotline.emergency,
+                        embassy: hotline.embassy,
+                        selectedPhone: hotline.selectedPhone,
+                        selectedLabel: hotline.selectedLabel
+                    )
+                )
+            } catch {
+                #if DEBUG
+                print("[Coordinator] Failed to save selected hotline to server: \(error)")
+                #endif
+            }
+        }
+    }
+
+    func removeSelectedHotline() {
+        selectedHotline = nil
+        UserDefaults.standard.removeObject(forKey: "selected_hotline")
+        Task {
+            do {
+                let _: SuccessResponse = try await apiClient.delete("/v1/consulate/selected")
+            } catch {
+                #if DEBUG
+                print("[Coordinator] Failed to delete selected hotline from server: \(error)")
+                #endif
+            }
+        }
+    }
+
+    private func cacheSelectedHotline(_ hotline: SelectedHotline) {
+        if let data = try? JSONEncoder().encode(hotline) {
+            UserDefaults.standard.set(data, forKey: "selected_hotline")
         }
     }
 
@@ -347,6 +464,32 @@ final class AppCoordinator: ObservableObject {
         }
     }
 
+    // MARK: - Live Activity
+
+    private func startLiveActivityIfNeeded() {
+        let guardianName: String
+        let guardianPhone: String
+        let layers: Int
+
+        if userRole == .protected_ {
+            guardianName = myGuardians.first?.user.displayName ?? "守护者"
+            guardianPhone = selectedHotline?.emergency ?? "911"
+            layers = myGuardians.count
+        } else {
+            // Guardian role — show protected persons count
+            guardianName = currentUser?.displayName ?? "守护者"
+            guardianPhone = selectedHotline?.emergency ?? "911"
+            layers = protectedPersons.count
+        }
+
+        liveActivityManager.startGuardianActivity(
+            userName: currentUser?.displayName ?? "",
+            guardianName: guardianName,
+            guardianPhone: guardianPhone,
+            protectionLayers: max(layers, 1)
+        )
+    }
+
     // MARK: - SOS Trigger
 
     func triggerSOS(method: SOSTriggerMethod = .longPress) {
@@ -369,15 +512,21 @@ final class AppCoordinator: ObservableObject {
         // Switch location to SOS mode
         locationManager.enterSOSMode()
 
+        // Update lock screen to SOS mode
+        liveActivityManager.triggerSOS(
+            localEmergencyNumber: selectedHotline?.emergency ?? "911"
+        )
+
         addTimelineEntry(type: .sosTriggered, description: "触发紧急求助（\(method.rawValue)）")
 
         // Report to server (with delivery feedback)
         sosDeliveryFailed = false
+        let sosLocation = locationManager.lastReportedLocation
         apiClient.postQueued("/v1/sos/trigger", body: SOSTriggerRequest(
             protectedPersonId: currentUser?.id ?? "",
             triggerMethod: method,
-            latitude: nil,
-            longitude: nil,
+            latitude: sosLocation?.coordinate.latitude,
+            longitude: sosLocation?.coordinate.longitude,
             batteryLevel: Double(UIDevice.current.batteryLevel)
         )) { [weak self] success in
             if !success {
@@ -393,6 +542,11 @@ final class AppCoordinator: ObservableObject {
         activeSOSEvent = nil
         localStore.saveActiveSOSEvent(nil)
         locationManager.exitSOSMode()
+
+        // Restore lock screen to normal
+        let guardianName = myGuardians.first?.user.displayName ?? "守护者"
+        let guardianPhone = selectedHotline?.emergency ?? "911"
+        liveActivityManager.cancelSOS(guardianName: guardianName, guardianPhone: guardianPhone)
 
         addTimelineEntry(type: .sosResolved, description: "取消了紧急求助")
 
@@ -412,10 +566,11 @@ final class AppCoordinator: ObservableObject {
 
         addTimelineEntry(type: .checkIn, description: note ?? "报平安")
 
+        let checkinLocation = locationManager.lastReportedLocation
         apiClient.postQueued("/v1/checkin", body: CheckInRequest(
             userId: userId,
-            latitude: nil,
-            longitude: nil,
+            latitude: checkinLocation?.coordinate.latitude,
+            longitude: checkinLocation?.coordinate.longitude,
             note: note
         ))
         _ = checkIn
@@ -435,6 +590,12 @@ final class AppCoordinator: ObservableObject {
             isInSafeZone: location.isInSafeZone,
             safeZoneName: location.safeZoneName
         ))
+
+        // Keep lock screen card in sync
+        liveActivityManager.updateLocation(
+            accuracy: Int(location.accuracy),
+            timestamp: location.timestamp
+        )
     }
 
     private func handleFallCandidate() {
@@ -702,6 +863,33 @@ final class AppCoordinator: ObservableObject {
         }
     }
 
+    // MARK: - Emergency Contacts
+
+    func fetchEmergencyContacts() async -> [LocalEmergencyContact] {
+        do {
+            let contacts: [LocalEmergencyContact] = try await apiClient.get("/v1/emergency-contacts")
+            return contacts
+        } catch {
+            #if DEBUG
+            print("[Coordinator] Failed to fetch emergency contacts: \(error)")
+            #endif
+            return []
+        }
+    }
+
+    func saveEmergencyContacts(_ contacts: [LocalEmergencyContact]) async {
+        do {
+            let _: SuccessResponse = try await apiClient.put(
+                "/v1/emergency-contacts",
+                body: contacts
+            )
+        } catch {
+            #if DEBUG
+            print("[Coordinator] Failed to save emergency contacts: \(error)")
+            #endif
+        }
+    }
+
     // MARK: - Subscription
 
     func fetchSubscription() async {
@@ -735,4 +923,92 @@ final class AppCoordinator: ObservableObject {
             guardians: firstPerson.guardians
         )
     }
+
+    // MARK: - Dev Mock Data
+
+    #if DEBUG
+    static let devMockProtectedPersons: [ProtectedPerson] = [
+        ProtectedPerson(
+            id: "pp-1",
+            user: User(
+                id: "pp-1", displayName: "陈小雨", role: .protected_,
+                avatarInitial: "雨",
+                timeZone: TimeZone(identifier: "Europe/Kiev")!,
+                countryCode: "UA", cityName: "基辅",
+                createdAt: Date().addingTimeInterval(-86400 * 180)
+            ),
+            guardians: [],
+            protectionLayers: 3,
+            lastCheckIn: Date().addingTimeInterval(-1800),
+            lastKnownLocation: Location(
+                latitude: 50.45, longitude: 30.52,
+                accuracy: 15, altitude: nil, speed: nil,
+                timestamp: Date().addingTimeInterval(-600)
+            ),
+            batteryLevel: 0.72,
+            batteryState: .unplugged,
+            lastPhoneActivity: Date().addingTimeInterval(-300),
+            status: .normal
+        ),
+        ProtectedPerson(
+            id: "pp-2",
+            user: User(
+                id: "pp-2", displayName: "陈小晴", role: .protected_,
+                avatarInitial: "晴",
+                timeZone: TimeZone(identifier: "Australia/Sydney")!,
+                countryCode: "AU", cityName: "悉尼",
+                createdAt: Date().addingTimeInterval(-86400 * 90)
+            ),
+            guardians: [],
+            protectionLayers: 2,
+            lastCheckIn: Date().addingTimeInterval(-86400 * 2),
+            lastKnownLocation: Location(
+                latitude: -33.87, longitude: 151.21,
+                accuracy: 20, altitude: nil, speed: nil,
+                timestamp: Date().addingTimeInterval(-7200)
+            ),
+            batteryLevel: 0.15,
+            batteryState: .unplugged,
+            lastPhoneActivity: Date().addingTimeInterval(-86400),
+            status: .overdue
+        ),
+    ]
+
+    static let devMockGuardians: [Guardian] = [
+        Guardian(
+            id: "g-1",
+            user: User(
+                id: "g-1", displayName: "妈妈", role: .guardian,
+                avatarInitial: "妈",
+                timeZone: TimeZone(identifier: "Asia/Shanghai")!,
+                countryCode: "CN", cityName: "上海",
+                createdAt: Date().addingTimeInterval(-86400 * 365)
+            ),
+            permissions: .defaultPermissions,
+            isOnDuty: true,
+            dutySchedule: nil,
+            averageResponseTime: 45,
+            linkedSince: Date().addingTimeInterval(-86400 * 180)
+        ),
+        Guardian(
+            id: "g-2",
+            user: User(
+                id: "g-2", displayName: "姑姑", role: .guardian,
+                avatarInitial: "姑",
+                timeZone: TimeZone(identifier: "America/Toronto")!,
+                countryCode: "CA", cityName: "多伦多",
+                createdAt: Date().addingTimeInterval(-86400 * 200)
+            ),
+            permissions: GuardianPermissions(
+                canSeeLocation: true, canSeeBattery: true,
+                canSeeHealth: false, canSeePhoneActivity: false,
+                canHearEmergencyAudio: false
+            ),
+            isOnDuty: false,
+            dutySchedule: nil,
+            averageResponseTime: 120,
+            linkedSince: Date().addingTimeInterval(-86400 * 90)
+        ),
+    ]
+    #endif
 }

@@ -18,6 +18,7 @@ struct ProtectedRecordsView: View {
 
     @State private var selectedTab = 0
     @State private var showAddContact = false
+    @State private var showUpgradeHint = false
     @AppStorage("custom_emergency_contacts") private var customContactsData: Data = Data()
     @State private var customContacts: [LocalEmergencyContact] = []
 
@@ -285,10 +286,15 @@ struct ProtectedRecordsView: View {
             Text("免费版仅保留 24 小时。升级后可查看 90 天完整时间线并导出——向警方、保险或律师说明情况时用得上。")
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
-            Button {} label: {
+            Button { showUpgradeHint = true } label: {
                 Text("升级查看全部记录")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(pro)
+            }
+            .alert("如何升级？", isPresented: $showUpgradeHint) {
+                Button("好的") {}
+            } message: {
+                Text("请联系您的守护者升级订阅方案，升级后您将自动解锁完整时间线。")
             }
         }
         .padding(12)

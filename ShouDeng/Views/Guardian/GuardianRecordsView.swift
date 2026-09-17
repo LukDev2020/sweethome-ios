@@ -197,6 +197,11 @@ struct GuardianRecordsView: View {
         case .phoneInactive: return "iphone.slash"
         case .fallDetected: return "figure.fall"
         case .locationUpdate: return "mappin"
+        case .homeTimerSet: return "house.fill"
+        case .homeTimerDismissed: return "checkmark.circle.fill"
+        case .homeTimerExpired: return "clock.badge.exclamationmark"
+        case .arrivalReport: return "mappin.circle.fill"
+        case .itineraryAdded: return "airplane"
         }
     }
 
@@ -354,7 +359,10 @@ struct GuardianRecordsView: View {
             Text("凌晨两点到六点三地家人都在睡。这四小时目前由专员补上——订阅的价值就是这块空缺。")
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
-            Button {} label: {
+            NavigationLink {
+                GuardianPlanBillingView()
+                    .environmentObject(coordinator)
+            } label: {
                 Text("查看响应中心记录")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(pro)
@@ -774,10 +782,7 @@ struct GuardianRecordsView: View {
             ))
         }
 
-        // If no real data yet, show demo to indicate what populated state looks like
-        if members.count <= 1 && coordinator.protectedPersons.isEmpty {
-            members.append(contentsOf: GuardianMember.demoData.filter { !$0.isMe })
-        }
+        // No demo fallback — show only real linked members
 
         guardianMembers = members
     }

@@ -180,7 +180,10 @@ struct GuardianDutyScheduleView: View {
             Text("凌晨两点到六点三地家人都在睡。这四小时目前由专员补上——订阅的价值就是这块空缺。")
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
-            Button {} label: {
+            NavigationLink {
+                GuardianPlanBillingView()
+                    .environmentObject(coordinator)
+            } label: {
                 Text("查看响应中心记录")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(pro)

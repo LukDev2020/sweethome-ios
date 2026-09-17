@@ -27,6 +27,14 @@ import familyRoutes from "./routes/family";
 import paymentRoutes from "./routes/payment";
 import webhookRoutes from "./routes/webhooks";
 import timelineRoutes from "./routes/timeline";
+import homeTimerRoutes from "./routes/homeTimer";
+import arrivalRoutes from "./routes/arrival";
+import itineraryRoutes from "./routes/itinerary";
+import medicalCardRoutes from "./routes/medicalCard";
+import emergencyTextRoutes from "./routes/emergencyText";
+import organizationRoutes from "./routes/organization";
+import insuranceRoutes from "./routes/insurance";
+import consulateRoutes from "./routes/consulate";
 import { createRateLimiter, RATE_LIMITS } from "./middleware/rateLimit";
 
 // --- Mount Routes ---
@@ -67,6 +75,24 @@ app.use("/v1/timeline", timelineRoutes);
 
 // Diagnostics (crash reports) — uses user route prefix
 app.use("/v1", userRoutes);
+
+// Phase 7: Daily Use (Iteration 1)
+app.use("/v1/home-timer", homeTimerRoutes);
+app.use("/v1/arrival-report", arrivalRoutes);
+app.use("/v1/itinerary", itineraryRoutes);
+
+// Phase 8: Emergency Utility (Iteration 2)
+app.use("/v1/medical-card", medicalCardRoutes);
+app.use("/v1/emergency-text", emergencyTextRoutes);
+
+// Phase 9: Organization / B2B (Iteration 3)
+app.use("/v1/org", organizationRoutes);
+
+// Phase 10: Insurance & Data (Iteration 4)
+app.use("/v1/insurance", insuranceRoutes);
+
+// Phase 11: Consulate Hotline (global embassy data + user selection)
+app.use("/v1/consulate", consulateRoutes);
 
 // --- Voice callback for Twilio ---
 app.post("/v1/voice-callback", async (req, res) => {
@@ -118,3 +144,4 @@ export { checkHeartbeatMissing } from "./scheduled/heartbeatCheck";
 export { checkCheckinOverdue } from "./scheduled/checkinOverdue";
 export { ttlCleanup } from "./scheduled/ttlCleanup";
 export { computeIntegrityProof } from "./scheduled/integrityProof";
+export { checkHomeTimerExpiry } from "./scheduled/homeTimerCheck";

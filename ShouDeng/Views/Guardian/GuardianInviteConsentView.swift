@@ -44,7 +44,14 @@ struct GuardianInviteConsentView: View {
                 step3Panel
 
                 // Resend button
-                Button {} label: {
+                Button {
+                    Task {
+                        let _: EmptyResponse = try await coordinator.apiClient.post(
+                            "/v1/guardian/resend-invite",
+                            body: EmptyBody()
+                        )
+                    }
+                } label: {
                     Text("重新发送邀请")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(ink)

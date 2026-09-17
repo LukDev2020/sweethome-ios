@@ -142,6 +142,7 @@ struct ProtectedPersonStatusResponse: Codable {
     let longitude: Double?
     let locationTimestamp: Date?
     let locationAddress: String?
+    let locationAccuracy: Double?
     let batteryLevel: Double?
     let batteryState: BatteryState
     let lastCheckIn: Date?
@@ -239,6 +240,270 @@ struct NotificationPrefsRequest: Codable {
     let checkinReminder: Bool
     let checkinOverdue: Bool
     let familyFeed: Bool
+}
+
+// MARK: - Home Timer
+
+struct HomeTimerRequest: Codable {
+    let deadline: Date
+    let label: String?
+    let latitude: Double?
+    let longitude: Double?
+}
+
+struct HomeTimerResponse: Codable {
+    let userId: String
+    let deadline: Date
+    let label: String
+    let status: String
+    let createdAt: Date
+}
+
+struct HomeTimerDismissResponse: Codable {
+    let success: Bool
+}
+
+struct GuardianTimerResponse: Codable {
+    let userId: String
+    let displayName: String
+    let deadline: Date
+    let label: String
+    let status: String
+}
+
+// MARK: - Arrival Report
+
+struct ArrivalReportRequest: Codable {
+    let latitude: Double?
+    let longitude: Double?
+    let placeName: String?
+}
+
+struct ArrivalReportResponse: Codable {
+    let success: Bool
+    let reportId: String
+}
+
+struct RecentArrivalReport: Codable, Identifiable {
+    let id: String
+    let userId: String
+    let displayName: String
+    let latitude: Double?
+    let longitude: Double?
+    let placeName: String?
+    let timestamp: Date
+}
+
+// MARK: - Shared Itinerary
+
+struct ItineraryCreateRequest: Codable {
+    let type: String
+    let carrierCode: String?
+    let flightNumber: String?
+    let departureCity: String
+    let arrivalCity: String
+    let departureTime: Date
+    let arrivalTime: Date?
+    let note: String?
+}
+
+struct ItineraryCreateResponse: Codable {
+    let id: String
+    let success: Bool
+}
+
+struct ItineraryItem: Codable, Identifiable {
+    let id: String
+    let userId: String
+    let displayName: String
+    let type: String
+    let carrierCode: String?
+    let flightNumber: String?
+    let departureCity: String
+    let arrivalCity: String
+    let departureTime: Date
+    let arrivalTime: Date?
+    let note: String?
+    let status: String
+}
+
+// MARK: - Medical Card
+
+struct MedicalCardData: Codable {
+    var bloodType: String?
+    var allergies: [String]
+    var medications: [String]
+    var conditions: [String]
+    var insuranceProvider: String?
+    var insurancePolicyNumber: String?
+    var emergencyNote: String?
+    var organDonor: Bool
+    var weight: Double?
+    var height: Double?
+
+    static let empty = MedicalCardData(
+        bloodType: nil, allergies: [], medications: [],
+        conditions: [], insuranceProvider: nil,
+        insurancePolicyNumber: nil, emergencyNote: nil,
+        organDonor: false, weight: nil, height: nil
+    )
+}
+
+// MARK: - Emergency Text
+
+struct EmergencyPhrase: Codable {
+    let helpText: String
+    let emergencyNumber: String
+    let language: String
+}
+
+// MARK: - Consulate
+
+struct ConsulateInfo: Codable {
+    let countryName: String
+    let emergencyNumber: String
+    let policeNumber: String
+    let ambulanceNumber: String
+    let chineseEmbassy: String?
+    let chineseConsulate: [String]?
+}
+
+struct ConsulateListItem: Codable {
+    let countryCode: String
+    let countryName: String
+    let emergencyNumber: String
+}
+
+// MARK: - Organization
+
+struct OrgCreateRequest: Codable {
+    let name: String
+    let type: String
+    let contactEmail: String?
+    let contactPhone: String?
+}
+
+struct OrgCreateResponse: Codable {
+    let orgId: String
+    let success: Bool
+}
+
+struct OrgDashboard: Codable {
+    let orgId: String
+    let orgName: String
+    let orgType: String
+    let summary: OrgDashboardSummary
+    let members: [OrgMemberStatus]
+}
+
+struct OrgDashboardSummary: Codable {
+    let totalMembers: Int
+    let activated: Int
+    let permissionsAbnormal: Int
+    let notInstalled: Int
+    let recentCheckIns: Int
+    let overdueCheckIns: Int
+}
+
+struct OrgMemberStatus: Codable, Identifiable {
+    var id: String { userId }
+    let userId: String
+    let displayName: String
+    let status: String
+    let lastCheckIn: Date?
+    let cityName: String?
+    let countryCode: String?
+}
+
+struct OrgAlertRequest: Codable {
+    let orgId: String
+    let title: String
+    let body: String
+    let countryCode: String?
+    let severity: String?
+}
+
+struct OrgAlertResponse: Codable {
+    let success: Bool
+    let alertId: String
+    let sentCount: Int
+}
+
+struct OrgRollCallStatus: Codable {
+    let alertId: String
+    let title: String
+    let totalMembers: Int
+    let confirmed: Int
+    let noResponse: Int
+    let entries: [RollCallEntry]
+}
+
+struct RollCallEntry: Codable, Identifiable {
+    var id: String { userId }
+    let userId: String
+    let displayName: String
+    let status: String
+    let respondedAt: Date?
+}
+
+struct OrgReport: Codable {
+    let orgId: String
+    let orgName: String
+    let reportPeriod: ReportPeriod
+    let summary: OrgReportSummary
+    let generatedAt: Date
+}
+
+struct ReportPeriod: Codable {
+    let start: Date
+    let end: Date
+}
+
+struct OrgReportSummary: Codable {
+    let totalMembers: Int
+    let totalCheckIns: Int
+    let totalAlerts: Int
+    let totalSOSEvents: Int
+    let avgCheckInsPerMember: Int
+}
+
+// MARK: - Insurance (legacy — kept for InsuranceReportView compatibility)
+
+struct InsuranceClaimRequest: Codable {
+    let incidentDate: Date
+    let description: String?
+    let protectedPersonId: String?
+}
+
+struct InsuranceClaimReport: Codable {
+    let reportId: String
+    let personName: String
+    let incidentDate: Date
+    let generatedAt: Date
+}
+
+// New claim material models are in ClaimMaterialModels.swift
+
+// MARK: - Selected Hotline
+
+struct SelectedHotline: Codable {
+    let countryCode: String
+    let countryName: String
+    let flag: String
+    let emergency: String
+    let embassy: String
+    var selectedPhone: String?
+    var selectedLabel: String?
+}
+
+struct SelectedHotlineRequest: Codable {
+    let countryCode: String
+    let countryName: String
+    let flag: String
+    let emergency: String
+    let embassy: String
+    let selectedPhone: String?
+    let selectedLabel: String?
 }
 
 // MARK: - Empty Body (for POST with no payload)

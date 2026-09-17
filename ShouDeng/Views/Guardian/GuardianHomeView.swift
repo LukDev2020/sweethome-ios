@@ -14,6 +14,11 @@ struct GuardianHomeView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @State private var mapFocusId: String?
     @State private var showInviteSheet = false
+    @State private var showMedicalCard = false
+    @State private var showEmergencyText = false
+    @State private var showConsulate = false
+    @State private var showOrgDashboard = false
+    @State private var showInsuranceReport = false
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
     private let inkDeep = Color(red: 8/255, green: 15/255, blue: 27/255)
@@ -44,16 +49,6 @@ struct GuardianHomeView: View {
                     false
                 ))
             }
-        } else {
-            // Demo fallback
-            result.append(contentsOf: [
-                ("基辅", "14:07", "白天", false),
-                ("上海", "20:07", "夜晚", false),
-                ("伦敦", "12:07", "白天", false),
-            ])
-            if result.isEmpty {
-                result.insert(("多伦多", "07:07", "你在这", true), at: 0)
-            }
         }
         return result
     }
@@ -75,6 +70,22 @@ struct GuardianHomeView: View {
 
                     // All normal
                     allNormalSection
+
+                    // Pinned hotline card
+                    if let hotline = coordinator.selectedHotline {
+                        HotlineCardView(
+                            hotline: hotline,
+                            onTapChange: { showConsulate = true },
+                            onRemove: { coordinator.removeSelectedHotline() }
+                        )
+                        .padding(.horizontal, 16)
+                        .padding(.top, 12)
+                    }
+
+                    // Guardian quick actions
+                    guardianQuickActions
+                        .padding(.horizontal, 16)
+                        .padding(.top, 12)
 
                     // Add button
                     Button { showInviteSheet = true } label: {
@@ -147,6 +158,26 @@ struct GuardianHomeView: View {
                 InviteGuardianView()
                     .environmentObject(coordinator)
             }
+            .sheet(isPresented: $showMedicalCard) {
+                MedicalCardView()
+                    .environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showEmergencyText) {
+                EmergencyTextCardView()
+                    .environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showConsulate) {
+                ConsulateView()
+                    .environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showOrgDashboard) {
+                OrgDashboardView()
+                    .environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showInsuranceReport) {
+                ClaimMaterialsView()
+                    .environmentObject(coordinator)
+            }
             .task {
                 await coordinator.fetchProtectedPersons()
                 await coordinator.fetchFamilyPosts()
@@ -168,23 +199,90 @@ struct GuardianHomeView: View {
     // MARK: - Globe Section
 
     private var globeSection: some View {
-        ZStack {
+        let dynamicPins: [GlobeMapView.Pin]
+        let dynamicLinks: [GlobeMapView.Link]
+        let familyText: String
+        let subtitleText: String
+
+        if !coordinator.protectedPersons.isEmpty {
+            var p: [GlobeMapView.Pin] = []
+            // Me (guardian)
+            let myCity = coordinator.currentUser?.cityName ?? ""
+            let myLabel = myCity.isEmpty ? "你" : "你 · \(myCity)"
+            let myCoord: CLLocationCoordinate2D = {
+                if let loc = coordinator.locationManager.lastReportedLocation {
+                    return loc.coordinate
+                }
+                return Self.coordForCity(myCity)
+            }()
+            p.append(.init(label: myLabel, latitude: myCoord.latitude, longitude: myCoord.longitude, color: safe, isMe: true))
+            // Protected persons
+            for person in coordinator.protectedPersons {
+                let lat: Double
+                let lng: Double
+                if let loc = person.lastKnownLocation {
+                    lat = loc.latitude; lng = loc.longitude
+                } else {
+                    let c = Self.coordForCity(person.user.cityName)
+                    lat = c.latitude; lng = c.longitude
+                }
+                let label = person.user.cityName.isEmpty ? person.user.displayName : "\(person.user.displayName) · \(person.user.cityName)"
+                p.append(.init(label: label, latitude: lat, longitude: lng, color: lamp, isMe: false))
+            }
+            // Response centers
+            p.append(.init(label: "响应中心", latitude: 25.20, longitude: 55.27, color: pro, isMe: false))
+            p.append(.init(label: "响应中心", latitude: 1.35, longitude: 103.82, color: pro, isMe: false))
+            dynamicPins = p
+            // Guardian → each protected person, response centers → first protected person
+            var lnks: [GlobeMapView.Link] = []
+            let protectedCount = coordinator.protectedPersons.count
+            for i in 1...protectedCount { lnks.append(.init(from: 0, to: i)) }
+            for i in (protectedCount + 1)..<p.count { lnks.append(.init(from: i, to: 1)) }
+            dynamicLinks = lnks
+
+            var countries = Set<String>()
+            if let cc = coordinator.currentUser?.countryCode, !cc.isEmpty { countries.insert(cc) }
+            for person in coordinator.protectedPersons { if !person.user.countryCode.isEmpty { countries.insert(person.user.countryCode) } }
+            let totalFamily = coordinator.protectedPersons.count
+            familyText = "\(totalFamily) 位家人"
+            subtitleText = "分布在 \(max(countries.count, 1)) 个国家"
+        } else {
+            // No protected persons yet — show just me + response centers
+            var p: [GlobeMapView.Pin] = []
+            let myCity = coordinator.currentUser?.cityName ?? ""
+            let myLabel = myCity.isEmpty ? "你" : "你 · \(myCity)"
+            let myCoord: CLLocationCoordinate2D = {
+                if let loc = coordinator.locationManager.lastReportedLocation {
+                    return loc.coordinate
+                }
+                return Self.coordForCity(myCity)
+            }()
+            p.append(.init(label: myLabel, latitude: myCoord.latitude, longitude: myCoord.longitude, color: safe, isMe: true))
+            p.append(.init(label: "响应中心", latitude: 25.20, longitude: 55.27, color: pro, isMe: false))
+            p.append(.init(label: "响应中心", latitude: 1.35, longitude: 103.82, color: pro, isMe: false))
+            dynamicPins = p
+            dynamicLinks = [.init(from: 1, to: 0), .init(from: 2, to: 0)]
+            familyText = "守护者"
+            subtitleText = "邀请家人加入"
+        }
+
+        return ZStack {
             RoundedRectangle(cornerRadius: 16)
                 .fill(inkDeep)
 
             GlobeMapView(
-                pins: GlobeMapView.guardianPins,
-                links: GlobeMapView.guardianLinks,
+                pins: dynamicPins,
+                links: dynamicLinks,
                 initialLongitude: 60
             )
 
             VStack {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("4 位家人")
+                        Text(familyText)
                             .font(.system(size: 14, weight: .semibold, design: .serif))
                             .foregroundStyle(lamp)
-                        Text("分布在 3 个国家")
+                        Text(subtitleText)
                             .font(.system(size: 10.5))
                             .foregroundStyle(.white.opacity(0.6))
                     }
@@ -209,6 +307,19 @@ struct GuardianHomeView: View {
         .frame(height: 240)
         .padding(.horizontal, 16)
         .padding(.top, 8)
+    }
+
+    private static func coordForCity(_ city: String) -> CLLocationCoordinate2D {
+        switch city {
+        case "多伦多": return CLLocationCoordinate2D(latitude: 43.65, longitude: -79.38)
+        case "上海": return CLLocationCoordinate2D(latitude: 31.23, longitude: 121.47)
+        case "悉尼": return CLLocationCoordinate2D(latitude: -33.87, longitude: 151.21)
+        case "伦敦": return CLLocationCoordinate2D(latitude: 51.50, longitude: -0.12)
+        case "基辅": return CLLocationCoordinate2D(latitude: 50.45, longitude: 30.52)
+        case "北京": return CLLocationCoordinate2D(latitude: 39.90, longitude: 116.40)
+        case "东京": return CLLocationCoordinate2D(latitude: 35.68, longitude: 139.69)
+        default: return CLLocationCoordinate2D(latitude: 40.0, longitude: -74.0)
+        }
     }
 
     private func legendDot(color: Color, label: String) -> some View {
@@ -255,36 +366,43 @@ struct GuardianHomeView: View {
     // MARK: - Location Card
 
     private var locationCard: some View {
-        // Demo pins for protected persons
-        let demoPins: [LocationPin] = [
-            LocationPin(id: "xiaoyu", name: "小雨", coordinate: CLLocationCoordinate2D(latitude: 50.45, longitude: 30.52), color: lamp, status: "12分钟前"),
-            LocationPin(id: "nainai", name: "奶奶", coordinate: CLLocationCoordinate2D(latitude: 31.23, longitude: 121.47), color: lamp, status: "14小时前"),
-            LocationPin(id: "didi", name: "弟弟", coordinate: CLLocationCoordinate2D(latitude: 51.50, longitude: -0.12), color: lamp, status: "在线"),
-            LocationPin(id: "baba", name: "爸爸", coordinate: CLLocationCoordinate2D(latitude: 43.65, longitude: -79.38), color: safe, isMe: true, status: "在线"),
-        ]
-
-        // Use real data if available, else demo
-        let pins: [LocationPin]
-        if !coordinator.protectedPersons.isEmpty {
-            pins = coordinator.protectedPersons.compactMap { person -> LocationPin? in
-                guard let loc = person.lastKnownLocation else { return nil }
-                return LocationPin(
-                    id: person.id,
-                    name: person.user.displayName,
-                    coordinate: CLLocationCoordinate2D(latitude: loc.latitude, longitude: loc.longitude),
-                    color: person.status == .alert ? alert : lamp
-                )
-            }
-        } else {
-            pins = demoPins
+        let pins: [LocationPin] = coordinator.protectedPersons.compactMap { person -> LocationPin? in
+            guard let loc = person.lastKnownLocation else { return nil }
+            return LocationPin(
+                id: person.id,
+                name: person.user.displayName,
+                coordinate: CLLocationCoordinate2D(latitude: loc.latitude, longitude: loc.longitude),
+                color: person.status == .alert ? alert : lamp
+            )
         }
 
-        return LocationCardView(
-            pins: pins.isEmpty ? demoPins : pins,
-            lastUpdateMinutes: 12,
-            label: "家人位置",
-            focusedPinId: $mapFocusId
-        )
+        return Group {
+            if !pins.isEmpty {
+                LocationCardView(
+                    pins: pins,
+                    label: "家人位置",
+                    focusedPinId: $mapFocusId
+                )
+            } else {
+                // No location data yet
+                VStack(spacing: 8) {
+                    Image(systemName: "map")
+                        .font(.system(size: 22))
+                        .foregroundStyle(ink.opacity(0.2))
+                    Text("暂无家人位置信息")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 24)
+                .padding(.horizontal, 16)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(ink.opacity(0.1), lineWidth: 1)
+                )
+                .padding(.horizontal, 16)
+            }
+        }
     }
 
     // MARK: - Needs Attention
@@ -319,32 +437,43 @@ struct GuardianHomeView: View {
                         })
                     }
                 }
-            } else {
-                // Demo fallback when no real data
-                VStack(alignment: .leading, spacing: 7) {
-                    HStack {
-                        Text("需要处理")
-                            .font(.system(size: 10.5))
-                            .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
-                        Spacer()
-                        Text("演示数据")
-                            .font(.system(size: 9))
-                            .foregroundStyle(.orange.opacity(0.6))
-                    }
-                    .padding(.horizontal, 18)
-                    .padding(.top, 12)
-
-                    protectedPersonCard(
-                        initial: "奶", name: "奶奶",
-                        tag: "14 小时未打卡", tagColor: Color(red: 138/255, green: 100/255, blue: 40/255),
-                        tagBg: lamp,
-                        detail: "上海 · 当地已是晚上八点",
-                        layers: 2, isWarning: true
-                    )
-                    .onTapGesture { withAnimation { mapFocusId = mapFocusId == "nainai" ? nil : "nainai" } }
-                }
             }
         }
+    }
+
+    // MARK: - Guardian Quick Actions
+
+    private var guardianQuickActions: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 8) {
+                gQuickButton(icon: "staroflife.fill", label: "医疗卡", color: alert) { showMedicalCard = true }
+                gQuickButton(icon: "text.bubble.fill", label: "多语言急救", color: alert) { showEmergencyText = true }
+                gQuickButton(icon: "building.columns.fill", label: "领事电话", color: pro) { showConsulate = true }
+            }
+            HStack(spacing: 8) {
+                gQuickButton(icon: "building.2.fill", label: "机构看板", color: safe) { showOrgDashboard = true }
+                gQuickButton(icon: "doc.text.magnifyingglass", label: "理赔材料", color: safe) { showInsuranceReport = true }
+                Color.clear.frame(maxWidth: .infinity, maxHeight: 1) // spacer
+            }
+        }
+    }
+
+    private func gQuickButton(icon: String, label: String, color: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 5) {
+                Image(systemName: icon)
+                    .font(.system(size: 16))
+                    .foregroundStyle(color)
+                Text(label)
+                    .font(.system(size: 11))
+                    .foregroundStyle(ink.opacity(0.7))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(color.opacity(0.06))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - All Normal
@@ -377,45 +506,24 @@ struct GuardianHomeView: View {
                         })
                     }
                 }
-            } else {
-                // Demo fallback
-                VStack(alignment: .leading, spacing: 7) {
-                    HStack {
-                        Text("一切正常")
-                            .font(.system(size: 10.5))
-                            .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
-                        Spacer()
-                        Text("演示数据")
-                            .font(.system(size: 9))
-                            .foregroundStyle(.orange.opacity(0.6))
-                    }
-                    .padding(.horizontal, 18)
-                    .padding(.top, 12)
-
-                    protectedPersonCard(
-                        initial: "雨", name: "小雨",
-                        tag: "专业响应", tagColor: pro,
-                        detail: "基辅 · 12 分钟前报平安",
-                        layers: 3
-                    )
-                    .onTapGesture { withAnimation { mapFocusId = mapFocusId == "xiaoyu" ? nil : "xiaoyu" } }
-
-                    protectedPersonCard(
-                        initial: "弟", name: "弟弟",
-                        tag: nil, tagColor: nil,
-                        detail: "伦敦 · 在学校 · 电量 82%",
-                        layers: 1
-                    )
-                    .onTapGesture { withAnimation { mapFocusId = mapFocusId == "didi" ? nil : "didi" } }
-
-                    protectedPersonCard(
-                        initial: "爸", name: "爸爸",
-                        tag: nil, tagColor: nil,
-                        detail: "多伦多 · 在家 · 在线",
-                        layers: 2, isDimmed: true
-                    )
-                    .onTapGesture { withAnimation { mapFocusId = mapFocusId == "baba" ? nil : "baba" } }
+            } else if coordinator.protectedPersons.isEmpty {
+                // Empty state — no protected persons linked yet
+                VStack(spacing: 12) {
+                    Image(systemName: "shield.slash")
+                        .font(.system(size: 28))
+                        .foregroundStyle(ink.opacity(0.25))
+                    Text("还没有守护对象")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(ink.opacity(0.6))
+                    Text("邀请家人加入，你将能看到他们的安全状态并在紧急时刻收到通知。")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 32)
+                .padding(.horizontal, 16)
             }
         }
     }

@@ -84,17 +84,10 @@ router.post("/accept", async (req, res) => {
     const uid = req.uid;
     const { inviteId, code } = req.body;
     try {
-        // Find invite by ID or code
+        // Find invite by ID or code (outside transaction for query support)
         let inviteRef;
-        let inviteData;
         if (inviteId) {
             inviteRef = db.collection("invites").doc(inviteId);
-            const doc = await inviteRef.get();
-            if (!doc.exists) {
-                res.status(404).json({ error: "Invite not found" });
-                return;
-            }
-            inviteData = doc.data();
         }
         else if (code) {
             const snapshot = await db
@@ -108,86 +101,103 @@ router.post("/accept", async (req, res) => {
                 return;
             }
             inviteRef = snapshot.docs[0].ref;
-            inviteData = snapshot.docs[0].data();
         }
         else {
             res.status(400).json({ error: "inviteId or code is required" });
             return;
         }
-        // Check expiry
-        if (inviteData.expiresAt.toDate() < new Date()) {
-            await inviteRef.update({ status: "expired" });
-            res.status(410).json({ error: "Invite has expired" });
-            return;
-        }
-        if (inviteData.status !== "pending") {
-            res.status(409).json({ error: "Invite already used" });
-            return;
-        }
-        // Cannot accept your own invite
-        if (inviteData.createdBy === uid) {
-            res.status(400).json({ error: "Cannot accept your own invite" });
-            return;
-        }
-        // Determine who is guardian and who is protected
-        const creatorDoc = await db
-            .collection("users")
-            .doc(inviteData.createdBy)
-            .get();
-        const acceptorDoc = await db.collection("users").doc(uid).get();
-        if (!creatorDoc.exists || !acceptorDoc.exists) {
-            res.status(404).json({ error: "User not found" });
-            return;
-        }
-        const creatorRole = creatorDoc.data().role;
-        let guardianId;
-        let protectedPersonId;
-        if (creatorRole === "protected") {
-            protectedPersonId = inviteData.createdBy;
-            guardianId = uid;
-        }
-        else {
-            guardianId = inviteData.createdBy;
-            protectedPersonId = uid;
-        }
-        const now = admin.firestore.Timestamp.now();
-        // Create guardian link
-        const linkId = `${guardianId}_${protectedPersonId}`;
-        await db
-            .collection("guardian_links")
-            .doc(linkId)
-            .set({
-            guardianId,
-            protectedPersonId,
-            status: "active",
-            createdAt: now,
-            acceptedAt: now,
-            revokedAt: null,
-            protectionLayers: ["location", "heartbeat", "sos"],
+        // Run accept logic inside a transaction to prevent race conditions
+        const result = await db.runTransaction(async (transaction) => {
+            const inviteDoc = await transaction.get(inviteRef);
+            if (!inviteDoc.exists) {
+                throw new Error("NOT_FOUND");
+            }
+            const inviteData = inviteDoc.data();
+            // Check expiry
+            if (inviteData.expiresAt.toDate() < new Date()) {
+                transaction.update(inviteRef, { status: "expired" });
+                throw new Error("EXPIRED");
+            }
+            if (inviteData.status !== "pending") {
+                throw new Error("ALREADY_USED");
+            }
+            // Cannot accept your own invite
+            if (inviteData.createdBy === uid) {
+                throw new Error("SELF_ACCEPT");
+            }
+            // Determine who is guardian and who is protected
+            const creatorRef = db.collection("users").doc(inviteData.createdBy);
+            const acceptorRef = db.collection("users").doc(uid);
+            const [creatorDoc, acceptorDoc] = await Promise.all([
+                transaction.get(creatorRef),
+                transaction.get(acceptorRef),
+            ]);
+            if (!creatorDoc.exists || !acceptorDoc.exists) {
+                throw new Error("USER_NOT_FOUND");
+            }
+            const creatorRole = creatorDoc.data().role;
+            let guardianId;
+            let protectedPersonId;
+            if (creatorRole === "protected") {
+                protectedPersonId = inviteData.createdBy;
+                guardianId = uid;
+            }
+            else {
+                guardianId = inviteData.createdBy;
+                protectedPersonId = uid;
+            }
+            const now = admin.firestore.Timestamp.now();
+            const linkId = `${guardianId}_${protectedPersonId}`;
+            const linkRef = db.collection("guardian_links").doc(linkId);
+            // Atomically create link + mark invite as accepted
+            transaction.set(linkRef, {
+                guardianId,
+                protectedPersonId,
+                status: "active",
+                createdAt: now,
+                acceptedAt: now,
+                revokedAt: null,
+                protectionLayers: ["location", "heartbeat", "sos"],
+            });
+            transaction.update(inviteRef, {
+                status: "accepted",
+                acceptedBy: uid,
+            });
+            return { guardianId, protectedPersonId, linkId };
         });
-        // Update invite
-        await inviteRef.update({
-            status: "accepted",
-            acceptedBy: uid,
-        });
-        // Log consent
+        // Log consent (outside transaction — non-critical)
         await (0, bigquery_1.insertConsentAudit)({
-            userId: protectedPersonId,
+            userId: result.protectedPersonId,
             consentType: "guardian_link",
             action: "granted",
-            grantedTo: guardianId,
+            grantedTo: result.guardianId,
             detail: `Guardian link established via invite ${inviteRef.id}`,
         });
         res.json({
             success: true,
-            guardianId,
-            protectedPersonId,
-            linkId,
+            ...result,
         });
     }
     catch (error) {
-        console.error("[Invite] accept error:", error);
-        res.status(500).json({ error: "Failed to accept invite" });
+        if (error.message === "NOT_FOUND") {
+            res.status(404).json({ error: "Invite not found" });
+        }
+        else if (error.message === "EXPIRED") {
+            res.status(410).json({ error: "Invite has expired" });
+        }
+        else if (error.message === "ALREADY_USED") {
+            res.status(409).json({ error: "Invite already used" });
+        }
+        else if (error.message === "SELF_ACCEPT") {
+            res.status(400).json({ error: "Cannot accept your own invite" });
+        }
+        else if (error.message === "USER_NOT_FOUND") {
+            res.status(404).json({ error: "User not found" });
+        }
+        else {
+            console.error("[Invite] accept error:", error);
+            res.status(500).json({ error: "Failed to accept invite" });
+        }
     }
 });
 exports.default = router;

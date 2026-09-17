@@ -68,8 +68,17 @@ struct EmergencyContactsView: View {
         .sheet(isPresented: $showAddContact) {
             AddEmergencyContactView(contacts: $customContacts, countryCode: countryCode)
         }
-        .onAppear { loadCustomContacts() }
-        .onChange(of: customContacts) { saveCustomContacts() }
+        .onAppear {
+            loadCustomContacts()
+            Task {
+                let serverContacts = await coordinator.fetchEmergencyContacts()
+                if !serverContacts.isEmpty { customContacts = serverContacts }
+            }
+        }
+        .onChange(of: customContacts) {
+            saveCustomContacts()
+            Task { await coordinator.saveEmergencyContacts(customContacts) }
+        }
     }
 
     private var regionInfo: RegionalEmergencyInfo {

@@ -61,6 +61,8 @@
 		<string>remote-notification</string>
 		<string>processing</string>
 	</array>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>

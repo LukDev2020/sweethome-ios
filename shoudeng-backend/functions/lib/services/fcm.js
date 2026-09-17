@@ -51,6 +51,19 @@ async function getTokensForUser(userId) {
     return snapshot.docs.map((doc) => doc.data().token);
 }
 /**
+ * Check if a user has a specific notification type enabled.
+ * Returns true by default if no preference is stored.
+ */
+async function isNotifEnabled(userId, prefKey) {
+    const userDoc = await db.collection("users").doc(userId).get();
+    if (!userDoc.exists)
+        return true;
+    const prefs = userDoc.data()?.notificationPrefs;
+    if (!prefs || prefs[prefKey] === undefined)
+        return true;
+    return prefs[prefKey] === true;
+}
+/**
  * Send SOS critical alert to a guardian.
  */
 async function sendSOSAlert(guardianId, protectedPersonName, sosEventId, locationDescription) {
@@ -100,6 +113,8 @@ async function sendSOSAlert(guardianId, protectedPersonName, sosEventId, locatio
  * Send check-in reminder push to a guardian.
  */
 async function sendCheckinReminder(guardianId, protectedPersonName) {
+    if (!(await isNotifEnabled(guardianId, "checkinOverdue")))
+        return;
     const tokens = await getTokensForUser(guardianId);
     if (tokens.length === 0)
         return;
@@ -132,6 +147,8 @@ async function sendCheckinReminder(guardianId, protectedPersonName) {
  * Send heartbeat missing warning to a guardian.
  */
 async function sendHeartbeatMissingAlert(guardianId, protectedPersonName, lastSeenMinutes) {
+    if (!(await isNotifEnabled(guardianId, "checkinOverdue")))
+        return;
     const tokens = await getTokensForUser(guardianId);
     if (tokens.length === 0)
         return;

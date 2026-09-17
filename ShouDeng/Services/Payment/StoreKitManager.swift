@@ -10,7 +10,7 @@ import Foundation
 //   - Receipt forwarding to backend for server-side validation
 //   - Purchase restoration
 //
-// Plans: Duo (双人守护) and Family (家庭守护), each with monthly/yearly.
+// Plans: Family (家庭版) and Enhanced (增强版), each with monthly/yearly.
 
 final class StoreKitManager: ObservableObject {
 
@@ -33,21 +33,21 @@ final class StoreKitManager: ObservableObject {
     // MARK: - Product IDs (must match App Store Connect)
 
     static let productIds: Set<String> = [
-        "app.shoudeng.duo.monthly",
-        "app.shoudeng.duo.yearly",
         "app.shoudeng.family.monthly",
         "app.shoudeng.family.yearly",
-        "app.shoudeng.familyplus.monthly",
-        "app.shoudeng.familyplus.yearly",
+        "app.shoudeng.enhanced.monthly",
+        "app.shoudeng.enhanced.yearly",
+        "app.shoudeng.ultimate.monthly",
+        "app.shoudeng.ultimate.yearly",
     ]
 
     private static let productToPlan: [String: String] = [
-        "app.shoudeng.duo.monthly": "duo",
-        "app.shoudeng.duo.yearly": "duo",
         "app.shoudeng.family.monthly": "family",
         "app.shoudeng.family.yearly": "family",
-        "app.shoudeng.familyplus.monthly": "familyplus",
-        "app.shoudeng.familyplus.yearly": "familyplus",
+        "app.shoudeng.enhanced.monthly": "enhanced",
+        "app.shoudeng.enhanced.yearly": "enhanced",
+        "app.shoudeng.ultimate.monthly": "ultimate",
+        "app.shoudeng.ultimate.yearly": "ultimate",
     ]
 
     // MARK: - Dependencies
@@ -87,13 +87,6 @@ final class StoreKitManager: ObservableObject {
     // MARK: - Product Accessors
 
     @MainActor
-    func duoProducts() -> (monthly: Product?, yearly: Product?) {
-        let m = products.first { $0.id == "app.shoudeng.duo.monthly" }
-        let y = products.first { $0.id == "app.shoudeng.duo.yearly" }
-        return (m, y)
-    }
-
-    @MainActor
     func familyProducts() -> (monthly: Product?, yearly: Product?) {
         let m = products.first { $0.id == "app.shoudeng.family.monthly" }
         let y = products.first { $0.id == "app.shoudeng.family.yearly" }
@@ -101,9 +94,16 @@ final class StoreKitManager: ObservableObject {
     }
 
     @MainActor
-    func familyPlusProducts() -> (monthly: Product?, yearly: Product?) {
-        let m = products.first { $0.id == "app.shoudeng.familyplus.monthly" }
-        let y = products.first { $0.id == "app.shoudeng.familyplus.yearly" }
+    func enhancedProducts() -> (monthly: Product?, yearly: Product?) {
+        let m = products.first { $0.id == "app.shoudeng.enhanced.monthly" }
+        let y = products.first { $0.id == "app.shoudeng.enhanced.yearly" }
+        return (m, y)
+    }
+
+    @MainActor
+    func ultimateProducts() -> (monthly: Product?, yearly: Product?) {
+        let m = products.first { $0.id == "app.shoudeng.ultimate.monthly" }
+        let y = products.first { $0.id == "app.shoudeng.ultimate.yearly" }
         return (m, y)
     }
 
@@ -287,18 +287,18 @@ final class StoreKitManager: ObservableObject {
 
     func planName(for productId: String) -> String {
         switch productId {
-        case let id where id.contains("familyplus"): return "家庭守护+"
-        case let id where id.contains("family"): return "家庭守护"
-        case let id where id.contains("duo"): return "双人守护"
+        case let id where id.contains("ultimate"): return "企业版"
+        case let id where id.contains("enhanced"): return "家庭版"
+        case let id where id.contains("family"): return "单人关注版"
         default: return "免费版"
         }
     }
 
     func planDisplayName(for planId: String) -> String {
         switch planId {
-        case "duo": return "双人守护"
-        case "family": return "家庭守护"
-        case "familyplus": return "家庭守护+"
+        case "family": return "单人关注版"
+        case "enhanced": return "家庭版"
+        case "ultimate": return "企业版"
         default: return "免费版"
         }
     }

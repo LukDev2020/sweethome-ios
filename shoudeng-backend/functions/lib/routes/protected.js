@@ -88,7 +88,7 @@ router.get("/guardians", async (req, res) => {
                     cityName: user.cityName,
                     createdAt: user.createdAt.toDate().toISOString(),
                 },
-                permissions: {
+                permissions: link.permissions || {
                     canSeeLocation: true,
                     canSeeBattery: true,
                     canSeeHealth: false,
@@ -149,5 +149,75 @@ async function checkOnDuty(guardianId, protectedPersonId) {
         .get();
     return anySchedule.empty; // On duty if no schedule configured
 }
+/**
+ * PUT /v1/protected/guardians/:guardianId/permissions
+ * Update the permissions a protected person grants to a specific guardian.
+ */
+router.put("/guardians/:guardianId/permissions", async (req, res) => {
+    const uid = req.uid;
+    const { guardianId } = req.params;
+    const { canSeeLocation, canSeeBattery, canSeeHealth, canSeePhoneActivity, canHearEmergencyAudio, } = req.body;
+    try {
+        const linkId = `${guardianId}_${uid}`;
+        const linkRef = db.collection("guardian_links").doc(linkId);
+        const linkDoc = await linkRef.get();
+        if (!linkDoc.exists || linkDoc.data().status !== "active") {
+            res.status(404).json({ error: "Guardian link not found" });
+            return;
+        }
+        // Verify the caller is the protected person in this link
+        if (linkDoc.data().protectedPersonId !== uid) {
+            res.status(403).json({ error: "Only the protected person can update permissions" });
+            return;
+        }
+        await linkRef.update({
+            permissions: {
+                canSeeLocation: canSeeLocation ?? true,
+                canSeeBattery: canSeeBattery ?? true,
+                canSeeHealth: canSeeHealth ?? false,
+                canSeePhoneActivity: canSeePhoneActivity ?? false,
+                canHearEmergencyAudio: canHearEmergencyAudio ?? true,
+            },
+            permissionsUpdatedAt: admin.firestore.Timestamp.now(),
+        });
+        res.json({ success: true });
+    }
+    catch (error) {
+        console.error("[Protected] update permissions error:", error);
+        res.status(500).json({ error: "Failed to update permissions" });
+    }
+});
+/**
+ * DELETE /v1/protected/guardians/:guardianId
+ * Remove a guardian. Sets link status to "revoked".
+ * The 6-hour delay is enforced client-side (UI shows pending state).
+ */
+router.delete("/guardians/:guardianId", async (req, res) => {
+    const uid = req.uid;
+    const { guardianId } = req.params;
+    try {
+        const linkId = `${guardianId}_${uid}`;
+        const linkRef = db.collection("guardian_links").doc(linkId);
+        const linkDoc = await linkRef.get();
+        if (!linkDoc.exists || linkDoc.data().status !== "active") {
+            res.status(404).json({ error: "Guardian link not found" });
+            return;
+        }
+        if (linkDoc.data().protectedPersonId !== uid) {
+            res.status(403).json({ error: "Only the protected person can remove a guardian" });
+            return;
+        }
+        await linkRef.update({
+            status: "revoked",
+            revokedAt: admin.firestore.Timestamp.now(),
+            revokedBy: uid,
+        });
+        res.json({ success: true });
+    }
+    catch (error) {
+        console.error("[Protected] remove guardian error:", error);
+        res.status(500).json({ error: "Failed to remove guardian" });
+    }
+});
 exports.default = router;
 //# sourceMappingURL=protected.js.map

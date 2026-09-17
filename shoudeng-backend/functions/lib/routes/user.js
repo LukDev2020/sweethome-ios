@@ -99,6 +99,34 @@ router.put("/me", async (req, res) => {
     }
 });
 /**
+ * PUT /v1/user/notification-preferences
+ * Save notification preferences to server (for push filtering).
+ */
+router.put("/notification-preferences", async (req, res) => {
+    const uid = req.uid;
+    const { sosAlerts, checkinReminder, checkinOverdue, familyFeed } = req.body;
+    const prefs = {};
+    if (sosAlerts !== undefined)
+        prefs.sosAlerts = sosAlerts;
+    if (checkinReminder !== undefined)
+        prefs.checkinReminder = checkinReminder;
+    if (checkinOverdue !== undefined)
+        prefs.checkinOverdue = checkinOverdue;
+    if (familyFeed !== undefined)
+        prefs.familyFeed = familyFeed;
+    try {
+        await db.collection("users").doc(uid).update({
+            notificationPrefs: prefs,
+            updatedAt: admin.firestore.Timestamp.now(),
+        });
+        res.json({ success: true });
+    }
+    catch (error) {
+        console.error("[User] update notification prefs error:", error);
+        res.status(500).json({ error: "Failed to update notification preferences" });
+    }
+});
+/**
  * POST /v1/user/delete
  * Delete user account and all associated data (GDPR right to erasure).
  * This is irreversible.

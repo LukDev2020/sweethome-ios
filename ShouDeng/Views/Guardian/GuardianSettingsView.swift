@@ -23,6 +23,11 @@ struct GuardianSettingsView: View {
     @State private var showRoleSwitchInfo = false
     @State private var showDeleteError = false
     @State private var showExportSent = false
+    @State private var showMedicalCard = false
+    @State private var showEmergencyText = false
+    @State private var showConsulate = false
+    @State private var showOrgDashboard = false
+    @State private var showInsuranceReport = false
 
     @AppStorage("notif_sos_alerts") private var notifSOS = true
     @AppStorage("notif_checkin_overdue") private var notifCheckinOverdue = true
@@ -46,6 +51,12 @@ struct GuardianSettingsView: View {
 
                     // Subscription
                     subscriptionPanel
+
+                    // Safety tools
+                    safetyToolsPanel
+
+                    // Organization
+                    organizationPanel
 
                     // Language
                     languagePanel
@@ -115,6 +126,21 @@ struct GuardianSettingsView: View {
                 Button("我知道了") {}
             } message: {
                 Text("切换为被守护者后，您将不再收到被守护者的安全信号，且需要至少添加一位守护者才能获得保护。")
+            }
+            .sheet(isPresented: $showMedicalCard) {
+                MedicalCardView().environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showEmergencyText) {
+                EmergencyTextCardView().environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showConsulate) {
+                ConsulateView().environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showOrgDashboard) {
+                OrgDashboardView().environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showInsuranceReport) {
+                ClaimMaterialsView().environmentObject(coordinator)
             }
             .onChange(of: notifSOS) { coordinator.syncNotificationPrefs() }
             .onChange(of: notifCheckinOverdue) { coordinator.syncNotificationPrefs() }
@@ -224,6 +250,61 @@ struct GuardianSettingsView: View {
         .task {
             await coordinator.storeKitManager.refreshSubscriptionStatus()
         }
+    }
+
+    // MARK: - Safety Tools Panel
+
+    private var safetyToolsPanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("安全工具")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+
+            Button { showMedicalCard = true } label: {
+                fixedRow("紧急医疗卡", value: "编辑 →", isWarning: false)
+            }
+            .buttonStyle(.plain)
+
+            Button { showEmergencyText = true } label: {
+                fixedRow("多语言急救卡", value: "查看 →", isWarning: false)
+            }
+            .buttonStyle(.plain)
+
+            Button { showConsulate = true } label: {
+                fixedRow("领事与紧急电话", value: "查看 →", isWarning: false)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    // MARK: - Organization Panel
+
+    private var organizationPanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("机构管理")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+
+            Button { showOrgDashboard = true } label: {
+                fixedRow("合规看板", value: "查看 →", isWarning: false)
+            }
+            .buttonStyle(.plain)
+
+            Button { showInsuranceReport = true } label: {
+                fixedRow("理赔材料整理", value: "开始 →", isWarning: false)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
+        )
     }
 
     // MARK: - Language Panel

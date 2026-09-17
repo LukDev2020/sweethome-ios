@@ -76,10 +76,16 @@ struct GuardianMemberDetailView: View {
                     // Action buttons
                     HStack(spacing: 8) {
                         actionButton("发消息", icon: "message.fill") {
-                            // Open SMS to this person's phone (if available via guardian link)
+                            if let phone = person.user.phone,
+                               let url = URL(string: "sms:\(phone)") {
+                                UIApplication.shared.open(url)
+                            }
                         }
                         actionButton("拨号", icon: "phone.fill") {
-                            // Open phone dialer
+                            if let phone = person.user.phone,
+                               let url = URL(string: "tel://\(phone)") {
+                                UIApplication.shared.open(url)
+                            }
                         }
                     }
                 }

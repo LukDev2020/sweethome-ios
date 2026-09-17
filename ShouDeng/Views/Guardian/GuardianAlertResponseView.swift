@@ -15,6 +15,9 @@ struct GuardianAlertResponseView: View {
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
 
+    @State private var showClaimMaterialsPrompt = false
+    @State private var showClaimMaterials = false
+
     private var person: ProtectedPerson? {
         coordinator.protectedPersons.first { $0.id == personId }
     }
@@ -52,8 +55,8 @@ struct GuardianAlertResponseView: View {
                     // Action buttons
                     HStack(spacing: 8) {
                         Button {
-                            // Call the protected person's phone or local emergency
-                            if let url = URL(string: "tel://") {
+                            if let phone = person?.user.phone,
+                               let url = URL(string: "tel://\(phone)") {
                                 UIApplication.shared.open(url)
                             }
                         } label: {
@@ -68,7 +71,7 @@ struct GuardianAlertResponseView: View {
 
                         Button {
                             coordinator.cancelSOS()
-                            dismiss()
+                            showClaimMaterialsPrompt = true
                         } label: {
                             Text("我已接手")
                                 .font(.system(size: 13.5, weight: .medium))
@@ -97,6 +100,15 @@ struct GuardianAlertResponseView: View {
                         .font(.system(size: 11))
                         .foregroundStyle(alert)
                 }
+            }
+            .alert("需要整理相关记录吗？", isPresented: $showClaimMaterialsPrompt) {
+                Button("整理材料") { showClaimMaterials = true }
+                Button("不需要", role: .cancel) { dismiss() }
+            } message: {
+                Text("导出事件前后的设备记录，供您自行使用。")
+            }
+            .sheet(isPresented: $showClaimMaterials, onDismiss: { dismiss() }) {
+                ClaimMaterialsView().environmentObject(coordinator)
             }
         }
     }

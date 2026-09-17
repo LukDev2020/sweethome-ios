@@ -35,6 +35,10 @@ struct ProtectedSettingsView: View {
     @State private var showRoleSwitchInfo = false
     @State private var showDeleteError = false
     @State private var showExportSent = false
+    @State private var showMedicalCard = false
+    @State private var showEmergencyText = false
+    @State private var showConsulate = false
+    @State private var showClaimMaterials = false
 
     var body: some View {
         NavigationStack {
@@ -57,6 +61,9 @@ struct ProtectedSettingsView: View {
 
                     // Check-in schedule
                     checkInPanel
+
+                    // Safety tools
+                    safetyToolsPanel
 
                     // Language
                     languagePanel
@@ -131,6 +138,18 @@ struct ProtectedSettingsView: View {
             } message: {
                 Text("切换角色需要守护者同意。请联系您的守护者发起角色变更申请。")
             }
+            .sheet(isPresented: $showMedicalCard) {
+                MedicalCardView().environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showEmergencyText) {
+                EmergencyTextCardView().environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showConsulate) {
+                ConsulateView().environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showClaimMaterials) {
+                ClaimMaterialsView().environmentObject(coordinator)
+            }
             .onChange(of: notifSOS) { coordinator.syncNotificationPrefs() }
             .onChange(of: notifCheckin) { coordinator.syncNotificationPrefs() }
             .onChange(of: notifFamilyFeed) { coordinator.syncNotificationPrefs() }
@@ -200,6 +219,41 @@ struct ProtectedSettingsView: View {
                 .foregroundStyle(.secondary)
             fixedRow("每天提醒", value: "09:00、21:00", isWarning: false)
             fixedRow("超时多久算失联", value: "4 小时", isWarning: false)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    // MARK: - Safety Tools Panel
+
+    private var safetyToolsPanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("安全工具")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+
+            Button { showMedicalCard = true } label: {
+                fixedRow("紧急医疗卡", value: "编辑 →", isWarning: false)
+            }
+            .buttonStyle(.plain)
+
+            Button { showEmergencyText = true } label: {
+                fixedRow("多语言急救卡", value: "查看 →", isWarning: false)
+            }
+            .buttonStyle(.plain)
+
+            Button { showConsulate = true } label: {
+                fixedRow("领事与紧急电话", value: "查看 →", isWarning: false)
+            }
+            .buttonStyle(.plain)
+
+            Button { showClaimMaterials = true } label: {
+                fixedRow("理赔材料整理", value: "开始 →", isWarning: false)
+            }
+            .buttonStyle(.plain)
         }
         .padding(12)
         .background(

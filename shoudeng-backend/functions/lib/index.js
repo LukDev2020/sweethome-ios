@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.computeIntegrityProof = exports.ttlCleanup = exports.checkCheckinOverdue = exports.checkHeartbeatMissing = exports.onSOSCreated = exports.api = void 0;
+exports.checkHomeTimerExpiry = exports.computeIntegrityProof = exports.ttlCleanup = exports.checkCheckinOverdue = exports.checkHeartbeatMissing = exports.onSOSCreated = exports.api = void 0;
 const admin = __importStar(require("firebase-admin"));
 const functions = __importStar(require("firebase-functions"));
 const express_1 = __importDefault(require("express"));
@@ -59,8 +59,18 @@ const device_1 = __importDefault(require("./routes/device"));
 const safezone_1 = __importDefault(require("./routes/safezone"));
 const duty_1 = __importDefault(require("./routes/duty"));
 const evidence_1 = __importDefault(require("./routes/evidence"));
+const family_1 = __importDefault(require("./routes/family"));
 const payment_1 = __importDefault(require("./routes/payment"));
 const webhooks_1 = __importDefault(require("./routes/webhooks"));
+const timeline_1 = __importDefault(require("./routes/timeline"));
+const homeTimer_1 = __importDefault(require("./routes/homeTimer"));
+const arrival_1 = __importDefault(require("./routes/arrival"));
+const itinerary_1 = __importDefault(require("./routes/itinerary"));
+const medicalCard_1 = __importDefault(require("./routes/medicalCard"));
+const emergencyText_1 = __importDefault(require("./routes/emergencyText"));
+const organization_1 = __importDefault(require("./routes/organization"));
+const insurance_1 = __importDefault(require("./routes/insurance"));
+const consulate_1 = __importDefault(require("./routes/consulate"));
 const rateLimit_1 = require("./middleware/rateLimit");
 // --- Mount Routes ---
 // Phase 1: Auth & Users
@@ -73,6 +83,8 @@ app.use("/v1/protected", protected_1.default);
 app.use("/v1/safe-zone", safezone_1.default);
 app.use("/v1/safe-zones", safezone_1.default);
 app.use("/v1/duty-schedule", duty_1.default);
+// Phase 2.5: Family Feed
+app.use("/v1/family", family_1.default);
 // Phase 3: Telemetry
 app.use("/v1", telemetry_1.default);
 // Phase 4: SOS & Push
@@ -85,8 +97,23 @@ app.use("/v1/evidence", evidence_1.default);
 // Phase 6: Payment & Webhooks
 app.use("/v1/payment", payment_1.default);
 app.use("/v1/webhooks", webhooks_1.default);
+// Phase 5.5: Timeline
+app.use("/v1/timeline", timeline_1.default);
 // Diagnostics (crash reports) — uses user route prefix
 app.use("/v1", user_1.default);
+// Phase 7: Daily Use (Iteration 1)
+app.use("/v1/home-timer", homeTimer_1.default);
+app.use("/v1/arrival-report", arrival_1.default);
+app.use("/v1/itinerary", itinerary_1.default);
+// Phase 8: Emergency Utility (Iteration 2)
+app.use("/v1/medical-card", medicalCard_1.default);
+app.use("/v1/emergency-text", emergencyText_1.default);
+// Phase 9: Organization / B2B (Iteration 3)
+app.use("/v1/org", organization_1.default);
+// Phase 10: Insurance & Data (Iteration 4)
+app.use("/v1/insurance", insurance_1.default);
+// Phase 11: Consulate Hotline (global embassy data + user selection)
+app.use("/v1/consulate", consulate_1.default);
 // --- Voice callback for Twilio ---
 app.post("/v1/voice-callback", async (req, res) => {
     const { Digits, CallSid } = req.body;
@@ -139,4 +166,6 @@ var ttlCleanup_1 = require("./scheduled/ttlCleanup");
 Object.defineProperty(exports, "ttlCleanup", { enumerable: true, get: function () { return ttlCleanup_1.ttlCleanup; } });
 var integrityProof_1 = require("./scheduled/integrityProof");
 Object.defineProperty(exports, "computeIntegrityProof", { enumerable: true, get: function () { return integrityProof_1.computeIntegrityProof; } });
+var homeTimerCheck_1 = require("./scheduled/homeTimerCheck");
+Object.defineProperty(exports, "checkHomeTimerExpiry", { enumerable: true, get: function () { return homeTimerCheck_1.checkHomeTimerExpiry; } });
 //# sourceMappingURL=index.js.map

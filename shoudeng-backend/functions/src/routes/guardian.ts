@@ -65,6 +65,9 @@ router.get(
           ? null
           : checkinSnapshot.docs[0].data().timestamp.toDate().toISOString();
 
+        // Check location permission granted by protected person
+        const canSeeLocation = link.permissions?.canSeeLocation !== false;
+
         // Get latest location from BigQuery heartbeat
         const lat = latestHeartbeat?.latitude ?? null;
         const lng = latestHeartbeat?.longitude ?? null;
@@ -82,13 +85,16 @@ router.get(
           personId,
           displayName: user.displayName,
           status,
-          latitude: lat as number | null,
-          longitude: lng as number | null,
-          locationTimestamp,
+          latitude: canSeeLocation ? (lat as number | null) : null,
+          longitude: canSeeLocation ? (lng as number | null) : null,
+          locationTimestamp: canSeeLocation ? locationTimestamp : null,
           locationAddress:
-            lat != null && lng != null
+            canSeeLocation && lat != null && lng != null
               ? await reverseGeocode(lat as number, lng as number)
               : null,
+          locationAccuracy: canSeeLocation
+            ? ((latestHeartbeat?.accuracy as number) ?? null)
+            : null,
           batteryLevel: (latestHeartbeat?.battery_level as number) ?? null,
           batteryState: (latestHeartbeat?.battery_state as string) ?? "unknown",
           lastCheckIn,
@@ -96,6 +102,9 @@ router.get(
             ? String(latestHeartbeat.timestamp)
             : null,
           protectionLayers: guardianCount.data().count,
+          timeZoneId: user.timeZone ?? null,
+          countryCode: user.countryCode ?? null,
+          cityName: user.cityName ?? null,
         });
       }
 
