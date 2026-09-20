@@ -7,6 +7,7 @@ import SwiftUI
 
 struct CountryCodePicker: View {
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var lang = LanguageManager.shared
     @Binding var selected: CountryCode
     @State private var searchText = ""
 
@@ -56,12 +57,12 @@ struct CountryCodePicker: View {
                 .buttonStyle(.plain)
             }
             .listStyle(.plain)
-            .searchable(text: $searchText, prompt: "搜索国家或地区")
-            .navigationTitle("选择国家/地区")
+            .searchable(text: $searchText, prompt: lang.localized("picker.search"))
+            .navigationTitle(lang.localized("picker.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("取消") { dismiss() }
+                    Button(lang.localized("picker.cancel")) { dismiss() }
                 }
             }
         }

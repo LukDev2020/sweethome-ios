@@ -2,6 +2,9 @@ import UIKit
 import UserNotifications
 import FirebaseCore
 import FirebaseAuth
+#if canImport(FirebaseCrashlytics)
+import FirebaseCrashlytics
+#endif
 
 class AppDelegate: NSObject, UIApplicationDelegate {
 
@@ -15,6 +18,15 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // Initialize Firebase (only if GoogleService-Info.plist has real values)
         if Self.hasValidFirebaseConfig() {
             FirebaseApp.configure()
+
+            #if canImport(FirebaseCrashlytics)
+            // Enable Crashlytics (disable debug collection in DEBUG to avoid noise)
+            #if DEBUG
+            Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(false)
+            #else
+            Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(true)
+            #endif
+            #endif
 
             #if DEBUG
             print("[Firebase] Configured for project: \(FirebaseApp.app()?.options.projectID ?? "unknown")")
@@ -72,7 +84,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         #endif
     }
 
-    // MARK: - URL Handling (Firebase reCAPTCHA callback)
+    // MARK: - URL Handling (Firebase reCAPTCHA callback + deep links)
 
     func application(
         _ app: UIApplication,
@@ -82,7 +94,19 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         if Auth.auth().canHandle(url) {
             return true
         }
-        return false
+        appCoordinator.handleDeepLink(url)
+        return true
+    }
+
+    // MARK: - Universal Links
+
+    func application(
+        _ application: UIApplication,
+        continue userActivity: NSUserActivity,
+        restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void
+    ) -> Bool {
+        appCoordinator.handleUserActivity(userActivity)
+        return true
     }
 
     // MARK: - Silent Push (Background Fetch)

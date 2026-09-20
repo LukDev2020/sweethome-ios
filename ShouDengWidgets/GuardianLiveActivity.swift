@@ -38,18 +38,21 @@ struct GuardianLiveActivity: Widget {
 
                 // MARK: Expanded — Bottom
                 DynamicIslandExpandedRegion(.bottom) {
-                    Link(destination: URL(string: "tel:\(context.state.emergencyPhone)")!) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "phone.fill")
-                                .font(.caption)
-                            Text("紧急呼叫 \(context.state.emergencyLabel)")
-                                .font(.subheadline.weight(.semibold))
+                    if let telURL = URL(string: "tel:\(context.state.emergencyPhone)"),
+                       !context.state.emergencyPhone.isEmpty {
+                        Link(destination: telURL) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "phone.fill")
+                                    .font(.caption)
+                                Text("紧急呼叫 \(context.state.emergencyLabel)")
+                                    .font(.subheadline.weight(.semibold))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                            .background(callButtonColor(context.state.status))
+                            .foregroundStyle(.white)
+                            .clipShape(Capsule())
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                        .background(callButtonColor(context.state.status))
-                        .foregroundStyle(.white)
-                        .clipShape(Capsule())
                     }
                 }
 

@@ -54,8 +54,9 @@ final class GuardianActivityManager {
             #endif
 
             // Forward push token to server
-            Task {
+            Task { [weak self] in
                 for await pushToken in activity.pushTokenUpdates {
+                    guard let self else { break }
                     let tokenString = pushToken.map { String(format: "%02x", $0) }.joined()
                     await self.sendPushTokenToServer(tokenString)
                 }

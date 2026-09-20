@@ -23,6 +23,11 @@ router.post("/save", async (req: Request, res: Response) => {
     return;
   }
 
+  if (radius !== undefined && (typeof radius !== "number" || radius <= 0 || radius > 100000)) {
+    res.status(400).json({ error: "radius must be a positive number (max 100km)" });
+    return;
+  }
+
   try {
     const zoneId = existingId || uuidv4();
 

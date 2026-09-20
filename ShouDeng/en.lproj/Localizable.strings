@@ -40,3 +40,8 @@
 "signup.role.guardian.desc" = "You will monitor family safety status";
 "signup.finish" = "Complete";
 "signup.back" = "Back";
+
+/* Country Picker */
+"picker.search" = "Search countries";
+"picker.title" = "Select Country/Region";
+"picker.cancel" = "Cancel";

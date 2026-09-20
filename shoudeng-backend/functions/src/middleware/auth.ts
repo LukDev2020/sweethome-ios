@@ -1,5 +1,8 @@
 import { Request, Response, NextFunction } from "express";
-import * as admin from "firebase-admin";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET =
+  process.env.JWT_SECRET || "shoudeng-dev-jwt-secret-do-not-use-in-prod";
 
 // Extend Express Request with authenticated user info
 declare global {
@@ -12,8 +15,8 @@ declare global {
 
 /**
  * Decode a token to extract uid.
- * In emulator mode, decodes JWT payload directly (accepts custom tokens
- * and cross-project ID tokens). In production, uses full verification.
+ * In emulator mode, decodes JWT payload directly (accepts any JWT shape).
+ * In production, verifies the JWT signature and checks token type.
  */
 async function decodeToken(token: string): Promise<string> {
   if (process.env.FUNCTIONS_EMULATOR === "true") {
@@ -26,12 +29,18 @@ async function decodeToken(token: string): Promise<string> {
       throw new Error("Invalid token format");
     }
   }
-  const decoded = await admin.auth().verifyIdToken(token);
-  return decoded.uid;
+  const payload = jwt.verify(token, JWT_SECRET) as {
+    uid: string;
+    type: string;
+  };
+  if (payload.type !== "access") {
+    throw new Error("Not an access token");
+  }
+  return payload.uid;
 }
 
 /**
- * Middleware that verifies Firebase Auth ID token from Authorization header.
+ * Middleware that verifies JWT access token from Authorization header.
  * Sets req.uid on success.
  */
 export async function authMiddleware(

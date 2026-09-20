@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # --- iOS Build & Test ---
+  ios:
+    name: iOS Build & Test
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app
+
+      - name: Resolve SPM dependencies
+        run: xcodebuild -resolvePackageDependencies -project ShouDeng.xcodeproj -scheme ShouDeng
+
+      - name: Build
+        run: |
+          xcodebuild build \
+            -project ShouDeng.xcodeproj \
+            -scheme ShouDeng \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Test
+        run: |
+          xcodebuild test \
+            -project ShouDeng.xcodeproj \
+            -scheme ShouDeng \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO \
+            -resultBundlePath TestResults.xcresult
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults.xcresult
+
+  # --- Backend Type Check & Test ---
+  backend:
+    name: Backend Type Check & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: shoudeng-backend/functions
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: shoudeng-backend/functions/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Run tests
+        run: npm test -- --passWithNoTests

@@ -136,6 +136,6 @@ final class ConsentLogger {
     }
 
     private var currentUserId: String {
-        UserDefaults.standard.string(forKey: "currentUserId") ?? "anonymous"
+        UserDefaults.standard.string(forKey: "currentUserId") ?? UIDevice.current.identifierForVendor?.uuidString ?? "unknown_device"
     }
 }

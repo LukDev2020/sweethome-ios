@@ -1,5 +1,8 @@
 import UIKit
 import Combine
+#if canImport(FirebaseCrashlytics)
+import FirebaseCrashlytics
+#endif
 
 // MARK: - App Coordinator
 //
@@ -8,8 +11,8 @@ import Combine
 
 final class AppCoordinator: ObservableObject {
 
-    // TEMP: Set to true to bypass login during development
-    let devBypassLogin = true
+    // Set to true to bypass login during development
+    let devBypassLogin = false
 
     // MARK: - Published State
 
@@ -21,12 +24,16 @@ final class AppCoordinator: ObservableObject {
     @Published var sosDeliveryFailed = false
     @Published var currentRiskScores: [String: BaselineScorer.RiskScore] = [:]
     @Published var currentCoverage: DutyScheduler.DayCoverage?
+    @Published var authState: AuthManager.AuthState = .unknown
     @Published var showSignup = false
     @Published var signupPhone: String?
     @Published var signupCountry: CountryCode?
     @Published var timeline: [TimelineEntry] = []
     @Published var familyPosts: [FamilyPost] = []
     @Published var selectedHotline: SelectedHotline?
+    @Published var pendingDeepLink: DeepLinkDestination?
+    @Published var showInviteAccept = false
+    @Published var pendingInviteCode: String?
 
     // MARK: - Infrastructure
 
@@ -81,6 +88,9 @@ final class AppCoordinator: ObservableObject {
                 return false
             }
         }
+
+        // Sync initial auth state before Combine subscription delivers asynchronously
+        authState = authManager.state
 
         wireServices()
         restoreLocalState()
@@ -177,9 +187,17 @@ final class AppCoordinator: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
                 guard let self else { return }
+                // Mirror auth state as a @Published property on the coordinator,
+                // since nested ObservableObject changes don't auto-propagate
+                // to views that observe the coordinator via @EnvironmentObject.
+                self.authState = state
                 switch state {
                 case .loggedIn(let userId):
                     UserDefaults.standard.set(userId, forKey: "currentUserId")
+                    self.heartbeatService.userId = userId
+                    #if canImport(FirebaseCrashlytics)
+                    Crashlytics.crashlytics().setUserID(userId)
+                    #endif
                     // Set role from login/signup response immediately
                     if let roleStr = self.authManager.lastLoginRole,
                        let role = UserRole(rawValue: roleStr) {
@@ -218,11 +236,68 @@ final class AppCoordinator: ObservableObject {
         activeSOSEvent = nil
         timeline = []
         familyPosts = []
+        selectedHotline = nil
         showSignup = false
         signupPhone = nil
         signupCountry = nil
         localStore.clearAll()
-        UserDefaults.standard.set(false, forKey: "onboardingComplete")
+        offlineQueue.clearAll()
+
+        // Clear all user-specific UserDefaults
+        let userKeys = [
+            "onboardingComplete",
+            "selected_hotline",
+            "medical_card_cache",
+            "custom_emergency_contacts",
+            "local_emergency_contacts_v2",
+            "notif_sos_alerts",
+            "notif_checkin_reminder",
+            "notif_checkin_overdue",
+            "notif_family_feed",
+            "login_failed_attempts",
+            "login_lockout_until",
+            "signup_failed_attempts",
+            "signup_lockout_until",
+        ]
+        for key in userKeys {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+    }
+
+    // MARK: - Deep Link Handling
+
+    func handleDeepLink(_ url: URL) {
+        guard let destination = DeepLinkRouter.parse(url: url) else { return }
+        handleDeepLinkDestination(destination)
+    }
+
+    func handleUserActivity(_ activity: NSUserActivity) {
+        guard let destination = DeepLinkRouter.parse(userActivity: activity) else { return }
+        handleDeepLinkDestination(destination)
+    }
+
+    private func handleDeepLinkDestination(_ destination: DeepLinkDestination) {
+        switch authManager.state {
+        case .loggedIn:
+            applyDeepLink(destination)
+        default:
+            // Store for after login
+            pendingDeepLink = destination
+        }
+    }
+
+    private func applyDeepLink(_ destination: DeepLinkDestination) {
+        switch destination {
+        case .invite(let code):
+            pendingInviteCode = code
+            showInviteAccept = true
+        case .evidence:
+            // Evidence links are handled by the web view; no in-app routing needed
+            break
+        case .sosEvent:
+            // Navigate to SOS detail — triggers on guardian tab
+            break
+        }
     }
 
     // MARK: - Fetch User Profile

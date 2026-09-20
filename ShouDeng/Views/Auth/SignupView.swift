@@ -5,14 +5,26 @@ import SwiftUI
 // Phone + verification code + name + role selection.
 // Supports international phone numbers with country code picker.
 // Role determines which portal (Protected/Guardian) the user enters.
+//
+// Security: 5 failed code attempts -> lock + contact Velar Care.
 
 struct SignupView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @Environment(\.dismiss) var dismiss
+    @ObservedObject private var lang = LanguageManager.shared
 
+    // Lighthouse palette (matching LoginView)
+    private let navy = Color(red: 1/255, green: 69/255, blue: 129/255)
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink2 = Color(red: 14/255, green: 43/255, blue: 74/255).opacity(0.62)
+    private let ink3 = Color(red: 14/255, green: 43/255, blue: 74/255).opacity(0.4)
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
+    private let red = Color(red: 246/255, green: 78/255, blue: 77/255)
+
+    private let maxAttempts = 5
+    private let lockoutKey = "signup_lockout_until"
+    private let failedAttemptsKey = "signup_failed_attempts"
 
     @State private var selectedCountry = CountryCode.deviceDefault
     @State private var phone = ""
@@ -25,6 +37,8 @@ struct SignupView: View {
     @State private var countdown = 0
     @State private var countdownTimer: Timer?
     @State private var showCountryPicker = false
+    @State private var failedAttempts = 0
+    @State private var isLocked = false
 
     enum Step {
         case phone
@@ -37,49 +51,64 @@ struct SignupView: View {
             VStack(spacing: 0) {
                 Spacer()
 
-                stepContent
+                if isLocked {
+                    lockedView
+                } else {
+                    stepContent
+                }
 
-                // Error
-                if let errorMessage {
-                    Text(errorMessage)
-                        .font(.system(size: 12))
-                        .foregroundStyle(.red)
-                        .padding(.top, 8)
+                // Error + attempts warning
+                if let errorMessage, !isLocked {
+                    VStack(spacing: 4) {
+                        Text(errorMessage)
+                            .font(.system(size: 12))
+                            .foregroundStyle(red)
+
+                        if step == .code && failedAttempts > 0 {
+                            let remaining = maxAttempts - failedAttempts
+                            Text(String(format: lang.localized("login.attempts.warning"), remaining))
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(remaining <= 2 ? red : ink3)
+                        }
+                    }
+                    .padding(.top, 8)
                 }
 
                 // Action button
-                Button {
-                    Task { await handleAction() }
-                } label: {
-                    Group {
-                        if isLoading {
-                            ProgressView().tint(.white)
-                        } else {
-                            Text(buttonTitle)
+                if !isLocked {
+                    Button {
+                        Task { await handleAction() }
+                    } label: {
+                        Group {
+                            if isLoading {
+                                ProgressView().tint(.white)
+                            } else {
+                                Text(buttonTitle)
+                            }
                         }
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(buttonDisabled ? ink.opacity(0.3) : ink)
+                        )
                     }
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(buttonDisabled ? ink.opacity(0.3) : ink)
-                    )
+                    .disabled(buttonDisabled)
+                    .padding(.horizontal, 32)
+                    .padding(.top, 20)
                 }
-                .disabled(buttonDisabled)
-                .padding(.horizontal, 32)
-                .padding(.top, 20)
 
                 Spacer()
                 Spacer()
             }
             .background(Color(.systemBackground))
-            .navigationTitle(NSLocalizedString("signup.title", comment: ""))
+            .navigationTitle(lang.localized("signup.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(NSLocalizedString("signup.back", comment: "")) { dismiss() }
+                    Button(lang.localized("signup.back")) { dismiss() }
                 }
             }
             .sheet(isPresented: $showCountryPicker) {
@@ -95,12 +124,38 @@ struct SignupView: View {
                     selectedCountry = prefillCountry
                     coordinator.signupCountry = nil
                 }
+                checkLockout()
             }
             .onDisappear {
                 countdownTimer?.invalidate()
             }
         }
     }
+
+    // MARK: - Locked View
+
+    private var lockedView: some View {
+        VStack(spacing: 0) {
+            Image(systemName: "lock.shield.fill")
+                .font(.system(size: 48))
+                .foregroundStyle(navy.opacity(0.6))
+                .padding(.bottom, 20)
+
+            Text(lang.localized("login.locked.title"))
+                .font(.system(size: 24, weight: .bold, design: .serif))
+                .foregroundStyle(navy)
+
+            Text(lang.localized("login.locked.message"))
+                .font(.system(size: 14))
+                .foregroundStyle(ink2)
+                .multilineTextAlignment(.center)
+                .lineSpacing(4)
+                .padding(.top, 12)
+                .padding(.horizontal, 40)
+        }
+    }
+
+    // MARK: - Step Content
 
     /// Full E.164 phone number
     private var fullPhoneNumber: String {
@@ -113,7 +168,7 @@ struct SignupView: View {
         switch step {
         case .phone:
             VStack(spacing: 16) {
-                Text(NSLocalizedString("signup.enter.phone", comment: ""))
+                Text(lang.localized("signup.enter.phone"))
                     .font(.system(size: 20, weight: .bold))
                 HStack(spacing: 0) {
                     // Country code button
@@ -138,7 +193,7 @@ struct SignupView: View {
                         )
                     }
 
-                    TextField(NSLocalizedString("login.phone.placeholder", comment: ""), text: $phone)
+                    TextField(lang.localized("login.phone.placeholder"), text: $phone)
                         .font(.system(size: 15))
                         .keyboardType(.phonePad)
                         .textContentType(.telephoneNumber)
@@ -154,12 +209,12 @@ struct SignupView: View {
 
         case .code:
             VStack(spacing: 16) {
-                Text(NSLocalizedString("signup.enter.code", comment: ""))
+                Text(lang.localized("signup.enter.code"))
                     .font(.system(size: 20, weight: .bold))
-                Text(String(format: NSLocalizedString("signup.code.sent", comment: ""), selectedCountry.dialCode, phone))
+                Text(String(format: lang.localized("signup.code.sent"), selectedCountry.dialCode, phone))
                     .font(.system(size: 13))
                     .foregroundStyle(.secondary)
-                TextField(NSLocalizedString("login.code.placeholder", comment: ""), text: $code)
+                TextField(lang.localized("login.code.placeholder"), text: $code)
                     .font(.system(size: 15))
                     .keyboardType(.numberPad)
                     .textContentType(.oneTimeCode)
@@ -173,9 +228,9 @@ struct SignupView: View {
 
         case .profile:
             VStack(spacing: 16) {
-                Text(NSLocalizedString("signup.profile.title", comment: ""))
+                Text(lang.localized("signup.profile.title"))
                     .font(.system(size: 20, weight: .bold))
-                TextField(NSLocalizedString("signup.name.placeholder", comment: ""), text: $displayName)
+                TextField(lang.localized("signup.name.placeholder"), text: $displayName)
                     .font(.system(size: 15))
                     .textContentType(.name)
                     .padding(12)
@@ -185,15 +240,15 @@ struct SignupView: View {
                     )
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(NSLocalizedString("signup.role.title", comment: ""))
+                    Text(lang.localized("signup.role.title"))
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                     roleOption(.protected_, icon: "shield.fill",
-                               title: NSLocalizedString("signup.role.protected", comment: ""),
-                               desc: NSLocalizedString("signup.role.protected.desc", comment: ""))
+                               title: lang.localized("signup.role.protected"),
+                               desc: lang.localized("signup.role.protected.desc"))
                     roleOption(.guardian, icon: "eye.fill",
-                               title: NSLocalizedString("signup.role.guardian", comment: ""),
-                               desc: NSLocalizedString("signup.role.guardian.desc", comment: ""))
+                               title: lang.localized("signup.role.guardian"),
+                               desc: lang.localized("signup.role.guardian.desc"))
                 }
             }
             .padding(.horizontal, 32)
@@ -232,10 +287,10 @@ struct SignupView: View {
     private var buttonTitle: String {
         switch step {
         case .phone: return countdown > 0
-            ? String(format: NSLocalizedString("login.countdown", comment: ""), countdown)
-            : NSLocalizedString("login.get.code", comment: "")
-        case .code:  return NSLocalizedString("signup.next", comment: "")
-        case .profile: return NSLocalizedString("signup.finish", comment: "")
+            ? String(format: lang.localized("login.countdown"), countdown)
+            : lang.localized("login.get.code")
+        case .code:  return lang.localized("signup.next")
+        case .profile: return lang.localized("signup.finish")
         }
     }
 
@@ -247,6 +302,8 @@ struct SignupView: View {
         case .profile: return displayName.trimmingCharacters(in: .whitespaces).isEmpty
         }
     }
+
+    // MARK: - Actions
 
     @MainActor
     private func handleAction() async {
@@ -261,20 +318,53 @@ struct SignupView: View {
                 step = .code
                 startCountdown()
             case .code:
+                // Verify OTP now so invalid codes fail before profile entry
+                try await coordinator.authManager.verifyCode(code: code)
+                failedAttempts = 0
+                UserDefaults.standard.set(0, forKey: failedAttemptsKey)
                 step = .profile
             case .profile:
                 try await coordinator.authManager.signup(
-                    phone: fullPhoneNumber,
-                    code: code,
                     displayName: displayName,
-                    role: selectedRole.rawValue
+                    role: selectedRole.rawValue,
+                    countryCode: selectedCountry.isoCode
                 )
                 coordinator.userRole = selectedRole
                 coordinator.showSignup = false
             }
         } catch {
+            if step == .code {
+                failedAttempts += 1
+                UserDefaults.standard.set(failedAttempts, forKey: failedAttemptsKey)
+                if failedAttempts >= maxAttempts {
+                    lockAccount()
+                    return
+                }
+            }
             errorMessage = error.localizedDescription
         }
+    }
+
+    // MARK: - Lockout
+
+    private func lockAccount() {
+        let lockUntil = Date().addingTimeInterval(30 * 60) // 30 min lock
+        UserDefaults.standard.set(lockUntil.timeIntervalSince1970, forKey: lockoutKey)
+        isLocked = true
+    }
+
+    private func checkLockout() {
+        let lockUntil = UserDefaults.standard.double(forKey: lockoutKey)
+        if lockUntil > 0 {
+            if Date().timeIntervalSince1970 < lockUntil {
+                isLocked = true
+            } else {
+                // Lockout expired — reset
+                UserDefaults.standard.removeObject(forKey: lockoutKey)
+                UserDefaults.standard.set(0, forKey: failedAttemptsKey)
+            }
+        }
+        failedAttempts = UserDefaults.standard.integer(forKey: failedAttemptsKey)
     }
 
     @MainActor

@@ -1,16 +1,59 @@
 import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
+import * as functions from "firebase-functions";
+import * as crypto from "crypto";
 
 const router = Router();
 const db = admin.firestore();
+
+// --- Twilio Signature Verification ---
+
+function verifyTwilioSignature(req: Request): boolean {
+  if (process.env.FUNCTIONS_EMULATOR === "true") return true;
+
+  const authToken = functions.config().twilio?.auth_token;
+  if (!authToken) {
+    console.error("[Webhook] Twilio auth_token not configured");
+    return false;
+  }
+
+  const signature = req.headers["x-twilio-signature"] as string;
+  if (!signature) return false;
+
+  // Build the full URL Twilio used to call us
+  const protocol = req.headers["x-forwarded-proto"] || "https";
+  const url = `${protocol}://${req.headers.host}${req.originalUrl}`;
+
+  // Sort POST params and append key=value
+  const params = req.body || {};
+  const sortedKeys = Object.keys(params).sort();
+  const data = url + sortedKeys.map((k) => k + params[k]).join("");
+
+  const expected = crypto
+    .createHmac("sha1", authToken)
+    .update(Buffer.from(data, "utf-8"))
+    .digest("base64");
+
+  const sigBuf = Buffer.from(signature, "utf-8");
+  const expBuf = Buffer.from(expected, "utf-8");
+
+  if (sigBuf.length !== expBuf.length) return false;
+  return crypto.timingSafeEqual(sigBuf, expBuf);
+}
 
 /**
  * POST /v1/webhooks/twilio/call-status
  * Twilio call status callback — tracks voice call delivery and duration.
  * Called by Twilio when a call's status changes.
- * NO auth — Twilio signs requests, verify via X-Twilio-Signature in production.
+ * Verified via X-Twilio-Signature.
  */
 router.post("/twilio/call-status", async (req: Request, res: Response) => {
+  if (!verifyTwilioSignature(req)) {
+    console.error("[Webhook] Invalid Twilio signature for call-status");
+    res.status(403).json({ error: "Invalid signature" });
+    return;
+  }
+
   const {
     CallSid,
     CallStatus,    // "queued" | "ringing" | "in-progress" | "completed" | "busy" | "failed" | "no-answer"
@@ -90,8 +133,15 @@ router.post("/twilio/call-status", async (req: Request, res: Response) => {
 /**
  * POST /v1/webhooks/twilio/sms-status
  * Twilio SMS delivery status callback.
+ * Verified via X-Twilio-Signature.
  */
 router.post("/twilio/sms-status", async (req: Request, res: Response) => {
+  if (!verifyTwilioSignature(req)) {
+    console.error("[Webhook] Invalid Twilio signature for sms-status");
+    res.status(403).json({ error: "Invalid signature" });
+    return;
+  }
+
   const { MessageSid, MessageStatus, To, ErrorCode } = req.body;
 
   console.log(`[Webhook] Twilio SMS status: ${MessageSid} → ${MessageStatus}`);

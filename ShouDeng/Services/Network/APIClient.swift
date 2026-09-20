@@ -85,6 +85,8 @@ final class APIClient {
     }
 
     /// Fire-and-forget with optional result callback for critical operations (e.g. SOS).
+    /// For safety-critical paths (SOS, location), the item is enqueued to disk FIRST
+    /// so it survives app termination, then sent immediately if possible.
     func postQueued<B: Encodable>(_ path: String, body: B, onResult: ((Bool) -> Void)?) {
         guard let bodyData = try? encoder.encode(body) else {
             onResult?(false)
@@ -96,18 +98,23 @@ final class APIClient {
             body: bodyData
         )
 
+        // Enqueue to disk FIRST — guarantees the request survives app kill
+        offlineQueue.enqueue(item)
+
         Task {
             do {
                 let request = try buildRequest(path: path, method: "POST", body: body)
                 let (_, response) = try await session.data(for: request)
-                if let http = response as? HTTPURLResponse, http.statusCode >= 500 {
-                    offlineQueue.enqueue(item)
-                    await MainActor.run { onResult?(false) }
-                } else {
+                if let http = response as? HTTPURLResponse, (200...399).contains(http.statusCode) {
+                    // Sent successfully — remove from queue
+                    offlineQueue.removeItems(withIds: [item.id])
                     await MainActor.run { onResult?(true) }
+                } else {
+                    // Server error — keep in queue for retry via flush
+                    await MainActor.run { onResult?(false) }
                 }
             } catch {
-                offlineQueue.enqueue(item)
+                // Network error — already in queue, will be flushed later
                 await MainActor.run { onResult?(false) }
             }
         }
@@ -116,18 +123,52 @@ final class APIClient {
     // MARK: - Flush Offline Queue
 
     func flushOfflineQueue() async {
-        let items = offlineQueue.dequeueAll()
+        // H4 fix: peek items first, only remove after successful send
+        let items = offlineQueue.peekAll()
+        guard !items.isEmpty else { return }
+
+        var successIds = Set<String>()
+        var didRefreshToken = false
+
         for item in items {
             do {
                 var request = try buildRawRequest(path: item.path, method: item.method)
                 request.httpBody = item.body
                 let (_, response) = try await session.data(for: request)
-                if let http = response as? HTTPURLResponse, http.statusCode >= 500 {
-                    offlineQueue.enqueue(item)
+                guard let http = response as? HTTPURLResponse else { continue }
+
+                switch http.statusCode {
+                case 200...399:
+                    successIds.insert(item.id)
+                case 401:
+                    // Attempt token refresh once per flush cycle
+                    if !didRefreshToken, let refresh = onUnauthorized {
+                        didRefreshToken = true
+                        let refreshed = await refresh()
+                        if refreshed {
+                            // Retry this item with new token
+                            var retryRequest = try buildRawRequest(path: item.path, method: item.method)
+                            retryRequest.httpBody = item.body
+                            let (_, retryResponse) = try await session.data(for: retryRequest)
+                            if let retryHttp = retryResponse as? HTTPURLResponse,
+                               (200...399).contains(retryHttp.statusCode) {
+                                successIds.insert(item.id)
+                            }
+                        }
+                    }
+                    // If refresh failed or already tried, keep item in queue
+                case 400...499:
+                    // Client errors (except 401) are permanent failures — remove to avoid infinite retry
+                    successIds.insert(item.id)
+                default:
+                    break // 5xx: keep in queue for retry
                 }
             } catch {
-                offlineQueue.enqueue(item)
+                // Network error: keep in queue for retry
             }
+        }
+        if !successIds.isEmpty {
+            offlineQueue.removeItems(withIds: successIds)
         }
     }
 

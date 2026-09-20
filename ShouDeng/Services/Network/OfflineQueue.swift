@@ -43,6 +43,20 @@ final class OfflineQueue {
     func enqueue(_ item: Item) {
         queue.async { [weak self] in
             guard let self else { return }
+
+            // M6 fix: deduplicate by path + method (skip if identical pending request exists)
+            if let existingData = try? Data(contentsOf: self.fileURL),
+               let existingText = String(data: existingData, encoding: .utf8) {
+                let lines = existingText.split(separator: "\n")
+                for line in lines {
+                    if let lineData = line.data(using: .utf8),
+                       let existing = try? self.decoder.decode(Item.self, from: lineData),
+                       existing.method == item.method && existing.path == item.path && existing.body == item.body {
+                        return // Duplicate, skip
+                    }
+                }
+            }
+
             guard var data = try? self.encoder.encode(item) else { return }
             data.append(contentsOf: "\n".utf8)
 
@@ -57,7 +71,48 @@ final class OfflineQueue {
         }
     }
 
+    // MARK: - Peek All (returns items without clearing)
+
+    func peekAll() -> [Item] {
+        var items: [Item] = []
+        queue.sync {
+            guard let data = try? Data(contentsOf: fileURL),
+                  let text = String(data: data, encoding: .utf8) else { return }
+
+            items = text
+                .split(separator: "\n")
+                .compactMap { line in
+                    guard let lineData = line.data(using: .utf8) else { return nil }
+                    return try? decoder.decode(Item.self, from: lineData)
+                }
+        }
+        return items
+    }
+
+    // MARK: - Remove Processed Items
+
+    func removeItems(withIds ids: Set<String>) {
+        queue.async { [weak self] in
+            guard let self else { return }
+            guard let data = try? Data(contentsOf: self.fileURL),
+                  let text = String(data: data, encoding: .utf8) else { return }
+
+            let remaining = text
+                .split(separator: "\n")
+                .filter { line in
+                    guard let lineData = line.data(using: .utf8),
+                          let item = try? self.decoder.decode(Item.self, from: lineData) else { return true }
+                    return !ids.contains(item.id)
+                }
+                .joined(separator: "\n")
+
+            let output = remaining.isEmpty ? "" : remaining + "\n"
+            try? output.write(to: self.fileURL, atomically: true, encoding: .utf8)
+        }
+    }
+
     // MARK: - Dequeue All (returns items and clears the file)
+    // Kept for backward compat but prefer peekAll + removeItems
 
     func dequeueAll() -> [Item] {
         var items: [Item] = []
@@ -76,6 +131,15 @@ final class OfflineQueue {
             try? "".write(to: fileURL, atomically: true, encoding: .utf8)
         }
         return items
+    }
+
+    // MARK: - Clear All (used on logout to prevent cross-user data leak)
+
+    func clearAll() {
+        queue.async { [weak self] in
+            guard let self else { return }
+            try? "".write(to: self.fileURL, atomically: true, encoding: .utf8)
+        }
     }
 
     // MARK: - Pending Count

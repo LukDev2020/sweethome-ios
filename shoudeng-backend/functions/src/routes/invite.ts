@@ -117,13 +117,20 @@ router.post("/accept", async (req: Request, res: Response) => {
       }
 
       const creatorRole = creatorDoc.data()!.role;
+      const acceptorRole = acceptorDoc.data()!.role;
       let guardianId: string;
       let protectedPersonId: string;
 
       if (creatorRole === "protected") {
+        if (acceptorRole !== "guardian") {
+          throw new Error("ROLE_MISMATCH");
+        }
         protectedPersonId = inviteData.createdBy;
         guardianId = uid;
       } else {
+        if (acceptorRole !== "protected") {
+          throw new Error("ROLE_MISMATCH");
+        }
         guardianId = inviteData.createdBy;
         protectedPersonId = uid;
       }
@@ -175,6 +182,8 @@ router.post("/accept", async (req: Request, res: Response) => {
       res.status(400).json({ error: "Cannot accept your own invite" });
     } else if (error.message === "USER_NOT_FOUND") {
       res.status(404).json({ error: "User not found" });
+    } else if (error.message === "ROLE_MISMATCH") {
+      res.status(400).json({ error: "Guardian and protected person roles do not match" });
     } else {
       console.error("[Invite] accept error:", error);
       res.status(500).json({ error: "Failed to accept invite" });

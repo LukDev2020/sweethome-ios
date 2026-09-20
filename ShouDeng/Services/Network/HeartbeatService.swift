@@ -36,6 +36,7 @@ final class HeartbeatService {
     private var beatsThisHour: Int = 0
     private var hourResetTimer: Timer?
 
+    var userId: String = ""
     var onHeartbeat: ((HeartbeatSignal) -> Void)?
 
     init(config: Config = Config()) {
@@ -90,7 +91,7 @@ final class HeartbeatService {
         }
 
         let signal = HeartbeatSignal(
-            userId: "",  // Filled by the app coordinator
+            userId: userId,
             timestamp: now,
             source: source,
             batteryLevel: batteryLevel >= 0 ? batteryLevel : nil,

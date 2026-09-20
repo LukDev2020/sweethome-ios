@@ -35,16 +35,6 @@
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
-		<key>NSExceptionDomains</key>
-		<dict>
-			<key>localhost</key>
-			<dict>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<true/>
-				<key>NSIncludesSubdomains</key>
-				<true/>
-			</dict>
-		</dict>
 	</dict>
 	<key>NSContactsUsageDescription</key>
 	<string>守灯需要访问您的通讯录，以便快速添加紧急联络人信息。</string>
@@ -52,8 +42,12 @@
 	<string>守灯需要始终访问您的位置，以便在紧急情况下向家人报告您的位置，并在您进出安全区时通知守护者。</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>守灯需要访问您的位置以显示您的当前位置，并在紧急求助时向家人发送位置信息。</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>仅在触发紧急求助时使用麦克风录制环境音，帮助守护者判断现场情况。录音需当地法律许可，部分地区要求所有在场者同意。</string>
 	<key>NSMotionUsageDescription</key>
 	<string>守灯使用运动传感器检测跌倒等异常情况，在您无法主动求助时自动通知家人。</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>允许在家庭圈中分享照片。您的照片仅对守护关系内的家人可见。</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
@@ -61,8 +55,6 @@
 		<string>remote-notification</string>
 		<string>processing</string>
 	</array>
-	<key>NSSupportsLiveActivities</key>
-	<true/>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>

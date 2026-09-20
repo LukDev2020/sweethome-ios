@@ -62,6 +62,11 @@ struct CountryCode: Identifiable, Hashable {
         CountryCode(name: "Sri Lanka", localName: "斯里兰卡", dialCode: "+94", isoCode: "LK", flag: flag(for: "LK")),
         CountryCode(name: "Nepal", localName: "尼泊尔", dialCode: "+977", isoCode: "NP", flag: flag(for: "NP")),
 
+        // Oceania
+        CountryCode(name: "Australia", localName: "澳大利亚", dialCode: "+61", isoCode: "AU", flag: flag(for: "AU")),
+        CountryCode(name: "New Zealand", localName: "新西兰", dialCode: "+64", isoCode: "NZ", flag: flag(for: "NZ")),
+        CountryCode(name: "Fiji", localName: "斐济", dialCode: "+679", isoCode: "FJ", flag: flag(for: "FJ")),
+
         // North America
         CountryCode(name: "United States", localName: "美国", dialCode: "+1", isoCode: "US", flag: flag(for: "US")),
         CountryCode(name: "Canada", localName: "加拿大", dialCode: "+1", isoCode: "CA", flag: flag(for: "CA")),
@@ -114,5 +119,22 @@ struct CountryCode: Identifiable, Hashable {
         CountryCode(name: "Lithuania", localName: "立陶宛", dialCode: "+370", isoCode: "LT", flag: flag(for: "LT")),
         CountryCode(name: "Latvia", localName: "拉脱维亚", dialCode: "+371", isoCode: "LV", flag: flag(for: "LV")),
         CountryCode(name: "Estonia", localName: "爱沙尼亚", dialCode: "+372", isoCode: "EE", flag: flag(for: "EE")),
+
+        // Middle East
+        CountryCode(name: "United Arab Emirates", localName: "阿联酋", dialCode: "+971", isoCode: "AE", flag: flag(for: "AE")),
+        CountryCode(name: "Saudi Arabia", localName: "沙特阿拉伯", dialCode: "+966", isoCode: "SA", flag: flag(for: "SA")),
+        CountryCode(name: "Turkey", localName: "土耳其", dialCode: "+90", isoCode: "TR", flag: flag(for: "TR")),
+        CountryCode(name: "Israel", localName: "以色列", dialCode: "+972", isoCode: "IL", flag: flag(for: "IL")),
+        CountryCode(name: "Qatar", localName: "卡塔尔", dialCode: "+974", isoCode: "QA", flag: flag(for: "QA")),
+        CountryCode(name: "Kuwait", localName: "科威特", dialCode: "+965", isoCode: "KW", flag: flag(for: "KW")),
+        CountryCode(name: "Jordan", localName: "约旦", dialCode: "+962", isoCode: "JO", flag: flag(for: "JO")),
+        CountryCode(name: "Lebanon", localName: "黎巴嫩", dialCode: "+961", isoCode: "LB", flag: flag(for: "LB")),
+
+        // Africa
+        CountryCode(name: "South Africa", localName: "南非", dialCode: "+27", isoCode: "ZA", flag: flag(for: "ZA")),
+        CountryCode(name: "Nigeria", localName: "尼日利亚", dialCode: "+234", isoCode: "NG", flag: flag(for: "NG")),
+        CountryCode(name: "Egypt", localName: "埃及", dialCode: "+20", isoCode: "EG", flag: flag(for: "EG")),
+        CountryCode(name: "Kenya", localName: "肯尼亚", dialCode: "+254", isoCode: "KE", flag: flag(for: "KE")),
+        CountryCode(name: "Morocco", localName: "摩洛哥", dialCode: "+212", isoCode: "MA", flag: flag(for: "MA")),
     ]
 }

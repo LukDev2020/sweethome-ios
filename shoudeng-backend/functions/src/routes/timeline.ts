@@ -45,8 +45,7 @@ router.get("/", async (req: Request, res: Response) => {
         description: data.description,
         detail: data.detail || null,
         timestamp:
-          data.timestamp?.toDate?.()?.toISOString() ||
-          new Date().toISOString(),
+          data.timestamp?.toDate?.()?.toISOString() || null,
       };
     });
 

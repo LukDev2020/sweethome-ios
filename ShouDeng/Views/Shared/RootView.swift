@@ -5,7 +5,7 @@ struct RootView: View {
     @AppStorage("onboardingComplete") private var onboardingComplete = false
 
     // TEMP: Set to true to bypass login during development
-    private let devBypassLogin = true
+    private let devBypassLogin = false
 
     var body: some View {
         Group {
@@ -22,7 +22,7 @@ struct RootView: View {
                         .environmentObject(coordinator)
                 }
             } else {
-                switch coordinator.authManager.state {
+                switch coordinator.authState {
                 case .unknown:
                     splashView
                 case .loggedOut:

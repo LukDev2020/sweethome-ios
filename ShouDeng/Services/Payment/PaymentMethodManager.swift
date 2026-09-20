@@ -88,8 +88,8 @@ final class PaymentMethodManager: ObservableObject {
                 if let urlString = response.payUrl, let url = URL(string: urlString) {
                     await UIApplication.shared.open(url)
                 }
-                // Payment confirmation happens via deep link callback
-                isProcessing = false
+                // Payment confirmation happens via deep link callback;
+                // keep isProcessing true until deep link confirms/cancels
                 return true
             }
         } catch {

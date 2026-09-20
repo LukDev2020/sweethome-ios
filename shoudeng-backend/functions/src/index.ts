@@ -8,7 +8,13 @@ admin.initializeApp();
 
 // --- Express App ---
 const app = express();
-app.use(cors({ origin: true }));
+// iOS-only app: no web origins needed in production.
+// Allow all origins only in emulator for local testing.
+app.use(
+  cors({
+    origin: process.env.FUNCTIONS_EMULATOR === "true" ? true : false,
+  })
+);
 app.use(express.json());
 
 // --- Route Imports ---

@@ -40,3 +40,8 @@
 "signup.role.guardian.desc" = "Vous surveillerez la sécurité de votre famille";
 "signup.finish" = "Terminer";
 "signup.back" = "Retour";
+
+/* Country Picker */
+"picker.search" = "Rechercher un pays";
+"picker.title" = "Choisir un pays/région";
+"picker.cancel" = "Annuler";

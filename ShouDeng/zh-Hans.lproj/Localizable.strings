@@ -40,3 +40,8 @@
 "signup.role.guardian.desc" = "你将关注家人的安全状态";
 "signup.finish" = "完成注册";
 "signup.back" = "返回";
+
+/* Country Picker */
+"picker.search" = "搜索国家或地区";
+"picker.title" = "选择国家/地区";
+"picker.cancel" = "取消";

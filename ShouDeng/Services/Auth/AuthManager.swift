@@ -42,6 +42,13 @@ final class AuthManager: ObservableObject {
     /// Stored verification ID from Firebase after SMS is sent.
     private var verificationID: String?
 
+    /// Stored idToken from verified OTP, used by signup flow.
+    private var verifiedIdToken: String?
+
+    /// M5 fix: prevent concurrent token refresh calls
+    private var isRefreshing = false
+    private var refreshContinuations: [CheckedContinuation<Void, Error>] = []
+
     init(api: APIClient, phoneAuth: PhoneAuthProviding = FirebasePhoneAuthProvider()) {
         self.api = api
         self.phoneAuth = phoneAuth
@@ -69,6 +76,16 @@ final class AuthManager: ObservableObject {
     func requestCode(phone: String) async throws {
         let vid = try await phoneAuth.verifyPhoneNumber(phone)
         verificationID = vid
+    }
+
+    // MARK: - Step 2: Verify OTP Code
+
+    /// Verify OTP code with Firebase and store the idToken for subsequent signup.
+    func verifyCode(code: String) async throws {
+        guard let vid = verificationID else {
+            throw AuthError.noVerificationID
+        }
+        verifiedIdToken = try await phoneAuth.signIn(verificationID: vid, verificationCode: code)
     }
 
     // MARK: - Step 2 + 3: Login (verify code + exchange with backend)
@@ -105,38 +122,58 @@ final class AuthManager: ObservableObject {
 
     // MARK: - Signup (verify code + create account on backend)
 
-    func signup(phone: String, code: String, displayName: String, role: String) async throws {
-        guard let vid = verificationID else {
+    func signup(displayName: String, role: String, countryCode: String) async throws {
+        guard let idToken = verifiedIdToken else {
             throw AuthError.noVerificationID
         }
 
-        // Verify OTP with Firebase -> get idToken
-        let idToken = try await phoneAuth.signIn(verificationID: vid, verificationCode: code)
-
-        // Create account on backend with idToken
+        // Create account on backend with previously verified idToken
         let response: AuthResponse = try await api.post(
             "/v1/auth/signup",
             body: SignupWithTokenRequest(
                 idToken: idToken,
                 displayName: displayName,
-                role: role
+                role: role,
+                countryCode: countryCode
             )
         )
         handleAuthResponse(response)
+        verifiedIdToken = nil
     }
 
     // MARK: - Token Refresh
 
     func refreshToken() async throws {
-        guard let refreshToken = keychain.read(.refreshToken) else {
-            await MainActor.run { state = .loggedOut }
-            throw APIError.unauthorized
+        // M5 fix: serialize concurrent refresh calls
+        if isRefreshing {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                refreshContinuations.append(continuation)
+            }
+            return
         }
-        let response: AuthResponse = try await api.post(
-            "/v1/auth/refresh",
-            body: RefreshRequest(refreshToken: refreshToken)
-        )
-        handleAuthResponse(response)
+        isRefreshing = true
+
+        do {
+            guard let refreshToken = keychain.read(.refreshToken) else {
+                await MainActor.run { state = .loggedOut }
+                throw APIError.unauthorized
+            }
+            let response: AuthResponse = try await api.post(
+                "/v1/auth/refresh",
+                body: RefreshRequest(refreshToken: refreshToken)
+            )
+            handleAuthResponse(response)
+            isRefreshing = false
+            let waiters = refreshContinuations
+            refreshContinuations = []
+            waiters.forEach { $0.resume() }
+        } catch {
+            isRefreshing = false
+            let waiters = refreshContinuations
+            refreshContinuations = []
+            waiters.forEach { $0.resume(throwing: error) }
+            throw error
+        }
     }
 
     // MARK: - Logout
@@ -145,6 +182,7 @@ final class AuthManager: ObservableObject {
         keychain.deleteAll()
         api.setAccessToken(nil)
         verificationID = nil
+        verifiedIdToken = nil
         UserDefaults.standard.removeObject(forKey: "currentUserId")
         state = .loggedOut
 
@@ -297,6 +335,7 @@ struct SignupWithTokenRequest: Codable {
     let idToken: String
     let displayName: String
     let role: String
+    let countryCode: String
 }
 
 struct RefreshRequest: Codable {

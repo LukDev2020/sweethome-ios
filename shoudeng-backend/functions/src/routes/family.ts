@@ -168,6 +168,11 @@ router.post("/posts/:postId/comments", async (req: Request, res: Response) => {
     return;
   }
 
+  if (text.length > 2000) {
+    res.status(400).json({ error: "Comment text must be 2000 characters or less" });
+    return;
+  }
+
   try {
     // Verify post exists
     const postRef = db.collection("family_posts").doc(postId);

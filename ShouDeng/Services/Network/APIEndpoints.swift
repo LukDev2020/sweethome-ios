@@ -341,12 +341,39 @@ struct MedicalCardData: Codable {
     var weight: Double?
     var height: Double?
 
-    static let empty = MedicalCardData(
-        bloodType: nil, allergies: [], medications: [],
-        conditions: [], insuranceProvider: nil,
-        insurancePolicyNumber: nil, emergencyNote: nil,
-        organDonor: false, weight: nil, height: nil
-    )
+    init(
+        bloodType: String? = nil, allergies: [String] = [], medications: [String] = [],
+        conditions: [String] = [], insuranceProvider: String? = nil,
+        insurancePolicyNumber: String? = nil, emergencyNote: String? = nil,
+        organDonor: Bool = false, weight: Double? = nil, height: Double? = nil
+    ) {
+        self.bloodType = bloodType
+        self.allergies = allergies
+        self.medications = medications
+        self.conditions = conditions
+        self.insuranceProvider = insuranceProvider
+        self.insurancePolicyNumber = insurancePolicyNumber
+        self.emergencyNote = emergencyNote
+        self.organDonor = organDonor
+        self.weight = weight
+        self.height = height
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        bloodType = try container.decodeIfPresent(String.self, forKey: .bloodType)
+        allergies = (try? container.decodeIfPresent([String].self, forKey: .allergies)) ?? []
+        medications = (try? container.decodeIfPresent([String].self, forKey: .medications)) ?? []
+        conditions = (try? container.decodeIfPresent([String].self, forKey: .conditions)) ?? []
+        insuranceProvider = try container.decodeIfPresent(String.self, forKey: .insuranceProvider)
+        insurancePolicyNumber = try container.decodeIfPresent(String.self, forKey: .insurancePolicyNumber)
+        emergencyNote = try container.decodeIfPresent(String.self, forKey: .emergencyNote)
+        organDonor = (try? container.decodeIfPresent(Bool.self, forKey: .organDonor)) ?? false
+        weight = try container.decodeIfPresent(Double.self, forKey: .weight)
+        height = try container.decodeIfPresent(Double.self, forKey: .height)
+    }
+
+    static let empty = MedicalCardData()
 }
 
 // MARK: - Emergency Text

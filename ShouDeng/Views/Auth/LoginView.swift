@@ -26,6 +26,7 @@ struct LoginView: View {
 
     private let maxAttempts = 5
     private let lockoutKey = "login_lockout_until"
+    private let failedAttemptsKey = "login_failed_attempts"
 
     @State private var selectedCountry = CountryCode.deviceDefault
     @State private var phone = ""
@@ -360,27 +361,19 @@ struct LoginView: View {
             if codeSent {
                 try await coordinator.authManager.login(phone: fullPhoneNumber, code: code)
                 failedAttempts = 0
+                UserDefaults.standard.set(0, forKey: failedAttemptsKey)
             } else {
                 try await coordinator.authManager.requestCode(phone: fullPhoneNumber)
                 codeSent = true
                 startCountdown()
             }
         } catch {
-            let errorType = String(describing: type(of: error))
-            let errorCase = String(describing: error)
             #if DEBUG
-            print("[LoginView] error type: \(errorType), case: \(errorCase)")
-            print("[LoginView] localized: \(error.localizedDescription)")
+            print("[LoginView] error: \(error)")
             #endif
 
-            // Detect "user not found" — check multiple ways for robustness
-            let isUserNotFound =
-                errorCase == "userNotFound" ||
-                errorCase == "notFound" ||
-                error.localizedDescription.contains("资源不存在") ||
-                error.localizedDescription.contains("not found")
-
-            if codeSent && isUserNotFound {
+            // Redirect to signup if user doesn't exist
+            if codeSent, let authError = error as? AuthError, case .userNotFound = authError {
                 coordinator.signupPhone = phone
                 coordinator.signupCountry = selectedCountry
                 coordinator.showSignup = true
@@ -389,6 +382,7 @@ struct LoginView: View {
 
             if codeSent {
                 failedAttempts += 1
+                UserDefaults.standard.set(failedAttempts, forKey: failedAttemptsKey)
                 if failedAttempts >= maxAttempts {
                     lockAccount()
                     return
@@ -418,9 +412,16 @@ struct LoginView: View {
 
     private func checkLockout() {
         let lockUntil = UserDefaults.standard.double(forKey: lockoutKey)
-        if lockUntil > 0 && Date().timeIntervalSince1970 < lockUntil {
-            isLocked = true
+        if lockUntil > 0 {
+            if Date().timeIntervalSince1970 < lockUntil {
+                isLocked = true
+            } else {
+                // Lockout expired — reset
+                UserDefaults.standard.removeObject(forKey: lockoutKey)
+                UserDefaults.standard.set(0, forKey: failedAttemptsKey)
+            }
         }
+        failedAttempts = UserDefaults.standard.integer(forKey: failedAttemptsKey)
     }
 
     private func openSupport() {

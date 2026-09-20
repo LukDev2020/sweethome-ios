@@ -29,6 +29,8 @@ targets:
     dependencies:
       - package: firebase-ios-sdk
         product: FirebaseAuth
+      - package: firebase-ios-sdk
+        product: FirebaseCrashlytics
     info:
       path: ShouDeng/Info.plist
       properties:
@@ -52,15 +54,14 @@ targets:
         NSLocationAlwaysAndWhenInUseUsageDescription: "守灯需要始终访问您的位置，以便在紧急情况下向家人报告您的位置，并在您进出安全区时通知守护者。"
         NSLocationWhenInUseUsageDescription: "守灯需要访问您的位置以显示您的当前位置，并在紧急求助时向家人发送位置信息。"
         NSMotionUsageDescription: "守灯使用运动传感器检测跌倒等异常情况，在您无法主动求助时自动通知家人。"
+        NSMicrophoneUsageDescription: "仅在触发紧急求助时使用麦克风录制环境音，帮助守护者判断现场情况。录音需当地法律许可，部分地区要求所有在场者同意。"
+        NSPhotoLibraryUsageDescription: "允许在家庭圈中分享照片。您的照片仅对守护关系内的家人可见。"
+        NSContactsUsageDescription: "守灯需要访问您的通讯录，以便快速添加紧急联络人信息。"
         CFBundleURLTypes:
           - CFBundleURLSchemes:
               - "com.googleusercontent.apps.561070924965-7ggg6418ktbb9bndt30oqpm9fireoq2j"
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: false
-          NSExceptionDomains:
-            localhost:
-              NSExceptionAllowsInsecureHTTPLoads: true
-              NSIncludesSubdomains: true
     settings:
       base:
         INFOPLIST_FILE: ShouDeng/Info.plist
@@ -74,6 +75,9 @@ targets:
         aps-environment: production
         com.apple.developer.in-app-payments:
           - merchant.app.shoudeng
+        com.apple.developer.associated-domains:
+          - applinks:shoudeng.app
+          - applinks:www.shoudeng.app
 
   ShouDengTests:
     type: bundle.unit-test

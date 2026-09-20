@@ -50,7 +50,8 @@ final class AuthManagerTests: XCTestCase {
         let request = SignupWithTokenRequest(
             idToken: "firebase-id-token-abc",
             displayName: "小明",
-            role: "protected"
+            role: "protected",
+            countryCode: "CN"
         )
         let data = try JSONEncoder().encode(request)
         let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
@@ -58,6 +59,7 @@ final class AuthManagerTests: XCTestCase {
         XCTAssertEqual(json?["idToken"] as? String, "firebase-id-token-abc")
         XCTAssertEqual(json?["displayName"] as? String, "小明")
         XCTAssertEqual(json?["role"] as? String, "protected")
+        XCTAssertEqual(json?["countryCode"] as? String, "CN")
     }
 
     func testAuthResponseDecoding() throws {

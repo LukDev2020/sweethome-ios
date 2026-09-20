@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
+import * as crypto from "crypto";
 import { authMiddleware } from "../middleware/auth";
 
 const router = Router();
@@ -166,9 +167,7 @@ router.post("/share", authMiddleware, async (req: Request, res: Response) => {
   const uid = req.uid!;
 
   try {
-    const token =
-      Math.random().toString(36).substring(2) +
-      Math.random().toString(36).substring(2);
+    const token = crypto.randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year
 
     await db.collection("medical_card_shares").doc(token).set({
