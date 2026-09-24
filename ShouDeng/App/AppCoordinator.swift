@@ -594,6 +594,13 @@ final class AppCoordinator: ObservableObject {
 
         addTimelineEntry(type: .sosTriggered, description: "触发紧急求助（\(method.rawValue)）")
 
+        #if BETA
+        // Beta: simulate escalation — skip real API call and immediately acknowledge
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+            self?.activeSOSEvent?.escalationState = .acknowledged
+            self?.addTimelineEntry(type: .sosResolved, description: "[Beta 模拟] SOS 自动确认，未发送真实通知")
+        }
+        #else
         // Report to server (with delivery feedback)
         sosDeliveryFailed = false
         let sosLocation = locationManager.lastReportedLocation
@@ -608,6 +615,7 @@ final class AppCoordinator: ObservableObject {
                 self?.sosDeliveryFailed = true
             }
         }
+        #endif
     }
 
     func cancelSOS() {

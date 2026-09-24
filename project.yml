@@ -6,12 +6,20 @@ options:
   xcodeVersion: "16.0"
   generateEmptyDirectories: true
 
+configs:
+  Debug: debug
+  Beta: release
+  Release: release
+
 settings:
   base:
     SWIFT_VERSION: "5.9"
     TARGETED_DEVICE_FAMILY: "1,2"
     MARKETING_VERSION: "1.0.0"
     CURRENT_PROJECT_VERSION: "1"
+  configs:
+    Beta:
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: BETA
 
 packages:
   firebase-ios-sdk:
@@ -50,7 +58,6 @@ targets:
           - location
           - fetch
           - remote-notification
-          - processing
         NSLocationAlwaysAndWhenInUseUsageDescription: "守灯需要始终访问您的位置，以便在紧急情况下向家人报告您的位置，并在您进出安全区时通知守护者。"
         NSLocationWhenInUseUsageDescription: "守灯需要访问您的位置以显示您的当前位置，并在紧急求助时向家人发送位置信息。"
         NSMotionUsageDescription: "守灯使用运动传感器检测跌倒等异常情况，在您无法主动求助时自动通知家人。"
@@ -73,8 +80,6 @@ targets:
       properties:
         com.apple.developer.usernotifications.critical-alerts: true
         aps-environment: production
-        com.apple.developer.in-app-payments:
-          - merchant.app.shoudeng
         com.apple.developer.associated-domains:
           - applinks:shoudeng.app
           - applinks:www.shoudeng.app

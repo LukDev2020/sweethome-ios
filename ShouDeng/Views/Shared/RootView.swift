@@ -18,8 +18,11 @@ struct RootView: View {
                     case .guardian:
                         GuardianTabView()
                     }
-                    DegradationBannerView()
-                        .environmentObject(coordinator)
+                    VStack(spacing: 0) {
+                        betaBanner
+                        DegradationBannerView()
+                            .environmentObject(coordinator)
+                    }
                 }
             } else {
                 switch coordinator.authState {
@@ -41,13 +44,36 @@ struct RootView: View {
                             case .guardian:
                                 GuardianTabView()
                             }
-                            DegradationBannerView()
-                                .environmentObject(coordinator)
+                            VStack(spacing: 0) {
+                                betaBanner
+                                DegradationBannerView()
+                                    .environmentObject(coordinator)
+                            }
                         }
                     }
                 }
             }
         }
+    }
+
+    // MARK: - Beta Banner
+
+    @ViewBuilder
+    private var betaBanner: some View {
+        #if BETA
+        HStack(spacing: 6) {
+            Image(systemName: "hammer.fill")
+                .font(.caption)
+            Text("TestFlight 测试版")
+                .font(.caption.bold())
+            Text("· SOS/跌倒升级走模拟通道")
+                .font(.caption2)
+        }
+        .foregroundStyle(.white)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 6)
+        .background(Color.orange)
+        #endif
     }
 
     // MARK: - Splash

@@ -1,2 +1,20 @@
 CFBundleDisplayName = "Velar Care";
 CFBundleName = "Velar Care";
+
+/* Localisation — Toujours */
+NSLocationAlwaysAndWhenInUseUsageDescription = "ShouDeng a besoin d'un accès permanent à votre position afin de signaler votre emplacement à votre famille en cas d'urgence et d'avertir les tuteurs lorsque vous entrez ou quittez une zone sécurisée.";
+
+/* Localisation — En cours d'utilisation */
+NSLocationWhenInUseUsageDescription = "ShouDeng a besoin de votre position pour afficher votre emplacement actuel et l'envoyer à votre famille lors d'un appel SOS d'urgence.";
+
+/* Capteurs de mouvement */
+NSMotionUsageDescription = "ShouDeng utilise les capteurs de mouvement pour détecter les chutes et autres anomalies, alertant automatiquement votre famille lorsque vous ne pouvez pas appeler à l'aide.";
+
+/* Microphone */
+NSMicrophoneUsageDescription = "Le microphone est utilisé uniquement lors du déclenchement d'un SOS d'urgence, pour enregistrer l'audio ambiant afin d'aider les tuteurs à évaluer la situation. L'enregistrement nécessite une autorisation légale dans votre juridiction.";
+
+/* Photothèque */
+NSPhotoLibraryUsageDescription = "Permet de partager des photos dans le cercle familial. Vos photos ne sont visibles que par les membres de la famille dans une relation de tutelle.";
+
+/* Contacts */
+NSContactsUsageDescription = "ShouDeng a besoin d'accéder à vos contacts pour ajouter rapidement les coordonnées de vos contacts d'urgence.";
