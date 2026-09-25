@@ -6,8 +6,14 @@ import jwt from "jsonwebtoken";
 const router = Router();
 const db = admin.firestore();
 
-const JWT_SECRET =
-  process.env.JWT_SECRET || "shoudeng-dev-jwt-secret-do-not-use-in-prod";
+const JWT_SECRET = (() => {
+  const secret = process.env.JWT_SECRET;
+  const isDev = process.env.FUNCTIONS_EMULATOR === "true" || process.env.JEST_WORKER_ID;
+  if (!secret && !isDev) {
+    throw new Error("JWT_SECRET environment variable is required in production");
+  }
+  return secret || "shoudeng-dev-jwt-secret-do-not-use-in-prod";
+})();
 const ACCESS_TOKEN_EXPIRY = "1h";
 const REFRESH_TOKEN_EXPIRY = "30d";
 
