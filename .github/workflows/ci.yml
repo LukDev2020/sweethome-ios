@@ -74,3 +74,70 @@ jobs:
 
       - name: Run tests
         run: npm test -- --passWithNoTests
+
+  # --- TestFlight Deploy (push to main only) ---
+  testflight:
+    name: Deploy to TestFlight
+    needs: [ios, backend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app
+
+      - name: Install App Store Connect API Key
+        env:
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+        run: |
+          mkdir -p ~/.private_keys
+          echo "$ASC_API_KEY_P8" > ~/.private_keys/AuthKey_${ASC_API_KEY_ID}.p8
+
+      - name: Bump build number
+        run: |
+          BUILD=$(date +%Y%m%d%H%M)
+          agvtool new-version -all "$BUILD"
+          echo "Build number: $BUILD"
+
+      - name: Resolve SPM dependencies
+        run: xcodebuild -resolvePackageDependencies -project ShouDeng.xcodeproj -scheme ShouDeng
+
+      - name: Archive
+        run: |
+          xcodebuild archive \
+            -project ShouDeng.xcodeproj \
+            -scheme ShouDeng \
+            -configuration Release \
+            -archivePath $RUNNER_TEMP/ShouDeng.xcarchive \
+            -skipPackagePluginValidation \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/.private_keys/AuthKey_${{ secrets.ASC_API_KEY_ID }}.p8 \
+            -authenticationKeyID ${{ secrets.ASC_API_KEY_ID }} \
+            -authenticationKeyIssuerID ${{ secrets.ASC_API_ISSUER_ID }}
+
+      - name: Export IPA
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath $RUNNER_TEMP/ShouDeng.xcarchive \
+            -exportPath $RUNNER_TEMP/export \
+            -exportOptionsPlist ExportOptions.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/.private_keys/AuthKey_${{ secrets.ASC_API_KEY_ID }}.p8 \
+            -authenticationKeyID ${{ secrets.ASC_API_KEY_ID }} \
+            -authenticationKeyIssuerID ${{ secrets.ASC_API_ISSUER_ID }}
+
+      - name: Upload to TestFlight
+        run: |
+          xcrun altool --upload-app \
+            -f $RUNNER_TEMP/export/ShouDeng.ipa \
+            -t ios \
+            --apiKey ${{ secrets.ASC_API_KEY_ID }} \
+            --apiIssuer ${{ secrets.ASC_API_ISSUER_ID }}
+
+      - name: Clean up
+        if: always()
+        run: rm -rf ~/.private_keys
