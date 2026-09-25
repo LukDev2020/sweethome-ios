@@ -6,14 +6,15 @@ import jwt from "jsonwebtoken";
 const router = Router();
 const db = admin.firestore();
 
-const JWT_SECRET = (() => {
+function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
-  const isDev = process.env.FUNCTIONS_EMULATOR === "true" || process.env.JEST_WORKER_ID;
-  if (!secret && !isDev) {
+  if (secret) return secret;
+  const isDev = process.env.FUNCTIONS_EMULATOR === "true" || !!process.env.JEST_WORKER_ID;
+  if (!isDev) {
     throw new Error("JWT_SECRET environment variable is required in production");
   }
-  return secret || "shoudeng-dev-jwt-secret-do-not-use-in-prod";
-})();
+  return "shoudeng-dev-jwt-secret-do-not-use-in-prod";
+}
 const ACCESS_TOKEN_EXPIRY = "1h";
 const REFRESH_TOKEN_EXPIRY = "30d";
 
@@ -24,10 +25,10 @@ function generateTokens(uid: string): {
   accessToken: string;
   refreshToken: string;
 } {
-  const accessToken = jwt.sign({ uid, type: "access" }, JWT_SECRET, {
+  const accessToken = jwt.sign({ uid, type: "access" }, getJwtSecret(), {
     expiresIn: ACCESS_TOKEN_EXPIRY,
   });
-  const refreshToken = jwt.sign({ uid, type: "refresh" }, JWT_SECRET, {
+  const refreshToken = jwt.sign({ uid, type: "refresh" }, getJwtSecret(), {
     expiresIn: REFRESH_TOKEN_EXPIRY,
   });
   return { accessToken, refreshToken };
@@ -345,7 +346,7 @@ router.post("/refresh", async (req: Request, res: Response) => {
   }
 
   try {
-    const payload = jwt.verify(refreshToken, JWT_SECRET) as {
+    const payload = jwt.verify(refreshToken, getJwtSecret()) as {
       uid: string;
       type: string;
     };

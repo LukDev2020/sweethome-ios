@@ -105,9 +105,9 @@ final class AppCoordinator: ObservableObject {
             return override
         }
         #if DEBUG
-        return "http://127.0.0.1:5001/sweethome-d1edd/us-central1/api"
+        return "http://127.0.0.1:5001/sweethome-b4e82/us-central1/api"
         #else
-        return "https://us-central1-sweethome-d1edd.cloudfunctions.net/api"
+        return "https://us-central1-sweethome-b4e82.cloudfunctions.net/api"
         #endif
     }
 
