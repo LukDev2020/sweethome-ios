@@ -34,11 +34,15 @@ targets:
       - path: ShouDeng
         excludes:
           - "**/*.md"
+          - Models/GuardianActivityAttributes.swift
+      - path: Shared
     dependencies:
       - package: firebase-ios-sdk
         product: FirebaseAuth
       - package: firebase-ios-sdk
         product: FirebaseCrashlytics
+      - target: ShouDengWidgets
+        embed: true
     info:
       path: ShouDeng/Info.plist
       properties:
@@ -78,11 +82,33 @@ targets:
     entitlements:
       path: ShouDeng/ShouDeng.entitlements
       properties:
+        com.apple.security.application-groups:
+          - group.com.shoudeng.app
         com.apple.developer.usernotifications.critical-alerts: true
         aps-environment: production
         com.apple.developer.associated-domains:
           - applinks:shoudeng.app
           - applinks:www.shoudeng.app
+
+  ShouDengWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: ShouDengWidgets
+      - path: Shared
+    info:
+      path: ShouDengWidgets/Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.shoudeng.app.widgets
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: "NO"
+        SWIFT_EMIT_LOC_STRINGS: "YES"
+    entitlements:
+      path: ShouDengWidgets/ShouDengWidgets.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.shoudeng.app
 
   ShouDengTests:
     type: bundle.unit-test

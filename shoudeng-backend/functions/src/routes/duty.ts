@@ -31,6 +31,10 @@ router.put("/", async (req: Request, res: Response) => {
       return;
     }
 
+    // Resolve user timezone
+    const userDoc = await db.collection("users").doc(uid).get();
+    const userTimezone = userDoc.exists ? userDoc.data()!.timeZone || "UTC" : "UTC";
+
     // Delete existing schedules for this pair
     const existingSnapshot = await db
       .collection("duty_schedules")
@@ -52,6 +56,10 @@ router.put("/", async (req: Request, res: Response) => {
       }
       const days: number[] = slot.dayOfWeek || [1, 2, 3, 4, 5, 6, 7];
       for (const day of days) {
+        if (!Number.isInteger(day) || day < 1 || day > 7) {
+          res.status(400).json({ error: "dayOfWeek values must be integers 1-7" });
+          return;
+        }
         const scheduleRef = db.collection("duty_schedules").doc();
         batch.set(scheduleRef, {
           protectedPersonId: uid,
@@ -59,7 +67,7 @@ router.put("/", async (req: Request, res: Response) => {
           dayOfWeek: day,
           startHour: start,
           endHour: end,
-          timeZone: "Asia/Shanghai", // Would use user's timezone
+          timeZone: userTimezone,
           isActive: true,
         });
       }

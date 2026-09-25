@@ -57,14 +57,17 @@ export const ttlCleanup = functions.pubsub
           Date.now() - retentionDays * 24 * 60 * 60 * 1000
         );
 
-        // Build hold exclusion clauses
+        // Build hold exclusion clauses using parameterized queries
         let holdClauses = "";
+        const params: Record<string, string> = { cutoff: cutoffDate.toISOString() };
         if (holds.length > 0) {
           const exclusions = holds
-            .map(
-              (h) =>
-                `NOT (user_id = '${h.protectedPersonId}' AND timestamp BETWEEN '${h.start.toISOString()}' AND '${h.end.toISOString()}')`
-            )
+            .map((h, i) => {
+              params[`hold_uid_${i}`] = h.protectedPersonId;
+              params[`hold_start_${i}`] = h.start.toISOString();
+              params[`hold_end_${i}`] = h.end.toISOString();
+              return `NOT (user_id = @hold_uid_${i} AND timestamp BETWEEN @hold_start_${i} AND @hold_end_${i})`;
+            })
             .join(" AND ");
           holdClauses = `AND ${exclusions}`;
         }
@@ -78,7 +81,7 @@ export const ttlCleanup = functions.pubsub
         try {
           const [job] = await bigquery.createQueryJob({
             query,
-            params: { cutoff: cutoffDate.toISOString() },
+            params,
           });
           const [rows] = await job.getQueryResults();
           console.log(

@@ -23,6 +23,12 @@ router.post("/save", async (req: Request, res: Response) => {
     return;
   }
 
+  if (typeof latitude !== "number" || latitude < -90 || latitude > 90 ||
+      typeof longitude !== "number" || longitude < -180 || longitude > 180) {
+    res.status(400).json({ error: "latitude must be -90..90, longitude must be -180..180" });
+    return;
+  }
+
   if (radius !== undefined && (typeof radius !== "number" || radius <= 0 || radius > 100000)) {
     res.status(400).json({ error: "radius must be a positive number (max 100km)" });
     return;

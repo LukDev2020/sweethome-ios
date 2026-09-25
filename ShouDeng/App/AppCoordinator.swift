@@ -1,5 +1,6 @@
 import UIKit
 import Combine
+import WidgetKit
 #if canImport(FirebaseCrashlytics)
 import FirebaseCrashlytics
 #endif
@@ -223,6 +224,8 @@ final class AppCoordinator: ObservableObject {
 
         // Sync local notification preferences to server
         syncNotificationPrefs()
+
+        syncWidgetState()
     }
 
     private func onLogout() {
@@ -242,6 +245,8 @@ final class AppCoordinator: ObservableObject {
         signupCountry = nil
         localStore.clearAll()
         offlineQueue.clearAll()
+        WidgetDataStore.clear()
+        WidgetCenter.shared.reloadAllTimelines()
 
         // Clear all user-specific UserDefaults
         let userKeys = [
@@ -374,6 +379,7 @@ final class AppCoordinator: ObservableObject {
             await MainActor.run {
                 self.protectedPersons = mapped
                 self.localStore.saveProtectedPersons(mapped)
+                self.syncWidgetState()
             }
         } catch {
             #if DEBUG
@@ -391,6 +397,7 @@ final class AppCoordinator: ObservableObject {
             await MainActor.run {
                 self.myGuardians = guardians
                 self.localStore.saveGuardians(guardians)
+                self.syncWidgetState()
             }
         } catch {
             #if DEBUG
@@ -583,6 +590,7 @@ final class AppCoordinator: ObservableObject {
 
         activeSOSEvent = sosEvent
         localStore.saveActiveSOSEvent(sosEvent)
+        syncWidgetState()
 
         // Switch location to SOS mode
         locationManager.enterSOSMode()
@@ -624,6 +632,7 @@ final class AppCoordinator: ObservableObject {
         escalationEngine.resolve(by: currentUser?.id ?? "", resolution: .protectedCancelled)
         activeSOSEvent = nil
         localStore.saveActiveSOSEvent(nil)
+        syncWidgetState()
         locationManager.exitSOSMode()
 
         // Restore lock screen to normal
@@ -648,6 +657,7 @@ final class AppCoordinator: ObservableObject {
         let checkIn = CheckInEvent.create(userId: userId, location: nil)
 
         addTimelineEntry(type: .checkIn, description: note ?? "报平安")
+        syncWidgetState()
 
         let checkinLocation = locationManager.lastReportedLocation
         apiClient.postQueued("/v1/checkin", body: CheckInRequest(
@@ -1005,6 +1015,40 @@ final class AppCoordinator: ObservableObject {
             protectedPerson: firstPerson,
             guardians: firstPerson.guardians
         )
+    }
+
+    // MARK: - Widget Sync
+
+    func syncWidgetState() {
+        let persons = protectedPersons.map { p in
+            WidgetProtectedPerson(
+                id: p.id,
+                displayName: p.user.displayName,
+                initial: p.user.avatarInitial,
+                status: p.status.rawValue,
+                lastCheckIn: p.lastCheckIn,
+                batteryLevel: p.batteryLevel,
+                homeTimerDeadline: nil
+            )
+        }
+
+        let state = WidgetState(
+            isLoggedIn: authState != .loggedOut && authState != .unknown,
+            userRole: userRole.rawValue,
+            userName: currentUser?.displayName,
+            guardianCount: myGuardians.count,
+            lastCheckInDate: timeline.first(where: { $0.type == .checkIn })?.timestamp,
+            sosActive: activeSOSEvent != nil,
+            sosTriggeredAt: activeSOSEvent?.triggeredAt,
+            homeTimerActive: false,
+            homeTimerDeadline: nil,
+            homeTimerLabel: nil,
+            protectedPersons: persons,
+            updatedAt: Date()
+        )
+
+        WidgetDataStore.write(state)
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     // MARK: - Dev Mock Data

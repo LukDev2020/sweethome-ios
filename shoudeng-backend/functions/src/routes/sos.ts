@@ -29,45 +29,59 @@ router.post("/trigger", async (req: Request, res: Response) => {
     return;
   }
 
+  // Only the protected person themselves can trigger their own SOS
+  if (protectedPersonId !== req.uid) {
+    res.status(403).json({ error: "Cannot trigger SOS for another user" });
+    return;
+  }
+
   const sosId = uuidv4();
   const now = admin.firestore.Timestamp.now();
 
   try {
-    // Check for existing active SOS
-    const activeSnapshot = await db
-      .collection("sos_events")
-      .where("protectedPersonId", "==", protectedPersonId)
-      .where("resolvedAt", "==", null)
-      .limit(1)
-      .get();
+    // Use transaction to prevent duplicate SOS events
+    const existingEvent = await db.runTransaction(async (transaction) => {
+      // Check for existing active SOS inside transaction
+      const activeSnapshot = await db
+        .collection("sos_events")
+        .where("protectedPersonId", "==", protectedPersonId)
+        .where("resolvedAt", "==", null)
+        .limit(1)
+        .get();
 
-    if (!activeSnapshot.empty) {
-      // Return existing SOS event
-      const existing = activeSnapshot.docs[0];
+      if (!activeSnapshot.empty) {
+        return {
+          sosEventId: activeSnapshot.docs[0].id,
+          escalationState: activeSnapshot.docs[0].data().escalationState,
+        };
+      }
+
+      const sosDoc = {
+        protectedPersonId,
+        triggeredAt: now,
+        triggerMethod: triggerMethod || "longPress",
+        latitude: latitude || null,
+        longitude: longitude || null,
+        accuracy: null,
+        batteryLevel: batteryLevel || null,
+        escalationState: "initiated",
+        resolvedAt: null,
+        resolvedBy: null,
+        resolution: null,
+        escalationLog: [],
+      };
+
+      transaction.set(db.collection("sos_events").doc(sosId), sosDoc);
+      return null;
+    });
+
+    if (existingEvent) {
       res.json({
-        sosEventId: existing.id,
-        escalationState: existing.data().escalationState,
+        ...existingEvent,
         message: "SOS already active",
       });
       return;
     }
-
-    const sosDoc = {
-      protectedPersonId,
-      triggeredAt: now,
-      triggerMethod: triggerMethod || "longPress",
-      latitude: latitude || null,
-      longitude: longitude || null,
-      accuracy: null,
-      batteryLevel: batteryLevel || null,
-      escalationState: "initiated",
-      resolvedAt: null,
-      resolvedBy: null,
-      resolution: null,
-      escalationLog: [],
-    };
-
-    await db.collection("sos_events").doc(sosId).set(sosDoc);
 
     // Add timeline entry
     const triggerLabels: Record<string, string> = {
