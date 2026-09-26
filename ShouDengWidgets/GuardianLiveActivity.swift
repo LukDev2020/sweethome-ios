@@ -2,157 +2,198 @@ import WidgetKit
 import SwiftUI
 import ActivityKit
 
+/// Lock screen Live Activity for the **关怀者 (Guardian)**.
+/// Shows: each protected person's status, city, battery, and a call button.
 struct GuardianLiveActivity: Widget {
 
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: GuardianActivityAttributes.self) { context in
-            // MARK: - Lock Screen Banner
-            lockScreenView(context: context)
-                .activityBackgroundTint(Color(red: 0.086, green: 0.129, blue: 0.235))
-
+            guardianLockScreenView(context: context)
+                .activityBackgroundTint(SharedColors.ink)
         } dynamicIsland: { context in
             DynamicIsland {
-                // MARK: Expanded — Leading
                 DynamicIslandExpandedRegion(.leading) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("守灯守护中")
+                        Text("守灯 · 守护中")
                             .font(.caption.bold())
-                        if let acc = context.state.locationAccuracy {
-                            Text("精度 \(acc)m")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-
-                // MARK: Expanded — Trailing
-                DynamicIslandExpandedRegion(.trailing) {
-                    VStack(alignment: .trailing, spacing: 4) {
-                        Text("\(context.state.protectionLayers) 层守护")
-                            .font(.caption.bold())
-                        Text(context.state.guardianName)
+                        Text("\(context.state.persons.count)位家人")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
                 }
-
-                // MARK: Expanded — Bottom
+                DynamicIslandExpandedRegion(.trailing) {
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text(context.state.overallStatusText)
+                            .font(.caption.bold())
+                            .foregroundStyle(overallStatusColor(context.state.overallStatus))
+                    }
+                }
                 DynamicIslandExpandedRegion(.bottom) {
-                    if let telURL = URL(string: "tel:\(context.state.emergencyPhone)"),
-                       !context.state.emergencyPhone.isEmpty {
-                        Link(destination: telURL) {
+                    // Show priority person rows
+                    let sorted = prioritySorted(context.state.persons)
+                    VStack(spacing: 6) {
+                        ForEach(Array(sorted.prefix(2))) { person in
                             HStack(spacing: 6) {
-                                Image(systemName: "phone.fill")
-                                    .font(.caption)
-                                Text("紧急呼叫 \(context.state.emergencyLabel)")
-                                    .font(.subheadline.weight(.semibold))
+                                Circle()
+                                    .fill(personStatusColor(person.status).opacity(0.3))
+                                    .frame(width: 20, height: 20)
+                                    .overlay(
+                                        Text(person.initial)
+                                            .font(.system(size: 9).bold())
+                                            .foregroundStyle(.white)
+                                    )
+                                Text(person.displayName)
+                                    .font(.caption2.bold())
+                                Text(personStatusLabel(person))
+                                    .font(.caption2)
+                                    .foregroundStyle(personStatusColor(person.status))
+                                Spacer()
                             }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(callButtonColor(context.state.status))
-                            .foregroundStyle(.white)
-                            .clipShape(Capsule())
+                        }
+                        // Call button
+                        if !context.state.priorityPersonPhone.isEmpty,
+                           let url = URL(string: "tel:\(context.state.priorityPersonPhone)") {
+                            Link(destination: url) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "phone.fill")
+                                        .font(.caption)
+                                    Text("呼叫 \(context.state.priorityPersonName)")
+                                        .font(.caption.weight(.semibold))
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 6)
+                                .background(SharedColors.lamp)
+                                .foregroundStyle(.white)
+                                .clipShape(Capsule())
+                            }
                         }
                     }
                 }
-
             } compactLeading: {
-                // MARK: Compact — Leading
                 HStack(spacing: 4) {
                     Circle()
-                        .fill(statusColor(context.state.status))
+                        .fill(overallStatusColor(context.state.overallStatus))
                         .frame(width: 8, height: 8)
                     Text("守灯")
                         .font(.caption2.bold())
                 }
             } compactTrailing: {
-                // MARK: Compact — Trailing
-                Text("\(context.state.protectionLayers)层")
-                    .font(.caption2.bold())
-                    .foregroundStyle(Color(red: 0.914, green: 0.271, blue: 0.376))
+                switch context.state.overallStatus {
+                case .allSafe:
+                    Text("\(context.state.persons.count)人安全")
+                        .font(.caption2.bold())
+                        .foregroundStyle(SharedColors.safe)
+                case .needsAttention:
+                    let name = context.state.priorityPersonName
+                    Text("⚠\(name)")
+                        .font(.caption2.bold())
+                        .foregroundStyle(SharedColors.warning)
+                case .sosAlert:
+                    let name = context.state.priorityPersonName
+                    Text("🆘\(name)")
+                        .font(.caption2.bold())
+                        .foregroundStyle(SharedColors.alert)
+                }
             } minimal: {
-                // MARK: Minimal
                 ZStack {
                     Circle()
-                        .fill(statusColor(context.state.status).opacity(0.3))
+                        .fill(overallStatusColor(context.state.overallStatus).opacity(0.3))
                     Image(systemName: "shield.checkered")
                         .font(.caption2)
-                        .foregroundStyle(statusColor(context.state.status))
+                        .foregroundStyle(overallStatusColor(context.state.overallStatus))
                 }
             }
         }
     }
 
-    // MARK: - Lock Screen View
+    // MARK: - Lock Screen Banner
 
     @ViewBuilder
-    private func lockScreenView(context: ActivityViewContext<GuardianActivityAttributes>) -> some View {
-        VStack(spacing: 12) {
+    private func guardianLockScreenView(context: ActivityViewContext<GuardianActivityAttributes>) -> some View {
+        let sorted = prioritySorted(context.state.persons)
+
+        VStack(spacing: 10) {
             // Header
             HStack {
                 HStack(spacing: 6) {
                     Image(systemName: "shield.checkered")
                         .font(.subheadline)
-                        .foregroundStyle(Color(red: 0.914, green: 0.271, blue: 0.376))
-                    Text("守灯守护中")
+                        .foregroundStyle(SharedColors.lamp)
+                    Text("守灯 · \(context.state.persons.count)位家人")
                         .font(.subheadline.bold())
                         .foregroundStyle(.white)
                 }
                 Spacer()
                 HStack(spacing: 4) {
                     Circle()
-                        .fill(statusColor(context.state.status))
+                        .fill(overallStatusColor(context.state.overallStatus))
                         .frame(width: 8, height: 8)
-                    Text(context.state.statusText)
+                    Text(context.state.overallStatusText)
                         .font(.caption)
-                        .foregroundStyle(statusColor(context.state.status))
+                        .foregroundStyle(overallStatusColor(context.state.overallStatus))
                 }
             }
 
-            // Info rows
-            HStack {
-                VStack(alignment: .leading, spacing: 6) {
-                    if let acc = context.state.locationAccuracy {
-                        Label("精度 \(acc)m", systemImage: "location.fill")
-                            .font(.caption)
-                            .foregroundStyle(.white.opacity(0.7))
+            // Person rows (max 3)
+            ForEach(Array(sorted.prefix(3))) { person in
+                HStack(spacing: 8) {
+                    // Avatar
+                    ZStack {
+                        Circle()
+                            .fill(personStatusColor(person.status).opacity(0.3))
+                            .frame(width: 30, height: 30)
+                        Text(person.initial)
+                            .font(.caption2.bold())
+                            .foregroundStyle(.white)
                     }
-
-                    Label {
-                        Text(context.state.guardianName)
-                            + Text(context.state.guardianOnline ? " · 在线" : " · 离线")
-                    } icon: {
-                        Image(systemName: "person.fill.checkmark")
+                    // Name + status
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(person.displayName)
+                            .font(.caption.bold())
+                            .foregroundStyle(.white)
+                        HStack(spacing: 4) {
+                            Text(personStatusLabel(person))
+                                .font(.caption2)
+                                .foregroundStyle(personStatusColor(person.status))
+                            Text("·")
+                                .font(.caption2)
+                                .foregroundStyle(.white.opacity(0.3))
+                            Text(person.cityName)
+                                .font(.caption2)
+                                .foregroundStyle(.white.opacity(0.5))
+                        }
                     }
-                    .font(.caption)
-                    .foregroundStyle(.white.opacity(0.7))
-                }
-
-                Spacer()
-
-                VStack(spacing: 2) {
-                    Text("\(context.state.protectionLayers)")
-                        .font(.title2.bold())
-                        .foregroundStyle(.white)
-                    Text("层守护")
-                        .font(.caption2)
-                        .foregroundStyle(.white.opacity(0.6))
+                    Spacer()
+                    // Battery
+                    if let battery = person.batteryLevel {
+                        HStack(spacing: 2) {
+                            Image(systemName: batteryIcon(battery))
+                                .font(.caption2)
+                                .foregroundStyle(battery < 0.2 ? SharedColors.alert : .white.opacity(0.5))
+                            Text("\(Int(battery * 100))%")
+                                .font(.caption2)
+                                .foregroundStyle(battery < 0.2 ? SharedColors.alert : .white.opacity(0.5))
+                        }
+                    }
                 }
             }
 
-            // Emergency call button
-            Link(destination: URL(string: "tel:\(context.state.emergencyPhone)")!) {
-                HStack(spacing: 6) {
-                    Image(systemName: "phone.fill")
-                    Text("紧急呼叫 \(context.state.emergencyLabel)")
-                        .fontWeight(.semibold)
+            // CTA: Call priority person
+            if !context.state.priorityPersonPhone.isEmpty,
+               let url = URL(string: "tel:\(context.state.priorityPersonPhone)") {
+                Link(destination: url) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "phone.fill")
+                        Text("呼叫 \(context.state.priorityPersonName)")
+                            .fontWeight(.semibold)
+                    }
+                    .font(.subheadline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(callButtonColor(context.state.overallStatus))
+                    .foregroundStyle(.white)
+                    .clipShape(Capsule())
                 }
-                .font(.subheadline)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(callButtonColor(context.state.status))
-                .foregroundStyle(.white)
-                .clipShape(Capsule())
             }
         }
         .padding(16)
@@ -160,16 +201,55 @@ struct GuardianLiveActivity: Widget {
 
     // MARK: - Helpers
 
-    private func statusColor(_ status: GuardianActivityAttributes.GuardianStatus) -> Color {
+    private func overallStatusColor(_ status: GuardianActivityAttributes.OverallStatus) -> Color {
         switch status {
-        case .normal: return .green
-        case .pendingCheckIn: return .orange
-        case .sos: return .red
-        case .locationLost: return .yellow
+        case .allSafe: return SharedColors.safe
+        case .needsAttention: return SharedColors.warning
+        case .sosAlert: return SharedColors.alert
         }
     }
 
-    private func callButtonColor(_ status: GuardianActivityAttributes.GuardianStatus) -> Color {
-        status == .sos ? .red : Color(red: 0.914, green: 0.271, blue: 0.376)
+    private func personStatusColor(_ status: GuardianActivityAttributes.PersonStatus) -> Color {
+        switch status {
+        case .normal: return SharedColors.safe
+        case .overdue: return SharedColors.warning
+        case .alert: return SharedColors.alert
+        case .unreachable: return SharedColors.offline
+        }
+    }
+
+    private func personStatusLabel(_ person: GuardianActivityAttributes.PersonInfo) -> String {
+        switch person.status {
+        case .normal: return "安全"
+        case .overdue: return "未报平安"
+        case .alert: return "紧急求助"
+        case .unreachable: return "离线"
+        }
+    }
+
+    private func callButtonColor(_ status: GuardianActivityAttributes.OverallStatus) -> Color {
+        status == .sosAlert ? .red : SharedColors.lamp
+    }
+
+    private func batteryIcon(_ level: Double) -> String {
+        if level > 0.75 { return "battery.100" }
+        if level > 0.50 { return "battery.75" }
+        if level > 0.25 { return "battery.50" }
+        return "battery.25"
+    }
+
+    private func prioritySorted(_ persons: [GuardianActivityAttributes.PersonInfo]) -> [GuardianActivityAttributes.PersonInfo] {
+        persons.sorted { a, b in
+            statusPriority(a.status) > statusPriority(b.status)
+        }
+    }
+
+    private func statusPriority(_ status: GuardianActivityAttributes.PersonStatus) -> Int {
+        switch status {
+        case .alert: return 3
+        case .overdue: return 2
+        case .unreachable: return 1
+        case .normal: return 0
+        }
     }
 }

@@ -549,27 +549,66 @@ final class AppCoordinator: ObservableObject {
     // MARK: - Live Activity
 
     private func startLiveActivityIfNeeded() {
-        let guardianName: String
-        let guardianPhone: String
-        let layers: Int
+        let emergencyPhone = selectedHotline?.emergency ?? "911"
 
         if userRole == .protected_ {
-            guardianName = myGuardians.first?.user.displayName ?? "守护者"
-            guardianPhone = selectedHotline?.emergency ?? "911"
-            layers = myGuardians.count
+            // Protected Person: show who is guarding you
+            let guardianInfos = myGuardians.map { g in
+                ProtectedActivityAttributes.GuardianInfo(
+                    name: g.user.displayName,
+                    initial: g.user.avatarInitial,
+                    isOnDuty: g.isOnDuty,
+                    isOnline: g.isOnDuty // approximate: on-duty ≈ online
+                )
+            }
+            liveActivityManager.startProtectedActivity(
+                userName: currentUser?.displayName ?? "",
+                guardians: guardianInfos,
+                lastCheckIn: nil,
+                emergencyPhone: emergencyPhone,
+                emergencyLabel: selectedHotline?.selectedLabel ?? "911"
+            )
         } else {
-            // Guardian role — show protected persons count
-            guardianName = currentUser?.displayName ?? "守护者"
-            guardianPhone = selectedHotline?.emergency ?? "911"
-            layers = protectedPersons.count
+            // Guardian: show each protected person's status
+            let personInfos = protectedPersons.map { pp in
+                GuardianActivityAttributes.PersonInfo(
+                    id: pp.id,
+                    displayName: pp.user.displayName,
+                    initial: pp.user.avatarInitial,
+                    status: Self.mapPersonStatus(pp.status),
+                    cityName: pp.user.cityName,
+                    lastCheckIn: pp.lastCheckIn,
+                    batteryLevel: pp.batteryLevel
+                )
+            }
+            let priority = protectedPersons
+                .sorted { Self.statusPriority($0.status) > Self.statusPriority($1.status) }
+                .first
+            liveActivityManager.startGuardianActivity(
+                guardianName: currentUser?.displayName ?? "",
+                persons: personInfos,
+                priorityPersonName: priority?.user.displayName ?? "",
+                priorityPersonPhone: emergencyPhone
+            )
         }
+    }
 
-        liveActivityManager.startGuardianActivity(
-            userName: currentUser?.displayName ?? "",
-            guardianName: guardianName,
-            guardianPhone: guardianPhone,
-            protectionLayers: max(layers, 1)
-        )
+    private static func mapPersonStatus(_ status: SafetyStatus) -> GuardianActivityAttributes.PersonStatus {
+        switch status {
+        case .normal, .pendingCheckIn: return .normal
+        case .overdue: return .overdue
+        case .alert: return .alert
+        case .unreachable: return .unreachable
+        }
+    }
+
+    private static func statusPriority(_ status: SafetyStatus) -> Int {
+        switch status {
+        case .alert: return 3
+        case .overdue: return 2
+        case .unreachable: return 1
+        case .normal, .pendingCheckIn: return 0
+        }
     }
 
     // MARK: - SOS Trigger
@@ -636,9 +675,7 @@ final class AppCoordinator: ObservableObject {
         locationManager.exitSOSMode()
 
         // Restore lock screen to normal
-        let guardianName = myGuardians.first?.user.displayName ?? "守护者"
-        let guardianPhone = selectedHotline?.emergency ?? "911"
-        liveActivityManager.cancelSOS(guardianName: guardianName, guardianPhone: guardianPhone)
+        liveActivityManager.cancelSOS()
 
         addTimelineEntry(type: .sosResolved, description: "取消了紧急求助")
 
@@ -684,11 +721,7 @@ final class AppCoordinator: ObservableObject {
             safeZoneName: location.safeZoneName
         ))
 
-        // Keep lock screen card in sync
-        liveActivityManager.updateLocation(
-            accuracy: Int(location.accuracy),
-            timestamp: location.timestamp
-        )
+        // Live Activity is updated via startLiveActivityIfNeeded / sync calls
     }
 
     private func handleFallCandidate() {

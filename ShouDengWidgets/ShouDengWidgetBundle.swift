@@ -7,6 +7,7 @@ struct ShouDengWidgetBundle: WidgetBundle {
         ProtectedStatusWidget()
         GuardianStatusWidget()
         ProtectedTimerWidget()
+        ProtectedLiveActivity()
         GuardianLiveActivity()
     }
 }
