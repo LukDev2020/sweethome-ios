@@ -10,11 +10,24 @@ sweethomeios/
 │   ├── App/                   # AppCoordinator, AppDelegate, lifecycle
 │   ├── Core/                  # Algorithms (location, escalation, baseline scoring)
 │   ├── Models/                # Data models (User, SOSEvent, Guardian, etc.)
-│   ├── Services/              # Auth, Network, Push, Payment, Diagnostics
+│   ├── Services/              # Auth, Network, Push, Payment, LiveActivity
 │   └── Views/                 # SwiftUI views by role
 │       ├── Protected/         # Protected person screens (A1-A6)
 │       ├── Guardian/          # Guardian screens (B1-B6)
 │       └── Shared/            # Common views (profile, feed, contacts)
+├── ShouDengWidgets/           # WidgetKit extension (lock screen + home screen widgets)
+│   ├── Widgets/               # Widget definitions (Protected, Guardian, Timer)
+│   ├── Views/                 # Widget view implementations per family size
+│   ├── Providers/             # Timeline providers for each widget
+│   ├── Intents/               # CheckIn and DismissTimer app intents
+│   ├── ProtectedLiveActivity  # Live Activity for protected person role
+│   └── GuardianLiveActivity   # Live Activity for guardian role
+├── Shared/                    # Code shared between app + widget extension
+│   ├── GuardianActivityAttributes   # Guardian Live Activity data model
+│   ├── ProtectedActivityAttributes  # Protected Live Activity data model
+│   ├── SharedColors                 # Brand colors
+│   ├── WidgetState                  # Widget data store model
+│   └── WidgetDataStore              # App Group UserDefaults bridge
 ├── shoudeng-backend/          # Firebase Cloud Functions (Node.js 20 / TypeScript)
 │   └── functions/src/
 │       ├── routes/            # Express REST API (24 endpoints)
@@ -29,6 +42,10 @@ sweethomeios/
 ## Key Features
 
 - **Dual-portal design**: Protected person (被守护者) and Guardian (守护者) views
+- **Live Activity lock screen cards**: Role-specific cards on the lock screen & Dynamic Island
+  - Guardian card: per-person status, city, battery, priority call button
+  - Protected card: guardian avatars with online/duty status, SOS + check-in buttons
+- **Lock screen widgets**: WidgetKit accessory widgets (inline, circular, rectangular) + home screen (small, medium)
 - **4-hop SOS escalation**: Push → SMS → Twilio voice call → emergency share link
 - **Adaptive location tracking**: 5 modes from passive to SOS-grade high-frequency
 - **Cross-timezone world clocks**: Dynamic display of family members' local times
@@ -140,6 +157,9 @@ Emulators run on:
 
 | Commit | Description |
 |--------|-------------|
+| `208c8d6` | Dual-role Live Activity cards — Guardian sees persons, Protected sees guardians |
+| `08c2619` | Enable Live Activities + fix simulator debug for lock screen cards |
+| `8bebe8e` | Lock screen widgets + backend security hardening |
 | `ecef8fe` | Production hardening: security rules, API gaps, error handling |
 | `9afe690` | Data sync consistency between guardian and protected views |
 | `6dfd91e` | Import emergency contacts from device address book |
