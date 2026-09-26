@@ -15,10 +15,11 @@ final class GuardianActivityManager {
         guardianPhone: String,
         protectionLayers: Int
     ) {
-        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
-            #if DEBUG
-            print("[LiveActivity] Not authorized")
-            #endif
+        let authInfo = ActivityAuthorizationInfo()
+        NSLog("[LiveActivity] areActivitiesEnabled: \(authInfo.areActivitiesEnabled), frequentPushesEnabled: \(authInfo.frequentPushesEnabled)")
+
+        guard authInfo.areActivitiesEnabled else {
+            NSLog("[LiveActivity] Not authorized — aborting")
             return
         }
 
@@ -43,28 +44,32 @@ final class GuardianActivityManager {
         )
 
         do {
+            #if DEBUG
+            let pushType: PushType? = nil
+            #else
+            let pushType: PushType? = .token
+            #endif
+            NSLog("[LiveActivity] Requesting activity with pushType=\(String(describing: pushType))")
             let activity = try Activity.request(
                 attributes: attributes,
                 content: .init(state: initialState, staleDate: nil),
-                pushType: .token
+                pushType: pushType
             )
             currentActivity = activity
-            #if DEBUG
-            print("[LiveActivity] Started: \(activity.id)")
-            #endif
+            NSLog("[LiveActivity] Started successfully: id=\(activity.id)")
 
-            // Forward push token to server
-            Task { [weak self] in
-                for await pushToken in activity.pushTokenUpdates {
-                    guard let self else { break }
-                    let tokenString = pushToken.map { String(format: "%02x", $0) }.joined()
-                    await self.sendPushTokenToServer(tokenString)
+            // Forward push token to server (only when push type is .token)
+            if pushType != nil {
+                Task { [weak self] in
+                    for await pushToken in activity.pushTokenUpdates {
+                        guard let self else { break }
+                        let tokenString = pushToken.map { String(format: "%02x", $0) }.joined()
+                        await self.sendPushTokenToServer(tokenString)
+                    }
                 }
             }
         } catch {
-            #if DEBUG
-            print("[LiveActivity] Start failed: \(error)")
-            #endif
+            NSLog("[LiveActivity] Start FAILED: \(error)")
         }
     }
 
