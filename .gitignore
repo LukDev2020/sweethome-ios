@@ -39,6 +39,10 @@ fastlane/test_output
 # Firebase credentials
 GoogleService-Info.plist
 
+# Secrets / keys
+.env
+*.p8
+
 # Node
 node_modules/
 

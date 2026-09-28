@@ -1180,6 +1180,7 @@
 				CODE_SIGN_ENTITLEMENTS = ShouDeng/ShouDeng.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = B98QT5LTWZ;
 				INFOPLIST_FILE = ShouDeng/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1198,6 +1199,7 @@
 				CODE_SIGN_ENTITLEMENTS = ShouDeng/ShouDeng.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = B98QT5LTWZ;
 				INFOPLIST_FILE = ShouDeng/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1214,6 +1216,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ShouDengWidgets/ShouDengWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = B98QT5LTWZ;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = ShouDengWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1235,6 +1238,7 @@
 				CODE_SIGN_ENTITLEMENTS = ShouDeng/ShouDeng.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = B98QT5LTWZ;
 				INFOPLIST_FILE = ShouDeng/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1334,6 +1338,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ShouDengWidgets/ShouDengWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = B98QT5LTWZ;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = ShouDengWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1353,6 +1358,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ShouDengWidgets/ShouDengWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = B98QT5LTWZ;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = ShouDengWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
