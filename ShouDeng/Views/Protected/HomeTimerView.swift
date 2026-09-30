@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 // MARK: - Home Timer View
 //
@@ -21,7 +22,7 @@ struct HomeTimerView: View {
     @State private var tick = Date()
     @State private var isLoading = false
 
-    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    nonisolated(unsafe) private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
         NavigationStack {
@@ -104,7 +105,7 @@ struct HomeTimerView: View {
             Spacer()
 
             Text("常用场景：夜间回家、独自出门、见陌生人")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary.opacity(0.6))
                 .padding(.bottom, 16)
         }

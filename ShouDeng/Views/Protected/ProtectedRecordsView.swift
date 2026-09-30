@@ -63,7 +63,7 @@ struct ProtectedRecordsView: View {
                     Text("我的记录")
                         .font(.system(size: 20, weight: .bold))
                     Text("90 天可查 · 专业版永久保存")
-                        .font(.system(size: 12))
+                        .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                 }
                 .padding(.top, 8)
@@ -106,7 +106,7 @@ struct ProtectedRecordsView: View {
 
                 // Tip
                 Text("紧急情况下，优先拨打当地急救电话。自定义联络人可提前录入邻居、社区、当地医院等信息。")
-                    .font(.system(size: 11))
+                    .font(.system(size: 12))
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
                     .padding(.bottom, 24)
@@ -130,7 +130,7 @@ struct ProtectedRecordsView: View {
                     .font(.system(size: 13, weight: .semibold))
                 Spacer()
                 Text("\(info.regionName) \(info.areaCode)")
-                    .font(.system(size: 11))
+                    .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }
             .padding(12)
@@ -148,7 +148,7 @@ struct ProtectedRecordsView: View {
                             .font(.system(size: 12.5, weight: .medium))
                         if let note = number.note {
                             Text(note)
-                                .font(.system(size: 10))
+                                .font(.system(size: 12))
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -232,7 +232,7 @@ struct ProtectedRecordsView: View {
     private func timelineRow(date: String, event: String, isBlurred: Bool) -> some View {
         HStack(alignment: .top) {
             Text(date)
-                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                .font(.system(size: 12, weight: .medium, design: .monospaced))
                 .foregroundStyle(.secondary)
                 .frame(width: 50, alignment: .trailing)
             Text(event)
@@ -256,7 +256,7 @@ struct ProtectedRecordsView: View {
     private var exportPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("导出")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             exportRow("带时间戳的 PDF", value: "需升级")
             exportRow("位置轨迹 GPX", value: "需升级")
@@ -284,7 +284,7 @@ struct ProtectedRecordsView: View {
     private var upsellCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("免费版仅保留 24 小时。升级后可查看 90 天完整时间线并导出——向警方、保险或律师说明情况时用得上。")
-                .font(.system(size: 12))
+                .font(.system(size: 13))
                 .foregroundStyle(.secondary)
             Button { showUpgradeHint = true } label: {
                 Text("升级查看全部记录")
@@ -383,7 +383,7 @@ private struct EmergencyContactCardRow: View {
             Text(contact.name)
                 .font(.system(size: 14, weight: .medium))
             Text(contact.relationship)
-                .font(.system(size: 10))
+                .font(.system(size: 12))
                 .foregroundStyle(safe)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
@@ -407,7 +407,7 @@ private struct EmergencyContactCardRow: View {
         if !contact.email.isEmpty {
             HStack(spacing: 4) {
                 Image(systemName: "envelope.fill").font(.system(size: 9)).foregroundStyle(.secondary)
-                Text(contact.email).font(.system(size: 11)).foregroundStyle(ink.opacity(0.6))
+                Text(contact.email).font(.system(size: 12)).foregroundStyle(ink.opacity(0.6))
             }
         }
     }
@@ -417,7 +417,7 @@ private struct EmergencyContactCardRow: View {
         if !contact.address.isEmpty {
             HStack(spacing: 4) {
                 Image(systemName: "mappin.circle.fill").font(.system(size: 9)).foregroundStyle(.secondary)
-                Text(contact.address).font(.system(size: 11)).foregroundStyle(ink.opacity(0.6)).lineLimit(2)
+                Text(contact.address).font(.system(size: 12)).foregroundStyle(ink.opacity(0.6)).lineLimit(2)
             }
         }
     }
@@ -428,7 +428,7 @@ private struct EmergencyContactCardRow: View {
             Button(role: .destructive, action: onDelete) {
                 HStack(spacing: 3) {
                     Image(systemName: "trash").font(.system(size: 10))
-                    Text("删除").font(.system(size: 11))
+                    Text("删除").font(.system(size: 12))
                 }
                 .foregroundStyle(.red.opacity(0.6))
             }
@@ -468,7 +468,7 @@ private struct CustomContactsPanel: View {
                 .font(.system(size: 13, weight: .semibold))
             Spacer()
             Text("\(contacts.count) 人")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
         }
         .padding(12)
@@ -493,7 +493,7 @@ private struct CustomContactsPanel: View {
                 .font(.system(size: 13))
                 .foregroundStyle(.secondary)
             Text("录入邻居、社区工作人员、当地医院等")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity)

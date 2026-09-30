@@ -29,7 +29,7 @@ struct GuardianInviteConsentView: View {
                     Text("邀请弟弟加入")
                         .font(.system(size: 20, weight: .bold))
                     Text("他确认后关系才成立")
-                        .font(.system(size: 12))
+                        .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                 }
                 .padding(.top, 8)
@@ -46,7 +46,7 @@ struct GuardianInviteConsentView: View {
                 // Resend button
                 Button {
                     Task {
-                        let _: EmptyResponse = try await coordinator.apiClient.post(
+                        let _: EmptyResponse? = try? await coordinator.apiClient.post(
                             "/v1/guardian/resend-invite",
                             body: EmptyBody()
                         )
@@ -65,7 +65,7 @@ struct GuardianInviteConsentView: View {
                 .padding(.top, 4)
 
                 Text("这一屏是过审的关键证据：应用商店要求证明守护类功能获得了双方明确同意。")
-                    .font(.system(size: 10.5))
+                    .font(.system(size: 12))
                     .foregroundStyle(.secondary.opacity(0.7))
                     .padding(.top, 8)
                     .padding(.bottom, 24)
@@ -82,7 +82,7 @@ struct GuardianInviteConsentView: View {
     private var step1Panel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("第一步 · 你申请查看的内容")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             permissionToggle("位置", isOn: $requestLocation)
             permissionToggle("电量与在线状态", isOn: $requestBattery)
@@ -111,7 +111,7 @@ struct GuardianInviteConsentView: View {
     private var step2Panel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("第二步 · 他会看到这段话")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             Text("妈妈想在你遇到危险时能帮到你。她将能看到你的位置和电量，看不到你的聊天、相册或任何应用内容。你随时可以关闭，也可以随时移除她。")
                 .font(.system(size: 12.5))
@@ -130,7 +130,7 @@ struct GuardianInviteConsentView: View {
     private var step3Panel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("第三步 · 等待他确认")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             waitingRow("邀请状态", value: "等待中 · 已发送 2 分钟", isWarning: false)
             waitingRow("未确认前你能看到", value: "什么都看不到", isWarning: true)
@@ -147,7 +147,7 @@ struct GuardianInviteConsentView: View {
             Text(label).font(.system(size: 13))
             Spacer()
             Text(value)
-                .font(.system(size: 11.5))
+                .font(.system(size: 12))
                 .foregroundStyle(isWarning ? alert : .secondary)
         }
         .padding(.vertical, 2)

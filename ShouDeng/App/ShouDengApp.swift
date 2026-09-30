@@ -8,6 +8,7 @@ struct ShouDengApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(appDelegate.appCoordinator)
+                .preferredColorScheme(.light)
         }
     }
 }

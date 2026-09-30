@@ -82,7 +82,7 @@ struct ProtectedSettingsView: View {
                     #endif
 
                     Text("求助方式给三种冗余：手机没在手上时，手表或实体按钮仍能触发。")
-                        .font(.system(size: 10.5))
+                        .font(.system(size: 12))
                         .foregroundStyle(.secondary.opacity(0.7))
                         .padding(.top, 8)
                         .padding(.bottom, 24)
@@ -161,7 +161,7 @@ struct ProtectedSettingsView: View {
     private var profilePanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("个人资料")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
 
             Button { showProfileEdit = true } label: {
@@ -172,7 +172,7 @@ struct ProtectedSettingsView: View {
                             .font(.system(size: 13, weight: .medium))
                             .foregroundStyle(ink)
                         Text(coordinator.currentUser?.cityName ?? "")
-                            .font(.system(size: 11))
+                            .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
@@ -196,7 +196,7 @@ struct ProtectedSettingsView: View {
     private var sosTriggerPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("怎样触发求助")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             toggleRow("App 内长按 3 秒", isOn: $longPressEnabled)
             toggleRow("手表快捷键", isOn: $watchEnabled)
@@ -215,7 +215,7 @@ struct ProtectedSettingsView: View {
     private var checkInPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("定时报平安")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             fixedRow("每天提醒", value: "09:00、21:00", isWarning: false)
             fixedRow("超时多久算失联", value: "4 小时", isWarning: false)
@@ -232,7 +232,7 @@ struct ProtectedSettingsView: View {
     private var safetyToolsPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("安全工具")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
 
             Button { showMedicalCard = true } label: {
@@ -267,7 +267,7 @@ struct ProtectedSettingsView: View {
     private var languagePanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("语言")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             HStack {
                 Text("界面语言").font(.system(size: 13))
@@ -283,7 +283,7 @@ struct ProtectedSettingsView: View {
             .padding(.vertical, 2)
             if !langManager.current.isFullySupported {
                 Text("当前仅登录页面支持此语言，主界面将逐步适配")
-                    .font(.system(size: 10.5))
+                    .font(.system(size: 12))
                     .foregroundStyle(.secondary.opacity(0.7))
             }
         }
@@ -299,7 +299,7 @@ struct ProtectedSettingsView: View {
     private var notificationPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("通知偏好")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             toggleRow("紧急求助 (SOS)", isOn: $notifSOS)
             toggleRow("报平安提醒", isOn: $notifCheckin)
@@ -317,7 +317,7 @@ struct ProtectedSettingsView: View {
     private var dataPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("数据")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             fixedRow("位置保留时长", value: "90 天后自动删除", isWarning: false)
             Button { showExportAlert = true } label: {
@@ -341,7 +341,7 @@ struct ProtectedSettingsView: View {
     private var legalPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("法律与关于")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             Button { showPrivacy = true } label: {
                 fixedRow("隐私政策与服务条款", value: "查看 →", isWarning: false)
@@ -368,7 +368,7 @@ struct ProtectedSettingsView: View {
     private var rolePanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("当前角色")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
 
             HStack(spacing: 8) {
@@ -379,7 +379,7 @@ struct ProtectedSettingsView: View {
                     Text("被守护者")
                         .font(.system(size: 13, weight: .medium))
                     Text("家人会收到您的安全信号")
-                        .font(.system(size: 11))
+                        .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -392,7 +392,7 @@ struct ProtectedSettingsView: View {
                         .font(.system(size: 13))
                     Spacer()
                     Text("需守护者同意")
-                        .font(.system(size: 11))
+                        .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                     Image(systemName: "chevron.right")
                         .font(.system(size: 11))
@@ -415,7 +415,7 @@ struct ProtectedSettingsView: View {
     private var devPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("开发者选项")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
 
             HStack {
@@ -430,7 +430,7 @@ struct ProtectedSettingsView: View {
                         Image(systemName: coordinator.userRole == .protected_ ? "shield.fill" : "eye.fill")
                             .font(.system(size: 10))
                         Text(coordinator.userRole == .protected_ ? "被守护者" : "守护者")
-                            .font(.system(size: 11, weight: .medium))
+                            .font(.system(size: 12, weight: .medium))
                         Image(systemName: "arrow.triangle.2.circlepath")
                             .font(.system(size: 9))
                     }
@@ -452,7 +452,7 @@ struct ProtectedSettingsView: View {
         )
         .overlay(alignment: .topTrailing) {
             Text("DEV")
-                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
                 .foregroundStyle(.white)
                 .padding(.horizontal, 5)
                 .padding(.vertical, 2)

@@ -44,7 +44,7 @@ struct GuardianAlertResponseView: View {
                             .font(.system(size: 20, weight: .bold))
                             .foregroundStyle(alert)
                         Text(headerSubtitle)
-                            .font(.system(size: 12))
+                            .font(.system(size: 13))
                             .foregroundStyle(.secondary)
                     }
                     .padding(.top, 8)
@@ -97,7 +97,7 @@ struct GuardianAlertResponseView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Text("警报中")
-                        .font(.system(size: 11))
+                        .font(.system(size: 12))
                         .foregroundStyle(alert)
                 }
             }
@@ -156,7 +156,7 @@ struct GuardianAlertResponseView: View {
                 .overlay(alignment: .bottomLeading) {
                     if let accuracy = sosEvent?.location?.accuracy {
                         Text("精度约 \(Int(accuracy)) 米")
-                            .font(.system(size: 10))
+                            .font(.system(size: 12))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
@@ -183,7 +183,7 @@ struct GuardianAlertResponseView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .overlay(alignment: .bottomLeading) {
                     Text("最后已知位置")
-                        .font(.system(size: 10))
+                        .font(.system(size: 12))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
@@ -201,7 +201,7 @@ struct GuardianAlertResponseView: View {
                             .font(.system(size: 28))
                             .foregroundStyle(alert)
                         Text("暂无位置信息")
-                            .font(.system(size: 11))
+                            .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -227,7 +227,7 @@ struct GuardianAlertResponseView: View {
         return VStack(spacing: 0) {
             HStack {
                 Text("升级链")
-                    .font(.system(size: 11.5, weight: .medium))
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(alert)
                 Spacer()
             }
@@ -266,7 +266,7 @@ struct GuardianAlertResponseView: View {
                     .fill(state == .done ? safe : state == .live ? alert : Color(.systemGray5))
                     .frame(width: 19, height: 19)
                 Text(number)
-                    .font(.system(size: 10.5))
+                    .font(.system(size: 12))
                     .foregroundStyle(state == .waiting ? Color.secondary : Color.white)
             }
 
@@ -274,7 +274,7 @@ struct GuardianAlertResponseView: View {
                 Text(title)
                     .font(.system(size: 12.5, weight: .medium))
                 Text(detail)
-                    .font(.system(size: 11))
+                    .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }
             Spacer()
@@ -295,7 +295,7 @@ struct GuardianAlertResponseView: View {
     private var sceneInfoPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("现场信息")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             if let battery = person?.batteryLevel ?? sosEvent?.batteryLevel {
                 let pct = Int(battery * 100)
@@ -334,7 +334,7 @@ struct GuardianAlertResponseView: View {
             Text(label).font(.system(size: 13))
             Spacer()
             Text(value)
-                .font(.system(size: 11.5))
+                .font(.system(size: 12))
                 .foregroundStyle(isAlert ? alert : .secondary)
         }
         .padding(.vertical, 2)

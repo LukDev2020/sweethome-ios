@@ -172,7 +172,7 @@ struct ProfileEditView: View {
                 }
             }
             Text("点击更换头像")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
         }
         .onChange(of: avatarItem) { _, newItem in
@@ -185,7 +185,7 @@ struct ProfileEditView: View {
     private var fieldSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("基本信息")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
 
             VStack(spacing: 0) {
@@ -214,7 +214,7 @@ struct ProfileEditView: View {
     private var timezoneSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("时区")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
 
             VStack(spacing: 0) {

@@ -28,7 +28,7 @@ struct GuardianMemberDetailView: View {
                         Text(person.user.displayName)
                             .font(.system(size: 20, weight: .bold))
                         Text(headerSubtitle(person))
-                            .font(.system(size: 12))
+                            .font(.system(size: 13))
                             .foregroundStyle(.secondary)
                     }
                     .padding(.top, 8)
@@ -104,7 +104,7 @@ struct GuardianMemberDetailView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Text("你正在值班")
-                    .font(.system(size: 11))
+                    .font(.system(size: 12))
                     .foregroundStyle(safe)
             }
         }
@@ -148,7 +148,7 @@ struct GuardianMemberDetailView: View {
                 .overlay(alignment: .bottomLeading) {
                     if let addr = loc.address, !addr.isEmpty {
                         Text(addr)
-                            .font(.system(size: 10))
+                            .font(.system(size: 12))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
@@ -167,7 +167,7 @@ struct GuardianMemberDetailView: View {
                             .font(.system(size: 28))
                             .foregroundStyle(.secondary)
                         Text("暂无位置信息")
-                            .font(.system(size: 11))
+                            .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -180,7 +180,7 @@ struct GuardianMemberDetailView: View {
     private func statusPanel(_ person: ProtectedPerson) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("此刻")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             statusRow("状态", value: statusText(person.status), isOk: person.status == .normal)
             if let battery = person.batteryLevel {
@@ -224,7 +224,7 @@ struct GuardianMemberDetailView: View {
             Text(label).font(.system(size: 13))
             Spacer()
             Text(value)
-                .font(.system(size: 11.5))
+                .font(.system(size: 12))
                 .foregroundStyle(isOk ? safe : .primary)
         }
         .padding(.vertical, 2)
@@ -262,7 +262,7 @@ struct GuardianMemberDetailView: View {
     private func timelineRow(time: String, event: String) -> some View {
         HStack {
             Text(time)
-                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                .font(.system(size: 12, weight: .medium, design: .monospaced))
                 .foregroundStyle(.secondary)
                 .frame(width: 44, alignment: .trailing)
             Text(event)

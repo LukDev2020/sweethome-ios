@@ -45,7 +45,7 @@ struct EmergencyContactsView: View {
 
                 // Tip
                 Text("紧急情况下，优先拨打当地急救电话。自定义联络人可提前录入邻居、社区工作人员、当地医院等信息。")
-                    .font(.system(size: 11))
+                    .font(.system(size: 12))
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 16)
@@ -91,11 +91,11 @@ struct EmergencyContactsView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("当地紧急号码")
-                    .font(.system(size: 11))
+                    .font(.system(size: 12))
                     .foregroundStyle(.secondary)
                 Spacer()
                 Text("区号: \(regionInfo.areaCode)")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(ink)
             }
 
@@ -132,7 +132,7 @@ struct EmergencyContactsView: View {
                     .font(.system(size: 13, weight: .medium))
                 if let note {
                     Text(note)
-                        .font(.system(size: 10))
+                        .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -156,7 +156,7 @@ struct EmergencyContactsView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("自定义紧急联络人")
-                    .font(.system(size: 11))
+                    .font(.system(size: 12))
                     .foregroundStyle(.secondary)
                 Spacer()
                 Button {
@@ -183,7 +183,7 @@ struct EmergencyContactsView: View {
                             .font(.system(size: 12))
                             .foregroundStyle(.tertiary)
                         Text("可以录入邻居、社区、当地医院等")
-                            .font(.system(size: 11))
+                            .font(.system(size: 12))
                             .foregroundStyle(.quaternary)
                     }
                     .padding(.vertical, 16)
@@ -217,11 +217,11 @@ struct EmergencyContactsView: View {
                 Text(contact.name)
                     .font(.system(size: 13, weight: .medium))
                 Text(contact.relationship)
-                    .font(.system(size: 10))
+                    .font(.system(size: 12))
                     .foregroundStyle(.secondary)
                 if !contact.address.isEmpty {
                     Text(contact.address)
-                        .font(.system(size: 10))
+                        .font(.system(size: 12))
                         .foregroundStyle(.tertiary)
                         .lineLimit(1)
                 }
@@ -236,14 +236,14 @@ struct EmergencyContactsView: View {
                             Image(systemName: "phone.fill")
                                 .font(.system(size: 10))
                             Text(contact.phone)
-                                .font(.system(size: 11, design: .monospaced))
+                                .font(.system(size: 12, design: .monospaced))
                         }
                         .foregroundStyle(safe)
                     }
                 }
                 if !contact.email.isEmpty {
                     Text(contact.email)
-                        .font(.system(size: 10))
+                        .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                 }
             }

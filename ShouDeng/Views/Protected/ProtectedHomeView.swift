@@ -1,5 +1,6 @@
 import SwiftUI
 import MapKit
+import Combine
 
 // MARK: - Screen A1: Protected Person Home
 //
@@ -91,23 +92,23 @@ struct ProtectedHomeView: View {
                         AvatarView(user: coordinator.currentUser, size: 22)
                         if let name = coordinator.currentUser?.displayName, !name.isEmpty {
                             Text(name)
-                                .font(.system(size: 11, weight: .medium))
+                                .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(ink)
                         }
                         Text("·")
-                            .font(.system(size: 9))
+                            .font(.system(size: 11))
                             .foregroundStyle(safe.opacity(0.4))
                         Image(systemName: "shield.fill")
                             .font(.system(size: 8))
                             .foregroundStyle(safe)
                         Text(toolbarLocation)
-                            .font(.system(size: 10))
+                            .font(.system(size: 12))
                             .foregroundStyle(ink.opacity(0.42))
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Text(toolbarBattery)
-                        .font(.system(size: 10.5))
+                        .font(.system(size: 12))
                         .foregroundStyle(ink.opacity(0.42))
                 }
             }
@@ -256,7 +257,7 @@ struct ProtectedHomeView: View {
                             .font(.system(size: 14, weight: .semibold, design: .serif))
                             .foregroundStyle(lamp)
                         Text(subtitleText)
-                            .font(.system(size: 10.5))
+                            .font(.system(size: 12))
                             .foregroundStyle(.white.opacity(0.6))
                     }
                     Spacer()
@@ -286,7 +287,7 @@ struct ProtectedHomeView: View {
         HStack(spacing: 4) {
             Circle().fill(color).frame(width: 6, height: 6)
             Text(label)
-                .font(.system(size: 9.5))
+                .font(.system(size: 11))
                 .foregroundStyle(.white.opacity(0.65))
         }
     }
@@ -325,14 +326,14 @@ struct ProtectedHomeView: View {
             ForEach(Array(clocks.enumerated()), id: \.offset) { _, clock in
                 VStack(spacing: 2) {
                     Text(clock.city)
-                        .font(.system(size: 9.5))
+                        .font(.system(size: 11))
                         .foregroundStyle(ink.opacity(0.55))
                         .lineLimit(1)
                     Text(clock.time)
                         .font(.system(size: 14, weight: .semibold, design: .serif))
                         .foregroundStyle(clock.isMe ? lamp : ink)
                     Text(clock.note)
-                        .font(.system(size: 9))
+                        .font(.system(size: 11))
                         .foregroundStyle(clock.isMe ? lamp : ink.opacity(0.45))
                 }
                 .frame(maxWidth: .infinity)
@@ -553,7 +554,7 @@ struct ProtectedHomeView: View {
                     .font(.system(size: 16))
                     .foregroundStyle(color)
                 Text(label)
-                    .font(.system(size: 11))
+                    .font(.system(size: 12))
                     .foregroundStyle(ink.opacity(0.7))
             }
             .frame(maxWidth: .infinity)
@@ -621,7 +622,7 @@ struct ProtectedHomeView: View {
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(ink.opacity(0.6))
                     Text("邀请家人成为你的守护者，他们可以在紧急时刻收到你的求助信号。")
-                        .font(.system(size: 12))
+                        .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 24)
@@ -654,7 +655,7 @@ struct ProtectedHomeView: View {
             VStack(spacing: 0) {
                 Divider()
                 Text("列表按「谁醒着」而非亲疏排序——慌乱时最需要知道的是谁最快能看到。")
-                    .font(.system(size: 10.5))
+                    .font(.system(size: 12))
                     .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, 11)
@@ -694,7 +695,7 @@ struct ProtectedHomeView: View {
 
     private func sectionHeader(_ title: String) -> some View {
         Text(title)
-            .font(.system(size: 10.5))
+            .font(.system(size: 12))
             .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
             .padding(.horizontal, 18)
             .padding(.top, 4)
@@ -727,7 +728,7 @@ struct ProtectedHomeView: View {
                         .font(.system(size: 13.5, weight: .medium))
                     if let tag, let tagColor {
                         Text(tag)
-                            .font(.system(size: 9.5))
+                            .font(.system(size: 11))
                             .padding(.horizontal, 7)
                             .padding(.vertical, 2)
                             .background(tagColor.opacity(0.14))
@@ -736,7 +737,7 @@ struct ProtectedHomeView: View {
                     }
                 }
                 Text(detail)
-                    .font(.system(size: 11))
+                    .font(.system(size: 12))
                     .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.58))
                     .lineLimit(1)
             }
@@ -749,7 +750,7 @@ struct ProtectedHomeView: View {
                     .font(.system(size: 13, weight: .semibold, design: .serif))
                     .foregroundStyle(ink)
                 Text(timeNote)
-                    .font(.system(size: 10.5))
+                    .font(.system(size: 12))
                     .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
             }
         }
@@ -771,7 +772,7 @@ struct SOSActiveView: View {
     @State private var tick = Date()
     @State private var showClaimMaterialsPrompt = false
     @State private var showClaimMaterials = false
-    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    nonisolated(unsafe) private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
@@ -793,7 +794,7 @@ struct SOSActiveView: View {
                         Image(systemName: "wifi.slash")
                             .font(.system(size: 12))
                         Text("求助信号暂未送达服务器，已存入离线队列，恢复网络后将自动重发")
-                            .font(.system(size: 11))
+                            .font(.system(size: 12))
                     }
                     .foregroundStyle(.white)
                     .padding(.horizontal, 12)
@@ -813,7 +814,7 @@ struct SOSActiveView: View {
                                     .font(.system(size: 26, weight: .black, design: .serif))
                                     .foregroundStyle(.white)
                                 Text(sosTimeLocation)
-                                    .font(.system(size: 10.5))
+                                    .font(.system(size: 12))
                                     .foregroundStyle(.white.opacity(0.8))
                             }
                         }
@@ -931,7 +932,7 @@ struct SOSActiveView: View {
                     .fill(state == .done ? safe : state == .live ? alert : Color(.systemGray5))
                     .frame(width: 19, height: 19)
                 Text(number)
-                    .font(.system(size: 10.5))
+                    .font(.system(size: 12))
                     .foregroundStyle(state == .waiting ? Color.secondary : Color.white)
             }
 
@@ -939,7 +940,7 @@ struct SOSActiveView: View {
                 Text(title)
                     .font(.system(size: 12.5, weight: .medium))
                 Text(detail)
-                    .font(.system(size: 11))
+                    .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }
             Spacer()
@@ -958,7 +959,7 @@ struct SOSActiveView: View {
     private var autoEnabledPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("求助期间自动开启，结束后恢复")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             statusRow("高频位置上报", value: "进行中", isActive: true)
             statusRow("环境录音留证", value: "进行中", isActive: true)

@@ -39,7 +39,7 @@ struct GuardianSettingsView: View {
                 VStack(spacing: 12) {
                     // Header
                     Text("守护者偏好")
-                        .font(.system(size: 12))
+                        .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                         .padding(.top, 8)
 
@@ -153,7 +153,7 @@ struct GuardianSettingsView: View {
     private var profilePanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("个人资料")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
 
             Button { showProfileEdit = true } label: {
@@ -164,7 +164,7 @@ struct GuardianSettingsView: View {
                             .font(.system(size: 13, weight: .medium))
                             .foregroundStyle(ink)
                         Text(coordinator.currentUser?.cityName ?? "")
-                            .font(.system(size: 11))
+                            .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
@@ -188,7 +188,7 @@ struct GuardianSettingsView: View {
     private var subscriptionPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("订阅与账单")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
 
             if let status = coordinator.storeKitManager.subscriptionStatus, status.isActive {
@@ -201,7 +201,7 @@ struct GuardianSettingsView: View {
                             .font(.system(size: 13, weight: .medium))
                         if let expires = status.expiresDate {
                             Text("有效期至 \(expires.formatted(.dateTime.year().month().day()))")
-                                .font(.system(size: 11))
+                                .font(.system(size: 12))
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -217,7 +217,7 @@ struct GuardianSettingsView: View {
                         Text("免费版")
                             .font(.system(size: 13, weight: .medium))
                         Text("升级解锁更强守护功能")
-                            .font(.system(size: 11))
+                            .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
@@ -257,7 +257,7 @@ struct GuardianSettingsView: View {
     private var safetyToolsPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("安全工具")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
 
             Button { showMedicalCard = true } label: {
@@ -287,7 +287,7 @@ struct GuardianSettingsView: View {
     private var organizationPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("机构管理")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
 
             Button { showOrgDashboard = true } label: {
@@ -312,7 +312,7 @@ struct GuardianSettingsView: View {
     private var languagePanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("语言")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             HStack {
                 Text("界面语言").font(.system(size: 13))
@@ -328,7 +328,7 @@ struct GuardianSettingsView: View {
             .padding(.vertical, 2)
             if !langManager.current.isFullySupported {
                 Text("当前仅登录页面支持此语言，主界面将逐步适配")
-                    .font(.system(size: 10.5))
+                    .font(.system(size: 12))
                     .foregroundStyle(.secondary.opacity(0.7))
             }
         }
@@ -344,7 +344,7 @@ struct GuardianSettingsView: View {
     private var notificationPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("通知偏好")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             toggleRow("紧急求助 (SOS)", isOn: $notifSOS)
             toggleRow("报平安超时提醒", isOn: $notifCheckinOverdue)
@@ -362,7 +362,7 @@ struct GuardianSettingsView: View {
     private var dataPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("数据")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             Button { showExportAlert = true } label: {
                 fixedRow("导出我的全部数据", value: "请求导出 →", isWarning: false)
@@ -385,7 +385,7 @@ struct GuardianSettingsView: View {
     private var legalPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("法律与关于")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             Button { showPrivacy = true } label: {
                 fixedRow("隐私政策与服务条款", value: "查看 →", isWarning: false)
@@ -412,7 +412,7 @@ struct GuardianSettingsView: View {
     private var rolePanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("当前角色")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
 
             HStack(spacing: 8) {
@@ -423,7 +423,7 @@ struct GuardianSettingsView: View {
                     Text("守护者")
                         .font(.system(size: 13, weight: .medium))
                     Text("您正在关注家人的安全状态")
-                        .font(.system(size: 11))
+                        .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -436,7 +436,7 @@ struct GuardianSettingsView: View {
                         .font(.system(size: 13))
                     Spacer()
                     Text("需确认")
-                        .font(.system(size: 11))
+                        .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                     Image(systemName: "chevron.right")
                         .font(.system(size: 11))
@@ -459,7 +459,7 @@ struct GuardianSettingsView: View {
     private var devPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("开发者选项")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
 
             HStack {
@@ -474,7 +474,7 @@ struct GuardianSettingsView: View {
                         Image(systemName: coordinator.userRole == .protected_ ? "shield.fill" : "eye.fill")
                             .font(.system(size: 10))
                         Text(coordinator.userRole == .protected_ ? "被守护者" : "守护者")
-                            .font(.system(size: 11, weight: .medium))
+                            .font(.system(size: 12, weight: .medium))
                         Image(systemName: "arrow.triangle.2.circlepath")
                             .font(.system(size: 9))
                     }
@@ -496,7 +496,7 @@ struct GuardianSettingsView: View {
         )
         .overlay(alignment: .topTrailing) {
             Text("DEV")
-                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
                 .foregroundStyle(.white)
                 .padding(.horizontal, 5)
                 .padding(.vertical, 2)
@@ -548,7 +548,7 @@ struct GuardianSettingsView: View {
             Text(label).font(.system(size: 13))
             Spacer()
             Text(value)
-                .font(.system(size: 11.5))
+                .font(.system(size: 12))
                 .foregroundStyle(isWarning ? alert : .secondary)
         }
         .padding(.vertical, 2)

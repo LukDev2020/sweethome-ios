@@ -170,7 +170,7 @@ struct OrgDashboardView: View {
                 .font(.system(size: 24, weight: .bold))
                 .foregroundStyle(color)
             Text(label)
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
@@ -200,7 +200,7 @@ struct OrgDashboardView: View {
             }
 
             Text(statusLabel(member.status))
-                .font(.system(size: 11, weight: .medium))
+                .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(statusColor(member.status))
                 .padding(.horizontal, 8)
                 .padding(.vertical, 3)

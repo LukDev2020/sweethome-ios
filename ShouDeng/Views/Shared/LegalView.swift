@@ -92,7 +92,7 @@ struct PrivacyPolicyView: View {
 
     private func lastUpdated(_ date: String) -> some View {
         Text("最后更新：\(date)")
-            .font(.system(size: 11))
+            .font(.system(size: 12))
             .foregroundStyle(.secondary)
     }
 
@@ -117,7 +117,7 @@ struct PrivacyPolicyView: View {
                 Text(title)
                     .font(.system(size: 13, weight: .medium))
                 Text(detail)
-                    .font(.system(size: 12))
+                    .font(.system(size: 13))
                     .foregroundStyle(.secondary)
                     .lineSpacing(3)
             }
@@ -153,7 +153,7 @@ struct AboutView: View {
                     .foregroundStyle(.secondary)
 
                 Text("版本 \(version) (\(build))")
-                    .font(.system(size: 11))
+                    .font(.system(size: 12))
                     .foregroundStyle(.tertiary)
 
                 Spacer()
@@ -167,7 +167,7 @@ struct AboutView: View {
                     }
 
                     Text("© 2026 守灯安全")
-                        .font(.system(size: 11))
+                        .font(.system(size: 12))
                         .foregroundStyle(.tertiary)
                 }
                 .padding(.bottom, 32)

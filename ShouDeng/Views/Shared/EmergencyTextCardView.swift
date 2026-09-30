@@ -135,7 +135,7 @@ struct EmergencyTextCardView: View {
                     .padding(.horizontal, 16)
 
                     Text("语言不通时，将屏幕展示给身边的人。\n急救卡信息离线可用，不需要网络。")
-                        .font(.system(size: 11))
+                        .font(.system(size: 12))
                         .foregroundStyle(.secondary.opacity(0.7))
                         .multilineTextAlignment(.center)
                         .padding(.bottom, 24)

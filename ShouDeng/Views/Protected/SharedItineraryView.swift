@@ -122,7 +122,7 @@ struct SharedItineraryView: View {
 
                 if let arrival = item.arrivalTime {
                     Text("→")
-                        .font(.system(size: 10))
+                        .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                     Text(arrival.formatted(.dateTime.hour().minute()))
                         .font(.system(size: 12))
@@ -156,7 +156,7 @@ struct SharedItineraryView: View {
         }()
 
         return Text(text)
-            .font(.system(size: 11, weight: .medium))
+            .font(.system(size: 12, weight: .medium))
             .foregroundStyle(color)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)

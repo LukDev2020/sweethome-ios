@@ -50,14 +50,14 @@ struct DegradationBannerView: View {
                     .foregroundStyle(tintColor)
 
                 Text(messageForCurrentRole(warning))
-                    .font(.system(size: 11.5, weight: .medium))
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(ink.opacity(0.85))
                     .lineLimit(1)
 
                 Spacer()
 
                 Text("详情")
-                    .font(.system(size: 10))
+                    .font(.system(size: 12))
                     .foregroundStyle(ink.opacity(0.45))
             }
             .padding(.horizontal, 16)

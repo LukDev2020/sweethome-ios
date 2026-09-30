@@ -110,9 +110,9 @@ struct InsuranceReportView: View {
 
                 VStack(spacing: 4) {
                     Text("报告包含:")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 12, weight: .medium))
                     Text("位置轨迹 / SOS 记录 / 签到记录 / 医疗信息 / 数据完整性证明")
-                        .font(.system(size: 11))
+                        .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                 }
                 .padding(.top, 4)
@@ -149,7 +149,7 @@ struct InsuranceReportView: View {
             )
 
             Text("报告已存档。数据完整性可通过每日 SHA-256\nMerkle 根进行独立验证。")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 

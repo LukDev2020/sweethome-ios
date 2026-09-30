@@ -27,7 +27,7 @@ struct HotlineCardView: View {
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(ink)
                     Text("紧急号码")
-                        .font(.system(size: 9))
+                        .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 }
 
@@ -55,7 +55,7 @@ struct HotlineCardView: View {
                     .font(.system(size: 9))
                     .foregroundStyle(safe)
                 Text("使馆领保")
-                    .font(.system(size: 10))
+                    .font(.system(size: 12))
                     .foregroundStyle(.secondary)
 
                 Spacer()
@@ -65,7 +65,7 @@ struct HotlineCardView: View {
                     Link(destination: URL(string: "tel:\(phone.replacingOccurrences(of: "-", with: ""))")!) {
                         HStack(spacing: 3) {
                             Text(label)
-                                .font(.system(size: 10))
+                                .font(.system(size: 12))
                                 .foregroundStyle(.secondary)
                             Text(phone)
                                 .font(.system(size: 12, weight: .medium, design: .monospaced))
@@ -89,7 +89,7 @@ struct HotlineCardView: View {
                     .font(.system(size: 9))
                     .foregroundStyle(.blue)
                 Text("12308热线")
-                    .font(.system(size: 10))
+                    .font(.system(size: 12))
                     .foregroundStyle(.secondary)
                 Spacer()
                 Link(destination: URL(string: "tel:+861012308")!) {
@@ -108,7 +108,7 @@ struct HotlineCardView: View {
                         onTapChange()
                     } label: {
                         Text("更换")
-                            .font(.system(size: 10))
+                            .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -117,7 +117,7 @@ struct HotlineCardView: View {
                         onRemove()
                     } label: {
                         Text("移除")
-                            .font(.system(size: 10))
+                            .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                     }
                 }

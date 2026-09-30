@@ -150,7 +150,7 @@ struct GlobeMapView: View {
             if pt.z > 0.4 {
                 let resolved = ctx.resolve(
                     Text(pin.label)
-                        .font(.system(size: pin.isMe ? 9.5 : 8, weight: .medium))
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.white.opacity(0.8 * alpha))
                 )
                 ctx.draw(resolved, at: CGPoint(x: pt.x, y: pt.y - glowR - 5), anchor: .bottom)

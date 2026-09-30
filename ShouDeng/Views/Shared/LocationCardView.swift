@@ -60,7 +60,7 @@ struct LocationCardView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     if let label {
                         Text(label)
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
@@ -72,10 +72,10 @@ struct LocationCardView: View {
                         HStack(spacing: 4) {
                             Circle().fill(pin.color).frame(width: 6, height: 6)
                             Text(pin.name)
-                                .font(.system(size: 10, weight: .medium))
+                                .font(.system(size: 12, weight: .medium))
                             if let status = pin.status {
                                 Text("· \(status)")
-                                    .font(.system(size: 9))
+                                    .font(.system(size: 11))
                                     .foregroundStyle(.white.opacity(0.8))
                             }
                         }
@@ -86,7 +86,7 @@ struct LocationCardView: View {
                         .clipShape(Capsule())
                     } else if let mins = lastUpdateMinutes {
                         Text(mins < 1 ? "刚刚更新" : "\(mins) 分钟前更新")
-                            .font(.system(size: 9))
+                            .font(.system(size: 11))
                             .foregroundStyle(.white.opacity(0.9))
                             .padding(.horizontal, 7)
                             .padding(.vertical, 2)
@@ -111,7 +111,7 @@ struct LocationCardView: View {
                                     Image(systemName: "arrow.down.right.and.arrow.up.left")
                                         .font(.system(size: 9))
                                     Text("收起")
-                                        .font(.system(size: 10))
+                                        .font(.system(size: 12))
                                 }
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 8)
@@ -146,7 +146,7 @@ struct LocationCardView: View {
             // Address from reverse geocoding
             if let address = addressText {
                 Text(address)
-                    .font(.system(size: 11))
+                    .font(.system(size: 12))
                     .foregroundStyle(ink.opacity(0.6))
                     .lineLimit(2)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -228,7 +228,7 @@ struct LocationCardView: View {
                 }
             }
             Text(pin.name)
-                .font(.system(size: isFocused ? 9 : 8, weight: isFocused ? .semibold : .medium))
+                .font(.system(size: 11, weight: isFocused ? .semibold : .medium))
                 .foregroundStyle(ink)
                 .lineLimit(1)
         }
@@ -373,7 +373,7 @@ struct FullScreenMapView: View {
                             .fill(safe.opacity(0.6))
                             .frame(width: 16, height: 3)
                         Text("24h 轨迹")
-                            .font(.system(size: 10))
+                            .font(.system(size: 12))
                     }
                     .foregroundStyle(.white)
                     .padding(.horizontal, 8)
@@ -465,7 +465,7 @@ struct FullScreenMapView: View {
             }
             if let trail = trailCoordinates[pin.id] {
                 Text("过去 24 小时 · \(trail.count) 个位置记录")
-                    .font(.system(size: 11))
+                    .font(.system(size: 12))
                     .foregroundStyle(.white.opacity(0.5))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -494,7 +494,7 @@ struct FullScreenMapView: View {
                 }
             }
             Text(pin.name)
-                .font(.system(size: 10, weight: .semibold))
+                .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(ink)
                 .lineLimit(1)
         }

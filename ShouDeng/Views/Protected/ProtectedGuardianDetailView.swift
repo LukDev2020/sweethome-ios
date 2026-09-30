@@ -49,7 +49,7 @@ struct ProtectedGuardianDetailView: View {
                     revocationPanel
 
                     Text("延迟生效为胁迫场景准备：被逼当场关闭时，家人仍能在六小时内看到。")
-                        .font(.system(size: 10.5))
+                        .font(.system(size: 12))
                         .foregroundStyle(.secondary.opacity(0.7))
                         .padding(.top, 8)
                         .padding(.bottom, 24)
@@ -174,7 +174,7 @@ struct ProtectedGuardianDetailView: View {
                         .font(.system(size: 15, weight: .medium))
                     if g.isOnDuty {
                         Text("值班中")
-                            .font(.system(size: 9.5))
+                            .font(.system(size: 11))
                             .padding(.horizontal, 7)
                             .padding(.vertical, 2)
                             .background(safe.opacity(0.14))
@@ -183,7 +183,7 @@ struct ProtectedGuardianDetailView: View {
                     }
                 }
                 Text("\(g.user.cityName) · 自 \(linkedSinceText(g.linkedSince)) 起")
-                    .font(.system(size: 11))
+                    .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }
             Spacer()
@@ -207,7 +207,7 @@ struct ProtectedGuardianDetailView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("日常可见")
-                    .font(.system(size: 11))
+                    .font(.system(size: 12))
                     .foregroundStyle(.secondary)
                 Spacer()
                 if isSavingPermissions {
@@ -216,7 +216,7 @@ struct ProtectedGuardianDetailView: View {
                 }
                 if let error = permissionSaveError {
                     Text(error)
-                        .font(.system(size: 10))
+                        .font(.system(size: 12))
                         .foregroundStyle(.red)
                         .lineLimit(1)
                 }
@@ -255,7 +255,7 @@ struct ProtectedGuardianDetailView: View {
     private var emergencyPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("紧急时自动开启")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             fixedRow("高频位置上报", value: "始终开启", isOk: true)
             HStack {
@@ -285,7 +285,7 @@ struct ProtectedGuardianDetailView: View {
     private var revocationPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("安全撤销")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             fixedRow("关闭共享延迟生效", value: "6 小时后", isOk: false)
 

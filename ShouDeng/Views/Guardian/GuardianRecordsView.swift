@@ -124,7 +124,7 @@ struct GuardianRecordsView: View {
             // Export
             VStack(alignment: .leading, spacing: 8) {
                 Text("导出")
-                    .font(.system(size: 11))
+                    .font(.system(size: 12))
                     .foregroundStyle(.secondary)
                 exportRow("带时间戳的 PDF", value: "需升级")
                 exportRow("位置轨迹 GPX", value: "需升级")
@@ -146,7 +146,7 @@ struct GuardianRecordsView: View {
                 .font(.system(size: 18, weight: .bold, design: .rounded))
                 .foregroundStyle(color)
             Text(label)
-                .font(.system(size: 10))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
@@ -168,7 +168,7 @@ struct GuardianRecordsView: View {
                     .font(.system(size: 12.5))
                     .lineLimit(2)
                 Text(date)
-                    .font(.system(size: 10))
+                    .font(.system(size: 12))
                     .foregroundStyle(.tertiary)
             }
             Spacer()
@@ -233,7 +233,7 @@ struct GuardianRecordsView: View {
             Text(label).font(.system(size: 13))
             Spacer()
             Text(value)
-                .font(.system(size: 11.5))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 2)
@@ -245,7 +245,7 @@ struct GuardianRecordsView: View {
         VStack(spacing: 12) {
             VStack(spacing: 2) {
                 Text(scheduleSubtitle)
-                    .font(.system(size: 12))
+                    .font(.system(size: 13))
                     .foregroundStyle(.secondary)
             }
 
@@ -282,7 +282,7 @@ struct GuardianRecordsView: View {
             HStack {
                 ForEach(["00", "04", "08", "12", "16", "20", "24"], id: \.self) { hour in
                     Text(hour)
-                        .font(.system(size: 9.5))
+                        .font(.system(size: 11))
                         .foregroundStyle(ink.opacity(0.45))
                     if hour != "24" { Spacer() }
                 }
@@ -294,7 +294,7 @@ struct GuardianRecordsView: View {
         ZStack {
             Rectangle().fill(bgColor)
             Text(label)
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(textColor)
                 .lineLimit(1)
         }
@@ -304,7 +304,7 @@ struct GuardianRecordsView: View {
     private var todayShiftsPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("今日班次")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             shiftRow("你 · 多伦多", value: "08:00 – 20:00 值班中", isOk: true)
             shiftRow("爸爸 · 多伦多", value: "20:00 – 02:00 已确认", isOk: false)
@@ -322,7 +322,7 @@ struct GuardianRecordsView: View {
             Text(label).font(.system(size: 13))
             Spacer()
             Text(value)
-                .font(.system(size: 11.5))
+                .font(.system(size: 12))
                 .foregroundStyle(isOk ? safe : .primary)
         }
         .padding(.vertical, 2)
@@ -331,7 +331,7 @@ struct GuardianRecordsView: View {
     private var gapHandlingPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("缺口处理")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             toggleRow("无人时段转响应中心", isOn: $routeToCenter)
             toggleRow("交接前提醒", isOn: $handoffReminder)
@@ -357,7 +357,7 @@ struct GuardianRecordsView: View {
     private var upsellCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("凌晨两点到六点三地家人都在睡。这四小时目前由专员补上——订阅的价值就是这块空缺。")
-                .font(.system(size: 12))
+                .font(.system(size: 13))
                 .foregroundStyle(.secondary)
             NavigationLink {
                 GuardianPlanBillingView()
@@ -484,20 +484,20 @@ struct GuardianRecordsView: View {
                         .foregroundStyle(ink)
                     if member.isMe {
                         Text("(我)")
-                            .font(.system(size: 11))
+                            .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                     }
                 }
                 HStack(spacing: 4) {
                     Text(member.role.label)
-                        .font(.system(size: 11))
+                        .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                     if !member.city.isEmpty {
                         Text("·")
-                            .font(.system(size: 11))
+                            .font(.system(size: 12))
                             .foregroundStyle(.quaternary)
                         Text(member.city)
-                            .font(.system(size: 11))
+                            .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -565,7 +565,7 @@ struct GuardianRecordsView: View {
 
     private func statusBadge(_ status: GuardianMember.Status) -> some View {
         Text(status.label)
-            .font(.system(size: 10, weight: .medium))
+            .font(.system(size: 12, weight: .medium))
             .foregroundStyle(statusColor(status))
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
@@ -608,10 +608,10 @@ struct GuardianRecordsView: View {
                             .font(.system(size: 24))
                             .foregroundStyle(.tertiary)
                         Text("暂无紧急联络人")
-                            .font(.system(size: 12))
+                            .font(.system(size: 13))
                             .foregroundStyle(.tertiary)
                         Text("录入邻居、社区、当地医院、大使馆等")
-                            .font(.system(size: 11))
+                            .font(.system(size: 12))
                             .foregroundStyle(.quaternary)
                     }
                     .padding(.vertical, 16)
@@ -648,14 +648,14 @@ struct GuardianRecordsView: View {
                     .font(.system(size: 13, weight: .medium))
                 HStack(spacing: 4) {
                     Text(contact.relationship)
-                        .font(.system(size: 10))
+                        .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                     if !contact.phone.isEmpty {
                         Text("·")
-                            .font(.system(size: 10))
+                            .font(.system(size: 12))
                             .foregroundStyle(.quaternary)
                         Text(contact.phone)
-                            .font(.system(size: 10, design: .monospaced))
+                            .font(.system(size: 12, design: .monospaced))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -709,7 +709,7 @@ struct GuardianRecordsView: View {
                     Text("邀请新守护者加入")
                         .font(.system(size: 14, weight: .medium))
                     Text("通过短信、微信或链接邀请家人加入守护圈")
-                        .font(.system(size: 11))
+                        .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -924,7 +924,7 @@ struct InviteGuardianSheet: View {
 
                 Section {
                     Text("邀请链接 24 小时内有效。对方接受后将自动加入守护圈。")
-                        .font(.system(size: 11))
+                        .font(.system(size: 12))
                         .foregroundStyle(.tertiary)
                 }
             }
@@ -946,9 +946,9 @@ struct InviteGuardianSheet: View {
                 .padding(.top, 5)
             VStack(alignment: .leading, spacing: 1) {
                 Text(title)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: 12, weight: .medium))
                 Text(desc)
-                    .font(.system(size: 10))
+                    .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }
         }

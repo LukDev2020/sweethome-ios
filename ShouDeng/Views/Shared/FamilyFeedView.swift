@@ -81,7 +81,7 @@ struct FamilyFeedView: View {
                     ForEach(Array(groupedByDate.enumerated()), id: \.offset) { _, group in
                         // Date header
                         Text(group.dateLabel)
-                            .font(.system(size: 11, weight: .medium))
+                            .font(.system(size: 12, weight: .medium))
                             .foregroundStyle(.secondary)
                             .padding(.vertical, 8)
 
@@ -368,10 +368,10 @@ struct MessageBubbleView: View {
                 if !isOwnMessage {
                     HStack(spacing: 4) {
                         Text(post.authorName)
-                            .font(.system(size: 11, weight: .medium))
+                            .font(.system(size: 12, weight: .medium))
                             .foregroundStyle(.secondary)
                         Text(timeString(post.createdAt))
-                            .font(.system(size: 10))
+                            .font(.system(size: 12))
                             .foregroundStyle(.tertiary)
                     }
                 }
@@ -432,7 +432,7 @@ struct MessageBubbleView: View {
                 // Time for own messages
                 if isOwnMessage {
                     Text(timeString(post.createdAt))
-                        .font(.system(size: 10))
+                        .font(.system(size: 12))
                         .foregroundStyle(.tertiary)
                 }
 
@@ -445,7 +445,7 @@ struct MessageBubbleView: View {
                             Image(systemName: "bubble.right")
                                 .font(.system(size: 10))
                             Text("\(post.commentCount) 条回复")
-                                .font(.system(size: 11))
+                                .font(.system(size: 12))
                         }
                         .foregroundStyle(.secondary)
                     }
@@ -530,13 +530,13 @@ struct MessageBubbleView: View {
                     VStack(alignment: .leading, spacing: 1) {
                         HStack(spacing: 3) {
                             Text(comment.authorName)
-                                .font(.system(size: 10, weight: .medium))
+                                .font(.system(size: 12, weight: .medium))
                             Text(timeString(comment.createdAt))
-                                .font(.system(size: 9))
+                                .font(.system(size: 11))
                                 .foregroundStyle(.tertiary)
                         }
                         Text(comment.text)
-                            .font(.system(size: 12))
+                            .font(.system(size: 13))
                     }
                 }
             }

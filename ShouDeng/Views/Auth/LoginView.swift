@@ -188,7 +188,7 @@ struct LoginView: View {
                         .padding(.top, 10)
 
                     Text("VELAR CARE")
-                        .font(.system(size: 11.5, weight: .medium))
+                        .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(blue)
                         .tracking(3.5)
                         .padding(.top, 4)
@@ -273,13 +273,13 @@ struct LoginView: View {
             if let errorMessage {
                 VStack(spacing: 4) {
                     Text(errorMessage)
-                        .font(.system(size: 11.5))
+                        .font(.system(size: 12))
                         .foregroundStyle(red)
 
                     if codeSent && failedAttempts > 0 {
                         let remaining = maxAttempts - failedAttempts
                         Text(String(format: lang.localized("login.attempts.warning"), remaining))
-                            .font(.system(size: 11, weight: .medium))
+                            .font(.system(size: 12, weight: .medium))
                             .foregroundStyle(remaining <= 2 ? red : ink3)
                     }
                 }
@@ -327,7 +327,7 @@ struct LoginView: View {
                         .foregroundStyle(ink2)
                         .underline(true, color: ink2)
                 }
-                .font(.system(size: 11.5))
+                .font(.system(size: 12))
             }
             .padding(.top, 13)
 
@@ -356,6 +356,15 @@ struct LoginView: View {
         errorMessage = nil
         isLoading = true
         defer { isLoading = false }
+
+        #if DEBUG
+        // Dev shortcut: phone "0000000000" → instant login, no Firebase/backend
+        let cleaned = phone.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
+        if cleaned == "00000000" {
+            coordinator.authManager.devLogin()
+            return
+        }
+        #endif
 
         do {
             if codeSent {

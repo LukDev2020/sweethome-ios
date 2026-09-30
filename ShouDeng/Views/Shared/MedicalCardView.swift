@@ -152,7 +152,7 @@ struct MedicalCardView: View {
                 }
 
                 Text("此信息存储在服务器，可通过紧急分享链接供急救人员查看。不需要解锁手机。")
-                    .font(.system(size: 11))
+                    .font(.system(size: 12))
                     .foregroundStyle(.secondary.opacity(0.7))
                     .padding(.top, 8)
                     .padding(.bottom, 24)
@@ -166,7 +166,7 @@ struct MedicalCardView: View {
     private func section<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             content()
         }

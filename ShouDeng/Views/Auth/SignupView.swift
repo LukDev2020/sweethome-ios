@@ -61,13 +61,13 @@ struct SignupView: View {
                 if let errorMessage, !isLocked {
                     VStack(spacing: 4) {
                         Text(errorMessage)
-                            .font(.system(size: 12))
+                            .font(.system(size: 13))
                             .foregroundStyle(red)
 
                         if step == .code && failedAttempts > 0 {
                             let remaining = maxAttempts - failedAttempts
                             Text(String(format: lang.localized("login.attempts.warning"), remaining))
-                                .font(.system(size: 11, weight: .medium))
+                                .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(remaining <= 2 ? red : ink3)
                         }
                     }
@@ -241,7 +241,7 @@ struct SignupView: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text(lang.localized("signup.role.title"))
-                        .font(.system(size: 11))
+                        .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                     roleOption(.protected_, icon: "shield.fill",
                                title: lang.localized("signup.role.protected"),
@@ -266,10 +266,10 @@ struct SignupView: View {
                     .frame(width: 28)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(title)
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(ink)
                     Text(desc)
-                        .font(.system(size: 11))
+                        .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                 }
                 Spacer()

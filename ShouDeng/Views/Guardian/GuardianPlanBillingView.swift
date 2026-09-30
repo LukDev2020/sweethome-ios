@@ -104,7 +104,7 @@ struct GuardianPlanBillingView: View {
                         .foregroundStyle(ink)
                     if let expires = status.expiresDate {
                         Text("有效期至 \(expires.formatted(.dateTime.year().month().day()))")
-                            .font(.system(size: 12))
+                            .font(.system(size: 13))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -133,7 +133,7 @@ struct GuardianPlanBillingView: View {
                             .font(.system(size: 14, weight: .medium))
                         if cycle == .yearly {
                             Text("省20%")
-                                .font(.system(size: 10, weight: .bold))
+                                .font(.system(size: 12, weight: .bold))
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
@@ -402,23 +402,23 @@ struct GuardianPlanBillingView: View {
             // Header row
             HStack(spacing: 0) {
                 Text("功能")
-                    .font(.system(size: 10, weight: .medium))
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Text("免费")
-                    .font(.system(size: 10, weight: .medium))
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.secondary)
                     .frame(width: 40)
                 Text("单人")
-                    .font(.system(size: 10, weight: .medium))
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(safe)
                     .frame(width: 40)
                 Text("家庭")
-                    .font(.system(size: 10, weight: .medium))
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(accent)
                     .frame(width: 40)
                 Text("企业")
-                    .font(.system(size: 10, weight: .medium))
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(warm)
                     .frame(width: 40)
             }
@@ -447,23 +447,23 @@ struct GuardianPlanBillingView: View {
     private func comparisonRow(_ feature: String, free: String, family: String, enhanced: String, ultimate: String) -> some View {
         HStack(spacing: 0) {
             Text(feature)
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(ink)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Text(free)
-                .font(.system(size: 10))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
                 .frame(width: 40)
             Text(family)
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(safe)
                 .frame(width: 40)
             Text(enhanced)
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(accent)
                 .frame(width: 40)
             Text(ultimate)
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(warm)
                 .frame(width: 40)
         }
@@ -474,7 +474,7 @@ struct GuardianPlanBillingView: View {
     private func comparisonRow(_ feature: String, free: Bool, family: Bool, enhanced: Bool, ultimate: Bool) -> some View {
         HStack(spacing: 0) {
             Text(feature)
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(ink)
                 .frame(maxWidth: .infinity, alignment: .leading)
             checkmark(free, color: .secondary).frame(width: 40)
@@ -505,7 +505,7 @@ struct GuardianPlanBillingView: View {
                     .foregroundStyle(ink)
             }
             Text("超大型组织、特殊需求或批量折扣，请联系我们获取专属报价")
-                .font(.system(size: 12))
+                .font(.system(size: 13))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Button {
@@ -537,14 +537,14 @@ struct GuardianPlanBillingView: View {
             // Error
             if let error = coordinator.storeKitManager.errorMessage {
                 Text(error)
-                    .font(.system(size: 12))
+                    .font(.system(size: 13))
                     .foregroundStyle(.red)
                     .multilineTextAlignment(.center)
             }
 
             if let error = coordinator.paymentMethodManager.errorMessage {
                 Text(error)
-                    .font(.system(size: 12))
+                    .font(.system(size: 13))
                     .foregroundStyle(.red)
                     .multilineTextAlignment(.center)
             }
@@ -581,7 +581,7 @@ struct GuardianPlanBillingView: View {
 
             // Legal
             Text("通过 Apple Pay 订阅将通过您的 Apple ID 账户扣款。其他支付方式通过第三方支付平台处理。除非在当前订阅期结束前至少 24 小时关闭自动续订，否则订阅将自动续订。")
-                .font(.system(size: 10))
+                .font(.system(size: 12))
                 .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 8)
@@ -625,13 +625,13 @@ private struct PlanCardView: View {
                                 .foregroundStyle(ink)
                         }
                         Text(subtitle)
-                            .font(.system(size: 12))
+                            .font(.system(size: 13))
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
                     if isPopular {
                         Text("推荐")
-                            .font(.system(size: 10, weight: .bold))
+                            .font(.system(size: 12, weight: .bold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
@@ -650,7 +650,7 @@ private struct PlanCardView: View {
                         .foregroundStyle(.secondary)
                     Spacer()
                     Text(usdPrice + period)
-                        .font(.system(size: 12))
+                        .font(.system(size: 13))
                         .foregroundStyle(.tertiary)
                 }
 

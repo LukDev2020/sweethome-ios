@@ -216,6 +216,38 @@ final class AppCoordinator: ObservableObject {
     }
 
     private func onLoginComplete() {
+        #if DEBUG
+        // Dev login: seed mock user and data so the app is fully navigable
+        if let userId = authManager.currentUserId, userId.hasPrefix("dev_") {
+            let devUser = User(
+                id: userId,
+                displayName: "开发测试",
+                role: userRole,
+                avatarInitial: "测",
+                timeZone: TimeZone(identifier: "America/Toronto") ?? .current,
+                countryCode: "CA",
+                cityName: "多伦多",
+                createdAt: Date()
+            )
+            currentUser = devUser
+            if userRole == .guardian && protectedPersons.isEmpty {
+                protectedPersons = Self.devMockProtectedPersons
+            }
+            if userRole == .protected_ && myGuardians.isEmpty {
+                myGuardians = Self.devMockGuardians
+            }
+            if selectedHotline == nil {
+                selectedHotline = SelectedHotline(
+                    countryCode: "CA", countryName: "加拿大", flag: "🇨🇦",
+                    emergency: "911", embassy: "+1-613-562-1616",
+                    selectedPhone: "+1-416-594-2308", selectedLabel: "多伦多"
+                )
+            }
+            print("[AppCoordinator] Dev login: seeded user '\(devUser.displayName)' role=\(userRole.rawValue)")
+            return
+        }
+        #endif
+
         // Flush any queued offline requests
         Task { await apiClient.flushOfflineQueue() }
 

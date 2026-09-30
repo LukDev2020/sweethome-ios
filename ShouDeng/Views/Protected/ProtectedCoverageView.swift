@@ -34,7 +34,7 @@ struct ProtectedCoverageView: View {
                     Text("所在地覆盖")
                         .font(.system(size: 20, weight: .bold))
                     Text("换个国家，保护跟着换")
-                        .font(.system(size: 12))
+                        .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                 }
                 .padding(.top, 8)
@@ -49,7 +49,7 @@ struct ProtectedCoverageView: View {
                 weakNetworkPanel
 
                 Text("覆盖能力需要真实的本地对接与人力，是免费产品最难复制的部分。")
-                    .font(.system(size: 10.5))
+                    .font(.system(size: 12))
                     .foregroundStyle(.secondary.opacity(0.7))
                     .padding(.top, 8)
                     .padding(.bottom, 24)
@@ -66,7 +66,7 @@ struct ProtectedCoverageView: View {
     private var localResourcesPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("\(countryName)\(cityName.isEmpty ? "" : " · \(cityName)")（已自动识别）")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             resourceRow("当地紧急号码", value: "112 已预置", isOk: true)
             resourceRow("响应中心语言", value: "中 / 英 / 俄", isOk: true)
@@ -85,7 +85,7 @@ struct ProtectedCoverageView: View {
     private var offlinePackPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("离线包 · 没有网络时仍可用")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             resourceRow("紧急号码与使馆信息", value: "已下载", isOk: true)
             resourceRow("短信求助模板", value: "已下载", isOk: true)
@@ -103,7 +103,7 @@ struct ProtectedCoverageView: View {
     private var weakNetworkPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("弱网降级")
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             toggleRow("无数据网络时改走短信", isOn: $smsDowngrade)
             toggleRow("低电量时降低上报频率", isOn: $lowPowerSaving)

@@ -11,6 +11,7 @@ import SwiftUI
 struct OnboardingView: View {
     @Binding var isComplete: Bool
     @EnvironmentObject var coordinator: AppCoordinator
+    @AppStorage("hasCompletedOnboardingOnce") private var hasCompletedOnce = false
     @State private var currentPage = 0
 
     // Design system
@@ -26,11 +27,30 @@ struct OnboardingView: View {
             inkDeep.ignoresSafeArea()
 
             VStack(spacing: 0) {
+                // Skip button (only after first-ever completion)
+                HStack {
+                    Spacer()
+                    if hasCompletedOnce {
+                        Button {
+                            skipToHome()
+                        } label: {
+                            Text("跳过")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.6))
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                        }
+                    }
+                }
+                .padding(.top, 8)
+                .padding(.trailing, 4)
+
                 // Progress dots
                 progressDots
-                    .padding(.top, 20)
+                    .padding(.top, 4)
 
                 Spacer()
+                    .frame(maxHeight: 60)
 
                 // Content
                 screenContent(screens[currentPage])
@@ -42,6 +62,16 @@ struct OnboardingView: View {
                     .padding(.bottom, 48)
             }
             .padding(.horizontal, 28)
+        }
+    }
+
+    private func skipToHome() {
+        coordinator.locationManager.start()
+        coordinator.heartbeatService.start()
+        coordinator.pushService.registerForPushNotifications()
+        coordinator.deviceHealthMonitor.beginMonitoring()
+        withAnimation {
+            isComplete = true
         }
     }
 
@@ -75,7 +105,7 @@ struct OnboardingView: View {
 
             // Body
             Text(screen.body)
-                .font(.system(size: 14.5))
+                .font(.system(size: 16))
                 .foregroundStyle(.white.opacity(0.75))
                 .lineSpacing(6)
                 .multilineTextAlignment(.leading)
@@ -96,6 +126,7 @@ struct OnboardingView: View {
                 }
             } else {
                 // Start services now that user has been informed
+                hasCompletedOnce = true
                 coordinator.locationManager.start()
                 coordinator.heartbeatService.start()
                 coordinator.pushService.registerForPushNotifications()

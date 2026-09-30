@@ -276,7 +276,7 @@ final class BaselineScorer {
 
         let checkInHoursLate = max(0, checkInGap - baseline.averageCheckInGap) / 3600
         let checkInExplanation: String
-        if let lastCheckIn {
+        if lastCheckIn != nil {
             let usualHour = baseline.checkInTimes.max(by: { $0.count < $1.count })?.hour ?? 9
             checkInExplanation = String(format: "通常在%d点前报平安，已超时%.0f小时", usualHour, checkInHoursLate)
         } else {

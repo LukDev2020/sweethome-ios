@@ -224,7 +224,7 @@ struct ConsulateDetailSheet: View {
                     }
 
                     Text("电话号码可直接拨打。数据离线可用。\n号码来源：中国外交部及各使领馆官网。")
-                        .font(.system(size: 11))
+                        .font(.system(size: 12))
                         .foregroundStyle(.secondary.opacity(0.7))
                         .multilineTextAlignment(.center)
                         .padding(.top, 8)
