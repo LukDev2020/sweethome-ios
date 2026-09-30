@@ -35,6 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const admin = __importStar(require("firebase-admin"));
+const crypto = __importStar(require("crypto"));
 const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
 const db = admin.firestore();
@@ -171,8 +172,7 @@ router.get("/share/:token", async (req, res) => {
 router.post("/share", auth_1.authMiddleware, async (req, res) => {
     const uid = req.uid;
     try {
-        const token = Math.random().toString(36).substring(2) +
-            Math.random().toString(36).substring(2);
+        const token = crypto.randomBytes(32).toString("hex");
         const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year
         await db.collection("medical_card_shares").doc(token).set({
             userId: uid,

@@ -68,8 +68,7 @@ router.get("/", async (req, res) => {
                 type: data.type,
                 description: data.description,
                 detail: data.detail || null,
-                timestamp: data.timestamp?.toDate?.()?.toISOString() ||
-                    new Date().toISOString(),
+                timestamp: data.timestamp?.toDate?.()?.toISOString() || null,
             };
         });
         res.json({ entries });

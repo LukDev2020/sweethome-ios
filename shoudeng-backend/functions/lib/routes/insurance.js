@@ -75,8 +75,8 @@ router.post("/claim-materials", async (req, res) => {
                     triggeredAt: data.triggeredAt.toDate().toISOString(),
                     triggerMethod: data.triggerMethod || null,
                     resolution: data.resolution || null,
-                    latitude: data.latitude || null,
-                    longitude: data.longitude || null,
+                    latitude: includeLocation ? (data.latitude || null) : null,
+                    longitude: includeLocation ? (data.longitude || null) : null,
                 };
             });
         }
@@ -94,8 +94,8 @@ router.post("/claim-materials", async (req, res) => {
                 const data = d.data();
                 return {
                     timestamp: data.timestamp.toDate().toISOString(),
-                    latitude: data.latitude || null,
-                    longitude: data.longitude || null,
+                    latitude: includeLocation ? (data.latitude || null) : null,
+                    longitude: includeLocation ? (data.longitude || null) : null,
                     note: data.note || null,
                 };
             });

@@ -122,15 +122,17 @@ router.post("/dismiss", async (req, res) => {
     const uid = req.uid;
     try {
         const timerRef = db.collection("home_timers").doc(uid);
-        const timerDoc = await timerRef.get();
-        if (!timerDoc.exists || timerDoc.data().status !== "active") {
-            res.status(404).json({ error: "No active timer" });
-            return;
-        }
         const now = admin.firestore.Timestamp.now();
-        await timerRef.update({
-            status: "dismissed",
-            dismissedAt: now,
+        // M1 fix: use transaction to prevent race condition
+        await db.runTransaction(async (transaction) => {
+            const timerDoc = await transaction.get(timerRef);
+            if (!timerDoc.exists || timerDoc.data().status !== "active") {
+                throw new Error("NO_ACTIVE_TIMER");
+            }
+            transaction.update(timerRef, {
+                status: "dismissed",
+                dismissedAt: now,
+            });
         });
         // Add timeline entry
         await db.collection("timeline_entries").add({
@@ -165,6 +167,10 @@ router.post("/dismiss", async (req, res) => {
         res.json({ success: true });
     }
     catch (error) {
+        if (error.message === "NO_ACTIVE_TIMER") {
+            res.status(404).json({ error: "No active timer" });
+            return;
+        }
         console.error("[HomeTimer] dismiss error:", error);
         res.status(500).json({ error: "Failed to dismiss timer" });
     }

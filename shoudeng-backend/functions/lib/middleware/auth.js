@@ -1,44 +1,24 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authMiddleware = authMiddleware;
-const admin = __importStar(require("firebase-admin"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+function getJwtSecret() {
+    const secret = process.env.JWT_SECRET;
+    if (secret)
+        return secret;
+    const isDev = process.env.FUNCTIONS_EMULATOR === "true" || !!process.env.JEST_WORKER_ID;
+    if (!isDev) {
+        throw new Error("JWT_SECRET environment variable is required in production");
+    }
+    return "shoudeng-dev-jwt-secret-do-not-use-in-prod";
+}
 /**
  * Decode a token to extract uid.
- * In emulator mode, decodes JWT payload directly (accepts custom tokens
- * and cross-project ID tokens). In production, uses full verification.
+ * In emulator mode, decodes JWT payload directly (accepts any JWT shape).
+ * In production, verifies the JWT signature and checks token type.
  */
 async function decodeToken(token) {
     if (process.env.FUNCTIONS_EMULATOR === "true") {
@@ -50,11 +30,14 @@ async function decodeToken(token) {
             throw new Error("Invalid token format");
         }
     }
-    const decoded = await admin.auth().verifyIdToken(token);
-    return decoded.uid;
+    const payload = jsonwebtoken_1.default.verify(token, getJwtSecret());
+    if (payload.type !== "access") {
+        throw new Error("Not an access token");
+    }
+    return payload.uid;
 }
 /**
- * Middleware that verifies Firebase Auth ID token from Authorization header.
+ * Middleware that verifies JWT access token from Authorization header.
  * Sets req.uid on success.
  */
 async function authMiddleware(req, res, next) {

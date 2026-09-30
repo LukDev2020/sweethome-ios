@@ -136,13 +136,20 @@ router.post("/accept", async (req, res) => {
                 throw new Error("USER_NOT_FOUND");
             }
             const creatorRole = creatorDoc.data().role;
+            const acceptorRole = acceptorDoc.data().role;
             let guardianId;
             let protectedPersonId;
             if (creatorRole === "protected") {
+                if (acceptorRole !== "guardian") {
+                    throw new Error("ROLE_MISMATCH");
+                }
                 protectedPersonId = inviteData.createdBy;
                 guardianId = uid;
             }
             else {
+                if (acceptorRole !== "protected") {
+                    throw new Error("ROLE_MISMATCH");
+                }
                 guardianId = inviteData.createdBy;
                 protectedPersonId = uid;
             }
@@ -193,6 +200,9 @@ router.post("/accept", async (req, res) => {
         }
         else if (error.message === "USER_NOT_FOUND") {
             res.status(404).json({ error: "User not found" });
+        }
+        else if (error.message === "ROLE_MISMATCH") {
+            res.status(400).json({ error: "Guardian and protected person roles do not match" });
         }
         else {
             console.error("[Invite] accept error:", error);

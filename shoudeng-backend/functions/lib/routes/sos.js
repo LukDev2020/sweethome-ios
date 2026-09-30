@@ -119,11 +119,12 @@ router.post("/trigger", async (req, res) => {
  * Resolve an active SOS event (guardian "I've taken over" or protected person cancel).
  */
 router.post("/resolve", async (req, res) => {
-    const { sosEventId, resolvedBy, resolution } = req.body;
-    if (!sosEventId || !resolvedBy || !resolution) {
+    const uid = req.uid;
+    const { sosEventId, resolution } = req.body;
+    if (!sosEventId || !resolution) {
         res
             .status(400)
-            .json({ error: "sosEventId, resolvedBy, and resolution are required" });
+            .json({ error: "sosEventId and resolution are required" });
         return;
     }
     try {
@@ -138,11 +139,23 @@ router.post("/resolve", async (req, res) => {
             res.status(409).json({ error: "SOS already resolved" });
             return;
         }
+        // C2 fix: verify caller is the protected person or a linked guardian
+        const isProtected = sosData.protectedPersonId === uid;
+        let isGuardian = false;
+        if (!isProtected) {
+            const linkId = `${uid}_${sosData.protectedPersonId}`;
+            const linkDoc = await db.collection("guardian_links").doc(linkId).get();
+            isGuardian = linkDoc.exists && linkDoc.data()?.status === "active";
+        }
+        if (!isProtected && !isGuardian) {
+            res.status(403).json({ error: "Not authorized to resolve this SOS event" });
+            return;
+        }
         const now = admin.firestore.Timestamp.now();
         await sosRef.update({
             escalationState: "resolved",
             resolvedAt: now,
-            resolvedBy,
+            resolvedBy: uid,
             resolution,
         });
         // Add timeline entry
@@ -163,7 +176,7 @@ router.post("/resolve", async (req, res) => {
         });
         // Notify the protected person that a guardian has taken over
         if (resolution === "guardianConfirmedSafe") {
-            const resolverDoc = await db.collection("users").doc(resolvedBy).get();
+            const resolverDoc = await db.collection("users").doc(uid).get();
             const resolverName = resolverDoc.exists
                 ? resolverDoc.data().displayName
                 : "守护者";
@@ -182,6 +195,7 @@ router.post("/resolve", async (req, res) => {
  * Delegates to Twilio service.
  */
 router.post("/voice-call", async (req, res) => {
+    const uid = req.uid;
     const { guardianId, sosEventId, protectedPersonName } = req.body;
     if (!guardianId || !sosEventId) {
         res
@@ -190,6 +204,25 @@ router.post("/voice-call", async (req, res) => {
         return;
     }
     try {
+        // C1 fix: verify caller is the SOS's protected person or a linked guardian
+        const sosRef = db.collection("sos_events").doc(sosEventId);
+        const sosDoc = await sosRef.get();
+        if (!sosDoc.exists) {
+            res.status(404).json({ error: "SOS event not found" });
+            return;
+        }
+        const sosData = sosDoc.data();
+        const isProtected = sosData.protectedPersonId === uid;
+        let isGuardian = false;
+        if (!isProtected) {
+            const linkId = `${uid}_${sosData.protectedPersonId}`;
+            const linkDoc = await db.collection("guardian_links").doc(linkId).get();
+            isGuardian = linkDoc.exists && linkDoc.data()?.status === "active";
+        }
+        if (!isProtected && !isGuardian) {
+            res.status(403).json({ error: "Not authorized for this SOS event" });
+            return;
+        }
         // Import dynamically to avoid initialization issues
         const { initiateVoiceCall } = await Promise.resolve().then(() => __importStar(require("../services/twilio")));
         const callbackUrl = `${req.protocol}://${req.get("host")}/v1/voice-callback`;

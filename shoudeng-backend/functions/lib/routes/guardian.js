@@ -87,6 +87,8 @@ router.get("/protected-persons", async (req, res) => {
             const lastCheckIn = checkinSnapshot.empty
                 ? null
                 : checkinSnapshot.docs[0].data().timestamp.toDate().toISOString();
+            // Check location permission granted by protected person
+            const canSeeLocation = link.permissions?.canSeeLocation !== false;
             // Get latest location from BigQuery heartbeat
             const lat = latestHeartbeat?.latitude ?? null;
             const lng = latestHeartbeat?.longitude ?? null;
@@ -99,11 +101,14 @@ router.get("/protected-persons", async (req, res) => {
                 personId,
                 displayName: user.displayName,
                 status,
-                latitude: lat,
-                longitude: lng,
-                locationTimestamp,
-                locationAddress: lat != null && lng != null
+                latitude: canSeeLocation ? lat : null,
+                longitude: canSeeLocation ? lng : null,
+                locationTimestamp: canSeeLocation ? locationTimestamp : null,
+                locationAddress: canSeeLocation && lat != null && lng != null
                     ? await (0, geocoding_1.reverseGeocode)(lat, lng)
+                    : null,
+                locationAccuracy: canSeeLocation
+                    ? (latestHeartbeat?.accuracy ?? null)
                     : null,
                 batteryLevel: latestHeartbeat?.battery_level ?? null,
                 batteryState: latestHeartbeat?.battery_state ?? "unknown",
@@ -112,6 +117,9 @@ router.get("/protected-persons", async (req, res) => {
                     ? String(latestHeartbeat.timestamp)
                     : null,
                 protectionLayers: guardianCount.data().count,
+                timeZoneId: user.timeZone ?? null,
+                countryCode: user.countryCode ?? null,
+                cityName: user.cityName ?? null,
             });
         }
         res.json(result);

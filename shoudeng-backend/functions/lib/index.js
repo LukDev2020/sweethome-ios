@@ -45,7 +45,11 @@ const cors_1 = __importDefault(require("cors"));
 admin.initializeApp();
 // --- Express App ---
 const app = (0, express_1.default)();
-app.use((0, cors_1.default)({ origin: true }));
+// iOS-only app: no web origins needed in production.
+// Allow all origins only in emulator for local testing.
+app.use((0, cors_1.default)({
+    origin: process.env.FUNCTIONS_EMULATOR === "true" ? true : false,
+}));
 app.use(express_1.default.json());
 // --- Route Imports ---
 const auth_1 = __importDefault(require("./routes/auth"));

@@ -69,6 +69,13 @@ router.put("/", async (req, res) => {
         existingSnapshot.docs.forEach((doc) => batch.delete(doc.ref));
         // Create new schedule entries
         for (const slot of slots) {
+            const start = slot.startHour;
+            const end = slot.endHour;
+            if (typeof start !== "number" || typeof end !== "number" ||
+                start < 0 || start > 23 || end < 0 || end > 23 || start >= end) {
+                res.status(400).json({ error: "startHour and endHour must be integers 0-23 with startHour < endHour" });
+                return;
+            }
             const days = slot.dayOfWeek || [1, 2, 3, 4, 5, 6, 7];
             for (const day of days) {
                 const scheduleRef = db.collection("duty_schedules").doc();
@@ -76,8 +83,8 @@ router.put("/", async (req, res) => {
                     protectedPersonId: uid,
                     guardianId,
                     dayOfWeek: day,
-                    startHour: slot.startHour,
-                    endHour: slot.endHour,
+                    startHour: start,
+                    endHour: end,
                     timeZone: "Asia/Shanghai", // Would use user's timezone
                     isActive: true,
                 });
