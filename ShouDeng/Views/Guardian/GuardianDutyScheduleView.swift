@@ -60,7 +60,7 @@ struct GuardianDutyScheduleView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Text("守护团队 5 人")
+                Text("守护团队 \(max(1, coordinator.protectedPersons.count + 1)) 人")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }
@@ -71,20 +71,16 @@ struct GuardianDutyScheduleView: View {
 
     private var coverageTrack: some View {
         VStack(spacing: 5) {
-            // Segmented bar
+            // Segmented bar — empty state when no duty assignments
             GeometryReader { geo in
-                let total: CGFloat = 24
                 let w = geo.size.width
-                HStack(spacing: 0) {
-                    // 妈妈: 00-07 (7h) - safe green
-                    segmentBlock(label: "妈妈", width: w * 7 / total, bgColor: safe, textColor: .white)
-                    // 爸爸: 07-13 (6h) - ink-soft blue
-                    segmentBlock(label: "爸爸", width: w * 6 / total, bgColor: Color(red: 44/255, green: 70/255, blue: 112/255), textColor: .white)
-                    // 无人: 13-17 (4h) - gap pattern
-                    segmentBlock(label: "无人", width: w * 4 / total, bgColor: pro.opacity(0.3), textColor: pro)
-                    // 姑姑: 17-24 (7h) - lamp gold
-                    segmentBlock(label: "姑姑", width: w * 7 / total, bgColor: lamp, textColor: ink)
+                ZStack {
+                    Rectangle().fill(pro.opacity(0.15))
+                    Text("尚未设置排班")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(pro)
                 }
+                .frame(width: w)
             }
             .frame(height: 36)
             .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -105,17 +101,6 @@ struct GuardianDutyScheduleView: View {
         }
     }
 
-    private func segmentBlock(label: String, width: CGFloat, bgColor: Color, textColor: Color) -> some View {
-        ZStack {
-            Rectangle().fill(bgColor)
-            Text(label)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(textColor)
-                .lineLimit(1)
-        }
-        .frame(width: width)
-    }
-
     // MARK: - Today's Shifts Panel
 
     private var todayShiftsPanel: some View {
@@ -123,26 +108,20 @@ struct GuardianDutyScheduleView: View {
             Text("今日班次")
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
-            shiftRow("你 · 多伦多", value: "08:00 – 20:00 值班中", isOk: true)
-            shiftRow("爸爸 · 多伦多", value: "20:00 – 02:00 已确认", isOk: false)
-            shiftRow("姑姑 · 悉尼", value: "02:00 – 08:00 已确认", isOk: false)
+            HStack {
+                Spacer()
+                Text("暂无班次安排")
+                    .font(.system(size: 13))
+                    .foregroundStyle(.tertiary)
+                Spacer()
+            }
+            .padding(.vertical, 8)
         }
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.13), lineWidth: 1)
         )
-    }
-
-    private func shiftRow(_ label: String, value: String, isOk: Bool) -> some View {
-        HStack {
-            Text(label).font(.system(size: 13))
-            Spacer()
-            Text(value)
-                .font(.system(size: 12))
-                .foregroundStyle(isOk ? safe : .primary)
-        }
-        .padding(.vertical, 2)
     }
 
     // MARK: - Gap Handling Panel

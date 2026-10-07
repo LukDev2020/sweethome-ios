@@ -192,12 +192,22 @@ struct ProtectedRecordsView: View {
     private var timelineSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             if coordinator.timeline.isEmpty {
-                timelineRow(date: "今天", event: "14:07 触发 SOS，4 分 12 秒后由妈妈确认安全", isBlurred: false)
-                timelineRow(date: "今天", event: "09:12 报平安", isBlurred: false)
-                timelineRow(date: "昨天", event: "21:40 离开安全区「住所」", isBlurred: false)
-                timelineRow(date: "昨天", event: "08:55 报平安", isBlurred: false)
-                timelineRow(date: "3天前", event: "18:20 在未知区域停留超过两小时", isBlurred: true)
-                timelineRow(date: "5天前", event: "07:30 报平安", isBlurred: true)
+                HStack {
+                    Spacer()
+                    VStack(spacing: 8) {
+                        Image(systemName: "clock")
+                            .font(.system(size: 28))
+                            .foregroundStyle(.tertiary)
+                        Text("暂无记录")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(.secondary)
+                        Text("你的活动记录将在此显示")
+                            .font(.system(size: 13))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(.vertical, 32)
+                    Spacer()
+                }
             } else {
                 ForEach(coordinator.timeline.prefix(20)) { entry in
                     timelineRow(

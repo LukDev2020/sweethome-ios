@@ -96,12 +96,22 @@ struct GuardianRecordsView: View {
             // Timeline list
             VStack(alignment: .leading, spacing: 0) {
                 if coordinator.timeline.isEmpty {
-                    timelineRow(icon: "exclamationmark.triangle.fill", iconColor: lamp, date: "今天", event: "14:07 小雨触发 SOS，4 分 12 秒后确认安全", isHighlight: true)
-                    timelineRow(icon: "checkmark.circle.fill", iconColor: safe, date: "今天", event: "09:12 小雨报平安", isHighlight: false)
-                    timelineRow(icon: "location.fill", iconColor: .secondary, date: "昨天", event: "21:40 小雨离开安全区「住所」", isHighlight: false)
-                    timelineRow(icon: "checkmark.circle.fill", iconColor: safe, date: "昨天", event: "08:55 弟弟报平安", isHighlight: false)
-                    timelineRow(icon: "battery.25", iconColor: lamp, date: "3天前", event: "16:30 奶奶手机电量低于 20%", isHighlight: false)
-                    timelineRow(icon: "checkmark.circle.fill", iconColor: safe, date: "5天前", event: "07:30 奶奶报平安", isHighlight: false)
+                    HStack {
+                        Spacer()
+                        VStack(spacing: 8) {
+                            Image(systemName: "clock")
+                                .font(.system(size: 28))
+                                .foregroundStyle(.tertiary)
+                            Text("暂无记录")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(.secondary)
+                            Text("守护活动将在此显示")
+                                .font(.system(size: 13))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .padding(.vertical, 32)
+                        Spacer()
+                    }
                 } else {
                     ForEach(coordinator.timeline.prefix(30)) { entry in
                         timelineRow(
@@ -263,14 +273,14 @@ struct GuardianRecordsView: View {
     private var coverageTrack: some View {
         VStack(spacing: 5) {
             GeometryReader { geo in
-                let total: CGFloat = 24
                 let w = geo.size.width
-                HStack(spacing: 0) {
-                    segmentBlock(label: "妈妈", width: w * 7 / total, bgColor: safe, textColor: .white)
-                    segmentBlock(label: "爸爸", width: w * 6 / total, bgColor: Color(red: 44/255, green: 70/255, blue: 112/255), textColor: .white)
-                    segmentBlock(label: "无人", width: w * 4 / total, bgColor: pro.opacity(0.3), textColor: pro)
-                    segmentBlock(label: "姑姑", width: w * 7 / total, bgColor: lamp, textColor: ink)
+                ZStack {
+                    Rectangle().fill(pro.opacity(0.15))
+                    Text("尚未设置排班")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(pro)
                 }
+                .frame(width: w)
             }
             .frame(height: 36)
             .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -290,25 +300,19 @@ struct GuardianRecordsView: View {
         }
     }
 
-    private func segmentBlock(label: String, width: CGFloat, bgColor: Color, textColor: Color) -> some View {
-        ZStack {
-            Rectangle().fill(bgColor)
-            Text(label)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(textColor)
-                .lineLimit(1)
-        }
-        .frame(width: width)
-    }
-
     private var todayShiftsPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("今日班次")
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
-            shiftRow("你 · 多伦多", value: "08:00 – 20:00 值班中", isOk: true)
-            shiftRow("爸爸 · 多伦多", value: "20:00 – 02:00 已确认", isOk: false)
-            shiftRow("姑姑 · 悉尼", value: "02:00 – 08:00 已确认", isOk: false)
+            HStack {
+                Spacer()
+                Text("暂无班次安排")
+                    .font(.system(size: 13))
+                    .foregroundStyle(.tertiary)
+                Spacer()
+            }
+            .padding(.vertical, 8)
         }
         .padding(12)
         .background(

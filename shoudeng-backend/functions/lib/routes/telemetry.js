@@ -142,14 +142,19 @@ router.post("/checkin", async (req, res) => {
             longitude: longitude || null,
             note: note || null,
         });
-        // Write to BigQuery for history
-        await (0, bigquery_1.insertCheckin)({
-            userId,
-            timestamp: now.toISOString(),
-            latitude,
-            longitude,
-            note,
-        });
+        // Write to BigQuery for history (non-blocking — table may not exist yet)
+        try {
+            await (0, bigquery_1.insertCheckin)({
+                userId,
+                timestamp: now.toISOString(),
+                latitude,
+                longitude,
+                note,
+            });
+        }
+        catch (bqError) {
+            console.warn("[Telemetry] BigQuery insertCheckin failed (non-fatal):", bqError);
+        }
         // Add timeline entry
         await db.collection("timeline_entries").add({
             userId,

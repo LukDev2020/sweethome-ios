@@ -306,7 +306,9 @@ struct ProtectedHomeView: View {
                     true
                 ))
             } else {
-                result.append(("基辅", "14:07", "我在这", true))
+                let formatter = DateFormatter()
+                formatter.dateFormat = "HH:mm"
+                result.append(("我", formatter.string(from: Date()), "我在这", true))
             }
             // Guardian times
             if !coordinator.myGuardians.isEmpty {
@@ -917,10 +919,7 @@ struct SOSActiveView: View {
     }
 
     private var escalationGuardianNames: [String] {
-        if !coordinator.myGuardians.isEmpty {
-            return coordinator.myGuardians.map(\.user.displayName)
-        }
-        return ["妈妈", "姑姑"]
+        return coordinator.myGuardians.map(\.user.displayName)
     }
 
     enum StepState { case done, live, waiting }
