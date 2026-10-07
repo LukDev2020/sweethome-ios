@@ -10,7 +10,9 @@ import Foundation
 //   - Receipt forwarding to backend for server-side validation
 //   - Purchase restoration
 //
-// Plans: Family (家庭版) and Enhanced (增强版), each with monthly/yearly.
+// Plans: single (单人关注版), family (家庭版), ultimate (企业版), each monthly/yearly.
+// Plan IDs and product IDs must match App Store Connect and PLANS in
+// shoudeng-backend/functions/src/services/payment.ts.
 
 final class StoreKitManager: ObservableObject {
 
@@ -33,21 +35,21 @@ final class StoreKitManager: ObservableObject {
     // MARK: - Product IDs (must match App Store Connect)
 
     static let productIds: Set<String> = [
-        "app.shoudeng.family.monthly",
-        "app.shoudeng.family.yearly",
-        "app.shoudeng.enhanced.monthly",
-        "app.shoudeng.enhanced.yearly",
-        "app.shoudeng.ultimate.monthly",
-        "app.shoudeng.ultimate.yearly",
+        "com.shoudeng.app.single.monthly",
+        "com.shoudeng.app.single.yearly",
+        "com.shoudeng.app.family.monthly",
+        "com.shoudeng.app.family.yearly",
+        "com.shoudeng.app.ultimate.monthly",
+        "com.shoudeng.app.ultimate.yearly",
     ]
 
     private static let productToPlan: [String: String] = [
-        "app.shoudeng.family.monthly": "family",
-        "app.shoudeng.family.yearly": "family",
-        "app.shoudeng.enhanced.monthly": "enhanced",
-        "app.shoudeng.enhanced.yearly": "enhanced",
-        "app.shoudeng.ultimate.monthly": "ultimate",
-        "app.shoudeng.ultimate.yearly": "ultimate",
+        "com.shoudeng.app.single.monthly": "single",
+        "com.shoudeng.app.single.yearly": "single",
+        "com.shoudeng.app.family.monthly": "family",
+        "com.shoudeng.app.family.yearly": "family",
+        "com.shoudeng.app.ultimate.monthly": "ultimate",
+        "com.shoudeng.app.ultimate.yearly": "ultimate",
     ]
 
     // MARK: - Dependencies
@@ -87,23 +89,9 @@ final class StoreKitManager: ObservableObject {
     // MARK: - Product Accessors
 
     @MainActor
-    func familyProducts() -> (monthly: Product?, yearly: Product?) {
-        let m = products.first { $0.id == "app.shoudeng.family.monthly" }
-        let y = products.first { $0.id == "app.shoudeng.family.yearly" }
-        return (m, y)
-    }
-
-    @MainActor
-    func enhancedProducts() -> (monthly: Product?, yearly: Product?) {
-        let m = products.first { $0.id == "app.shoudeng.enhanced.monthly" }
-        let y = products.first { $0.id == "app.shoudeng.enhanced.yearly" }
-        return (m, y)
-    }
-
-    @MainActor
-    func ultimateProducts() -> (monthly: Product?, yearly: Product?) {
-        let m = products.first { $0.id == "app.shoudeng.ultimate.monthly" }
-        let y = products.first { $0.id == "app.shoudeng.ultimate.yearly" }
+    func products(forPlan planId: String) -> (monthly: Product?, yearly: Product?) {
+        let m = products.first { $0.id == "com.shoudeng.app.\(planId).monthly" }
+        let y = products.first { $0.id == "com.shoudeng.app.\(planId).yearly" }
         return (m, y)
     }
 
@@ -120,7 +108,7 @@ final class StoreKitManager: ObservableObject {
             switch result {
             case .success(let verification):
                 let transaction = try checkVerified(verification)
-                await handleVerifiedTransaction(transaction)
+                await handleVerifiedTransaction(transaction, jws: verification.jwsRepresentation)
                 await transaction.finish()
                 isLoading = false
                 return true
@@ -214,7 +202,7 @@ final class StoreKitManager: ObservableObject {
             for await result in Transaction.updates {
                 guard let self else { return }
                 if let transaction = try? self.checkVerified(result) {
-                    await self.handleVerifiedTransaction(transaction)
+                    await self.handleVerifiedTransaction(transaction, jws: result.jwsRepresentation)
                     await transaction.finish()
                 }
             }
@@ -224,7 +212,7 @@ final class StoreKitManager: ObservableObject {
     // MARK: - Handle Verified Transaction
 
     @MainActor
-    private func handleVerifiedTransaction(_ transaction: Transaction) async {
+    private func handleVerifiedTransaction(_ transaction: Transaction, jws: String) async {
         let planId = Self.productToPlan[transaction.productID] ?? "free"
         let isActive = (transaction.expirationDate ?? .distantFuture) > Date()
 
@@ -232,40 +220,19 @@ final class StoreKitManager: ObservableObject {
             purchasedPlanId = planId
         }
 
-        forwardToBackend(transaction)
+        forwardToBackend(jws: jws)
         await refreshSubscriptionStatus()
     }
 
     // MARK: - Backend Verification
 
-    private func forwardToBackend(_ transaction: Transaction) {
-        let planId = Self.productToPlan[transaction.productID] ?? "free"
-        let jws = encodeTransactionJWS(transaction)
+    /// Sends Apple's signed transaction (JWS) to the backend, which derives
+    /// the plan from the signed product ID.
+    private func forwardToBackend(jws: String) {
         guard !jws.isEmpty else { return }
-
         apiClient.postQueued("/v1/payment/verify-receipt", body: VerifyReceiptRequest(
-            signedTransaction: jws,
-            planId: planId
+            signedTransaction: jws
         ))
-    }
-
-    private func encodeTransactionJWS(_ transaction: Transaction) -> String {
-        let payload: [String: Any] = [
-            "productId": transaction.productID,
-            "originalTransactionId": String(transaction.originalID),
-            "bundleId": "app.shoudeng.ios",
-            "expiresDate": (transaction.expirationDate ?? Date()).timeIntervalSince1970 * 1000,
-        ]
-
-        guard let data = try? JSONSerialization.data(withJSONObject: payload) else {
-            return ""
-        }
-        let base64 = data.base64EncodedString()
-            .replacingOccurrences(of: "+", with: "-")
-            .replacingOccurrences(of: "/", with: "_")
-            .replacingOccurrences(of: "=", with: "")
-
-        return "eyJhbGciOiJub25lIn0.\(base64)."
     }
 
     // MARK: - Verification Helper
@@ -286,18 +253,13 @@ final class StoreKitManager: ObservableObject {
     }
 
     func planName(for productId: String) -> String {
-        switch productId {
-        case let id where id.contains("ultimate"): return "企业版"
-        case let id where id.contains("enhanced"): return "家庭版"
-        case let id where id.contains("family"): return "单人关注版"
-        default: return "免费版"
-        }
+        planDisplayName(for: Self.productToPlan[productId] ?? "free")
     }
 
     func planDisplayName(for planId: String) -> String {
         switch planId {
-        case "family": return "单人关注版"
-        case "enhanced": return "家庭版"
+        case "single": return "单人关注版"
+        case "family": return "家庭版"
         case "ultimate": return "企业版"
         default: return "免费版"
         }
@@ -308,7 +270,6 @@ final class StoreKitManager: ObservableObject {
 
 struct VerifyReceiptRequest: Codable {
     let signedTransaction: String
-    let planId: String
 }
 
 struct RestorePurchaseRequest: Codable {

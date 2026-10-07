@@ -33,7 +33,8 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PLANS = void 0;
+exports.PLANS = exports.APPLE_BUNDLE_ID = void 0;
+exports.mapProductToPlan = mapProductToPlan;
 exports.verifyAppleReceipt = verifyAppleReceipt;
 exports.upsertSubscription = upsertSubscription;
 exports.getSubscription = getSubscription;
@@ -42,25 +43,28 @@ const admin = __importStar(require("firebase-admin"));
 const bigquery_1 = require("./bigquery");
 const db = admin.firestore();
 // Apple App Store Server API configuration
-const APPLE_BUNDLE_ID = "app.shoudeng.ios";
-// Subscription plan definitions
+// Must equal PRODUCT_BUNDLE_IDENTIFIER of the ShouDeng target in project.yml.
+exports.APPLE_BUNDLE_ID = "com.shoudeng.app";
+// Subscription plan definitions — single source of truth for plan IDs.
+// Product IDs must match App Store Connect and StoreKitManager.productIds (iOS).
+// Prices are reference values only; App Store Connect pricing is authoritative.
 exports.PLANS = {
     free: {
         id: "free",
         name: "免费版",
-        price: 0,
+        prices: { monthly: { CNY: 0, USD: 0 }, yearly: { CNY: 0, USD: 0 } },
         ttlDays: { heartbeat: 7, location: 7, checkin: 30 },
         maxGuardians: 1,
         maxProtected: 1,
         features: ["basic_sos", "1_guardian", "24h_timeline", "checkin"],
     },
-    duo: {
-        id: "duo",
-        name: "双人守护",
-        price: 18,
+    single: {
+        id: "single",
+        name: "单人关注版",
+        prices: { monthly: { CNY: 10, USD: 1.49 }, yearly: { CNY: 96, USD: 14.99 } },
         appleProductIds: [
-            "app.shoudeng.duo.monthly",
-            "app.shoudeng.duo.yearly",
+            "com.shoudeng.app.single.monthly",
+            "com.shoudeng.app.single.yearly",
         ],
         ttlDays: { heartbeat: 90, location: 90, checkin: -1 },
         maxGuardians: 3,
@@ -72,40 +76,53 @@ exports.PLANS = {
     },
     family: {
         id: "family",
-        name: "家庭守护",
-        price: 38,
+        name: "家庭版",
+        prices: { monthly: { CNY: 30, USD: 4.99 }, yearly: { CNY: 288, USD: 49.99 } },
         appleProductIds: [
-            "app.shoudeng.family.monthly",
-            "app.shoudeng.family.yearly",
-        ],
-        ttlDays: { heartbeat: 90, location: 90, checkin: -1 },
-        maxGuardians: -1,
-        maxProtected: 4,
-        features: [
-            "basic_sos", "checkin", "unlimited_guardians", "90d_timeline",
-            "duty_schedule", "voice_call_escalation", "sms_fallback",
-            "export_pdf", "family_dashboard",
-        ],
-    },
-    familyplus: {
-        id: "familyplus",
-        name: "家庭守护+",
-        price: 58,
-        appleProductIds: [
-            "app.shoudeng.familyplus.monthly",
-            "app.shoudeng.familyplus.yearly",
+            "com.shoudeng.app.family.monthly",
+            "com.shoudeng.app.family.yearly",
         ],
         ttlDays: { heartbeat: 180, location: 180, checkin: -1 },
         maxGuardians: -1,
-        maxProtected: 8,
+        maxProtected: 4,
         features: [
             "basic_sos", "checkin", "unlimited_guardians", "180d_timeline",
             "duty_schedule", "voice_call_escalation", "sms_fallback",
-            "export_pdf", "family_dashboard", "priority_support",
-            "location_history_export",
+            "export_pdf", "family_dashboard", "location_history_export",
+        ],
+    },
+    ultimate: {
+        id: "ultimate",
+        name: "企业版",
+        prices: { monthly: { CNY: 128, USD: 19.99 }, yearly: { CNY: 1228, USD: 199.99 } },
+        appleProductIds: [
+            "com.shoudeng.app.ultimate.monthly",
+            "com.shoudeng.app.ultimate.yearly",
+        ],
+        ttlDays: { heartbeat: 365, location: 365, checkin: -1 },
+        maxGuardians: -1,
+        maxProtected: -1,
+        features: [
+            "basic_sos", "checkin", "unlimited_guardians", "unlimited_protected",
+            "365d_timeline", "duty_schedule", "voice_call_escalation", "sms_fallback",
+            "export_pdf", "family_dashboard", "location_history_export",
+            "priority_support",
         ],
     },
 };
+/**
+ * Map an App Store product ID to its plan. Returns null for unknown products.
+ */
+function mapProductToPlan(productId) {
+    if (!productId)
+        return null;
+    for (const [planId, plan] of Object.entries(exports.PLANS)) {
+        if ("appleProductIds" in plan && plan.appleProductIds.includes(productId)) {
+            return planId;
+        }
+    }
+    return null;
+}
 /**
  * Verify an Apple App Store receipt with Apple's server.
  * Uses App Store Server API v2 (signed JWS transactions).
@@ -120,7 +137,7 @@ async function verifyAppleReceipt(signedTransaction) {
         }
         const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf-8"));
         // Verify bundle ID
-        if (payload.bundleId && payload.bundleId !== APPLE_BUNDLE_ID) {
+        if (payload.bundleId !== exports.APPLE_BUNDLE_ID) {
             return { valid: false, error: "Bundle ID mismatch" };
         }
         return {
@@ -241,14 +258,17 @@ async function handleAppleNotification(signedPayload) {
         const subRef = subSnapshot.docs[0].ref;
         const now = admin.firestore.Timestamp.now();
         switch (notificationType) {
-            case "DID_RENEW":
+            case "DID_RENEW": {
+                const renewedPlan = mapProductToPlan(txPayload.productId);
                 await subRef.update({
+                    ...(renewedPlan ? { planId: renewedPlan, appleProductId: txPayload.productId } : {}),
                     status: "active",
                     currentPeriodEnd: admin.firestore.Timestamp.fromDate(new Date(txPayload.expiresDate)),
                     updatedAt: now,
                 });
                 console.log(`[Payment] Subscription renewed: ${originalTransactionId}`);
                 break;
+            }
             case "DID_CHANGE_RENEWAL_STATUS":
                 await subRef.update({
                     autoRenew: subtype !== "AUTO_RENEW_DISABLED",

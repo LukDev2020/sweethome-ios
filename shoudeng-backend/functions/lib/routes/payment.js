@@ -48,7 +48,7 @@ router.get("/plans", (_req, res) => {
     const plans = Object.values(payment_1.PLANS).map((p) => ({
         id: p.id,
         name: p.name,
-        price: p.price,
+        prices: p.prices,
         appleProductIds: "appleProductIds" in p ? p.appleProductIds : [],
         maxGuardians: p.maxGuardians,
         maxProtected: p.maxProtected,
@@ -78,7 +78,7 @@ router.get("/subscription", auth_1.authMiddleware, async (req, res) => {
  */
 router.post("/verify-receipt", auth_1.authMiddleware, (0, rateLimit_1.createRateLimiter)(rateLimit_1.RATE_LIMITS.general), async (req, res) => {
     const uid = req.uid;
-    const { signedTransaction, planId } = req.body;
+    const { signedTransaction } = req.body;
     if (!signedTransaction) {
         res.status(400).json({ error: "signedTransaction is required" });
         return;
@@ -89,8 +89,12 @@ router.post("/verify-receipt", auth_1.authMiddleware, (0, rateLimit_1.createRate
             res.status(400).json({ error: result.error || "Invalid receipt" });
             return;
         }
-        // Determine plan from product ID or request body
-        const resolvedPlanId = planId || mapProductToPlan(result.productId);
+        // Plan comes only from the signed product ID — never from the client
+        const resolvedPlanId = (0, payment_1.mapProductToPlan)(result.productId);
+        if (!resolvedPlanId) {
+            res.status(400).json({ error: "Unknown product" });
+            return;
+        }
         await (0, payment_1.upsertSubscription)({
             userId: uid,
             planId: resolvedPlanId,
@@ -122,7 +126,9 @@ router.post("/restore", auth_1.authMiddleware, async (req, res) => {
         for (const tx of signedTransactions) {
             const result = await (0, payment_1.verifyAppleReceipt)(tx);
             if (result.valid && result.expiresDate && result.expiresDate > new Date()) {
-                const plan = mapProductToPlan(result.productId);
+                const plan = (0, payment_1.mapProductToPlan)(result.productId);
+                if (!plan)
+                    continue;
                 if (!latestValid ||
                     (result.expiresDate > (latestValid.expiresDate || new Date(0)))) {
                     latestValid = {
@@ -172,21 +178,5 @@ router.post("/apple-webhook", async (req, res) => {
         res.status(500).json({ error: "Webhook processing failed" });
     }
 });
-/**
- * Map Apple product ID to internal plan ID.
- */
-function mapProductToPlan(productId) {
-    if (!productId)
-        return "free";
-    for (const [planId, plan] of Object.entries(payment_1.PLANS)) {
-        if ("appleProductIds" in plan) {
-            const ids = plan.appleProductIds;
-            if (ids.includes(productId)) {
-                return planId;
-            }
-        }
-    }
-    return "free";
-}
 exports.default = router;
 //# sourceMappingURL=payment.js.map

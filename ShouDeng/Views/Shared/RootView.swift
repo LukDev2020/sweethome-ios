@@ -3,6 +3,8 @@ import SwiftUI
 struct RootView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @AppStorage("onboardingComplete") private var onboardingComplete = false
+    @ObservedObject private var biometric = BiometricAuthManager.shared
+    @State private var showBiometricPrompt = false
 
     // TEMP: Set to true to bypass login during development
     private let devBypassLogin = false
@@ -34,7 +36,9 @@ struct RootView: View {
                             SignupView()
                         }
                 case .loggedIn:
-                    if !onboardingComplete {
+                    if biometric.isEnabled && !biometric.isUnlocked {
+                        BiometricGateView()
+                    } else if !onboardingComplete {
                         OnboardingView(isComplete: $onboardingComplete)
                     } else {
                         ZStack(alignment: .top) {
@@ -48,6 +52,17 @@ struct RootView: View {
                                 betaBanner
                                 DegradationBannerView()
                                     .environmentObject(coordinator)
+                            }
+                        }
+                        .sheet(isPresented: $showBiometricPrompt) {
+                            BiometricEnablePromptView(isPresented: $showBiometricPrompt)
+                        }
+                        .onAppear {
+                            // After first login, offer biometric setup if available
+                            if biometric.isAvailable && !biometric.hasShownPrompt && !biometric.isEnabled {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                    showBiometricPrompt = true
+                                }
                             }
                         }
                     }

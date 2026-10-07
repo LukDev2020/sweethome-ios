@@ -52,7 +52,7 @@ sweethomeios/
 - **Interactive globe + map**: MapKit with tappable family member pins
 - **Family feed**: WeChat-style social feed with comments and media
 - **Emergency contacts**: Regional emergency numbers + custom contacts with address book import
-- **StoreKit 2 subscriptions**: 3 tiers (Duo, Family, Family+) with monthly/yearly plans
+- **StoreKit 2 subscriptions**: 3 tiers (单人关注版 `single`, 家庭版 `family`, 企业版 `ultimate`) with monthly/yearly plans; product IDs `com.shoudeng.app.<plan>.<monthly|yearly>`
 - **Data integrity**: SHA-256 row hashing + daily Merkle root proofs via BigQuery
 - **Evidence system**: Exportable PDF/JSON/GPX bundles with time-limited share links
 - **Offline resilience**: Disk-backed offline queue for critical operations (SOS, heartbeat)

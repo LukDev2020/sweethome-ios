@@ -28,11 +28,9 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>3</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-	<key>NSSupportsLiveActivities</key>
-	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
@@ -40,6 +38,8 @@
 	</dict>
 	<key>NSContactsUsageDescription</key>
 	<string>守灯需要访问您的通讯录，以便快速添加紧急联络人信息。</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>守灯使用面容ID验证您的身份，保护家庭安全数据的访问。</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>守灯需要始终访问您的位置，以便在紧急情况下向家人报告您的位置，并在您进出安全区时通知守护者。</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
@@ -50,6 +50,8 @@
 	<string>守灯使用运动传感器检测跌倒等异常情况，在您无法主动求助时自动通知家人。</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>允许在家庭圈中分享照片。您的照片仅对守护关系内的家人可见。</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>

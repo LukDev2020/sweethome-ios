@@ -7,6 +7,7 @@ import {
   upsertSubscription,
   getSubscription,
   handleAppleNotification,
+  mapProductToPlan,
   PLANS,
   PlanId,
 } from "../services/payment";
@@ -22,7 +23,7 @@ router.get("/plans", (_req: Request, res: Response) => {
   const plans = Object.values(PLANS).map((p) => ({
     id: p.id,
     name: p.name,
-    price: p.price,
+    prices: p.prices,
     appleProductIds: "appleProductIds" in p ? p.appleProductIds : [],
     maxGuardians: p.maxGuardians,
     maxProtected: p.maxProtected,
@@ -62,7 +63,7 @@ router.post(
   createRateLimiter(RATE_LIMITS.general),
   async (req: Request, res: Response) => {
     const uid = req.uid!;
-    const { signedTransaction, planId } = req.body;
+    const { signedTransaction } = req.body;
 
     if (!signedTransaction) {
       res.status(400).json({ error: "signedTransaction is required" });
@@ -77,8 +78,12 @@ router.post(
         return;
       }
 
-      // Determine plan from product ID or request body
-      const resolvedPlanId: PlanId = (planId as PlanId) || mapProductToPlan(result.productId);
+      // Plan comes only from the signed product ID — never from the client
+      const resolvedPlanId = mapProductToPlan(result.productId);
+      if (!resolvedPlanId) {
+        res.status(400).json({ error: "Unknown product" });
+        return;
+      }
 
       await upsertSubscription({
         userId: uid,
@@ -125,6 +130,7 @@ router.post(
         const result = await verifyAppleReceipt(tx);
         if (result.valid && result.expiresDate && result.expiresDate > new Date()) {
           const plan = mapProductToPlan(result.productId);
+          if (!plan) continue;
           if (
             !latestValid ||
             (result.expiresDate > (latestValid.expiresDate || new Date(0)))
@@ -180,22 +186,5 @@ router.post("/apple-webhook", async (req: Request, res: Response) => {
     res.status(500).json({ error: "Webhook processing failed" });
   }
 });
-
-/**
- * Map Apple product ID to internal plan ID.
- */
-function mapProductToPlan(productId?: string): PlanId {
-  if (!productId) return "free";
-
-  for (const [planId, plan] of Object.entries(PLANS)) {
-    if ("appleProductIds" in plan) {
-      const ids = (plan as { appleProductIds: readonly string[] }).appleProductIds;
-      if (ids.includes(productId)) {
-        return planId as PlanId;
-      }
-    }
-  }
-  return "free";
-}
 
 export default router;

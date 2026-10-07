@@ -4,7 +4,8 @@ import StoreKit
 // MARK: - Plan & Billing
 //
 // Subscription page aligned with pricing doc:
-//   - Free / Family (家庭版) ¥18/月 / Enhanced (增强版) ¥38/月
+//   - Free / 单人关注版 (single) ¥10/月 / 家庭版 (family) ¥30/月 / 企业版 (ultimate) ¥128/月
+//   - Plan IDs match StoreKitManager and backend PLANS
 //   - Monthly / Yearly toggle (yearly saves ~20%)
 //   - Payment methods: Apple Pay, Credit Card, Alipay, WeChat Pay, PayPal
 //   - Feature comparison table
@@ -13,7 +14,7 @@ import StoreKit
 struct GuardianPlanBillingView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @State private var billingCycle: BillingCycle = .monthly
-    @State private var selectedPlan: PlanTier = .family
+    @State private var selectedPlan: PlanTier = .single
     @State private var selectedPayment: PaymentMethod = .applePay
     @State private var showRestoreAlert = false
     @State private var showPaymentSheet = false
@@ -30,7 +31,7 @@ struct GuardianPlanBillingView: View {
     }
 
     enum PlanTier: String {
-        case family, enhanced, ultimate
+        case single, family, ultimate
     }
 
     var body: some View {
@@ -163,16 +164,16 @@ struct GuardianPlanBillingView: View {
 
     private var planCards: some View {
         VStack(spacing: 12) {
+            singlePlanCard
             familyPlanCard
-            enhancedPlanCard
             ultimatePlanCard
         }
     }
 
-    private var familyPlanCard: some View {
-        let family = coordinator.storeKitManager.familyProducts()
-        let product = billingCycle == .monthly ? family.monthly : family.yearly
-        let isCurrent = coordinator.storeKitManager.purchasedPlanId == "family"
+    private var singlePlanCard: some View {
+        let single = coordinator.storeKitManager.products(forPlan: "single")
+        let product = billingCycle == .monthly ? single.monthly : single.yearly
+        let isCurrent = coordinator.storeKitManager.purchasedPlanId == "single"
 
         return PlanCardView(
             planName: "单人关注版",
@@ -183,7 +184,7 @@ struct GuardianPlanBillingView: View {
             usdPrice: billingCycle == .monthly ? "$1.49" : "$14.99",
             period: billingCycle == .monthly ? "/月" : "/年",
             isCurrent: isCurrent,
-            isSelected: selectedPlan == .family && !isCurrent,
+            isSelected: selectedPlan == .single && !isCurrent,
             isPopular: false,
             accentColor: safe,
             benefits: [
@@ -194,16 +195,16 @@ struct GuardianPlanBillingView: View {
                 ("phone.arrow.up.right", "SOS 语音呼叫升级"),
                 ("doc.richtext", "事件报告 PDF 导出"),
             ],
-            onSelect: { selectedPlan = .family },
-            onSubscribe: { subscribeToPlan("family", product: product) },
+            onSelect: { selectedPlan = .single },
+            onSubscribe: { subscribeToPlan("single", product: product) },
             isLoading: coordinator.storeKitManager.isLoading
         )
     }
 
-    private var enhancedPlanCard: some View {
-        let enhanced = coordinator.storeKitManager.enhancedProducts()
-        let product = billingCycle == .monthly ? enhanced.monthly : enhanced.yearly
-        let isCurrent = coordinator.storeKitManager.purchasedPlanId == "enhanced"
+    private var familyPlanCard: some View {
+        let family = coordinator.storeKitManager.products(forPlan: "family")
+        let product = billingCycle == .monthly ? family.monthly : family.yearly
+        let isCurrent = coordinator.storeKitManager.purchasedPlanId == "family"
 
         return PlanCardView(
             planName: "家庭版",
@@ -214,7 +215,7 @@ struct GuardianPlanBillingView: View {
             usdPrice: billingCycle == .monthly ? "$4.99" : "$49.99",
             period: billingCycle == .monthly ? "/月" : "/年",
             isCurrent: isCurrent,
-            isSelected: selectedPlan == .enhanced && !isCurrent,
+            isSelected: selectedPlan == .family && !isCurrent,
             isPopular: true,
             accentColor: accent,
             benefits: [
@@ -228,14 +229,14 @@ struct GuardianPlanBillingView: View {
                 ("chart.bar.fill", "家庭安全仪表板"),
                 ("map.fill", "位置轨迹 GPX 导出"),
             ],
-            onSelect: { selectedPlan = .enhanced },
-            onSubscribe: { subscribeToPlan("enhanced", product: product) },
+            onSelect: { selectedPlan = .family },
+            onSubscribe: { subscribeToPlan("family", product: product) },
             isLoading: coordinator.storeKitManager.isLoading
         )
     }
 
     private var ultimatePlanCard: some View {
-        let ultimate = coordinator.storeKitManager.ultimateProducts()
+        let ultimate = coordinator.storeKitManager.products(forPlan: "ultimate")
         let product = billingCycle == .monthly ? ultimate.monthly : ultimate.yearly
         let isCurrent = coordinator.storeKitManager.purchasedPlanId == "ultimate"
 
@@ -427,24 +428,24 @@ struct GuardianPlanBillingView: View {
 
             Divider().padding(.horizontal, 12)
 
-            comparisonRow("守护者", free: "1", family: "3", enhanced: "∞", ultimate: "∞")
-            comparisonRow("被守护者", free: "1", family: "1", enhanced: "4", ultimate: "∞")
-            comparisonRow("时间线", free: "24h", family: "90天", enhanced: "180天", ultimate: "365天")
-            comparisonRow("SOS 求助", free: true, family: true, enhanced: true, ultimate: true)
-            comparisonRow("报平安", free: true, family: true, enhanced: true, ultimate: true)
-            comparisonRow("值班排班", free: false, family: true, enhanced: true, ultimate: true)
-            comparisonRow("语音升级", free: false, family: true, enhanced: true, ultimate: true)
-            comparisonRow("短信回退", free: false, family: false, enhanced: true, ultimate: true)
-            comparisonRow("PDF 导出", free: false, family: true, enhanced: true, ultimate: true)
-            comparisonRow("GPX 导出", free: false, family: false, enhanced: true, ultimate: true)
-            comparisonRow("仪表板", free: false, family: false, enhanced: true, ultimate: true)
-            comparisonRow("优先客服", free: false, family: false, enhanced: false, ultimate: true)
+            comparisonRow("守护者", free: "1", single: "3", family: "∞", ultimate: "∞")
+            comparisonRow("被守护者", free: "1", single: "1", family: "4", ultimate: "∞")
+            comparisonRow("时间线", free: "24h", single: "90天", family: "180天", ultimate: "365天")
+            comparisonRow("SOS 求助", free: true, single: true, family: true, ultimate: true)
+            comparisonRow("报平安", free: true, single: true, family: true, ultimate: true)
+            comparisonRow("值班排班", free: false, single: true, family: true, ultimate: true)
+            comparisonRow("语音升级", free: false, single: true, family: true, ultimate: true)
+            comparisonRow("短信回退", free: false, single: false, family: true, ultimate: true)
+            comparisonRow("PDF 导出", free: false, single: true, family: true, ultimate: true)
+            comparisonRow("GPX 导出", free: false, single: false, family: true, ultimate: true)
+            comparisonRow("仪表板", free: false, single: false, family: true, ultimate: true)
+            comparisonRow("优先客服", free: false, single: false, family: false, ultimate: true)
         }
         .background(Color(.systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 
-    private func comparisonRow(_ feature: String, free: String, family: String, enhanced: String, ultimate: String) -> some View {
+    private func comparisonRow(_ feature: String, free: String, single: String, family: String, ultimate: String) -> some View {
         HStack(spacing: 0) {
             Text(feature)
                 .font(.system(size: 12))
@@ -454,11 +455,11 @@ struct GuardianPlanBillingView: View {
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
                 .frame(width: 40)
-            Text(family)
+            Text(single)
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(safe)
                 .frame(width: 40)
-            Text(enhanced)
+            Text(family)
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(accent)
                 .frame(width: 40)
@@ -471,15 +472,15 @@ struct GuardianPlanBillingView: View {
         .padding(.vertical, 7)
     }
 
-    private func comparisonRow(_ feature: String, free: Bool, family: Bool, enhanced: Bool, ultimate: Bool) -> some View {
+    private func comparisonRow(_ feature: String, free: Bool, single: Bool, family: Bool, ultimate: Bool) -> some View {
         HStack(spacing: 0) {
             Text(feature)
                 .font(.system(size: 12))
                 .foregroundStyle(ink)
                 .frame(maxWidth: .infinity, alignment: .leading)
             checkmark(free, color: .secondary).frame(width: 40)
-            checkmark(family, color: safe).frame(width: 40)
-            checkmark(enhanced, color: accent).frame(width: 40)
+            checkmark(single, color: safe).frame(width: 40)
+            checkmark(family, color: accent).frame(width: 40)
             checkmark(ultimate, color: warm).frame(width: 40)
         }
         .padding(.horizontal, 12)

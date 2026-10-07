@@ -141,6 +141,10 @@ router.post("/posts", async (req, res) => {
         res.status(400).json({ error: "Post must have text or media" });
         return;
     }
+    if (text && text.length > 5000) {
+        res.status(400).json({ error: "Post text must be 5000 characters or less" });
+        return;
+    }
     try {
         // Get author info
         const userDoc = await db.collection("users").doc(uid).get();
@@ -302,6 +306,11 @@ router.post("/upload", async (req, res) => {
         const fileName = `family/${uid}/${Date.now()}${extension_}`;
         const file = bucket.file(fileName);
         const buffer = Buffer.from(data, "base64");
+        const MAX_UPLOAD_SIZE = 50 * 1024 * 1024; // 50 MB
+        if (buffer.length > MAX_UPLOAD_SIZE) {
+            res.status(413).json({ error: "File too large (max 50 MB)" });
+            return;
+        }
         await file.save(buffer, {
             metadata: {
                 contentType: mimeType || "image/jpeg",

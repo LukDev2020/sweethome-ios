@@ -202,6 +202,9 @@ final class AuthManager: ObservableObject {
         UserDefaults.standard.removeObject(forKey: "currentUserId")
         state = .loggedOut
 
+        // Reset biometric unlock state so gate re-appears on next login
+        BiometricAuthManager.shared.resetUnlockState()
+
         // Sign out from Firebase too
         phoneAuth.signOut()
     }

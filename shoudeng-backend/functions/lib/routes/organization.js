@@ -406,6 +406,22 @@ router.get("/roll-call/:alertId", async (req, res) => {
             res.status(404).json({ error: "Alert not found" });
             return;
         }
+        // Verify caller is an admin of the org that owns this alert
+        const alertOrgId = alertDoc.data().orgId;
+        const orgDoc = await db.collection("organizations").doc(alertOrgId).get();
+        if (!orgDoc.exists || !orgDoc.data().adminIds.includes(uid)) {
+            // Also allow if caller is a member of the org
+            const memberSnap = await db
+                .collection("org_members")
+                .where("orgId", "==", alertOrgId)
+                .where("userId", "==", uid)
+                .limit(1)
+                .get();
+            if (memberSnap.empty) {
+                res.status(403).json({ error: "Not authorized to view this roll call" });
+                return;
+            }
+        }
         const rollCallSnapshot = await db
             .collection("org_roll_calls")
             .where("alertId", "==", alertId)

@@ -65,6 +65,9 @@ struct ProtectedSettingsView: View {
                     // Safety tools
                     safetyToolsPanel
 
+                    // Security (biometric)
+                    securityPanel
+
                     // Language
                     languagePanel
 
@@ -254,6 +257,57 @@ struct ProtectedSettingsView: View {
                 fixedRow("理赔材料整理", value: "开始 →", isWarning: false)
             }
             .buttonStyle(.plain)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    // MARK: - Security Panel
+
+    private var securityPanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("安全")
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+
+            if BiometricAuthManager.shared.isAvailable {
+                HStack {
+                    Image(systemName: BiometricAuthManager.shared.biometricIconName)
+                        .font(.system(size: 14))
+                        .foregroundStyle(safe)
+                        .frame(width: 20)
+                    Text("\(BiometricAuthManager.shared.biometricName) 登录")
+                        .font(.system(size: 13))
+                    Spacer()
+                    Toggle("", isOn: Binding(
+                        get: { BiometricAuthManager.shared.isEnabled },
+                        set: { newValue in
+                            if newValue {
+                                try? BiometricAuthManager.shared.enable()
+                            } else {
+                                BiometricAuthManager.shared.disable()
+                            }
+                        }
+                    ))
+                    .labelsHidden()
+                    .tint(safe)
+                }
+                .padding(.vertical, 2)
+            } else {
+                HStack {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 20)
+                    Text("此设备不支持生物识别登录")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.vertical, 2)
+            }
         }
         .padding(12)
         .background(

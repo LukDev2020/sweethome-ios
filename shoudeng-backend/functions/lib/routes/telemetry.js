@@ -54,6 +54,10 @@ router.post("/heartbeat", async (req, res) => {
         res.status(400).json({ error: "userId and timestamp are required" });
         return;
     }
+    if (userId !== req.uid) {
+        res.status(403).json({ error: "Cannot submit heartbeat for another user" });
+        return;
+    }
     try {
         await (0, bigquery_1.insertHeartbeat)({
             userId,
@@ -86,6 +90,10 @@ router.post("/location/report", async (req, res) => {
             .json({ error: "userId, latitude, and longitude are required" });
         return;
     }
+    if (userId !== req.uid) {
+        res.status(403).json({ error: "Cannot submit location for another user" });
+        return;
+    }
     try {
         await (0, bigquery_1.insertLocationReport)({
             userId,
@@ -114,6 +122,10 @@ router.post("/checkin", async (req, res) => {
     const { userId, latitude, longitude, note } = req.body;
     if (!userId) {
         res.status(400).json({ error: "userId is required" });
+        return;
+    }
+    if (userId !== req.uid) {
+        res.status(403).json({ error: "Cannot submit checkin for another user" });
         return;
     }
     const now = new Date();
