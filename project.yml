@@ -90,7 +90,6 @@ targets:
       properties:
         com.apple.security.application-groups:
           - group.com.shoudeng.app
-        com.apple.developer.usernotifications.critical-alerts: true
         aps-environment: production
         com.apple.developer.associated-domains:
           - applinks:shoudeng.app
@@ -105,6 +104,7 @@ targets:
     info:
       path: ShouDengWidgets/Info.plist
       properties:
+        CFBundleDisplayName: "守灯Widgets"
         CFBundleShortVersionString: "1.0.0"
         CFBundleVersion: "3"
         NSExtension:
