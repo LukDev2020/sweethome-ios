@@ -10,9 +10,13 @@ import SwiftUI
 
 struct ProtectedCoverageView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
+    private let creamBg = Color(red: 254/255, green: 252/255, blue: 247/255)
+    private let offWhiteBg = Color(red: 251/255, green: 248/255, blue: 241/255)
+    private let paneBorder = Color(red: 1/255, green: 69/255, blue: 129/255).opacity(0.13)
 
     @State private var smsDowngrade = true
     @State private var lowPowerSaving = true
@@ -27,9 +31,20 @@ struct ProtectedCoverageView: View {
     }
 
     var body: some View {
+        Group {
+            if sizeClass == .regular {
+                duoPaneLayout
+            } else {
+                compactLayout
+            }
+        }
+        .navigationTitle("所在地覆盖")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var compactLayout: some View {
         ScrollView {
             VStack(spacing: 12) {
-                // Header
                 VStack(spacing: 2) {
                     Text("所在地覆盖")
                         .font(.system(size: 20, weight: .bold))
@@ -38,16 +53,9 @@ struct ProtectedCoverageView: View {
                         .foregroundStyle(.secondary)
                 }
                 .padding(.top, 8)
-
-                // Local resources
                 localResourcesPanel
-
-                // Offline pack
                 offlinePackPanel
-
-                // Weak network
                 weakNetworkPanel
-
                 Text("覆盖能力需要真实的本地对接与人力，是免费产品最难复制的部分。")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary.opacity(0.7))
@@ -57,8 +65,45 @@ struct ProtectedCoverageView: View {
             .padding(.horizontal, 16)
         }
         .background(Color(.systemBackground))
-        .navigationTitle("所在地覆盖")
-        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var duoPaneLayout: some View {
+        HStack(spacing: 0) {
+            ScrollView {
+                VStack(spacing: 12) {
+                    VStack(spacing: 2) {
+                        Text("所在地覆盖")
+                            .font(.system(size: 20, weight: .bold))
+                        Text("换个国家，保护跟着换")
+                            .font(.system(size: 13))
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.top, 8)
+                    localResourcesPanel
+                }
+                .padding(.horizontal, 16)
+            }
+            .frame(width: 445)
+            .background(creamBg)
+
+            Rectangle().fill(paneBorder).frame(width: 1)
+
+            ScrollView {
+                VStack(spacing: 12) {
+                    offlinePackPanel
+                    weakNetworkPanel
+                    Text("覆盖能力需要真实的本地对接与人力，是免费产品最难复制的部分。")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary.opacity(0.7))
+                        .padding(.top, 8)
+                        .padding(.bottom, 24)
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+            }
+            .frame(maxWidth: .infinity)
+            .background(offWhiteBg)
+        }
     }
 
     // MARK: - Local Resources

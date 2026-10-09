@@ -12,6 +12,7 @@ import SwiftUI
 struct LoginView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     // Lighthouse palette
     private let navy = Color(red: 1/255, green: 69/255, blue: 129/255)
@@ -42,10 +43,12 @@ struct LoginView: View {
 
     var body: some View {
         ZStack {
-            bg.ignoresSafeArea()
+            bg.ignoresSafeArea(.all, edges: .all)
 
             if isLocked {
                 lockedView
+            } else if sizeClass == .regular {
+                duoLoginView
             } else {
                 loginView
             }
@@ -109,101 +112,140 @@ struct LoginView: View {
         }
     }
 
-    // MARK: - Login View
+    // MARK: - Login View (Compact)
 
     private var loginView: some View {
         VStack(spacing: 0) {
-            // Top bar: reset (left) + language (right)
-            HStack {
-                if codeSent || errorMessage != nil {
-                    Button {
-                        resetAll()
-                    } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "arrow.counterclockwise")
-                                .font(.system(size: 11, weight: .semibold))
-                            Text(lang.localized("login.reset"))
-                                .font(.system(size: 12))
-                        }
-                        .foregroundStyle(navy.opacity(0.6))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(
-                            Capsule().fill(navy.opacity(0.06))
-                        )
-                    }
-                    .padding(.leading, 20)
-                }
+            loginTopBar
+            Spacer()
+            brandArea
+                .padding(.bottom, 36)
+            loginFormFields
+            Spacer()
+            Spacer()
+        }
+    }
 
+    // MARK: - Duo Login View (Inner Screen)
+
+    private var duoLoginView: some View {
+        HStack(spacing: 0) {
+            VStack {
                 Spacer()
-
-                HStack(spacing: 2) {
-                    ForEach(AppLanguage.allCases, id: \.self) { language in
-                        Button {
-                            lang.current = language
-                        } label: {
-                            Text(language.displayName)
-                                .font(.system(size: 12))
-                                .foregroundStyle(lang.current == language ? navy : ink3)
-                                .padding(.horizontal, 9)
-                                .padding(.vertical, 4)
-                                .background(
-                                    lang.current == language
-                                        ? Capsule().fill(navy.opacity(0.09))
-                                        : nil
-                                )
-                        }
-                    }
-                }
-                .padding(.trailing, 20)
+                brandArea
+                Spacer()
             }
-            .padding(.top, 6)
+            .frame(width: 445)
+
+            Rectangle()
+                .fill(line)
+                .frame(width: 1)
+
+            VStack(spacing: 0) {
+                loginTopBar
+                Spacer()
+                loginFormFields
+                Spacer()
+                Spacer()
+            }
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    // MARK: - Shared Login Sections
+
+    private var loginTopBar: some View {
+        HStack {
+            if codeSent || errorMessage != nil {
+                Button {
+                    resetAll()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.counterclockwise")
+                            .font(.system(size: 11, weight: .semibold))
+                        Text(lang.localized("login.reset"))
+                            .font(.system(size: 12))
+                    }
+                    .foregroundStyle(navy.opacity(0.6))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(
+                        Capsule().fill(navy.opacity(0.06))
+                    )
+                }
+                .padding(.leading, 20)
+            }
 
             Spacer()
 
-            // Brand area
-            ZStack {
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [blue.opacity(0.16), blue.opacity(0)],
-                            center: .center,
-                            startRadius: 0,
-                            endRadius: 80
-                        )
-                    )
-                    .frame(width: 160, height: 160)
-
-                VStack(spacing: 0) {
-                    Image("AppLogo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 80, height: 80)
-                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-
-                    Text(lang.localized("app.name"))
-                        .font(.system(size: 29, weight: .black, design: .serif))
-                        .foregroundStyle(navy)
-                        .tracking(1.5)
-                        .padding(.top, 10)
-
-                    Text("VELAR CARE")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(blue)
-                        .tracking(3.5)
-                        .padding(.top, 4)
-
-                    Text(lang.localized("app.tagline"))
-                        .font(.system(size: 13.5))
-                        .foregroundStyle(ink2)
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(4)
-                        .padding(.top, 12)
-                        .padding(.horizontal, 6)
+            HStack(spacing: 2) {
+                ForEach(AppLanguage.allCases, id: \.self) { language in
+                    Button {
+                        lang.current = language
+                    } label: {
+                        Text(language.displayName)
+                            .font(.system(size: 12))
+                            .foregroundStyle(lang.current == language ? navy : ink3)
+                            .padding(.horizontal, 9)
+                            .padding(.vertical, 4)
+                            .background(
+                                lang.current == language
+                                    ? Capsule().fill(navy.opacity(0.09))
+                                    : nil
+                            )
+                    }
                 }
             }
-            .padding(.bottom, 36)
+            .padding(.trailing, 20)
+        }
+        .padding(.top, 6)
+    }
 
+    private var brandArea: some View {
+        ZStack {
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [blue.opacity(0.16), blue.opacity(0)],
+                        center: .center,
+                        startRadius: 0,
+                        endRadius: 80
+                    )
+                )
+                .frame(width: 160, height: 160)
+
+            VStack(spacing: 0) {
+                Image("AppLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 80, height: 80)
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+
+                Text(lang.localized("app.name"))
+                    .font(.system(size: 29, weight: .black, design: .serif))
+                    .foregroundStyle(navy)
+                    .tracking(1.5)
+                    .padding(.top, 10)
+
+                Text("VELAR CARE")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(blue)
+                    .tracking(3.5)
+                    .padding(.top, 4)
+
+                Text(lang.localized("app.tagline"))
+                    .font(.system(size: 13.5))
+                    .foregroundStyle(ink2)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(4)
+                    .padding(.top, 12)
+                    .padding(.horizontal, 6)
+            }
+        }
+    }
+
+    private var loginFormFields: some View {
+        VStack(spacing: 0) {
             // Phone input row
             VStack(spacing: 12) {
                 HStack(spacing: 8) {
@@ -330,9 +372,6 @@ struct LoginView: View {
                 .font(.system(size: 12))
             }
             .padding(.top, 13)
-
-            Spacer()
-            Spacer()
         }
     }
 

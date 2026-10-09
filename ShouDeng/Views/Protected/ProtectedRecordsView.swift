@@ -8,6 +8,7 @@ import SwiftUI
 
 struct ProtectedRecordsView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
@@ -15,6 +16,9 @@ struct ProtectedRecordsView: View {
     private let pro = Color(red: 107/255, green: 92/255, blue: 165/255)
     private let border: Color = Color(red: 0.7, green: 0.7, blue: 0.72)
     private let divider: Color = Color(red: 0.85, green: 0.85, blue: 0.86)
+    private let creamBg = Color(red: 254/255, green: 252/255, blue: 247/255)
+    private let offWhiteBg = Color(red: 251/255, green: 248/255, blue: 241/255)
+    private let paneBorder = Color(red: 1/255, green: 69/255, blue: 129/255).opacity(0.13)
 
     @State private var selectedTab = 0
     @State private var showAddContact = false
@@ -27,8 +31,27 @@ struct ProtectedRecordsView: View {
     }
 
     var body: some View {
+        Group {
+            if sizeClass == .regular {
+                recordsDuoPane
+            } else {
+                recordsCompact
+            }
+        }
+        .navigationTitle("我的记录")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(sizeClass == .regular ? .hidden : .visible, for: .navigationBar)
+        .sheet(isPresented: $showAddContact) {
+            AddEmergencyContactView(contacts: $customContacts, countryCode: userCountry)
+        }
+        .onAppear { loadCustomContacts() }
+        .onChange(of: customContacts) { saveCustomContacts() }
+    }
+
+    // MARK: - Compact Layout
+
+    private var recordsCompact: some View {
         VStack(spacing: 0) {
-            // Segmented picker
             Picker("", selection: $selectedTab) {
                 Text("时间线").tag(0)
                 Text("紧急联系人").tag(1)
@@ -37,7 +60,6 @@ struct ProtectedRecordsView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
 
-            // Content
             if selectedTab == 0 {
                 timelineTab
             } else {
@@ -45,13 +67,70 @@ struct ProtectedRecordsView: View {
             }
         }
         .background(Color(.systemBackground))
-        .navigationTitle("我的记录")
-        .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $showAddContact) {
-            AddEmergencyContactView(contacts: $customContacts, countryCode: userCountry)
+    }
+
+    // MARK: - Duo Pane Layout (both tabs visible)
+
+    private var recordsDuoPane: some View {
+        HStack(spacing: 0) {
+            // Left: timeline
+            ScrollView {
+                VStack(spacing: 12) {
+                    VStack(spacing: 2) {
+                        Text("我的记录")
+                            .font(.system(size: 20, weight: .bold))
+                        Text("90 天可查 · 专业版永久保存")
+                            .font(.system(size: 13))
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.top, 8)
+
+                    timelineSection
+                    exportPanel
+                    upsellCard
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 24)
+            }
+            .frame(width: 445)
+            .background(creamBg)
+
+            Rectangle().fill(paneBorder).frame(width: 1)
+
+            // Right: emergency contacts
+            ScrollView {
+                VStack(spacing: 14) {
+                    regionalNumbersSection
+                    customContactsSection
+
+                    Button {
+                        showAddContact = true
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 16))
+                            Text("添加紧急联络人")
+                                .font(.system(size: 13, weight: .medium))
+                        }
+                        .foregroundStyle(safe)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(safe.opacity(0.08))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+
+                    Text("紧急情况下，优先拨打当地急救电话。自定义联络人可提前录入邻居、社区、当地医院等信息。")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.tertiary)
+                        .multilineTextAlignment(.center)
+                        .padding(.bottom, 24)
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+            }
+            .frame(maxWidth: .infinity)
+            .background(offWhiteBg)
         }
-        .onAppear { loadCustomContacts() }
-        .onChange(of: customContacts) { saveCustomContacts() }
     }
 
     // MARK: - Tab 0: Timeline

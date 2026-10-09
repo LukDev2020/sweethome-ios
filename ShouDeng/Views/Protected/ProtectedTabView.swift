@@ -4,49 +4,27 @@ import SwiftUI
 //
 // Wraps all Protected Person screens in a TabView.
 // Home is the default tab.
+// On Duo inner screen, switches to vertical rail layout.
 
 struct ProtectedTabView: View {
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
+    @AppStorage("debug_selected_tab") private var selectedTab = 0
 
-    @State private var selectedTab = 0
+    private var tabs: [DuoTabItem] {
+        [
+            DuoTabItem(id: 0, title: "首页",   icon: "shield.fill",            view: AnyView(ProtectedHomeView())),
+            DuoTabItem(id: 1, title: "家庭圈", icon: "heart.text.square",      view: AnyView(FamilyFeedView())),
+            DuoTabItem(id: 2, title: "覆盖",   icon: "globe.americas",         view: AnyView(ProtectedCoverageView())),
+            DuoTabItem(id: 3, title: "记录",   icon: "clock.arrow.circlepath", view: AnyView(ProtectedRecordsView())),
+            DuoTabItem(id: 4, title: "设置",   icon: "gearshape",              view: AnyView(ProtectedSettingsView())),
+        ]
+    }
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            ProtectedHomeView()
-                .tabItem {
-                    Image(systemName: "shield.fill")
-                    Text("首页")
-                }
-                .tag(0)
-
-            FamilyFeedView()
-                .tabItem {
-                    Image(systemName: "heart.text.square")
-                    Text("家庭圈")
-                }
-                .tag(1)
-
-            ProtectedCoverageView()
-                .tabItem {
-                    Image(systemName: "globe.americas")
-                    Text("覆盖")
-                }
-                .tag(2)
-
-            ProtectedRecordsView()
-                .tabItem {
-                    Image(systemName: "clock.arrow.circlepath")
-                    Text("记录")
-                }
-                .tag(3)
-
-            ProtectedSettingsView()
-                .tabItem {
-                    Image(systemName: "gearshape")
-                    Text("设置")
-                }
-                .tag(4)
-        }
-        .tint(safe)
+        DuoAdaptiveTabContainer(
+            selectedTab: $selectedTab,
+            tabs: tabs,
+            tintColor: safe
+        )
     }
 }

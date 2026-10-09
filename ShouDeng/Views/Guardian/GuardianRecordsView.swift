@@ -9,12 +9,16 @@ import SwiftUI
 
 struct GuardianRecordsView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
     private let pro = Color(red: 107/255, green: 92/255, blue: 165/255)
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
+    private let creamBg = Color(red: 254/255, green: 252/255, blue: 247/255)
+    private let offWhiteBg = Color(red: 251/255, green: 248/255, blue: 241/255)
+    private let paneBorder = Color(red: 1/255, green: 69/255, blue: 129/255).opacity(0.13)
 
     @State private var selectedTab: RecordTab = .timeline
     @State private var routeToCenter = true
@@ -42,37 +46,224 @@ struct GuardianRecordsView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                // Segmented picker
-                Picker("", selection: $selectedTab) {
-                    ForEach(RecordTab.allCases, id: \.self) { tab in
-                        Text(tab.rawValue).tag(tab)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-
-                // Content
-                ScrollView {
-                    switch selectedTab {
-                    case .timeline:
-                        timelineContent
-                    case .schedule:
-                        scheduleContent
-                    case .contacts:
-                        contactsContent
-                    }
+            Group {
+                if sizeClass == .regular {
+                    recordsDuoPane
+                } else {
+                    recordsCompact
                 }
             }
-            .background(Color(.systemBackground))
             .navigationTitle("记录")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar(sizeClass == .regular ? .hidden : .visible, for: .navigationBar)
             .onAppear {
                 loadEmergencyContacts()
                 loadGuardianMembers()
             }
+            .sheet(isPresented: $showInviteSheet) {
+                InviteGuardianSheet(members: $guardianMembers)
+                    .environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showAddEmergency) {
+                AddEmergencyContactView(
+                    contacts: $localEmergencyContacts,
+                    countryCode: coordinator.currentUser?.countryCode ?? "CN"
+                )
+            }
+            .sheet(item: $editingMember) { member in
+                EditGuardianMemberSheet(member: member, members: $guardianMembers)
+                    .environmentObject(coordinator)
+            }
+            .onChange(of: localEmergencyContacts) { saveEmergencyContacts() }
         }
+    }
+
+    // MARK: - Compact Layout
+
+    private var recordsCompact: some View {
+        VStack(spacing: 0) {
+            Picker("", selection: $selectedTab) {
+                ForEach(RecordTab.allCases, id: \.self) { tab in
+                    Text(tab.rawValue).tag(tab)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+
+            ScrollView {
+                switch selectedTab {
+                case .timeline:
+                    timelineContent
+                case .schedule:
+                    scheduleContent
+                case .contacts:
+                    contactsContentInner
+                }
+            }
+        }
+        .background(Color(.systemBackground))
+    }
+
+    // MARK: - Duo Pane Layout
+
+    private var recordsDuoPane: some View {
+        HStack(spacing: 0) {
+            // Left: header + picker + stats
+            ScrollView {
+                VStack(spacing: 12) {
+                    Text("记录")
+                        .font(.system(size: 20, weight: .bold))
+                        .padding(.top, 8)
+
+                    Picker("", selection: $selectedTab) {
+                        ForEach(RecordTab.allCases, id: \.self) { tab in
+                            Text(tab.rawValue).tag(tab)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    // Stats for current tab
+                    switch selectedTab {
+                    case .timeline:
+                        timelineStatBadges
+                    case .schedule:
+                        VStack(spacing: 2) {
+                            Text(scheduleSubtitle)
+                                .font(.system(size: 13))
+                                .foregroundStyle(.secondary)
+                        }
+                        coverageTrack
+                    case .contacts:
+                        contactsStatBadges
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 24)
+            }
+            .frame(width: 445)
+            .background(creamBg)
+
+            Rectangle().fill(paneBorder).frame(width: 1)
+
+            // Right: content for selected tab
+            ScrollView {
+                switch selectedTab {
+                case .timeline:
+                    timelineListAndExport
+                case .schedule:
+                    VStack(spacing: 12) {
+                        todayShiftsPanel
+                        gapHandlingPanel
+                        upsellCard
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .padding(.bottom, 24)
+                case .contacts:
+                    VStack(spacing: 16) {
+                        guardianMembersPanel
+                        emergencyContactsPanel
+                        inviteCTA
+                    }
+                    .padding(.top, 4)
+                    .padding(.bottom, 24)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .background(offWhiteBg)
+        }
+    }
+
+    // MARK: - Extracted Stats
+
+    private var timelineStatBadges: some View {
+        HStack(spacing: 16) {
+            statBadge(value: "\(coordinator.timeline.count)", label: "事件", color: ink)
+            statBadge(
+                value: "\(coordinator.timeline.filter { $0.type == .checkIn }.count)",
+                label: "报平安", color: safe
+            )
+            statBadge(
+                value: "\(coordinator.timeline.filter { $0.type == .sosTriggered }.count)",
+                label: "SOS", color: alert
+            )
+        }
+    }
+
+    private var contactsStatBadges: some View {
+        HStack(spacing: 16) {
+            statBadge(
+                value: "\(guardianMembers.filter { $0.status == .active }.count)",
+                label: "守护者", color: safe
+            )
+            statBadge(
+                value: "\(guardianMembers.filter { $0.status == .pending }.count)",
+                label: "待接受", color: lamp
+            )
+            statBadge(
+                value: "\(localEmergencyContacts.count)",
+                label: "紧急联络", color: alert
+            )
+        }
+    }
+
+    // Timeline list + export (right pane content for duo)
+    private var timelineListAndExport: some View {
+        VStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 0) {
+                if coordinator.timeline.isEmpty {
+                    HStack {
+                        Spacer()
+                        VStack(spacing: 8) {
+                            Image(systemName: "clock")
+                                .font(.system(size: 28))
+                                .foregroundStyle(.tertiary)
+                            Text("暂无记录")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(.secondary)
+                            Text("守护活动将在此显示")
+                                .font(.system(size: 13))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .padding(.vertical, 32)
+                        Spacer()
+                    }
+                } else {
+                    ForEach(coordinator.timeline.prefix(30)) { entry in
+                        timelineRow(
+                            icon: iconForType(entry.type),
+                            iconColor: colorForType(entry.type),
+                            date: formatDate(entry.timestamp),
+                            event: "\(formatTime(entry.timestamp)) \(entry.description)",
+                            isHighlight: entry.type == .sosTriggered
+                        )
+                    }
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
+            )
+            .padding(.horizontal, 16)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("导出")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                exportRow("带时间戳的 PDF", value: "需升级")
+                exportRow("位置轨迹 GPX", value: "需升级")
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
+            )
+            .padding(.horizontal, 16)
+            .padding(.bottom, 24)
+        }
+        .padding(.top, 8)
     }
 
     // MARK: - Timeline Content
@@ -381,7 +572,7 @@ struct GuardianRecordsView: View {
 
     // MARK: - Contacts Content
 
-    private var contactsContent: some View {
+    private var contactsContentInner: some View {
         VStack(spacing: 16) {
             // Summary stats
             HStack(spacing: 16) {
@@ -411,21 +602,6 @@ struct GuardianRecordsView: View {
         }
         .padding(.top, 4)
         .padding(.bottom, 24)
-        .sheet(isPresented: $showInviteSheet) {
-            InviteGuardianSheet(members: $guardianMembers)
-                .environmentObject(coordinator)
-        }
-        .sheet(isPresented: $showAddEmergency) {
-            AddEmergencyContactView(
-                contacts: $localEmergencyContacts,
-                countryCode: coordinator.currentUser?.countryCode ?? "CN"
-            )
-        }
-        .sheet(item: $editingMember) { member in
-            EditGuardianMemberSheet(member: member, members: $guardianMembers)
-                .environmentObject(coordinator)
-        }
-        .onChange(of: localEmergencyContacts) { saveEmergencyContacts() }
     }
 
     // MARK: - Guardian Members Panel

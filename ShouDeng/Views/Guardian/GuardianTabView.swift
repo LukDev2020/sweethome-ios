@@ -4,41 +4,28 @@ import SwiftUI
 //
 // Wraps all Guardian screens in a TabView.
 // Tabs: Home, Family Feed, Records (timeline + schedule), Settings
+// On Duo inner screen, switches to vertical rail layout.
 
 struct GuardianTabView: View {
-    @State private var selectedTab = 0  // DEV: change to test different tabs (0=home, 1=feed, 2=records, 3=settings)
+    @AppStorage("debug_selected_tab") private var selectedTab = 0
     private let pro = Color(red: 107/255, green: 92/255, blue: 165/255)
 
+    private var tabs: [DuoTabItem] {
+        [
+            DuoTabItem(id: 0, title: "首页",   icon: "eye.fill",                       view: AnyView(GuardianHomeView())),
+            DuoTabItem(id: 1, title: "家庭圈", icon: "bubble.left.and.bubble.right",    view: AnyView(FamilyFeedView())),
+            DuoTabItem(id: 2, title: "记录",   icon: "clock.arrow.circlepath",          view: AnyView(GuardianRecordsView())),
+            DuoTabItem(id: 3, title: "设置",   icon: "gearshape",                       view: AnyView(GuardianSettingsView())),
+        ]
+    }
+
     var body: some View {
-        TabView(selection: $selectedTab) {
-            GuardianHomeView()
-                .tabItem {
-                    Image(systemName: "eye.fill")
-                    Text("首页")
-                }
-                .tag(0)
-
-            FamilyFeedView()
-                .tabItem {
-                    Image(systemName: "bubble.left.and.bubble.right")
-                    Text("家庭圈")
-                }
-                .tag(1)
-
-            GuardianRecordsView()
-                .tabItem {
-                    Image(systemName: "clock.arrow.circlepath")
-                    Text("记录")
-                }
-                .tag(2)
-
-            GuardianSettingsView()
-                .tabItem {
-                    Image(systemName: "gearshape")
-                    Text("设置")
-                }
-                .tag(3)
-        }
-        .tint(pro)
+        DuoAdaptiveTabContainer(
+            selectedTab: $selectedTab,
+            tabs: tabs,
+            tintColor: pro,
+            showInviteButton: true,
+            onInvite: { /* TODO: P1 — open invite flow */ }
+        )
     }
 }

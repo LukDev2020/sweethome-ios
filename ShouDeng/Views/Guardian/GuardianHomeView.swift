@@ -19,6 +19,7 @@ struct GuardianHomeView: View {
     @State private var showConsulate = false
     @State private var showOrgDashboard = false
     @State private var showInsuranceReport = false
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
     private let inkDeep = Color(red: 8/255, green: 15/255, blue: 27/255)
@@ -26,6 +27,9 @@ struct GuardianHomeView: View {
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
     private let pro = Color(red: 107/255, green: 92/255, blue: 165/255)
+    private let creamBg = Color(red: 254/255, green: 252/255, blue: 247/255)
+    private let offWhiteBg = Color(red: 251/255, green: 248/255, blue: 241/255)
+    private let paneBorder = Color(red: 1/255, green: 69/255, blue: 129/255).opacity(0.13)
 
     private var dynamicClocks: [(city: String, time: String, note: String, isYou: Bool)] {
         var result: [(String, String, String, Bool)] = []
@@ -55,69 +59,14 @@ struct GuardianHomeView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 0) {
-                    globeSection
-                    worldClocks
-                        .padding(.top, 4)
-
-                    // Location card
-                    locationCard
-                        .padding(.top, 10)
-
-                    // Needs attention
-                    needsAttentionSection
-
-                    // All normal
-                    allNormalSection
-
-                    // Pinned hotline card
-                    if let hotline = coordinator.selectedHotline {
-                        HotlineCardView(
-                            hotline: hotline,
-                            onTapChange: { showConsulate = true },
-                            onRemove: { coordinator.removeSelectedHotline() }
-                        )
-                        .padding(.horizontal, 16)
-                        .padding(.top, 12)
-                    }
-
-                    // Guardian quick actions
-                    guardianQuickActions
-                        .padding(.horizontal, 16)
-                        .padding(.top, 12)
-
-                    // Add button
-                    Button { showInviteSheet = true } label: {
-                        Text("添加要守护的人")
-                            .font(.system(size: 13))
-                            .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.6))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 11)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [5, 3]))
-                                    .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.28))
-                            )
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 10)
-
-                    // Footer note
-                    VStack(spacing: 0) {
-                        Divider()
-                        Text("世界钟解决跨国家庭每天都在做的心算：现在打过去会不会吵醒他。")
-                            .font(.system(size: 12))
-                            .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.top, 11)
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 11)
-                    .padding(.bottom, 24)
+            Group {
+                if sizeClass == .regular {
+                    duoPaneLayout
+                } else {
+                    compactLayout
                 }
             }
-            .background(Color(.systemBackground))
+            .toolbar(sizeClass == .regular ? .hidden : .visible, for: .navigationBar)
             .navigationTitle("守灯")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(pro.opacity(0.06), for: .navigationBar)
@@ -182,6 +131,156 @@ struct GuardianHomeView: View {
                 await coordinator.fetchProtectedPersons()
                 await coordinator.fetchFamilyPosts()
             }
+        }
+    }
+
+    // MARK: - Compact Layout (Standard Phones)
+
+    private var compactLayout: some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                globeSection
+                worldClocks
+                    .padding(.top, 4)
+                locationCard
+                    .padding(.top, 10)
+                needsAttentionSection
+                allNormalSection
+                hotlineSection
+                guardianQuickActions
+                    .padding(.horizontal, 16)
+                    .padding(.top, 12)
+                addPersonButton
+                    .padding(.horizontal, 16)
+                    .padding(.top, 10)
+                footerNote
+                    .padding(.horizontal, 16)
+                    .padding(.top, 11)
+                    .padding(.bottom, 24)
+            }
+        }
+        .background(Color(.systemBackground))
+    }
+
+    // MARK: - Duo Pane Layout (Inner Screen)
+
+    private var duoPaneLayout: some View {
+        HStack(spacing: 0) {
+            // LEFT PANE: Overview
+            ScrollView {
+                VStack(spacing: 0) {
+                    HStack {
+                        Text("守灯")
+                            .font(.system(size: 18, weight: .bold, design: .serif))
+                            .foregroundStyle(ink)
+                        Spacer()
+                        Text("你正在值班")
+                            .font(.system(size: 12))
+                            .foregroundStyle(safe)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(safe.opacity(0.1))
+                            .clipShape(Capsule())
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 12)
+
+                    HStack(spacing: 6) {
+                        AvatarView(user: coordinator.currentUser, size: 26)
+                        if let name = coordinator.currentUser?.displayName, !name.isEmpty {
+                            Text(name)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(ink)
+                        }
+                        Text("·")
+                            .font(.system(size: 11))
+                            .foregroundStyle(ink.opacity(0.3))
+                        Text(toolbarLocation)
+                            .font(.system(size: 12))
+                            .foregroundStyle(ink.opacity(0.5))
+                        Spacer()
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+
+                    globeSection
+                    worldClocks
+                        .padding(.top, 4)
+
+                    Spacer(minLength: 16)
+                }
+            }
+            .frame(width: 445)
+            .background(creamBg)
+
+            Rectangle()
+                .fill(paneBorder)
+                .frame(width: 1)
+
+            // RIGHT PANE: Status & Actions
+            ScrollView {
+                VStack(spacing: 0) {
+                    locationCard
+                        .padding(.top, 10)
+                    needsAttentionSection
+                    allNormalSection
+                    hotlineSection
+                    guardianQuickActions
+                        .padding(.horizontal, 16)
+                        .padding(.top, 12)
+                    addPersonButton
+                        .padding(.horizontal, 16)
+                        .padding(.top, 10)
+                    footerNote
+                        .padding(.horizontal, 16)
+                        .padding(.top, 11)
+                        .padding(.bottom, 24)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .background(offWhiteBg)
+        }
+    }
+
+    // MARK: - Shared Inline Sections
+
+    private var hotlineSection: some View {
+        Group {
+            if let hotline = coordinator.selectedHotline {
+                HotlineCardView(
+                    hotline: hotline,
+                    onTapChange: { showConsulate = true },
+                    onRemove: { coordinator.removeSelectedHotline() }
+                )
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+            }
+        }
+    }
+
+    private var addPersonButton: some View {
+        Button { showInviteSheet = true } label: {
+            Text("添加要守护的人")
+                .font(.system(size: 13))
+                .foregroundStyle(ink.opacity(0.6))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 11)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [5, 3]))
+                        .foregroundStyle(ink.opacity(0.28))
+                )
+        }
+    }
+
+    private var footerNote: some View {
+        VStack(spacing: 0) {
+            Divider()
+            Text("世界钟解决跨国家庭每天都在做的心算：现在打过去会不会吵醒他。")
+                .font(.system(size: 12))
+                .foregroundStyle(ink.opacity(0.45))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 11)
         }
     }
 

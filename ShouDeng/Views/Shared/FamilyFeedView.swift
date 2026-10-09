@@ -11,10 +11,14 @@ import PhotosUI
 
 struct FamilyFeedView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
+    private let creamBg = Color(red: 254/255, green: 252/255, blue: 247/255)
+    private let offWhiteBg = Color(red: 251/255, green: 248/255, blue: 241/255)
+    private let paneBorder = Color(red: 1/255, green: 69/255, blue: 129/255).opacity(0.13)
 
     @State private var isLoading = false
     @State private var hasFetched = false
@@ -26,8 +30,46 @@ struct FamilyFeedView: View {
 
     var body: some View {
         NavigationStack {
+            Group {
+                if sizeClass == .regular {
+                    feedDuoPane
+                } else {
+                    feedCompact
+                }
+            }
+            .navigationTitle("家庭圈")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(sizeClass == .regular ? .hidden : .visible, for: .navigationBar)
+            .task {
+                guard !hasFetched else { return }
+                hasFetched = true
+                await loadPosts()
+            }
+        }
+    }
+
+    // MARK: - Compact Layout
+
+    private var feedCompact: some View {
+        VStack(spacing: 0) {
+            Group {
+                if coordinator.familyPosts.isEmpty && !isLoading {
+                    emptyState
+                } else {
+                    messageList
+                }
+            }
+            chatInputBar
+        }
+        .background(Color(.systemGroupedBackground))
+    }
+
+    // MARK: - Duo Pane Layout
+
+    private var feedDuoPane: some View {
+        HStack(spacing: 0) {
+            // Left: messages + input
             VStack(spacing: 0) {
-                // Messages
                 Group {
                     if coordinator.familyPosts.isEmpty && !isLoading {
                         emptyState
@@ -35,19 +77,131 @@ struct FamilyFeedView: View {
                         messageList
                     }
                 }
-
-                // Chat input bar
                 chatInputBar
             }
-            .background(Color(.systemGroupedBackground))
-            .navigationTitle("家庭圈")
-            .navigationBarTitleDisplayMode(.inline)
-            .task {
-                guard !hasFetched else { return }
-                hasFetched = true
-                await loadPosts()
+            .frame(width: 445)
+            .background(creamBg)
+
+            Rectangle().fill(paneBorder).frame(width: 1)
+
+            // Right: family members panel
+            ScrollView {
+                VStack(spacing: 12) {
+                    Text("家庭成员")
+                        .font(.system(size: 16, weight: .bold))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 12)
+
+                    familyMembersPanel
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 24)
+            }
+            .frame(maxWidth: .infinity)
+            .background(offWhiteBg)
+        }
+    }
+
+    // MARK: - Family Members Panel (Duo right pane)
+
+    private var familyMembersPanel: some View {
+        VStack(spacing: 0) {
+            // Show protected persons (if guardian) or guardians (if protected)
+            let persons = coordinator.protectedPersons
+            let guardians = coordinator.myGuardians
+
+            if !persons.isEmpty {
+                ForEach(persons) { person in
+                    memberRow(
+                        name: person.user.displayName,
+                        initial: person.user.avatarInitial,
+                        city: person.user.cityName,
+                        role: "被守护者"
+                    )
+                }
+            }
+
+            if !guardians.isEmpty {
+                ForEach(guardians) { guardian in
+                    memberRow(
+                        name: guardian.user.displayName,
+                        initial: guardian.user.avatarInitial,
+                        city: guardian.user.cityName,
+                        role: "守护者"
+                    )
+                }
+            }
+
+            // Current user
+            if let user = coordinator.currentUser {
+                memberRow(
+                    name: user.displayName.isEmpty ? "我" : user.displayName,
+                    initial: user.avatarInitial,
+                    city: user.cityName,
+                    role: user.role == .guardian ? "守护者（我）" : "被守护者（我）"
+                )
+            }
+
+            if persons.isEmpty && guardians.isEmpty && coordinator.currentUser == nil {
+                VStack(spacing: 8) {
+                    Image(systemName: "person.3")
+                        .font(.system(size: 28))
+                        .foregroundStyle(.tertiary)
+                    Text("暂无家庭成员")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 32)
             }
         }
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    private func memberRow(name: String, initial: String, city: String, role: String) -> some View {
+        HStack(spacing: 10) {
+            ZStack {
+                Circle()
+                    .fill(safe.opacity(0.12))
+                    .frame(width: 36, height: 36)
+                Text(initial)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(safe)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(name)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(ink)
+                HStack(spacing: 4) {
+                    Text(role)
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                    if !city.isEmpty {
+                        Text("·")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.quaternary)
+                        Text(city)
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+
+            Spacer()
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .overlay(
+            Rectangle()
+                .fill(Color(.separator).opacity(0.15))
+                .frame(height: 1),
+            alignment: .bottom
+        )
     }
 
     // MARK: - Empty State

@@ -8,12 +8,16 @@ import SwiftUI
 struct GuardianSettingsView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var langManager = LanguageManager.shared
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
 
     private let pro = Color(red: 107/255, green: 92/255, blue: 165/255)
+    private let creamBg = Color(red: 254/255, green: 252/255, blue: 247/255)
+    private let offWhiteBg = Color(red: 251/255, green: 248/255, blue: 241/255)
+    private let paneBorder = Color(red: 1/255, green: 69/255, blue: 129/255).opacity(0.13)
 
     @State private var showProfileEdit = false
     @State private var showPrivacy = false
@@ -35,53 +39,13 @@ struct GuardianSettingsView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 12) {
-                    // Header
-                    Text("守护者偏好")
-                        .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
-                        .padding(.top, 8)
-
-                    // Profile
-                    profilePanel
-
-                    // Role
-                    rolePanel
-
-                    // Subscription
-                    subscriptionPanel
-
-                    // Safety tools
-                    safetyToolsPanel
-
-                    // Organization
-                    organizationPanel
-
-                    // Security (biometric)
-                    securityPanel
-
-                    // Language
-                    languagePanel
-
-                    // Notifications
-                    notificationPanel
-
-                    // Data
-                    dataPanel
-
-                    // Legal & About
-                    legalPanel
-
-                    #if DEBUG
-                    devPanel
-                    #endif
-
-                    Spacer().frame(height: 24)
+            Group {
+                if sizeClass == .regular {
+                    settingsDuoPane
+                } else {
+                    settingsCompact
                 }
-                .padding(.horizontal, 16)
             }
-            .background(Color(.systemBackground))
             .navigationTitle("设置")
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showProfileEdit, onDismiss: {
@@ -148,6 +112,80 @@ struct GuardianSettingsView: View {
             .onChange(of: notifSOS) { coordinator.syncNotificationPrefs() }
             .onChange(of: notifCheckinOverdue) { coordinator.syncNotificationPrefs() }
             .onChange(of: notifFamilyFeed) { coordinator.syncNotificationPrefs() }
+        }
+    }
+
+    // MARK: - Layout Variants
+
+    private var settingsCompact: some View {
+        ScrollView {
+            VStack(spacing: 12) {
+                Text("守护者偏好")
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 8)
+                profilePanel
+                rolePanel
+                subscriptionPanel
+                safetyToolsPanel
+                organizationPanel
+                securityPanel
+                languagePanel
+                notificationPanel
+                dataPanel
+                legalPanel
+                #if DEBUG
+                devPanel
+                #endif
+                Spacer().frame(height: 24)
+            }
+            .padding(.horizontal, 16)
+        }
+        .background(Color(.systemBackground))
+    }
+
+    private var settingsDuoPane: some View {
+        HStack(spacing: 0) {
+            ScrollView {
+                VStack(spacing: 12) {
+                    Text("账户")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 8)
+                    profilePanel
+                    rolePanel
+                    subscriptionPanel
+                    Spacer().frame(height: 24)
+                }
+                .padding(.horizontal, 16)
+            }
+            .frame(width: 445)
+            .background(creamBg)
+
+            Rectangle().fill(paneBorder).frame(width: 1)
+
+            ScrollView {
+                VStack(spacing: 12) {
+                    Text("工具与安全")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 8)
+                    safetyToolsPanel
+                    organizationPanel
+                    securityPanel
+                    languagePanel
+                    notificationPanel
+                    dataPanel
+                    legalPanel
+                    #if DEBUG
+                    devPanel
+                    #endif
+                    Spacer().frame(height: 24)
+                }
+                .padding(.horizontal, 16)
+            }
+            .frame(maxWidth: .infinity)
+            .background(offWhiteBg)
         }
     }
 

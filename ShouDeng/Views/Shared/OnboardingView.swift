@@ -13,7 +13,8 @@ struct OnboardingView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
     @AppStorage("hasCompletedOnboardingOnce") private var hasCompletedOnce = false
-    @State private var currentPage = 0
+    @State private var currentPage = UserDefaults.standard.integer(forKey: "debug_onboarding_page")
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     // Design system
     private let inkDeep = Color(red: 8/255, green: 15/255, blue: 27/255)
@@ -27,66 +28,122 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
-            inkDeep.ignoresSafeArea()
+            inkDeep.ignoresSafeArea(.all, edges: .all)
 
+            if sizeClass == .regular {
+                duoOnboardingLayout
+            } else {
+                compactOnboardingLayout
+            }
+        }
+    }
+
+    // MARK: - Compact Layout
+
+    private var compactOnboardingLayout: some View {
+        VStack(spacing: 0) {
+            onboardingTopBar
+            progressDots
+                .padding(.top, 4)
+            Spacer()
+                .frame(maxHeight: 60)
+            screenContent(screens[currentPage])
+            Spacer()
+            actionButton(screens[currentPage])
+                .padding(.bottom, 48)
+        }
+        .padding(.horizontal, 28)
+    }
+
+    // MARK: - Duo Layout (Inner Screen)
+
+    private var duoOnboardingLayout: some View {
+        HStack(spacing: 0) {
+            // LEFT: Icon + Title
             VStack(spacing: 0) {
-                // Top bar: language toggle (left) + skip button (right)
-                HStack {
-                    HStack(spacing: 2) {
-                        ForEach(AppLanguage.allCases, id: \.self) { language in
-                            Button {
-                                lang.current = language
-                            } label: {
-                                Text(language.displayName)
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(lang.current == language ? .white : .white.opacity(0.35))
-                                    .padding(.horizontal, 9)
-                                    .padding(.vertical, 4)
-                                    .background(
-                                        lang.current == language
-                                            ? Capsule().fill(.white.opacity(0.15))
-                                            : nil
-                                    )
-                            }
-                        }
-                    }
-                    .padding(.leading, 16)
-
-                    Spacer()
-
-                    if hasCompletedOnce {
-                        Button {
-                            skipToHome()
-                        } label: {
-                            Text(lang.current == .chinese ? "跳过" : "Skip")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundStyle(.white.opacity(0.6))
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                        }
-                    }
-                }
-                .padding(.top, 8)
-                .padding(.trailing, 4)
-
-                // Progress dots
+                onboardingTopBar
+                    .padding(.horizontal, 28)
                 progressDots
                     .padding(.top, 4)
-
                 Spacer()
-                    .frame(maxHeight: 60)
-
-                // Content
-                screenContent(screens[currentPage])
-
+                Image(systemName: screens[currentPage].icon)
+                    .font(.system(size: 56, weight: .light))
+                    .foregroundStyle(lamp)
+                    .frame(height: 70)
+                Text(screens[currentPage].title)
+                    .font(.system(size: 26, weight: .bold, design: .serif))
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 20)
+                    .padding(.horizontal, 32)
                 Spacer()
+                Spacer()
+            }
+            .frame(width: 445)
 
-                // Action button
+            Rectangle()
+                .fill(.white.opacity(0.08))
+                .frame(width: 1)
+
+            // RIGHT: Body + Button
+            VStack(spacing: 0) {
+                Spacer()
+                Text(screens[currentPage].body)
+                    .font(.system(size: 16))
+                    .foregroundStyle(.white.opacity(0.75))
+                    .lineSpacing(6)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 36)
+                Spacer()
                 actionButton(screens[currentPage])
+                    .padding(.horizontal, 36)
                     .padding(.bottom, 48)
             }
-            .padding(.horizontal, 28)
+            .frame(maxWidth: .infinity)
         }
+    }
+
+    // MARK: - Shared Top Bar
+
+    private var onboardingTopBar: some View {
+        HStack {
+            HStack(spacing: 2) {
+                ForEach(AppLanguage.allCases, id: \.self) { language in
+                    Button {
+                        lang.current = language
+                    } label: {
+                        Text(language.displayName)
+                            .font(.system(size: 12))
+                            .foregroundStyle(lang.current == language ? .white : .white.opacity(0.35))
+                            .padding(.horizontal, 9)
+                            .padding(.vertical, 4)
+                            .background(
+                                lang.current == language
+                                    ? Capsule().fill(.white.opacity(0.15))
+                                    : nil
+                            )
+                    }
+                }
+            }
+            .padding(.leading, 16)
+
+            Spacer()
+
+            if hasCompletedOnce {
+                Button {
+                    skipToHome()
+                } label: {
+                    Text(lang.current == .chinese ? "跳过" : "Skip")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.6))
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                }
+            }
+        }
+        .padding(.top, 8)
+        .padding(.trailing, 4)
     }
 
     private func skipToHome() {
