@@ -11,6 +11,7 @@ import SwiftUI
 struct OnboardingView: View {
     @Binding var isComplete: Bool
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var lang = LanguageManager.shared
     @AppStorage("hasCompletedOnboardingOnce") private var hasCompletedOnce = false
     @State private var currentPage = 0
 
@@ -20,21 +21,44 @@ struct OnboardingView: View {
     private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
     private let paper = Color(red: 236/255, green: 238/255, blue: 240/255)
 
-    private let screens = DisclaimerCopy.Onboarding.screens
+    private var screens: [DisclaimerCopy.Onboarding.Screen] {
+        DisclaimerCopy.Onboarding.screens(for: lang.current)
+    }
 
     var body: some View {
         ZStack {
             inkDeep.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Skip button (only after first-ever completion)
+                // Top bar: language toggle (left) + skip button (right)
                 HStack {
+                    HStack(spacing: 2) {
+                        ForEach(AppLanguage.allCases, id: \.self) { language in
+                            Button {
+                                lang.current = language
+                            } label: {
+                                Text(language.displayName)
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(lang.current == language ? .white : .white.opacity(0.35))
+                                    .padding(.horizontal, 9)
+                                    .padding(.vertical, 4)
+                                    .background(
+                                        lang.current == language
+                                            ? Capsule().fill(.white.opacity(0.15))
+                                            : nil
+                                    )
+                            }
+                        }
+                    }
+                    .padding(.leading, 16)
+
                     Spacer()
+
                     if hasCompletedOnce {
                         Button {
                             skipToHome()
                         } label: {
-                            Text("跳过")
+                            Text(lang.current == .chinese ? "跳过" : "Skip")
                                 .font(.system(size: 14, weight: .medium))
                                 .foregroundStyle(.white.opacity(0.6))
                                 .padding(.horizontal, 16)

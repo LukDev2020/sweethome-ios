@@ -21,7 +21,17 @@ enum DisclaimerCopy {
             let buttonTitle: String
         }
 
-        static let screens: [Screen] = [
+        static let screens: [Screen] = screensZh
+
+        static func screens(for language: AppLanguage) -> [Screen] {
+            switch language {
+            case .chinese: return screensZh
+            case .english: return screensEn
+            case .french: return screensFr
+            }
+        }
+
+        private static let screensZh: [Screen] = [
             Screen(
                 id: "onboard.not_emergency",
                 icon: "exclamationmark.triangle",
@@ -42,6 +52,54 @@ enum DisclaimerCopy {
                 title: "控制权在你手里",
                 body: "你随时可以关闭任何一项共享。\n\n关闭后延迟 6 小时生效——这是为了防止在胁迫下被要求当场关闭。如果你处于安全环境，6 小时后共享将彻底停止。",
                 buttonTitle: "开始使用"
+            ),
+        ]
+
+        private static let screensEn: [Screen] = [
+            Screen(
+                id: "onboard.not_emergency",
+                icon: "exclamationmark.triangle",
+                title: "ShouDeng Is Not an Emergency Service",
+                body: "In an emergency, always call your local emergency number first.\n\nShouDeng notifies your family and contacts — it cannot replace police, fire, or medical services. We do our best to deliver notifications, but cannot guarantee network, device, or recipient availability.",
+                buttonTitle: "I Understand"
+            ),
+            Screen(
+                id: "onboard.scope",
+                icon: "eye.slash",
+                title: "We Only See What Safety Requires",
+                body: "Your family can see your location, battery level, and online status.\n\nThey cannot see your messages, photos, call history, or any other app content.\n\nWe do not collect that information either.",
+                buttonTitle: "Continue"
+            ),
+            Screen(
+                id: "onboard.control",
+                icon: "hand.raised",
+                title: "You Are in Control",
+                body: "You can turn off any sharing at any time.\n\nChanges take effect after a 6-hour delay — this prevents someone from forcing you to disable sharing on the spot. If you are safe, sharing will fully stop after 6 hours.",
+                buttonTitle: "Get Started"
+            ),
+        ]
+
+        private static let screensFr: [Screen] = [
+            Screen(
+                id: "onboard.not_emergency",
+                icon: "exclamationmark.triangle",
+                title: "ShouDeng n'est pas un service d'urgence",
+                body: "En cas de danger, appelez d'abord le numéro d'urgence local.\n\nShouDeng prévient votre famille et vos contacts — il ne remplace ni la police, ni les pompiers, ni les secours. Nous faisons de notre mieux pour transmettre les notifications, mais ne pouvons garantir la disponibilité du réseau, de l'appareil ou du destinataire.",
+                buttonTitle: "Je comprends"
+            ),
+            Screen(
+                id: "onboard.scope",
+                icon: "eye.slash",
+                title: "Nous ne voyons que le nécessaire",
+                body: "Votre famille peut voir votre position, le niveau de batterie et votre statut en ligne.\n\nElle ne peut pas voir vos messages, photos, historique d'appels, ni le contenu d'aucune autre application.\n\nNous ne collectons pas non plus ces informations.",
+                buttonTitle: "Continuer"
+            ),
+            Screen(
+                id: "onboard.control",
+                icon: "hand.raised",
+                title: "Vous gardez le contrôle",
+                body: "Vous pouvez désactiver tout partage à tout moment.\n\nLes changements prennent effet après un délai de 6 heures — cela empêche quiconque de vous forcer à désactiver le partage sur-le-champ. Si vous êtes en sécurité, le partage cessera complètement après 6 heures.",
+                buttonTitle: "Commencer"
             ),
         ]
     }
