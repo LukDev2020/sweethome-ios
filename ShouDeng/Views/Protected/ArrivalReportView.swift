@@ -84,7 +84,7 @@ struct ArrivalReportView: View {
 
             TextField("或输入地点名称", text: $placeName)
                 .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: 280)
+                .frame(maxWidth: .infinity)
 
             Button {
                 Task { await sendReport() }

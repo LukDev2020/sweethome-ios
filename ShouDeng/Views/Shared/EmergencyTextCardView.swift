@@ -160,7 +160,7 @@ struct EmergencyTextCardView: View {
 
     private var fullScreenCard: some View {
         ZStack {
-            Color.white.ignoresSafeArea()
+            Color.white.ignoresSafeArea(.all, edges: .all)
 
             VStack(spacing: 24) {
                 Spacer()

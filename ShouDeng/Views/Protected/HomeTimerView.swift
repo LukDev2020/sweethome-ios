@@ -68,7 +68,7 @@ struct HomeTimerView: View {
             VStack(spacing: 12) {
                 TextField("标签", text: $label)
                     .textFieldStyle(.roundedBorder)
-                    .frame(maxWidth: 240)
+                    .frame(maxWidth: .infinity)
 
                 DatePicker(
                     "预计时间",
@@ -78,7 +78,7 @@ struct HomeTimerView: View {
                 )
                 .datePickerStyle(.wheel)
                 .labelsHidden()
-                .frame(maxWidth: 280)
+                .frame(maxWidth: .infinity)
             }
             .padding(.top, 8)
 
@@ -127,12 +127,12 @@ struct HomeTimerView: View {
             ZStack {
                 Circle()
                     .stroke(isExpired ? alert.opacity(0.3) : safe.opacity(0.15), lineWidth: 8)
-                    .frame(width: 200, height: 200)
+                    .frame(maxWidth: 200, maxHeight: 200)
 
                 Circle()
                     .trim(from: 0, to: isExpired ? 1.0 : CGFloat(remaining) / max(1, CGFloat(deadline.timeIntervalSince(activeDeadline!.addingTimeInterval(-Double(remaining))))))
                     .stroke(isExpired ? alert : safe, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                    .frame(width: 200, height: 200)
+                    .frame(maxWidth: 200, maxHeight: 200)
                     .rotationEffect(.degrees(-90))
 
                 VStack(spacing: 4) {

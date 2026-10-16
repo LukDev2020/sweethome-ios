@@ -7,11 +7,25 @@ struct RootView: View {
     @State private var showBiometricPrompt = false
 
     // TEMP: Set to true to bypass login during development
-    private let devBypassLogin = false
+    private var devBypassLogin: Bool {
+        !ProcessInfo.processInfo.arguments.contains("-auth-screens")
+    }
+
+    #if DEBUG
+    private var isScreenshotMode: Bool { ScreenshotCapture.isEnabled }
+    #else
+    private var isScreenshotMode: Bool { false }
+    #endif
 
     var body: some View {
         Group {
-            if devBypassLogin {
+            if isScreenshotMode {
+                #if DEBUG
+                ScreenshotGalleryView()
+                #endif
+            } else if ProcessInfo.processInfo.arguments.contains("-show-onboarding") {
+                OnboardingView(isComplete: $onboardingComplete)
+            } else if devBypassLogin {
                 // DEV BYPASS: skip login and onboarding
                 ZStack(alignment: .top) {
                     switch coordinator.userRole {

@@ -13,7 +13,7 @@ import FirebaseCrashlytics
 final class AppCoordinator: ObservableObject {
 
     // Set to true to bypass login during development
-    let devBypassLogin = false
+    let devBypassLogin = true
 
     // MARK: - Published State
 
@@ -123,6 +123,9 @@ final class AppCoordinator: ObservableObject {
             if let role = localStore.loadUserRole() {
                 userRole = role
             }
+        } else if let debugRole = UserDefaults.standard.string(forKey: "debug_role"),
+                  let role = UserRole(rawValue: debugRole) {
+            userRole = role
         }
         #else
         if let role = localStore.loadUserRole() {

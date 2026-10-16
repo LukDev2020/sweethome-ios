@@ -17,7 +17,7 @@ struct BiometricGateView: View {
 
     var body: some View {
         ZStack {
-            bg.ignoresSafeArea()
+            bg.ignoresSafeArea(.all, edges: .all)
 
             VStack(spacing: 0) {
                 Spacer()
