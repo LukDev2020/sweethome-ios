@@ -32,6 +32,7 @@ struct VerticalTabRail: View {
                         .foregroundStyle(lamp)
                         .frame(width: 44, height: 44)
                 }
+                .accessibilityLabel("邀请守护者")
                 .padding(.top, 12)
             }
 
@@ -54,6 +55,7 @@ struct VerticalTabRail: View {
                             )
                             .clipShape(Circle())
                     }
+                    .accessibilityLabel(tab.title)
                 }
             }
             .padding(.vertical, 8)
