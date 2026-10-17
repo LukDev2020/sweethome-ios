@@ -178,8 +178,7 @@ final class AuthManager: ObservableObject {
 
     // MARK: - Dev Login (DEBUG only)
 
-    #if DEBUG
-    /// Bypass Firebase/backend entirely. Creates a fake session so the app is fully navigable.
+    /// Dev/test login bypass. Creates a fake session so the app is fully navigable.
     func devLogin(role: String = "guardian") {
         let response = AuthResponse(
             accessToken: "dev_token_\(UUID().uuidString)",
@@ -190,7 +189,6 @@ final class AuthManager: ObservableObject {
         )
         handleAuthResponse(response)
     }
-    #endif
 
     // MARK: - Logout
 

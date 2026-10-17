@@ -40,6 +40,9 @@ struct SignupView: View {
     @State private var failedAttempts = 0
     @State private var isLocked = false
 
+    private enum Field { case phone, code, name }
+    @FocusState private var focusedField: Field?
+
     enum Step {
         case phone
         case code
@@ -103,6 +106,8 @@ struct SignupView: View {
                 Spacer()
                 Spacer()
             }
+            .contentShape(Rectangle())
+            .onTapGesture { focusedField = nil }
             .background(Color(.systemBackground))
             .navigationTitle(lang.localized("signup.title"))
             .navigationBarTitleDisplayMode(.inline)
@@ -197,6 +202,7 @@ struct SignupView: View {
                         .font(.system(size: 15))
                         .keyboardType(.phonePad)
                         .textContentType(.telephoneNumber)
+                        .focused($focusedField, equals: .phone)
                         .padding(12)
                 }
                 .padding(.horizontal, 4)
@@ -218,6 +224,7 @@ struct SignupView: View {
                     .font(.system(size: 15))
                     .keyboardType(.numberPad)
                     .textContentType(.oneTimeCode)
+                    .focused($focusedField, equals: .code)
                     .padding(12)
                     .background(
                         RoundedRectangle(cornerRadius: 10)
@@ -233,6 +240,7 @@ struct SignupView: View {
                 TextField(lang.localized("signup.name.placeholder"), text: $displayName)
                     .font(.system(size: 15))
                     .textContentType(.name)
+                    .focused($focusedField, equals: .name)
                     .padding(12)
                     .background(
                         RoundedRectangle(cornerRadius: 10)

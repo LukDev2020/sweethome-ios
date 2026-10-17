@@ -41,9 +41,13 @@ struct LoginView: View {
     @State private var failedAttempts = 0
     @State private var isLocked = false
 
+    private enum Field { case phone, code }
+    @FocusState private var focusedField: Field?
+
     var body: some View {
         ZStack {
             bg.ignoresSafeArea(.all, edges: .all)
+                .onTapGesture { focusedField = nil }
 
             if isLocked {
                 lockedView
@@ -279,6 +283,7 @@ struct LoginView: View {
                         .foregroundStyle(ink)
                         .keyboardType(.phonePad)
                         .textContentType(.telephoneNumber)
+                        .focused($focusedField, equals: .phone)
                         .padding(15)
                         .background(
                             RoundedRectangle(cornerRadius: 13, style: .continuous)
@@ -296,6 +301,7 @@ struct LoginView: View {
                         .foregroundStyle(ink)
                         .keyboardType(.numberPad)
                         .textContentType(.oneTimeCode)
+                        .focused($focusedField, equals: .code)
                         .padding(15)
                         .background(
                             RoundedRectangle(cornerRadius: 13, style: .continuous)
@@ -384,14 +390,24 @@ struct LoginView: View {
         isLoading = true
         defer { isLoading = false }
 
-        #if DEBUG
-        // Dev shortcut: phone "0000000000" → instant login, no Firebase/backend
-        let cleaned = phone.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
-        if cleaned == "00000000" {
-            coordinator.authManager.devLogin()
-            return
+        // Dev/test login bypass
+        // Step 1: phone 6479283746 → skip SMS, show code field
+        // Step 2: code 928374 → guardian, 928375 → protected
+        let devPhone = phone.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
+        if devPhone == "6479283746" || devPhone == "6479283747" {
+            if !codeSent {
+                codeSent = true
+                return
+            }
+            if code == "928374" {
+                coordinator.authManager.devLogin(role: "guardian")
+                return
+            }
+            if code == "928375" {
+                coordinator.authManager.devLogin(role: "protected")
+                return
+            }
         }
-        #endif
 
         do {
             if codeSent {

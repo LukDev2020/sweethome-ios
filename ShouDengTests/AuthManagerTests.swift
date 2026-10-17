@@ -168,6 +168,70 @@ final class AuthManagerTests: XCTestCase {
         XCTAssertFalse(vid.isEmpty)
         XCTAssertEqual(mock.lastPhoneNumber, "+16135551234")
     }
+
+    // MARK: - Dev Login Bypass
+
+    func testDevLoginSetsLoggedInState() {
+        let queue = OfflineQueue()
+        let client = APIClient(
+            config: .init(baseURL: "https://api.shoudeng.app"),
+            offlineQueue: queue
+        )
+        let manager = AuthManager(api: client, phoneAuth: MockPhoneAuthProvider())
+
+        manager.devLogin(role: "guardian")
+
+        // devLogin dispatches to main queue, so give it a moment
+        let exp = expectation(description: "state updates")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            XCTAssertEqual(manager.isLoggedIn, true)
+            XCTAssertNotNil(manager.currentUserId)
+            XCTAssertTrue(manager.currentUserId?.hasPrefix("dev_user_") ?? false)
+            XCTAssertEqual(manager.lastLoginRole, "guardian")
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 2)
+    }
+
+    func testDevLoginProtectedRole() {
+        let queue = OfflineQueue()
+        let client = APIClient(
+            config: .init(baseURL: "https://api.shoudeng.app"),
+            offlineQueue: queue
+        )
+        let manager = AuthManager(api: client, phoneAuth: MockPhoneAuthProvider())
+
+        manager.devLogin(role: "protected")
+
+        let exp = expectation(description: "state updates")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            XCTAssertEqual(manager.isLoggedIn, true)
+            XCTAssertEqual(manager.lastLoginRole, "protected")
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 2)
+    }
+
+    func testDevLoginThenLogout() {
+        let queue = OfflineQueue()
+        let client = APIClient(
+            config: .init(baseURL: "https://api.shoudeng.app"),
+            offlineQueue: queue
+        )
+        let manager = AuthManager(api: client, phoneAuth: MockPhoneAuthProvider())
+
+        manager.devLogin(role: "guardian")
+
+        let exp = expectation(description: "login then logout")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            XCTAssertTrue(manager.isLoggedIn)
+            manager.logout()
+            XCTAssertFalse(manager.isLoggedIn)
+            XCTAssertEqual(manager.state, .loggedOut)
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 2)
+    }
 }
 
 // MARK: - Mock Phone Auth Provider for Tests
