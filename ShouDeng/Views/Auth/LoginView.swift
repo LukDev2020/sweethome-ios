@@ -182,25 +182,7 @@ struct LoginView: View {
 
             Spacer()
 
-            HStack(spacing: 2) {
-                ForEach(AppLanguage.allCases, id: \.self) { language in
-                    Button {
-                        lang.current = language
-                    } label: {
-                        Text(language.displayName)
-                            .font(.system(size: 12))
-                            .foregroundStyle(lang.current == language ? navy : ink3)
-                            .padding(.horizontal, 9)
-                            .padding(.vertical, 4)
-                            .background(
-                                lang.current == language
-                                    ? Capsule().fill(navy.opacity(0.09))
-                                    : nil
-                            )
-                    }
-                }
-            }
-            .padding(.trailing, 20)
+            LanguageSwitcher(style: .light)
         }
         .padding(.top, 6)
     }
