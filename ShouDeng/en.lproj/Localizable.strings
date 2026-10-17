@@ -1,9 +1,10 @@
 /* Login */
 "app.name" = "Vela";
-"app.tagline" = "Reach your family faster in emergencies";
+"app.tagline" = "Family looking out for family";
 "login.phone.placeholder" = "Phone number";
 "login.code.placeholder" = "Verification code";
-"login.get.code" = "Get Code";
+"login.get.code" = "Continue with phone";
+"login.phone.helper" = "Enter your number to receive a code";
 "login.button" = "Log In";
 "login.countdown" = "%ds";
 "login.no.account" = "Don't have an account? ";
@@ -40,6 +41,21 @@
 "signup.role.guardian.desc" = "You will monitor family safety status";
 "signup.finish" = "Complete";
 "signup.back" = "Back";
+
+/* Settings */
+"settings.elder.mode" = "Large Text Mode";
+
+/* Role Selection */
+"role.select.title" = "Choose Your Role";
+"role.select.subtitle" = "You can change this later in Settings.";
+"role.select.confirm" = "Continue";
+
+/* Invite */
+"invite.accept.title" = "Join Family Circle";
+"invite.accept.message" = "You have been invited to join a family safety circle. Accept to start watching over each other.";
+"invite.accept.button" = "Accept Invite";
+"invite.accept.success" = "You're connected!";
+"invite.accept.done" = "Done";
 
 /* Country Picker */
 "picker.search" = "Search countries";

@@ -182,25 +182,7 @@ struct LoginView: View {
 
             Spacer()
 
-            HStack(spacing: 2) {
-                ForEach(AppLanguage.allCases, id: \.self) { language in
-                    Button {
-                        lang.current = language
-                    } label: {
-                        Text(language.displayName)
-                            .font(.system(size: 12))
-                            .foregroundStyle(lang.current == language ? navy : ink3)
-                            .padding(.horizontal, 9)
-                            .padding(.vertical, 4)
-                            .background(
-                                lang.current == language
-                                    ? Capsule().fill(navy.opacity(0.09))
-                                    : nil
-                            )
-                    }
-                }
-            }
-            .padding(.trailing, 20)
+            LanguageSwitcher(style: .light)
         }
         .padding(.top, 6)
     }
@@ -222,8 +204,8 @@ struct LoginView: View {
                 Image("AppLogo")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 80, height: 80)
-                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .frame(width: 120, height: 120)
+                    .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
 
                 Text(lang.localized("app.name"))
                     .font(.system(size: 29, weight: .black, design: .serif))
@@ -231,7 +213,7 @@ struct LoginView: View {
                     .tracking(1.5)
                     .padding(.top, 10)
 
-                Text(lang.current == .chinese ? "VELA" : "守灯")
+                Text(Brand.displaySubtitle(locale: lang.current))
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(blue)
                     .tracking(3.5)
@@ -317,6 +299,14 @@ struct LoginView: View {
             .padding(.horizontal, 32)
             .animation(.easeInOut(duration: 0.3), value: codeSent)
 
+            if !codeSent {
+                Text(lang.localized("login.phone.helper"))
+                    .font(.system(size: 13))
+                    .foregroundStyle(ink3)
+                    .padding(.top, 8)
+                    .padding(.horizontal, 32)
+            }
+
             // Error + attempts warning
             if let errorMessage {
                 VStack(spacing: 4) {
@@ -352,7 +342,7 @@ struct LoginView: View {
                     }
                 }
                 .font(.system(size: 15.5, weight: .medium))
-                .foregroundStyle(buttonDisabled ? navy.opacity(0.55) : cream)
+                .foregroundStyle(buttonDisabled ? navy.opacity(0.38) : cream)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(
@@ -477,7 +467,7 @@ struct LoginView: View {
     }
 
     private func openSupport() {
-        if let url = URL(string: "mailto:support@velarcare.com?subject=Account%20Locked") {
+        if let url = URL(string: "mailto:\(Brand.supportEmail)?subject=Account%20Locked") {
             UIApplication.shared.open(url)
         }
     }

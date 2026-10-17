@@ -1,9 +1,10 @@
 /* Login */
 "app.name" = "Vela";
-"app.tagline" = "Joindre votre famille plus vite en cas d'urgence";
+"app.tagline" = "Veiller les uns sur les autres";
 "login.phone.placeholder" = "Numéro de téléphone";
 "login.code.placeholder" = "Code de vérification";
-"login.get.code" = "Obtenir le code";
+"login.get.code" = "Continuer avec le téléphone";
+"login.phone.helper" = "Entrez votre numéro pour recevoir un code";
 "login.button" = "Connexion";
 "login.countdown" = "%ds";
 "login.no.account" = "Pas de compte ? ";
@@ -40,6 +41,21 @@
 "signup.role.guardian.desc" = "Vous surveillerez la sécurité de votre famille";
 "signup.finish" = "Terminer";
 "signup.back" = "Retour";
+
+/* Settings */
+"settings.elder.mode" = "Mode grands caractères";
+
+/* Role Selection */
+"role.select.title" = "Choisissez votre rôle";
+"role.select.subtitle" = "Vous pourrez le modifier dans les Réglages.";
+"role.select.confirm" = "Continuer";
+
+/* Invite */
+"invite.accept.title" = "Rejoindre le cercle familial";
+"invite.accept.message" = "Vous avez été invité(e) à rejoindre un cercle de sécurité familiale. Acceptez pour commencer à veiller les uns sur les autres.";
+"invite.accept.button" = "Accepter l'invitation";
+"invite.accept.success" = "Vous êtes connecté(e) !";
+"invite.accept.done" = "Terminé";
 
 /* Country Picker */
 "picker.search" = "Rechercher un pays";

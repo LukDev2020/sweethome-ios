@@ -1,9 +1,10 @@
 /* Login */
 "app.name" = "守灯";
-"app.tagline" = "在紧急时刻更快联系上你的家人";
+"app.tagline" = "家人之间，互相守护";
 "login.phone.placeholder" = "手机号码";
 "login.code.placeholder" = "验证码";
-"login.get.code" = "获取验证码";
+"login.get.code" = "用手机号继续";
+"login.phone.helper" = "输入手机号后获取验证码";
 "login.button" = "登录";
 "login.countdown" = "%d秒后重发";
 "login.no.account" = "还没有账号？";
@@ -40,6 +41,21 @@
 "signup.role.guardian.desc" = "你将关注家人的安全状态";
 "signup.finish" = "完成注册";
 "signup.back" = "返回";
+
+/* Settings */
+"settings.elder.mode" = "大字模式";
+
+/* Role Selection */
+"role.select.title" = "选择你的角色";
+"role.select.subtitle" = "之后可在设置中更改。";
+"role.select.confirm" = "继续";
+
+/* Invite */
+"invite.accept.title" = "加入守护圈";
+"invite.accept.message" = "你已收到邀请，加入家庭守护圈后可以互相守护。";
+"invite.accept.button" = "接受邀请";
+"invite.accept.success" = "已成功连接！";
+"invite.accept.done" = "完成";
 
 /* Country Picker */
 "picker.search" = "搜索国家或地区";
