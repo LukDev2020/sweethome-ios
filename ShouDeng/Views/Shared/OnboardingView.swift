@@ -43,8 +43,13 @@ struct OnboardingView: View {
     private var compactOnboardingLayout: some View {
         VStack(spacing: 0) {
             onboardingTopBar
-            progressDots
-                .padding(.top, 16)
+            PageIndicator(
+                count: screens.count,
+                current: currentPage,
+                activeColor: lamp,
+                inactiveColor: lamp.opacity(0.25)
+            )
+            .padding(.top, 16)
             Spacer()
                 .frame(maxHeight: 48)
             screenContent(screens[currentPage])
@@ -63,8 +68,13 @@ struct OnboardingView: View {
             VStack(spacing: 0) {
                 onboardingTopBar
                     .padding(.horizontal, 28)
-                progressDots
-                    .padding(.top, 16)
+                PageIndicator(
+                    count: screens.count,
+                    current: currentPage,
+                    activeColor: lamp,
+                    inactiveColor: lamp.opacity(0.25)
+                )
+                .padding(.top, 16)
                 Spacer()
                 Image(systemName: screens[currentPage].icon)
                     .font(.system(size: 56, weight: .light))
@@ -76,6 +86,7 @@ struct OnboardingView: View {
                     .multilineTextAlignment(.center)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
+                    .minimumScaleFactor(0.8)
                     .padding(.top, 20)
                     .padding(.horizontal, 32)
                 Spacer()
@@ -90,12 +101,7 @@ struct OnboardingView: View {
             // RIGHT: Body + Button
             VStack(spacing: 0) {
                 Spacer()
-                Text(screens[currentPage].body)
-                    .font(.system(size: 16))
-                    .foregroundStyle(.white.opacity(0.75))
-                    .lineSpacing(6)
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
+                disclaimerBody(screens[currentPage].body)
                     .padding(.horizontal, 36)
                 Spacer()
                 actionButton(screens[currentPage])
@@ -124,26 +130,7 @@ struct OnboardingView: View {
 
             Spacer()
 
-            // D-07: Language switcher top-right, matching login screen
-            HStack(spacing: 2) {
-                ForEach(AppLanguage.allCases, id: \.self) { language in
-                    Button {
-                        lang.current = language
-                    } label: {
-                        Text(language.displayName)
-                            .font(.system(size: 12))
-                            .foregroundStyle(lang.current == language ? .white : .white.opacity(0.35))
-                            .padding(.horizontal, 9)
-                            .padding(.vertical, 4)
-                            .background(
-                                lang.current == language
-                                    ? Capsule().fill(.white.opacity(0.15))
-                                    : nil
-                            )
-                    }
-                }
-            }
-            .padding(.trailing, 16)
+            LanguageSwitcher(style: .dark)
         }
         .padding(.top, 8)
         .padding(.leading, 4)
@@ -152,18 +139,6 @@ struct OnboardingView: View {
     private func skipToHome() {
         withAnimation {
             isComplete = true
-        }
-    }
-
-    // MARK: - Progress Dots
-
-    private var progressDots: some View {
-        HStack(spacing: 8) {
-            ForEach(0..<screens.count, id: \.self) { i in
-                Circle()
-                    .fill(i <= currentPage ? lamp : lamp.opacity(0.25))
-                    .frame(width: 7, height: 7)
-            }
         }
     }
 
@@ -177,22 +152,64 @@ struct OnboardingView: View {
                 .foregroundStyle(lamp)
                 .frame(height: 60)
 
-            // Title
+            // Title — no truncation
             Text(screen.title)
                 .font(.system(size: 24, weight: .bold, design: .serif))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
                 .lineLimit(nil)
                 .fixedSize(horizontal: false, vertical: true)
+                .minimumScaleFactor(0.8)
 
-            // Body
-            Text(screen.body)
-                .font(.system(size: 16))
-                .foregroundStyle(.white.opacity(0.75))
-                .lineSpacing(6)
-                .multilineTextAlignment(.leading)
-                .fixedSize(horizontal: false, vertical: true)
+            // Body with inline SF Symbols
+            disclaimerBody(screen.body)
         }
+    }
+
+    // MARK: - Disclaimer Body (SF Symbol lines)
+
+    /// Parses body text where each paragraph may start with an SF Symbol name
+    /// (e.g. "phone.fill In an emergency..."). Renders icon + text pairs.
+    private func disclaimerBody(_ body: String) -> some View {
+        let paragraphs = body.components(separatedBy: "\n\n")
+        return VStack(alignment: .leading, spacing: 16) {
+            ForEach(Array(paragraphs.enumerated()), id: \.offset) { _, paragraph in
+                let parts = Self.parseSymbolLine(paragraph)
+                HStack(alignment: .top, spacing: 12) {
+                    if let symbol = parts.symbol {
+                        Image(systemName: symbol)
+                            .font(.system(size: 17, weight: .medium))
+                            .foregroundStyle(lamp)
+                            .frame(width: 24, alignment: .center)
+                            .padding(.top, 2)
+                    }
+                    Text(parts.text)
+                        .font(.system(size: 17))
+                        .foregroundStyle(.white.opacity(0.75))
+                        .lineSpacing(5)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+    }
+
+    /// Splits "phone.fill Some text" into (symbol: "phone.fill", text: "Some text").
+    /// If no known symbol prefix, returns nil symbol and the full text.
+    private static let knownSymbols: Set<String> = [
+        "phone.fill", "person.2.fill", "wifi.exclamationmark",
+        "eye.slash", "hand.raised", "exclamationmark.triangle"
+    ]
+
+    private static func parseSymbolLine(_ line: String) -> (symbol: String?, text: String) {
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        // Check if line starts with a known SF Symbol name
+        for sym in knownSymbols {
+            if trimmed.hasPrefix(sym + " ") {
+                let text = String(trimmed.dropFirst(sym.count + 1))
+                return (sym, text)
+            }
+        }
+        return (nil, trimmed)
     }
 
     // MARK: - Action Button
@@ -201,6 +218,7 @@ struct OnboardingView: View {
         Button {
             // Log consent
             ConsentLogger.shared.logOnboardingScreen(screen.id)
+            AuditLog.record(event: .disclaimerAccepted, version: DisclaimerCopy.Onboarding.version)
 
             if currentPage < screens.count - 1 {
                 withAnimation(.easeInOut(duration: 0.3)) {

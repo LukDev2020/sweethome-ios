@@ -35,8 +35,8 @@ enum DisclaimerCopy {
             Screen(
                 id: "onboard.not_emergency",
                 icon: "exclamationmark.triangle",
-                title: "守灯不是紧急服务",
-                body: "遇到危险时，请优先拨打当地紧急号码。\n\n守灯的作用是通知你的家人和联系人，无法替代警方、消防或急救。我们会尽力送达通知，但无法保证网络、设备或对方一定能及时响应。",
+                title: "守灯不是紧急救援服务",
+                body: "phone.fill 遇到紧急情况，请先拨打当地急救电话。\n\nperson.2.fill 守灯通知你的家人和联系人，无法替代警方、消防或急救服务。\n\nwifi.exclamationmark 我们会尽力送达通知，但无法保证网络、设备或对方一定能及时响应。",
                 buttonTitle: "我明白了"
             ),
             Screen(
@@ -60,7 +60,7 @@ enum DisclaimerCopy {
                 id: "onboard.not_emergency",
                 icon: "exclamationmark.triangle",
                 title: "Vela Is Not an Emergency Service",
-                body: "In an emergency, always call your local emergency number first.\n\nVela notifies your family and contacts — it cannot replace police, fire, or medical services. We do our best to deliver notifications, but cannot guarantee network, device, or recipient availability.",
+                body: "phone.fill In an emergency, call your local emergency number first.\n\nperson.2.fill Vela notifies your family and contacts. It cannot replace police, fire, or medical services.\n\nwifi.exclamationmark We do our best to deliver notifications but cannot guarantee network, device, or recipient availability.",
                 buttonTitle: "I Understand"
             ),
             Screen(
@@ -84,7 +84,7 @@ enum DisclaimerCopy {
                 id: "onboard.not_emergency",
                 icon: "exclamationmark.triangle",
                 title: "Vela n'est pas un service d'urgence",
-                body: "En cas de danger, appelez d'abord le numéro d'urgence local.\n\nVela prévient votre famille et vos contacts — il ne remplace ni la police, ni les pompiers, ni les secours. Nous faisons de notre mieux pour transmettre les notifications, mais ne pouvons garantir la disponibilité du réseau, de l'appareil ou du destinataire.",
+                body: "phone.fill En cas d'urgence, appelez d'abord le numéro d'urgence local.\n\nperson.2.fill Vela prévient votre famille et vos contacts. Il ne remplace ni la police, ni les pompiers, ni les secours.\n\nwifi.exclamationmark Nous faisons de notre mieux pour transmettre les notifications, mais ne pouvons garantir la disponibilité du réseau, de l'appareil ou du destinataire.",
                 buttonTitle: "Je comprends"
             ),
             Screen(

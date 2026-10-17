@@ -12,6 +12,7 @@
 		06386B2FC24D4DFE3C69F2CB /* HotlineCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 525930DD8BF30E7421491576 /* HotlineCardView.swift */; };
 		08008D4727E3F87A4F8C3F87 /* DismissTimerIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 040C57BD82556A18B68CDDE7 /* DismissTimerIntent.swift */; };
 		0A520BDDFC2C9F526CAEB9EC /* ConsentLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35327FBDA1338FA0E3A57540 /* ConsentLogger.swift */; };
+		D6E7F8A9B0C1D2E3F4A5B6C7 /* AuditLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5D6E7F8A9B0C1D2E3F4A5B6 /* AuditLog.swift */; };
 		0B1E36F80D59153D5A93D7BA /* VerticalTabRail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AD061FC3A7B8EC6D203DC4A /* VerticalTabRail.swift */; };
 		0B892C8BFA3A8FE116B892CF /* ProtectedSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BEAFFBD653265D29795FC10 /* ProtectedSettingsView.swift */; };
 		0C1536421573BD9FE11F0A4A /* EmergencyTextCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEFD93DE7D272B9E6D75E3E9 /* EmergencyTextCardView.swift */; };
@@ -67,6 +68,8 @@
 		62FB10DE6E9D973ED7612DA4 /* ProtectedWidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 094B7B9328E458ED644D623F /* ProtectedWidgetViews.swift */; };
 		639980C1ABB6AC215AB6A086 /* ClaimMaterialsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF25946B046DF1BA3754FAD /* ClaimMaterialsView.swift */; };
 		647CECC1E71D0A4EF094D5C7 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3466851E2976AD062984576F /* OnboardingView.swift */; };
+		F2A3B4C5D6E7F8A9B0C1D2E3 /* PageIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F2A3B4C5D6E7F8A9B0C1D2 /* PageIndicator.swift */; };
+		B4C5D6E7F8A9B0C1D2E3F4A5 /* LanguageSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B4C5D6E7F8A9B0C1D2E3F4 /* LanguageSwitcher.swift */; };
 		650E607DA8080D5654777C21 /* ProtectedLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C0D6EE1A2DDEF20B0D245C8 /* ProtectedLiveActivity.swift */; };
 		677834490B57DB6C3C54821D /* WidgetPreviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6CF262FFD6B5FBF8B10D4F7 /* WidgetPreviews.swift */; };
 		677EF24901E9EE3C564AA7E2 /* FeatureDisclosureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C180202B726745C4D4136747 /* FeatureDisclosureView.swift */; };
@@ -199,7 +202,10 @@
 		323C5F3CDB46FE9F3750B9AA /* GuardianHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianHomeView.swift; sourceTree = "<group>"; };
 		325580AA75684B4486819630 /* ShouDengWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShouDengWidgets.entitlements; sourceTree = "<group>"; };
 		3466851E2976AD062984576F /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		E1F2A3B4C5D6E7F8A9B0C1D2 /* PageIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageIndicator.swift; sourceTree = "<group>"; };
+		A3B4C5D6E7F8A9B0C1D2E3F4 /* LanguageSwitcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageSwitcher.swift; sourceTree = "<group>"; };
 		35327FBDA1338FA0E3A57540 /* ConsentLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsentLogger.swift; sourceTree = "<group>"; };
+		C5D6E7F8A9B0C1D2E3F4A5B6 /* AuditLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuditLog.swift; sourceTree = "<group>"; };
 		36FD0E52F4564B5B9E057EB3 /* LocationCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationCardView.swift; sourceTree = "<group>"; };
 		37E2174A14C8BD5D344A7E54 /* GuardianTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianTabView.swift; sourceTree = "<group>"; };
 		3C38041E8CCB6EAE0ECF2D4F /* AuthManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManagerTests.swift; sourceTree = "<group>"; };
@@ -345,6 +351,7 @@
 			isa = PBXGroup;
 			children = (
 				35327FBDA1338FA0E3A57540 /* ConsentLogger.swift */,
+				C5D6E7F8A9B0C1D2E3F4A5B6 /* AuditLog.swift */,
 				D9AB9C9ECACF9A543D385A38 /* DeviceHealthMonitor.swift */,
 				67C305CFAAFD54663F090DC3 /* DisclaimerCopy.swift */,
 			);
@@ -515,6 +522,8 @@
 				36FD0E52F4564B5B9E057EB3 /* LocationCardView.swift */,
 				0879BC98D0B4991130725412 /* MedicalCardView.swift */,
 				3466851E2976AD062984576F /* OnboardingView.swift */,
+				E1F2A3B4C5D6E7F8A9B0C1D2 /* PageIndicator.swift */,
+				A3B4C5D6E7F8A9B0C1D2E3F4 /* LanguageSwitcher.swift */,
 				5A999FE740978FB9A70C0B89 /* ProfileEditView.swift */,
 				997CD81ED07E07D1FF5E0291 /* RootView.swift */,
 			);
@@ -910,6 +919,7 @@
 				639980C1ABB6AC215AB6A086 /* ClaimMaterialsView.swift in Sources */,
 				987EA4563028AC5BDB0BDEE8 /* ClaimPDFGenerator.swift in Sources */,
 				0A520BDDFC2C9F526CAEB9EC /* ConsentLogger.swift in Sources */,
+				D6E7F8A9B0C1D2E3F4A5B6C7 /* AuditLog.swift in Sources */,
 				AF92E9F1A99C0FD92B75DBBE /* ConsulateView.swift in Sources */,
 				791C1055A0D240706A687AD6 /* CountryCode.swift in Sources */,
 				B2C3D4E5F6A7B8C9D0E1F2A3 /* Brand.swift in Sources */,
@@ -956,6 +966,8 @@
 				C0B0BE414A87C5344A38B4E4 /* MotionService.swift in Sources */,
 				FD27D57BCFCB4A4640B7864C /* OfflineQueue.swift in Sources */,
 				647CECC1E71D0A4EF094D5C7 /* OnboardingView.swift in Sources */,
+				F2A3B4C5D6E7F8A9B0C1D2E3 /* PageIndicator.swift in Sources */,
+				B4C5D6E7F8A9B0C1D2E3F4A5 /* LanguageSwitcher.swift in Sources */,
 				91B694B65DF0CB555CA4C950 /* OrgDashboardView.swift in Sources */,
 				99FC8FF203EC949973C261AE /* PaymentMethodManager.swift in Sources */,
 				6AC917981978E3093AAC36EC /* ProfileEditView.swift in Sources */,
