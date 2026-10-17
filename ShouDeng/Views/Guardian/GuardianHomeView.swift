@@ -87,7 +87,7 @@ struct GuardianHomeView: View {
                             .foregroundStyle(pro)
                         Text(toolbarLocation)
                             .font(.system(size: 12))
-                            .foregroundStyle(ink.opacity(0.42))
+                            .foregroundStyle(ink.opacity(0.55))
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -194,10 +194,10 @@ struct GuardianHomeView: View {
                         }
                         Text("·")
                             .font(.system(size: 11))
-                            .foregroundStyle(ink.opacity(0.3))
+                            .foregroundStyle(ink.opacity(0.55))
                         Text(toolbarLocation)
                             .font(.system(size: 12))
-                            .foregroundStyle(ink.opacity(0.5))
+                            .foregroundStyle(ink.opacity(0.55))
                         Spacer()
                     }
                     .padding(.horizontal, 16)
@@ -278,7 +278,7 @@ struct GuardianHomeView: View {
             Divider()
             Text("世界钟解决跨国家庭每天都在做的心算：现在打过去会不会吵醒他。")
                 .font(.system(size: 12))
-                .foregroundStyle(ink.opacity(0.45))
+                .foregroundStyle(ink.opacity(0.55))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.top, 11)
         }

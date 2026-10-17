@@ -70,13 +70,13 @@ struct ProtectedHomeView: View {
                             .foregroundStyle(safe)
                         Text(toolbarLocation)
                             .font(.system(size: 12))
-                            .foregroundStyle(ink.opacity(0.42))
+                            .foregroundStyle(ink.opacity(0.55))
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Text(toolbarBattery)
                         .font(.system(size: 12))
-                        .foregroundStyle(ink.opacity(0.42))
+                        .foregroundStyle(ink.opacity(0.55))
                 }
             }
             .navigationDestination(for: String.self) { guardianId in
@@ -167,7 +167,7 @@ struct ProtectedHomeView: View {
                         Spacer()
                         Text(toolbarBattery)
                             .font(.system(size: 12))
-                            .foregroundStyle(ink.opacity(0.42))
+                            .foregroundStyle(ink.opacity(0.55))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
                             .background(ink.opacity(0.06))
@@ -191,7 +191,7 @@ struct ProtectedHomeView: View {
                             .foregroundStyle(safe)
                         Text(toolbarLocation)
                             .font(.system(size: 12))
-                            .foregroundStyle(ink.opacity(0.5))
+                            .foregroundStyle(ink.opacity(0.55))
                         Spacer()
                     }
                     .padding(.horizontal, 16)
@@ -428,7 +428,7 @@ struct ProtectedHomeView: View {
                         .foregroundStyle(clock.isMe ? lamp : ink)
                     Text(clock.note)
                         .font(.system(size: 11))
-                        .foregroundStyle(clock.isMe ? lamp : ink.opacity(0.45))
+                        .foregroundStyle(clock.isMe ? lamp : ink.opacity(0.55))
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 7)

@@ -13,7 +13,7 @@ import FirebaseCrashlytics
 final class AppCoordinator: ObservableObject {
 
     // Set to true to bypass login during development
-    let devBypassLogin = true
+    let devBypassLogin = false
 
     // MARK: - Published State
 

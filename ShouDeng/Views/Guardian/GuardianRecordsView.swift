@@ -484,7 +484,7 @@ struct GuardianRecordsView: View {
                 ForEach(["00", "04", "08", "12", "16", "20", "24"], id: \.self) { hour in
                     Text(hour)
                         .font(.system(size: 11))
-                        .foregroundStyle(ink.opacity(0.45))
+                        .foregroundStyle(ink.opacity(0.55))
                     if hour != "24" { Spacer() }
                 }
             }
