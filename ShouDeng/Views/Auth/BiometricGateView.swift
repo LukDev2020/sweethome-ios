@@ -42,7 +42,7 @@ struct BiometricGateView: View {
                             .frame(width: 80, height: 80)
                             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
-                        Text("守灯")
+                        Text(Brand.displayTitle(locale: LanguageManager.shared.current))
                             .font(.system(size: 29, weight: .black, design: .serif))
                             .foregroundStyle(navy)
                             .tracking(1.5)

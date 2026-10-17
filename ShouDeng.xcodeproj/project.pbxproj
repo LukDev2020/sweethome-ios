@@ -61,6 +61,7 @@
 		5A9F01A61315F1C229230439 /* GuardianSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB252440C67956A6E95C34C2 /* GuardianSettingsView.swift */; };
 		5BF317DDA31D8A059C33D9FC /* ProtectedCoverageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2CBED579613C2FC6F68B5B6 /* ProtectedCoverageView.swift */; };
 		5E1BA1B8E61306352C819EA8 /* AuthManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C38041E8CCB6EAE0ECF2D4F /* AuthManagerTests.swift */; };
+		D4E5F6A7B8C9D0E1F2A3B4C5 /* BrandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D4E5F6A7B8C9D0E1F2A3B4 /* BrandTests.swift */; };
 		5EB4D8C3B5424318A166AA9B /* CrashReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C2AFD6DEC7BB6A319D0C0A1 /* CrashReporter.swift */; };
 		61586C8E3D663CC027C5804E /* GuardianAlertResponseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43D8A8B0CD131E9E09E02BF6 /* GuardianAlertResponseView.swift */; };
 		62FB10DE6E9D973ED7612DA4 /* ProtectedWidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 094B7B9328E458ED644D623F /* ProtectedWidgetViews.swift */; };
@@ -74,6 +75,7 @@
 		6AF177BA649E9E3A34CFDABB /* ProtectedTimerWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28DD19C64B3FA4AFF3D91214 /* ProtectedTimerWidget.swift */; };
 		72311B032AFAD5E4C43442AA /* ShouDengWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B67AB48387F3263CABF4FE /* ShouDengWidgetBundle.swift */; };
 		791C1055A0D240706A687AD6 /* CountryCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6FB12D36F67ADB24BA2DDD5 /* CountryCode.swift */; };
+		B2C3D4E5F6A7B8C9D0E1F2A3 /* Brand.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* Brand.swift */; };
 		7CEB8F947D0673F08CE4439B /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9B16BBF77C02115152E9C88 /* AppCoordinator.swift */; };
 		7D9761B4731755AF8D1F6F8C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 870E1E566CD6F0CB6F1D7BF4 /* InfoPlist.strings */; };
 		83EB2936CCAAB952FCE2D393 /* PushService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6204076B52EBEA3054AA0985 /* PushService.swift */; };
@@ -201,6 +203,7 @@
 		36FD0E52F4564B5B9E057EB3 /* LocationCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationCardView.swift; sourceTree = "<group>"; };
 		37E2174A14C8BD5D344A7E54 /* GuardianTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianTabView.swift; sourceTree = "<group>"; };
 		3C38041E8CCB6EAE0ECF2D4F /* AuthManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManagerTests.swift; sourceTree = "<group>"; };
+		C3D4E5F6A7B8C9D0E1F2A3B4 /* BrandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandTests.swift; sourceTree = "<group>"; };
 		3D4BC3608A17EB87F1339C43 /* LegalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalView.swift; sourceTree = "<group>"; };
 		3D922CFCBCCE8F87BD686AD8 /* FallDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallDetector.swift; sourceTree = "<group>"; };
 		43D8A8B0CD131E9E09E02BF6 /* GuardianAlertResponseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianAlertResponseView.swift; sourceTree = "<group>"; };
@@ -292,6 +295,7 @@
 		F37B8CD19FA502A941DA6A92 /* LocalStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalStore.swift; sourceTree = "<group>"; };
 		F64A2DB8BEDB820B83E3C2C1 /* ConsulateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsulateView.swift; sourceTree = "<group>"; };
 		F6FB12D36F67ADB24BA2DDD5 /* CountryCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryCode.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* Brand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Brand.swift; sourceTree = "<group>"; };
 		F7E7DF026259086BD8255347 /* HomeTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeTimerView.swift; sourceTree = "<group>"; };
 		FAAF4DB91B71052AABF5312A /* GuardianTimelineProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianTimelineProvider.swift; sourceTree = "<group>"; };
 		FD5DECB3D0590E8B19B6BC11 /* SharedItineraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedItineraryView.swift; sourceTree = "<group>"; };
@@ -448,6 +452,7 @@
 			children = (
 				07B3F7BF74A7768DF6C5697C /* ClaimMaterialModels.swift */,
 				F6FB12D36F67ADB24BA2DDD5 /* CountryCode.swift */,
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* Brand.swift */,
 				090ED02D65906AB2947D49C5 /* Events.swift */,
 				F1C3DE3DA8E9EEE6CEB01B71 /* User.swift */,
 			);
@@ -628,6 +633,7 @@
 				19BF856E4785D6ABD573F691 /* AdaptiveLocationManagerTests.swift */,
 				B273093A701FBEED8E657124 /* APIClientTests.swift */,
 				3C38041E8CCB6EAE0ECF2D4F /* AuthManagerTests.swift */,
+				C3D4E5F6A7B8C9D0E1F2A3B4 /* BrandTests.swift */,
 				C3DFF6F31788D3DCA3A0EA15 /* BaselineScorerTests.swift */,
 				2FC2559DEFD8D966B804EC79 /* ClaimMaterialTests.swift */,
 				DC654D034E59F72E979F06BE /* CountryCodeTests.swift */,
@@ -906,6 +912,7 @@
 				0A520BDDFC2C9F526CAEB9EC /* ConsentLogger.swift in Sources */,
 				AF92E9F1A99C0FD92B75DBBE /* ConsulateView.swift in Sources */,
 				791C1055A0D240706A687AD6 /* CountryCode.swift in Sources */,
+				B2C3D4E5F6A7B8C9D0E1F2A3 /* Brand.swift in Sources */,
 				8627C03A13BF47323E31243F /* CountryCodePicker.swift in Sources */,
 				5EB4D8C3B5424318A166AA9B /* CrashReporter.swift in Sources */,
 				B10FAF76F9E10CCC8BC26F3C /* DeepLinkRouter.swift in Sources */,
@@ -983,6 +990,7 @@
 				D36AE3ACFF56A4B4A28DD3AF /* APIClientTests.swift in Sources */,
 				F0FFEA124608CCCA60504A62 /* AdaptiveLocationManagerTests.swift in Sources */,
 				5E1BA1B8E61306352C819EA8 /* AuthManagerTests.swift in Sources */,
+				D4E5F6A7B8C9D0E1F2A3B4C5 /* BrandTests.swift in Sources */,
 				1DFEC1C4BFFAE279D78FB734 /* BaselineScorerTests.swift in Sources */,
 				F961424AEC6B46170477E03A /* ClaimMaterialTests.swift in Sources */,
 				270DE17DDB5012F906FAE7D2 /* CountryCodeTests.swift in Sources */,

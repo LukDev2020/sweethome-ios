@@ -231,7 +231,7 @@ struct LoginView: View {
                     .tracking(1.5)
                     .padding(.top, 10)
 
-                Text(lang.current == .chinese ? "VELA" : "守灯")
+                Text(Brand.displaySubtitle(locale: lang.current))
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(blue)
                     .tracking(3.5)
@@ -477,7 +477,7 @@ struct LoginView: View {
     }
 
     private func openSupport() {
-        if let url = URL(string: "mailto:support@velarcare.com?subject=Account%20Locked") {
+        if let url = URL(string: "mailto:\(Brand.supportEmail)?subject=Account%20Locked") {
             UIApplication.shared.open(url)
         }
     }
