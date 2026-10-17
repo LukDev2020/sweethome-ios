@@ -346,7 +346,7 @@ struct LoginView: View {
                     }
                 }
                 .font(.system(size: 15.5, weight: .medium))
-                .foregroundStyle(buttonDisabled ? navy.opacity(0.42) : cream)
+                .foregroundStyle(buttonDisabled ? navy.opacity(0.55) : cream)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(
@@ -358,20 +358,8 @@ struct LoginView: View {
             .padding(.horizontal, 32)
             .padding(.top, 16)
 
-            // Switch to signup
-            Button {
-                coordinator.showSignup = true
-            } label: {
-                HStack(spacing: 0) {
-                    Text(lang.localized("login.no.account"))
-                        .foregroundStyle(ink3)
-                    Text(lang.localized("login.signup"))
-                        .foregroundStyle(ink2)
-                        .underline(true, color: ink2)
-                }
-                .font(.system(size: 12))
-            }
-            .padding(.top, 13)
+            // D-06: No separate signup link — backend auto-creates on new phone
+            // (LoginView already redirects to signup on .userNotFound)
         }
     }
 

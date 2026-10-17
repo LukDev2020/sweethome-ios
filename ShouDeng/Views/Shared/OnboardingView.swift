@@ -10,7 +10,6 @@ import SwiftUI
 
 struct OnboardingView: View {
     @Binding var isComplete: Bool
-    @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
     @AppStorage("hasCompletedOnboardingOnce") private var hasCompletedOnce = false
     @State private var currentPage = UserDefaults.standard.integer(forKey: "debug_onboarding_page")
@@ -45,9 +44,9 @@ struct OnboardingView: View {
         VStack(spacing: 0) {
             onboardingTopBar
             progressDots
-                .padding(.top, 4)
+                .padding(.top, 16)
             Spacer()
-                .frame(maxHeight: 60)
+                .frame(maxHeight: 48)
             screenContent(screens[currentPage])
             Spacer()
             actionButton(screens[currentPage])
@@ -65,7 +64,7 @@ struct OnboardingView: View {
                 onboardingTopBar
                     .padding(.horizontal, 28)
                 progressDots
-                    .padding(.top, 4)
+                    .padding(.top, 16)
                 Spacer()
                 Image(systemName: screens[currentPage].icon)
                     .font(.system(size: 56, weight: .light))
@@ -111,6 +110,21 @@ struct OnboardingView: View {
 
     private var onboardingTopBar: some View {
         HStack {
+            if hasCompletedOnce {
+                Button {
+                    skipToHome()
+                } label: {
+                    Text(lang.current == .chinese ? "跳过" : "Skip")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.6))
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                }
+            }
+
+            Spacer()
+
+            // D-07: Language switcher top-right, matching login screen
             HStack(spacing: 2) {
                 ForEach(AppLanguage.allCases, id: \.self) { language in
                     Button {
@@ -129,31 +143,13 @@ struct OnboardingView: View {
                     }
                 }
             }
-            .padding(.leading, 16)
-
-            Spacer()
-
-            if hasCompletedOnce {
-                Button {
-                    skipToHome()
-                } label: {
-                    Text(lang.current == .chinese ? "跳过" : "Skip")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.6))
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                }
-            }
+            .padding(.trailing, 16)
         }
         .padding(.top, 8)
-        .padding(.trailing, 4)
+        .padding(.leading, 4)
     }
 
     private func skipToHome() {
-        coordinator.locationManager.start()
-        coordinator.heartbeatService.start()
-        coordinator.pushService.registerForPushNotifications()
-        coordinator.deviceHealthMonitor.beginMonitoring()
         withAnimation {
             isComplete = true
         }
@@ -211,12 +207,8 @@ struct OnboardingView: View {
                     currentPage += 1
                 }
             } else {
-                // Start services now that user has been informed
+                // Mark disclaimers accepted; services start after login
                 hasCompletedOnce = true
-                coordinator.locationManager.start()
-                coordinator.heartbeatService.start()
-                coordinator.pushService.registerForPushNotifications()
-                coordinator.deviceHealthMonitor.beginMonitoring()
                 withAnimation {
                     isComplete = true
                 }

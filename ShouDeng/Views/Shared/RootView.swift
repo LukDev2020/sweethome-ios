@@ -31,6 +31,10 @@ private struct AuthenticatedRootView: View {
         Group {
             if ProcessInfo.processInfo.arguments.contains("-show-onboarding") {
                 OnboardingView(isComplete: $onboardingComplete)
+            } else if !onboardingComplete {
+                // D-05: Disclaimer onboarding before any auth/login
+                OnboardingView(isComplete: $onboardingComplete)
+                    .transition(.opacity)
             } else {
                 switch coordinator.authState {
                 case .unknown:
@@ -43,8 +47,6 @@ private struct AuthenticatedRootView: View {
                 case .loggedIn:
                     if biometric.isEnabled && !biometric.isUnlocked {
                         BiometricGateView()
-                    } else if !onboardingComplete {
-                        OnboardingView(isComplete: $onboardingComplete)
                     } else {
                         ZStack(alignment: .top) {
                             switch coordinator.userRole {
