@@ -191,6 +191,7 @@ struct LocationCardView: View {
     private var mapContent: some View {
         let style: MapStyle = .standard(pointsOfInterest: .excludingAll)
         return Map(position: $position, interactionModes: [.pan, .zoom]) {
+            UserAnnotation()
             ForEach(pins) { pin in
                 Annotation(pin.name, coordinate: pin.coordinate) {
                     pinView(pin, isFocused: pin.id == focusedPinId)
@@ -314,6 +315,7 @@ struct FullScreenMapView: View {
         ZStack(alignment: .top) {
             // Full screen map
             Map(position: $position, interactionModes: [.pan, .zoom, .rotate, .pitch]) {
+                UserAnnotation()
                 // Pins
                 ForEach(pins) { pin in
                     Annotation(pin.name, coordinate: pin.coordinate) {

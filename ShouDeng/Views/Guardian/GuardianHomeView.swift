@@ -465,43 +465,41 @@ struct GuardianHomeView: View {
     // MARK: - Location Card
 
     private var locationCard: some View {
-        let pins: [LocationPin] = coordinator.protectedPersons.compactMap { person -> LocationPin? in
-            guard let loc = person.lastKnownLocation else { return nil }
-            return LocationPin(
-                id: person.id,
-                name: person.user.displayName,
-                coordinate: CLLocationCoordinate2D(latitude: loc.latitude, longitude: loc.longitude),
-                color: person.status == .alert ? alert : lamp
-            )
-        }
+        // Guardian's own location
+        let deviceLocation = coordinator.locationManager.lastReportedLocation
+        let myCoord: CLLocationCoordinate2D = {
+            if let loc = deviceLocation {
+                return loc.coordinate
+            }
+            if let user = coordinator.currentUser, !user.cityName.isEmpty {
+                return Self.coordForCity(user.cityName)
+            }
+            return CLLocationCoordinate2D(latitude: 39.9, longitude: 116.4)
+        }()
 
-        return Group {
-            if !pins.isEmpty {
-                LocationCardView(
-                    pins: pins,
-                    label: "家人位置",
-                    focusedPinId: $mapFocusId
-                )
-            } else {
-                // No location data yet
-                VStack(spacing: 8) {
-                    Image(systemName: "map")
-                        .font(.system(size: 22))
-                        .foregroundStyle(ink.opacity(0.2))
-                    Text("暂无家人位置信息")
-                        .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 24)
-                .padding(.horizontal, 16)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(ink.opacity(0.1), lineWidth: 1)
-                )
-                .padding(.horizontal, 16)
+        var pins: [LocationPin] = [
+            LocationPin(id: "me", name: "我", coordinate: myCoord, color: safe, isMe: true)
+        ]
+
+        // Protected persons' locations
+        for person in coordinator.protectedPersons {
+            if let loc = person.lastKnownLocation {
+                pins.append(LocationPin(
+                    id: person.id,
+                    name: person.user.displayName,
+                    coordinate: CLLocationCoordinate2D(latitude: loc.latitude, longitude: loc.longitude),
+                    color: person.status == .alert ? alert : lamp
+                ))
             }
         }
+
+        return LocationCardView(
+            pins: pins,
+            centerCoordinate: myCoord,
+            lastUpdateMinutes: deviceLocation != nil ? Int(Date().timeIntervalSince(deviceLocation!.timestamp) / 60) : nil,
+            label: "家人位置",
+            focusedPinId: $mapFocusId
+        )
     }
 
     // MARK: - Needs Attention

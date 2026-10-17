@@ -135,6 +135,7 @@ struct GuardianMemberDetailView: View {
                     center: coord,
                     span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
                 ))) {
+                    UserAnnotation()
                     Annotation(person.user.displayName, coordinate: coord) {
                         ZStack {
                             Circle().fill(lamp.opacity(0.25)).frame(width: 28, height: 28)

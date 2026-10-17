@@ -143,6 +143,7 @@ struct GuardianAlertResponseView: View {
                     center: coord,
                     span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
                 ))) {
+                    UserAnnotation()
                     Annotation(personName, coordinate: coord) {
                         ZStack {
                             Circle().fill(alert.opacity(0.3)).frame(width: 32, height: 32)
@@ -171,6 +172,7 @@ struct GuardianAlertResponseView: View {
                     center: coord,
                     span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
                 ))) {
+                    UserAnnotation()
                     Annotation(personName, coordinate: coord) {
                         ZStack {
                             Circle().fill(alert.opacity(0.3)).frame(width: 32, height: 32)
