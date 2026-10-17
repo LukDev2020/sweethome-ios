@@ -1,5 +1,5 @@
 /* Login */
-"app.name" = "Velar Care";
+"app.name" = "Vela";
 "app.tagline" = "Joindre votre famille plus vite en cas d'urgence";
 "login.phone.placeholder" = "Numéro de téléphone";
 "login.code.placeholder" = "Code de vérification";
@@ -21,7 +21,7 @@
 /* Login - Security */
 "login.reset" = "Recommencer";
 "login.locked.title" = "Compte verrouillé";
-"login.locked.message" = "Trop de tentatives échouées. Veuillez contacter l'équipe Velar Care.";
+"login.locked.message" = "Trop de tentatives échouées. Veuillez contacter l'équipe Vela.";
 "login.locked.contact" = "Contacter le support";
 "login.attempts.warning" = "%d tentatives restantes";
 

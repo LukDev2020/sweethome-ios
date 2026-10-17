@@ -21,7 +21,7 @@
 /* Login - Security */
 "login.reset" = "重新开始";
 "login.locked.title" = "账户已锁定";
-"login.locked.message" = "验证码错误次数过多，请联系 Velar Care 团队解锁。";
+"login.locked.message" = "验证码错误次数过多，请联系 Vela 团队解锁。";
 "login.locked.contact" = "联系客服";
 "login.attempts.warning" = "剩余 %d 次尝试";
 

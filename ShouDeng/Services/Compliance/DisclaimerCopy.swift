@@ -59,8 +59,8 @@ enum DisclaimerCopy {
             Screen(
                 id: "onboard.not_emergency",
                 icon: "exclamationmark.triangle",
-                title: "ShouDeng Is Not an Emergency Service",
-                body: "In an emergency, always call your local emergency number first.\n\nShouDeng notifies your family and contacts — it cannot replace police, fire, or medical services. We do our best to deliver notifications, but cannot guarantee network, device, or recipient availability.",
+                title: "Vela Is Not an Emergency Service",
+                body: "In an emergency, always call your local emergency number first.\n\nVela notifies your family and contacts — it cannot replace police, fire, or medical services. We do our best to deliver notifications, but cannot guarantee network, device, or recipient availability.",
                 buttonTitle: "I Understand"
             ),
             Screen(
@@ -83,8 +83,8 @@ enum DisclaimerCopy {
             Screen(
                 id: "onboard.not_emergency",
                 icon: "exclamationmark.triangle",
-                title: "ShouDeng n'est pas un service d'urgence",
-                body: "En cas de danger, appelez d'abord le numéro d'urgence local.\n\nShouDeng prévient votre famille et vos contacts — il ne remplace ni la police, ni les pompiers, ni les secours. Nous faisons de notre mieux pour transmettre les notifications, mais ne pouvons garantir la disponibilité du réseau, de l'appareil ou du destinataire.",
+                title: "Vela n'est pas un service d'urgence",
+                body: "En cas de danger, appelez d'abord le numéro d'urgence local.\n\nVela prévient votre famille et vos contacts — il ne remplace ni la police, ni les pompiers, ni les secours. Nous faisons de notre mieux pour transmettre les notifications, mais ne pouvons garantir la disponibilité du réseau, de l'appareil ou du destinataire.",
                 buttonTitle: "Je comprends"
             ),
             Screen(

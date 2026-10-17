@@ -36,6 +36,7 @@ struct OnboardingView: View {
                 compactOnboardingLayout
             }
         }
+        .preferredColorScheme(.dark)
     }
 
     // MARK: - Compact Layout
@@ -74,6 +75,8 @@ struct OnboardingView: View {
                     .font(.system(size: 26, weight: .bold, design: .serif))
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 20)
                     .padding(.horizontal, 32)
                 Spacer()
@@ -183,6 +186,8 @@ struct OnboardingView: View {
                 .font(.system(size: 24, weight: .bold, design: .serif))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
 
             // Body
             Text(screen.body)

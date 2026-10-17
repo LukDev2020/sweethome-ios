@@ -6,7 +6,7 @@ import SwiftUI
 // Design follows the lighthouse design system:
 //   navy #014581, blue #3D9AC0, cream #FCF2DA, bg #FBF8F1, ink #0E2B4A
 //
-// Security: 5 failed code attempts → lock + contact Velar Care.
+// Security: 5 failed code attempts → lock + contact Vela support.
 // Reset: clears all state and returns to phone entry.
 
 struct LoginView: View {
@@ -227,7 +227,7 @@ struct LoginView: View {
                     .tracking(1.5)
                     .padding(.top, 10)
 
-                Text("VELAR CARE")
+                Text(lang.current == .chinese ? "VELA" : "守灯")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(blue)
                     .tracking(3.5)

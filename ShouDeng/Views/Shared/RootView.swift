@@ -1,11 +1,6 @@
 import SwiftUI
 
 struct RootView: View {
-    @EnvironmentObject var coordinator: AppCoordinator
-    @AppStorage("onboardingComplete") private var onboardingComplete = false
-    @ObservedObject private var biometric = BiometricAuthManager.shared
-    @State private var showBiometricPrompt = false
-
     #if DEBUG
     private var isScreenshotMode: Bool { ScreenshotCapture.isEnabled }
     #else
@@ -13,12 +8,28 @@ struct RootView: View {
     #endif
 
     var body: some View {
+        if isScreenshotMode {
+            #if DEBUG
+            ScreenshotGalleryView()
+            #endif
+        } else {
+            AuthenticatedRootView()
+        }
+    }
+}
+
+// MARK: - Authenticated Root View
+// Separated so that coordinator observation doesn't interfere with screenshot mode.
+
+private struct AuthenticatedRootView: View {
+    @EnvironmentObject var coordinator: AppCoordinator
+    @AppStorage("onboardingComplete") private var onboardingComplete = false
+    @ObservedObject private var biometric = BiometricAuthManager.shared
+    @State private var showBiometricPrompt = false
+
+    var body: some View {
         Group {
-            if isScreenshotMode {
-                #if DEBUG
-                ScreenshotGalleryView()
-                #endif
-            } else if ProcessInfo.processInfo.arguments.contains("-show-onboarding") {
+            if ProcessInfo.processInfo.arguments.contains("-show-onboarding") {
                 OnboardingView(isComplete: $onboardingComplete)
             } else {
                 switch coordinator.authState {

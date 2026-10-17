@@ -6,7 +6,7 @@ import SwiftUI
 // Supports international phone numbers with country code picker.
 // Role determines which portal (Protected/Guardian) the user enters.
 //
-// Security: 5 failed code attempts -> lock + contact Velar Care.
+// Security: 5 failed code attempts -> lock + contact Vela support.
 
 struct SignupView: View {
     @EnvironmentObject var coordinator: AppCoordinator
