@@ -42,6 +42,18 @@
 "signup.finish" = "Complete";
 "signup.back" = "Back";
 
+/* Role Selection */
+"role.select.title" = "Choose Your Role";
+"role.select.subtitle" = "You can change this later in Settings.";
+"role.select.confirm" = "Continue";
+
+/* Invite */
+"invite.accept.title" = "Join Family Circle";
+"invite.accept.message" = "You have been invited to join a family safety circle. Accept to start watching over each other.";
+"invite.accept.button" = "Accept Invite";
+"invite.accept.success" = "You're connected!";
+"invite.accept.done" = "Done";
+
 /* Country Picker */
 "picker.search" = "Search countries";
 "picker.title" = "Select Country/Region";

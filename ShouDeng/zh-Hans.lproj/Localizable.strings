@@ -42,6 +42,18 @@
 "signup.finish" = "完成注册";
 "signup.back" = "返回";
 
+/* Role Selection */
+"role.select.title" = "选择你的角色";
+"role.select.subtitle" = "之后可在设置中更改。";
+"role.select.confirm" = "继续";
+
+/* Invite */
+"invite.accept.title" = "加入守护圈";
+"invite.accept.message" = "你已收到邀请，加入家庭守护圈后可以互相守护。";
+"invite.accept.button" = "接受邀请";
+"invite.accept.success" = "已成功连接！";
+"invite.accept.done" = "完成";
+
 /* Country Picker */
 "picker.search" = "搜索国家或地区";
 "picker.title" = "选择国家/地区";

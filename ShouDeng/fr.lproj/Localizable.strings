@@ -42,6 +42,18 @@
 "signup.finish" = "Terminer";
 "signup.back" = "Retour";
 
+/* Role Selection */
+"role.select.title" = "Choisissez votre rôle";
+"role.select.subtitle" = "Vous pourrez le modifier dans les Réglages.";
+"role.select.confirm" = "Continuer";
+
+/* Invite */
+"invite.accept.title" = "Rejoindre le cercle familial";
+"invite.accept.message" = "Vous avez été invité(e) à rejoindre un cercle de sécurité familiale. Acceptez pour commencer à veiller les uns sur les autres.";
+"invite.accept.button" = "Accepter l'invitation";
+"invite.accept.success" = "Vous êtes connecté(e) !";
+"invite.accept.done" = "Terminé";
+
 /* Country Picker */
 "picker.search" = "Rechercher un pays";
 "picker.title" = "Choisir un pays/région";

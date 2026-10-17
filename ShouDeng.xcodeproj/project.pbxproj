@@ -74,6 +74,10 @@
 		677834490B57DB6C3C54821D /* WidgetPreviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6CF262FFD6B5FBF8B10D4F7 /* WidgetPreviews.swift */; };
 		677EF24901E9EE3C564AA7E2 /* FeatureDisclosureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C180202B726745C4D4136747 /* FeatureDisclosureView.swift */; };
 		6888CF1224D9125CBA2EB78C /* SignupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E56310453259DD87FAE127E5 /* SignupView.swift */; };
+		ROLESELECTBF1 /* RoleSelectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ROLESELECT001 /* RoleSelectView.swift */; };
+		INVITEACCEPTB1 /* InviteAcceptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = INVITEACCEPT01 /* InviteAcceptView.swift */; };
+		ROLESELECT001 /* RoleSelectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoleSelectView.swift; sourceTree = "<group>"; };
+		INVITEACCEPT01 /* InviteAcceptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteAcceptView.swift; sourceTree = "<group>"; };
 		6AC917981978E3093AAC36EC /* ProfileEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A999FE740978FB9A70C0B89 /* ProfileEditView.swift */; };
 		6AF177BA649E9E3A34CFDABB /* ProtectedTimerWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28DD19C64B3FA4AFF3D91214 /* ProtectedTimerWidget.swift */; };
 		72311B032AFAD5E4C43442AA /* ShouDengWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B67AB48387F3263CABF4FE /* ShouDengWidgetBundle.swift */; };
@@ -482,6 +486,8 @@
 				ABAFCCA942C4FA62E1F96326 /* CountryCodePicker.swift */,
 				31619A304E944F8752AA75E9 /* LoginView.swift */,
 				E56310453259DD87FAE127E5 /* SignupView.swift */,
+				ROLESELECT001 /* RoleSelectView.swift */,
+				INVITEACCEPT01 /* InviteAcceptView.swift */,
 			);
 			path = Auth;
 			sourceTree = "<group>";
@@ -986,6 +992,8 @@
 				A5963AD625F11CE7952C86C0 /* SharedItineraryView.swift in Sources */,
 				A1302B34EE4C90A44A1ED47C /* ShouDengApp.swift in Sources */,
 				6888CF1224D9125CBA2EB78C /* SignupView.swift in Sources */,
+				ROLESELECTBF1 /* RoleSelectView.swift in Sources */,
+				INVITEACCEPTB1 /* InviteAcceptView.swift in Sources */,
 				C980F286538D455C19BECABA /* StoreKitManager.swift in Sources */,
 				47CD6276A165F690D3747109 /* TrajectoryProcessor.swift in Sources */,
 				35159B7DB49900FACD831968 /* User.swift in Sources */,

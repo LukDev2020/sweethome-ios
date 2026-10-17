@@ -32,6 +32,7 @@ final class AppCoordinator: ObservableObject {
     @Published var pendingDeepLink: DeepLinkDestination?
     @Published var showInviteAccept = false
     @Published var pendingInviteCode: String?
+    @Published var needsRoleSelection = false
 
     // MARK: - Infrastructure
 
@@ -173,6 +174,12 @@ final class AppCoordinator: ObservableObject {
         syncNotificationPrefs()
 
         syncWidgetState()
+
+        // Apply any pending deep link from before login
+        if let pending = pendingDeepLink {
+            pendingDeepLink = nil
+            applyDeepLink(pending)
+        }
     }
 
     private func onLogout() {

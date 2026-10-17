@@ -47,6 +47,8 @@ private struct AuthenticatedRootView: View {
                 case .loggedIn:
                     if biometric.isEnabled && !biometric.isUnlocked {
                         BiometricGateView()
+                    } else if coordinator.needsRoleSelection {
+                        RoleSelectView()
                     } else {
                         ZStack(alignment: .top) {
                             switch coordinator.userRole {
@@ -60,6 +62,9 @@ private struct AuthenticatedRootView: View {
                                 DegradationBannerView()
                                     .environmentObject(coordinator)
                             }
+                        }
+                        .sheet(isPresented: $coordinator.showInviteAccept) {
+                            InviteAcceptView()
                         }
                         .sheet(isPresented: $showBiometricPrompt) {
                             BiometricEnablePromptView(isPresented: $showBiometricPrompt)
