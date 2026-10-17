@@ -36,6 +36,8 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
 	</dict>
+	<key>NSPrivacyPolicyURL</key>
+	<string>https://shoudeng.app/privacy</string>
 	<key>NSContactsUsageDescription</key>
 	<string>守灯需要访问您的通讯录，以便快速添加紧急联络人信息。</string>
 	<key>NSFaceIDUsageDescription</key>
