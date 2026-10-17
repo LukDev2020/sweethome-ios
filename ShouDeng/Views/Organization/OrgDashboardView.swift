@@ -272,37 +272,11 @@ struct OrgDashboardView: View {
             await MainActor.run { dashboard = data }
         } catch {
             #if DEBUG
-            // In dev mode, show mock dashboard data so the UI is demonstrable
-            if coordinator.devBypassLogin {
-                await MainActor.run { dashboard = Self.devMockDashboard }
-            }
+            print("[Org] dashboard load error: \(error)")
             #endif
         }
     }
 
-    #if DEBUG
-    private static let devMockDashboard = OrgDashboard(
-        orgId: "mock-org-1",
-        orgName: "北京大学国际处",
-        orgType: "university",
-        summary: OrgDashboardSummary(
-            totalMembers: 320,
-            activated: 298,
-            permissionsAbnormal: 12,
-            notInstalled: 10,
-            recentCheckIns: 245,
-            overdueCheckIns: 8
-        ),
-        members: [
-            OrgMemberStatus(userId: "m1", displayName: "张三", status: "normal", lastCheckIn: Date().addingTimeInterval(-1800), cityName: "多伦多", countryCode: "CA"),
-            OrgMemberStatus(userId: "m2", displayName: "李四", status: "normal", lastCheckIn: Date().addingTimeInterval(-3600), cityName: "伦敦", countryCode: "GB"),
-            OrgMemberStatus(userId: "m3", displayName: "王五", status: "overdue", lastCheckIn: Date().addingTimeInterval(-86400 * 3), cityName: "悉尼", countryCode: "AU"),
-            OrgMemberStatus(userId: "m4", displayName: "赵六", status: "permissions_abnormal", lastCheckIn: Date().addingTimeInterval(-7200), cityName: "东京", countryCode: "JP"),
-            OrgMemberStatus(userId: "m5", displayName: "孙七", status: "not_installed", lastCheckIn: nil, cityName: "基辅", countryCode: "UA"),
-            OrgMemberStatus(userId: "m6", displayName: "周八", status: "normal", lastCheckIn: Date().addingTimeInterval(-900), cityName: "上海", countryCode: "CN"),
-        ]
-    )
-    #endif
 }
 
 // MARK: - Create Org Sheet
@@ -456,10 +430,7 @@ struct SendAlertSheet: View {
             await MainActor.run { sentResult = result }
         } catch {
             #if DEBUG
-            print("[Org] send alert error (using local fallback): \(error)")
-            // Show mock result so UI is demonstrable
-            let mockResult = OrgAlertResponse(success: true, alertId: UUID().uuidString, sentCount: 298)
-            await MainActor.run { sentResult = mockResult }
+            print("[Org] send alert error: \(error)")
             #endif
         }
     }

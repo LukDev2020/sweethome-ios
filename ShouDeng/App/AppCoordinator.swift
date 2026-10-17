@@ -12,9 +12,6 @@ import FirebaseCrashlytics
 
 final class AppCoordinator: ObservableObject {
 
-    // Set to true to bypass login during development
-    let devBypassLogin = false
-
     // MARK: - Published State
 
     @Published var currentUser: User?
@@ -78,9 +75,6 @@ final class AppCoordinator: ObservableObject {
         // In dev bypass mode, suppress logout to avoid wiping local state.
         apiClient.onUnauthorized = { [weak self] in
             guard let self else { return false }
-            #if DEBUG
-            if self.devBypassLogin { return false }
-            #endif
             do {
                 try await self.authManager.refreshToken()
                 return true
@@ -118,64 +112,14 @@ final class AppCoordinator: ObservableObject {
         if let user = localStore.loadCurrentUser() {
             currentUser = user
         }
-        #if DEBUG
-        if !devBypassLogin {
-            if let role = localStore.loadUserRole() {
-                userRole = role
-            }
-        } else if let debugRole = UserDefaults.standard.string(forKey: "debug_role"),
-                  let role = UserRole(rawValue: debugRole) {
-            userRole = role
-        }
-        #else
         if let role = localStore.loadUserRole() {
             userRole = role
         }
-        #endif
         myGuardians = localStore.loadGuardians()
         protectedPersons = localStore.loadProtectedPersons()
         activeSOSEvent = localStore.loadActiveSOSEvent()
         timeline = localStore.loadTimeline()
         familyPosts = localStore.loadFamilyPosts()
-
-        #if DEBUG
-        // In dev bypass mode, ensure a default user exists and seed mock data
-        if devBypassLogin && currentUser == nil {
-            let devUser = User(
-                id: "dev_local_user",
-                displayName: "陈明远",
-                role: userRole,
-                avatarInitial: "陈",
-                timeZone: TimeZone(identifier: "America/Toronto") ?? .current,
-                countryCode: "CA",
-                cityName: "多伦多",
-                createdAt: Date()
-            )
-            currentUser = devUser
-            print("[AppCoordinator] Created dev seed user: \(devUser.displayName) role=\(userRole.rawValue)")
-        } else if let u = currentUser {
-            print("[AppCoordinator] Restored user: '\(u.displayName)' city='\(u.cityName)'")
-        }
-        // Seed mock data AFTER local store loading, so empty stores get filled
-        if devBypassLogin {
-            if userRole == .guardian && protectedPersons.isEmpty {
-                protectedPersons = Self.devMockProtectedPersons
-                print("[AppCoordinator] Seeded \(protectedPersons.count) mock protected persons")
-            }
-            if userRole == .protected_ && myGuardians.isEmpty {
-                myGuardians = Self.devMockGuardians
-                print("[AppCoordinator] Seeded \(myGuardians.count) mock guardians")
-            }
-            // Seed default hotline based on user's country
-            if selectedHotline == nil {
-                selectedHotline = SelectedHotline(
-                    countryCode: "CA", countryName: "加拿大", flag: "🇨🇦",
-                    emergency: "911", embassy: "+1-613-562-1616",
-                    selectedPhone: "+1-416-594-2308", selectedLabel: "多伦多"
-                )
-            }
-        }
-        #endif
 
         // Load safe zones into location manager
         let zones = localStore.loadSafeZones()
@@ -219,38 +163,6 @@ final class AppCoordinator: ObservableObject {
     }
 
     private func onLoginComplete() {
-        #if DEBUG
-        // Dev login: seed mock user and data so the app is fully navigable
-        if let userId = authManager.currentUserId, userId.hasPrefix("dev_") {
-            let devUser = User(
-                id: userId,
-                displayName: "开发测试",
-                role: userRole,
-                avatarInitial: "测",
-                timeZone: TimeZone(identifier: "America/Toronto") ?? .current,
-                countryCode: "CA",
-                cityName: "多伦多",
-                createdAt: Date()
-            )
-            currentUser = devUser
-            if userRole == .guardian && protectedPersons.isEmpty {
-                protectedPersons = Self.devMockProtectedPersons
-            }
-            if userRole == .protected_ && myGuardians.isEmpty {
-                myGuardians = Self.devMockGuardians
-            }
-            if selectedHotline == nil {
-                selectedHotline = SelectedHotline(
-                    countryCode: "CA", countryName: "加拿大", flag: "🇨🇦",
-                    emergency: "911", embassy: "+1-613-562-1616",
-                    selectedPhone: "+1-416-594-2308", selectedLabel: "多伦多"
-                )
-            }
-            print("[AppCoordinator] Dev login: seeded user '\(devUser.displayName)' role=\(userRole.rawValue)")
-            return
-        }
-        #endif
-
         // Flush any queued offline requests
         Task { await apiClient.flushOfflineQueue() }
 
@@ -264,9 +176,6 @@ final class AppCoordinator: ObservableObject {
     }
 
     private func onLogout() {
-        #if DEBUG
-        if devBypassLogin { return }
-        #endif
         liveActivityManager.endAllActivities()
         currentUser = nil
         protectedPersons = []
@@ -371,9 +280,6 @@ final class AppCoordinator: ObservableObject {
     // MARK: - Fetch Data
 
     func fetchProtectedPersons() async {
-        #if DEBUG
-        if devBypassLogin && !protectedPersons.isEmpty { return }
-        #endif
         do {
             let persons: [ProtectedPersonStatusResponse] = try await apiClient.get("/v1/guardian/protected-persons")
             let mapped = persons.map { p in
@@ -424,9 +330,6 @@ final class AppCoordinator: ObservableObject {
     }
 
     func fetchGuardians() async {
-        #if DEBUG
-        if devBypassLogin && !myGuardians.isEmpty { return }
-        #endif
         do {
             let guardians: [Guardian] = try await apiClient.get("/v1/protected/guardians")
             await MainActor.run {
@@ -982,20 +885,6 @@ final class AppCoordinator: ObservableObject {
     // MARK: - Guardian Management
 
     func createInviteCode() async throws -> CreateInviteResponse {
-        #if DEBUG
-        if devBypassLogin {
-            // Generate a fake invite code for dev testing
-            try await Task.sleep(nanoseconds: 500_000_000) // simulate network
-            let code = String(format: "%06d", Int.random(in: 100000...999999))
-            let expiry = ISO8601DateFormatter().string(from: Date().addingTimeInterval(86400))
-            return CreateInviteResponse(
-                inviteId: UUID().uuidString,
-                code: code,
-                expiresAt: expiry,
-                status: "active"
-            )
-        }
-        #endif
         let response: CreateInviteResponse = try await apiClient.post(
             "/v1/invite/create",
             body: CreateInviteRequest(role: userRole.rawValue)
@@ -1119,91 +1008,4 @@ final class AppCoordinator: ObservableObject {
         WidgetCenter.shared.reloadAllTimelines()
     }
 
-    // MARK: - Dev Mock Data
-
-    #if DEBUG
-    static let devMockProtectedPersons: [ProtectedPerson] = [
-        ProtectedPerson(
-            id: "pp-1",
-            user: User(
-                id: "pp-1", displayName: "陈小雨", role: .protected_,
-                avatarInitial: "雨",
-                timeZone: TimeZone(identifier: "Europe/Kiev")!,
-                countryCode: "UA", cityName: "基辅",
-                createdAt: Date().addingTimeInterval(-86400 * 180)
-            ),
-            guardians: [],
-            protectionLayers: 3,
-            lastCheckIn: Date().addingTimeInterval(-1800),
-            lastKnownLocation: Location(
-                latitude: 50.45, longitude: 30.52,
-                accuracy: 15, altitude: nil, speed: nil,
-                timestamp: Date().addingTimeInterval(-600)
-            ),
-            batteryLevel: 0.72,
-            batteryState: .unplugged,
-            lastPhoneActivity: Date().addingTimeInterval(-300),
-            status: .normal
-        ),
-        ProtectedPerson(
-            id: "pp-2",
-            user: User(
-                id: "pp-2", displayName: "陈小晴", role: .protected_,
-                avatarInitial: "晴",
-                timeZone: TimeZone(identifier: "Australia/Sydney")!,
-                countryCode: "AU", cityName: "悉尼",
-                createdAt: Date().addingTimeInterval(-86400 * 90)
-            ),
-            guardians: [],
-            protectionLayers: 2,
-            lastCheckIn: Date().addingTimeInterval(-86400 * 2),
-            lastKnownLocation: Location(
-                latitude: -33.87, longitude: 151.21,
-                accuracy: 20, altitude: nil, speed: nil,
-                timestamp: Date().addingTimeInterval(-7200)
-            ),
-            batteryLevel: 0.15,
-            batteryState: .unplugged,
-            lastPhoneActivity: Date().addingTimeInterval(-86400),
-            status: .overdue
-        ),
-    ]
-
-    static let devMockGuardians: [Guardian] = [
-        Guardian(
-            id: "g-1",
-            user: User(
-                id: "g-1", displayName: "妈妈", role: .guardian,
-                avatarInitial: "妈",
-                timeZone: TimeZone(identifier: "Asia/Shanghai")!,
-                countryCode: "CN", cityName: "上海",
-                createdAt: Date().addingTimeInterval(-86400 * 365)
-            ),
-            permissions: .defaultPermissions,
-            isOnDuty: true,
-            dutySchedule: nil,
-            averageResponseTime: 45,
-            linkedSince: Date().addingTimeInterval(-86400 * 180)
-        ),
-        Guardian(
-            id: "g-2",
-            user: User(
-                id: "g-2", displayName: "姑姑", role: .guardian,
-                avatarInitial: "姑",
-                timeZone: TimeZone(identifier: "America/Toronto")!,
-                countryCode: "CA", cityName: "多伦多",
-                createdAt: Date().addingTimeInterval(-86400 * 200)
-            ),
-            permissions: GuardianPermissions(
-                canSeeLocation: true, canSeeBattery: true,
-                canSeeHealth: false, canSeePhoneActivity: false,
-                canHearEmergencyAudio: false
-            ),
-            isOnDuty: false,
-            dutySchedule: nil,
-            averageResponseTime: 120,
-            linkedSince: Date().addingTimeInterval(-86400 * 90)
-        ),
-    ]
-    #endif
 }

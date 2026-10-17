@@ -172,37 +172,11 @@ struct SharedItineraryView: View {
             await MainActor.run { itineraries = items }
         } catch {
             #if DEBUG
-            print("[Itinerary] load error (using local fallback): \(error)")
-            // Show mock data in dev mode so the UI is demonstrable
-            if coordinator.devBypassLogin {
-                await MainActor.run {
-                    itineraries = Self.devMockItineraries
-                }
-            }
+            print("[Itinerary] load error: \(error)")
             #endif
         }
     }
 
-    #if DEBUG
-    private static let devMockItineraries: [ItineraryItem] = [
-        ItineraryItem(
-            id: "mock-1", userId: "dev_local_user", displayName: "我",
-            type: "flight", carrierCode: "CA", flightNumber: "981",
-            departureCity: "北京", arrivalCity: "多伦多",
-            departureTime: Date().addingTimeInterval(86400),
-            arrivalTime: Date().addingTimeInterval(86400 + 13 * 3600),
-            note: "经停温哥华", status: "scheduled"
-        ),
-        ItineraryItem(
-            id: "mock-2", userId: "dev_local_user", displayName: "我",
-            type: "train", carrierCode: nil, flightNumber: nil,
-            departureCity: "上海", arrivalCity: "北京",
-            departureTime: Date().addingTimeInterval(-3600),
-            arrivalTime: Date().addingTimeInterval(3600 * 4),
-            note: nil, status: "departed"
-        ),
-    ]
-    #endif
 }
 
 // MARK: - Add Itinerary Sheet

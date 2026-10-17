@@ -6,11 +6,6 @@ struct RootView: View {
     @ObservedObject private var biometric = BiometricAuthManager.shared
     @State private var showBiometricPrompt = false
 
-    // TEMP: Set to true to bypass login during development
-    private var devBypassLogin: Bool {
-        !ProcessInfo.processInfo.arguments.contains("-auth-screens")
-    }
-
     #if DEBUG
     private var isScreenshotMode: Bool { ScreenshotCapture.isEnabled }
     #else
@@ -25,21 +20,6 @@ struct RootView: View {
                 #endif
             } else if ProcessInfo.processInfo.arguments.contains("-show-onboarding") {
                 OnboardingView(isComplete: $onboardingComplete)
-            } else if devBypassLogin {
-                // DEV BYPASS: skip login and onboarding
-                ZStack(alignment: .top) {
-                    switch coordinator.userRole {
-                    case .protected_:
-                        ProtectedTabView()
-                    case .guardian:
-                        GuardianTabView()
-                    }
-                    VStack(spacing: 0) {
-                        betaBanner
-                        DegradationBannerView()
-                            .environmentObject(coordinator)
-                    }
-                }
             } else {
                 switch coordinator.authState {
                 case .unknown:
