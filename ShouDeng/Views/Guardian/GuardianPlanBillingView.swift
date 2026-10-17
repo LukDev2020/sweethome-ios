@@ -306,12 +306,9 @@ struct GuardianPlanBillingView: View {
                 .foregroundStyle(ink)
 
             VStack(spacing: 0) {
-                ForEach(PaymentMethod.allCases) { method in
-                    paymentMethodRow(method)
-                    if method != PaymentMethod.allCases.last {
-                        Divider().padding(.leading, 44)
-                    }
-                }
+                // App Store requires StoreKit IAP for digital subscriptions (Guideline 3.1.1)
+                // External payment methods (Alipay/WeChat/PayPal) removed for submission
+                paymentMethodRow(.applePay)
             }
             .background(Color(.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 12))
