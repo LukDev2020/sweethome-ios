@@ -1,0 +1,21 @@
+{
+  "name": "vela-harness",
+  "version": "1.0.0",
+  "description": "MCP test harness for Vela QA — provides tools to drive Firebase emulator state",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^2024.11.0",
+    "firebase-admin": "^12.0.0",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^20.10.0",
+    "typescript": "^5.4.0"
+  },
+  "private": true
+}
