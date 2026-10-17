@@ -20,11 +20,14 @@ struct ProtectedTabView: View {
         ]
     }
 
+    @AppStorage("elder_mode") private var elderMode = true
+
     var body: some View {
         DuoAdaptiveTabContainer(
             selectedTab: $selectedTab,
             tabs: tabs,
             tintColor: safe
         )
+        .modifier(ElderModeModifier(enabled: elderMode))
     }
 }

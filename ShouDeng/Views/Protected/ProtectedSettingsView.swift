@@ -22,6 +22,7 @@ struct ProtectedSettingsView: View {
     @AppStorage("sos_longPress") private var longPressEnabled = true
     @AppStorage("sos_watch") private var watchEnabled = true
     @AppStorage("sos_silentMode") private var silentMode = false
+    @AppStorage("elder_mode") private var elderMode = true
     @AppStorage("notif_sos_alerts") private var notifSOS = true
     @AppStorage("notif_checkin_reminder") private var notifCheckin = true
     @AppStorage("notif_family_feed") private var notifFamilyFeed = true
@@ -310,6 +311,20 @@ struct ProtectedSettingsView: View {
             Text("安全")
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
+
+            HStack {
+                Image(systemName: "textformat.size.larger")
+                    .font(.system(size: 14))
+                    .foregroundStyle(safe)
+                    .frame(width: 20)
+                Text(langManager.localized("settings.elder.mode"))
+                    .font(.system(size: 13))
+                Spacer()
+                Toggle("", isOn: $elderMode)
+                    .labelsHidden()
+                    .tint(safe)
+            }
+            .padding(.vertical, 2)
 
             if BiometricAuthManager.shared.isAvailable {
                 HStack {

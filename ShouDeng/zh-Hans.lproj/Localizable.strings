@@ -42,6 +42,9 @@
 "signup.finish" = "完成注册";
 "signup.back" = "返回";
 
+/* Settings */
+"settings.elder.mode" = "大字模式";
+
 /* Role Selection */
 "role.select.title" = "选择你的角色";
 "role.select.subtitle" = "之后可在设置中更改。";

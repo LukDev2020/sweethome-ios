@@ -42,6 +42,9 @@
 "signup.finish" = "Complete";
 "signup.back" = "Back";
 
+/* Settings */
+"settings.elder.mode" = "Large Text Mode";
+
 /* Role Selection */
 "role.select.title" = "Choose Your Role";
 "role.select.subtitle" = "You can change this later in Settings.";

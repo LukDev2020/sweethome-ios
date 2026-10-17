@@ -42,6 +42,9 @@
 "signup.finish" = "Terminer";
 "signup.back" = "Retour";
 
+/* Settings */
+"settings.elder.mode" = "Mode grands caractères";
+
 /* Role Selection */
 "role.select.title" = "Choisissez votre rôle";
 "role.select.subtitle" = "Vous pourrez le modifier dans les Réglages.";
