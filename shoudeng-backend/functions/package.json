@@ -12,7 +12,9 @@
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
     "lint": "eslint src/**/*.ts",
-    "test": "jest --config jest.config.js"
+    "test": "jest --config jest.config.js",
+    "test:unit": "jest --config jest.config.js --testPathIgnorePatterns e2e",
+    "test:e2e": "FIRESTORE_EMULATOR_HOST=localhost:8080 FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 FUNCTIONS_EMULATOR=true jest --config jest.config.js --testPathPattern e2e-bots --runInBand --forceExit"
   },
   "engines": {
     "node": "20"
