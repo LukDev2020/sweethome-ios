@@ -1,9 +1,10 @@
 /* Login */
 "app.name" = "Vela";
-"app.tagline" = "Reach your family faster in emergencies";
+"app.tagline" = "Family looking out for family";
 "login.phone.placeholder" = "Phone number";
 "login.code.placeholder" = "Verification code";
-"login.get.code" = "Get Code";
+"login.get.code" = "Continue with phone";
+"login.phone.helper" = "Enter your number to receive a code";
 "login.button" = "Log In";
 "login.countdown" = "%ds";
 "login.no.account" = "Don't have an account? ";

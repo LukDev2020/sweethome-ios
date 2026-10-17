@@ -1,9 +1,10 @@
 /* Login */
 "app.name" = "守灯";
-"app.tagline" = "在紧急时刻更快联系上你的家人";
+"app.tagline" = "家人之间，互相守护";
 "login.phone.placeholder" = "手机号码";
 "login.code.placeholder" = "验证码";
-"login.get.code" = "获取验证码";
+"login.get.code" = "用手机号继续";
+"login.phone.helper" = "输入手机号后获取验证码";
 "login.button" = "登录";
 "login.countdown" = "%d秒后重发";
 "login.no.account" = "还没有账号？";

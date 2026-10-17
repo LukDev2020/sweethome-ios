@@ -13,6 +13,12 @@ struct CountryCodePicker: View {
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
 
+    private static let pinnedISO = ["CA", "CN", "HK", "US"]
+
+    private var pinned: [CountryCode] {
+        Self.pinnedISO.compactMap { iso in CountryCode.all.first { $0.isoCode == iso } }
+    }
+
     private var filtered: [CountryCode] {
         if searchText.isEmpty { return CountryCode.all }
         let query = searchText.lowercased()
@@ -26,35 +32,19 @@ struct CountryCodePicker: View {
 
     var body: some View {
         NavigationStack {
-            List(filtered) { country in
-                Button {
-                    selected = country
-                    dismiss()
-                } label: {
-                    HStack(spacing: 12) {
-                        Text(country.flag)
-                            .font(.system(size: 24))
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(country.localName)
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundStyle(ink)
-                            Text(country.name)
-                                .font(.system(size: 11))
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        Text(country.dialCode)
-                            .font(.system(size: 14, design: .monospaced))
-                            .foregroundStyle(.secondary)
-                        if country == selected {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundStyle(.green)
+            List {
+                if searchText.isEmpty {
+                    Section {
+                        ForEach(pinned) { country in
+                            countryRow(country)
                         }
                     }
-                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                Section {
+                    ForEach(filtered) { country in
+                        countryRow(country)
+                    }
+                }
             }
             .listStyle(.plain)
             .searchable(text: $searchText, prompt: lang.localized("picker.search"))
@@ -66,5 +56,36 @@ struct CountryCodePicker: View {
                 }
             }
         }
+    }
+
+    private func countryRow(_ country: CountryCode) -> some View {
+        Button {
+            selected = country
+            dismiss()
+        } label: {
+            HStack(spacing: 12) {
+                Text(country.flag)
+                    .font(.system(size: 24))
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(country.localName)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(ink)
+                    Text(country.name)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Text(country.dialCode)
+                    .font(.system(size: 14, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                if country == selected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(.green)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }

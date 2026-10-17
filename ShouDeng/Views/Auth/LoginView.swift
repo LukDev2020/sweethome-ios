@@ -204,8 +204,8 @@ struct LoginView: View {
                 Image("AppLogo")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 80, height: 80)
-                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .frame(width: 120, height: 120)
+                    .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
 
                 Text(lang.localized("app.name"))
                     .font(.system(size: 29, weight: .black, design: .serif))
@@ -299,6 +299,14 @@ struct LoginView: View {
             .padding(.horizontal, 32)
             .animation(.easeInOut(duration: 0.3), value: codeSent)
 
+            if !codeSent {
+                Text(lang.localized("login.phone.helper"))
+                    .font(.system(size: 13))
+                    .foregroundStyle(ink3)
+                    .padding(.top, 8)
+                    .padding(.horizontal, 32)
+            }
+
             // Error + attempts warning
             if let errorMessage {
                 VStack(spacing: 4) {
@@ -334,7 +342,7 @@ struct LoginView: View {
                     }
                 }
                 .font(.system(size: 15.5, weight: .medium))
-                .foregroundStyle(buttonDisabled ? navy.opacity(0.55) : cream)
+                .foregroundStyle(buttonDisabled ? navy.opacity(0.38) : cream)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(
