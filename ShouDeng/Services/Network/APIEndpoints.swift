@@ -116,6 +116,7 @@ struct SuccessResponse: Codable {
 
 struct UpdateProfileRequest: Codable {
     let displayName: String?
+    var email: String? = nil
     let timeZone: String?
     let cityName: String?
     let countryCode: String?
@@ -126,6 +127,7 @@ struct UserProfileResponse: Codable {
     let displayName: String
     let role: String
     let avatarInitial: String
+    let email: String?
     let timeZone: String
     let countryCode: String
     let cityName: String

@@ -33,11 +33,11 @@
 "signup.next" = "Next";
 "signup.profile.title" = "Complete Profile";
 "signup.name.placeholder" = "Your name";
-"signup.role.title" = "Your role";
-"signup.role.protected" = "Protected";
-"signup.role.protected.desc" = "Family will receive your safety signals";
+"signup.role.title" = "Choose your role";
+"signup.role.protected" = "Protected Person";
+"signup.role.protected.desc" = "For seniors living alone, students abroad, or travelers. The system monitors your safety and alerts your guardians in emergencies.";
 "signup.role.guardian" = "Guardian";
-"signup.role.guardian.desc" = "You will monitor family safety status";
+"signup.role.guardian.desc" = "For family members who care about a loved one's safety. You'll receive real-time location and safety signals, and can assist remotely when needed.";
 "signup.finish" = "Complete";
 "signup.back" = "Back";
 

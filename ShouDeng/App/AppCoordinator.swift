@@ -24,6 +24,7 @@ final class AppCoordinator: ObservableObject {
     @Published var currentCoverage: DutyScheduler.DayCoverage?
     @Published var authState: AuthManager.AuthState = .unknown
     @Published var showSignup = false
+    @Published var showSetupWizard = false
     @Published var signupPhone: String?
     @Published var signupCountry: CountryCode?
     @Published var timeline: [TimelineEntry] = []
@@ -262,6 +263,7 @@ final class AppCoordinator: ObservableObject {
                 displayName: profile.displayName,
                 role: UserRole(rawValue: profile.role) ?? .protected_,
                 avatarInitial: profile.avatarInitial,
+                email: profile.email,
                 timeZone: TimeZone(identifier: profile.timeZone) ?? .current,
                 countryCode: profile.countryCode,
                 cityName: profile.cityName,

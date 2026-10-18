@@ -16,6 +16,7 @@ struct User: Codable, Identifiable {
     var avatarInitial: String        // Single character for avatar circle
     var avatarLocalPath: String?     // Local file path for custom avatar photo
     var phone: String?               // E.164 format, e.g. "+8613800138000"
+    var email: String?               // For account recovery
     var timeZone: TimeZone
     var countryCode: String          // ISO 3166-1 alpha-2
     var cityName: String

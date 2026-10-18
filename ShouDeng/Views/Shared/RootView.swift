@@ -24,6 +24,7 @@ struct RootView: View {
 private struct AuthenticatedRootView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @AppStorage("onboardingComplete") private var onboardingComplete = false
+    @AppStorage("setupWizardComplete") private var setupWizardComplete = false
     @ObservedObject private var biometric = BiometricAuthManager.shared
     @State private var showBiometricPrompt = false
 
@@ -47,6 +48,12 @@ private struct AuthenticatedRootView: View {
                 case .loggedIn:
                     if biometric.isEnabled && !biometric.isUnlocked {
                         BiometricGateView()
+                    } else if !setupWizardComplete && coordinator.showSetupWizard {
+                        PostSignupWizardView(onComplete: {
+                            setupWizardComplete = true
+                            coordinator.showSetupWizard = false
+                        })
+                        .environmentObject(coordinator)
                     } else {
                         ZStack(alignment: .top) {
                             switch coordinator.userRole {
@@ -65,8 +72,8 @@ private struct AuthenticatedRootView: View {
                             BiometricEnablePromptView(isPresented: $showBiometricPrompt)
                         }
                         .onAppear {
-                            // After first login, offer biometric setup if available
-                            if biometric.isAvailable && !biometric.hasShownPrompt && !biometric.isEnabled {
+                            // After login, offer biometric setup if available (skip if wizard already handled it)
+                            if biometric.isAvailable && !biometric.hasShownPrompt && !biometric.isEnabled && setupWizardComplete {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                                     showBiometricPrompt = true
                                 }

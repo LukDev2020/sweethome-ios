@@ -33,11 +33,11 @@
 "signup.next" = "Suivant";
 "signup.profile.title" = "Compléter le profil";
 "signup.name.placeholder" = "Votre nom";
-"signup.role.title" = "Votre rôle";
-"signup.role.protected" = "Protégé";
-"signup.role.protected.desc" = "Votre famille recevra vos signaux de sécurité";
+"signup.role.title" = "Choisissez votre rôle";
+"signup.role.protected" = "Personne protégée";
+"signup.role.protected.desc" = "Pour les personnes âgées vivant seules, les étudiants à l'étranger ou les voyageurs. Le système surveille votre sécurité et alerte vos gardiens en cas d'urgence.";
 "signup.role.guardian" = "Gardien";
-"signup.role.guardian.desc" = "Vous surveillerez la sécurité de votre famille";
+"signup.role.guardian.desc" = "Pour les proches soucieux de la sécurité d'un être cher. Vous recevrez la position et les signaux de sécurité en temps réel.";
 "signup.finish" = "Terminer";
 "signup.back" = "Retour";
 

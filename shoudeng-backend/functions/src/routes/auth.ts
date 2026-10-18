@@ -275,7 +275,7 @@ router.post("/login", async (req: Request, res: Response) => {
  * Accepts optional countryCode from client for accurate geo assignment.
  */
 router.post("/signup", async (req: Request, res: Response) => {
-  const { idToken, displayName, role, countryCode: clientCountryCode } =
+  const { idToken, displayName, role, countryCode: clientCountryCode, email } =
     req.body;
 
   if (!idToken || !displayName || !role) {
@@ -305,7 +305,7 @@ router.post("/signup", async (req: Request, res: Response) => {
     const detectedCountry = clientCountryCode || countryFromPhone(phone);
     const detectedTimezone = timezoneFromCountry(detectedCountry);
 
-    const userDoc = {
+    const userDoc: Record<string, unknown> = {
       displayName,
       phone,
       role,
@@ -316,6 +316,9 @@ router.post("/signup", async (req: Request, res: Response) => {
       createdAt: now,
       updatedAt: now,
     };
+    if (email && typeof email === "string" && email.includes("@")) {
+      userDoc.email = email;
+    }
 
     await db.collection("users").doc(uid).set(userDoc);
 

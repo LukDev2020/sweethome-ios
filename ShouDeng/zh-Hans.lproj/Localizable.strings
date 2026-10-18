@@ -33,11 +33,11 @@
 "signup.next" = "下一步";
 "signup.profile.title" = "完善资料";
 "signup.name.placeholder" = "你的称呼";
-"signup.role.title" = "你的角色";
+"signup.role.title" = "选择你的角色";
 "signup.role.protected" = "被守护者";
-"signup.role.protected.desc" = "家人会收到你的安全信号";
+"signup.role.protected.desc" = "适合独居长辈、留学生、出差旅行者。系统会监测你的安全状态，遇到紧急情况自动通知守护者。";
 "signup.role.guardian" = "守护者";
-"signup.role.guardian.desc" = "你将关注家人的安全状态";
+"signup.role.guardian.desc" = "适合子女、家属、关心家人安全的人。你会实时收到被守护者的位置和安全信号，必要时可远程协助。";
 "signup.finish" = "完成注册";
 "signup.back" = "返回";
 

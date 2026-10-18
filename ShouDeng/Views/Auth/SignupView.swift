@@ -272,13 +272,14 @@ struct SignupView: View {
                     .font(.system(size: 18))
                     .foregroundStyle(selectedRole == role ? lamp : ink.opacity(0.4))
                     .frame(width: 28)
-                VStack(alignment: .leading, spacing: 1) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(ink)
                     Text(desc)
-                        .font(.system(size: 13))
+                        .font(.system(size: 12))
                         .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer()
                 Image(systemName: selectedRole == role ? "checkmark.circle.fill" : "circle")
@@ -338,6 +339,7 @@ struct SignupView: View {
                     countryCode: selectedCountry.isoCode
                 )
                 coordinator.userRole = selectedRole
+                coordinator.showSetupWizard = true
                 coordinator.showSignup = false
             }
         } catch {
