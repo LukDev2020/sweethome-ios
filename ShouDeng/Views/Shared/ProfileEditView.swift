@@ -63,6 +63,7 @@ struct ProfileEditView: View {
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
 
     @State private var displayName: String = ""
+    @State private var email: String = ""
     @State private var cityName: String = ""
     @State private var selectedTimeZone: TimeZone = .current
     @State private var isSaving = false
@@ -195,6 +196,15 @@ struct ProfileEditView: View {
                         .multilineTextAlignment(.trailing)
                 }
                 Divider()
+                fieldRow("邮箱") {
+                    TextField("用于找回账号", text: $email)
+                        .font(.scaled(size: 14))
+                        .keyboardType(.emailAddress)
+                        .textContentType(.emailAddress)
+                        .autocapitalization(.none)
+                        .multilineTextAlignment(.trailing)
+                }
+                Divider()
                 fieldRow("城市") {
                     TextField("输入城市", text: $cityName)
                         .font(.scaled(size: 14))
@@ -255,6 +265,7 @@ struct ProfileEditView: View {
     private func loadCurrentProfile() {
         guard let user = coordinator.currentUser else { return }
         displayName = user.displayName
+        email = user.email ?? ""
         cityName = user.cityName
         selectedTimeZone = user.timeZone
         // Load saved avatar from disk
@@ -299,6 +310,7 @@ struct ProfileEditView: View {
         errorMessage = nil
 
         let trimmedName = displayName.trimmingCharacters(in: .whitespaces)
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedCity = cityName.trimmingCharacters(in: .whitespaces)
 
         // Save avatar to disk if changed
@@ -314,6 +326,7 @@ struct ProfileEditView: View {
                 "/v1/user/me",
                 body: UpdateProfileRequest(
                     displayName: trimmedName,
+                    email: trimmedEmail.isEmpty ? nil : trimmedEmail,
                     timeZone: selectedTimeZone.identifier,
                     cityName: trimmedCity,
                     countryCode: nil
@@ -340,10 +353,12 @@ struct ProfileEditView: View {
     }
 
     private func applyToUser(name: String, city: String, avatarPath: String?) {
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
         if coordinator.currentUser != nil {
             coordinator.currentUser?.displayName = name
             coordinator.currentUser?.avatarInitial = String(name.prefix(1))
             coordinator.currentUser?.avatarLocalPath = avatarPath
+            coordinator.currentUser?.email = trimmedEmail.isEmpty ? nil : trimmedEmail
             coordinator.currentUser?.cityName = city
             coordinator.currentUser?.timeZone = selectedTimeZone
         } else {

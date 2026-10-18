@@ -130,6 +130,7 @@ struct ProtectedSettingsView: View {
                     .foregroundStyle(.secondary)
                     .padding(.top, 8)
                 profilePanel
+                emailMissingBanner
                 rolePanel
                 sosTriggerPanel
                 checkInPanel
@@ -163,6 +164,7 @@ struct ProtectedSettingsView: View {
                         .foregroundStyle(.secondary)
                         .padding(.top, 8)
                     profilePanel
+                    emailMissingBanner
                     rolePanel
                     sosTriggerPanel
                     checkInPanel
@@ -232,6 +234,43 @@ struct ProtectedSettingsView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
         )
+    }
+
+    // MARK: - Email Missing Banner
+
+    @ViewBuilder
+    private var emailMissingBanner: some View {
+        if let user = coordinator.currentUser, (user.email ?? "").isEmpty {
+            Button { showProfileEdit = true } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "envelope.badge.fill")
+                        .font(.scaled(size: 14))
+                        .foregroundStyle(.orange)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("添加邮箱以便找回账号")
+                            .font(.scaled(size: 13, weight: .medium))
+                            .foregroundStyle(ink)
+                        Text("遇到换手机或号码失效时可通过邮箱找回")
+                            .font(.scaled(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.scaled(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.orange.opacity(0.06))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.orange.opacity(0.15), lineWidth: 1)
+                        )
+                )
+            }
+            .buttonStyle(.plain)
+        }
     }
 
     // MARK: - SOS Trigger Panel

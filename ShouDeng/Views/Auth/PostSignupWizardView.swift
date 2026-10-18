@@ -1,4 +1,5 @@
 import SwiftUI
+import StoreKit
 
 // MARK: - Post-Signup Setup Wizard
 //
@@ -210,8 +211,14 @@ struct PostSignupWizardView: View {
 
     // MARK: - Step 4: Payment (Guardian only)
 
+    @State private var selectedProductId: String?
+    @State private var purchaseInProgress = false
+    @State private var purchaseSuccess = false
+
     private var paymentStep: some View {
-        VStack(spacing: 16) {
+        let store = coordinator.storeKitManager
+
+        return VStack(spacing: 16) {
             Spacer()
 
             Image(systemName: "shield.checkered")
@@ -228,17 +235,117 @@ struct PostSignupWizardView: View {
                 .multilineTextAlignment(.center)
                 .lineSpacing(3)
 
-            VStack(spacing: 10) {
-                planCard(title: "单人关注版", price: "¥10/月", description: "守护1位家人", highlight: true)
-                planCard(title: "家庭版", price: "¥30/月", description: "守护多位家人", highlight: false)
+            if purchaseSuccess {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(safe)
+                    Text("订阅成功")
+                        .font(.scaled(size: 15, weight: .medium))
+                        .foregroundStyle(safe)
+                }
+                .padding(.top, 8)
+            } else if store.products.isEmpty {
+                // Products not loaded yet — show static fallback
+                VStack(spacing: 10) {
+                    planCard(title: "单人关注版", price: "¥10/月", description: "守护1位家人", highlight: true)
+                    planCard(title: "家庭版", price: "¥30/月", description: "守护多位家人", highlight: false)
+                }
+                .padding(.horizontal, 8)
+            } else {
+                // Real StoreKit products
+                VStack(spacing: 10) {
+                    ForEach(store.products, id: \.id) { product in
+                        let isSelected = selectedProductId == product.id
+                        Button {
+                            selectedProductId = product.id
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(store.planDisplayName(for: store.planId(for: product)))
+                                        .font(.scaled(size: 15, weight: .medium))
+                                        .foregroundStyle(ink)
+                                    Text(product.description)
+                                        .font(.scaled(size: 12))
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Text(product.displayPrice)
+                                    .font(.scaled(size: 15, weight: .semibold))
+                                    .foregroundStyle(isSelected ? safe : .secondary)
+                                if isSelected {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(safe)
+                                        .font(.scaled(size: 16))
+                                }
+                            }
+                            .padding(14)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(isSelected ? safe.opacity(0.08) : Color(.systemGray6))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(isSelected ? safe.opacity(0.3) : Color.clear, lineWidth: 1.5)
+                            )
+                        }
+                    }
+                }
+                .padding(.horizontal, 8)
+
+                if let selectedId = selectedProductId,
+                   let product = store.products.first(where: { $0.id == selectedId }) {
+                    Button {
+                        Task { await purchaseProduct(product) }
+                    } label: {
+                        HStack(spacing: 6) {
+                            if purchaseInProgress {
+                                ProgressView()
+                                    .tint(.white)
+                            }
+                            Text("开始免费试用")
+                                .font(.scaled(size: 15, weight: .medium))
+                                .foregroundStyle(cream)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(purchaseInProgress ? safe.opacity(0.5) : safe)
+                        )
+                    }
+                    .disabled(purchaseInProgress)
+                    .padding(.horizontal, 8)
+                }
             }
-            .padding(.horizontal, 8)
+
+            if let error = store.errorMessage {
+                Text(error)
+                    .font(.scaled(size: 12))
+                    .foregroundStyle(.red)
+            }
 
             Text("免费试用7天，随时取消")
                 .font(.scaled(size: 12))
                 .foregroundStyle(.tertiary)
 
             Spacer()
+        }
+        .task {
+            if store.products.isEmpty {
+                await store.fetchProducts()
+            }
+        }
+    }
+
+    private func purchaseProduct(_ product: Product) async {
+        purchaseInProgress = true
+        let success = await coordinator.storeKitManager.purchase(product)
+        purchaseInProgress = false
+        if success {
+            purchaseSuccess = true
+            // Auto-advance after a short delay
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            advanceStep()
         }
     }
 
@@ -433,6 +540,15 @@ struct PostSignupWizardView: View {
             if currentStep == 2 {
                 // Biometric step has its own buttons
                 EmptyView()
+            } else if currentStep == 3 && coordinator.userRole == .guardian {
+                // Payment step — skip option (Apple requires non-gated)
+                if !purchaseSuccess {
+                    Button("稍后再说") {
+                        advanceStep()
+                    }
+                    .font(.scaled(size: 14))
+                    .foregroundStyle(.secondary)
+                }
             } else if currentStep == totalSteps - 1 {
                 Button {
                     Task { await finishWizard() }
