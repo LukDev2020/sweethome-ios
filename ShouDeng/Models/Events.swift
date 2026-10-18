@@ -99,6 +99,8 @@ enum TimelineEntryType: String, Codable {
     case homeTimerExpired
     case arrivalReport
     case itineraryAdded
+    case trackingPaused
+    case trackingResumed
 }
 
 // MARK: - Safe Zone

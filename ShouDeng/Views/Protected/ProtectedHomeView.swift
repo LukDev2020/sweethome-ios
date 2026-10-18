@@ -137,6 +137,9 @@ struct ProtectedHomeView: View {
                     .padding(.top, 4)
                 locationCard
                     .padding(.top, 10)
+                trackingPauseToggle
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
                 sosButton
                     .padding(.horizontal, 16)
                     .padding(.top, 12)
@@ -217,6 +220,9 @@ struct ProtectedHomeView: View {
                 VStack(spacing: 0) {
                     locationCard
                         .padding(.top, 10)
+                    trackingPauseToggle
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
                     sosButton
                         .padding(.horizontal, 16)
                         .padding(.top, 12)
@@ -496,6 +502,61 @@ struct ProtectedHomeView: View {
         case "北京": return CLLocationCoordinate2D(latitude: 39.90, longitude: 116.40)
         case "东京": return CLLocationCoordinate2D(latitude: 35.68, longitude: 139.69)
         default: return CLLocationCoordinate2D(latitude: 40.0, longitude: -74.0)
+        }
+    }
+
+    // MARK: - Tracking Pause Toggle
+
+    private var trackingPauseToggle: some View {
+        let isPaused = coordinator.isTrackingPaused
+
+        return Button {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            withAnimation(.easeInOut(duration: 0.3)) {
+                if isPaused {
+                    coordinator.resumeTracking()
+                } else {
+                    coordinator.pauseTracking()
+                }
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: isPaused ? "location.slash.fill" : "location.fill")
+                    .font(.scaled(size: 13))
+                    .foregroundStyle(isPaused ? .orange : safe)
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(isPaused ? "位置共享已暂停" : "位置共享中")
+                        .font(.scaled(size: 13, weight: .medium))
+                        .foregroundStyle(isPaused ? .orange : ink.opacity(0.7))
+
+                    if isPaused {
+                        let remaining = coordinator.trackingPauseRemainingMinutes
+                        Text(remaining > 60 ? "\(remaining / 60)小时\(remaining % 60)分钟后自动恢复" : "\(remaining)分钟后自动恢复")
+                            .font(.scaled(size: 11))
+                            .foregroundStyle(.orange.opacity(0.7))
+                    }
+                }
+
+                Spacer()
+
+                Text(isPaused ? "恢复" : "暂停")
+                    .font(.scaled(size: 12, weight: .medium))
+                    .foregroundStyle(isPaused ? .white : ink.opacity(0.5))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Capsule().fill(isPaused ? Color.orange : ink.opacity(0.08)))
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(isPaused ? Color.orange.opacity(0.08) : safe.opacity(0.05))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(isPaused ? Color.orange.opacity(0.2) : safe.opacity(0.1), lineWidth: 1)
+                    )
+            )
         }
     }
 

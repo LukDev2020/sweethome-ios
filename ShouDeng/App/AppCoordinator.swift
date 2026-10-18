@@ -34,6 +34,11 @@ final class AppCoordinator: ObservableObject {
     @Published var showInviteAccept = false
     @Published var pendingInviteCode: String?
 
+    // Tracking pause (protected person privacy)
+    @Published var isTrackingPaused = false
+    @Published var trackingPauseExpiresAt: Date?
+    private var trackingPauseTimer: Timer?
+
     // MARK: - Infrastructure
 
     let offlineQueue = OfflineQueue()
@@ -191,6 +196,11 @@ final class AppCoordinator: ObservableObject {
         showSignup = false
         signupPhone = nil
         signupCountry = nil
+        isTrackingPaused = false
+        trackingPauseExpiresAt = nil
+        trackingPauseTimer?.invalidate()
+        trackingPauseTimer = nil
+        locationManager.isTrackingPaused = false
         localStore.clearAll()
         offlineQueue.clearAll()
         WidgetDataStore.clear()
@@ -579,6 +589,11 @@ final class AppCoordinator: ObservableObject {
         localStore.saveActiveSOSEvent(sosEvent)
         syncWidgetState()
 
+        // If tracking was paused, auto-resume — safety overrides privacy
+        if isTrackingPaused {
+            resumeTracking()
+        }
+
         // Switch location to SOS mode
         locationManager.enterSOSMode()
 
@@ -652,6 +667,61 @@ final class AppCoordinator: ObservableObject {
             note: note
         ))
         _ = checkIn
+    }
+
+    // MARK: - Tracking Pause
+
+    static let maxPauseDurationHours: Double = 4
+
+    private struct TrackingPauseRequest: Encodable {
+        let userId: String
+        let paused: Bool
+        var expiresAt: String?
+    }
+
+    func pauseTracking() {
+        let expiry = Date().addingTimeInterval(Self.maxPauseDurationHours * 3600)
+        isTrackingPaused = true
+        trackingPauseExpiresAt = expiry
+        locationManager.isTrackingPaused = true
+
+        addTimelineEntry(type: .trackingPaused, description: "暂停了位置共享")
+
+        // Notify server so guardians see paused status
+        if let userId = currentUser?.id {
+            apiClient.postQueued("/v1/location/pause", body: TrackingPauseRequest(userId: userId, paused: true, expiresAt: ISO8601DateFormatter().string(from: expiry)))
+        }
+
+        // Auto-resume timer
+        trackingPauseTimer?.invalidate()
+        trackingPauseTimer = Timer.scheduledTimer(withTimeInterval: Self.maxPauseDurationHours * 3600, repeats: false) { [weak self] _ in
+            DispatchQueue.main.async {
+                self?.resumeTracking()
+            }
+        }
+    }
+
+    func resumeTracking() {
+        isTrackingPaused = false
+        trackingPauseExpiresAt = nil
+        locationManager.isTrackingPaused = false
+        trackingPauseTimer?.invalidate()
+        trackingPauseTimer = nil
+
+        addTimelineEntry(type: .trackingResumed, description: "恢复了位置共享")
+
+        // Notify server
+        if let userId = currentUser?.id {
+            apiClient.postQueued("/v1/location/pause", body: TrackingPauseRequest(userId: userId, paused: false))
+        }
+
+        // Send a fresh location immediately
+        locationManager.requestSingleLocation()
+    }
+
+    var trackingPauseRemainingMinutes: Int {
+        guard let expiry = trackingPauseExpiresAt else { return 0 }
+        return max(0, Int(expiry.timeIntervalSinceNow / 60))
     }
 
     // MARK: - Event Handlers

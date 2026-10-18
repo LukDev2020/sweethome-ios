@@ -403,6 +403,8 @@ struct GuardianRecordsView: View {
         case .homeTimerExpired: return "clock.badge.exclamationmark"
         case .arrivalReport: return "mappin.circle.fill"
         case .itineraryAdded: return "airplane"
+        case .trackingPaused: return "location.slash"
+        case .trackingResumed: return "location.fill"
         }
     }
 

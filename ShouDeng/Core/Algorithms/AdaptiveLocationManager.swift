@@ -91,6 +91,9 @@ final class AdaptiveLocationManager: NSObject {
     private(set) var lastReportedLocation: CLLocation?
     private var lastReportTime: Date?
 
+    // Tracking pause — suppresses location reports (SOS overrides)
+    var isTrackingPaused = false
+
     /// Best available location: last reported, or iOS cached location
     var bestAvailableLocation: CLLocation? {
         // Prefer the fresher of lastReportedLocation and CLLocationManager's cache
@@ -346,6 +349,9 @@ final class AdaptiveLocationManager: NSObject {
             report(location)
             return
         }
+
+        // If tracking is paused, skip location reports (SOS already handled above)
+        if isTrackingPaused { return }
 
         // Deduplication: skip if too close in space or time
         if let lastLocation = lastReportedLocation,
