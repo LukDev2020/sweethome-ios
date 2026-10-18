@@ -1,0 +1,92 @@
+# S9: Accessibility — Mother with Dynamic Type xxLarge + VoiceOver
+# Actors: mother (iPhone SE, zh-Hans, xxLarge text, VoiceOver)
+# Precondition: Seeded data, mother is linked guardian
+
+appId: com.shoudeng.app
+name: S09 - Accessibility Testing
+
+---
+
+# === MOTHER's DEVICE (iPhone SE 3rd gen, zh-Hans, xxLarge) ===
+
+# Configure accessibility before launch
+# Dynamic Type: xxLarge
+# VoiceOver: enabled
+# Screen: 375x667pt (iPhone SE)
+
+- launchApp
+
+# --- Home/Dashboard screen ---
+- assertVisible: "Safe"
+- screenshot: S09_01_mother_dashboard-xxlarge
+
+# Verify no text truncation on dashboard
+# All critical labels must be fully visible
+# SOS button must be at least 44x44pt
+
+# --- Protected person status ---
+- tapOn: "Chen Hao"
+- screenshot: S09_02_mother_haozi-status-xxlarge
+
+# Verify:
+# - Name not truncated
+# - Location text readable
+# - Battery indicator visible
+# - Status badge fully visible
+
+# --- Safe zones list ---
+- tapOn: "Safe Zones"
+- screenshot: S09_03_mother_safezones-xxlarge
+
+# Verify all 4 safe zone names visible without truncation:
+# - Home - Scarborough Apt
+# - U of T St. George
+# - GoodLife Fitness
+# - Scarborough Town Centre
+
+# --- Timeline view ---
+- tapOn: "Timeline"
+- screenshot: S09_04_mother_timeline-xxlarge
+
+# Verify timeline entries readable at xxLarge
+# Timestamps and descriptions must not overlap
+
+# --- SOS button accessibility ---
+# VoiceOver should announce SOS button
+# Minimum tap target: 44x44pt
+- screenshot: S09_05_mother_sos-button-xxlarge
+
+# --- Medical card view ---
+- tapOn: "Medical Card"
+- screenshot: S09_06_mother_medical-card-xxlarge
+
+# Verify all medical info readable:
+# - Blood type: A
+# - Allergies: Penicillin
+# - Height/Weight
+
+# --- Settings screen ---
+- tapOn: "Settings"
+- screenshot: S09_07_mother_settings-xxlarge
+
+# Verify all settings options tappable and readable
+
+# === VOICEOVER NAVIGATION TEST ===
+# Navigate through key screens using VoiceOver gestures
+# (swipe right = next element, double-tap = activate)
+
+# Dashboard → Status → Safe Zones → Timeline → Settings
+# All elements must have accessibility labels
+# No "button" without a label
+# No images without alt text
+
+# === ASSERTIONS ===
+# - No text truncation on any screen at xxLarge + iPhone SE
+# - All interactive elements >= 44x44pt tap target
+# - All buttons have accessibilityLabel set
+# - VoiceOver can navigate complete SOS flow
+# - No overlapping UI elements
+# - Chinese text (zh-Hans) renders correctly at xxLarge
+# - Guardian dashboard fully functional at xxLarge
+# - Status badges (Safe/Overdue/Alert) readable
+# - Timeline entry text does not overlap timestamps

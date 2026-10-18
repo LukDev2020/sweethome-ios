@@ -1,0 +1,74 @@
+# S6: Battery Death — 9h Offline
+# Actors: haozi (phone dies), father, mother
+# Clock: Simulate Oct 11 — phone dies 14:00 EDT, boots 23:00 EDT
+# Precondition: Seeded data with battery degradation event
+
+appId: com.shoudeng.app
+name: S06 - Battery Death and Recovery
+
+---
+
+# === HAOZI's DEVICE ===
+
+- launchApp
+
+# --- Battery drops to 15% (low battery alert) ---
+# Simulate battery level change
+- screenshot: S06_01_haozi_battery-low-15pct
+
+# --- Battery drops to 5% (critical alert) ---
+# batteryReportThreshold = 0.05 (5% change triggers report)
+# Critical alert at 5% unplugged
+- screenshot: S06_02_haozi_battery-critical-5pct
+
+# === GUARDIAN DEVICES ===
+# Father/Mother receive battery critical notification
+# FCM body: "设备离线提醒" (battery low variant)
+- screenshot: S06_03_father_battery-alert
+
+# === PHONE DIES (14:00 EDT) ===
+# No more heartbeats from haozi
+# Last heartbeat timestamp = 14:00 EDT
+
+# --- 30 minutes later: heartbeatCheck fires ---
+# HEARTBEAT_MISSING_THRESHOLD_MIN = 30
+# heartbeatCheck runs every 5 minutes
+# At 14:30 EDT → heartbeatCheck detects missing heartbeat
+
+# === GUARDIAN NOTIFICATION: Device Offline ===
+# FCM: "设备离线提醒"
+# SafetyStatus → unreachable (grey)
+- screenshot: S06_04_father_device-offline
+
+# --- Degradation warning progression ---
+# < 4h offline: severity = caution
+# >= 4h offline: severity = critical
+# At 18:00 EDT (4h offline): escalates to critical degradation
+
+# === 9 HOURS LATER: Phone boots (23:00 EDT) ===
+# Haozi plugs in phone, it boots up
+- launchApp
+
+# --- Heartbeat resumes ---
+# HeartbeatService sends immediate heartbeat on appForeground
+- screenshot: S06_05_haozi_phone-recovered
+
+# === GUARDIAN SEES RECOVERY ===
+# SafetyStatus → normal (green)
+# Battery level reported (charging)
+- screenshot: S06_06_father_status-recovered
+
+# === BACKEND ASSERTIONS ===
+# - Battery 5% alert: FCM with batteryLevel <= 5, batteryState=unplugged
+# - Heartbeat gap: last heartbeat at 14:00, next at 23:00 = 9h gap
+# - heartbeatCheck function fires at 14:30 (30min threshold)
+# - heartbeatCheck runs every 5 minutes
+# - Timeline entry: type=phoneInactive
+# - FCM notification: "设备离线提醒"
+# - Degradation warning: device_offline
+#   - < 4h: severity=caution
+#   - >= 4h: severity=critical
+# - SafetyStatus changes: normal → unreachable → normal
+# - Recovery heartbeat: source=appForeground
+# - Battery report on recovery: batteryState=charging
+# - HEARTBEAT_MISSING_THRESHOLD_MIN = 30 (DO NOT MODIFY)

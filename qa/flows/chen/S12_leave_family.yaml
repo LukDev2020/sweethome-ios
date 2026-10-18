@@ -1,0 +1,68 @@
+# S12: Leaving Family — Guardian Revocation
+# Actors: haozi (revokes), father (loses access)
+# Precondition: Father is linked guardian with active status
+
+appId: com.shoudeng.app
+name: S12 - Guardian Revocation
+
+---
+
+# === HAOZI's DEVICE (iPhone 14, en-CA) ===
+
+- launchApp
+
+# --- Navigate to guardians list ---
+- tapOn: "Settings"
+- tapOn: "My Guardians"
+- screenshot: S12_01_haozi_guardians-list
+
+# Verify father is listed as active guardian
+- assertVisible: "Chen Jianguo"
+- assertVisible: "Active"
+
+# --- Revoke father ---
+- tapOn: "Chen Jianguo"
+- screenshot: S12_02_haozi_guardian-detail
+
+- tapOn: "Remove Guardian"
+- screenshot: S12_03_haozi_revoke-confirm
+
+# Confirmation dialog
+- assertVisible: "Remove"
+- tapOn: "Confirm"
+- screenshot: S12_04_haozi_guardian-revoked
+
+# --- Verify father removed ---
+- assertNotVisible: "Chen Jianguo"
+- screenshot: S12_05_haozi_guardians-after-revoke
+
+# === FATHER's DEVICE ===
+
+# --- Father opens app, haozi no longer visible ---
+- launchApp
+- screenshot: S12_06_father_no-access
+
+# Father should NOT see haozi's:
+# - Location
+# - Battery level
+# - Health data
+# - Timeline
+
+# --- Father tries to view haozi's status ---
+# Should get "No protected persons" or haozi removed from list
+- assertNotVisible: "Chen Hao"
+- screenshot: S12_07_father_protected-list-empty
+
+# === TEST: SOS after revocation ===
+# If haozi triggers SOS, father should NOT receive notification
+
+# === BACKEND ASSERTIONS ===
+# - guardian_links/{chen-jianguo-uid}_{chen-hao-uid}: status=revoked
+# - DELETE /v1/protected/guardians/chen-jianguo-uid called successfully
+# - Father (chen-jianguo-uid) denied read access to haozi's data by Firestore rules
+# - Timeline entry logged for revocation
+# - Father's GET /v1/guardian/ no longer returns chen-hao-uid
+# - If haozi triggers SOS:
+#   - Father NOT in notification targets
+#   - Only mother (li-min-uid) receives push
+# - Guardian link cannot be re-activated without new invite

@@ -1,0 +1,57 @@
+# S7: Trajectory Consent Toggle
+# Actors: haozi
+# Precondition: haozi has trajectory consent=false
+
+appId: com.shoudeng.app
+name: S07 - Trajectory Consent Toggle
+
+---
+
+# === HAOZI's DEVICE (iPhone 14, en-CA) ===
+
+- launchApp
+
+# --- Navigate to privacy settings ---
+- tapOn: "Settings"
+- tapOn: "Privacy"
+- screenshot: S07_01_haozi_privacy-settings
+
+# --- Verify trajectory is currently OFF ---
+- assertVisible: "Trajectory"
+# Toggle should be OFF
+- screenshot: S07_02_haozi_trajectory-off
+
+# --- Enable trajectory ---
+- tapOn: "Trajectory"
+
+# Feature disclosure appears (requiresOptIn=true, isHighSensitivity=true)
+- assertVisible: "Trajectory Recording"
+# High sensitivity disclosure has extra warning
+- screenshot: S07_03_haozi_trajectory-disclosure
+
+- tapOn: "Allow"
+- screenshot: S07_04_haozi_trajectory-enabled
+
+# --- Verify consent logged ---
+# ConsentLogger.logFeatureDisclosure(.trajectory, granted: true)
+# Record: item=consent.trajectory, action=granted, copyVersion=v1.1
+
+# --- Disable trajectory ---
+- tapOn: "Trajectory"
+- screenshot: S07_05_haozi_trajectory-revoke-confirm
+
+- tapOn: "Revoke"
+- screenshot: S07_06_haozi_trajectory-disabled
+
+# === BACKEND ASSERTIONS ===
+# - Consent log entry 1:
+#   item=consent.trajectory, action=granted, copyVersion=v1.1
+#   locale=en_CA, appVersion=current
+# - Consent log entry 2:
+#   item=consent.trajectory, action=revoked, copyVersion=v1.1
+# - Feature disclosure:
+#   requiresOptIn=true, isHighSensitivity=true
+#   Storage key: disclosure_trajectory_v1.1
+# - User consent doc updated: trajectory=true then trajectory=false
+# - Trajectory data collection started then stopped
+# - Consent records are JSONL append-only (both records preserved)

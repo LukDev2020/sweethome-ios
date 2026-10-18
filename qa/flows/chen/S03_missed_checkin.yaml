@@ -1,0 +1,52 @@
+# S3: Missed Check-In — 8h Overdue Escalation
+# Actors: haozi (forgets check-in), father (on-duty, receives alert)
+# Clock: Simulate Oct 3 — last check-in at 22:00 Oct 2, no check-in Oct 3
+# Precondition: Seeded data, last check-in > 8h ago
+
+appId: com.shoudeng.app
+name: S03 - Missed Check-In Escalation
+
+---
+
+# === SETUP ===
+# Seed state: haozi's last check-in was 22:00 EDT Oct 2
+# Current simulated time: 06:01 EDT Oct 3 (8h + 1min after last check-in)
+# checkinOverdue scheduled function runs every 15 minutes
+
+# === HAOZI's DEVICE ===
+- launchApp
+
+# Haozi sees the app but does NOT tap check-in
+- screenshot: S03_01_haozi_no-checkin-yet
+
+# --- Wait for checkinOverdue to fire ---
+# After 8h without check-in, the scheduled function triggers
+# (In test: manually invoke or wait for emulator schedule)
+
+# === FATHER's DEVICE (on-duty) ===
+# Father should receive push notification about missed check-in
+
+# --- Father opens app, sees warning ---
+- assertVisible: "Check-In Overdue"
+- screenshot: S03_02_father_overdue-alert
+
+# --- Father views haozi's status ---
+# SafetyStatus should be pendingCheckIn → overdue
+- assertVisible: "Overdue"
+- screenshot: S03_03_father_status-overdue
+
+# === HAOZI CHECKS IN LATE ===
+# Haozi finally opens app and checks in
+- tapOn: "Check In"
+- assertVisible: "Checked In"
+- screenshot: S03_04_haozi_late-checkin
+
+# === BACKEND ASSERTIONS ===
+# - checkinOverdue function fired (check function logs)
+# - Timeline entry: type=missedCheckIn for chen-hao-uid
+# - FCM notification sent to on-duty guardian (chen-jianguo-uid)
+# - Notification body contains "报平安提醒"
+# - SafetyStatus progression: normal → pendingCheckIn → overdue → normal (after late check-in)
+# - Late check-in recorded in checkins collection
+# - checkinOverdue threshold = 8 hours (NEVER modify this value)
+# - Scheduled function interval = every 15 minutes

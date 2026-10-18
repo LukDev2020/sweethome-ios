@@ -1,0 +1,80 @@
+# S1: Onboarding — Fresh Install to Family Joined
+# Actors: haozi (iPhone 14, en-CA), father (iPhone 12, zh-Hans)
+# Precondition: Fresh install, no existing account
+# Duration: ~3 minutes
+
+appId: com.shoudeng.app
+name: S01 - Onboarding Fresh Install
+
+---
+
+# === HAOZI's DEVICE (iPhone 14, en-CA) ===
+
+- launchApp
+
+# --- Screen 1: Not an Emergency Service ---
+- assertVisible: "Vela Is Not an Emergency Service"
+- assertVisible: "exclamationmark.triangle"
+- tapOn: "I Understand"
+- screenshot: S01_01_haozi_disclaimer-not-emergency
+
+# --- Screen 2: Scope of Data ---
+- assertVisible: "We Only See What Safety Requires"
+- tapOn: "I Understand"
+- screenshot: S01_02_haozi_disclaimer-scope
+
+# --- Screen 3: You Are in Control ---
+- assertVisible: "You Are in Control"
+- tapOn: "I Understand"
+- screenshot: S01_03_haozi_disclaimer-control
+
+# --- Phone Verification ---
+- assertVisible: "Phone Number"
+- tapOn: "Phone Number"
+- inputText: "+14165550137"
+- tapOn: "Get Code"
+- waitForAnimationToEnd
+# In emulator, verification code is auto-filled or use test code
+- assertVisible: "Verification Code"
+- inputText: "123456"
+- tapOn: "Verify"
+- screenshot: S01_04_haozi_phone-verified
+
+# --- Role Selection ---
+- assertVisible: "Choose Your Role"
+- tapOn: "Care Receiver"
+- screenshot: S01_05_haozi_role-selected
+
+# --- Feature Disclosures ---
+# Location consent (requiresOptIn=true)
+- assertVisible: "Share Your Location"
+- tapOn: "Allow"
+
+# Fall detection consent
+- assertVisible: "Fall Detection"
+- tapOn: "Allow"
+
+# SOS consent
+- assertVisible: "SOS"
+- tapOn: "I Understand"
+
+- screenshot: S01_06_haozi_consents-complete
+
+# --- Wait for invite from father ---
+# (Father sends invite on his device — see backend seed)
+- assertVisible: "Enter Invite Code"
+- tapOn: "Invite Code"
+- inputText: "CHEN2026"
+- tapOn: "Join Family"
+- screenshot: S01_07_haozi_family-joined
+
+# --- Verify home screen ---
+- assertVisible: "Safe"
+- screenshot: S01_08_haozi_home-screen
+
+# === BACKEND ASSERTIONS (via backend-observer) ===
+# - 3 consent records in consent_log.jsonl: onboard.not_emergency, onboard.scope, onboard.control
+# - Copy version = "v1.1" on all records
+# - users/chen-hao-uid: role=protected, countryCode=CA, timeZone=America/Toronto
+# - guardian_links/{chen-jianguo-uid}_{chen-hao-uid}: status=active
+# - Feature disclosure records: consent.location, consent.fall_detect, consent.sos

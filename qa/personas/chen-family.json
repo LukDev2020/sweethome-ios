@@ -1,0 +1,194 @@
+{
+  "familyId": "chen-family",
+  "plan": {
+    "id": "family",
+    "activeSince": "2026-09-01T00:00:00Z",
+    "nextBilling": "2026-11-01T00:00:00Z",
+    "appleProductId": "com.shoudeng.app.family.monthly"
+  },
+  "members": [
+    {
+      "seedId": "haozi",
+      "userId": "chen-hao-uid",
+      "displayName": "陈浩",
+      "displayNameEN": "Chen Hao",
+      "age": 20,
+      "role": "protected",
+      "phone": "+14165550137",
+      "countryCode": "CA",
+      "cityName": "Toronto",
+      "timeZone": "America/Toronto",
+      "locale": "en-CA",
+      "device": "iPhone 14",
+      "avatarInitial": "浩",
+      "medicalCard": {
+        "bloodType": "A",
+        "allergies": ["Penicillin"],
+        "medications": [],
+        "conditions": [],
+        "insuranceProvider": null,
+        "insurancePolicyNumber": null,
+        "emergencyNote": "Father: +86 138 0013 8000",
+        "organDonor": false,
+        "weight": 72,
+        "height": 178
+      },
+      "consularHotline": {
+        "countryCode": "CA",
+        "countryName": "Canada",
+        "flag": "\ud83c\udde8\ud83c\udde6",
+        "emergency": "911",
+        "embassy": "+1-416-964-7260",
+        "selectedPhone": "+1-416-964-7260",
+        "selectedLabel": "Chinese Consulate Toronto"
+      },
+      "consent": {
+        "location": true,
+        "trajectory": false,
+        "fallDetect": true,
+        "sos": true,
+        "audio": false,
+        "voiceCall": true
+      },
+      "safeZones": [
+        {
+          "id": "sz-haozi-apt",
+          "name": "Home - Scarborough Apt",
+          "latitude": 43.776,
+          "longitude": -79.258,
+          "radius": 150,
+          "type": "home"
+        },
+        {
+          "id": "sz-haozi-campus",
+          "name": "U of T St. George",
+          "latitude": 43.662,
+          "longitude": -79.395,
+          "radius": 500,
+          "type": "school"
+        },
+        {
+          "id": "sz-haozi-gym",
+          "name": "GoodLife Fitness",
+          "latitude": 43.770,
+          "longitude": -79.260,
+          "radius": 80,
+          "type": "custom"
+        },
+        {
+          "id": "sz-haozi-job",
+          "name": "Scarborough Town Centre",
+          "latitude": 43.775,
+          "longitude": -79.257,
+          "radius": 200,
+          "type": "work"
+        }
+      ]
+    },
+    {
+      "seedId": "father",
+      "userId": "chen-jianguo-uid",
+      "displayName": "陈建国",
+      "displayNameEN": "Chen Jianguo",
+      "age": 52,
+      "role": "guardian",
+      "phone": "+8613800138000",
+      "countryCode": "CN",
+      "cityName": "Shenzhen",
+      "timeZone": "Asia/Shanghai",
+      "locale": "zh-Hans",
+      "device": "iPhone 12",
+      "avatarInitial": "建",
+      "isPrimaryGuardian": true,
+      "prefersVoiceCall": true,
+      "consent": {
+        "location": true,
+        "trajectory": true,
+        "fallDetect": true,
+        "sos": true,
+        "audio": true,
+        "voiceCall": true
+      }
+    },
+    {
+      "seedId": "mother",
+      "userId": "li-min-uid",
+      "displayName": "李敏",
+      "displayNameEN": "Li Min",
+      "age": 50,
+      "role": "guardian",
+      "phone": "+8613900139000",
+      "countryCode": "CN",
+      "cityName": "Shenzhen",
+      "timeZone": "Asia/Shanghai",
+      "locale": "zh-Hans",
+      "device": "iPhone SE",
+      "avatarInitial": "敏",
+      "isPrimaryGuardian": false,
+      "dynamicTypeSize": "xxLarge",
+      "consent": {
+        "location": true,
+        "trajectory": true,
+        "fallDetect": true,
+        "sos": true,
+        "audio": true,
+        "voiceCall": true
+      }
+    }
+  ],
+  "guardianLinks": [
+    {
+      "guardianId": "chen-jianguo-uid",
+      "protectedPersonId": "chen-hao-uid",
+      "status": "active",
+      "permissions": {
+        "canSeeLocation": true,
+        "canSeeBattery": true,
+        "canSeeHealth": true,
+        "canSeePhoneActivity": false,
+        "canHearEmergencyAudio": true
+      }
+    },
+    {
+      "guardianId": "li-min-uid",
+      "protectedPersonId": "chen-hao-uid",
+      "status": "active",
+      "permissions": {
+        "canSeeLocation": true,
+        "canSeeBattery": true,
+        "canSeeHealth": true,
+        "canSeePhoneActivity": false,
+        "canHearEmergencyAudio": true
+      }
+    }
+  ],
+  "dutySchedule": {
+    "description": "Father 08:00-20:00 Shenzhen, Mother 20:00-08:00 Shenzhen",
+    "slots": [
+      {
+        "guardianId": "chen-jianguo-uid",
+        "startHour": 8,
+        "endHour": 20,
+        "dayOfWeek": [],
+        "timeZone": "Asia/Shanghai"
+      },
+      {
+        "guardianId": "li-min-uid",
+        "startHour": 20,
+        "endHour": 8,
+        "dayOfWeek": [],
+        "timeZone": "Asia/Shanghai"
+      }
+    ]
+  },
+  "locations": {
+    "home": { "lat": 43.776, "lng": -79.258, "label": "Scarborough Apt" },
+    "campus": { "lat": 43.662, "lng": -79.395, "label": "U of T St. George" },
+    "gym": { "lat": 43.770, "lng": -79.260, "label": "GoodLife Fitness" },
+    "job": { "lat": 43.775, "lng": -79.257, "label": "Scarborough Town Centre" },
+    "subwayBloor": { "lat": 43.670, "lng": -79.386, "label": "Bloor-Yonge Station" },
+    "subwayScarborough": { "lat": 43.773, "lng": -79.258, "label": "Scarborough Centre Station" },
+    "queenStBar": { "lat": 43.650, "lng": -79.379, "label": "Queen St W bar district" },
+    "niagaraFalls": { "lat": 43.089, "lng": -79.075, "label": "Niagara Falls" }
+  }
+}
