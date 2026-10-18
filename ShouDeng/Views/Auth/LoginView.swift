@@ -12,6 +12,7 @@ import SwiftUI
 struct LoginView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
+    @ObservedObject private var fontScale = FontScaleManager.shared
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     // Lighthouse palette
@@ -40,6 +41,7 @@ struct LoginView: View {
     @State private var showCountryPicker = false
     @State private var failedAttempts = 0
     @State private var isLocked = false
+    @State private var showFontPicker = false
 
     private enum Field { case phone, code }
     @FocusState private var focusedField: Field?
@@ -159,50 +161,104 @@ struct LoginView: View {
     // MARK: - Shared Login Sections
 
     private var loginTopBar: some View {
-        HStack {
-            if codeSent || errorMessage != nil {
-                Button {
-                    resetAll()
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.counterclockwise")
-                            .font(.scaled(size: 11, weight: .semibold))
-                        Text(lang.localized("login.reset"))
-                            .font(.scaled(size: 12))
-                    }
-                    .foregroundStyle(navy.opacity(0.6))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(
-                        Capsule().fill(navy.opacity(0.06))
-                    )
-                }
-                .padding(.leading, 20)
-            }
-
-            Spacer()
-
-            HStack(spacing: 2) {
-                ForEach(AppLanguage.allCases, id: \.self) { language in
+        VStack(spacing: 0) {
+            HStack {
+                if codeSent || errorMessage != nil {
                     Button {
-                        lang.current = language
+                        resetAll()
                     } label: {
-                        Text(language.displayName)
-                            .font(.scaled(size: 12))
-                            .foregroundStyle(lang.current == language ? navy : ink3)
-                            .padding(.horizontal, 9)
-                            .padding(.vertical, 4)
-                            .background(
-                                lang.current == language
-                                    ? Capsule().fill(navy.opacity(0.09))
-                                    : nil
-                            )
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.counterclockwise")
+                                .font(.scaled(size: 11, weight: .semibold))
+                            Text(lang.localized("login.reset"))
+                                .font(.scaled(size: 12))
+                        }
+                        .foregroundStyle(navy.opacity(0.6))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(
+                            Capsule().fill(navy.opacity(0.06))
+                        )
+                    }
+                    .padding(.leading, 20)
+                }
+
+                Spacer()
+
+                HStack(spacing: 6) {
+                    // Font size button
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            showFontPicker.toggle()
+                        }
+                    } label: {
+                        HStack(spacing: 3) {
+                            Image(systemName: "textformat.size")
+                                .font(.system(size: 11))
+                            Text(fontScale.level.label)
+                                .font(.system(size: 10))
+                        }
+                        .foregroundStyle(showFontPicker ? .white : navy.opacity(0.6))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            Capsule().fill(showFontPicker ? navy : navy.opacity(0.06))
+                        )
+                    }
+
+                    // Language switcher
+                    HStack(spacing: 2) {
+                        ForEach(AppLanguage.allCases, id: \.self) { language in
+                            Button {
+                                lang.current = language
+                            } label: {
+                                Text(language.displayName)
+                                    .font(.scaled(size: 12))
+                                    .foregroundStyle(lang.current == language ? navy : ink3)
+                                    .padding(.horizontal, 9)
+                                    .padding(.vertical, 4)
+                                    .background(
+                                        lang.current == language
+                                            ? Capsule().fill(navy.opacity(0.09))
+                                            : nil
+                                    )
+                            }
+                        }
                     }
                 }
+                .padding(.trailing, 20)
             }
-            .padding(.trailing, 20)
+            .padding(.top, 6)
+
+            // Inline font size picker
+            if showFontPicker {
+                HStack(spacing: 6) {
+                    ForEach(FontScaleLevel.allCases, id: \.self) { level in
+                        Button {
+                            fontScale.level = level
+                        } label: {
+                            VStack(spacing: 2) {
+                                Text("字")
+                                    .font(.system(size: 10 * level.scale, weight: .medium))
+                                    .foregroundStyle(fontScale.level == level ? .white : ink)
+                                Text(level.label)
+                                    .font(.system(size: 9))
+                                    .foregroundStyle(fontScale.level == level ? .white.opacity(0.9) : ink3)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(fontScale.level == level ? navy : navy.opacity(0.06))
+                            )
+                        }
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
         }
-        .padding(.top, 6)
     }
 
     private var brandArea: some View {

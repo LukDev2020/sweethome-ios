@@ -56,42 +56,75 @@ struct LocationCardView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 14))
                     .frame(height: isFocused ? 220 : 130)
 
-                // Overlay labels
-                VStack(alignment: .leading, spacing: 2) {
-                    if let label {
-                        Text(label)
-                            .font(.scaled(size: 12, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(ink.opacity(0.7))
-                            .clipShape(Capsule())
-                    }
-                    if let pin = focusedPin {
-                        // Focused person info
-                        HStack(spacing: 4) {
-                            Circle().fill(pin.color).frame(width: 6, height: 6)
-                            Text(pin.name)
-                                .font(.scaled(size: 12, weight: .medium))
-                            if let status = pin.status {
-                                Text("· \(status)")
-                                    .font(.scaled(size: 11))
-                                    .foregroundStyle(.white.opacity(0.8))
+                // Overlay: person switcher + labels
+                VStack(alignment: .leading, spacing: 4) {
+                    // Person icon strip (only show when >1 pin)
+                    if pins.count > 1 {
+                        HStack(spacing: 6) {
+                            ForEach(pins) { pin in
+                                Button {
+                                    withAnimation(.easeInOut(duration: 0.3)) {
+                                        focusedPinId = focusedPinId == pin.id ? nil : pin.id
+                                    }
+                                } label: {
+                                    HStack(spacing: 3) {
+                                        ZStack {
+                                            Circle()
+                                                .fill(pin.color)
+                                                .frame(width: 20, height: 20)
+                                            Text(String(pin.name.prefix(1)))
+                                                .font(.system(size: 10, weight: .bold))
+                                                .foregroundStyle(.white)
+                                        }
+                                        if focusedPinId == pin.id {
+                                            Text(pin.name)
+                                                .font(.scaled(size: 11, weight: .medium))
+                                                .foregroundStyle(.white)
+                                                .lineLimit(1)
+                                        }
+                                    }
+                                    .padding(.horizontal, focusedPinId == pin.id ? 6 : 0)
+                                    .padding(.vertical, 2)
+                                    .background(
+                                        focusedPinId == pin.id
+                                            ? Capsule().fill(pin.color.opacity(0.85))
+                                            : Capsule().fill(ink.opacity(0.5))
+                                    )
+                                }
                             }
                         }
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(pin.color.opacity(0.85))
-                        .clipShape(Capsule())
-                    } else if let mins = lastUpdateMinutes {
-                        Text(mins < 1 ? "刚刚更新" : "\(mins) 分钟前更新")
-                            .font(.scaled(size: 11))
-                            .foregroundStyle(.white.opacity(0.9))
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 2)
-                            .background(ink.opacity(0.5))
-                            .clipShape(Capsule())
+                    }
+
+                    // Info labels
+                    if let pin = focusedPin {
+                        if let status = pin.status {
+                            Text(status)
+                                .font(.scaled(size: 11))
+                                .foregroundStyle(.white.opacity(0.9))
+                                .padding(.horizontal, 7)
+                                .padding(.vertical, 2)
+                                .background(pin.color.opacity(0.7))
+                                .clipShape(Capsule())
+                        }
+                    } else {
+                        if let label {
+                            Text(label)
+                                .font(.scaled(size: 12, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(ink.opacity(0.7))
+                                .clipShape(Capsule())
+                        }
+                        if let mins = lastUpdateMinutes {
+                            Text(mins < 1 ? "刚刚更新" : "\(mins) 分钟前更新")
+                                .font(.scaled(size: 11))
+                                .foregroundStyle(.white.opacity(0.9))
+                                .padding(.horizontal, 7)
+                                .padding(.vertical, 2)
+                                .background(ink.opacity(0.5))
+                                .clipShape(Capsule())
+                        }
                     }
                 }
                 .padding(8)
