@@ -1,0 +1,61 @@
+# S10: Insurance Claim Report
+# Actors: haozi
+# Clock: Oct 12
+# Precondition: SOS event from Oct 9 exists in seeded data
+
+appId: com.shoudeng.app
+name: S10 - Insurance Claim Report
+
+---
+
+# === HAOZI's DEVICE (iPhone 14, en-CA) ===
+
+- launchApp
+
+# --- Navigate to claims / evidence section ---
+- tapOn: "Settings"
+- tapOn: "Evidence & Claims"
+- screenshot: S10_01_haozi_claims-menu
+
+# --- Create new claim report ---
+- tapOn: "New Claim Report"
+- screenshot: S10_02_haozi_new-claim
+
+# --- Select SOS event (Oct 9 drill) ---
+- assertVisible: "Oct 9"
+- tapOn: "Oct 9"
+- screenshot: S10_03_haozi_select-event
+
+# --- Attach photos ---
+- tapOn: "Add Photos"
+# Select 2 photos from library
+- screenshot: S10_04_haozi_photos-attached
+
+# --- Review claim report ---
+- assertVisible: "Claim Report"
+# Report should include:
+# - SOS event reference
+# - Timeline entries for the event
+# - Location data at time of event
+# - Attached photos
+- screenshot: S10_05_haozi_claim-review
+
+# --- Save draft ---
+- tapOn: "Save Draft"
+- assertVisible: "Draft Saved"
+- screenshot: S10_06_haozi_claim-saved
+
+# === BACKEND ASSERTIONS ===
+# - insurance_claims doc created in Firestore
+#   userId = chen-hao-uid
+#   sosEventRef = Oct 9 SOS event ID
+#   status = draft
+#   attachmentCount = 2
+# - 2 photos uploaded to Cloud Storage (evidence bucket)
+# - evidence_holds doc created:
+#   userId = chen-hao-uid
+#   holdType = insurance_claim
+#   expiresAt = set (prevents TTL cleanup)
+# - Evidence hold prevents TTL deletion of related data
+# - Report includes: SOS event data, timeline entries, location points
+# - Claim materials endpoint: POST /v1/insurance/claim-materials

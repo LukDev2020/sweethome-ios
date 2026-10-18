@@ -1,0 +1,63 @@
+# S11: Cross-Border Reachability
+# Actors: father (Shenzhen, cn-lossy network: 300ms latency, 10% loss)
+# Precondition: Father linked as guardian, seeded data
+
+appId: com.shoudeng.app
+name: S11 - Cross-Border Reachability
+
+---
+
+# === FATHER's DEVICE (iPhone 12, zh-Hans, cn-lossy network) ===
+
+# Network conditioning: 300ms delay, 10% packet loss
+# Simulates mainland China internet conditions
+
+- launchApp
+
+# --- Dashboard loads under cn-lossy ---
+- assertVisible: "Safe"
+- screenshot: S11_01_father_dashboard-cn
+
+# --- View haozi's location ---
+- tapOn: "Chen Hao"
+# Location should load (geocoding returns zh-CN addresses)
+- screenshot: S11_02_father_haozi-location
+
+# --- View timeline ---
+- tapOn: "Timeline"
+- assertVisible: "Timeline"
+- screenshot: S11_03_father_timeline-cn
+
+# --- View safe zones ---
+- tapOn: "Safe Zones"
+- screenshot: S11_04_father_safezones-cn
+
+# --- Test API responsiveness ---
+# All endpoints should respond within 10s under cn-lossy
+
+# --- Heartbeat/status refresh ---
+- tapOn: "Refresh"
+- screenshot: S11_05_father_refresh-cn
+
+# --- Consular hotline ---
+- tapOn: "Emergency"
+- assertVisible: "Chinese Consulate Toronto"
+- assertVisible: "+1-416-964-7260"
+- screenshot: S11_06_father_consular-hotline
+
+# --- Emergency number for CA ---
+- assertVisible: "911"
+- screenshot: S11_07_father_emergency-ca
+
+# === BACKEND ASSERTIONS ===
+# - All API calls complete within 10s (including 300ms network latency)
+# - FCM push delivered via APNs pathway (not direct FCM to CN)
+# - Geocoding language=zh-CN for Chinese users
+# - SMS to +86 uses Twilio (known gap F-011: no China SMS gateway)
+# - TwiML voice language = zh-CN for CN country code
+# - Emergency number mapping: CA → 911, CN → 110
+# - International fallback: 112
+# - Production URL uses us-central1 (not blocked in CN)
+# - ATS enforced (HTTPS only)
+# - No Google Maps direct calls from iOS client
+# - All notification bodies in Chinese (known gap F-001)

@@ -1,0 +1,77 @@
+# S4: SOS Full Escalation — Long Press to Voice Call
+# Actors: haozi (triggers SOS), father (on-duty, slow response), mother
+# Clock: 15:00 EDT (03:00+1 CST — father on duty)
+# Precondition: Seeded data, both guardians linked
+
+appId: com.shoudeng.app
+name: S04 - SOS Full Escalation Chain
+
+---
+
+# === HAOZI's DEVICE (iPhone 14) ===
+
+- launchApp
+
+# --- Trigger SOS via long press ---
+- longPressOn:
+    id: "sos-button"
+    duration: 3000
+- screenshot: S04_01_haozi_sos-triggered
+
+# Confirmation dialog
+- assertVisible: "SOS Sent"
+- assertVisible: "Help is on the way"
+- screenshot: S04_02_haozi_sos-confirmation
+
+# === ESCALATION CHAIN (backend-driven) ===
+
+# --- Hop 1: Push to on-duty guardian (father) ---
+# Backend creates sos_events doc: escalationState=initiated
+# After creation → onSOSCreated trigger fires
+# Push notification sent to father
+# escalationState → hop1_notified
+# Wait 30s for response (backend delay)
+
+# --- FATHER's DEVICE: Deliberately SLOW (no response for 30s) ---
+# Father does NOT acknowledge within 30s
+
+# --- Hop 2: Push + SMS to ALL guardians (30s later) ---
+# escalationState → hop2_allNotified
+# FCM to father AND mother
+# SMS to +8613800138000 and +8613900139000
+# Wait 60s for response
+
+# --- FATHER and MOTHER: Still no response for 60s ---
+
+# --- Hop 3: Voice call to father (90s after trigger) ---
+# escalationState → hop3_voiceCalling
+# Twilio initiates call to +8613800138000
+# Up to 3 attempts, 30s interval
+# TwiML language = zh-CN
+
+# --- FATHER answers voice call ---
+# Father opens app and resolves SOS
+- screenshot: S04_03_father_sos-received
+
+# === FATHER RESOLVES ===
+# Father taps "I've taken over" / "确认安全"
+- tapOn: "Confirm Safe"
+- screenshot: S04_04_father_sos-resolved
+
+# === HAOZI sees resolution ===
+- assertVisible: "Guardian has taken over"
+- screenshot: S04_05_haozi_sos-resolved
+
+# === BACKEND ASSERTIONS ===
+# - sos_events doc: protectedPersonId=chen-hao-uid, triggerMethod=longPress
+# - Escalation state progression:
+#   initiated → hop1_notified → hop2_allNotified → hop3_voiceCalling → resolved
+# - Backend timing: hop1→2 = 30s delay, hop2→3 = 60s delay, hop3→4 = 30s delay
+# - Timeline entries: sosTriggered (with triggerLabel "长按"), sosResolved
+# - Resolution = guardianConfirmedSafe, resolvedBy = chen-jianguo-uid
+# - FCM notification: interruption-level=critical for SOS
+# - Voice call initiated: callSid logged in escalationLog
+# - Rate limit: sos_events count < 3 in past hour
+# - Emergency share token: 48h expiry (if hop 4 reached)
+# - SOS doc resolvedAt timestamp set
+# - Resolver notification: "守护者已接手" sent to haozi

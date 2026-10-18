@@ -1,0 +1,56 @@
+# S8: Subscription Upgrade — Free to Family Plan
+# Actors: father (payer, zh-Hans)
+# Precondition: Father currently on free plan
+
+appId: com.shoudeng.app
+name: S08 - Subscription Upgrade
+
+---
+
+# === FATHER's DEVICE (iPhone 12, zh-Hans) ===
+
+- launchApp
+
+# --- Navigate to subscription settings ---
+- tapOn: "Settings"
+- tapOn: "Subscription"
+- screenshot: S08_01_father_current-plan-free
+
+# --- View upgrade options ---
+- assertVisible: "Free"
+- assertVisible: "Family"
+- screenshot: S08_02_father_plan-options
+
+# --- Select family monthly plan ---
+- tapOn: "Family"
+- screenshot: S08_03_father_family-plan-details
+
+# --- Purchase via StoreKit sandbox ---
+# Product ID: com.shoudeng.app.family.monthly
+- tapOn: "Subscribe"
+# StoreKit sandbox payment sheet
+- screenshot: S08_04_father_storekit-payment
+
+# Confirm purchase (sandbox auto-confirms)
+- tapOn: "Confirm"
+- screenshot: S08_05_father_purchase-confirmed
+
+# --- Verify plan active ---
+- assertVisible: "Family Plan"
+- assertVisible: "Active"
+- screenshot: S08_06_father_plan-active
+
+# === BACKEND ASSERTIONS ===
+# - StoreKit product ID: com.shoudeng.app.family.monthly
+# - Receipt validated on backend (/v1/payment endpoint)
+# - User plan updated in Firestore:
+#   plan.id = "family"
+#   plan.appleProductId = "com.shoudeng.app.family.monthly"
+# - TTL retention changes:
+#   free plan: 7 days
+#   paid (family) plan: 90 days
+# - Features unlocked with family plan:
+#   - Trajectory history
+#   - Evidence export
+#   - Extended retention
+# - Billing cycle set (activeSince, nextBilling)

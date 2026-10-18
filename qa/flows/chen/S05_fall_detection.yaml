@@ -1,0 +1,70 @@
+# S5: Fall Detection — Auto-SOS After 60s Confirmation Timeout
+# Actors: haozi (simulated fall), father (on-duty)
+# Clock: 14:00 EDT
+# Precondition: haozi has fallDetect consent=true
+
+appId: com.shoudeng.app
+name: S05 - Fall Detection Auto-SOS
+
+---
+
+# === HAOZI's DEVICE (iPhone 14) ===
+
+- launchApp
+
+# --- Simulate fall detection pipeline ---
+# Stage 1: Free-fall (acceleration < 0.6g for >= 100ms)
+# Stage 2: Impact (acceleration > 2.5g within 500ms of free-fall end)
+# Stage 3: Orientation change (gravity vector rotates >= 60 degrees within 2s)
+# Stage 4: Stillness (SVM variance < 0.05 for >= 15 seconds)
+# (In simulator: inject mock sensor data or use test harness API)
+
+# --- Confirmation dialog appears ---
+- assertVisible: "Fall Detected"
+- assertVisible: "Are you okay?"
+- screenshot: S05_01_haozi_fall-detected-dialog
+
+# --- 60-second countdown ---
+# Timer shows countdown from 60s
+- assertVisible: "60"
+- screenshot: S05_02_haozi_countdown-start
+
+# === PATH A: User responds "I'm Fine" (no SOS) ===
+# - tapOn: "I'm Fine"
+# - assertNotVisible: "SOS Sent"
+# - Verify: no sos_events doc created
+
+# === PATH B: User does NOT respond (timeout → auto-SOS) ===
+# Wait for 60s countdown to complete
+# (In test: accelerate clock or use test harness)
+
+# --- Auto-SOS triggered ---
+- assertVisible: "SOS Sent"
+- assertVisible: "Fall detected"
+- screenshot: S05_03_haozi_auto-sos-triggered
+
+# === FATHER receives notification ===
+# Fall detection SOS has triggerMethod=fallDetection
+# Father's push: "紧急求助 — 摔倒检测"
+- screenshot: S05_04_father_fall-sos-notification
+
+# --- Father resolves ---
+- tapOn: "Confirm Safe"
+- screenshot: S05_05_father_fall-resolved
+
+# === BACKEND ASSERTIONS ===
+# - Fall detection thresholds (DO NOT MODIFY):
+#   freeFallThresholdG = 0.6g
+#   freeFallMinDurationMs = 100ms
+#   impactThresholdG = 2.5g
+#   impactWindowAfterFreeFallMs = 500ms
+#   orientationChangeMinDegrees = 60 degrees
+#   orientationSampleWindowSec = 2.0s
+#   stillnessMaxVariance = 0.05
+#   stillnessDurationSec = 15.0s
+#   confirmationTimeoutSec = 60.0s
+#   sampleRateHz = 50.0 Hz
+# - sos_events doc: triggerMethod=fallDetection
+# - Timeline entry: type=fallDetected
+# - Escalation chain proceeds normally after auto-SOS
+# - If elderly profile: adjusted thresholds (2.0g impact, 50deg orientation, 10s stillness)

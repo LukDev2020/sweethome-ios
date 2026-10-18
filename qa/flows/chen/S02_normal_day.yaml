@@ -1,0 +1,81 @@
+# S2: Normal Day — Campus + Gym + Home
+# Actors: haozi (iPhone 14, en-CA), mother (on-duty 08:00-20:00 EDT)
+# Clock: Weekday, 08:00-23:00 EDT
+# Precondition: Seeded with 30-day history
+
+appId: com.shoudeng.app
+name: S02 - Normal Day Routine
+
+---
+
+# === HAOZI's DEVICE ===
+
+- launchApp
+
+# --- Morning: Wake at home (Scarborough Apt safe zone) ---
+# Simulate location: 43.776, -79.258 (home)
+- setLocation:
+    latitude: 43.776
+    longitude: -79.258
+- screenshot: S02_01_haozi_home-morning
+
+# Verify safe zone badge
+- assertVisible: "Home"
+- assertVisible: "Safe"
+
+# --- Commute: Subway to campus ---
+# Move to Scarborough Centre Station
+- setLocation:
+    latitude: 43.773
+    longitude: -79.258
+- screenshot: S02_02_haozi_left-home
+
+# Transit through subway (14-min tunnel gap — no location updates expected)
+# Move to Bloor-Yonge Station
+- setLocation:
+    latitude: 43.670
+    longitude: -79.386
+
+# --- Arrive campus (U of T safe zone) ---
+- setLocation:
+    latitude: 43.662
+    longitude: -79.395
+- screenshot: S02_03_haozi_campus-arrived
+
+# Verify safe zone entry
+- assertVisible: "U of T"
+
+# --- 4 hours at campus (no GPS polling in safe zone) ---
+# Heartbeats continue at natural intervals
+
+# --- Afternoon: Gym ---
+- setLocation:
+    latitude: 43.770
+    longitude: -79.260
+- screenshot: S02_04_haozi_gym
+
+# --- Evening: Return home ---
+- setLocation:
+    latitude: 43.776
+    longitude: -79.258
+- screenshot: S02_05_haozi_home-evening
+
+# --- Check-in at ~22:00 EDT ---
+- tapOn: "Check In"
+- assertVisible: "Checked In"
+- screenshot: S02_06_haozi_checkin-done
+
+# === MOTHER's DEVICE (on-duty during daytime EDT) ===
+# Mother sees haozi as green/safe throughout
+# - Location updates during transit (moving mode = 60s interval)
+# - No GPS polling while in safe zones
+# - Battery level reported with heartbeats
+# - Check-in confirmed before overdue threshold (8h)
+
+# === BACKEND ASSERTIONS ===
+# - Safe zone enter/exit timeline entries (home exit, campus enter, campus exit, gym enter, gym exit, home enter)
+# - Heartbeats at natural intervals (max 12/hr, min 60s apart)
+# - Location reports during transit (moving mode)
+# - Check-in doc in checkins collection with timestamp
+# - No overdue notification (check-in within 8h)
+# - Mother's view shows SafetyStatus.normal (green)
