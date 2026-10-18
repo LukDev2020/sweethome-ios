@@ -13,6 +13,7 @@ import SwiftUI
 struct ProtectedSettingsView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var langManager = LanguageManager.shared
+    @ObservedObject private var fontScaleManager = FontScaleManager.shared
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
@@ -125,7 +126,7 @@ struct ProtectedSettingsView: View {
         ScrollView {
             VStack(spacing: 12) {
                 Text("求助方式与隐私")
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
                     .padding(.top, 8)
                 profilePanel
@@ -135,6 +136,7 @@ struct ProtectedSettingsView: View {
                 safetyToolsPanel
                 securityPanel
                 languagePanel
+                fontSizePanel
                 notificationPanel
                 dataPanel
                 legalPanel
@@ -142,7 +144,7 @@ struct ProtectedSettingsView: View {
                 devPanel
                 #endif
                 Text("求助方式给三种冗余：手机没在手上时，手表或实体按钮仍能触发。")
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(.secondary.opacity(0.7))
                     .padding(.top, 8)
                     .padding(.bottom, 24)
@@ -157,7 +159,7 @@ struct ProtectedSettingsView: View {
             ScrollView {
                 VStack(spacing: 12) {
                     Text("账户与求助")
-                        .font(.system(size: 13))
+                        .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                         .padding(.top, 8)
                     profilePanel
@@ -176,7 +178,7 @@ struct ProtectedSettingsView: View {
             ScrollView {
                 VStack(spacing: 12) {
                     Text("工具与安全")
-                        .font(.system(size: 13))
+                        .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                         .padding(.top, 8)
                     safetyToolsPanel
@@ -202,7 +204,7 @@ struct ProtectedSettingsView: View {
     private var profilePanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("个人资料")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
             Button { showProfileEdit = true } label: {
@@ -210,15 +212,15 @@ struct ProtectedSettingsView: View {
                     AvatarView(user: coordinator.currentUser, size: 36)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(coordinator.currentUser?.displayName ?? "未设置")
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.scaled(size: 13, weight: .medium))
                             .foregroundStyle(ink)
                         Text(coordinator.currentUser?.cityName ?? "")
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 11))
+                        .font(.scaled(size: 11))
                         .foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 2)
@@ -237,7 +239,7 @@ struct ProtectedSettingsView: View {
     private var sosTriggerPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("怎样触发求助")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             toggleRow("App 内长按 3 秒", isOn: $longPressEnabled)
             toggleRow("手表快捷键", isOn: $watchEnabled)
@@ -256,7 +258,7 @@ struct ProtectedSettingsView: View {
     private var checkInPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("定时报平安")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             fixedRow("每天提醒", value: "09:00、21:00", isWarning: false)
             fixedRow("超时多久算失联", value: "4 小时", isWarning: false)
@@ -273,7 +275,7 @@ struct ProtectedSettingsView: View {
     private var safetyToolsPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("安全工具")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
             Button { showMedicalCard = true } label: {
@@ -308,17 +310,17 @@ struct ProtectedSettingsView: View {
     private var securityPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("安全")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
             if BiometricAuthManager.shared.isAvailable {
                 HStack {
                     Image(systemName: BiometricAuthManager.shared.biometricIconName)
-                        .font(.system(size: 14))
+                        .font(.scaled(size: 14))
                         .foregroundStyle(safe)
                         .frame(width: 20)
                     Text("\(BiometricAuthManager.shared.biometricName) 登录")
-                        .font(.system(size: 13))
+                        .font(.scaled(size: 13))
                     Spacer()
                     Toggle("", isOn: Binding(
                         get: { BiometricAuthManager.shared.isEnabled },
@@ -337,11 +339,11 @@ struct ProtectedSettingsView: View {
             } else {
                 HStack {
                     Image(systemName: "lock.fill")
-                        .font(.system(size: 14))
+                        .font(.scaled(size: 14))
                         .foregroundStyle(.secondary)
                         .frame(width: 20)
                     Text("此设备不支持生物识别登录")
-                        .font(.system(size: 13))
+                        .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 2)
@@ -359,10 +361,10 @@ struct ProtectedSettingsView: View {
     private var languagePanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("语言")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             HStack {
-                Text("界面语言").font(.system(size: 13))
+                Text("界面语言").font(.scaled(size: 13))
                 Spacer()
                 Picker("", selection: $langManager.current) {
                     ForEach(AppLanguage.allCases, id: \.self) { lang in
@@ -375,9 +377,51 @@ struct ProtectedSettingsView: View {
             .padding(.vertical, 2)
             if !langManager.current.isFullySupported {
                 Text("当前仅登录页面支持此语言，主界面将逐步适配")
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(.secondary.opacity(0.7))
             }
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    // MARK: - Font Size Panel
+
+    private var fontSizePanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("字体大小")
+                .font(.scaled(size: 12))
+                .foregroundStyle(.secondary)
+            HStack(spacing: 8) {
+                ForEach(FontScaleLevel.allCases, id: \.self) { level in
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            fontScaleManager.level = level
+                        }
+                    } label: {
+                        VStack(spacing: 4) {
+                            Text("字")
+                                .font(.system(size: 11 * level.scale, weight: .medium))
+                                .foregroundStyle(fontScaleManager.level == level ? .white : ink)
+                            Text(level.label)
+                                .font(.system(size: 10))
+                                .foregroundStyle(fontScaleManager.level == level ? .white.opacity(0.9) : .secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(fontScaleManager.level == level ? safe : Color(.secondarySystemBackground))
+                        )
+                    }
+                }
+            }
+            Text("调整后所有页面文字大小会立即变化")
+                .font(.scaled(size: 11))
+                .foregroundStyle(.secondary.opacity(0.7))
         }
         .padding(12)
         .background(
@@ -391,7 +435,7 @@ struct ProtectedSettingsView: View {
     private var notificationPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("通知偏好")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             toggleRow("紧急求助 (SOS)", isOn: $notifSOS)
             toggleRow("报平安提醒", isOn: $notifCheckin)
@@ -409,7 +453,7 @@ struct ProtectedSettingsView: View {
     private var dataPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("数据")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             fixedRow("位置保留时长", value: "90 天后自动删除", isWarning: false)
             Button { showExportAlert = true } label: {
@@ -433,7 +477,7 @@ struct ProtectedSettingsView: View {
     private var legalPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("法律与关于")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             Button { showPrivacy = true } label: {
                 fixedRow("隐私政策与服务条款", value: "查看 →", isWarning: false)
@@ -460,18 +504,18 @@ struct ProtectedSettingsView: View {
     private var rolePanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("当前角色")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
             HStack(spacing: 8) {
                 Image(systemName: "shield.fill")
-                    .font(.system(size: 14))
+                    .font(.scaled(size: 14))
                     .foregroundStyle(safe)
                 VStack(alignment: .leading, spacing: 1) {
                     Text("被守护者")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.scaled(size: 13, weight: .medium))
                     Text("家人会收到您的安全信号")
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -481,13 +525,13 @@ struct ProtectedSettingsView: View {
             Button { showRoleSwitchInfo = true } label: {
                 HStack {
                     Text("申请切换为守护者")
-                        .font(.system(size: 13))
+                        .font(.scaled(size: 13))
                     Spacer()
                     Text("需守护者同意")
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(.secondary)
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 11))
+                        .font(.scaled(size: 11))
                         .foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 2)
@@ -507,11 +551,11 @@ struct ProtectedSettingsView: View {
     private var devPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("开发者选项")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
             HStack {
-                Text("切换角色视图").font(.system(size: 13))
+                Text("切换角色视图").font(.scaled(size: 13))
                 Spacer()
                 Button {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
@@ -520,11 +564,11 @@ struct ProtectedSettingsView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: coordinator.userRole == .protected_ ? "shield.fill" : "eye.fill")
-                            .font(.system(size: 10))
+                            .font(.scaled(size: 10))
                         Text(coordinator.userRole == .protected_ ? "被守护者" : "守护者")
-                            .font(.system(size: 12, weight: .medium))
+                            .font(.scaled(size: 12, weight: .medium))
                         Image(systemName: "arrow.triangle.2.circlepath")
-                            .font(.system(size: 9))
+                            .font(.scaled(size: 9))
                     }
                     .foregroundStyle(.white)
                     .padding(.horizontal, 10)
@@ -544,7 +588,7 @@ struct ProtectedSettingsView: View {
         )
         .overlay(alignment: .topTrailing) {
             Text("DEV")
-                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .font(.scaled(size: 11, weight: .bold, design: .monospaced))
                 .foregroundStyle(.white)
                 .padding(.horizontal, 5)
                 .padding(.vertical, 2)
@@ -582,7 +626,7 @@ struct ProtectedSettingsView: View {
 
     private func toggleRow(_ label: String, isOn: Binding<Bool>) -> some View {
         HStack {
-            Text(label).font(.system(size: 13))
+            Text(label).font(.scaled(size: 13))
             Spacer()
             Toggle("", isOn: isOn)
                 .labelsHidden()
@@ -593,10 +637,10 @@ struct ProtectedSettingsView: View {
 
     private func fixedRow(_ label: String, value: String, isWarning: Bool) -> some View {
         HStack {
-            Text(label).font(.system(size: 13))
+            Text(label).font(.scaled(size: 13))
             Spacer()
             Text(value)
-                .font(.system(size: 11.5))
+                .font(.scaled(size: 11.5))
                 .foregroundStyle(isWarning ? alert : .secondary)
         }
         .padding(.vertical, 2)

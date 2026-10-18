@@ -56,13 +56,13 @@ struct ConsulateView: View {
                     Section {
                         HStack(spacing: 12) {
                             Text(pinned.flag)
-                                .font(.system(size: 24))
+                                .font(.scaled(size: 24))
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(pinned.name)
-                                    .font(.system(size: 15, weight: .medium))
+                                    .font(.scaled(size: 15, weight: .medium))
                                     .foregroundStyle(ink)
                                 Text("已设为常用")
-                                    .font(.system(size: 12))
+                                    .font(.scaled(size: 12))
                                     .foregroundStyle(safe)
                             }
                             Spacer()
@@ -79,23 +79,23 @@ struct ConsulateView: View {
                         Button { selectedCountry = country } label: {
                             HStack(spacing: 12) {
                                 Text(country.flag)
-                                    .font(.system(size: 24))
+                                    .font(.scaled(size: 24))
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(country.name)
-                                        .font(.system(size: 15, weight: .medium))
+                                        .font(.scaled(size: 15, weight: .medium))
                                         .foregroundStyle(ink)
                                     Text("紧急电话: \(country.emergency)")
-                                        .font(.system(size: 12))
+                                        .font(.scaled(size: 12))
                                         .foregroundStyle(.secondary)
                                 }
                                 Spacer()
                                 if coordinator.selectedHotline?.countryCode == country.code {
                                     Image(systemName: "pin.fill")
-                                        .font(.system(size: 11))
+                                        .font(.scaled(size: 11))
                                         .foregroundStyle(safe)
                                 }
                                 Image(systemName: "chevron.right")
-                                    .font(.system(size: 11))
+                                    .font(.scaled(size: 11))
                                     .foregroundStyle(.secondary)
                             }
                         }
@@ -170,9 +170,9 @@ struct ConsulateDetailSheet: View {
                     // Country header
                     HStack {
                         Text(country.flag)
-                            .font(.system(size: 40))
+                            .font(.scaled(size: 40))
                         Text(country.name)
-                            .font(.system(size: 24, weight: .bold))
+                            .font(.scaled(size: 24, weight: .bold))
                         Spacer()
                     }
                     .padding(.bottom, 8)
@@ -187,9 +187,9 @@ struct ConsulateDetailSheet: View {
                     } label: {
                         HStack(spacing: 6) {
                             Image(systemName: isPinned ? "pin.slash.fill" : "pin.fill")
-                                .font(.system(size: 13))
+                                .font(.scaled(size: 13))
                             Text(isPinned ? "取消常用" : "设为常用 — 显示在首页")
-                                .font(.system(size: 14, weight: .medium))
+                                .font(.scaled(size: 14, weight: .medium))
                         }
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
@@ -224,7 +224,7 @@ struct ConsulateDetailSheet: View {
                     }
 
                     Text("电话号码可直接拨打。数据离线可用。\n号码来源：中国外交部及各使领馆官网。")
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(.secondary.opacity(0.7))
                         .multilineTextAlignment(.center)
                         .padding(.top, 8)
@@ -250,7 +250,7 @@ struct ConsulateDetailSheet: View {
                 Image(systemName: icon)
                     .foregroundStyle(color)
                 Text(title)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.scaled(size: 14, weight: .semibold))
             }
             content()
         }
@@ -265,11 +265,11 @@ struct ConsulateDetailSheet: View {
     private func phoneRow(_ label: String, number: String) -> some View {
         HStack {
             Text(label)
-                .font(.system(size: 13))
+                .font(.scaled(size: 13))
                 .foregroundStyle(.secondary)
             Spacer()
             Link(number, destination: URL(string: "tel:\(number.replacingOccurrences(of: "-", with: ""))")!)
-                .font(.system(size: 15, weight: .medium, design: .monospaced))
+                .font(.scaled(size: 15, weight: .medium, design: .monospaced))
                 .foregroundStyle(ink)
         }
     }

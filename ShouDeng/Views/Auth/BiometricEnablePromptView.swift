@@ -18,15 +18,15 @@ struct BiometricEnablePromptView: View {
             Spacer()
 
             Image(systemName: biometric.biometricIconName)
-                .font(.system(size: 56))
+                .font(.scaled(size: 56))
                 .foregroundStyle(navy.opacity(0.8))
 
             Text("启用\(biometric.biometricName)登录？")
-                .font(.system(size: 20, weight: .bold))
+                .font(.scaled(size: 20, weight: .bold))
                 .foregroundStyle(navy)
 
             Text("下次打开守灯时，无需输入验证码即可快速登录。\n您可以随时在设置中关闭此功能。")
-                .font(.system(size: 14))
+                .font(.scaled(size: 14))
                 .foregroundStyle(ink2)
                 .multilineTextAlignment(.center)
                 .lineSpacing(4)
@@ -39,7 +39,7 @@ struct BiometricEnablePromptView: View {
                     isPresented = false
                 } label: {
                     Text("启用\(biometric.biometricName)")
-                        .font(.system(size: 15.5, weight: .medium))
+                        .font(.scaled(size: 15.5, weight: .medium))
                         .foregroundStyle(cream)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
@@ -54,7 +54,7 @@ struct BiometricEnablePromptView: View {
                     isPresented = false
                 } label: {
                     Text("暂不开启")
-                        .font(.system(size: 14))
+                        .font(.scaled(size: 14))
                         .foregroundStyle(.secondary)
                 }
             }

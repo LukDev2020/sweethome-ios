@@ -80,7 +80,7 @@ struct PostSignupWizardView: View {
                         .fill(index <= currentStep ? navy : Color(.systemGray4))
                         .frame(width: 8, height: 8)
                     Text(stepTitles[index])
-                        .font(.system(size: 10))
+                        .font(.scaled(size: 10))
                         .foregroundStyle(index <= currentStep ? ink : .secondary)
                 }
             }
@@ -94,21 +94,21 @@ struct PostSignupWizardView: View {
             Spacer()
 
             Image(systemName: "envelope.badge.shield.half.filled")
-                .font(.system(size: 48))
+                .font(.scaled(size: 48))
                 .foregroundStyle(navy.opacity(0.7))
 
             Text("添加邮箱")
-                .font(.system(size: 22, weight: .bold))
+                .font(.scaled(size: 22, weight: .bold))
                 .foregroundStyle(ink)
 
             Text("用于账号找回和重要安全通知。\n我们不会向您发送营销邮件。")
-                .font(.system(size: 14))
+                .font(.scaled(size: 14))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .lineSpacing(3)
 
             TextField("your@email.com", text: $email)
-                .font(.system(size: 16))
+                .font(.scaled(size: 16))
                 .keyboardType(.emailAddress)
                 .textContentType(.emailAddress)
                 .autocapitalization(.none)
@@ -130,20 +130,20 @@ struct PostSignupWizardView: View {
             Spacer()
 
             Image(systemName: "building.2")
-                .font(.system(size: 48))
+                .font(.scaled(size: 48))
                 .foregroundStyle(navy.opacity(0.7))
 
             Text("确认您的城市")
-                .font(.system(size: 22, weight: .bold))
+                .font(.scaled(size: 22, weight: .bold))
                 .foregroundStyle(ink)
 
             Text("用于显示本地时间和紧急服务信息。")
-                .font(.system(size: 14))
+                .font(.scaled(size: 14))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
             TextField("例：上海、Toronto", text: $cityName)
-                .font(.system(size: 16))
+                .font(.scaled(size: 16))
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
                 .background(Color(.systemGray6))
@@ -163,15 +163,15 @@ struct PostSignupWizardView: View {
             Spacer()
 
             Image(systemName: biometric.biometricIconName)
-                .font(.system(size: 56))
+                .font(.scaled(size: 56))
                 .foregroundStyle(navy.opacity(0.7))
 
             Text("启用\(biometric.biometricName)登录？")
-                .font(.system(size: 22, weight: .bold))
+                .font(.scaled(size: 22, weight: .bold))
                 .foregroundStyle(ink)
 
             Text("下次打开守灯时，无需输入验证码即可快速登录。\n您可以随时在设置中关闭此功能。")
-                .font(.system(size: 14))
+                .font(.scaled(size: 14))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .lineSpacing(3)
@@ -183,7 +183,7 @@ struct PostSignupWizardView: View {
                     advanceStep()
                 } label: {
                     Text("启用\(biometric.biometricName)")
-                        .font(.system(size: 15.5, weight: .medium))
+                        .font(.scaled(size: 15.5, weight: .medium))
                         .foregroundStyle(cream)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
@@ -198,7 +198,7 @@ struct PostSignupWizardView: View {
                     advanceStep()
                 } label: {
                     Text("暂不开启")
-                        .font(.system(size: 14))
+                        .font(.scaled(size: 14))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -215,15 +215,15 @@ struct PostSignupWizardView: View {
             Spacer()
 
             Image(systemName: "shield.checkered")
-                .font(.system(size: 48))
+                .font(.scaled(size: 48))
                 .foregroundStyle(safe.opacity(0.8))
 
             Text("选择守护方案")
-                .font(.system(size: 22, weight: .bold))
+                .font(.scaled(size: 22, weight: .bold))
                 .foregroundStyle(ink)
 
             Text("守灯提供7天免费试用，试用期间享受完整功能。\n试用结束后可继续使用基础版。")
-                .font(.system(size: 14))
+                .font(.scaled(size: 14))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .lineSpacing(3)
@@ -235,7 +235,7 @@ struct PostSignupWizardView: View {
             .padding(.horizontal, 8)
 
             Text("免费试用7天，随时取消")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.tertiary)
 
             Spacer()
@@ -246,15 +246,15 @@ struct PostSignupWizardView: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.scaled(size: 15, weight: .medium))
                     .foregroundStyle(ink)
                 Text(description)
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
             }
             Spacer()
             Text(price)
-                .font(.system(size: 15, weight: .semibold))
+                .font(.scaled(size: 15, weight: .semibold))
                 .foregroundStyle(highlight ? safe : .secondary)
         }
         .padding(14)
@@ -275,16 +275,16 @@ struct PostSignupWizardView: View {
             Spacer()
 
             Image(systemName: coordinator.userRole == .guardian ? "person.badge.plus" : "person.2.wave.2")
-                .font(.system(size: 48))
+                .font(.scaled(size: 48))
                 .foregroundStyle(navy.opacity(0.7))
 
             if coordinator.userRole == .guardian {
                 Text("添加守护对象")
-                    .font(.system(size: 22, weight: .bold))
+                    .font(.scaled(size: 22, weight: .bold))
                     .foregroundStyle(ink)
 
                 Text("请被守护者在守灯APP中生成邀请码，\n然后在这里输入邀请码来建立守护关系。")
-                    .font(.system(size: 14))
+                    .font(.scaled(size: 14))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
@@ -292,11 +292,11 @@ struct PostSignupWizardView: View {
                 inviteCodeInput
             } else {
                 Text("邀请守护者")
-                    .font(.system(size: 22, weight: .bold))
+                    .font(.scaled(size: 22, weight: .bold))
                     .foregroundStyle(ink)
 
                 Text("生成邀请码并分享给您的家人，\n他们可以用守灯APP扫码加入守护。")
-                    .font(.system(size: 14))
+                    .font(.scaled(size: 14))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
@@ -315,7 +315,7 @@ struct PostSignupWizardView: View {
     private var inviteCodeInput: some View {
         VStack(spacing: 12) {
             TextField("输入邀请码", text: $inviteCode)
-                .font(.system(size: 18, weight: .medium, design: .monospaced))
+                .font(.scaled(size: 18, weight: .medium, design: .monospaced))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
@@ -328,14 +328,14 @@ struct PostSignupWizardView: View {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(safe)
                     Text("守护关系已建立")
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.scaled(size: 14, weight: .medium))
                         .foregroundStyle(safe)
                 }
             }
 
             if !inviteError.isEmpty {
                 Text(inviteError)
-                    .font(.system(size: 13))
+                    .font(.scaled(size: 13))
                     .foregroundStyle(.red)
             }
 
@@ -343,7 +343,7 @@ struct PostSignupWizardView: View {
                 Task { await acceptInvite() }
             } label: {
                 Text("确认邀请码")
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.scaled(size: 15, weight: .medium))
                     .foregroundStyle(cream)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
@@ -363,12 +363,12 @@ struct PostSignupWizardView: View {
         VStack(spacing: 12) {
             if let code = generatedCode {
                 Text(code)
-                    .font(.system(size: 28, weight: .bold, design: .monospaced))
+                    .font(.scaled(size: 28, weight: .bold, design: .monospaced))
                     .foregroundStyle(navy)
                     .padding(.vertical, 8)
 
                 Text("24小时内有效")
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(.tertiary)
 
                 Button {
@@ -384,7 +384,7 @@ struct PostSignupWizardView: View {
                         Image(systemName: "square.and.arrow.up")
                         Text("分享邀请码")
                     }
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.scaled(size: 15, weight: .medium))
                     .foregroundStyle(cream)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
@@ -399,7 +399,7 @@ struct PostSignupWizardView: View {
                     Task { await generateCode() }
                 } label: {
                     Text("生成邀请码")
-                        .font(.system(size: 15, weight: .medium))
+                        .font(.scaled(size: 15, weight: .medium))
                         .foregroundStyle(cream)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
@@ -423,7 +423,7 @@ struct PostSignupWizardView: View {
                 Button("上一步") {
                     withAnimation { currentStep -= 1 }
                 }
-                .font(.system(size: 14))
+                .font(.scaled(size: 14))
                 .foregroundStyle(.secondary)
             }
 
@@ -441,7 +441,7 @@ struct PostSignupWizardView: View {
                         Text("开始使用")
                         Image(systemName: "arrow.right")
                     }
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.scaled(size: 15, weight: .medium))
                     .foregroundStyle(cream)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 12)
@@ -457,7 +457,7 @@ struct PostSignupWizardView: View {
                         Button("稍后") {
                             advanceStep()
                         }
-                        .font(.system(size: 14))
+                        .font(.scaled(size: 14))
                         .foregroundStyle(.secondary)
                     }
 
@@ -468,7 +468,7 @@ struct PostSignupWizardView: View {
                             Text("下一步")
                             Image(systemName: "arrow.right")
                         }
-                        .font(.system(size: 15, weight: .medium))
+                        .font(.scaled(size: 15, weight: .medium))
                         .foregroundStyle(cream)
                         .padding(.horizontal, 24)
                         .padding(.vertical, 12)

@@ -72,13 +72,13 @@ struct ClaimMaterialsView: View {
                 // Header
                 VStack(spacing: 6) {
                     Image(systemName: "doc.text.magnifyingglass")
-                        .font(.system(size: 36))
+                        .font(.scaled(size: 36))
                         .foregroundStyle(safe.opacity(0.6))
                     Text("整理设备记录")
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.scaled(size: 18, weight: .semibold))
                         .foregroundStyle(ink)
                     Text("选择时间范围和记录类型，\n导出事件前后的设备记录供您自行使用。")
-                        .font(.system(size: 12.5))
+                        .font(.scaled(size: 12.5))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
@@ -108,7 +108,7 @@ struct ClaimMaterialsView: View {
                     Task { await generateExport() }
                 } label: {
                     Text("预览记录")
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.scaled(size: 15, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 48)
@@ -118,7 +118,7 @@ struct ClaimMaterialsView: View {
 
                 // Disclaimer
                 Text(ClaimDisclaimer.full)
-                    .font(.system(size: 10))
+                    .font(.scaled(size: 10))
                     .foregroundStyle(.tertiary)
                     .padding(.bottom, 24)
             }
@@ -131,10 +131,10 @@ struct ClaimMaterialsView: View {
     private var insuranceTypePicker: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("险种参考 (可选)")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             Text("选择险种后将显示对应的材料参考清单")
-                .font(.system(size: 10.5))
+                .font(.scaled(size: 10.5))
                 .foregroundStyle(.tertiary)
 
             LazyVGrid(columns: [
@@ -148,9 +148,9 @@ struct ClaimMaterialsView: View {
                     } label: {
                         VStack(spacing: 4) {
                             Image(systemName: type.icon)
-                                .font(.system(size: 15))
+                                .font(.scaled(size: 15))
                             Text(type.displayName)
-                                .font(.system(size: 11))
+                                .font(.scaled(size: 11))
                         }
                         .foregroundStyle(selectedType == type ? .white : ink.opacity(0.7))
                         .frame(maxWidth: .infinity)
@@ -176,7 +176,7 @@ struct ClaimMaterialsView: View {
     private var dateSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("事件日期")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             DatePicker(
                 "",
@@ -198,7 +198,7 @@ struct ClaimMaterialsView: View {
     private var windowSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("导出范围")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             Picker("", selection: $windowHours) {
                 Text("前后 12 小时").tag(12)
@@ -219,10 +219,10 @@ struct ClaimMaterialsView: View {
     private var policySection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("保单号 (可选，仅记录在导出文件中)")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             TextField("例如 PA-20260101-XXX", text: $policyNumber)
-                .font(.system(size: 13))
+                .font(.scaled(size: 13))
                 .textFieldStyle(.roundedBorder)
         }
         .padding(12)
@@ -237,7 +237,7 @@ struct ClaimMaterialsView: View {
     private var inclusionToggles: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("选择要包含的记录")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             toggleRow("SOS 求助记录", isOn: $includeSOS)
             toggleRow("签到 (报平安) 记录", isOn: $includeCheckIns)
@@ -257,11 +257,11 @@ struct ClaimMaterialsView: View {
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("备注 (可选，仅记录在导出文件中)")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             TextField("简要描述发生了什么", text: $userDescription, axis: .vertical)
                 .lineLimit(2...4)
-                .font(.system(size: 13))
+                .font(.scaled(size: 13))
                 .textFieldStyle(.roundedBorder)
         }
         .padding(12)
@@ -281,7 +281,7 @@ struct ClaimMaterialsView: View {
                         ProgressView()
                             .controlSize(.large)
                         Text("正在整理记录...")
-                            .font(.system(size: 14))
+                            .font(.scaled(size: 14))
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity)
@@ -289,16 +289,16 @@ struct ClaimMaterialsView: View {
                 } else if let error = errorMessage {
                     VStack(spacing: 12) {
                         Image(systemName: "exclamationmark.triangle")
-                            .font(.system(size: 32))
+                            .font(.scaled(size: 32))
                             .foregroundStyle(.orange)
                         Text(error)
-                            .font(.system(size: 13))
+                            .font(.scaled(size: 13))
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
                         Button("重试") {
                             Task { await generateExport() }
                         }
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.scaled(size: 14, weight: .medium))
                         .foregroundStyle(safe)
                     }
                     .frame(maxWidth: .infinity)
@@ -316,10 +316,10 @@ struct ClaimMaterialsView: View {
             // Summary header
             VStack(spacing: 4) {
                 Text("记录预览")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.scaled(size: 18, weight: .semibold))
                     .foregroundStyle(ink)
                 Text("请确认以下内容，确认后可导出")
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity)
@@ -339,13 +339,13 @@ struct ClaimMaterialsView: View {
                     ForEach(sos) { event in
                         HStack {
                             Text(formatISOTime(event.triggeredAt))
-                                .font(.system(size: 11, design: .monospaced))
+                                .font(.scaled(size: 11, design: .monospaced))
                                 .foregroundStyle(.secondary)
                             Text("SOS 触发")
-                                .font(.system(size: 12))
+                                .font(.scaled(size: 12))
                             if let method = event.triggerMethod {
                                 Text("(\(method))")
-                                    .font(.system(size: 11))
+                                    .font(.scaled(size: 11))
                                     .foregroundStyle(.secondary)
                             }
                             Spacer()
@@ -361,13 +361,13 @@ struct ClaimMaterialsView: View {
                     ForEach(checkIns) { ci in
                         HStack {
                             Text(formatISOTime(ci.timestamp))
-                                .font(.system(size: 11, design: .monospaced))
+                                .font(.scaled(size: 11, design: .monospaced))
                                 .foregroundStyle(.secondary)
                             Text("报平安")
-                                .font(.system(size: 12))
+                                .font(.scaled(size: 12))
                             if let note = ci.note, !note.isEmpty {
                                 Text(note)
-                                    .font(.system(size: 11))
+                                    .font(.scaled(size: 11))
                                     .foregroundStyle(.secondary)
                                     .lineLimit(1)
                             }
@@ -384,11 +384,11 @@ struct ClaimMaterialsView: View {
                     ForEach(timeline) { entry in
                         HStack(alignment: .top) {
                             Text(formatISOTime(entry.timestamp))
-                                .font(.system(size: 11, design: .monospaced))
+                                .font(.scaled(size: 11, design: .monospaced))
                                 .foregroundStyle(.secondary)
                                 .frame(width: 44, alignment: .trailing)
                             Text(entry.description ?? entry.type ?? "事件")
-                                .font(.system(size: 12))
+                                .font(.scaled(size: 12))
                                 .lineLimit(2)
                             Spacer()
                         }
@@ -427,7 +427,7 @@ struct ClaimMaterialsView: View {
             infoCard {
                 previewRow("内容哈希 (SHA-256)", value: String(export.contentHash.prefix(24)) + "...")
                 Text("此哈希值供您自行校验导出内容未被修改")
-                    .font(.system(size: 10))
+                    .font(.scaled(size: 10))
                     .foregroundStyle(.tertiary)
             }
 
@@ -442,7 +442,7 @@ struct ClaimMaterialsView: View {
                 step = 2
             } label: {
                 Text("确认并导出 PDF")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.scaled(size: 15, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
@@ -451,7 +451,7 @@ struct ClaimMaterialsView: View {
             }
 
             Text(ClaimDisclaimer.full)
-                .font(.system(size: 10))
+                .font(.scaled(size: 10))
                 .foregroundStyle(.tertiary)
                 .padding(.bottom, 24)
         }
@@ -463,24 +463,24 @@ struct ClaimMaterialsView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: "checklist")
-                    .font(.system(size: 13))
+                    .font(.scaled(size: 13))
                     .foregroundStyle(lamp)
                 Text("材料参考清单 · \(type.displayName)")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.scaled(size: 13, weight: .semibold))
             }
 
             // Insurer requires
             VStack(alignment: .leading, spacing: 4) {
                 Text("保险公司通常要求 (需您自行获取)")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.scaled(size: 11, weight: .medium))
                     .foregroundStyle(.secondary)
                 ForEach(type.insurerRequires, id: \.self) { item in
                     HStack(spacing: 6) {
                         Image(systemName: "square")
-                            .font(.system(size: 10))
+                            .font(.scaled(size: 10))
                             .foregroundStyle(.secondary)
                         Text(item)
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                     }
                 }
             }
@@ -490,21 +490,21 @@ struct ClaimMaterialsView: View {
             // Vela records
             VStack(alignment: .leading, spacing: 4) {
                 Text("您的设备记录中包含")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.scaled(size: 11, weight: .medium))
                     .foregroundStyle(.secondary)
                 ForEach(type.velaCanProvide, id: \.self) { item in
                     HStack(spacing: 6) {
                         Image(systemName: "checkmark.square.fill")
-                            .font(.system(size: 10))
+                            .font(.scaled(size: 10))
                             .foregroundStyle(safe)
                         Text(item)
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                     }
                 }
             }
 
             Text(ClaimDisclaimer.checklistNote)
-                .font(.system(size: 10))
+                .font(.scaled(size: 10))
                 .foregroundStyle(.tertiary)
                 .padding(.top, 2)
         }
@@ -526,11 +526,11 @@ struct ClaimMaterialsView: View {
             Spacer()
 
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 56))
+                .font(.scaled(size: 56))
                 .foregroundStyle(safe)
 
             Text("记录已导出")
-                .font(.system(size: 20, weight: .bold))
+                .font(.scaled(size: 20, weight: .bold))
                 .foregroundStyle(ink)
 
             if let export = exportResult {
@@ -557,7 +557,7 @@ struct ClaimMaterialsView: View {
                         Image(systemName: "square.and.arrow.up")
                         Text("分享 PDF 文件")
                     }
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.scaled(size: 15, weight: .medium))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
@@ -568,18 +568,18 @@ struct ClaimMaterialsView: View {
 
             VStack(spacing: 4) {
                 Text(ClaimDisclaimer.pdfHeader)
-                    .font(.system(size: 10.5))
+                    .font(.scaled(size: 10.5))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                 ForEach(ClaimDisclaimer.limitations, id: \.self) { line in
                     Text("· \(line)")
-                        .font(.system(size: 10))
+                        .font(.scaled(size: 10))
                         .foregroundStyle(.tertiary)
                 }
             }
 
             Button("完成") { dismiss() }
-                .font(.system(size: 15, weight: .medium))
+                .font(.scaled(size: 15, weight: .medium))
                 .foregroundStyle(safe)
                 .padding(.top, 4)
 
@@ -680,7 +680,7 @@ struct ClaimMaterialsView: View {
 
     private func toggleRow(_ label: String, isOn: Binding<Bool>) -> some View {
         HStack {
-            Text(label).font(.system(size: 13))
+            Text(label).font(.scaled(size: 13))
             Spacer()
             Toggle("", isOn: isOn)
                 .labelsHidden()
@@ -704,11 +704,11 @@ struct ClaimMaterialsView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text(title)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.scaled(size: 12, weight: .semibold))
                     .foregroundStyle(ink)
                 if let count {
                     Text("\(count) 条")
-                        .font(.system(size: 10))
+                        .font(.scaled(size: 10))
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -725,11 +725,11 @@ struct ClaimMaterialsView: View {
     private func previewRow(_ label: String, value: String) -> some View {
         HStack {
             Text(label)
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             Spacer()
             Text(value)
-                .font(.system(size: 12, weight: .medium))
+                .font(.scaled(size: 12, weight: .medium))
                 .foregroundStyle(ink)
                 .lineLimit(1)
         }
@@ -739,11 +739,11 @@ struct ClaimMaterialsView: View {
     private func resultRow(_ label: String, value: String) -> some View {
         HStack {
             Text(label)
-                .font(.system(size: 13))
+                .font(.scaled(size: 13))
                 .foregroundStyle(.secondary)
             Spacer()
             Text(value)
-                .font(.system(size: 13, weight: .medium))
+                .font(.scaled(size: 13, weight: .medium))
                 .foregroundStyle(ink)
         }
     }

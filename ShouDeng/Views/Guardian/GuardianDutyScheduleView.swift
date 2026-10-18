@@ -34,9 +34,9 @@ struct GuardianDutyScheduleView: View {
                 // Header
                 VStack(spacing: 2) {
                     Text("值班排程")
-                        .font(.system(size: 20, weight: .bold))
+                        .font(.scaled(size: 20, weight: .bold))
                     Text("\(firstProtectedName)的一天\(firstProtectedCity.isEmpty ? "" : " · \(firstProtectedCity)时间")")
-                        .font(.system(size: 13))
+                        .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                 }
                 .padding(.top, 8)
@@ -61,7 +61,7 @@ struct GuardianDutyScheduleView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Text("守护团队 \(max(1, coordinator.protectedPersons.count + 1)) 人")
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
             }
         }
@@ -77,7 +77,7 @@ struct GuardianDutyScheduleView: View {
                 ZStack {
                     Rectangle().fill(pro.opacity(0.15))
                     Text("尚未设置排班")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.scaled(size: 12, weight: .medium))
                         .foregroundStyle(pro)
                 }
                 .frame(width: w)
@@ -93,7 +93,7 @@ struct GuardianDutyScheduleView: View {
             HStack {
                 ForEach(["00", "04", "08", "12", "16", "20", "24"], id: \.self) { hour in
                     Text(hour)
-                        .font(.system(size: 11))
+                        .font(.scaled(size: 11))
                         .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
                     if hour != "24" { Spacer() }
                 }
@@ -106,12 +106,12 @@ struct GuardianDutyScheduleView: View {
     private var todayShiftsPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("今日班次")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             HStack {
                 Spacer()
                 Text("暂无班次安排")
-                    .font(.system(size: 13))
+                    .font(.scaled(size: 13))
                     .foregroundStyle(.tertiary)
                 Spacer()
             }
@@ -129,7 +129,7 @@ struct GuardianDutyScheduleView: View {
     private var gapHandlingPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("缺口处理")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             toggleRow("无人时段转响应中心", isOn: $routeToCenter)
             toggleRow("交接前提醒", isOn: $handoffReminder)
@@ -143,7 +143,7 @@ struct GuardianDutyScheduleView: View {
 
     private func toggleRow(_ label: String, isOn: Binding<Bool>) -> some View {
         HStack {
-            Text(label).font(.system(size: 13))
+            Text(label).font(.scaled(size: 13))
             Spacer()
             Toggle("", isOn: isOn)
                 .labelsHidden()
@@ -157,14 +157,14 @@ struct GuardianDutyScheduleView: View {
     private var upsellCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("凌晨两点到六点三地家人都在睡。这四小时目前由专员补上——订阅的价值就是这块空缺。")
-                .font(.system(size: 13))
+                .font(.scaled(size: 13))
                 .foregroundStyle(.secondary)
             NavigationLink {
                 GuardianPlanBillingView()
                     .environmentObject(coordinator)
             } label: {
                 Text("查看响应中心记录")
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.scaled(size: 13, weight: .medium))
                     .foregroundStyle(pro)
             }
         }

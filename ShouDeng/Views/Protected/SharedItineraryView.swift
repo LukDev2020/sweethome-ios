@@ -54,18 +54,18 @@ struct SharedItineraryView: View {
     private var emptyState: some View {
         VStack(spacing: 16) {
             Image(systemName: "airplane")
-                .font(.system(size: 40))
+                .font(.scaled(size: 40))
                 .foregroundStyle(safe.opacity(0.4))
             Text("还没有共享行程")
-                .font(.system(size: 15, weight: .medium))
+                .font(.scaled(size: 15, weight: .medium))
                 .foregroundStyle(ink.opacity(0.6))
             Text("添加航班或车次，家人可以看到你的行程状态")
-                .font(.system(size: 13))
+                .font(.scaled(size: 13))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Button { showAdd = true } label: {
                 Text("添加行程")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.scaled(size: 14, weight: .medium))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 10)
@@ -91,11 +91,11 @@ struct SharedItineraryView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: item.type == "flight" ? "airplane" : "tram.fill")
-                    .font(.system(size: 14))
+                    .font(.scaled(size: 14))
                     .foregroundStyle(safe)
                 if let code = item.carrierCode, let num = item.flightNumber {
                     Text("\(code)\(num)")
-                        .font(.system(size: 14, weight: .semibold, design: .monospaced))
+                        .font(.scaled(size: 14, weight: .semibold, design: .monospaced))
                 }
                 Spacer()
                 statusBadge(item.status)
@@ -103,12 +103,12 @@ struct SharedItineraryView: View {
 
             HStack(spacing: 4) {
                 Text(item.departureCity)
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.scaled(size: 15, weight: .medium))
                 Image(systemName: "arrow.right")
-                    .font(.system(size: 11))
+                    .font(.scaled(size: 11))
                     .foregroundStyle(.secondary)
                 Text(item.arrivalCity)
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.scaled(size: 15, weight: .medium))
             }
             .foregroundStyle(ink)
 
@@ -117,22 +117,22 @@ struct SharedItineraryView: View {
                     item.departureTime.formatted(.dateTime.month().day().hour().minute()),
                     systemImage: "clock"
                 )
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
                 if let arrival = item.arrivalTime {
                     Text("→")
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(.secondary)
                     Text(arrival.formatted(.dateTime.hour().minute()))
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(.secondary)
                 }
             }
 
             if let note = item.note, !note.isEmpty {
                 Text(note)
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
             }
         }
@@ -156,7 +156,7 @@ struct SharedItineraryView: View {
         }()
 
         return Text(text)
-            .font(.system(size: 12, weight: .medium))
+            .font(.scaled(size: 12, weight: .medium))
             .foregroundStyle(color)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)

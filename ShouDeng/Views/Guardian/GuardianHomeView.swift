@@ -76,23 +76,23 @@ struct GuardianHomeView: View {
                         AvatarView(user: coordinator.currentUser, size: 22)
                         if let name = coordinator.currentUser?.displayName, !name.isEmpty {
                             Text(name)
-                                .font(.system(size: 12, weight: .medium))
+                                .font(.scaled(size: 12, weight: .medium))
                                 .foregroundStyle(ink)
                         }
                         Text("·")
-                            .font(.system(size: 11))
+                            .font(.scaled(size: 11))
                             .foregroundStyle(pro.opacity(0.4))
                         Image(systemName: "eye.fill")
-                            .font(.system(size: 8))
+                            .font(.scaled(size: 8))
                             .foregroundStyle(pro)
                         Text(toolbarLocation)
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                             .foregroundStyle(ink.opacity(0.55))
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Text("你正在值班")
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(safe)
                 }
             }
@@ -172,11 +172,11 @@ struct GuardianHomeView: View {
                 VStack(spacing: 0) {
                     HStack {
                         Text("守灯")
-                            .font(.system(size: 18, weight: .bold, design: .serif))
+                            .font(.scaled(size: 18, weight: .bold, design: .serif))
                             .foregroundStyle(ink)
                         Spacer()
                         Text("你正在值班")
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                             .foregroundStyle(safe)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
@@ -190,14 +190,14 @@ struct GuardianHomeView: View {
                         AvatarView(user: coordinator.currentUser, size: 26)
                         if let name = coordinator.currentUser?.displayName, !name.isEmpty {
                             Text(name)
-                                .font(.system(size: 13, weight: .medium))
+                                .font(.scaled(size: 13, weight: .medium))
                                 .foregroundStyle(ink)
                         }
                         Text("·")
-                            .font(.system(size: 11))
+                            .font(.scaled(size: 11))
                             .foregroundStyle(ink.opacity(0.55))
                         Text(toolbarLocation)
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                             .foregroundStyle(ink.opacity(0.55))
                         Spacer()
                     }
@@ -262,7 +262,7 @@ struct GuardianHomeView: View {
     private var addPersonButton: some View {
         Button { showInviteSheet = true } label: {
             Text("添加要守护的人")
-                .font(.system(size: 13))
+                .font(.scaled(size: 13))
                 .foregroundStyle(ink.opacity(0.6))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 11)
@@ -278,7 +278,7 @@ struct GuardianHomeView: View {
         VStack(spacing: 0) {
             Divider()
             Text("世界钟解决跨国家庭每天都在做的心算：现在打过去会不会吵醒他。")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(ink.opacity(0.55))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.top, 11)
@@ -380,10 +380,10 @@ struct GuardianHomeView: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(familyText)
-                            .font(.system(size: 14, weight: .semibold, design: .serif))
+                            .font(.scaled(size: 14, weight: .semibold, design: .serif))
                             .foregroundStyle(lamp)
                         Text(subtitleText)
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                             .foregroundStyle(.white.opacity(0.6))
                     }
                     Spacer()
@@ -426,7 +426,7 @@ struct GuardianHomeView: View {
         HStack(spacing: 4) {
             Circle().fill(color).frame(width: 6, height: 6)
             Text(label)
-                .font(.system(size: 11))
+                .font(.scaled(size: 11))
                 .foregroundStyle(.white.opacity(0.55))
         }
     }
@@ -438,14 +438,14 @@ struct GuardianHomeView: View {
             ForEach(Array(dynamicClocks.enumerated()), id: \.offset) { _, clock in
                 VStack(spacing: 2) {
                     Text(clock.city)
-                        .font(.system(size: 11))
+                        .font(.scaled(size: 11))
                         .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.55))
                         .lineLimit(1)
                     Text(clock.time)
-                        .font(.system(size: 14, weight: .semibold, design: .serif))
+                        .font(.scaled(size: 14, weight: .semibold, design: .serif))
                         .foregroundStyle(clock.isYou ? lamp : ink)
                     Text(clock.note)
-                        .font(.system(size: 11))
+                        .font(.scaled(size: 11))
                         .foregroundStyle(clock.isYou ? lamp : Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
                 }
                 .frame(maxWidth: .infinity)
@@ -512,7 +512,7 @@ struct GuardianHomeView: View {
             if !warningPersons.isEmpty {
                 VStack(alignment: .leading, spacing: 7) {
                     Text("需要处理")
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
                         .padding(.horizontal, 18)
                         .padding(.top, 12)
@@ -560,10 +560,10 @@ struct GuardianHomeView: View {
         Button(action: action) {
             VStack(spacing: 5) {
                 Image(systemName: icon)
-                    .font(.system(size: 16))
+                    .font(.scaled(size: 16))
                     .foregroundStyle(color)
                 Text(label)
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(ink.opacity(0.7))
             }
             .frame(maxWidth: .infinity)
@@ -583,7 +583,7 @@ struct GuardianHomeView: View {
             if !normalPersons.isEmpty {
                 VStack(alignment: .leading, spacing: 7) {
                     Text("一切正常")
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
                         .padding(.horizontal, 18)
                         .padding(.top, 12)
@@ -608,13 +608,13 @@ struct GuardianHomeView: View {
                 // Empty state — no protected persons linked yet
                 VStack(spacing: 12) {
                     Image(systemName: "shield.slash")
-                        .font(.system(size: 28))
+                        .font(.scaled(size: 28))
                         .foregroundStyle(ink.opacity(0.25))
                     Text("还没有守护对象")
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.scaled(size: 14, weight: .medium))
                         .foregroundStyle(ink.opacity(0.6))
                     Text("邀请家人加入，你将能看到他们的安全状态并在紧急时刻收到通知。")
-                        .font(.system(size: 13))
+                        .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 24)
@@ -676,10 +676,10 @@ struct GuardianHomeView: View {
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 5) {
                     Text(name)
-                        .font(.system(size: 13.5, weight: .medium))
+                        .font(.scaled(size: 13.5, weight: .medium))
                     if let tag, let tagColor {
                         Text(tag)
-                            .font(.system(size: 11))
+                            .font(.scaled(size: 11))
                             .padding(.horizontal, 7)
                             .padding(.vertical, 2)
                             .background((tagBg ?? tagColor).opacity(tagBg != nil ? 0.22 : 0.14))
@@ -688,7 +688,7 @@ struct GuardianHomeView: View {
                     }
                 }
                 Text(detail)
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.58))
                     .lineLimit(1)
             }
@@ -698,10 +698,10 @@ struct GuardianHomeView: View {
             // Protection layers
             VStack(spacing: 1) {
                 Text("\(layers) 层")
-                    .font(.system(size: 13, weight: .semibold, design: .serif))
+                    .font(.scaled(size: 13, weight: .semibold, design: .serif))
                     .foregroundStyle(ink)
                 Text("保护")
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
             }
         }

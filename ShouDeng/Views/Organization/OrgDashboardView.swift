@@ -64,9 +64,9 @@ struct OrgDashboardView: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(data.orgName)
-                            .font(.system(size: 18, weight: .bold))
+                            .font(.scaled(size: 18, weight: .bold))
                         Text(data.orgType)
-                            .font(.system(size: 13))
+                            .font(.scaled(size: 13))
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
@@ -125,7 +125,7 @@ struct OrgDashboardView: View {
                             Image(systemName: "megaphone.fill")
                             Text("发送预警")
                         }
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.scaled(size: 14, weight: .medium))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 42)
@@ -138,7 +138,7 @@ struct OrgDashboardView: View {
                             Image(systemName: "doc.text.fill")
                             Text("导出报告")
                         }
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.scaled(size: 14, weight: .medium))
                         .foregroundStyle(ink)
                         .frame(maxWidth: .infinity)
                         .frame(height: 42)
@@ -150,7 +150,7 @@ struct OrgDashboardView: View {
                 // Member list
                 VStack(alignment: .leading, spacing: 8) {
                     Text("成员状态")
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(.secondary)
 
                     ForEach(data.members) { member in
@@ -167,10 +167,10 @@ struct OrgDashboardView: View {
     private func summaryCard(value: String, label: String, color: Color) -> some View {
         VStack(spacing: 4) {
             Text(value)
-                .font(.system(size: 24, weight: .bold))
+                .font(.scaled(size: 24, weight: .bold))
                 .foregroundStyle(color)
             Text(label)
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
@@ -188,19 +188,19 @@ struct OrgDashboardView: View {
                 .frame(width: 8, height: 8)
 
             Text(member.displayName)
-                .font(.system(size: 14))
+                .font(.scaled(size: 14))
                 .foregroundStyle(ink)
 
             Spacer()
 
             if let city = member.cityName {
                 Text(city)
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
             }
 
             Text(statusLabel(member.status))
-                .font(.system(size: 12, weight: .medium))
+                .font(.scaled(size: 12, weight: .medium))
                 .foregroundStyle(statusColor(member.status))
                 .padding(.horizontal, 8)
                 .padding(.vertical, 3)
@@ -240,18 +240,18 @@ struct OrgDashboardView: View {
     private var noOrgView: some View {
         VStack(spacing: 16) {
             Image(systemName: "building.2.fill")
-                .font(.system(size: 40))
+                .font(.scaled(size: 40))
                 .foregroundStyle(safe.opacity(0.4))
             Text("还没有创建机构")
-                .font(.system(size: 16, weight: .medium))
+                .font(.scaled(size: 16, weight: .medium))
                 .foregroundStyle(ink.opacity(0.6))
             Text("机构版可以批量管理成员安全状态，\n一键发送预警，生成合规报告。")
-                .font(.system(size: 13))
+                .font(.scaled(size: 13))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Button { showCreateOrg = true } label: {
                 Text("创建机构")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.scaled(size: 14, weight: .medium))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 10)
@@ -370,10 +370,10 @@ struct SendAlertSheet: View {
                 VStack(spacing: 16) {
                     Spacer()
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 48))
+                        .font(.scaled(size: 48))
                         .foregroundStyle(.green)
                     Text("预警已发送")
-                        .font(.system(size: 18, weight: .bold))
+                        .font(.scaled(size: 18, weight: .bold))
                     Text("已通知 \(result.sentCount) 人")
                         .foregroundStyle(.secondary)
                     Button("完成") {

@@ -34,7 +34,7 @@ struct AvatarView: View {
                     .fill(Color(.systemGray5))
                     .frame(width: size, height: size)
                 Text(resolvedInitial)
-                    .font(.system(size: size * 0.38, weight: .medium))
+                    .font(.scaled(size: size * 0.38, weight: .medium))
                     .foregroundStyle(ink)
             }
         }
@@ -86,7 +86,7 @@ struct ProfileEditView: View {
 
                     if let error = errorMessage {
                         Text(error)
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                             .foregroundStyle(alert)
                     }
 
@@ -100,7 +100,7 @@ struct ProfileEditView: View {
                             }
                             Text("保存")
                         }
-                        .font(.system(size: 15, weight: .medium))
+                        .font(.scaled(size: 15, weight: .medium))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
@@ -112,9 +112,9 @@ struct ProfileEditView: View {
                     // Role info
                     HStack(spacing: 6) {
                         Image(systemName: coordinator.userRole == .protected_ ? "shield.fill" : "eye.fill")
-                            .font(.system(size: 11))
+                            .font(.scaled(size: 11))
                         Text(coordinator.userRole == .protected_ ? "被守护者" : "守护者")
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                     }
                     .foregroundStyle(.secondary)
                     .padding(.top, 4)
@@ -155,7 +155,7 @@ struct ProfileEditView: View {
                             .frame(width: 80, height: 80)
                             .overlay {
                                 Text(displayName.isEmpty ? "?" : String(displayName.prefix(1)))
-                                    .font(.system(size: 28, weight: .medium))
+                                    .font(.scaled(size: 28, weight: .medium))
                                     .foregroundStyle(ink)
                             }
                     }
@@ -165,14 +165,14 @@ struct ProfileEditView: View {
                         .frame(width: 26, height: 26)
                         .overlay {
                             Image(systemName: "camera.fill")
-                                .font(.system(size: 11))
+                                .font(.scaled(size: 11))
                                 .foregroundStyle(.white)
                         }
                         .shadow(color: .black.opacity(0.15), radius: 2, y: 1)
                 }
             }
             Text("点击更换头像")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
         }
         .onChange(of: avatarItem) { _, newItem in
@@ -185,19 +185,19 @@ struct ProfileEditView: View {
     private var fieldSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("基本信息")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
             VStack(spacing: 0) {
                 fieldRow("昵称") {
                     TextField("输入昵称", text: $displayName)
-                        .font(.system(size: 14))
+                        .font(.scaled(size: 14))
                         .multilineTextAlignment(.trailing)
                 }
                 Divider()
                 fieldRow("城市") {
                     TextField("输入城市", text: $cityName)
-                        .font(.system(size: 14))
+                        .font(.scaled(size: 14))
                         .multilineTextAlignment(.trailing)
                 }
             }
@@ -214,13 +214,13 @@ struct ProfileEditView: View {
     private var timezoneSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("时区")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
             VStack(spacing: 0) {
                 fieldRow("当前时区") {
                     Text(selectedTimeZone.identifier)
-                        .font(.system(size: 13))
+                        .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                 }
                 Divider()
@@ -229,7 +229,7 @@ struct ProfileEditView: View {
                     let _ = formatter.dateFormat = "HH:mm"
                     let _ = formatter.timeZone = selectedTimeZone
                     Text(formatter.string(from: Date()))
-                        .font(.system(size: 13, design: .monospaced))
+                        .font(.scaled(size: 13, design: .monospaced))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -243,7 +243,7 @@ struct ProfileEditView: View {
 
     private func fieldRow<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
         HStack {
-            Text(label).font(.system(size: 13))
+            Text(label).font(.scaled(size: 13))
             Spacer()
             content()
         }

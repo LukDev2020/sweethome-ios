@@ -71,6 +71,7 @@
 		677EF24901E9EE3C564AA7E2 /* FeatureDisclosureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C180202B726745C4D4136747 /* FeatureDisclosureView.swift */; };
 		6888CF1224D9125CBA2EB78C /* SignupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E56310453259DD87FAE127E5 /* SignupView.swift */; };
 		A1B2C3D4E5F60001 /* PostSignupWizardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60002 /* PostSignupWizardView.swift */; };
+		B2C3D4E5F6070001 /* FontScaleManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6070002 /* FontScaleManager.swift */; };
 		6AC917981978E3093AAC36EC /* ProfileEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A999FE740978FB9A70C0B89 /* ProfileEditView.swift */; };
 		6AF177BA649E9E3A34CFDABB /* ProtectedTimerWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28DD19C64B3FA4AFF3D91214 /* ProtectedTimerWidget.swift */; };
 		72311B032AFAD5E4C43442AA /* ShouDengWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B67AB48387F3263CABF4FE /* ShouDengWidgetBundle.swift */; };
@@ -282,6 +283,7 @@
 		E49AE653FD21F8E431675140 /* WidgetDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataStore.swift; sourceTree = "<group>"; };
 		E56310453259DD87FAE127E5 /* SignupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignupView.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60002 /* PostSignupWizardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostSignupWizardView.swift; sourceTree = "<group>"; };
+		B2C3D4E5F6070002 /* FontScaleManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontScaleManager.swift; sourceTree = "<group>"; };
 		E90B997F6B5ED8D73AF5B4F8 /* LanguageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageManager.swift; sourceTree = "<group>"; };
 		E9B16BBF77C02115152E9C88 /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
 		EC9967501D760330EF89D308 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -337,6 +339,14 @@
 				A6CF262FFD6B5FBF8B10D4F7 /* WidgetPreviews.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		B2C3D4E5F6070003 /* Accessibility */ = {
+			isa = PBXGroup;
+			children = (
+				B2C3D4E5F6070002 /* FontScaleManager.swift */,
+			);
+			path = Accessibility;
 			sourceTree = "<group>";
 		};
 		0B700CD844D731ED5C5D529D /* Compliance */ = {
@@ -395,6 +405,7 @@
 		33935C558A4A6450BC809802 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				B2C3D4E5F6070003 /* Accessibility */,
 				F52A6289F3BE3BC2692C63EC /* Auth */,
 				35F8111DC3C18FAF636B1A62 /* Baseline */,
 				0B700CD844D731ED5C5D529D /* Compliance */,
@@ -971,6 +982,7 @@
 				A1302B34EE4C90A44A1ED47C /* ShouDengApp.swift in Sources */,
 				6888CF1224D9125CBA2EB78C /* SignupView.swift in Sources */,
 				A1B2C3D4E5F60001 /* PostSignupWizardView.swift in Sources */,
+				B2C3D4E5F6070001 /* FontScaleManager.swift in Sources */,
 				C980F286538D455C19BECABA /* StoreKitManager.swift in Sources */,
 				47CD6276A165F690D3747109 /* TrajectoryProcessor.swift in Sources */,
 				35159B7DB49900FACD831968 /* User.swift in Sources */,

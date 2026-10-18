@@ -49,7 +49,7 @@ struct ProtectedGuardianDetailView: View {
                     revocationPanel
 
                     Text("延迟生效为胁迫场景准备：被逼当场关闭时，家人仍能在六小时内看到。")
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(.secondary.opacity(0.7))
                         .padding(.top, 8)
                         .padding(.bottom, 24)
@@ -159,7 +159,7 @@ struct ProtectedGuardianDetailView: View {
                     .fill(Color(.systemGray5))
                     .frame(width: 40, height: 40)
                 Text(g.user.avatarInitial)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.scaled(size: 14, weight: .medium))
                     .foregroundStyle(ink)
                 if g.isOnDuty {
                     Circle()
@@ -171,10 +171,10 @@ struct ProtectedGuardianDetailView: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 5) {
                     Text(g.user.displayName)
-                        .font(.system(size: 15, weight: .medium))
+                        .font(.scaled(size: 15, weight: .medium))
                     if g.isOnDuty {
                         Text("值班中")
-                            .font(.system(size: 11))
+                            .font(.scaled(size: 11))
                             .padding(.horizontal, 7)
                             .padding(.vertical, 2)
                             .background(safe.opacity(0.14))
@@ -183,7 +183,7 @@ struct ProtectedGuardianDetailView: View {
                     }
                 }
                 Text("\(g.user.cityName) · 自 \(linkedSinceText(g.linkedSince)) 起")
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
             }
             Spacer()
@@ -207,7 +207,7 @@ struct ProtectedGuardianDetailView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("日常可见")
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
                 Spacer()
                 if isSavingPermissions {
@@ -216,7 +216,7 @@ struct ProtectedGuardianDetailView: View {
                 }
                 if let error = permissionSaveError {
                     Text(error)
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(.red)
                         .lineLimit(1)
                 }
@@ -235,7 +235,7 @@ struct ProtectedGuardianDetailView: View {
 
     private func permissionToggle(_ label: String, isOn: Binding<Bool>) -> some View {
         HStack {
-            Text(label).font(.system(size: 13))
+            Text(label).font(.scaled(size: 13))
             Spacer()
             Toggle("", isOn: Binding(
                 get: { isOn.wrappedValue },
@@ -255,11 +255,11 @@ struct ProtectedGuardianDetailView: View {
     private var emergencyPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("紧急时自动开启")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             fixedRow("高频位置上报", value: "始终开启", isOk: true)
             HStack {
-                Text("环境录音").font(.system(size: 13))
+                Text("环境录音").font(.scaled(size: 13))
                 Spacer()
                 Toggle("", isOn: Binding(
                     get: { shareEmergencyAudio },
@@ -285,7 +285,7 @@ struct ProtectedGuardianDetailView: View {
     private var revocationPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("安全撤销")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             fixedRow("关闭共享延迟生效", value: "6 小时后", isOk: false)
 
@@ -293,14 +293,14 @@ struct ProtectedGuardianDetailView: View {
                 showRemoveConfirm = true
             } label: {
                 HStack {
-                    Text("移除这位守护者").font(.system(size: 13))
+                    Text("移除这位守护者").font(.scaled(size: 13))
                     Spacer()
                     if isRemoving {
                         ProgressView()
                             .scaleEffect(0.7)
                     } else {
                         Text("需二次确认")
-                            .font(.system(size: 11.5))
+                            .font(.scaled(size: 11.5))
                             .foregroundStyle(alert)
                     }
                 }
@@ -317,10 +317,10 @@ struct ProtectedGuardianDetailView: View {
 
     private func fixedRow(_ label: String, value: String, isOk: Bool = false, isWarning: Bool = false) -> some View {
         HStack {
-            Text(label).font(.system(size: 13))
+            Text(label).font(.scaled(size: 13))
             Spacer()
             Text(value)
-                .font(.system(size: 11.5))
+                .font(.scaled(size: 11.5))
                 .foregroundStyle(isWarning ? alert : isOk ? safe : .secondary)
         }
         .padding(.vertical, 2)

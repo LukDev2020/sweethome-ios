@@ -64,13 +64,13 @@ struct SignupView: View {
                 if let errorMessage, !isLocked {
                     VStack(spacing: 4) {
                         Text(errorMessage)
-                            .font(.system(size: 13))
+                            .font(.scaled(size: 13))
                             .foregroundStyle(red)
 
                         if step == .code && failedAttempts > 0 {
                             let remaining = maxAttempts - failedAttempts
                             Text(String(format: lang.localized("login.attempts.warning"), remaining))
-                                .font(.system(size: 12, weight: .medium))
+                                .font(.scaled(size: 12, weight: .medium))
                                 .foregroundStyle(remaining <= 2 ? red : ink3)
                         }
                     }
@@ -89,7 +89,7 @@ struct SignupView: View {
                                 Text(buttonTitle)
                             }
                         }
-                        .font(.system(size: 15, weight: .medium))
+                        .font(.scaled(size: 15, weight: .medium))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
@@ -142,16 +142,16 @@ struct SignupView: View {
     private var lockedView: some View {
         VStack(spacing: 0) {
             Image(systemName: "lock.shield.fill")
-                .font(.system(size: 48))
+                .font(.scaled(size: 48))
                 .foregroundStyle(navy.opacity(0.6))
                 .padding(.bottom, 20)
 
             Text(lang.localized("login.locked.title"))
-                .font(.system(size: 24, weight: .bold, design: .serif))
+                .font(.scaled(size: 24, weight: .bold, design: .serif))
                 .foregroundStyle(navy)
 
             Text(lang.localized("login.locked.message"))
-                .font(.system(size: 14))
+                .font(.scaled(size: 14))
                 .foregroundStyle(ink2)
                 .multilineTextAlignment(.center)
                 .lineSpacing(4)
@@ -174,7 +174,7 @@ struct SignupView: View {
         case .phone:
             VStack(spacing: 16) {
                 Text(lang.localized("signup.enter.phone"))
-                    .font(.system(size: 20, weight: .bold))
+                    .font(.scaled(size: 20, weight: .bold))
                 HStack(spacing: 0) {
                     // Country code button
                     Button {
@@ -182,12 +182,12 @@ struct SignupView: View {
                     } label: {
                         HStack(spacing: 4) {
                             Text(selectedCountry.flag)
-                                .font(.system(size: 18))
+                                .font(.scaled(size: 18))
                             Text(selectedCountry.dialCode)
-                                .font(.system(size: 15))
+                                .font(.scaled(size: 15))
                                 .foregroundStyle(ink)
                             Image(systemName: "chevron.down")
-                                .font(.system(size: 9, weight: .semibold))
+                                .font(.scaled(size: 9, weight: .semibold))
                                 .foregroundStyle(.secondary)
                         }
                         .padding(.horizontal, 10)
@@ -199,7 +199,7 @@ struct SignupView: View {
                     }
 
                     TextField(lang.localized("login.phone.placeholder"), text: $phone)
-                        .font(.system(size: 15))
+                        .font(.scaled(size: 15))
                         .keyboardType(.phonePad)
                         .textContentType(.telephoneNumber)
                         .focused($focusedField, equals: .phone)
@@ -216,12 +216,12 @@ struct SignupView: View {
         case .code:
             VStack(spacing: 16) {
                 Text(lang.localized("signup.enter.code"))
-                    .font(.system(size: 20, weight: .bold))
+                    .font(.scaled(size: 20, weight: .bold))
                 Text(String(format: lang.localized("signup.code.sent"), selectedCountry.dialCode, phone))
-                    .font(.system(size: 13))
+                    .font(.scaled(size: 13))
                     .foregroundStyle(.secondary)
                 TextField(lang.localized("login.code.placeholder"), text: $code)
-                    .font(.system(size: 15))
+                    .font(.scaled(size: 15))
                     .keyboardType(.numberPad)
                     .textContentType(.oneTimeCode)
                     .focused($focusedField, equals: .code)
@@ -236,9 +236,9 @@ struct SignupView: View {
         case .profile:
             VStack(spacing: 16) {
                 Text(lang.localized("signup.profile.title"))
-                    .font(.system(size: 20, weight: .bold))
+                    .font(.scaled(size: 20, weight: .bold))
                 TextField(lang.localized("signup.name.placeholder"), text: $displayName)
-                    .font(.system(size: 15))
+                    .font(.scaled(size: 15))
                     .textContentType(.name)
                     .focused($focusedField, equals: .name)
                     .padding(12)
@@ -249,7 +249,7 @@ struct SignupView: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text(lang.localized("signup.role.title"))
-                        .font(.system(size: 13))
+                        .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                     roleOption(.protected_, icon: "shield.fill",
                                title: lang.localized("signup.role.protected"),
@@ -269,15 +269,15 @@ struct SignupView: View {
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: icon)
-                    .font(.system(size: 18))
+                    .font(.scaled(size: 18))
                     .foregroundStyle(selectedRole == role ? lamp : ink.opacity(0.4))
                     .frame(width: 28)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
-                        .font(.system(size: 16, weight: .medium))
+                        .font(.scaled(size: 16, weight: .medium))
                         .foregroundStyle(ink)
                     Text(desc)
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }

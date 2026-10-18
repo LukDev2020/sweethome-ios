@@ -59,7 +59,7 @@ struct EmergencyTextCardView: View {
                                     HStack(spacing: 4) {
                                         Text(phrase.flag)
                                         Text(phrase.language)
-                                            .font(.system(size: 12))
+                                            .font(.scaled(size: 12))
                                     }
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 7)
@@ -79,11 +79,11 @@ struct EmergencyTextCardView: View {
                     // Main card
                     VStack(spacing: 16) {
                         Image(systemName: "staroflife.fill")
-                            .font(.system(size: 36))
+                            .font(.scaled(size: 36))
                             .foregroundStyle(alert)
 
                         Text(currentPhrase.helpText)
-                            .font(.system(size: 28, weight: .bold))
+                            .font(.scaled(size: 28, weight: .bold))
                             .multilineTextAlignment(.center)
                             .foregroundStyle(ink)
 
@@ -103,12 +103,12 @@ struct EmergencyTextCardView: View {
                             Image(systemName: "phone.fill")
                                 .foregroundStyle(alert)
                             Text(currentPhrase.emergencyNumber)
-                                .font(.system(size: 36, weight: .bold, design: .monospaced))
+                                .font(.scaled(size: 36, weight: .bold, design: .monospaced))
                                 .foregroundStyle(alert)
                         }
 
                         Text("Emergency Number")
-                            .font(.system(size: 14))
+                            .font(.scaled(size: 14))
                             .foregroundStyle(.secondary)
                     }
                     .padding(24)
@@ -124,7 +124,7 @@ struct EmergencyTextCardView: View {
                         HStack(spacing: 8) {
                             Image(systemName: "arrow.up.left.and.arrow.down.right")
                             Text("全屏显示")
-                                .font(.system(size: 14, weight: .medium))
+                                .font(.scaled(size: 14, weight: .medium))
                         }
                         .foregroundStyle(alert)
                         .frame(maxWidth: .infinity)
@@ -135,7 +135,7 @@ struct EmergencyTextCardView: View {
                     .padding(.horizontal, 16)
 
                     Text("语言不通时，将屏幕展示给身边的人。\n急救卡信息离线可用，不需要网络。")
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(.secondary.opacity(0.7))
                         .multilineTextAlignment(.center)
                         .padding(.bottom, 24)
@@ -166,11 +166,11 @@ struct EmergencyTextCardView: View {
                 Spacer()
 
                 Image(systemName: "staroflife.fill")
-                    .font(.system(size: 56))
+                    .font(.scaled(size: 56))
                     .foregroundStyle(alert)
 
                 Text(currentPhrase.helpText)
-                    .font(.system(size: 36, weight: .bold))
+                    .font(.scaled(size: 36, weight: .bold))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.black)
                     .padding(.horizontal, 24)
@@ -178,9 +178,9 @@ struct EmergencyTextCardView: View {
                 HStack(spacing: 12) {
                     Image(systemName: "phone.fill")
                         .foregroundStyle(alert)
-                        .font(.system(size: 28))
+                        .font(.scaled(size: 28))
                     Text(currentPhrase.emergencyNumber)
-                        .font(.system(size: 56, weight: .bold, design: .monospaced))
+                        .font(.scaled(size: 56, weight: .bold, design: .monospaced))
                         .foregroundStyle(alert)
                 }
 
@@ -188,7 +188,7 @@ struct EmergencyTextCardView: View {
 
                 Button { showFullScreen = false } label: {
                     Text("关闭")
-                        .font(.system(size: 16))
+                        .font(.scaled(size: 16))
                         .foregroundStyle(.secondary)
                 }
                 .padding(.bottom, 32)
@@ -201,11 +201,11 @@ struct EmergencyTextCardView: View {
     private func infoRow(_ label: String, value: String) -> some View {
         HStack {
             Text(label)
-                .font(.system(size: 14, weight: .medium))
+                .font(.scaled(size: 14, weight: .medium))
                 .foregroundStyle(.secondary)
             Spacer()
             Text(value)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.scaled(size: 16, weight: .semibold))
                 .foregroundStyle(ink)
         }
         .padding(.horizontal, 8)

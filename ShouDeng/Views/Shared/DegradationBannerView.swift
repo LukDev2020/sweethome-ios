@@ -46,18 +46,18 @@ struct DegradationBannerView: View {
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: isCritical ? "exclamationmark.triangle.fill" : "exclamationmark.circle.fill")
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(tintColor)
 
                 Text(messageForCurrentRole(warning))
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.scaled(size: 12, weight: .medium))
                     .foregroundStyle(ink.opacity(0.85))
                     .lineLimit(1)
 
                 Spacer()
 
                 Text("详情")
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(ink.opacity(0.45))
             }
             .padding(.horizontal, 16)
@@ -81,20 +81,20 @@ struct DegradationBannerView: View {
             // Icon
             let isCritical = warning.severity == .critical
             Image(systemName: isCritical ? "exclamationmark.triangle.fill" : "exclamationmark.circle.fill")
-                .font(.system(size: 32))
+                .font(.scaled(size: 32))
                 .foregroundStyle(isCritical ? alert : lamp)
                 .padding(.bottom, 16)
 
             // Title
             Text(messageForCurrentRole(warning))
-                .font(.system(size: 17, weight: .bold))
+                .font(.scaled(size: 17, weight: .bold))
                 .foregroundStyle(ink)
                 .multilineTextAlignment(.center)
                 .padding(.bottom, 16)
 
             // Detail text
             Text(warning.detailText)
-                .font(.system(size: 14))
+                .font(.scaled(size: 14))
                 .foregroundStyle(ink.opacity(0.72))
                 .lineSpacing(6)
                 .multilineTextAlignment(.leading)
@@ -126,7 +126,7 @@ struct DegradationBannerView: View {
             handleAction(action)
         } label: {
             Text(action.title)
-                .font(.system(size: 15, weight: .medium))
+                .font(.scaled(size: 15, weight: .medium))
                 .foregroundStyle(action.type == .dismiss ? ink.opacity(0.6) : .white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)

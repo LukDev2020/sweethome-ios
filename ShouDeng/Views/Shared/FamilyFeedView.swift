@@ -91,7 +91,7 @@ struct FamilyFeedView: View {
             ScrollView {
                 VStack(spacing: 12) {
                     Text("家庭成员")
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.scaled(size: 16, weight: .bold))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.top, 12)
 
@@ -148,10 +148,10 @@ struct FamilyFeedView: View {
             if persons.isEmpty && guardians.isEmpty && coordinator.currentUser == nil {
                 VStack(spacing: 8) {
                     Image(systemName: "person.3")
-                        .font(.system(size: 28))
+                        .font(.scaled(size: 28))
                         .foregroundStyle(.tertiary)
                     Text("暂无家庭成员")
-                        .font(.system(size: 13))
+                        .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity)
@@ -172,24 +172,24 @@ struct FamilyFeedView: View {
                     .fill(safe.opacity(0.12))
                     .frame(width: 36, height: 36)
                 Text(initial)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.scaled(size: 14, weight: .medium))
                     .foregroundStyle(safe)
             }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(name)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.scaled(size: 13, weight: .medium))
                     .foregroundStyle(ink)
                 HStack(spacing: 4) {
                     Text(role)
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(.secondary)
                     if !city.isEmpty {
                         Text("·")
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                             .foregroundStyle(.quaternary)
                         Text(city)
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -213,13 +213,13 @@ struct FamilyFeedView: View {
         VStack(spacing: 16) {
             Spacer()
             Image(systemName: "bubble.left.and.bubble.right")
-                .font(.system(size: 44))
+                .font(.scaled(size: 44))
                 .foregroundStyle(safe.opacity(0.35))
             Text("家庭圈还没有消息")
-                .font(.system(size: 16, weight: .medium))
+                .font(.scaled(size: 16, weight: .medium))
                 .foregroundStyle(ink)
             Text("发一条消息，分享照片或生活点滴")
-                .font(.system(size: 13))
+                .font(.scaled(size: 13))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
@@ -238,7 +238,7 @@ struct FamilyFeedView: View {
                     ForEach(Array(groupedByDate.enumerated()), id: \.offset) { _, group in
                         // Date header
                         Text(group.dateLabel)
-                            .font(.system(size: 12, weight: .medium))
+                            .font(.scaled(size: 12, weight: .medium))
                             .foregroundStyle(.secondary)
                             .padding(.vertical, 8)
 
@@ -326,7 +326,7 @@ struct FamilyFeedView: View {
                                     }
                                 } label: {
                                     Image(systemName: "xmark.circle.fill")
-                                        .font(.system(size: 16))
+                                        .font(.scaled(size: 16))
                                         .foregroundStyle(.white, .black.opacity(0.6))
                                 }
                                 .offset(x: 4, y: -4)
@@ -349,13 +349,13 @@ struct FamilyFeedView: View {
                     matching: .any(of: [.images, .videos])
                 ) {
                     Image(systemName: "photo")
-                        .font(.system(size: 20))
+                        .font(.scaled(size: 20))
                         .foregroundStyle(safe)
                 }
 
                 // Text field
                 TextField("发消息...", text: $messageText)
-                    .font(.system(size: 15))
+                    .font(.scaled(size: 15))
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .background(Color(.systemGray6))
@@ -376,7 +376,7 @@ struct FamilyFeedView: View {
                             .frame(width: 32, height: 32)
                     } else {
                         Image(systemName: "arrow.up.circle.fill")
-                            .font(.system(size: 32))
+                            .font(.scaled(size: 32))
                             .foregroundStyle(canSend ? safe : Color(.systemGray4))
                     }
                 }
@@ -526,10 +526,10 @@ struct MessageBubbleView: View {
                 if !isOwnMessage {
                     HStack(spacing: 4) {
                         Text(post.authorName)
-                            .font(.system(size: 12, weight: .medium))
+                            .font(.scaled(size: 12, weight: .medium))
                             .foregroundStyle(.secondary)
                         Text(timeString(post.createdAt))
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                             .foregroundStyle(.tertiary)
                     }
                 }
@@ -539,25 +539,25 @@ struct MessageBubbleView: View {
                     // Editing mode
                     if isEditing {
                         TextField("编辑消息", text: $editText, axis: .vertical)
-                            .font(.system(size: 14))
+                            .font(.scaled(size: 14))
                             .lineLimit(1...10)
                         HStack(spacing: 12) {
                             Button("取消") {
                                 isEditing = false
                             }
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                             .foregroundStyle(.secondary)
                             Button("保存") {
                                 saveEdit()
                             }
-                            .font(.system(size: 12, weight: .medium))
+                            .font(.scaled(size: 12, weight: .medium))
                             .foregroundStyle(safe)
                         }
                     } else {
                         // Text content
                         if !post.text.isEmpty {
                             Text(post.text)
-                                .font(.system(size: 14))
+                                .font(.scaled(size: 14))
                                 .foregroundStyle(isOwnMessage ? .white : ink)
                                 .lineSpacing(2)
                         }
@@ -590,7 +590,7 @@ struct MessageBubbleView: View {
                 // Time for own messages
                 if isOwnMessage {
                     Text(timeString(post.createdAt))
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(.tertiary)
                 }
 
@@ -601,9 +601,9 @@ struct MessageBubbleView: View {
                     } label: {
                         HStack(spacing: 3) {
                             Image(systemName: "bubble.right")
-                                .font(.system(size: 10))
+                                .font(.scaled(size: 10))
                             Text("\(post.commentCount) 条回复")
-                                .font(.system(size: 12))
+                                .font(.scaled(size: 12))
                         }
                         .foregroundStyle(.secondary)
                     }
@@ -688,20 +688,20 @@ struct MessageBubbleView: View {
                     VStack(alignment: .leading, spacing: 1) {
                         HStack(spacing: 3) {
                             Text(comment.authorName)
-                                .font(.system(size: 12, weight: .medium))
+                                .font(.scaled(size: 12, weight: .medium))
                             Text(timeString(comment.createdAt))
-                                .font(.system(size: 11))
+                                .font(.scaled(size: 11))
                                 .foregroundStyle(.tertiary)
                         }
                         Text(comment.text)
-                            .font(.system(size: 13))
+                            .font(.scaled(size: 13))
                     }
                 }
             }
 
             HStack(spacing: 6) {
                 TextField("回复...", text: $commentText)
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
                     .background(Color(.systemGray6))
@@ -714,7 +714,7 @@ struct MessageBubbleView: View {
                     }
                 } label: {
                     Image(systemName: "arrow.up.circle.fill")
-                        .font(.system(size: 22))
+                        .font(.scaled(size: 22))
                         .foregroundStyle(safe)
                 }
                 .disabled(commentText.trimmingCharacters(in: .whitespaces).isEmpty)

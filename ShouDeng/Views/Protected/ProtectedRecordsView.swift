@@ -78,9 +78,9 @@ struct ProtectedRecordsView: View {
                 VStack(spacing: 12) {
                     VStack(spacing: 2) {
                         Text("我的记录")
-                            .font(.system(size: 20, weight: .bold))
+                            .font(.scaled(size: 20, weight: .bold))
                         Text("90 天可查 · 专业版永久保存")
-                            .font(.system(size: 13))
+                            .font(.scaled(size: 13))
                             .foregroundStyle(.secondary)
                     }
                     .padding(.top, 8)
@@ -108,9 +108,9 @@ struct ProtectedRecordsView: View {
                     } label: {
                         HStack(spacing: 6) {
                             Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 16))
+                                .font(.scaled(size: 16))
                             Text("添加紧急联络人")
-                                .font(.system(size: 13, weight: .medium))
+                                .font(.scaled(size: 13, weight: .medium))
                         }
                         .foregroundStyle(safe)
                         .frame(maxWidth: .infinity)
@@ -120,7 +120,7 @@ struct ProtectedRecordsView: View {
                     }
 
                     Text("紧急情况下，优先拨打当地急救电话。自定义联络人可提前录入邻居、社区、当地医院等信息。")
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(.tertiary)
                         .multilineTextAlignment(.center)
                         .padding(.bottom, 24)
@@ -140,9 +140,9 @@ struct ProtectedRecordsView: View {
             VStack(spacing: 12) {
                 VStack(spacing: 2) {
                     Text("我的记录")
-                        .font(.system(size: 20, weight: .bold))
+                        .font(.scaled(size: 20, weight: .bold))
                     Text("90 天可查 · 专业版永久保存")
-                        .font(.system(size: 13))
+                        .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                 }
                 .padding(.top, 8)
@@ -172,9 +172,9 @@ struct ProtectedRecordsView: View {
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 16))
+                            .font(.scaled(size: 16))
                         Text("添加紧急联络人")
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.scaled(size: 13, weight: .medium))
                     }
                     .foregroundStyle(safe)
                     .frame(maxWidth: .infinity)
@@ -185,7 +185,7 @@ struct ProtectedRecordsView: View {
 
                 // Tip
                 Text("紧急情况下，优先拨打当地急救电话。自定义联络人可提前录入邻居、社区、当地医院等信息。")
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
                     .padding(.bottom, 24)
@@ -203,13 +203,13 @@ struct ProtectedRecordsView: View {
             // Header
             HStack {
                 Image(systemName: "phone.arrow.up.right.fill")
-                    .font(.system(size: 13))
+                    .font(.scaled(size: 13))
                     .foregroundStyle(alert)
                 Text("当地紧急服务")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.scaled(size: 13, weight: .semibold))
                 Spacer()
                 Text("\(info.regionName) \(info.areaCode)")
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
             }
             .padding(12)
@@ -218,16 +218,16 @@ struct ProtectedRecordsView: View {
             ForEach(Array(info.numbers.enumerated()), id: \.offset) { _, number in
                 HStack(spacing: 10) {
                     Image(systemName: number.icon)
-                        .font(.system(size: 13))
+                        .font(.scaled(size: 13))
                         .foregroundStyle(number.color)
                         .frame(width: 22)
 
                     VStack(alignment: .leading, spacing: 1) {
                         Text(number.label)
-                            .font(.system(size: 12.5, weight: .medium))
+                            .font(.scaled(size: 12.5, weight: .medium))
                         if let note = number.note {
                             Text(note)
-                                .font(.system(size: 12))
+                                .font(.scaled(size: 12))
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -236,7 +236,7 @@ struct ProtectedRecordsView: View {
 
                     Button { callNumber(number.number) } label: {
                         Text(number.number)
-                            .font(.system(size: 16, weight: .bold, design: .monospaced))
+                            .font(.scaled(size: 16, weight: .bold, design: .monospaced))
                             .foregroundStyle(alert)
                     }
                 }
@@ -275,13 +275,13 @@ struct ProtectedRecordsView: View {
                     Spacer()
                     VStack(spacing: 8) {
                         Image(systemName: "clock")
-                            .font(.system(size: 28))
+                            .font(.scaled(size: 28))
                             .foregroundStyle(.tertiary)
                         Text("暂无记录")
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.scaled(size: 14, weight: .medium))
                             .foregroundStyle(.secondary)
                         Text("你的活动记录将在此显示")
-                            .font(.system(size: 13))
+                            .font(.scaled(size: 13))
                             .foregroundStyle(.tertiary)
                     }
                     .padding(.vertical, 32)
@@ -321,11 +321,11 @@ struct ProtectedRecordsView: View {
     private func timelineRow(date: String, event: String, isBlurred: Bool) -> some View {
         HStack(alignment: .top) {
             Text(date)
-                .font(.system(size: 12, weight: .medium, design: .monospaced))
+                .font(.scaled(size: 12, weight: .medium, design: .monospaced))
                 .foregroundStyle(.secondary)
                 .frame(width: 50, alignment: .trailing)
             Text(event)
-                .font(.system(size: 12.5))
+                .font(.scaled(size: 12.5))
                 .lineLimit(2)
             Spacer()
         }
@@ -345,7 +345,7 @@ struct ProtectedRecordsView: View {
     private var exportPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("导出")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             exportRow("带时间戳的 PDF", value: "需升级")
             exportRow("位置轨迹 GPX", value: "需升级")
@@ -359,10 +359,10 @@ struct ProtectedRecordsView: View {
 
     private func exportRow(_ label: String, value: String) -> some View {
         HStack {
-            Text(label).font(.system(size: 13))
+            Text(label).font(.scaled(size: 13))
             Spacer()
             Text(value)
-                .font(.system(size: 11.5))
+                .font(.scaled(size: 11.5))
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 2)
@@ -373,11 +373,11 @@ struct ProtectedRecordsView: View {
     private var upsellCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("免费版仅保留 24 小时。升级后可查看 90 天完整时间线并导出——向警方、保险或律师说明情况时用得上。")
-                .font(.system(size: 13))
+                .font(.scaled(size: 13))
                 .foregroundStyle(.secondary)
             Button { showUpgradeHint = true } label: {
                 Text("升级查看全部记录")
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.scaled(size: 13, weight: .medium))
                     .foregroundStyle(pro)
             }
             .alert("如何升级？", isPresented: $showUpgradeHint) {
@@ -441,7 +441,7 @@ private struct EmergencyContactCardRow: View {
             ZStack {
                 Circle().fill(safe.opacity(0.12)).frame(width: 38, height: 38)
                 Text(String(contact.name.prefix(1)))
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.scaled(size: 15, weight: .semibold))
                     .foregroundStyle(safe)
             }
 
@@ -459,7 +459,7 @@ private struct EmergencyContactCardRow: View {
             if !contact.phone.isEmpty {
                 Button(action: onCall) {
                     Image(systemName: "phone.circle.fill")
-                        .font(.system(size: 28))
+                        .font(.scaled(size: 28))
                         .foregroundStyle(safe)
                 }
             }
@@ -470,9 +470,9 @@ private struct EmergencyContactCardRow: View {
     private var nameRow: some View {
         HStack(spacing: 6) {
             Text(contact.name)
-                .font(.system(size: 14, weight: .medium))
+                .font(.scaled(size: 14, weight: .medium))
             Text(contact.relationship)
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(safe)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
@@ -485,8 +485,8 @@ private struct EmergencyContactCardRow: View {
     private var phoneRow: some View {
         if !contact.phone.isEmpty {
             HStack(spacing: 4) {
-                Image(systemName: "phone.fill").font(.system(size: 9)).foregroundStyle(.secondary)
-                Text(contact.phone).font(.system(size: 12, design: .monospaced)).foregroundStyle(ink.opacity(0.7))
+                Image(systemName: "phone.fill").font(.scaled(size: 9)).foregroundStyle(.secondary)
+                Text(contact.phone).font(.scaled(size: 12, design: .monospaced)).foregroundStyle(ink.opacity(0.7))
             }
         }
     }
@@ -495,8 +495,8 @@ private struct EmergencyContactCardRow: View {
     private var emailRow: some View {
         if !contact.email.isEmpty {
             HStack(spacing: 4) {
-                Image(systemName: "envelope.fill").font(.system(size: 9)).foregroundStyle(.secondary)
-                Text(contact.email).font(.system(size: 12)).foregroundStyle(ink.opacity(0.6))
+                Image(systemName: "envelope.fill").font(.scaled(size: 9)).foregroundStyle(.secondary)
+                Text(contact.email).font(.scaled(size: 12)).foregroundStyle(ink.opacity(0.6))
             }
         }
     }
@@ -505,8 +505,8 @@ private struct EmergencyContactCardRow: View {
     private var addressRow: some View {
         if !contact.address.isEmpty {
             HStack(spacing: 4) {
-                Image(systemName: "mappin.circle.fill").font(.system(size: 9)).foregroundStyle(.secondary)
-                Text(contact.address).font(.system(size: 12)).foregroundStyle(ink.opacity(0.6)).lineLimit(2)
+                Image(systemName: "mappin.circle.fill").font(.scaled(size: 9)).foregroundStyle(.secondary)
+                Text(contact.address).font(.scaled(size: 12)).foregroundStyle(ink.opacity(0.6)).lineLimit(2)
             }
         }
     }
@@ -516,8 +516,8 @@ private struct EmergencyContactCardRow: View {
             Spacer()
             Button(role: .destructive, action: onDelete) {
                 HStack(spacing: 3) {
-                    Image(systemName: "trash").font(.system(size: 10))
-                    Text("删除").font(.system(size: 12))
+                    Image(systemName: "trash").font(.scaled(size: 10))
+                    Text("删除").font(.scaled(size: 12))
                 }
                 .foregroundStyle(.red.opacity(0.6))
             }
@@ -551,13 +551,13 @@ private struct CustomContactsPanel: View {
     private var header: some View {
         HStack {
             Image(systemName: "person.2.fill")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(safe)
             Text("自定义紧急联络人")
-                .font(.system(size: 13, weight: .semibold))
+                .font(.scaled(size: 13, weight: .semibold))
             Spacer()
             Text("\(contacts.count) 人")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
         }
         .padding(12)
@@ -576,13 +576,13 @@ private struct CustomContactsPanel: View {
     private var emptyState: some View {
         VStack(spacing: 6) {
             Image(systemName: "person.crop.circle.badge.plus")
-                .font(.system(size: 28))
+                .font(.scaled(size: 28))
                 .foregroundStyle(.tertiary)
             Text("暂无紧急联络人")
-                .font(.system(size: 13))
+                .font(.scaled(size: 13))
                 .foregroundStyle(.secondary)
             Text("录入邻居、社区工作人员、当地医院等")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity)

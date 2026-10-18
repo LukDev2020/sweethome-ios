@@ -33,22 +33,22 @@ struct CountryCodePicker: View {
                 } label: {
                     HStack(spacing: 12) {
                         Text(country.flag)
-                            .font(.system(size: 24))
+                            .font(.scaled(size: 24))
                         VStack(alignment: .leading, spacing: 1) {
                             Text(country.localName)
-                                .font(.system(size: 14, weight: .medium))
+                                .font(.scaled(size: 14, weight: .medium))
                                 .foregroundStyle(ink)
                             Text(country.name)
-                                .font(.system(size: 11))
+                                .font(.scaled(size: 11))
                                 .foregroundStyle(.secondary)
                         }
                         Spacer()
                         Text(country.dialCode)
-                            .font(.system(size: 14, design: .monospaced))
+                            .font(.scaled(size: 14, design: .monospaced))
                             .foregroundStyle(.secondary)
                         if country == selected {
                             Image(systemName: "checkmark")
-                                .font(.system(size: 12, weight: .bold))
+                                .font(.scaled(size: 12, weight: .bold))
                                 .foregroundStyle(.green)
                         }
                     }

@@ -25,12 +25,12 @@ struct InviteGuardianView: View {
                     // Header
                     VStack(spacing: 4) {
                         Image(systemName: "person.badge.plus")
-                            .font(.system(size: 36))
+                            .font(.scaled(size: 36))
                             .foregroundStyle(safe)
                         Text("邀请守护者")
-                            .font(.system(size: 20, weight: .bold))
+                            .font(.scaled(size: 20, weight: .bold))
                         Text("生成邀请码，发送给你的家人或朋友")
-                            .font(.system(size: 13))
+                            .font(.scaled(size: 13))
                             .foregroundStyle(.secondary)
                     }
                     .padding(.top, 24)
@@ -45,7 +45,7 @@ struct InviteGuardianView: View {
                                 Image(systemName: "square.and.arrow.up")
                                 Text("分享邀请码")
                             }
-                            .font(.system(size: 15, weight: .medium))
+                            .font(.scaled(size: 15, weight: .medium))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
@@ -56,7 +56,7 @@ struct InviteGuardianView: View {
                         // Expiry note
                         if let expires = expiresAt {
                             Text("邀请码 24 小时内有效（截止 \(formatExpiry(expires))）")
-                                .font(.system(size: 11))
+                                .font(.scaled(size: 11))
                                 .foregroundStyle(.secondary)
                         }
 
@@ -76,7 +76,7 @@ struct InviteGuardianView: View {
                                 }
                                 Text("生成邀请码")
                             }
-                            .font(.system(size: 15, weight: .medium))
+                            .font(.scaled(size: 15, weight: .medium))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
@@ -87,7 +87,7 @@ struct InviteGuardianView: View {
 
                         if let error = errorMessage {
                             Text(error)
-                                .font(.system(size: 12))
+                                .font(.scaled(size: 12))
                                 .foregroundStyle(.red)
                         }
 
@@ -113,12 +113,12 @@ struct InviteGuardianView: View {
     private func codeCard(_ code: String) -> some View {
         VStack(spacing: 8) {
             Text("邀请码")
-                .font(.system(size: 11))
+                .font(.scaled(size: 11))
                 .foregroundStyle(.secondary)
             HStack(spacing: 8) {
                 ForEach(Array(code.enumerated()), id: \.offset) { _, char in
                     Text(String(char))
-                        .font(.system(size: 28, weight: .bold, design: .monospaced))
+                        .font(.scaled(size: 28, weight: .bold, design: .monospaced))
                         .foregroundStyle(ink)
                         .frame(width: 40, height: 48)
                         .background(Color(.systemGray6))
@@ -133,7 +133,7 @@ struct InviteGuardianView: View {
                     Image(systemName: "doc.on.doc")
                     Text("复制")
                 }
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(safe)
             }
             .padding(.top, 4)
@@ -151,7 +151,7 @@ struct InviteGuardianView: View {
     private var instructionsPanel: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("如何使用")
-                .font(.system(size: 11))
+                .font(.scaled(size: 11))
                 .foregroundStyle(.secondary)
             instructionRow("1", text: "将邀请码发送给你信任的家人或朋友")
             instructionRow("2", text: "对方在「守灯」App 中输入邀请码")
@@ -171,11 +171,11 @@ struct InviteGuardianView: View {
                     .fill(safe.opacity(0.15))
                     .frame(width: 22, height: 22)
                 Text(number)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.scaled(size: 11, weight: .medium))
                     .foregroundStyle(safe)
             }
             Text(text)
-                .font(.system(size: 13))
+                .font(.scaled(size: 13))
                 .foregroundStyle(ink.opacity(0.8))
         }
     }

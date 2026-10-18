@@ -75,16 +75,16 @@ struct GuardianPlanBillingView: View {
     private var heroSection: some View {
         VStack(spacing: 8) {
             Image(systemName: "shield.checkered")
-                .font(.system(size: 36))
+                .font(.scaled(size: 36))
                 .foregroundStyle(accent)
                 .padding(.top, 12)
 
             Text("守护，不止一种方式")
-                .font(.system(size: 22, weight: .bold))
+                .font(.scaled(size: 22, weight: .bold))
                 .foregroundStyle(ink)
 
             Text("仅守护者需要付费 · 按家庭计费")
-                .font(.system(size: 14))
+                .font(.scaled(size: 14))
                 .foregroundStyle(.secondary)
         }
         .padding(.bottom, 4)
@@ -97,15 +97,15 @@ struct GuardianPlanBillingView: View {
         if let status = coordinator.storeKitManager.subscriptionStatus, status.isActive {
             HStack(spacing: 10) {
                 Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: 18))
+                    .font(.scaled(size: 18))
                     .foregroundStyle(safe)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("当前方案：\(coordinator.storeKitManager.planDisplayName(for: status.planId))")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.scaled(size: 14, weight: .semibold))
                         .foregroundStyle(ink)
                     if let expires = status.expiresDate {
                         Text("有效期至 \(expires.formatted(.dateTime.year().month().day()))")
-                            .font(.system(size: 13))
+                            .font(.scaled(size: 13))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -131,10 +131,10 @@ struct GuardianPlanBillingView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Text(cycle.rawValue)
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.scaled(size: 14, weight: .medium))
                         if cycle == .yearly {
                             Text("省20%")
-                                .font(.system(size: 12, weight: .bold))
+                                .font(.scaled(size: 12, weight: .bold))
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
@@ -302,7 +302,7 @@ struct GuardianPlanBillingView: View {
     private var paymentMethodSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("支付方式")
-                .font(.system(size: 13, weight: .semibold))
+                .font(.scaled(size: 13, weight: .semibold))
                 .foregroundStyle(ink)
 
             VStack(spacing: 0) {
@@ -327,7 +327,7 @@ struct GuardianPlanBillingView: View {
                     .frame(width: 28, height: 28)
 
                 Text(method.displayName)
-                    .font(.system(size: 14))
+                    .font(.scaled(size: 14))
                     .foregroundStyle(ink)
 
                 Spacer()
@@ -335,7 +335,7 @@ struct GuardianPlanBillingView: View {
                 Image(systemName: selectedPayment == method
                       ? "checkmark.circle.fill"
                       : "circle")
-                    .font(.system(size: 18))
+                    .font(.scaled(size: 18))
                     .foregroundStyle(selectedPayment == method ? accent : Color(.systemGray4))
             }
             .padding(.horizontal, 14)
@@ -350,11 +350,11 @@ struct GuardianPlanBillingView: View {
         switch method {
         case .applePay:
             Image(systemName: "apple.logo")
-                .font(.system(size: 18))
+                .font(.scaled(size: 18))
                 .foregroundStyle(ink)
         case .creditCard:
             Image(systemName: "creditcard.fill")
-                .font(.system(size: 16))
+                .font(.scaled(size: 16))
                 .foregroundStyle(.blue)
         case .alipay:
             ZStack {
@@ -362,7 +362,7 @@ struct GuardianPlanBillingView: View {
                     .fill(Color(red: 0.02, green: 0.55, blue: 0.95))
                     .frame(width: 28, height: 28)
                 Text("支")
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.scaled(size: 14, weight: .bold))
                     .foregroundStyle(.white)
             }
         case .wechatPay:
@@ -371,7 +371,7 @@ struct GuardianPlanBillingView: View {
                     .fill(Color(red: 0.07, green: 0.73, blue: 0.31))
                     .frame(width: 28, height: 28)
                 Image(systemName: "message.fill")
-                    .font(.system(size: 13))
+                    .font(.scaled(size: 13))
                     .foregroundStyle(.white)
             }
         case .paypal:
@@ -380,7 +380,7 @@ struct GuardianPlanBillingView: View {
                     .fill(Color(red: 0.0, green: 0.19, blue: 0.56))
                     .frame(width: 28, height: 28)
                 Text("P")
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.scaled(size: 16, weight: .bold))
                     .foregroundStyle(.white)
             }
         }
@@ -391,7 +391,7 @@ struct GuardianPlanBillingView: View {
     private var featureComparison: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("方案对比")
-                .font(.system(size: 13, weight: .semibold))
+                .font(.scaled(size: 13, weight: .semibold))
                 .foregroundStyle(ink)
                 .padding(.horizontal, 12)
                 .padding(.top, 14)
@@ -400,23 +400,23 @@ struct GuardianPlanBillingView: View {
             // Header row
             HStack(spacing: 0) {
                 Text("功能")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.scaled(size: 12, weight: .medium))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Text("免费")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.scaled(size: 12, weight: .medium))
                     .foregroundStyle(.secondary)
                     .frame(width: 40)
                 Text("单人")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.scaled(size: 12, weight: .medium))
                     .foregroundStyle(safe)
                     .frame(width: 40)
                 Text("家庭")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.scaled(size: 12, weight: .medium))
                     .foregroundStyle(accent)
                     .frame(width: 40)
                 Text("企业")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.scaled(size: 12, weight: .medium))
                     .foregroundStyle(warm)
                     .frame(width: 40)
             }
@@ -445,23 +445,23 @@ struct GuardianPlanBillingView: View {
     private func comparisonRow(_ feature: String, free: String, single: String, family: String, ultimate: String) -> some View {
         HStack(spacing: 0) {
             Text(feature)
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(ink)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Text(free)
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
                 .frame(width: 40)
             Text(single)
-                .font(.system(size: 12, weight: .medium))
+                .font(.scaled(size: 12, weight: .medium))
                 .foregroundStyle(safe)
                 .frame(width: 40)
             Text(family)
-                .font(.system(size: 12, weight: .medium))
+                .font(.scaled(size: 12, weight: .medium))
                 .foregroundStyle(accent)
                 .frame(width: 40)
             Text(ultimate)
-                .font(.system(size: 12, weight: .medium))
+                .font(.scaled(size: 12, weight: .medium))
                 .foregroundStyle(warm)
                 .frame(width: 40)
         }
@@ -472,7 +472,7 @@ struct GuardianPlanBillingView: View {
     private func comparisonRow(_ feature: String, free: Bool, single: Bool, family: Bool, ultimate: Bool) -> some View {
         HStack(spacing: 0) {
             Text(feature)
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(ink)
                 .frame(maxWidth: .infinity, alignment: .leading)
             checkmark(free, color: .secondary).frame(width: 40)
@@ -486,7 +486,7 @@ struct GuardianPlanBillingView: View {
 
     private func checkmark(_ on: Bool, color: Color) -> some View {
         Image(systemName: on ? "checkmark" : "minus")
-            .font(.system(size: 11, weight: .semibold))
+            .font(.scaled(size: 11, weight: .semibold))
             .foregroundStyle(on ? color : Color(.systemGray4))
     }
 
@@ -496,14 +496,14 @@ struct GuardianPlanBillingView: View {
         VStack(spacing: 8) {
             HStack(spacing: 8) {
                 Image(systemName: "questionmark.circle")
-                    .font(.system(size: 16))
+                    .font(.scaled(size: 16))
                     .foregroundStyle(ink.opacity(0.6))
                 Text("需要定制方案？")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.scaled(size: 15, weight: .semibold))
                     .foregroundStyle(ink)
             }
             Text("超大型组织、特殊需求或批量折扣，请联系我们获取专属报价")
-                .font(.system(size: 13))
+                .font(.scaled(size: 13))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Button {
@@ -512,7 +512,7 @@ struct GuardianPlanBillingView: View {
                 }
             } label: {
                 Text("联系我们")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.scaled(size: 14, weight: .medium))
                     .foregroundStyle(accent)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 10)
@@ -535,14 +535,14 @@ struct GuardianPlanBillingView: View {
             // Error
             if let error = coordinator.storeKitManager.errorMessage {
                 Text(error)
-                    .font(.system(size: 13))
+                    .font(.scaled(size: 13))
                     .foregroundStyle(.red)
                     .multilineTextAlignment(.center)
             }
 
             if let error = coordinator.paymentMethodManager.errorMessage {
                 Text(error)
-                    .font(.system(size: 13))
+                    .font(.scaled(size: 13))
                     .foregroundStyle(.red)
                     .multilineTextAlignment(.center)
             }
@@ -556,9 +556,9 @@ struct GuardianPlanBillingView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "gear")
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                         Text("管理订阅")
-                            .font(.system(size: 13))
+                            .font(.scaled(size: 13))
                     }
                     .foregroundStyle(accent)
                 }
@@ -572,14 +572,14 @@ struct GuardianPlanBillingView: View {
                 }
             } label: {
                 Text("恢复购买")
-                    .font(.system(size: 13))
+                    .font(.scaled(size: 13))
                     .foregroundStyle(.secondary)
             }
             .disabled(coordinator.storeKitManager.isLoading)
 
             // Legal
             Text("通过 Apple Pay 订阅将通过您的 Apple ID 账户扣款。其他支付方式通过第三方支付平台处理。除非在当前订阅期结束前至少 24 小时关闭自动续订，否则订阅将自动续订。")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 8)
@@ -616,20 +616,20 @@ private struct PlanCardView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 6) {
                             Image(systemName: icon)
-                                .font(.system(size: 15))
+                                .font(.scaled(size: 15))
                                 .foregroundStyle(iconColor)
                             Text(planName)
-                                .font(.system(size: 17, weight: .bold))
+                                .font(.scaled(size: 17, weight: .bold))
                                 .foregroundStyle(ink)
                         }
                         Text(subtitle)
-                            .font(.system(size: 13))
+                            .font(.scaled(size: 13))
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
                     if isPopular {
                         Text("推荐")
-                            .font(.system(size: 12, weight: .bold))
+                            .font(.scaled(size: 12, weight: .bold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
@@ -641,14 +641,14 @@ private struct PlanCardView: View {
                 // Price
                 HStack(alignment: .firstTextBaseline, spacing: 2) {
                     Text(price)
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.scaled(size: 28, weight: .bold, design: .rounded))
                         .foregroundStyle(ink)
                     Text(period)
-                        .font(.system(size: 13))
+                        .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                     Spacer()
                     Text(usdPrice + period)
-                        .font(.system(size: 13))
+                        .font(.scaled(size: 13))
                         .foregroundStyle(.tertiary)
                 }
 
@@ -662,11 +662,11 @@ private struct PlanCardView: View {
                     ForEach(Array(benefits.enumerated()), id: \.offset) { _, benefit in
                         HStack(spacing: 8) {
                             Image(systemName: benefit.icon)
-                                .font(.system(size: 12))
+                                .font(.scaled(size: 12))
                                 .foregroundStyle(accentColor)
                                 .frame(width: 20)
                             Text(benefit.text)
-                                .font(.system(size: 13))
+                                .font(.scaled(size: 13))
                                 .foregroundStyle(ink)
                         }
                     }
@@ -678,9 +678,9 @@ private struct PlanCardView: View {
                         Spacer()
                         HStack(spacing: 4) {
                             Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 13))
+                                .font(.scaled(size: 13))
                             Text("当前方案")
-                                .font(.system(size: 14, weight: .semibold))
+                                .font(.scaled(size: 14, weight: .semibold))
                         }
                         .foregroundStyle(accentColor)
                         .padding(.vertical, 12)
@@ -697,7 +697,7 @@ private struct PlanCardView: View {
                                     .tint(.white)
                             } else {
                                 Text("立即订阅")
-                                    .font(.system(size: 15, weight: .semibold))
+                                    .font(.scaled(size: 15, weight: .semibold))
                             }
                             Spacer()
                         }

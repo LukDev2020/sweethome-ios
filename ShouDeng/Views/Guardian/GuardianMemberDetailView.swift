@@ -26,9 +26,9 @@ struct GuardianMemberDetailView: View {
                     // Header
                     VStack(spacing: 2) {
                         Text(person.user.displayName)
-                            .font(.system(size: 20, weight: .bold))
+                            .font(.scaled(size: 20, weight: .bold))
                         Text(headerSubtitle(person))
-                            .font(.system(size: 13))
+                            .font(.scaled(size: 13))
                             .foregroundStyle(.secondary)
                     }
                     .padding(.top, 8)
@@ -52,14 +52,14 @@ struct GuardianMemberDetailView: View {
                     } label: {
                         HStack(spacing: 8) {
                             Image(systemName: "phone.arrow.up.right.fill")
-                                .font(.system(size: 14))
+                                .font(.scaled(size: 14))
                                 .foregroundStyle(.red)
                             Text("紧急救援电话")
-                                .font(.system(size: 13, weight: .medium))
+                                .font(.scaled(size: 13, weight: .medium))
                                 .foregroundStyle(ink)
                             Spacer()
                             Image(systemName: "chevron.right")
-                                .font(.system(size: 11))
+                                .font(.scaled(size: 11))
                                 .foregroundStyle(.secondary)
                         }
                         .padding(12)
@@ -104,7 +104,7 @@ struct GuardianMemberDetailView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Text("你正在值班")
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(safe)
             }
         }
@@ -149,7 +149,7 @@ struct GuardianMemberDetailView: View {
                 .overlay(alignment: .bottomLeading) {
                     if let addr = loc.address, !addr.isEmpty {
                         Text(addr)
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
@@ -165,10 +165,10 @@ struct GuardianMemberDetailView: View {
                         .frame(height: 160)
                     VStack(spacing: 4) {
                         Image(systemName: "mappin.slash")
-                            .font(.system(size: 28))
+                            .font(.scaled(size: 28))
                             .foregroundStyle(.secondary)
                         Text("暂无位置信息")
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -181,7 +181,7 @@ struct GuardianMemberDetailView: View {
     private func statusPanel(_ person: ProtectedPerson) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("此刻")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             statusRow("状态", value: statusText(person.status), isOk: person.status == .normal)
             if let battery = person.batteryLevel {
@@ -222,10 +222,10 @@ struct GuardianMemberDetailView: View {
 
     private func statusRow(_ label: String, value: String, isOk: Bool) -> some View {
         HStack {
-            Text(label).font(.system(size: 13))
+            Text(label).font(.scaled(size: 13))
             Spacer()
             Text(value)
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(isOk ? safe : .primary)
         }
         .padding(.vertical, 2)
@@ -263,11 +263,11 @@ struct GuardianMemberDetailView: View {
     private func timelineRow(time: String, event: String) -> some View {
         HStack {
             Text(time)
-                .font(.system(size: 12, weight: .medium, design: .monospaced))
+                .font(.scaled(size: 12, weight: .medium, design: .monospaced))
                 .foregroundStyle(.secondary)
                 .frame(width: 44, alignment: .trailing)
             Text(event)
-                .font(.system(size: 12.5))
+                .font(.scaled(size: 12.5))
             Spacer()
         }
         .padding(.horizontal, 12)
@@ -284,10 +284,10 @@ struct GuardianMemberDetailView: View {
         Button(action: action) {
             HStack(spacing: 6) {
                 Image(systemName: icon)
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                 Text(title)
             }
-            .font(.system(size: 14, weight: .medium))
+            .font(.scaled(size: 14, weight: .medium))
             .foregroundStyle(ink)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)

@@ -28,7 +28,7 @@ struct VerticalTabRail: View {
                     onInvite?()
                 } label: {
                     Image(systemName: "person.badge.plus")
-                        .font(.system(size: 20))
+                        .font(.scaled(size: 20))
                         .foregroundStyle(lamp)
                         .frame(width: 44, height: 44)
                 }
@@ -45,7 +45,7 @@ struct VerticalTabRail: View {
                         selectedTab = tab.id
                     } label: {
                         Image(systemName: tab.icon)
-                            .font(.system(size: 20))
+                            .font(.scaled(size: 20))
                             .foregroundStyle(selectedTab == tab.id ? inkDeep : .white.opacity(0.5))
                             .frame(width: 52, height: 52)
                             .background(

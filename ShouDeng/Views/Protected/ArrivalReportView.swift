@@ -49,15 +49,15 @@ struct ArrivalReportView: View {
     private var reportForm: some View {
         VStack(spacing: 20) {
             Image(systemName: "mappin.circle.fill")
-                .font(.system(size: 48))
+                .font(.scaled(size: 48))
                 .foregroundStyle(safe)
 
             Text("报告到达")
-                .font(.system(size: 20, weight: .semibold))
+                .font(.scaled(size: 20, weight: .semibold))
                 .foregroundStyle(ink)
 
             Text("一键告知守护者你已安全到达")
-                .font(.system(size: 14))
+                .font(.scaled(size: 14))
                 .foregroundStyle(.secondary)
 
             // Quick place tags
@@ -68,7 +68,7 @@ struct ArrivalReportView: View {
                             placeName = place
                         } label: {
                             Text(place)
-                                .font(.system(size: 13))
+                                .font(.scaled(size: 13))
                                 .foregroundStyle(placeName == place ? .white : ink)
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 7)
@@ -96,7 +96,7 @@ struct ArrivalReportView: View {
                         Image(systemName: "checkmark.circle.fill")
                     }
                     Text("我到了")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.scaled(size: 16, weight: .semibold))
                 }
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
@@ -114,21 +114,21 @@ struct ArrivalReportView: View {
     private var sentConfirmation: some View {
         VStack(spacing: 16) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 56))
+                .font(.scaled(size: 56))
                 .foregroundStyle(safe)
 
             Text("已通知守护者")
-                .font(.system(size: 20, weight: .semibold))
+                .font(.scaled(size: 20, weight: .semibold))
                 .foregroundStyle(ink)
 
             if !placeName.isEmpty {
                 Text("你已安全到达「\(placeName)」")
-                    .font(.system(size: 14))
+                    .font(.scaled(size: 14))
                     .foregroundStyle(.secondary)
             }
 
             Button("完成") { dismiss() }
-                .font(.system(size: 15, weight: .medium))
+                .font(.scaled(size: 15, weight: .medium))
                 .foregroundStyle(safe)
                 .padding(.top, 8)
         }

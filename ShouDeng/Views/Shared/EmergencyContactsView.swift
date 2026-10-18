@@ -27,12 +27,12 @@ struct EmergencyContactsView: View {
                 // Header
                 VStack(spacing: 4) {
                     Image(systemName: "phone.arrow.up.right.fill")
-                        .font(.system(size: 28))
+                        .font(.scaled(size: 28))
                         .foregroundStyle(alert)
                     Text("紧急救援电话")
-                        .font(.system(size: 18, weight: .bold))
+                        .font(.scaled(size: 18, weight: .bold))
                     Text("\(personName)所在地区: \(regionInfo.regionName)")
-                        .font(.system(size: 13))
+                        .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                 }
                 .padding(.top, 8)
@@ -45,7 +45,7 @@ struct EmergencyContactsView: View {
 
                 // Tip
                 Text("紧急情况下，优先拨打当地急救电话。自定义联络人可提前录入邻居、社区工作人员、当地医院等信息。")
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 16)
@@ -91,11 +91,11 @@ struct EmergencyContactsView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("当地紧急号码")
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
                 Spacer()
                 Text("区号: \(regionInfo.areaCode)")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.scaled(size: 12, weight: .medium))
                     .foregroundStyle(ink)
             }
 
@@ -123,16 +123,16 @@ struct EmergencyContactsView: View {
     private func emergencyNumberRow(icon: String, iconColor: Color, label: String, number: String, note: String?) -> some View {
         HStack(spacing: 10) {
             Image(systemName: icon)
-                .font(.system(size: 14))
+                .font(.scaled(size: 14))
                 .foregroundStyle(iconColor)
                 .frame(width: 24)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(label)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.scaled(size: 13, weight: .medium))
                 if let note {
                     Text(note)
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -143,7 +143,7 @@ struct EmergencyContactsView: View {
                 callNumber(number)
             } label: {
                 Text(number)
-                    .font(.system(size: 15, weight: .bold, design: .monospaced))
+                    .font(.scaled(size: 15, weight: .bold, design: .monospaced))
                     .foregroundStyle(alert)
             }
         }
@@ -156,7 +156,7 @@ struct EmergencyContactsView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("自定义紧急联络人")
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
                 Spacer()
                 Button {
@@ -164,9 +164,9 @@ struct EmergencyContactsView: View {
                 } label: {
                     HStack(spacing: 2) {
                         Image(systemName: "plus.circle")
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                         Text("添加")
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                     }
                     .foregroundStyle(safe)
                 }
@@ -177,13 +177,13 @@ struct EmergencyContactsView: View {
                     Spacer()
                     VStack(spacing: 6) {
                         Image(systemName: "person.crop.circle.badge.plus")
-                            .font(.system(size: 24))
+                            .font(.scaled(size: 24))
                             .foregroundStyle(.tertiary)
                         Text("暂无自定义联络人")
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                             .foregroundStyle(.tertiary)
                         Text("可以录入邻居、社区、当地医院等")
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                             .foregroundStyle(.quaternary)
                     }
                     .padding(.vertical, 16)
@@ -209,19 +209,19 @@ struct EmergencyContactsView: View {
                     .fill(safe.opacity(0.12))
                     .frame(width: 32, height: 32)
                 Text(String(contact.name.prefix(1)))
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.scaled(size: 13, weight: .medium))
                     .foregroundStyle(safe)
             }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(contact.name)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.scaled(size: 13, weight: .medium))
                 Text(contact.relationship)
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
                 if !contact.address.isEmpty {
                     Text(contact.address)
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(.tertiary)
                         .lineLimit(1)
                 }
@@ -234,16 +234,16 @@ struct EmergencyContactsView: View {
                     Button { callNumber(contact.phone) } label: {
                         HStack(spacing: 3) {
                             Image(systemName: "phone.fill")
-                                .font(.system(size: 10))
+                                .font(.scaled(size: 10))
                             Text(contact.phone)
-                                .font(.system(size: 12, design: .monospaced))
+                                .font(.scaled(size: 12, design: .monospaced))
                         }
                         .foregroundStyle(safe)
                     }
                 }
                 if !contact.email.isEmpty {
                     Text(contact.email)
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -308,9 +308,9 @@ struct AddEmergencyContactView: View {
                     } label: {
                         HStack {
                             Image(systemName: "person.crop.circle.badge.plus")
-                                .font(.system(size: 18))
+                                .font(.scaled(size: 18))
                             Text("从通讯录选择")
-                                .font(.system(size: 14, weight: .medium))
+                                .font(.scaled(size: 14, weight: .medium))
                         }
                         .foregroundStyle(safe)
                         .frame(maxWidth: .infinity)
@@ -359,7 +359,7 @@ struct AddEmergencyContactView: View {
                         dismiss()
                     }
                     .disabled(name.isEmpty || phone.isEmpty)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.scaled(size: 14, weight: .medium))
                     .foregroundStyle(safe)
                 }
             }

@@ -41,10 +41,10 @@ struct GuardianAlertResponseView: View {
                     // Header — real data
                     VStack(spacing: 2) {
                         Text("\(personName)正在求助")
-                            .font(.system(size: 20, weight: .bold))
+                            .font(.scaled(size: 20, weight: .bold))
                             .foregroundStyle(alert)
                         Text(headerSubtitle)
-                            .font(.system(size: 13))
+                            .font(.scaled(size: 13))
                             .foregroundStyle(.secondary)
                     }
                     .padding(.top, 8)
@@ -61,7 +61,7 @@ struct GuardianAlertResponseView: View {
                             }
                         } label: {
                             Text("立即拨号")
-                                .font(.system(size: 13.5, weight: .medium))
+                                .font(.scaled(size: 13.5, weight: .medium))
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
@@ -74,7 +74,7 @@ struct GuardianAlertResponseView: View {
                             showClaimMaterialsPrompt = true
                         } label: {
                             Text("我已接手")
-                                .font(.system(size: 13.5, weight: .medium))
+                                .font(.scaled(size: 13.5, weight: .medium))
                                 .foregroundStyle(ink)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
@@ -97,7 +97,7 @@ struct GuardianAlertResponseView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Text("警报中")
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(alert)
                 }
             }
@@ -157,7 +157,7 @@ struct GuardianAlertResponseView: View {
                 .overlay(alignment: .bottomLeading) {
                     if let accuracy = sosEvent?.location?.accuracy {
                         Text("精度约 \(Int(accuracy)) 米")
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
@@ -185,7 +185,7 @@ struct GuardianAlertResponseView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .overlay(alignment: .bottomLeading) {
                     Text("最后已知位置")
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
@@ -200,10 +200,10 @@ struct GuardianAlertResponseView: View {
                         .frame(height: 180)
                     VStack(spacing: 4) {
                         Image(systemName: "mappin.slash")
-                            .font(.system(size: 28))
+                            .font(.scaled(size: 28))
                             .foregroundStyle(alert)
                         Text("暂无位置信息")
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -229,7 +229,7 @@ struct GuardianAlertResponseView: View {
         return VStack(spacing: 0) {
             HStack {
                 Text("升级链")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.scaled(size: 12, weight: .medium))
                     .foregroundStyle(alert)
                 Spacer()
             }
@@ -268,15 +268,15 @@ struct GuardianAlertResponseView: View {
                     .fill(state == .done ? safe : state == .live ? alert : Color(.systemGray5))
                     .frame(width: 19, height: 19)
                 Text(number)
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(state == .waiting ? Color.secondary : Color.white)
             }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 12.5, weight: .medium))
+                    .font(.scaled(size: 12.5, weight: .medium))
                 Text(detail)
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
             }
             Spacer()
@@ -297,7 +297,7 @@ struct GuardianAlertResponseView: View {
     private var sceneInfoPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("现场信息")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             if let battery = person?.batteryLevel ?? sosEvent?.batteryLevel {
                 let pct = Int(battery * 100)
@@ -333,10 +333,10 @@ struct GuardianAlertResponseView: View {
 
     private func infoRow(_ label: String, value: String, isAlert: Bool) -> some View {
         HStack {
-            Text(label).font(.system(size: 13))
+            Text(label).font(.scaled(size: 13))
             Spacer()
             Text(value)
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(isAlert ? alert : .secondary)
         }
         .padding(.vertical, 2)

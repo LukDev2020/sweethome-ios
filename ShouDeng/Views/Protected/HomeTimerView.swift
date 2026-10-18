@@ -53,15 +53,15 @@ struct HomeTimerView: View {
             Spacer()
 
             Image(systemName: "house.fill")
-                .font(.system(size: 48))
+                .font(.scaled(size: 48))
                 .foregroundStyle(safe.opacity(0.6))
 
             Text("设置回家时间")
-                .font(.system(size: 20, weight: .semibold))
+                .font(.scaled(size: 20, weight: .semibold))
                 .foregroundStyle(ink)
 
             Text("如果到时间还没有关闭计时器，\n系统会自动通知你的守护者。")
-                .font(.system(size: 14))
+                .font(.scaled(size: 14))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
@@ -91,7 +91,7 @@ struct HomeTimerView: View {
                             .tint(.white)
                     }
                     Text("开始计时")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.scaled(size: 16, weight: .semibold))
                 }
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
@@ -105,7 +105,7 @@ struct HomeTimerView: View {
             Spacer()
 
             Text("常用场景：夜间回家、独自出门、见陌生人")
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary.opacity(0.6))
                 .padding(.bottom, 16)
         }
@@ -138,28 +138,28 @@ struct HomeTimerView: View {
                 VStack(spacing: 4) {
                     if isExpired {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.system(size: 32))
+                            .font(.scaled(size: 32))
                             .foregroundStyle(alert)
                         Text("已超时")
-                            .font(.system(size: 16, weight: .bold))
+                            .font(.scaled(size: 16, weight: .bold))
                             .foregroundStyle(alert)
                     } else {
                         Text(String(format: "%02d:%02d:%02d", hours, minutes, seconds))
-                            .font(.system(size: 36, weight: .bold, design: .monospaced))
+                            .font(.scaled(size: 36, weight: .bold, design: .monospaced))
                             .foregroundStyle(ink)
                         Text("剩余时间")
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                             .foregroundStyle(.secondary)
                     }
                 }
             }
 
             Text(activeLabel ?? label)
-                .font(.system(size: 18, weight: .medium))
+                .font(.scaled(size: 18, weight: .medium))
                 .foregroundStyle(ink)
 
             Text("到达后请关闭计时器")
-                .font(.system(size: 14))
+                .font(.scaled(size: 14))
                 .foregroundStyle(.secondary)
 
             Button {
@@ -168,7 +168,7 @@ struct HomeTimerView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill")
                     Text("我到了，关闭计时")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.scaled(size: 16, weight: .semibold))
                 }
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)

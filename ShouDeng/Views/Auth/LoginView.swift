@@ -75,16 +75,16 @@ struct LoginView: View {
             Spacer()
 
             Image(systemName: "lock.shield.fill")
-                .font(.system(size: 48))
+                .font(.scaled(size: 48))
                 .foregroundStyle(navy.opacity(0.6))
                 .padding(.bottom, 20)
 
             Text(lang.localized("login.locked.title"))
-                .font(.system(size: 24, weight: .bold, design: .serif))
+                .font(.scaled(size: 24, weight: .bold, design: .serif))
                 .foregroundStyle(navy)
 
             Text(lang.localized("login.locked.message"))
-                .font(.system(size: 14))
+                .font(.scaled(size: 14))
                 .foregroundStyle(ink2)
                 .multilineTextAlignment(.center)
                 .lineSpacing(4)
@@ -96,10 +96,10 @@ struct LoginView: View {
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "envelope.fill")
-                        .font(.system(size: 13))
+                        .font(.scaled(size: 13))
                     Text(lang.localized("login.locked.contact"))
                 }
-                .font(.system(size: 15.5, weight: .medium))
+                .font(.scaled(size: 15.5, weight: .medium))
                 .foregroundStyle(cream)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
@@ -166,9 +166,9 @@ struct LoginView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "arrow.counterclockwise")
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(.scaled(size: 11, weight: .semibold))
                         Text(lang.localized("login.reset"))
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                     }
                     .foregroundStyle(navy.opacity(0.6))
                     .padding(.horizontal, 10)
@@ -188,7 +188,7 @@ struct LoginView: View {
                         lang.current = language
                     } label: {
                         Text(language.displayName)
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                             .foregroundStyle(lang.current == language ? navy : ink3)
                             .padding(.horizontal, 9)
                             .padding(.vertical, 4)
@@ -226,19 +226,19 @@ struct LoginView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
                 Text(lang.localized("app.name"))
-                    .font(.system(size: 29, weight: .black, design: .serif))
+                    .font(.scaled(size: 29, weight: .black, design: .serif))
                     .foregroundStyle(navy)
                     .tracking(1.5)
                     .padding(.top, 10)
 
                 Text(lang.current == .chinese ? "VELA" : "守灯")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.scaled(size: 12, weight: .medium))
                     .foregroundStyle(blue)
                     .tracking(3.5)
                     .padding(.top, 4)
 
                 Text(lang.localized("app.tagline"))
-                    .font(.system(size: 13.5))
+                    .font(.scaled(size: 13.5))
                     .foregroundStyle(ink2)
                     .multilineTextAlignment(.center)
                     .lineSpacing(4)
@@ -258,12 +258,12 @@ struct LoginView: View {
                     } label: {
                         HStack(spacing: 5) {
                             Text(selectedCountry.flag)
-                                .font(.system(size: 18))
+                                .font(.scaled(size: 18))
                             Text(selectedCountry.dialCode)
-                                .font(.system(size: 14))
+                                .font(.scaled(size: 14))
                                 .foregroundStyle(ink)
                             Image(systemName: "chevron.down")
-                                .font(.system(size: 9, weight: .semibold))
+                                .font(.scaled(size: 9, weight: .semibold))
                                 .foregroundStyle(ink3)
                         }
                         .padding(.horizontal, 12)
@@ -279,7 +279,7 @@ struct LoginView: View {
                     }
 
                     TextField(lang.localized("login.phone.placeholder"), text: $phone)
-                        .font(.system(size: 15))
+                        .font(.scaled(size: 15))
                         .foregroundStyle(ink)
                         .keyboardType(.phonePad)
                         .textContentType(.telephoneNumber)
@@ -297,7 +297,7 @@ struct LoginView: View {
 
                 if codeSent {
                     TextField(lang.localized("login.code.placeholder"), text: $code)
-                        .font(.system(size: 15))
+                        .font(.scaled(size: 15))
                         .foregroundStyle(ink)
                         .keyboardType(.numberPad)
                         .textContentType(.oneTimeCode)
@@ -321,13 +321,13 @@ struct LoginView: View {
             if let errorMessage {
                 VStack(spacing: 4) {
                     Text(errorMessage)
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(red)
 
                     if codeSent && failedAttempts > 0 {
                         let remaining = maxAttempts - failedAttempts
                         Text(String(format: lang.localized("login.attempts.warning"), remaining))
-                            .font(.system(size: 12, weight: .medium))
+                            .font(.scaled(size: 12, weight: .medium))
                             .foregroundStyle(remaining <= 2 ? red : ink3)
                     }
                 }
@@ -351,7 +351,7 @@ struct LoginView: View {
                                 : lang.localized("login.get.code")))
                     }
                 }
-                .font(.system(size: 15.5, weight: .medium))
+                .font(.scaled(size: 15.5, weight: .medium))
                 .foregroundStyle(buttonDisabled ? navy.opacity(0.55) : cream)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)

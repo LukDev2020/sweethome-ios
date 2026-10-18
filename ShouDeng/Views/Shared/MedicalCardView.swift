@@ -71,7 +71,7 @@ struct MedicalCardView: View {
                     HStack(spacing: 8) {
                         Image(systemName: "eye.fill")
                         Text("预览急救卡")
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.scaled(size: 14, weight: .medium))
                     }
                     .foregroundStyle(safe)
                     .frame(maxWidth: .infinity)
@@ -152,7 +152,7 @@ struct MedicalCardView: View {
                 }
 
                 Text("此信息存储在服务器，可通过紧急分享链接供急救人员查看。不需要解锁手机。")
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(.secondary.opacity(0.7))
                     .padding(.top, 8)
                     .padding(.bottom, 24)
@@ -166,7 +166,7 @@ struct MedicalCardView: View {
     private func section<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
-                .font(.system(size: 12))
+                .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             content()
         }
@@ -182,10 +182,10 @@ struct MedicalCardView: View {
             ForEach(Array(items.enumerated()), id: \.offset) { index, item in
                 HStack(spacing: 4) {
                     Text(item)
-                        .font(.system(size: 13))
+                        .font(.scaled(size: 13))
                     Button { onRemove(index) } label: {
                         Image(systemName: "xmark")
-                            .font(.system(size: 9, weight: .bold))
+                            .font(.scaled(size: 9, weight: .bold))
                     }
                 }
                 .foregroundStyle(ink)
@@ -200,7 +200,7 @@ struct MedicalCardView: View {
     private func addField(text: Binding<String>, placeholder: String, onAdd: @escaping () -> Void) -> some View {
         HStack {
             TextField(placeholder, text: text)
-                .font(.system(size: 13))
+                .font(.scaled(size: 13))
                 .textFieldStyle(.roundedBorder)
             Button {
                 guard !text.wrappedValue.isEmpty else { return }
@@ -317,10 +317,10 @@ struct MedicalCardPreview: View {
                     // Header
                     HStack {
                         Image(systemName: "staroflife.fill")
-                            .font(.system(size: 24))
+                            .font(.scaled(size: 24))
                             .foregroundStyle(alert)
                         Text("紧急医疗信息")
-                            .font(.system(size: 20, weight: .bold))
+                            .font(.scaled(size: 20, weight: .bold))
                         Spacer()
                     }
                     .padding(.bottom, 4)
@@ -373,10 +373,10 @@ struct MedicalCardPreview: View {
     private func previewRow(_ label: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label)
-                .font(.system(size: 12, weight: .medium))
+                .font(.scaled(size: 12, weight: .medium))
                 .foregroundStyle(.secondary)
             Text(value)
-                .font(.system(size: 18, weight: .semibold))
+                .font(.scaled(size: 18, weight: .semibold))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)

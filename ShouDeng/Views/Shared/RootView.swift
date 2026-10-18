@@ -26,6 +26,7 @@ private struct AuthenticatedRootView: View {
     @AppStorage("onboardingComplete") private var onboardingComplete = false
     @AppStorage("setupWizardComplete") private var setupWizardComplete = false
     @ObservedObject private var biometric = BiometricAuthManager.shared
+    @ObservedObject private var fontScale = FontScaleManager.shared
     @State private var showBiometricPrompt = false
 
     var body: some View {
@@ -83,6 +84,7 @@ private struct AuthenticatedRootView: View {
                 }
             }
         }
+        .id(fontScale.level.rawValue)
     }
 
     // MARK: - Beta Banner
@@ -115,7 +117,7 @@ private struct AuthenticatedRootView: View {
                 .frame(width: 96, height: 96)
                 .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
             Text("守灯")
-                .font(.system(size: 24, weight: .bold, design: .serif))
+                .font(.scaled(size: 24, weight: .bold, design: .serif))
                 .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -43,7 +43,7 @@ struct BiometricGateView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
                         Text("守灯")
-                            .font(.system(size: 29, weight: .black, design: .serif))
+                            .font(.scaled(size: 29, weight: .black, design: .serif))
                             .foregroundStyle(navy)
                             .tracking(1.5)
                     }
@@ -55,11 +55,11 @@ struct BiometricGateView: View {
                 } label: {
                     VStack(spacing: 12) {
                         Image(systemName: biometric.biometricIconName)
-                            .font(.system(size: 44))
+                            .font(.scaled(size: 44))
                             .foregroundStyle(navy.opacity(0.7))
 
                         Text("轻触以\(biometric.biometricName)解锁")
-                            .font(.system(size: 14))
+                            .font(.scaled(size: 14))
                             .foregroundStyle(ink2)
                     }
                 }
@@ -67,15 +67,24 @@ struct BiometricGateView: View {
 
                 Spacer()
 
-                // Fallback
+                // Fallback — logout and use OTP login
                 Button {
                     biometric.disable()
                     coordinator.authManager.logout()
                 } label: {
-                    Text("使用验证码登录")
-                        .font(.system(size: 13))
-                        .foregroundStyle(ink2)
-                        .underline()
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.right.square")
+                            .font(.scaled(size: 14))
+                        Text("使用验证码登录")
+                            .font(.scaled(size: 14, weight: .medium))
+                    }
+                    .foregroundStyle(navy.opacity(0.6))
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(navy.opacity(0.2), lineWidth: 1)
+                    )
                 }
                 .padding(.bottom, 48)
             }

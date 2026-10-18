@@ -33,19 +33,19 @@ struct FeatureDisclosureView: View {
 
             // Icon
             Image(systemName: feature.icon)
-                .font(.system(size: 36, weight: .light))
+                .font(.scaled(size: 36, weight: .light))
                 .foregroundStyle(lamp)
                 .padding(.bottom, 20)
 
             // Title
             Text(feature.title)
-                .font(.system(size: 20, weight: .bold, design: .serif))
+                .font(.scaled(size: 20, weight: .bold, design: .serif))
                 .foregroundStyle(ink)
                 .padding(.bottom, 14)
 
             // Body
             Text(feature.body)
-                .font(.system(size: 14))
+                .font(.scaled(size: 14))
                 .foregroundStyle(ink.opacity(0.72))
                 .lineSpacing(6)
                 .multilineTextAlignment(.leading)
@@ -63,7 +63,7 @@ struct FeatureDisclosureView: View {
                         onAcknowledge(false)
                     } label: {
                         Text("暂不开启")
-                            .font(.system(size: 15, weight: .medium))
+                            .font(.scaled(size: 15, weight: .medium))
                             .foregroundStyle(ink.opacity(0.6))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
@@ -76,7 +76,7 @@ struct FeatureDisclosureView: View {
                         onAcknowledge(true)
                     } label: {
                         Text("开启")
-                            .font(.system(size: 15, weight: .medium))
+                            .font(.scaled(size: 15, weight: .medium))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
@@ -92,7 +92,7 @@ struct FeatureDisclosureView: View {
                     onAcknowledge(true)
                 } label: {
                     Text(buttonText)
-                        .font(.system(size: 15, weight: .medium))
+                        .font(.scaled(size: 15, weight: .medium))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)

@@ -211,6 +211,7 @@ final class AppCoordinator: ObservableObject {
             "login_lockout_until",
             "signup_failed_attempts",
             "signup_lockout_until",
+            "setupWizardComplete",
         ]
         for key in userKeys {
             UserDefaults.standard.removeObject(forKey: key)

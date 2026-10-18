@@ -86,25 +86,25 @@ struct PrivacyPolicyView: View {
 
     private func sectionTitle(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 18, weight: .bold))
+            .font(.scaled(size: 18, weight: .bold))
             .padding(.bottom, 4)
     }
 
     private func lastUpdated(_ date: String) -> some View {
         Text("最后更新：\(date)")
-            .font(.system(size: 12))
+            .font(.scaled(size: 12))
             .foregroundStyle(.secondary)
     }
 
     private func sectionHeader(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 14, weight: .semibold))
+            .font(.scaled(size: 14, weight: .semibold))
             .padding(.top, 4)
     }
 
     private func bodyText(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 13))
+            .font(.scaled(size: 13))
             .foregroundStyle(.primary.opacity(0.85))
             .lineSpacing(4)
     }
@@ -112,12 +112,12 @@ struct PrivacyPolicyView: View {
     private func bulletPoint(_ title: String, detail: String) -> some View {
         HStack(alignment: .top, spacing: 8) {
             Text("•")
-                .font(.system(size: 13))
+                .font(.scaled(size: 13))
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.scaled(size: 13, weight: .medium))
                 Text(detail)
-                    .font(.system(size: 13))
+                    .font(.scaled(size: 13))
                     .foregroundStyle(.secondary)
                     .lineSpacing(3)
             }
@@ -146,14 +146,14 @@ struct AboutView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
                 Text("守灯")
-                    .font(.system(size: 24, weight: .bold, design: .serif))
+                    .font(.scaled(size: 24, weight: .bold, design: .serif))
 
                 Text("让每一盏灯都不孤单")
-                    .font(.system(size: 13))
+                    .font(.scaled(size: 13))
                     .foregroundStyle(.secondary)
 
                 Text("版本 \(version) (\(build))")
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(.tertiary)
 
                 Spacer()
@@ -163,11 +163,11 @@ struct AboutView: View {
                         showPrivacy = true
                     } label: {
                         Text("隐私政策与服务条款")
-                            .font(.system(size: 13))
+                            .font(.scaled(size: 13))
                     }
 
                     Text("© 2026 守灯安全")
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(.tertiary)
                 }
                 .padding(.bottom, 32)

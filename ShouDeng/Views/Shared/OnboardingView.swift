@@ -67,11 +67,11 @@ struct OnboardingView: View {
                     .padding(.top, 16)
                 Spacer()
                 Image(systemName: screens[currentPage].icon)
-                    .font(.system(size: 56, weight: .light))
+                    .font(.scaled(size: 56, weight: .light))
                     .foregroundStyle(lamp)
                     .frame(height: 70)
                 Text(screens[currentPage].title)
-                    .font(.system(size: 26, weight: .bold, design: .serif))
+                    .font(.scaled(size: 26, weight: .bold, design: .serif))
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                     .lineLimit(nil)
@@ -91,7 +91,7 @@ struct OnboardingView: View {
             VStack(spacing: 0) {
                 Spacer()
                 Text(screens[currentPage].body)
-                    .font(.system(size: 16))
+                    .font(.scaled(size: 16))
                     .foregroundStyle(.white.opacity(0.75))
                     .lineSpacing(6)
                     .multilineTextAlignment(.leading)
@@ -115,7 +115,7 @@ struct OnboardingView: View {
                     skipToHome()
                 } label: {
                     Text(lang.current == .chinese ? "跳过" : "Skip")
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.scaled(size: 14, weight: .medium))
                         .foregroundStyle(.white.opacity(0.6))
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
@@ -131,7 +131,7 @@ struct OnboardingView: View {
                         lang.current = language
                     } label: {
                         Text(language.displayName)
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                             .foregroundStyle(lang.current == language ? .white : .white.opacity(0.35))
                             .padding(.horizontal, 9)
                             .padding(.vertical, 4)
@@ -173,13 +173,13 @@ struct OnboardingView: View {
         VStack(spacing: 24) {
             // Icon
             Image(systemName: screen.icon)
-                .font(.system(size: 44, weight: .light))
+                .font(.scaled(size: 44, weight: .light))
                 .foregroundStyle(lamp)
                 .frame(height: 60)
 
             // Title
             Text(screen.title)
-                .font(.system(size: 24, weight: .bold, design: .serif))
+                .font(.scaled(size: 24, weight: .bold, design: .serif))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
                 .lineLimit(nil)
@@ -187,7 +187,7 @@ struct OnboardingView: View {
 
             // Body
             Text(screen.body)
-                .font(.system(size: 16))
+                .font(.scaled(size: 16))
                 .foregroundStyle(.white.opacity(0.75))
                 .lineSpacing(6)
                 .multilineTextAlignment(.leading)
@@ -215,7 +215,7 @@ struct OnboardingView: View {
             }
         } label: {
             Text(screen.buttonTitle)
-                .font(.system(size: 15, weight: .medium))
+                .font(.scaled(size: 15, weight: .medium))
                 .foregroundStyle(inkDeep)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 15)

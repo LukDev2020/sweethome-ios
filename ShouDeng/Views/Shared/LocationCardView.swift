@@ -60,7 +60,7 @@ struct LocationCardView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     if let label {
                         Text(label)
-                            .font(.system(size: 12, weight: .semibold))
+                            .font(.scaled(size: 12, weight: .semibold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
@@ -72,10 +72,10 @@ struct LocationCardView: View {
                         HStack(spacing: 4) {
                             Circle().fill(pin.color).frame(width: 6, height: 6)
                             Text(pin.name)
-                                .font(.system(size: 12, weight: .medium))
+                                .font(.scaled(size: 12, weight: .medium))
                             if let status = pin.status {
                                 Text("· \(status)")
-                                    .font(.system(size: 11))
+                                    .font(.scaled(size: 11))
                                     .foregroundStyle(.white.opacity(0.8))
                             }
                         }
@@ -86,7 +86,7 @@ struct LocationCardView: View {
                         .clipShape(Capsule())
                     } else if let mins = lastUpdateMinutes {
                         Text(mins < 1 ? "刚刚更新" : "\(mins) 分钟前更新")
-                            .font(.system(size: 11))
+                            .font(.scaled(size: 11))
                             .foregroundStyle(.white.opacity(0.9))
                             .padding(.horizontal, 7)
                             .padding(.vertical, 2)
@@ -109,9 +109,9 @@ struct LocationCardView: View {
                             } label: {
                                 HStack(spacing: 3) {
                                     Image(systemName: "arrow.down.right.and.arrow.up.left")
-                                        .font(.system(size: 9))
+                                        .font(.scaled(size: 9))
                                     Text("收起")
-                                        .font(.system(size: 12))
+                                        .font(.scaled(size: 12))
                                 }
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 8)
@@ -134,7 +134,7 @@ struct LocationCardView: View {
                     showFullScreenMap = true
                 } label: {
                     Image(systemName: "arrow.up.left.and.arrow.down.right")
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(.white)
                         .frame(width: 30, height: 30)
                         .background(ink.opacity(0.65))
@@ -146,7 +146,7 @@ struct LocationCardView: View {
             // Address from reverse geocoding
             if let address = addressText {
                 Text(address)
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(ink.opacity(0.6))
                     .lineLimit(2)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -229,7 +229,7 @@ struct LocationCardView: View {
                 }
             }
             Text(pin.name)
-                .font(.system(size: 11, weight: isFocused ? .semibold : .medium))
+                .font(.scaled(size: 11, weight: isFocused ? .semibold : .medium))
                 .foregroundStyle(ink)
                 .lineLimit(1)
         }
@@ -351,7 +351,7 @@ struct FullScreenMapView: View {
                         dismiss()
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 28))
+                            .font(.scaled(size: 28))
                             .foregroundStyle(.white, ink.opacity(0.6))
                     }
 
@@ -359,7 +359,7 @@ struct FullScreenMapView: View {
 
                     if let label {
                         Text(label)
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(.scaled(size: 13, weight: .semibold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 5)
@@ -375,7 +375,7 @@ struct FullScreenMapView: View {
                             .fill(safe.opacity(0.6))
                             .frame(width: 16, height: 3)
                         Text("24h 轨迹")
-                            .font(.system(size: 12))
+                            .font(.scaled(size: 12))
                     }
                     .foregroundStyle(.white)
                     .padding(.horizontal, 8)
@@ -394,7 +394,7 @@ struct FullScreenMapView: View {
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 } else if let address = addressText {
                     Text(address)
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
@@ -420,7 +420,7 @@ struct FullScreenMapView: View {
                                 HStack(spacing: 5) {
                                     Circle().fill(pin.color).frame(width: 8, height: 8)
                                     Text(pin.name)
-                                        .font(.system(size: 12, weight: selectedPin?.id == pin.id ? .bold : .medium))
+                                        .font(.scaled(size: 12, weight: selectedPin?.id == pin.id ? .bold : .medium))
                                 }
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 12)
@@ -443,11 +443,11 @@ struct FullScreenMapView: View {
             HStack {
                 Circle().fill(pin.color).frame(width: 10, height: 10)
                 Text(pin.name)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.scaled(size: 15, weight: .semibold))
                     .foregroundStyle(.white)
                 if let status = pin.status {
                     Text("· \(status)")
-                        .font(.system(size: 12))
+                        .font(.scaled(size: 12))
                         .foregroundStyle(.white.opacity(0.7))
                 }
                 Spacer()
@@ -455,19 +455,19 @@ struct FullScreenMapView: View {
                     withAnimation { selectedPin = nil }
                 } label: {
                     Image(systemName: "xmark")
-                        .font(.system(size: 11))
+                        .font(.scaled(size: 11))
                         .foregroundStyle(.white.opacity(0.6))
                 }
             }
             if let address = addressText {
                 Text(address)
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(.white.opacity(0.8))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             if let trail = trailCoordinates[pin.id] {
                 Text("过去 24 小时 · \(trail.count) 个位置记录")
-                    .font(.system(size: 12))
+                    .font(.scaled(size: 12))
                     .foregroundStyle(.white.opacity(0.5))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -496,7 +496,7 @@ struct FullScreenMapView: View {
                 }
             }
             Text(pin.name)
-                .font(.system(size: 12, weight: .semibold))
+                .font(.scaled(size: 12, weight: .semibold))
                 .foregroundStyle(ink)
                 .lineLimit(1)
         }
