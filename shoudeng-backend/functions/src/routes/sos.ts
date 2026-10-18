@@ -15,7 +15,7 @@ router.use(authMiddleware);
  * Trigger an SOS event from the protected person's device.
  * Creates a Firestore document which triggers the onSOSCreated escalation chain.
  */
-router.post("/trigger", async (req: Request, res: Response) => {
+router.post("/trigger", createRateLimiter(RATE_LIMITS.sos), async (req: Request, res: Response) => {
   const {
     protectedPersonId,
     triggerMethod,

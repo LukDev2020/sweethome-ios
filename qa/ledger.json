@@ -1,0 +1,157 @@
+{
+  "version": "1.0",
+  "branch": "qa/backend-harness",
+  "createdAt": "2026-10-17",
+  "updatedAt": "2026-10-17",
+  "findings": [
+    {
+      "id": "F-001",
+      "phase": 0,
+      "severity": "medium",
+      "category": "i18n",
+      "title": "FCM push notification bodies hardcoded in Chinese",
+      "file": "shoudeng-backend/functions/src/services/fcm.ts",
+      "description": "All push notification titles and bodies (SOS alert, checkin reminder, heartbeat missing, SOS resolved) are hardcoded in Chinese. No per-recipient locale routing.",
+      "testedBy": ["escalation.test.ts", "i18n.audit.test.ts", "crossborder.test.ts"],
+      "status": "open"
+    },
+    {
+      "id": "F-002",
+      "phase": 0,
+      "severity": "medium",
+      "category": "i18n",
+      "title": "SMS templates hardcoded in Chinese",
+      "file": "shoudeng-backend/functions/src/services/sms.ts",
+      "description": "All SMS templates (SOS, checkin reminder, verification) are hardcoded in Chinese only. No per-recipient locale.",
+      "testedBy": ["escalation.test.ts", "i18n.audit.test.ts", "crossborder.test.ts"],
+      "status": "open"
+    },
+    {
+      "id": "F-003",
+      "phase": 0,
+      "severity": "low",
+      "category": "i18n",
+      "title": "TwiML voice language based on protected person's country, not guardian's locale",
+      "file": "shoudeng-backend/functions/src/services/twilio.ts",
+      "description": "getTwimlLanguage() uses the protected person's countryCode to select voice language, but the guardian receiving the call may speak a different language.",
+      "testedBy": ["i18n.audit.test.ts", "crossborder.test.ts"],
+      "status": "open"
+    },
+    {
+      "id": "F-004",
+      "phase": 0,
+      "severity": "high",
+      "category": "security",
+      "title": "SOS rate limit preset exists but not mounted on route",
+      "file": "shoudeng-backend/functions/src/routes/sos.ts",
+      "description": "The 'sos' rate limit preset (3/hr) was not applied to the SOS trigger route. Fixed: added createRateLimiter(RATE_LIMITS.sos) middleware to POST /trigger.",
+      "status": "fixed"
+    },
+    {
+      "id": "F-005",
+      "phase": 1,
+      "severity": "low",
+      "category": "infrastructure",
+      "title": "Missing Storage and Pub/Sub emulators in firebase.json",
+      "file": "shoudeng-backend/firebase.json",
+      "description": "Storage and Pub/Sub emulators were not configured. Added in Phase 1 harness setup.",
+      "status": "fixed"
+    },
+    {
+      "id": "F-006",
+      "phase": 2,
+      "severity": "medium",
+      "category": "security",
+      "title": "10 Firestore collections have no explicit security rules",
+      "file": "shoudeng-backend/firestore.rules",
+      "description": "Collections checkins, home_timers, medical_cards, selected_hotlines, arrival_reports, itineraries, evidence_shares, medical_card_shares, rate_limits, claim_material_exports rely on default deny. This is secure but means the app is fully server-dependent for these collections.",
+      "testedBy": ["firestore.rules.test.ts"],
+      "status": "open"
+    },
+    {
+      "id": "F-007",
+      "phase": 0,
+      "severity": "low",
+      "category": "i18n",
+      "title": "iOS push action buttons hardcoded in Chinese",
+      "file": "ShouDeng/Services/Push/PushService.swift",
+      "description": "UNNotificationAction titles are hardcoded in Chinese: '我已接手', '立即拨号', '我知道了', '我很好，报个平安'. Should use NSLocalizedString.",
+      "testedBy": ["i18n.audit.test.ts"],
+      "status": "open"
+    },
+    {
+      "id": "F-008",
+      "phase": 0,
+      "severity": "low",
+      "category": "i18n",
+      "title": "iOS local notification content hardcoded in Chinese",
+      "file": "ShouDeng/Services/Push/PushService.swift",
+      "description": "Local notification titles and bodies (checkin reminder, duty handoff, SOS alert) are hardcoded in Chinese. Should use localized strings.",
+      "status": "open"
+    },
+    {
+      "id": "F-009",
+      "phase": 0,
+      "severity": "low",
+      "category": "i18n",
+      "title": "HeartbeatService battery alert message hardcoded in Chinese",
+      "file": "ShouDeng/Services/Network/HeartbeatService.swift",
+      "description": "BatteryAlert.message uses String(format: '电量仅%.0f%%，即将关机'...) hardcoded in Chinese.",
+      "status": "open"
+    },
+    {
+      "id": "F-010",
+      "phase": 0,
+      "severity": "low",
+      "category": "i18n",
+      "title": "BaselineScorer risk explanations hardcoded in Chinese",
+      "file": "ShouDeng/Core/Algorithms/BaselineScorer.swift",
+      "description": "All humanReadableReasons in BaselineScorer are hardcoded in Chinese. Should use localized strings.",
+      "status": "open"
+    },
+    {
+      "id": "F-011",
+      "phase": 6,
+      "severity": "medium",
+      "category": "cross-border",
+      "title": "No China SMS gateway for +86 numbers",
+      "file": "shoudeng-backend/functions/src/services/sms.ts",
+      "description": "Twilio is the sole SMS provider. Twilio has limited delivery rates to mainland China +86 numbers. A China-specific gateway (Aliyun SMS, Tencent Cloud SMS) should be used for +86 recipients.",
+      "testedBy": ["crossborder.test.ts"],
+      "status": "open"
+    },
+    {
+      "id": "F-012",
+      "phase": 6,
+      "severity": "low",
+      "category": "cross-border",
+      "title": "Geocoding hardcoded to zh-CN language",
+      "file": "shoudeng-backend/functions/src/services/geocoding.ts",
+      "description": "reverseGeocode() always requests language=zh-CN from Google Maps API. Non-Chinese guardians will see Chinese addresses in SOS notifications.",
+      "testedBy": ["crossborder.test.ts"],
+      "status": "open"
+    },
+    {
+      "id": "F-013",
+      "phase": 6,
+      "severity": "medium",
+      "category": "cross-border",
+      "title": "No fallback geocoding provider for China",
+      "file": "shoudeng-backend/functions/src/services/geocoding.ts",
+      "description": "Google Maps API is blocked in mainland China. If Cloud Functions are deployed to an Asia region or called from China-based infrastructure, geocoding will fail. No fallback provider (Amap/Gaode, Baidu Maps) is configured.",
+      "testedBy": ["crossborder.test.ts"],
+      "status": "open"
+    },
+    {
+      "id": "F-014",
+      "phase": 6,
+      "severity": "low",
+      "category": "cross-border",
+      "title": "No PIPL data residency configuration for Chinese users",
+      "file": "shoudeng-backend/functions/src/index.ts",
+      "description": "Current version targets markets outside mainland China only. China market requires a separate version deployed on domestic servers (Aliyun/Tencent Cloud). PIPL compliance is deferred to the China-specific build.",
+      "testedBy": ["crossborder.test.ts"],
+      "status": "deferred"
+    }
+  ]
+}

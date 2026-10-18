@@ -99,7 +99,10 @@ final class AppCoordinator: ObservableObject {
         if let override = Bundle.main.infoDictionary?["API_BASE_URL"] as? String, !override.isEmpty {
             return override
         }
-        #if DEBUG
+        #if QA_HARNESS
+        // QA harness: point to emulator with seed project ID
+        return "http://127.0.0.1:5001/sweethome-d1edd/us-central1/api"
+        #elseif DEBUG
         return "http://127.0.0.1:5001/sweethome-b4e82/us-central1/api"
         #else
         return "https://us-central1-sweethome-b4e82.cloudfunctions.net/api"
