@@ -43,9 +43,9 @@
       "severity": "high",
       "category": "security",
       "title": "SOS rate limit preset exists but not mounted on route",
-      "file": "shoudeng-backend/functions/src/middleware/rateLimit.ts",
-      "description": "The 'sos' rate limit preset (3/hr) exists but is NOT applied to the SOS trigger route. An attacker could flood SOS events.",
-      "status": "open"
+      "file": "shoudeng-backend/functions/src/routes/sos.ts",
+      "description": "The 'sos' rate limit preset (3/hr) was not applied to the SOS trigger route. Fixed: added createRateLimiter(RATE_LIMITS.sos) middleware to POST /trigger.",
+      "status": "fixed"
     },
     {
       "id": "F-005",
@@ -145,13 +145,13 @@
     {
       "id": "F-014",
       "phase": 6,
-      "severity": "high",
+      "severity": "low",
       "category": "cross-border",
       "title": "No PIPL data residency configuration for Chinese users",
       "file": "shoudeng-backend/functions/src/index.ts",
-      "description": "China's Personal Information Protection Law (PIPL) requires personal data of Chinese citizens to be stored within China unless a cross-border data transfer security assessment is passed. All user data is currently stored in Firebase's default US region.",
+      "description": "Current version targets markets outside mainland China only. China market requires a separate version deployed on domestic servers (Aliyun/Tencent Cloud). PIPL compliance is deferred to the China-specific build.",
       "testedBy": ["crossborder.test.ts"],
-      "status": "open"
+      "status": "deferred"
     }
   ]
 }
