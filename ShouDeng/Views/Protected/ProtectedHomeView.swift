@@ -119,6 +119,7 @@ struct ProtectedHomeView: View {
             }
             .featureDisclosure(.sos, trigger: $sosDisclosureTrigger)
             .task {
+                coordinator.locationManager.requestSingleLocation()
                 await coordinator.fetchGuardians()
                 await coordinator.fetchFamilyPosts()
                 await coordinator.fetchTimeline()
@@ -448,8 +449,8 @@ struct ProtectedHomeView: View {
     // MARK: - Location Card
 
     private var locationCard: some View {
-        // Use real device location if available, else fall back to user's city or default
-        let deviceLocation = coordinator.locationManager.lastReportedLocation
+        // Use best available location for fresher timestamp
+        let deviceLocation = coordinator.locationManager.bestAvailableLocation
         let myCoord: CLLocationCoordinate2D = {
             if let loc = deviceLocation {
                 return CLLocationCoordinate2D(latitude: loc.coordinate.latitude, longitude: loc.coordinate.longitude)

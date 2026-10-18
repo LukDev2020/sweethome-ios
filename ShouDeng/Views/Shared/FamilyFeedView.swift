@@ -37,6 +37,9 @@ struct FamilyFeedView: View {
                     feedCompact
                 }
             }
+            .onTapGesture {
+                isInputFocused = false
+            }
             .navigationTitle("家庭圈")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(sizeClass == .regular ? .hidden : .visible, for: .navigationBar)
@@ -254,6 +257,7 @@ struct FamilyFeedView: View {
                 .padding(.horizontal, 12)
                 .padding(.bottom, 8)
             }
+            .scrollDismissesKeyboard(.interactively)
             .refreshable {
                 await loadPosts()
             }

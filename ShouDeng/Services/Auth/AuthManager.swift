@@ -61,6 +61,11 @@ final class AuthManager: ObservableObject {
         if let token = keychain.read(.accessToken),
            let userId = keychain.read(.userId),
            !token.isEmpty {
+            // Reject dev tokens left over from debug builds
+            if token.hasPrefix("dev_token_") {
+                logout()
+                return
+            }
             api.setAccessToken(token)
             state = .loggedIn(userId: userId)
             UserDefaults.standard.set(userId, forKey: "currentUserId")

@@ -277,6 +277,10 @@ final class AppCoordinator: ObservableObject {
             #if DEBUG
             print("[Coordinator] Failed to fetch profile: \(error)")
             #endif
+            // If the token is invalid/expired and refresh also failed, force logout
+            if let apiError = error as? APIError, case .unauthorized = apiError {
+                await MainActor.run { authManager.logout() }
+            }
         }
     }
 

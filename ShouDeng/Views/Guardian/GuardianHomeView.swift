@@ -128,6 +128,7 @@ struct GuardianHomeView: View {
                     .environmentObject(coordinator)
             }
             .task {
+                coordinator.locationManager.requestSingleLocation()
                 await coordinator.fetchProtectedPersons()
                 await coordinator.fetchFamilyPosts()
             }
@@ -465,8 +466,8 @@ struct GuardianHomeView: View {
     // MARK: - Location Card
 
     private var locationCard: some View {
-        // Guardian's own location
-        let deviceLocation = coordinator.locationManager.lastReportedLocation
+        // Guardian's own location (use best available for fresher timestamp)
+        let deviceLocation = coordinator.locationManager.bestAvailableLocation
         let myCoord: CLLocationCoordinate2D = {
             if let loc = deviceLocation {
                 return loc.coordinate

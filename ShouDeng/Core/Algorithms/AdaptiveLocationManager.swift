@@ -91,6 +91,20 @@ final class AdaptiveLocationManager: NSObject {
     private(set) var lastReportedLocation: CLLocation?
     private var lastReportTime: Date?
 
+    /// Best available location: last reported, or iOS cached location
+    var bestAvailableLocation: CLLocation? {
+        // Prefer the fresher of lastReportedLocation and CLLocationManager's cache
+        if let reported = lastReportedLocation, let cached = locationManager.location {
+            return reported.timestamp > cached.timestamp ? reported : cached
+        }
+        return lastReportedLocation ?? locationManager.location
+    }
+
+    /// Request a single fresh location fix (e.g. when home view appears)
+    func requestSingleLocation() {
+        locationManager.requestLocation()
+    }
+
     // Dwell-point tracking
     private var dwellCandidates: [DwellCandidate] = []
     private var locationHistory: [CLLocation] = []
