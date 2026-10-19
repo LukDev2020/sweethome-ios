@@ -465,6 +465,7 @@ struct PostSignupWizardView: View {
     }
 
     @State private var generatedCode: String?
+    @State private var generateError: String?
 
     private var generateInviteButton: some View {
         VStack(spacing: 12) {
@@ -505,18 +506,30 @@ struct PostSignupWizardView: View {
                 Button {
                     Task { await generateCode() }
                 } label: {
-                    Text("生成邀请码")
-                        .font(.scaled(size: 15, weight: .medium))
-                        .foregroundStyle(cream)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(navy)
-                        )
+                    HStack(spacing: 6) {
+                        if isLoading {
+                            ProgressView()
+                                .tint(cream)
+                        }
+                        Text("生成邀请码")
+                    }
+                    .font(.scaled(size: 15, weight: .medium))
+                    .foregroundStyle(cream)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(navy)
+                    )
                 }
                 .disabled(isLoading)
                 .padding(.horizontal, 8)
+            }
+
+            if let error = generateError {
+                Text(error)
+                    .font(.scaled(size: 12))
+                    .foregroundStyle(.red)
             }
         }
     }
@@ -622,6 +635,7 @@ struct PostSignupWizardView: View {
 
     private func generateCode() async {
         isLoading = true
+        generateError = nil
         do {
             let response: CreateInviteResponse = try await coordinator.apiClient.post(
                 "/v1/invite/create",
@@ -629,6 +643,7 @@ struct PostSignupWizardView: View {
             )
             generatedCode = response.code
         } catch {
+            generateError = "生成失败，请检查网络连接后重试"
             #if DEBUG
             print("[Wizard] Failed to generate invite: \(error)")
             #endif

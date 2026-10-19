@@ -26,6 +26,7 @@ struct ProtectedSettingsView: View {
     @AppStorage("notif_sos_alerts") private var notifSOS = true
     @AppStorage("notif_checkin_reminder") private var notifCheckin = true
     @AppStorage("notif_family_feed") private var notifFamilyFeed = true
+    @AppStorage("lockscreen_card_enabled") private var lockscreenCardEnabled = true
 
     private let pro = Color(red: 107/255, green: 92/255, blue: 165/255)
     private let creamBg = Color(red: 254/255, green: 252/255, blue: 247/255)
@@ -135,6 +136,7 @@ struct ProtectedSettingsView: View {
                 sosTriggerPanel
                 checkInPanel
                 safetyToolsPanel
+                lockScreenCardPanel
                 securityPanel
                 languagePanel
                 fontSizePanel
@@ -184,6 +186,7 @@ struct ProtectedSettingsView: View {
                         .foregroundStyle(.secondary)
                         .padding(.top, 8)
                     safetyToolsPanel
+                    lockScreenCardPanel
                     securityPanel
                     languagePanel
                     notificationPanel
@@ -350,6 +353,47 @@ struct ProtectedSettingsView: View {
                 fixedRow("理赔材料整理", value: "开始 →", isWarning: false)
             }
             .buttonStyle(.plain)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    // MARK: - Lock Screen Card Panel
+
+    private var lockScreenCardPanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("锁屏实时活动")
+                .font(.scaled(size: 12))
+                .foregroundStyle(.secondary)
+
+            HStack {
+                Image(systemName: "rectangle.on.rectangle.badge.person.crop")
+                    .font(.scaled(size: 14))
+                    .foregroundStyle(safe)
+                    .frame(width: 20)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("锁屏急救卡")
+                        .font(.scaled(size: 13))
+                    Text("退出 App 时自动显示急救信息和家人状态")
+                        .font(.scaled(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Toggle("", isOn: $lockscreenCardEnabled)
+                    .labelsHidden()
+                    .tint(safe)
+            }
+            .padding(.vertical, 2)
+            .onChange(of: lockscreenCardEnabled) { _, enabled in
+                if enabled {
+                    coordinator.startLiveActivityIfNeeded()
+                } else {
+                    coordinator.liveActivityManager.endAllActivities()
+                }
+            }
         }
         .padding(12)
         .background(

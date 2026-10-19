@@ -423,42 +423,48 @@ struct MedicalCardView: View {
 
     private func saveCard() async {
         isSaving = true
-        defer { isSaving = false }
 
-        // Always cache locally first
+        // Optimistic: cache locally + show success immediately
         cacheMedicalCard(card)
-        // Sync emergency medications to lock screen widget immediately
+        isSaving = false
+        withAnimation(.easeInOut(duration: 0.3)) { saveResult = .success }
+
+        // Background: widget sync + server save (non-blocking)
+        let cardCopy = card
+        let path = apiPath
         coordinator.syncWidgetState()
-
-        var serverOK = false
-        do {
-            let _: SuccessResponse = try await coordinator.apiClient.put(
-                apiPath,
-                body: card
-            )
-            serverOK = true
-        } catch {
-            #if DEBUG
-            print("[MedicalCard] save error: \(error)")
-            #endif
+        Task.detached(priority: .utility) {
+            do {
+                let _: SuccessResponse = try await coordinator.apiClient.put(path, body: cardCopy)
+            } catch {
+                await MainActor.run {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        saveResult = .failure("已本地保存，服务器同步失败")
+                    }
+                }
+                #if DEBUG
+                print("[MedicalCard] save error: \(error)")
+                #endif
+            }
         }
 
-        withAnimation(.easeInOut(duration: 0.3)) {
-            saveResult = serverOK ? .success : .failure("已本地保存，服务器同步失败")
-        }
-        try? await Task.sleep(nanoseconds: 2_000_000_000)
+        // Auto-dismiss toast after 1.5s
+        try? await Task.sleep(nanoseconds: 1_500_000_000)
         withAnimation(.easeInOut(duration: 0.3)) { saveResult = nil }
     }
 
+    private static let cacheEncoder = JSONEncoder()
+    private static let cacheDecoder = JSONDecoder()
+
     private func cacheMedicalCard(_ data: MedicalCardData) {
-        if let encoded = try? JSONEncoder().encode(data) {
+        if let encoded = try? Self.cacheEncoder.encode(data) {
             UserDefaults.standard.set(encoded, forKey: "medical_card_cache")
         }
     }
 
     private func loadCachedMedicalCard() -> MedicalCardData? {
         guard let data = UserDefaults.standard.data(forKey: "medical_card_cache"),
-              let card = try? JSONDecoder().decode(MedicalCardData.self, from: data) else {
+              let card = try? Self.cacheDecoder.decode(MedicalCardData.self, from: data) else {
             return nil
         }
         return card

@@ -66,6 +66,9 @@ final class AppCoordinator: ObservableObject {
     // MARK: - Init
 
     init() {
+        // Register default: lock screen card enabled by default
+        UserDefaults.standard.register(defaults: ["lockscreen_card_enabled": true])
+
         let config = APIClient.Config(
             baseURL: Self.resolveBaseURL()
         )
@@ -96,7 +99,9 @@ final class AppCoordinator: ObservableObject {
         wireServices()
         restoreLocalState()
         observeAuthState()
-        startLiveActivityIfNeeded()
+        if UserDefaults.standard.bool(forKey: "lockscreen_card_enabled") {
+            startLiveActivityIfNeeded()
+        }
     }
 
     // MARK: - Base URL
@@ -512,7 +517,16 @@ final class AppCoordinator: ObservableObject {
 
     // MARK: - Live Activity
 
-    private func startLiveActivityIfNeeded() {
+    /// Called when app goes to background — starts Live Activity if user has it enabled.
+    func startLiveActivityOnBackground() {
+        guard case .loggedIn = authState else { return }
+        guard UserDefaults.standard.bool(forKey: "lockscreen_card_enabled") else { return }
+        if !liveActivityManager.isRunning {
+            startLiveActivityIfNeeded()
+        }
+    }
+
+    func startLiveActivityIfNeeded() {
         let emergencyPhone = selectedHotline?.emergency ?? "911"
 
         if userRole == .protected_ {
@@ -1081,51 +1095,94 @@ final class AppCoordinator: ObservableObject {
         )
     }
 
-    // MARK: - Widget Sync
+    // MARK: - Widget Sync (debounced, background)
+
+    private var widgetSyncTask: Task<Void, Never>?
 
     func syncWidgetState() {
-        let persons = protectedPersons.map { p in
-            WidgetProtectedPerson(
-                id: p.id,
-                displayName: p.user.displayName,
-                initial: p.user.avatarInitial,
-                status: p.status.rawValue,
-                lastCheckIn: p.lastCheckIn,
-                batteryLevel: p.batteryLevel,
-                homeTimerDeadline: nil
-            )
+        // Debounce: cancel any pending sync and schedule a new one after 0.3s
+        widgetSyncTask?.cancel()
+        widgetSyncTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 300_000_000) // 0.3s debounce
+            guard !Task.isCancelled else { return }
+
+            // Capture data on main actor
+            let persons = protectedPersons.map { p in
+                WidgetProtectedPerson(
+                    id: p.id,
+                    displayName: p.user.displayName,
+                    initial: p.user.avatarInitial,
+                    status: p.status.rawValue,
+                    lastCheckIn: p.lastCheckIn,
+                    batteryLevel: p.batteryLevel,
+                    homeTimerDeadline: nil
+                )
+            }
+            let isLoggedIn = authState != .loggedOut && authState != .unknown
+            let role = userRole.rawValue
+            let userName = currentUser?.displayName
+            let guardianCount = myGuardians.count
+            let lastCheckIn = timeline.first(where: { $0.type == .checkIn })?.timestamp
+            let sosActive = activeSOSEvent != nil
+            let sosTriggeredAt = activeSOSEvent?.triggeredAt
+            let emergencyPhone = selectedHotline?.emergency
+
+            // Move encoding + widget reload to background
+            Task.detached(priority: .utility) {
+                let emergencyMeds: [WidgetMedication] = {
+                    guard let data = UserDefaults.standard.data(forKey: "medical_card_cache"),
+                          let card = try? Self.sharedDecoder.decode(MedicalCardData.self, from: data) else {
+                        return []
+                    }
+                    return card.emergencyMedications.map {
+                        WidgetMedication(id: $0.id, name: $0.name, location: $0.storageLocation, dosage: $0.dosage)
+                    }
+                }()
+
+                let state = WidgetState(
+                    isLoggedIn: isLoggedIn,
+                    userRole: role,
+                    userName: userName,
+                    guardianCount: guardianCount,
+                    lastCheckInDate: lastCheckIn,
+                    sosActive: sosActive,
+                    sosTriggeredAt: sosTriggeredAt,
+                    homeTimerActive: false,
+                    homeTimerDeadline: nil,
+                    homeTimerLabel: nil,
+                    protectedPersons: persons,
+                    emergencyMedications: emergencyMeds,
+                    emergencyPhone: emergencyPhone,
+                    updatedAt: Date()
+                )
+
+                WidgetDataStore.write(state)
+                WidgetCenter.shared.reloadAllTimelines()
+            }
         }
-
-        // Load emergency medications from medical card cache
-        let emergencyMeds: [WidgetMedication] = {
-            guard let data = UserDefaults.standard.data(forKey: "medical_card_cache"),
-                  let card = try? JSONDecoder().decode(MedicalCardData.self, from: data) else {
-                return []
-            }
-            return card.emergencyMedications.map {
-                WidgetMedication(id: $0.id, name: $0.name, location: $0.storageLocation, dosage: $0.dosage)
-            }
-        }()
-
-        let state = WidgetState(
-            isLoggedIn: authState != .loggedOut && authState != .unknown,
-            userRole: userRole.rawValue,
-            userName: currentUser?.displayName,
-            guardianCount: myGuardians.count,
-            lastCheckInDate: timeline.first(where: { $0.type == .checkIn })?.timestamp,
-            sosActive: activeSOSEvent != nil,
-            sosTriggeredAt: activeSOSEvent?.triggeredAt,
-            homeTimerActive: false,
-            homeTimerDeadline: nil,
-            homeTimerLabel: nil,
-            protectedPersons: persons,
-            emergencyMedications: emergencyMeds,
-            emergencyPhone: selectedHotline?.emergency,
-            updatedAt: Date()
-        )
-
-        WidgetDataStore.write(state)
-        WidgetCenter.shared.reloadAllTimelines()
     }
+
+    // MARK: - Shared Coders (Fix 5: reuse instead of allocating new ones)
+
+    static let sharedEncoder: JSONEncoder = {
+        let e = JSONEncoder()
+        e.dateEncodingStrategy = .iso8601
+        return e
+    }()
+
+    static let sharedDecoder: JSONDecoder = {
+        let d = JSONDecoder()
+        d.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let string = try container.decode(String.self)
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            if let date = formatter.date(from: string) { return date }
+            formatter.formatOptions = [.withInternetDateTime]
+            if let date = formatter.date(from: string) { return date }
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Invalid date: \(string)")
+        }
+        return d
+    }()
 
 }

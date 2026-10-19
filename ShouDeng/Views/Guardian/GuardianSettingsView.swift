@@ -37,6 +37,7 @@ struct GuardianSettingsView: View {
     @AppStorage("notif_sos_alerts") private var notifSOS = true
     @AppStorage("notif_checkin_overdue") private var notifCheckinOverdue = true
     @AppStorage("notif_family_feed") private var notifFamilyFeed = true
+    @AppStorage("lockscreen_card_enabled") private var lockscreenCardEnabled = true
 
     var body: some View {
         NavigationStack {
@@ -131,6 +132,7 @@ struct GuardianSettingsView: View {
                 subscriptionPanel
                 safetyToolsPanel
                 organizationPanel
+                lockScreenCardPanel
                 securityPanel
                 languagePanel
                 fontSizePanel
@@ -176,6 +178,7 @@ struct GuardianSettingsView: View {
                         .padding(.top, 8)
                     safetyToolsPanel
                     organizationPanel
+                    lockScreenCardPanel
                     securityPanel
                     languagePanel
                     notificationPanel
@@ -394,6 +397,47 @@ struct GuardianSettingsView: View {
                 fixedRow("理赔材料整理", value: "开始 →", isWarning: false)
             }
             .buttonStyle(.plain)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    // MARK: - Lock Screen Card Panel
+
+    private var lockScreenCardPanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("锁屏实时活动")
+                .font(.scaled(size: 12))
+                .foregroundStyle(.secondary)
+
+            HStack {
+                Image(systemName: "rectangle.on.rectangle.badge.person.crop")
+                    .font(.scaled(size: 14))
+                    .foregroundStyle(safe)
+                    .frame(width: 20)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("锁屏守护卡")
+                        .font(.scaled(size: 13))
+                    Text("退出 App 时自动显示家人安全状态")
+                        .font(.scaled(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Toggle("", isOn: $lockscreenCardEnabled)
+                    .labelsHidden()
+                    .tint(safe)
+            }
+            .padding(.vertical, 2)
+            .onChange(of: lockscreenCardEnabled) { _, enabled in
+                if enabled {
+                    coordinator.startLiveActivityIfNeeded()
+                } else {
+                    coordinator.liveActivityManager.endAllActivities()
+                }
+            }
         }
         .padding(12)
         .background(

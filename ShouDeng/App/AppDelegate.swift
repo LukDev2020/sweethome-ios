@@ -151,6 +151,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
     func applicationWillResignActive(_ application: UIApplication) {
         appCoordinator.motionService.stopForegroundMonitoring()
+        // Auto-start Live Activity when user leaves the app (if enabled)
+        appCoordinator.startLiveActivityOnBackground()
     }
 
     // MARK: - Firebase Config Check

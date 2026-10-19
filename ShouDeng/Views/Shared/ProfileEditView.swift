@@ -313,12 +313,13 @@ struct ProfileEditView: View {
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedCity = cityName.trimmingCharacters(in: .whitespaces)
 
-        // Save avatar to disk if changed
+        // Save avatar to disk on background thread if changed
         var avatarPath = coordinator.currentUser?.avatarLocalPath
         if let avatarImage {
-            if let saved = saveAvatarToDisk(avatarImage) {
-                avatarPath = saved
-            }
+            let saved: String? = await Task.detached(priority: .utility) {
+                return self.saveAvatarToDisk(avatarImage)
+            }.value
+            if let saved { avatarPath = saved }
         }
 
         do {

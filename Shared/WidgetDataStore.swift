@@ -11,9 +11,12 @@ enum WidgetDataStore {
         UserDefaults(suiteName: appGroupId)
     }
 
+    private static let encoder = JSONEncoder()
+    private static let decoder = JSONDecoder()
+
     static func write(_ state: WidgetState) {
         guard let defaults = sharedDefaults else { return }
-        if let data = try? JSONEncoder().encode(state) {
+        if let data = try? encoder.encode(state) {
             defaults.set(data, forKey: stateKey)
         }
     }
@@ -21,7 +24,7 @@ enum WidgetDataStore {
     static func read() -> WidgetState {
         guard let defaults = sharedDefaults,
               let data = defaults.data(forKey: stateKey),
-              let state = try? JSONDecoder().decode(WidgetState.self, from: data) else {
+              let state = try? decoder.decode(WidgetState.self, from: data) else {
             return .empty
         }
         return state
