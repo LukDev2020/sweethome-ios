@@ -128,9 +128,11 @@
 		ECEF9510D4F244AA95E5401A /* EscalationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46A040C15853E6D3C1C57AD9 /* EscalationEngine.swift */; };
 		ED58D0933C87B251E8F7BD1D /* FallDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D922CFCBCCE8F87BD686AD8 /* FallDetector.swift */; };
 		F0FFEA124608CCCA60504A62 /* AdaptiveLocationManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19BF856E4785D6ABD573F691 /* AdaptiveLocationManagerTests.swift */; };
+		B3C4D5E6F7A8B9C0D1E2F3A4 /* ReactiveLocationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5D6E7F8A9B0C1D2E3F4A5B6 /* ReactiveLocationServiceTests.swift */; };
 		F32E28DB01881C1D11BF9BE9 /* InsuranceReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06AF7B7B67988ED0F7472A93 /* InsuranceReportView.swift */; };
 		F3ECFE963F1129AB9DCD91B0 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E138FA50B18713B668BAA89 /* AuthManager.swift */; };
 		F4098E23D57249FA9DBC132D /* AdaptiveLocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2FC646F35FAFF4899339BE7 /* AdaptiveLocationManager.swift */; };
+		F2E1D0C9B8A7F6E5D4C3B2A1 /* ReactiveLocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* ReactiveLocationService.swift */; };
 		F75C7ACC811E097653758D19 /* DutyScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8653AAB32EF5A2540EA607 /* DutyScheduler.swift */; };
 		F961424AEC6B46170477E03A /* ClaimMaterialTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FC2559DEFD8D966B804EC79 /* ClaimMaterialTests.swift */; };
 		FBCABBE2B5B113CB958B4515 /* ProtectedTimelineProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27916B4AF78CFA84BAE296F8 /* ProtectedTimelineProvider.swift */; };
@@ -183,6 +185,7 @@
 		10FF63580E6B1EBBA0C953C8 /* GuardianLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianLiveActivity.swift; sourceTree = "<group>"; };
 		120577EAE73536443543BF82 /* OrgDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrgDashboardView.swift; sourceTree = "<group>"; };
 		19BF856E4785D6ABD573F691 /* AdaptiveLocationManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptiveLocationManagerTests.swift; sourceTree = "<group>"; };
+		C5D6E7F8A9B0C1D2E3F4A5B6 /* ReactiveLocationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactiveLocationServiceTests.swift; sourceTree = "<group>"; };
 		2045C1ED8DC5B6CCC03AC6C3 /* GuardianPlanBillingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianPlanBillingView.swift; sourceTree = "<group>"; };
 		20C46D74589EDCD39D1DFAAF /* GuardianActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianActivityManager.swift; sourceTree = "<group>"; };
 		218FC0E8E38C528F3D664893 /* CrashReporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporterTests.swift; sourceTree = "<group>"; };
@@ -293,6 +296,7 @@
 		F1C3DE3DA8E9EEE6CEB01B71 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		F1C499DEA1B2756F167118B7 /* TrajectoryProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrajectoryProcessor.swift; sourceTree = "<group>"; };
 		F2FC646F35FAFF4899339BE7 /* AdaptiveLocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptiveLocationManager.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* ReactiveLocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactiveLocationService.swift; sourceTree = "<group>"; };
 		F37B8CD19FA502A941DA6A92 /* LocalStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalStore.swift; sourceTree = "<group>"; };
 		F64A2DB8BEDB820B83E3C2C1 /* ConsulateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsulateView.swift; sourceTree = "<group>"; };
 		F6FB12D36F67ADB24BA2DDD5 /* CountryCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryCode.swift; sourceTree = "<group>"; };
@@ -491,6 +495,7 @@
 		632F2EFA5DEF1367F909B2AB /* Location */ = {
 			isa = PBXGroup;
 			children = (
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* ReactiveLocationService.swift */,
 			);
 			path = Location;
 			sourceTree = "<group>";
@@ -640,6 +645,7 @@
 			isa = PBXGroup;
 			children = (
 				19BF856E4785D6ABD573F691 /* AdaptiveLocationManagerTests.swift */,
+				C5D6E7F8A9B0C1D2E3F4A5B6 /* ReactiveLocationServiceTests.swift */,
 				B273093A701FBEED8E657124 /* APIClientTests.swift */,
 				3C38041E8CCB6EAE0ECF2D4F /* AuthManagerTests.swift */,
 				C3DFF6F31788D3DCA3A0EA15 /* BaselineScorerTests.swift */,
@@ -906,6 +912,7 @@
 				96A2973D8E8E4D03F87C9086 /* APIClient.swift in Sources */,
 				99541A8CAB47148212819EA3 /* APIEndpoints.swift in Sources */,
 				F4098E23D57249FA9DBC132D /* AdaptiveLocationManager.swift in Sources */,
+				F2E1D0C9B8A7F6E5D4C3B2A1 /* ReactiveLocationService.swift in Sources */,
 				7CEB8F947D0673F08CE4439B /* AppCoordinator.swift in Sources */,
 				A22F58C7B33F5DE5F6350346 /* AppDelegate.swift in Sources */,
 				255D788D0378FE97EA28EF51 /* ArrivalReportView.swift in Sources */,
@@ -998,6 +1005,7 @@
 			files = (
 				D36AE3ACFF56A4B4A28DD3AF /* APIClientTests.swift in Sources */,
 				F0FFEA124608CCCA60504A62 /* AdaptiveLocationManagerTests.swift in Sources */,
+				B3C4D5E6F7A8B9C0D1E2F3A4 /* ReactiveLocationServiceTests.swift in Sources */,
 				5E1BA1B8E61306352C819EA8 /* AuthManagerTests.swift in Sources */,
 				1DFEC1C4BFFAE279D78FB734 /* BaselineScorerTests.swift in Sources */,
 				F961424AEC6B46170477E03A /* ClaimMaterialTests.swift in Sources */,
@@ -1114,7 +1122,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 13;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1173,7 +1181,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 13;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1361,7 +1369,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 13;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;

@@ -404,21 +404,25 @@ struct MedicalCardView: View {
     // MARK: - Actions
 
     private func loadCard() async {
-        isLoading = true
-        defer { isLoading = false }
+        // Show cached data immediately (no spinner wait)
         let cached = loadCachedMedicalCard()
-        // Try server, fall back to local cache
+        if let cached {
+            card = cached
+            isLoading = false
+        }
+
+        // Try server in background, update if successful
         if let loaded: MedicalCardData = try? await coordinator.apiClient.get(apiPath) {
-            // If local cache has medication items but server doesn't, prefer local
             if let cached, !cached.medicationItems.isEmpty && loaded.medicationItems.isEmpty {
-                await MainActor.run { card = cached }
+                // Local cache has medication items server doesn't — keep local
             } else {
                 await MainActor.run { card = loaded }
                 cacheMedicalCard(loaded)
             }
-        } else if let cached {
-            await MainActor.run { card = cached }
         }
+
+        // If no cache and no server, show empty form
+        await MainActor.run { isLoading = false }
     }
 
     private func saveCard() async {
@@ -429,10 +433,12 @@ struct MedicalCardView: View {
         isSaving = false
         withAnimation(.easeInOut(duration: 0.3)) { saveResult = .success }
 
-        // Background: widget sync + server save (non-blocking)
+        // Background: widget sync + Live Activity refresh + server save (non-blocking)
         let cardCopy = card
         let path = apiPath
         coordinator.syncWidgetState()
+        // Refresh Live Activity with updated medical data
+        coordinator.startLiveActivityIfNeeded()
         Task.detached(priority: .utility) {
             do {
                 let _: SuccessResponse = try await coordinator.apiClient.put(path, body: cardCopy)

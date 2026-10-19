@@ -265,8 +265,17 @@ struct OrgDashboardView: View {
     // MARK: - Load
 
     private func loadDashboard() async {
-        isLoading = true
-        defer { isLoading = false }
+        // Show "no org" state after 5 seconds if API hasn't responded
+        let timeoutTask = Task {
+            try? await Task.sleep(nanoseconds: 5_000_000_000)
+            if isLoading {
+                await MainActor.run { isLoading = false }
+            }
+        }
+        defer {
+            timeoutTask.cancel()
+            isLoading = false
+        }
         do {
             let data: OrgDashboard = try await coordinator.apiClient.get("/v1/org/dashboard")
             await MainActor.run { dashboard = data }

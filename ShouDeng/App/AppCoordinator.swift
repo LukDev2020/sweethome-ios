@@ -58,6 +58,7 @@ final class AppCoordinator: ObservableObject {
     let deviceHealthMonitor = DeviceHealthMonitor()
     let crashReporter = CrashReporter.shared
     let liveActivityManager = GuardianActivityManager()
+    let locationService = ReactiveLocationService()
     let storeKitManager: StoreKitManager
     let paymentMethodManager: PaymentMethodManager
 
@@ -242,6 +243,22 @@ final class AppCoordinator: ObservableObject {
     // MARK: - Deep Link Handling
 
     func handleDeepLink(_ url: URL) {
+        // Handle custom scheme actions (shoudeng://sos, shoudeng://checkin, etc.)
+        if url.scheme == "shoudeng" {
+            switch url.host {
+            case "sos":
+                triggerSOS(method: .longPress)
+                return
+            case "checkin":
+                performCheckIn()
+                return
+            case "share-location":
+                shareCurrentLocation()
+                return
+            default:
+                break
+            }
+        }
         guard let destination = DeepLinkRouter.parse(url: url) else { return }
         handleDeepLinkDestination(destination)
     }
@@ -450,11 +467,13 @@ final class AppCoordinator: ObservableObject {
 
     private func wireServices() {
 
-        // Location → Heartbeat + Server
+        // Location → Heartbeat + Server + Reactive SwiftUI bridge
         locationManager.onLocationReport = { [weak self] location in
             self?.heartbeatService.recordBeat(source: .significantLocation, location: location)
             self?.handleLocationUpdate(location)
         }
+        // Bind reactive service AFTER setting the callback — it preserves the chain
+        locationService.bind(to: locationManager)
 
         // Location → Safe zone events
         locationManager.onSafeZoneEnter = { [weak self] zone in
@@ -691,6 +710,21 @@ final class AppCoordinator: ObservableObject {
     }
 
     // MARK: - Check-In
+
+    /// Share current location via system share sheet (triggered from Lock Screen card)
+    func shareCurrentLocation() {
+        guard let loc = locationManager.bestAvailableLocation else { return }
+        let lat = loc.coordinate.latitude
+        let lng = loc.coordinate.longitude
+        let name = currentUser?.displayName ?? "我的位置"
+        let mapURL = "https://maps.apple.com/?ll=\(lat),\(lng)&q=\(name)"
+        let items: [Any] = [mapURL]
+        let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let root = scene.windows.first?.rootViewController {
+            root.present(ac, animated: true)
+        }
+    }
 
     func performCheckIn(note: String? = nil) {
         guard let userId = currentUser?.id, !userId.isEmpty else { return }

@@ -510,7 +510,8 @@ struct ProtectedHomeView: View {
             centerCoordinate: myCoord,
             lastUpdateMinutes: deviceLocation != nil ? Int(Date().timeIntervalSince(deviceLocation!.timestamp) / 60) : nil,
             label: "我的位置",
-            focusedPinId: $mapFocusId
+            focusedPinId: $mapFocusId,
+            locationService: coordinator.locationService
         )
     }
 

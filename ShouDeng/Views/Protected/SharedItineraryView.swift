@@ -165,8 +165,17 @@ struct SharedItineraryView: View {
     }
 
     private func loadItineraries() async {
-        isLoading = true
-        defer { isLoading = false }
+        // Show empty state after 5 seconds if API hasn't responded
+        let timeoutTask = Task {
+            try? await Task.sleep(nanoseconds: 5_000_000_000)
+            if isLoading {
+                await MainActor.run { isLoading = false }
+            }
+        }
+        defer {
+            timeoutTask.cancel()
+            isLoading = false
+        }
         do {
             let items: [ItineraryItem] = try await coordinator.apiClient.get("/v1/itinerary")
             await MainActor.run { itineraries = items }

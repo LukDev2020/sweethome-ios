@@ -106,204 +106,200 @@ struct ProtectedLiveActivity: Widget {
 
     @ViewBuilder
     private func protectedLockScreenView(context: ActivityViewContext<ProtectedActivityAttributes>) -> some View {
-        VStack(spacing: 12) {
-            // Header
-            HStack {
-                HStack(spacing: 6) {
+        VStack(spacing: 8) {
+            // Header row: app name + status + guardians
+            HStack(spacing: 8) {
+                HStack(spacing: 4) {
                     Image(systemName: "shield.checkered")
-                        .font(.subheadline)
+                        .font(.caption2)
                         .foregroundStyle(SharedColors.lamp)
                     Text(WidgetDataStore.appName)
-                        .font(.subheadline.bold())
+                        .font(.caption.bold())
                         .foregroundStyle(.white)
                 }
+
                 Spacer()
-                HStack(spacing: 4) {
+
+                // Guardian avatars (compact inline)
+                HStack(spacing: -6) {
+                    ForEach(Array(context.state.guardians.prefix(3).enumerated()), id: \.offset) { _, guardian in
+                        ZStack {
+                            Circle()
+                                .fill(guardian.isOnline ? SharedColors.safe.opacity(0.4) : SharedColors.offline.opacity(0.3))
+                                .frame(width: 24, height: 24)
+                            Text(guardian.initial)
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(.white)
+                        }
+                        .overlay(alignment: .bottomTrailing) {
+                            if guardian.isOnline {
+                                Circle()
+                                    .fill(SharedColors.safe)
+                                    .frame(width: 7, height: 7)
+                                    .overlay(Circle().stroke(SharedColors.ink, lineWidth: 1.5))
+                            }
+                        }
+                    }
+                }
+
+                // Status badge
+                HStack(spacing: 3) {
                     Circle()
                         .fill(protectedStatusColor(context.state.status))
-                        .frame(width: 8, height: 8)
+                        .frame(width: 6, height: 6)
                     Text(context.state.statusText)
-                        .font(.caption)
+                        .font(.system(size: 10))
                         .foregroundStyle(protectedStatusColor(context.state.status))
                 }
             }
 
-            // Guardian avatars row
-            HStack(spacing: 12) {
-                ForEach(Array(context.state.guardians.prefix(3).enumerated()), id: \.offset) { _, guardian in
-                    VStack(spacing: 4) {
-                        ZStack {
-                            Circle()
-                                .fill(guardian.isOnline ? SharedColors.safe.opacity(0.3) : SharedColors.offline.opacity(0.3))
-                                .frame(width: 36, height: 36)
-                            Text(guardian.initial)
-                                .font(.caption.bold())
-                                .foregroundStyle(.white)
-                            // Online indicator dot
-                            if guardian.isOnline {
-                                Circle()
-                                    .fill(SharedColors.safe)
-                                    .frame(width: 10, height: 10)
-                                    .overlay(Circle().stroke(SharedColors.ink, lineWidth: 2))
-                                    .offset(x: 12, y: 12)
-                            }
-                        }
-                        Text(guardian.name)
-                            .font(.caption2)
-                            .foregroundStyle(.white.opacity(0.8))
-                        Text(guardian.isOnDuty ? "值班中" : "离线")
-                            .font(.system(size: 9))
-                            .foregroundStyle(guardian.isOnDuty ? SharedColors.safe : .white.opacity(0.4))
-                    }
+            // Timer or check-in (if applicable, compact single line)
+            if let timer = context.state.homeTimerDeadline {
+                HStack(spacing: 4) {
+                    Image(systemName: "timer")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.white.opacity(0.6))
+                    Text("回家倒计时")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.white.opacity(0.6))
+                    Spacer()
+                    Text(timer, style: .timer)
+                        .font(.caption2.bold().monospacedDigit())
+                        .foregroundStyle(.white)
                 }
-                Spacer()
-                // Last check-in info
-                VStack(alignment: .trailing, spacing: 2) {
-                    if let timer = context.state.homeTimerDeadline {
-                        Text("回家倒计时")
-                            .font(.caption2)
-                            .foregroundStyle(.white.opacity(0.6))
-                        Text(timer, style: .timer)
-                            .font(.caption.bold().monospacedDigit())
-                            .foregroundStyle(.white)
-                    } else if let lastCI = context.state.lastCheckIn {
-                        Text("上次报平安")
-                            .font(.caption2)
-                            .foregroundStyle(.white.opacity(0.6))
-                        Text(lastCI, style: .relative)
-                            .font(.caption.bold())
-                            .foregroundStyle(.white)
-                    }
+            } else if let lastCI = context.state.lastCheckIn {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.white.opacity(0.6))
+                    Text("上次报平安")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.white.opacity(0.6))
+                    Spacer()
+                    Text(lastCI, style: .relative)
+                        .font(.caption2.bold())
+                        .foregroundStyle(.white)
                 }
             }
 
-            // Emergency Medical Info (visible without unlocking)
+            // Emergency Medical Info — compact 2-line layout
             if hasEmergencyInfo(context.state) {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 4) {
+                VStack(alignment: .leading, spacing: 4) {
+                    // Line 1: blood type + allergies + conditions
+                    HStack(spacing: 6) {
                         Image(systemName: "staroflife.fill")
-                            .font(.caption2)
+                            .font(.system(size: 9))
                             .foregroundStyle(.orange)
-                        Text("急救信息")
-                            .font(.caption2.bold())
-                            .foregroundStyle(.orange)
-                        Spacer()
-                    }
 
-                    // Blood type + Allergies (critical for first responders)
-                    HStack(spacing: 12) {
                         if let blood = context.state.bloodType, !blood.isEmpty {
-                            HStack(spacing: 3) {
+                            HStack(spacing: 2) {
                                 Image(systemName: "drop.fill")
-                                    .font(.system(size: 9))
+                                    .font(.system(size: 8))
                                     .foregroundStyle(.red)
                                 Text(blood)
-                                    .font(.caption.bold())
+                                    .font(.system(size: 11, weight: .bold))
                                     .foregroundStyle(.white)
                             }
                         }
                         if !context.state.allergies.isEmpty {
-                            HStack(spacing: 3) {
+                            HStack(spacing: 2) {
                                 Image(systemName: "exclamationmark.triangle.fill")
-                                    .font(.system(size: 9))
+                                    .font(.system(size: 8))
                                     .foregroundStyle(.yellow)
-                                Text(context.state.allergies.prefix(3).joined(separator: "、"))
-                                    .font(.caption2)
+                                Text("过敏: " + context.state.allergies.prefix(2).joined(separator: "、"))
+                                    .font(.system(size: 10))
                                     .foregroundStyle(.white)
                                     .lineLimit(1)
                             }
                         }
-                    }
-
-                    // Conditions (diseases)
-                    if !context.state.conditions.isEmpty {
-                        HStack(spacing: 3) {
-                            Image(systemName: "heart.text.clipboard")
-                                .font(.system(size: 9))
-                                .foregroundStyle(.white.opacity(0.6))
-                            Text(context.state.conditions.prefix(4).joined(separator: "、"))
-                                .font(.caption2)
-                                .foregroundStyle(.white.opacity(0.9))
+                        if !context.state.conditions.isEmpty {
+                            Text(context.state.conditions.prefix(2).joined(separator: "、"))
+                                .font(.system(size: 10))
+                                .foregroundStyle(.white.opacity(0.8))
                                 .lineLimit(1)
                         }
+                        Spacer(minLength: 0)
                     }
 
-                    // Emergency medications
-                    if !context.state.emergencyMedications.isEmpty {
-                        ForEach(Array(context.state.emergencyMedications.prefix(2).enumerated()), id: \.offset) { _, med in
-                            HStack(spacing: 4) {
-                                Image(systemName: "cross.circle.fill")
-                                    .font(.system(size: 9))
-                                    .foregroundStyle(.orange)
-                                Text(med.name)
-                                    .font(.caption2.bold())
-                                    .foregroundStyle(.white)
-                                if !med.location.isEmpty {
-                                    Text("· \(med.location)")
-                                        .font(.caption2)
-                                        .foregroundStyle(.white.opacity(0.7))
-                                }
-                                Spacer()
-                                if !med.dosage.isEmpty {
-                                    Text(med.dosage)
-                                        .font(.caption2)
-                                        .foregroundStyle(.white.opacity(0.6))
+                    // Line 2: emergency medications + note
+                    if !context.state.emergencyMedications.isEmpty || (context.state.emergencyNote != nil && !(context.state.emergencyNote?.isEmpty ?? true)) {
+                        HStack(spacing: 6) {
+                            ForEach(Array(context.state.emergencyMedications.prefix(2).enumerated()), id: \.offset) { _, med in
+                                HStack(spacing: 2) {
+                                    Image(systemName: "cross.circle.fill")
+                                        .font(.system(size: 8))
+                                        .foregroundStyle(.orange)
+                                    Text(med.name)
+                                        .font(.system(size: 10, weight: .semibold))
+                                        .foregroundStyle(.white)
+                                    if !med.location.isEmpty {
+                                        Text("(\(med.location))")
+                                            .font(.system(size: 9))
+                                            .foregroundStyle(.white.opacity(0.6))
+                                    }
                                 }
                             }
-                        }
-                    }
-
-                    // Emergency note
-                    if let note = context.state.emergencyNote, !note.isEmpty {
-                        HStack(spacing: 3) {
-                            Image(systemName: "note.text")
-                                .font(.system(size: 9))
-                                .foregroundStyle(.white.opacity(0.5))
-                            Text(note)
-                                .font(.caption2)
-                                .foregroundStyle(.white.opacity(0.8))
-                                .lineLimit(2)
+                            if let note = context.state.emergencyNote, !note.isEmpty {
+                                Text(note)
+                                    .font(.system(size: 9))
+                                    .foregroundStyle(.white.opacity(0.7))
+                                    .lineLimit(1)
+                            }
+                            Spacer(minLength: 0)
                         }
                     }
                 }
-                .padding(8)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 6)
                 .background(Color.orange.opacity(0.15))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
             }
 
-            // Action buttons
-            HStack(spacing: 8) {
+            // Action buttons (compact, 3 buttons)
+            HStack(spacing: 6) {
                 Link(destination: URL(string: "shoudeng://sos")!) {
-                    HStack(spacing: 4) {
+                    HStack(spacing: 2) {
                         Image(systemName: "sos")
-                            .font(.caption)
-                        Text("紧急求助")
-                            .fontWeight(.semibold)
+                            .font(.system(size: 9))
+                        Text("求助")
+                            .font(.caption2.weight(.semibold))
                     }
-                    .font(.subheadline)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
+                    .padding(.vertical, 7)
                     .background(context.state.status == .sosActive ? .red : SharedColors.lamp)
                     .foregroundStyle(.white)
                     .clipShape(Capsule())
                 }
                 Link(destination: URL(string: "shoudeng://checkin")!) {
-                    HStack(spacing: 4) {
+                    HStack(spacing: 2) {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.caption)
-                        Text("报平安")
-                            .fontWeight(.semibold)
+                            .font(.system(size: 9))
+                        Text("平安")
+                            .font(.caption2.weight(.semibold))
                     }
-                    .font(.subheadline)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
+                    .padding(.vertical, 7)
                     .background(SharedColors.safe.opacity(0.8))
+                    .foregroundStyle(.white)
+                    .clipShape(Capsule())
+                }
+                Link(destination: URL(string: "shoudeng://share-location")!) {
+                    HStack(spacing: 2) {
+                        Image(systemName: "location.fill")
+                            .font(.system(size: 9))
+                        Text("位置")
+                            .font(.caption2.weight(.semibold))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 7)
+                    .background(.blue.opacity(0.8))
                     .foregroundStyle(.white)
                     .clipShape(Capsule())
                 }
             }
         }
-        .padding(16)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
     }
 
     // MARK: - Helpers

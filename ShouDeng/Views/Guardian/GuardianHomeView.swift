@@ -525,7 +525,8 @@ struct GuardianHomeView: View {
             centerCoordinate: myCoord,
             lastUpdateMinutes: deviceLocation != nil ? Int(Date().timeIntervalSince(deviceLocation!.timestamp) / 60) : nil,
             label: "家人位置",
-            focusedPinId: $mapFocusId
+            focusedPinId: $mapFocusId,
+            locationService: coordinator.locationService
         )
     }
 

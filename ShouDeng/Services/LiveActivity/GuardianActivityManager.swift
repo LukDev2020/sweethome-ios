@@ -221,13 +221,12 @@ final class GuardianActivityManager {
     }
 
     func endAllActivities() {
-        Task {
-            for activity in Activity<ProtectedActivityAttributes>.activities {
-                await activity.end(nil, dismissalPolicy: .immediate)
-            }
-            for activity in Activity<GuardianActivityAttributes>.activities {
-                await activity.end(nil, dismissalPolicy: .immediate)
-            }
+        // End synchronously to avoid race with subsequent start
+        for activity in Activity<ProtectedActivityAttributes>.activities {
+            Task { await activity.end(nil, dismissalPolicy: .immediate) }
+        }
+        for activity in Activity<GuardianActivityAttributes>.activities {
+            Task { await activity.end(nil, dismissalPolicy: .immediate) }
         }
         protectedActivity = nil
         guardianActivity = nil

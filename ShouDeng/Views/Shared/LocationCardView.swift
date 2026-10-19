@@ -16,6 +16,9 @@ struct LocationCardView: View {
     var label: String?
     @Binding var focusedPinId: String?
 
+    /// Optional reactive location service for live updates
+    @ObservedObject var locationService: ReactiveLocationService
+
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
@@ -24,15 +27,18 @@ struct LocationCardView: View {
     @State private var addressText: String?
     @State private var showFullScreenMap = false
     @State private var mapDragged = false
+    @State private var isFollowing = true
 
     init(pins: [LocationPin], centerCoordinate: CLLocationCoordinate2D? = nil,
          lastUpdateMinutes: Int? = nil, label: String? = nil,
-         focusedPinId: Binding<String?> = .constant(nil)) {
+         focusedPinId: Binding<String?> = .constant(nil),
+         locationService: ReactiveLocationService = ReactiveLocationService()) {
         self.pins = pins
         self.centerCoordinate = centerCoordinate
         self.lastUpdateMinutes = lastUpdateMinutes
         self.label = label
         self._focusedPinId = focusedPinId
+        self.locationService = locationService
 
         let center = centerCoordinate ?? pins.first?.coordinate
             ?? CLLocationCoordinate2D(latitude: 39.9, longitude: 116.4)
@@ -43,13 +49,51 @@ struct LocationCardView: View {
         )))
     }
 
+    /// Live pins: merge static pins with reactive location updates
+    private var livePins: [LocationPin] {
+        pins.map { pin in
+            if pin.isMe, let liveCoord = locationService.currentLocation {
+                var updated = pin
+                updated = LocationPin(
+                    id: pin.id,
+                    name: pin.name,
+                    coordinate: liveCoord,
+                    color: pin.color,
+                    isMe: pin.isMe,
+                    status: pin.status,
+                    role: pin.role
+                )
+                return updated
+            }
+            // Check for live member location updates
+            if let member = locationService.memberLocations[pin.id] {
+                return LocationPin(
+                    id: pin.id,
+                    name: pin.name,
+                    coordinate: member.coordinate,
+                    color: pin.color,
+                    isMe: pin.isMe,
+                    status: pin.status,
+                    role: pin.role
+                )
+            }
+            return pin
+        }
+    }
+
+    /// Live update minutes
+    private var liveUpdateMinutes: Int? {
+        locationService.lastUpdateMinutes ?? lastUpdateMinutes
+    }
+
     private var isFocused: Bool { focusedPinId != nil }
     private var focusedPin: LocationPin? {
         guard let id = focusedPinId else { return nil }
-        return pins.first { $0.id == id }
+        return livePins.first { $0.id == id }
     }
 
     var body: some View {
+        let currentPins = livePins
         VStack(spacing: 0) {
             ZStack(alignment: .topLeading) {
                 // Map
@@ -60,9 +104,9 @@ struct LocationCardView: View {
                 // Overlay: person switcher + labels
                 VStack(alignment: .leading, spacing: 4) {
                     // Person icon strip (only show when >1 pin)
-                    if pins.count > 1 {
+                    if currentPins.count > 1 {
                         HStack(spacing: 6) {
-                            ForEach(pins) { pin in
+                            ForEach(currentPins) { pin in
                                 Button {
                                     withAnimation(.easeInOut(duration: 0.3)) {
                                         focusedPinId = focusedPinId == pin.id ? nil : pin.id
@@ -117,7 +161,7 @@ struct LocationCardView: View {
                                 .background(ink.opacity(0.7))
                                 .clipShape(Capsule())
                         }
-                        if let mins = lastUpdateMinutes {
+                        if let mins = liveUpdateMinutes {
                             Text(mins < 1 ? "刚刚更新" : "\(mins) 分钟前更新")
                                 .font(.scaled(size: 11))
                                 .foregroundStyle(.white.opacity(0.9))
@@ -131,7 +175,7 @@ struct LocationCardView: View {
                 .padding(8)
 
                 // Member card (upper right)
-                if pins.count > 1 {
+                if currentPins.count > 1 {
                     VStack {
                         HStack {
                             Spacer()
@@ -227,11 +271,13 @@ struct LocationCardView: View {
             showFullScreenMap = true
         }
         .fullScreenCover(isPresented: $showFullScreenMap) {
-            FullScreenMapView(pins: pins, label: label, focusedPinId: $focusedPinId)
+            FullScreenMapView(pins: livePins, label: label, focusedPinId: $focusedPinId, locationService: locationService)
         }
         .task { await reverseGeocodeMainPin() }
         .onChange(of: focusedPinId) { _, newId in
-            if let newId, let pin = pins.first(where: { $0.id == newId }) {
+            let currentPins = livePins
+            if let newId, let pin = currentPins.first(where: { $0.id == newId }) {
+                isFollowing = false
                 withAnimation(.easeInOut(duration: 0.5)) {
                     position = .region(MKCoordinateRegion(
                         center: pin.coordinate,
@@ -240,10 +286,12 @@ struct LocationCardView: View {
                 }
                 Task { await reverseGeocode(pin.coordinate) }
             } else {
-                // Reset to show all pins
-                let center = centerCoordinate ?? pins.first?.coordinate
+                // Reset to follow mode
+                isFollowing = true
+                let center = locationService.currentLocation
+                    ?? centerCoordinate ?? currentPins.first?.coordinate
                     ?? CLLocationCoordinate2D(latitude: 39.9, longitude: 116.4)
-                let span = pins.count > 1 ? Self.spanForPins(pins) : 0.05
+                let span = currentPins.count > 1 ? Self.spanForPins(currentPins) : 0.02
                 withAnimation(.easeInOut(duration: 0.5)) {
                     position = .region(MKCoordinateRegion(
                         center: center,
@@ -256,9 +304,10 @@ struct LocationCardView: View {
     }
 
     private var mapContent: some View {
+        let currentPins = livePins
         let style: MapStyle = .standard(pointsOfInterest: .excludingAll)
         return Map(position: $position, interactionModes: [.pan, .zoom]) {
-            ForEach(pins) { pin in
+            ForEach(currentPins) { pin in
                 Annotation(pin.name, coordinate: pin.coordinate) {
                     pinView(pin, isFocused: pin.id == focusedPinId)
                         .onTapGesture {
@@ -272,21 +321,39 @@ struct LocationCardView: View {
         .mapStyle(style)
         .onMapCameraChange { _ in
             if !mapDragged {
-                withAnimation(.easeInOut(duration: 0.2)) { mapDragged = true }
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    mapDragged = true
+                    isFollowing = false
+                }
+            }
+        }
+        // Auto-follow: when location updates and user hasn't dragged
+        .onChange(of: locationService.currentLocation?.latitude) { _, _ in
+            guard isFollowing, focusedPinId == nil,
+                  let coord = locationService.currentLocation else { return }
+            withAnimation(.easeInOut(duration: 0.5)) {
+                position = .region(MKCoordinateRegion(
+                    center: coord,
+                    span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
+                ))
             }
         }
     }
 
     private func recenterMap() {
-        let center = centerCoordinate ?? pins.first?.coordinate
+        let currentPins = livePins
+        // Prefer live location for recenter
+        let center = locationService.currentLocation
+            ?? centerCoordinate ?? currentPins.first?.coordinate
             ?? CLLocationCoordinate2D(latitude: 39.9, longitude: 116.4)
-        let span = pins.count > 1 ? Self.spanForPins(pins) : 0.05
+        let span = currentPins.count > 1 ? Self.spanForPins(currentPins) : 0.02
         withAnimation(.easeInOut(duration: 0.5)) {
             position = .region(MKCoordinateRegion(
                 center: center,
                 span: MKCoordinateSpan(latitudeDelta: span, longitudeDelta: span)
             ))
             mapDragged = false
+            isFollowing = true
             focusedPinId = nil
         }
     }
@@ -333,7 +400,7 @@ struct LocationCardView: View {
 
     private var memberCard: some View {
         VStack(alignment: .leading, spacing: 4) {
-            ForEach(pins) { pin in
+            ForEach(livePins) { pin in
                 Button {
                     withAnimation(.easeInOut(duration: 0.3)) {
                         focusedPinId = focusedPinId == pin.id ? nil : pin.id
@@ -442,6 +509,7 @@ struct FullScreenMapView: View {
     let pins: [LocationPin]
     var label: String?
     @Binding var focusedPinId: String?
+    @ObservedObject var locationService: ReactiveLocationService
     @Environment(\.dismiss) private var dismiss
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
@@ -452,14 +520,16 @@ struct FullScreenMapView: View {
     @State private var selectedPin: LocationPin?
     @State private var addressText: String?
     @State private var fullMapDragged = false
+    @State private var isFollowing = true
 
-    // Mock 24-hour trail for demo — in production this comes from server
     @State private var trailCoordinates: [String: [CLLocationCoordinate2D]] = [:]
 
-    init(pins: [LocationPin], label: String? = nil, focusedPinId: Binding<String?>) {
+    init(pins: [LocationPin], label: String? = nil, focusedPinId: Binding<String?>,
+         locationService: ReactiveLocationService = ReactiveLocationService()) {
         self.pins = pins
         self.label = label
         self._focusedPinId = focusedPinId
+        self.locationService = locationService
 
         let center = pins.first?.coordinate
             ?? CLLocationCoordinate2D(latitude: 39.9, longitude: 116.4)
@@ -470,12 +540,32 @@ struct FullScreenMapView: View {
         )))
     }
 
+    /// Live pins with reactive updates
+    private var livePins: [LocationPin] {
+        pins.map { pin in
+            if pin.isMe, let liveCoord = locationService.currentLocation {
+                return LocationPin(
+                    id: pin.id, name: pin.name, coordinate: liveCoord,
+                    color: pin.color, isMe: true, status: pin.status, role: pin.role
+                )
+            }
+            if let member = locationService.memberLocations[pin.id] {
+                return LocationPin(
+                    id: pin.id, name: pin.name, coordinate: member.coordinate,
+                    color: pin.color, isMe: false, status: pin.status, role: pin.role
+                )
+            }
+            return pin
+        }
+    }
+
     var body: some View {
+        let currentPins = livePins
         ZStack(alignment: .top) {
             // Full screen map
             Map(position: $position, interactionModes: [.pan, .zoom, .rotate, .pitch]) {
                 // Pins
-                ForEach(pins) { pin in
+                ForEach(currentPins) { pin in
                     Annotation(pin.name, coordinate: pin.coordinate) {
                         fullPinView(pin)
                             .onTapGesture {
@@ -485,6 +575,7 @@ struct FullScreenMapView: View {
                                         center: pin.coordinate,
                                         span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
                                     ))
+                                    isFollowing = false
                                 }
                                 Task { await reverseGeocode(pin.coordinate) }
                             }
@@ -492,7 +583,7 @@ struct FullScreenMapView: View {
                 }
 
                 // 24-hour trail polylines
-                ForEach(pins) { pin in
+                ForEach(currentPins) { pin in
                     if let trail = trailCoordinates[pin.id], trail.count > 1 {
                         MapPolyline(coordinates: trail)
                             .stroke(pin.color.opacity(0.6), lineWidth: 3)
@@ -503,7 +594,21 @@ struct FullScreenMapView: View {
             .ignoresSafeArea()
             .onMapCameraChange { _ in
                 if !fullMapDragged {
-                    withAnimation(.easeInOut(duration: 0.2)) { fullMapDragged = true }
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        fullMapDragged = true
+                        isFollowing = false
+                    }
+                }
+            }
+            // Auto-follow in full screen
+            .onChange(of: locationService.currentLocation?.latitude) { _, _ in
+                guard isFollowing, selectedPin == nil,
+                      let coord = locationService.currentLocation else { return }
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    position = .region(MKCoordinateRegion(
+                        center: coord,
+                        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                    ))
                 }
             }
 
@@ -595,7 +700,7 @@ struct FullScreenMapView: View {
                 // Pin list at bottom
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        ForEach(pins) { pin in
+                        ForEach(currentPins) { pin in
                             Button {
                                 withAnimation(.easeInOut(duration: 0.5)) {
                                     selectedPin = pin
@@ -701,15 +806,18 @@ struct FullScreenMapView: View {
     }
 
     private func recenterFullMap() {
-        let center = pins.first?.coordinate
+        let currentPins = livePins
+        let center = locationService.currentLocation
+            ?? currentPins.first?.coordinate
             ?? CLLocationCoordinate2D(latitude: 39.9, longitude: 116.4)
-        let span = pins.count > 1 ? LocationCardView.spanForPins(pins) : 0.05
+        let span = currentPins.count > 1 ? LocationCardView.spanForPins(currentPins) : 0.02
         withAnimation(.easeInOut(duration: 0.5)) {
             position = .region(MKCoordinateRegion(
                 center: center,
                 span: MKCoordinateSpan(latitudeDelta: span, longitudeDelta: span)
             ))
             fullMapDragged = false
+            isFollowing = true
             selectedPin = nil
         }
     }
