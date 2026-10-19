@@ -43,9 +43,9 @@ enum WidgetDataStore {
     }
 
     /// Returns the app's display name based on language setting.
-    /// Chinese → "守灯", English/French/other → "VELA"
+    /// Chinese → "守灯", English/French/other → "Luma"
     static var appName: String {
         let lang = sharedDefaults?.string(forKey: languageKey) ?? "zh-Hans"
-        return lang.hasPrefix("zh") ? "守灯" : "VELA"
+        return lang.hasPrefix("zh") ? "守灯" : "Luma"
     }
 }

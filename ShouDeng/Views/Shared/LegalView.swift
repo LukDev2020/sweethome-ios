@@ -145,10 +145,10 @@ struct AboutView: View {
                     .frame(width: 80, height: 80)
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
-                Text("守灯")
+                Text(LanguageManager.shared.current == .chinese ? "守灯" : "Luma")
                     .font(.scaled(size: 24, weight: .bold, design: .serif))
 
-                Text("让每一盏灯都不孤单")
+                Text(LanguageManager.shared.current == .chinese ? "让每一盏灯都不孤单" : "Family safety, always on")
                     .font(.scaled(size: 13))
                     .foregroundStyle(.secondary)
 
@@ -166,7 +166,7 @@ struct AboutView: View {
                             .font(.scaled(size: 13))
                     }
 
-                    Text("© 2026 守灯安全")
+                    Text(LanguageManager.shared.current == .chinese ? "© 2026 守灯安全" : "© 2026 Luma Safety")
                         .font(.scaled(size: 12))
                         .foregroundStyle(.tertiary)
                 }

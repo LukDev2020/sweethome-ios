@@ -1,5 +1,5 @@
 /* Login */
-"app.name" = "Vela";
+"app.name" = "Luma";
 "app.tagline" = "Reach your family faster in emergencies";
 "login.phone.placeholder" = "Phone number";
 "login.code.placeholder" = "Verification code";
@@ -21,7 +21,7 @@
 /* Login - Security */
 "login.reset" = "Start Over";
 "login.locked.title" = "Account Locked";
-"login.locked.message" = "Too many failed attempts. Please contact the Vela team for assistance.";
+"login.locked.message" = "Too many failed attempts. Please contact the Luma team for assistance.";
 "login.locked.contact" = "Contact Support";
 "login.attempts.warning" = "%d attempts remaining";
 
