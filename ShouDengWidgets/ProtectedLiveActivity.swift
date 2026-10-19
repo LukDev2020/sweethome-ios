@@ -14,8 +14,13 @@ struct ProtectedLiveActivity: Widget {
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("守灯守护中")
-                            .font(.caption.bold())
+                        HStack(spacing: 4) {
+                            Image(systemName: "shield.checkered")
+                                .font(.caption2)
+                                .foregroundStyle(SharedColors.lamp)
+                            Text(WidgetDataStore.appName)
+                                .font(.caption.bold())
+                        }
                         let onDuty = context.state.guardians.filter(\.isOnDuty)
                         if !onDuty.isEmpty {
                             Text("\(onDuty.first!.name)值班中")
@@ -68,10 +73,10 @@ struct ProtectedLiveActivity: Widget {
                 }
             } compactLeading: {
                 HStack(spacing: 4) {
-                    Circle()
-                        .fill(protectedStatusColor(context.state.status))
-                        .frame(width: 8, height: 8)
-                    Text("守灯")
+                    Image(systemName: "shield.checkered")
+                        .font(.caption2)
+                        .foregroundStyle(SharedColors.lamp)
+                    Text(WidgetDataStore.appName)
                         .font(.caption2.bold())
                 }
             } compactTrailing: {
@@ -108,7 +113,7 @@ struct ProtectedLiveActivity: Widget {
                     Image(systemName: "shield.checkered")
                         .font(.subheadline)
                         .foregroundStyle(SharedColors.lamp)
-                    Text("守灯守护中")
+                    Text(WidgetDataStore.appName)
                         .font(.subheadline.bold())
                         .foregroundStyle(.white)
                 }
@@ -172,31 +177,92 @@ struct ProtectedLiveActivity: Widget {
                 }
             }
 
-            // Emergency medications (if any)
-            if !context.state.emergencyMedications.isEmpty {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("急救药品")
-                        .font(.caption2)
-                        .foregroundStyle(.white.opacity(0.5))
-                    ForEach(Array(context.state.emergencyMedications.prefix(3).enumerated()), id: \.offset) { _, med in
-                        HStack(spacing: 6) {
-                            Image(systemName: "cross.circle.fill")
+            // Emergency Medical Info (visible without unlocking)
+            if hasEmergencyInfo(context.state) {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "staroflife.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.orange)
+                        Text("急救信息")
+                            .font(.caption2.bold())
+                            .foregroundStyle(.orange)
+                        Spacer()
+                    }
+
+                    // Blood type + Allergies (critical for first responders)
+                    HStack(spacing: 12) {
+                        if let blood = context.state.bloodType, !blood.isEmpty {
+                            HStack(spacing: 3) {
+                                Image(systemName: "drop.fill")
+                                    .font(.system(size: 9))
+                                    .foregroundStyle(.red)
+                                Text(blood)
+                                    .font(.caption.bold())
+                                    .foregroundStyle(.white)
+                            }
+                        }
+                        if !context.state.allergies.isEmpty {
+                            HStack(spacing: 3) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .font(.system(size: 9))
+                                    .foregroundStyle(.yellow)
+                                Text(context.state.allergies.prefix(3).joined(separator: "、"))
+                                    .font(.caption2)
+                                    .foregroundStyle(.white)
+                                    .lineLimit(1)
+                            }
+                        }
+                    }
+
+                    // Conditions (diseases)
+                    if !context.state.conditions.isEmpty {
+                        HStack(spacing: 3) {
+                            Image(systemName: "heart.text.clipboard")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.white.opacity(0.6))
+                            Text(context.state.conditions.prefix(4).joined(separator: "、"))
                                 .font(.caption2)
-                                .foregroundStyle(.orange)
-                            Text(med.name)
-                                .font(.caption.bold())
-                                .foregroundStyle(.white)
-                            if !med.location.isEmpty {
-                                Text(med.location)
-                                    .font(.caption2)
-                                    .foregroundStyle(.white.opacity(0.7))
+                                .foregroundStyle(.white.opacity(0.9))
+                                .lineLimit(1)
+                        }
+                    }
+
+                    // Emergency medications
+                    if !context.state.emergencyMedications.isEmpty {
+                        ForEach(Array(context.state.emergencyMedications.prefix(2).enumerated()), id: \.offset) { _, med in
+                            HStack(spacing: 4) {
+                                Image(systemName: "cross.circle.fill")
+                                    .font(.system(size: 9))
+                                    .foregroundStyle(.orange)
+                                Text(med.name)
+                                    .font(.caption2.bold())
+                                    .foregroundStyle(.white)
+                                if !med.location.isEmpty {
+                                    Text("· \(med.location)")
+                                        .font(.caption2)
+                                        .foregroundStyle(.white.opacity(0.7))
+                                }
+                                Spacer()
+                                if !med.dosage.isEmpty {
+                                    Text(med.dosage)
+                                        .font(.caption2)
+                                        .foregroundStyle(.white.opacity(0.6))
+                                }
                             }
-                            Spacer()
-                            if !med.dosage.isEmpty {
-                                Text(med.dosage)
-                                    .font(.caption2)
-                                    .foregroundStyle(.white.opacity(0.6))
-                            }
+                        }
+                    }
+
+                    // Emergency note
+                    if let note = context.state.emergencyNote, !note.isEmpty {
+                        HStack(spacing: 3) {
+                            Image(systemName: "note.text")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.white.opacity(0.5))
+                            Text(note)
+                                .font(.caption2)
+                                .foregroundStyle(.white.opacity(0.8))
+                                .lineLimit(2)
                         }
                     }
                 }
@@ -241,6 +307,14 @@ struct ProtectedLiveActivity: Widget {
     }
 
     // MARK: - Helpers
+
+    private func hasEmergencyInfo(_ state: ProtectedActivityAttributes.ContentState) -> Bool {
+        (state.bloodType != nil && !(state.bloodType?.isEmpty ?? true))
+        || !state.allergies.isEmpty
+        || !state.conditions.isEmpty
+        || !state.emergencyMedications.isEmpty
+        || (state.emergencyNote != nil && !(state.emergencyNote?.isEmpty ?? true))
+    }
 
     private func protectedStatusColor(_ status: ProtectedActivityAttributes.OverallStatus) -> Color {
         switch status {

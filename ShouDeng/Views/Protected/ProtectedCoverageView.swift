@@ -42,6 +42,21 @@ struct ProtectedCoverageView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
+    private var sampleDataBanner: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "info.circle.fill")
+                .font(.caption2)
+            Text("以下为示例数据，实际覆盖因地区而异")
+                .font(.caption2)
+        }
+        .foregroundStyle(.secondary)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .background(Color(.secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .padding(.horizontal, 16)
+    }
+
     private var compactLayout: some View {
         ScrollView {
             VStack(spacing: 12) {
@@ -53,6 +68,7 @@ struct ProtectedCoverageView: View {
                         .foregroundStyle(.secondary)
                 }
                 .padding(.top, 8)
+                sampleDataBanner
                 localResourcesPanel
                 offlinePackPanel
                 weakNetworkPanel
@@ -79,6 +95,7 @@ struct ProtectedCoverageView: View {
                             .foregroundStyle(.secondary)
                     }
                     .padding(.top, 8)
+                    sampleDataBanner
                     localResourcesPanel
                 }
                 .padding(.horizontal, 16)

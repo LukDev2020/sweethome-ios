@@ -30,4 +30,19 @@ enum WidgetDataStore {
     static func clear() {
         sharedDefaults?.removeObject(forKey: stateKey)
     }
+
+    // MARK: - Language Sync
+
+    private static let languageKey = "app_language"
+
+    static func writeLanguage(_ lang: String) {
+        sharedDefaults?.set(lang, forKey: languageKey)
+    }
+
+    /// Returns the app's display name based on language setting.
+    /// Chinese → "守灯", English/French/other → "VELA"
+    static var appName: String {
+        let lang = sharedDefaults?.string(forKey: languageKey) ?? "zh-Hans"
+        return lang.hasPrefix("zh") ? "守灯" : "VELA"
+    }
 }

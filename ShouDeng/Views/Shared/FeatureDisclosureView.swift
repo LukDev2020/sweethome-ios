@@ -136,7 +136,9 @@ struct FeatureDisclosureModifier: ViewModifier {
                 FeatureDisclosureView(feature: feature) { granted in
                     acknowledged = true
                     showSheet = false
-                    _ = granted
+                    if !granted {
+                        trigger.wrappedValue = false
+                    }
                 }
             }
     }

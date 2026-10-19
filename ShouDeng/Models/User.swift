@@ -86,6 +86,12 @@ enum BatteryState: String, Codable {
     case full
     case unplugged
     case unknown
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        self = BatteryState(rawValue: raw) ?? .unknown
+    }
 }
 
 enum SafetyStatus: String, Codable {

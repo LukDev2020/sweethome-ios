@@ -35,6 +35,14 @@ struct GlobeMapView: View {
                 draw(ctx: &ctx, size: size, time: timeline.date.timeIntervalSinceReferenceDate)
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(globeAccessibilityLabel)
+    }
+
+    private var globeAccessibilityLabel: String {
+        if pins.isEmpty { return "家庭守护地球，暂无成员" }
+        let names = pins.map { $0.label }.joined(separator: "、")
+        return "家庭守护地球，显示\(pins.count)位成员：\(names)"
     }
 
     // MARK: - Rendering
@@ -126,34 +134,34 @@ struct GlobeMapView: View {
             let alpha = min(1.0, 0.4 + pt.z)
 
             // Outer glow
-            let glowR: CGFloat = pin.isMe ? 12 : 8
+            let glowR: CGFloat = pin.isMe ? 14 : 10
             ctx.fill(
                 Path(ellipseIn: CGRect(x: pt.x - glowR, y: pt.y - glowR, width: glowR * 2, height: glowR * 2)),
                 with: .color(pin.color.opacity(0.18 * alpha))
             )
 
             // Inner glow
-            let innerR: CGFloat = pin.isMe ? 7 : 5
+            let innerR: CGFloat = pin.isMe ? 8 : 6
             ctx.fill(
                 Path(ellipseIn: CGRect(x: pt.x - innerR, y: pt.y - innerR, width: innerR * 2, height: innerR * 2)),
                 with: .color(pin.color.opacity(0.35 * alpha))
             )
 
             // Core dot
-            let coreR: CGFloat = pin.isMe ? 4.5 : 3
+            let coreR: CGFloat = pin.isMe ? 5.5 : 4
             ctx.fill(
                 Path(ellipseIn: CGRect(x: pt.x - coreR, y: pt.y - coreR, width: coreR * 2, height: coreR * 2)),
                 with: .color(pin.color.opacity(alpha))
             )
 
             // City label (only when facing forward enough)
-            if pt.z > 0.4 {
+            if pt.z > 0.2 {
                 let resolved = ctx.resolve(
                     Text(pin.label)
-                        .font(.scaled(size: 11, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.8 * alpha))
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.9 * alpha))
                 )
-                ctx.draw(resolved, at: CGPoint(x: pt.x, y: pt.y - glowR - 5), anchor: .bottom)
+                ctx.draw(resolved, at: CGPoint(x: pt.x, y: pt.y - glowR - 6), anchor: .bottom)
             }
         }
     }

@@ -148,6 +148,7 @@ final class AuthManager: ObservableObject {
 
     // MARK: - Token Refresh
 
+    @MainActor
     func refreshToken() async throws {
         // M5 fix: serialize concurrent refresh calls
         if isRefreshing {

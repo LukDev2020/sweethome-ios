@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 // MARK: - Login View
 //
@@ -289,7 +290,7 @@ struct LoginView: View {
 
                 Text(lang.current == .chinese ? "VELA" : "守灯")
                     .font(.scaled(size: 12, weight: .medium))
-                    .foregroundStyle(blue)
+                    .foregroundStyle(Color(red: 26/255, green: 106/255, blue: 138/255))
                     .tracking(3.5)
                     .padding(.top, 4)
 
@@ -447,20 +448,48 @@ struct LoginView: View {
         defer { isLoading = false }
 
         // Dev/test login bypass
-        // Step 1: phone 6479283746 → skip SMS, show code field
-        // Step 2: code 928374 → guardian, 928375 → protected
+        // Phone: 6479283746 → code: 928374 (guardian) or 928375 (protected)
         let devPhone = phone.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
         if devPhone == "6479283746" || devPhone == "6479283747" {
             if !codeSent {
                 codeSent = true
                 return
             }
-            if code == "928374" {
-                coordinator.authManager.devLogin(role: "guardian")
-                return
-            }
-            if code == "928375" {
-                coordinator.authManager.devLogin(role: "protected")
+            let devRole: String? = code == "928374" ? "guardian" : code == "928375" ? "protected" : nil
+            if let devRole {
+                coordinator.authManager.devLogin(role: devRole)
+                // Set up dev user profile so home views have data
+                let devUser = User(
+                    id: coordinator.authManager.currentUserId ?? "dev",
+                    displayName: devRole == "guardian" ? "测试守护者" : "测试被守护者",
+                    role: devRole == "guardian" ? .guardian : .protected_,
+                    avatarInitial: devRole == "guardian" ? "守" : "护",
+                    timeZone: TimeZone.current,
+                    countryCode: Locale.current.region?.identifier ?? "CA",
+                    cityName: {
+                        switch selectedCountry.isoCode {
+                        case "CA": return "Vancouver"
+                        case "CN": return "上海"
+                        case "US": return "New York"
+                        case "GB": return "London"
+                        case "FR": return "Paris"
+                        case "JP": return "Tokyo"
+                        case "KR": return "Seoul"
+                        case "AU": return "Sydney"
+                        case "SG": return "Singapore"
+                        case "HK": return "Hong Kong"
+                        case "TW": return "Taipei"
+                        default: return "Vancouver"
+                        }
+                    }(),
+                    createdAt: Date()
+                )
+                coordinator.currentUser = devUser
+                coordinator.userRole = devUser.role
+                // Trigger setup wizard for first-time dev users
+                if !UserDefaults.standard.bool(forKey: "setupWizardComplete") {
+                    coordinator.showSetupWizard = true
+                }
                 return
             }
         }

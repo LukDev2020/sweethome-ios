@@ -91,9 +91,16 @@ struct GuardianHomeView: View {
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Text("你正在值班")
-                        .font(.scaled(size: 12))
-                        .foregroundStyle(safe)
+                    // Only show duty text when there are protected persons
+                    if !coordinator.protectedPersons.isEmpty {
+                        Text("守护中 · \(coordinator.protectedPersons.count)人")
+                            .font(.scaled(size: 12))
+                            .foregroundStyle(safe)
+                    } else {
+                        Text("守灯")
+                            .font(.scaled(size: 12))
+                            .foregroundStyle(safe)
+                    }
                 }
             }
             .navigationDestination(for: String.self) { personId in
@@ -175,7 +182,13 @@ struct GuardianHomeView: View {
                             .font(.scaled(size: 18, weight: .bold, design: .serif))
                             .foregroundStyle(ink)
                         Spacer()
-                        Text("你正在值班")
+                        Group {
+                            if !coordinator.protectedPersons.isEmpty {
+                                Text("守护中 · \(coordinator.protectedPersons.count)人")
+                            } else {
+                                Text("守灯")
+                            }
+                        }
                             .font(.scaled(size: 12))
                             .foregroundStyle(safe)
                             .padding(.horizontal, 10)
@@ -491,7 +504,7 @@ struct GuardianHomeView: View {
         }()
 
         var pins: [LocationPin] = [
-            LocationPin(id: "me", name: "我", coordinate: myCoord, color: safe, isMe: true)
+            LocationPin(id: "me", name: "我", coordinate: myCoord, color: safe, isMe: true, role: .me)
         ]
 
         // Protected persons' locations
@@ -501,7 +514,8 @@ struct GuardianHomeView: View {
                     id: person.id,
                     name: person.user.displayName,
                     coordinate: CLLocationCoordinate2D(latitude: loc.latitude, longitude: loc.longitude),
-                    color: person.status == .alert ? alert : lamp
+                    color: person.status == .alert ? alert : lamp,
+                    role: .protected_
                 ))
             }
         }

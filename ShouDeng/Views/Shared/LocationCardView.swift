@@ -130,6 +130,18 @@ struct LocationCardView: View {
                 }
                 .padding(8)
 
+                // Member card (upper right)
+                if pins.count > 1 {
+                    VStack {
+                        HStack {
+                            Spacer()
+                            memberCard
+                        }
+                        Spacer()
+                    }
+                    .padding(6)
+                }
+
                 // Collapse button when focused
                 if isFocused {
                     VStack {
@@ -153,6 +165,7 @@ struct LocationCardView: View {
                                 .background(ink.opacity(0.6))
                                 .clipShape(Capsule())
                             }
+                            .accessibilityLabel("收起地图")
                         }
                         .padding(8)
                     }
@@ -174,6 +187,7 @@ struct LocationCardView: View {
                         .background(ink.opacity(0.65))
                         .clipShape(Circle())
                 }
+                .accessibilityLabel("展开地图")
                 .padding(8)
             }
             // Recenter button (appears after user drags the map)
@@ -190,6 +204,7 @@ struct LocationCardView: View {
                             .clipShape(Circle())
                             .shadow(color: .black.opacity(0.2), radius: 3, y: 1)
                     }
+                    .accessibilityLabel("回到当前位置")
                     .padding(8)
                     .transition(.scale.combined(with: .opacity))
                 }
@@ -243,7 +258,6 @@ struct LocationCardView: View {
     private var mapContent: some View {
         let style: MapStyle = .standard(pointsOfInterest: .excludingAll)
         return Map(position: $position, interactionModes: [.pan, .zoom]) {
-            UserAnnotation()
             ForEach(pins) { pin in
                 Annotation(pin.name, coordinate: pin.coordinate) {
                     pinView(pin, isFocused: pin.id == focusedPinId)
@@ -280,29 +294,102 @@ struct LocationCardView: View {
     @ViewBuilder
     private func pinView(_ pin: LocationPin, isFocused: Bool) -> some View {
         VStack(spacing: 1) {
-            ZStack {
-                if isFocused {
-                    // Pulsing ring for focused pin
+            if pin.isMe {
+                // "My location" — red circle with arrow, always visible
+                ZStack {
                     Circle()
-                        .stroke(pin.color.opacity(0.4), lineWidth: 2)
-                        .frame(width: 36, height: 36)
+                        .fill(Color.red.opacity(0.15))
+                        .frame(width: isFocused ? 40 : 34, height: isFocused ? 40 : 34)
+                    Circle()
+                        .stroke(Color.red, lineWidth: 2.5)
+                        .frame(width: isFocused ? 32 : 26, height: isFocused ? 32 : 26)
+                    Image(systemName: "location.fill")
+                        .font(.system(size: isFocused ? 14 : 12, weight: .bold))
+                        .foregroundStyle(Color.red)
                 }
-                Circle()
-                    .fill(pin.color.opacity(0.25))
-                    .frame(width: isFocused ? 32 : 28, height: isFocused ? 32 : 28)
-                Circle()
-                    .fill(pin.color)
-                    .frame(width: isFocused ? 16 : 14, height: isFocused ? 16 : 14)
-                if pin.isMe {
+            } else {
+                ZStack {
+                    if isFocused {
+                        Circle()
+                            .stroke(pin.color.opacity(0.4), lineWidth: 2)
+                            .frame(width: 36, height: 36)
+                    }
                     Circle()
-                        .stroke(.white, lineWidth: 2)
-                        .frame(width: 18, height: 18)
+                        .fill(pin.color.opacity(0.25))
+                        .frame(width: isFocused ? 32 : 28, height: isFocused ? 32 : 28)
+                    Circle()
+                        .fill(pin.color)
+                        .frame(width: isFocused ? 16 : 14, height: isFocused ? 16 : 14)
                 }
             }
             Text(pin.name)
                 .font(.scaled(size: 11, weight: isFocused ? .semibold : .medium))
                 .foregroundStyle(ink)
                 .lineLimit(1)
+        }
+    }
+
+    // MARK: - Member Card (upper right translucent overlay)
+
+    private var memberCard: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(pins) { pin in
+                Button {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        focusedPinId = focusedPinId == pin.id ? nil : pin.id
+                    }
+                } label: {
+                    HStack(spacing: 5) {
+                        // Avatar circle
+                        ZStack {
+                            Circle()
+                                .fill(pin.isMe ? Color.red.opacity(0.2) : pin.color.opacity(0.3))
+                                .frame(width: 18, height: 18)
+                            if pin.isMe {
+                                Image(systemName: "location.fill")
+                                    .font(.system(size: 8, weight: .bold))
+                                    .foregroundStyle(Color.red)
+                            } else {
+                                Text(String(pin.name.prefix(1)))
+                                    .font(.system(size: 9, weight: .bold))
+                                    .foregroundStyle(.white)
+                            }
+                        }
+                        // Name
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text(pin.name)
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .lineLimit(1)
+                            Text(memberRoleLabel(pin))
+                                .font(.system(size: 8))
+                                .foregroundStyle(.white.opacity(0.6))
+                        }
+                    }
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(
+                        focusedPinId == pin.id
+                            ? RoundedRectangle(cornerRadius: 6).fill(pin.color.opacity(0.4))
+                            : RoundedRectangle(cornerRadius: 6).fill(Color.clear)
+                    )
+                }
+            }
+        }
+        .padding(6)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(.white.opacity(0.15), lineWidth: 0.5)
+        )
+    }
+
+    private func memberRoleLabel(_ pin: LocationPin) -> String {
+        switch pin.role {
+        case .me: return "我"
+        case .guardian: return pin.status ?? "守护者"
+        case .protected_: return pin.status ?? "被守护"
         }
     }
 
@@ -387,7 +474,6 @@ struct FullScreenMapView: View {
         ZStack(alignment: .top) {
             // Full screen map
             Map(position: $position, interactionModes: [.pan, .zoom, .rotate, .pitch]) {
-                UserAnnotation()
                 // Pins
                 ForEach(pins) { pin in
                     Annotation(pin.name, coordinate: pin.coordinate) {
@@ -438,6 +524,7 @@ struct FullScreenMapView: View {
                                 .clipShape(Circle())
                                 .shadow(color: .black.opacity(0.25), radius: 4, y: 2)
                         }
+                        .accessibilityLabel("回到当前位置")
                         .padding(.trailing, 16)
                         .padding(.bottom, 130)
                     }
@@ -455,6 +542,7 @@ struct FullScreenMapView: View {
                             .font(.scaled(size: 28))
                             .foregroundStyle(.white, ink.opacity(0.6))
                     }
+                    .accessibilityLabel("关闭地图")
 
                     Spacer()
 
@@ -583,17 +671,26 @@ struct FullScreenMapView: View {
     @ViewBuilder
     private func fullPinView(_ pin: LocationPin) -> some View {
         VStack(spacing: 2) {
-            ZStack {
-                Circle()
-                    .fill(pin.color.opacity(0.25))
-                    .frame(width: 36, height: 36)
-                Circle()
-                    .fill(pin.color)
-                    .frame(width: 18, height: 18)
-                if pin.isMe {
+            if pin.isMe {
+                ZStack {
                     Circle()
-                        .stroke(.white, lineWidth: 2.5)
-                        .frame(width: 22, height: 22)
+                        .fill(Color.red.opacity(0.15))
+                        .frame(width: 44, height: 44)
+                    Circle()
+                        .stroke(Color.red, lineWidth: 3)
+                        .frame(width: 34, height: 34)
+                    Image(systemName: "location.fill")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(Color.red)
+                }
+            } else {
+                ZStack {
+                    Circle()
+                        .fill(pin.color.opacity(0.25))
+                        .frame(width: 36, height: 36)
+                    Circle()
+                        .fill(pin.color)
+                        .frame(width: 18, height: 18)
                 }
             }
             Text(pin.name)
@@ -654,4 +751,11 @@ struct LocationPin: Identifiable {
     let color: Color
     var isMe: Bool = false
     var status: String?
+    var role: PinRole = .me
+
+    enum PinRole {
+        case me
+        case guardian
+        case protected_
+    }
 }

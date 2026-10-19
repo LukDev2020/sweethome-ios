@@ -61,7 +61,7 @@ struct DegradationBannerView: View {
                     .foregroundStyle(ink.opacity(0.45))
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 9)
+            .padding(.vertical, 14)
             .background(tintColor.opacity(0.12))
         }
         .buttonStyle(.plain)

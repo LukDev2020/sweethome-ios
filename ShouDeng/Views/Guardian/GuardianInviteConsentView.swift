@@ -26,7 +26,7 @@ struct GuardianInviteConsentView: View {
             VStack(spacing: 12) {
                 // Header
                 VStack(spacing: 2) {
-                    Text("邀请弟弟加入")
+                    Text("邀请家人加入守灯")
                         .font(.scaled(size: 20, weight: .bold))
                     Text("他确认后关系才成立")
                         .font(.scaled(size: 13))

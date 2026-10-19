@@ -234,6 +234,9 @@ struct GuardianMemberDetailView: View {
     // MARK: - Timeline
 
     private var timelineSection: some View {
+        // NOTE: TimelineEntry has no relatedPersonId field, so we cannot filter
+        // by person yet. Once the model gains that field, filter here:
+        //   coordinator.timeline.filter { $0.relatedPersonId == personId }.prefix(10)
         let personEntries = coordinator.timeline.prefix(10)
 
         return Group {

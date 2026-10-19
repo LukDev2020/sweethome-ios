@@ -17,6 +17,10 @@ final class GuardianActivityManager {
         lastCheckIn: Date?,
         emergencyPhone: String,
         emergencyLabel: String,
+        bloodType: String? = nil,
+        allergies: [String] = [],
+        conditions: [String] = [],
+        emergencyNote: String? = nil,
         emergencyMedications: [ProtectedActivityAttributes.MedInfo] = []
     ) {
         let authInfo = ActivityAuthorizationInfo()
@@ -39,13 +43,17 @@ final class GuardianActivityManager {
             homeTimerLabel: nil,
             emergencyPhone: emergencyPhone,
             emergencyLabel: emergencyLabel,
+            bloodType: bloodType,
+            allergies: allergies,
+            conditions: conditions,
+            emergencyNote: emergencyNote,
             emergencyMedications: emergencyMedications
         )
 
         do {
             let activity = try Activity.request(
                 attributes: attributes,
-                content: .init(state: state, staleDate: nil),
+                content: .init(state: state, staleDate: Date().addingTimeInterval(600)),
                 pushType: Self.pushType
             )
             protectedActivity = activity
@@ -88,7 +96,7 @@ final class GuardianActivityManager {
         do {
             let activity = try Activity.request(
                 attributes: attributes,
-                content: .init(state: state, staleDate: nil),
+                content: .init(state: state, staleDate: Date().addingTimeInterval(600)),
                 pushType: Self.pushType
             )
             guardianActivity = activity
@@ -107,7 +115,7 @@ final class GuardianActivityManager {
             var state = activity.content.state
             state.status = status
             state.statusText = text
-            await activity.update(.init(state: state, staleDate: nil))
+            await activity.update(.init(state: state, staleDate: Date().addingTimeInterval(600)))
         }
     }
 
@@ -116,7 +124,7 @@ final class GuardianActivityManager {
         Task {
             var state = activity.content.state
             state.guardians = guardians
-            await activity.update(.init(state: state, staleDate: nil))
+            await activity.update(.init(state: state, staleDate: Date().addingTimeInterval(600)))
         }
     }
 
@@ -127,7 +135,7 @@ final class GuardianActivityManager {
             state.lastCheckIn = Date()
             state.status = .normal
             state.statusText = "正常"
-            await activity.update(.init(state: state, staleDate: nil))
+            await activity.update(.init(state: state, staleDate: Date().addingTimeInterval(600)))
         }
     }
 
@@ -139,7 +147,7 @@ final class GuardianActivityManager {
             state.homeTimerLabel = label
             state.status = deadline != nil ? .timerRunning : .normal
             state.statusText = deadline != nil ? "回家计时中" : "正常"
-            await activity.update(.init(state: state, staleDate: nil))
+            await activity.update(.init(state: state, staleDate: Date().addingTimeInterval(600)))
         }
     }
 
@@ -161,7 +169,7 @@ final class GuardianActivityManager {
                 priorityPersonPhone: priorityPhone,
                 updatedAt: Date()
             )
-            await activity.update(.init(state: newState, staleDate: nil))
+            await activity.update(.init(state: newState, staleDate: Date().addingTimeInterval(600)))
         }
     }
 
@@ -176,7 +184,7 @@ final class GuardianActivityManager {
                 state.emergencyPhone = localEmergencyNumber
                 state.emergencyLabel = localEmergencyNumber
                 await activity.update(
-                    .init(state: state, staleDate: nil),
+                    .init(state: state, staleDate: Date().addingTimeInterval(600)),
                     alertConfiguration: .init(
                         title: "SOS 紧急求助",
                         body: "守灯已触发紧急求助",
@@ -194,7 +202,7 @@ final class GuardianActivityManager {
                 var state = activity.content.state
                 state.status = .normal
                 state.statusText = "正常"
-                await activity.update(.init(state: state, staleDate: nil))
+                await activity.update(.init(state: state, staleDate: Date().addingTimeInterval(600)))
             }
         }
     }

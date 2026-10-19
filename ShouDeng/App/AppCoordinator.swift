@@ -15,7 +15,7 @@ final class AppCoordinator: ObservableObject {
     // MARK: - Published State
 
     @Published var currentUser: User?
-    @Published var userRole: UserRole = .guardian
+    @Published var userRole: UserRole = .protected_
     @Published var protectedPersons: [ProtectedPerson] = []  // Guardian sees these
     @Published var myGuardians: [Guardian] = []               // Protected person sees these
     @Published var activeSOSEvent: SOSEvent?
@@ -182,6 +182,12 @@ final class AppCoordinator: ObservableObject {
         syncNotificationPrefs()
 
         syncWidgetState()
+
+        // Apply any pending deep link that arrived before login
+        if let pending = pendingDeepLink {
+            pendingDeepLink = nil
+            applyDeepLink(pending)
+        }
     }
 
     private func onLogout() {
@@ -519,14 +525,15 @@ final class AppCoordinator: ObservableObject {
                     isOnline: g.isOnDuty // approximate: on-duty ≈ online
                 )
             }
-            // Load emergency medications from cache
-            let medInfos: [ProtectedActivityAttributes.MedInfo] = {
+            // Load emergency medical info from cache
+            let cachedCard: MedicalCardData? = {
                 guard let data = UserDefaults.standard.data(forKey: "medical_card_cache"),
-                      let card = try? JSONDecoder().decode(MedicalCardData.self, from: data) else { return [] }
-                return card.emergencyMedications.map {
-                    ProtectedActivityAttributes.MedInfo(name: $0.name, location: $0.storageLocation, dosage: $0.dosage)
-                }
+                      let card = try? JSONDecoder().decode(MedicalCardData.self, from: data) else { return nil }
+                return card
             }()
+            let medInfos: [ProtectedActivityAttributes.MedInfo] = (cachedCard?.emergencyMedications ?? []).map {
+                ProtectedActivityAttributes.MedInfo(name: $0.name, location: $0.storageLocation, dosage: $0.dosage)
+            }
 
             liveActivityManager.startProtectedActivity(
                 userName: currentUser?.displayName ?? "",
@@ -534,6 +541,10 @@ final class AppCoordinator: ObservableObject {
                 lastCheckIn: nil,
                 emergencyPhone: emergencyPhone,
                 emergencyLabel: selectedHotline?.selectedLabel ?? "911",
+                bloodType: cachedCard?.bloodType,
+                allergies: cachedCard?.allergies ?? [],
+                conditions: cachedCard?.conditions ?? [],
+                emergencyNote: cachedCard?.emergencyNote,
                 emergencyMedications: medInfos
             )
         } else {
@@ -582,9 +593,15 @@ final class AppCoordinator: ObservableObject {
     // MARK: - SOS Trigger
 
     func triggerSOS(method: SOSTriggerMethod = .longPress) {
+        guard let userId = currentUser?.id, !userId.isEmpty else {
+            #if DEBUG
+            print("[AppCoordinator] Cannot trigger SOS: no current user")
+            #endif
+            return
+        }
         let sosEvent = SOSEvent(
             id: UUID().uuidString,
-            protectedPersonId: currentUser?.id ?? "",
+            protectedPersonId: userId,
             triggeredAt: Date(),
             triggerMethod: method,
             location: nil,
@@ -625,7 +642,7 @@ final class AppCoordinator: ObservableObject {
         sosDeliveryFailed = false
         let sosLocation = locationManager.lastReportedLocation
         apiClient.postQueued("/v1/sos/trigger", body: SOSTriggerRequest(
-            protectedPersonId: currentUser?.id ?? "",
+            protectedPersonId: userId,
             triggerMethod: method,
             latitude: sosLocation?.coordinate.latitude,
             longitude: sosLocation?.coordinate.longitude,
@@ -640,8 +657,8 @@ final class AppCoordinator: ObservableObject {
 
     func cancelSOS() {
         guard let sos = activeSOSEvent else { return }
-
-        escalationEngine.resolve(by: currentUser?.id ?? "", resolution: .protectedCancelled)
+        let userId = currentUser?.id ?? "unknown"
+        escalationEngine.resolve(by: userId, resolution: .protectedCancelled)
         activeSOSEvent = nil
         localStore.saveActiveSOSEvent(nil)
         syncWidgetState()
@@ -654,7 +671,7 @@ final class AppCoordinator: ObservableObject {
 
         apiClient.postQueued("/v1/sos/resolve", body: SOSResolveRequest(
             sosEventId: sos.id,
-            resolvedBy: currentUser?.id ?? "",
+            resolvedBy: userId,
             resolution: .protectedCancelled
         ))
     }
@@ -662,7 +679,7 @@ final class AppCoordinator: ObservableObject {
     // MARK: - Check-In
 
     func performCheckIn(note: String? = nil) {
-        guard let userId = currentUser?.id else { return }
+        guard let userId = currentUser?.id, !userId.isEmpty else { return }
 
         let checkIn = CheckInEvent.create(userId: userId, location: nil)
 

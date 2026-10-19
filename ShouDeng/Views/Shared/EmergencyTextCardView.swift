@@ -62,7 +62,7 @@ struct EmergencyTextCardView: View {
                                             .font(.scaled(size: 12))
                                     }
                                     .padding(.horizontal, 12)
-                                    .padding(.vertical, 7)
+                                    .padding(.vertical, 12)
                                     .background(
                                         selectedLang == phrase.code
                                             ? alert.opacity(0.15)
@@ -160,7 +160,7 @@ struct EmergencyTextCardView: View {
 
     private var fullScreenCard: some View {
         ZStack {
-            Color.white.ignoresSafeArea(.all, edges: .all)
+            Color(.systemBackground).ignoresSafeArea(.all, edges: .all)
 
             VStack(spacing: 24) {
                 Spacer()

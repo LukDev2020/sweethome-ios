@@ -14,8 +14,13 @@ struct GuardianLiveActivity: Widget {
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("守灯 · 守护中")
-                            .font(.caption.bold())
+                        HStack(spacing: 4) {
+                            Image(systemName: "shield.checkered")
+                                .font(.caption2)
+                                .foregroundStyle(SharedColors.lamp)
+                            Text(WidgetDataStore.appName)
+                                .font(.caption.bold())
+                        }
                         Text("\(context.state.persons.count)位家人")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
@@ -71,10 +76,10 @@ struct GuardianLiveActivity: Widget {
                 }
             } compactLeading: {
                 HStack(spacing: 4) {
-                    Circle()
-                        .fill(overallStatusColor(context.state.overallStatus))
-                        .frame(width: 8, height: 8)
-                    Text("守灯")
+                    Image(systemName: "shield.checkered")
+                        .font(.caption2)
+                        .foregroundStyle(SharedColors.lamp)
+                    Text(WidgetDataStore.appName)
                         .font(.caption2.bold())
                 }
             } compactTrailing: {
@@ -116,10 +121,10 @@ struct GuardianLiveActivity: Widget {
             // Header
             HStack {
                 HStack(spacing: 6) {
-                    Image(systemName: "shield.checkered")
-                        .font(.subheadline)
-                        .foregroundStyle(SharedColors.lamp)
-                    Text("守灯 · \(context.state.persons.count)位家人")
+                    Image("AppLogo")
+                        .resizable()
+                        .frame(width: 20, height: 20)
+                    Text("\(WidgetDataStore.appName) · \(context.state.persons.count)位家人")
                         .font(.subheadline.bold())
                         .foregroundStyle(.white)
                 }

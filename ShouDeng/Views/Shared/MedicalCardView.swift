@@ -237,6 +237,7 @@ struct MedicalCardView: View {
                 .background(safe.opacity(0.08))
                 .clipShape(RoundedRectangle(cornerRadius: 10))
             }
+            .accessibilityLabel("添加")
 
             // Legacy medications migration hint
             if !card.medications.isEmpty && card.medicationItems.isEmpty {
@@ -298,6 +299,7 @@ struct MedicalCardView: View {
                     .padding(.vertical, 3)
                     .background(Capsule().fill(item.isEmergency ? Color.orange : Color.orange.opacity(0.1)))
                 }
+                .accessibilityLabel("标记为急救药物")
 
                 // Delete
                 Button {
@@ -373,6 +375,7 @@ struct MedicalCardView: View {
                         Image(systemName: "xmark")
                             .font(.scaled(size: 9, weight: .bold))
                     }
+                    .accessibilityLabel("删除")
                 }
                 .foregroundStyle(ink)
                 .padding(.horizontal, 10)

@@ -661,10 +661,23 @@ struct ClaimMaterialsView: View {
             sosEvents: (sosItems?.isEmpty ?? true) ? nil : sosItems,
             checkIns: includeCheckIns ? [] : nil,
             timeline: (timelineItems?.isEmpty ?? true) ? nil : timelineItems,
-            medicalSnapshot: includeMedicalCard ? MedicalSnapshot(
-                bloodType: "A+", allergies: ["青霉素"], conditions: nil,
-                insuranceProvider: nil, policyNumber: policyNumber.isEmpty ? nil : policyNumber
-            ) : nil,
+            medicalSnapshot: includeMedicalCard ? {
+                // Load from local cache instead of hardcoded mock data
+                if let data = UserDefaults.standard.data(forKey: "medical_card_cache"),
+                   let cached = try? JSONDecoder().decode(MedicalCardData.self, from: data) {
+                    return MedicalSnapshot(
+                        bloodType: cached.bloodType, allergies: cached.allergies.isEmpty ? nil : cached.allergies,
+                        conditions: cached.conditions.isEmpty ? nil : cached.conditions,
+                        insuranceProvider: cached.insuranceProvider,
+                        policyNumber: cached.insurancePolicyNumber ?? (policyNumber.isEmpty ? nil : policyNumber)
+                    )
+                }
+                // Truly empty fallback — no fabricated data
+                return MedicalSnapshot(
+                    bloodType: nil, allergies: nil, conditions: nil,
+                    insuranceProvider: nil, policyNumber: policyNumber.isEmpty ? nil : policyNumber
+                )
+            }() : nil,
             contentHash: hash,
             disclaimer: ClaimDisclaimer.full
         )

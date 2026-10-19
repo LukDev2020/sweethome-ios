@@ -36,6 +36,7 @@ final class LanguageManager: ObservableObject {
             UserDefaults.standard.set(current.rawValue, forKey: key)
             UserDefaults.standard.set([current.rawValue], forKey: "AppleLanguages")
             bundle = Self.loadBundle(for: current)
+            WidgetDataStore.writeLanguage(current.rawValue)
         }
     }
 
@@ -46,6 +47,7 @@ final class LanguageManager: ObservableObject {
         let lang = saved.flatMap(AppLanguage.init(rawValue:)) ?? Self.detectLanguage()
         self.current = lang
         self.bundle = Self.loadBundle(for: lang)
+        WidgetDataStore.writeLanguage(lang.rawValue)
     }
 
     func localized(_ key: String) -> String {

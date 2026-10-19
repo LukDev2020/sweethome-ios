@@ -27,6 +27,7 @@ struct ProtectedHomeView: View {
     @State private var showEmergencyText = false
     @State private var showConsulate = false
     @State private var showClaimMaterials = false
+    @State private var showNoGuardianSOSWarning = false
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     // Design system colors from the HTML
@@ -84,6 +85,17 @@ struct ProtectedHomeView: View {
             }
             .sheet(isPresented: $showSOSActive) {
                 SOSActiveView()
+            }
+            .alert("SOS无法送达", isPresented: $showNoGuardianSOSWarning) {
+                Button("仍然发送") {
+                    coordinator.triggerSOS(method: .longPress)
+                    showSOSActive = true
+                }
+                Button("先邀请守护者", role: .cancel) {
+                    showInviteGuardian = true
+                }
+            } message: {
+                Text("你还没有添加任何守护者，SOS信号将无人接收。建议先邀请家人成为你的守护者。")
             }
             .sheet(isPresented: $showInviteGuardian) {
                 InviteGuardianView()
@@ -477,7 +489,7 @@ struct ProtectedHomeView: View {
         }()
 
         var pins: [LocationPin] = [
-            LocationPin(id: "me", name: "我", coordinate: myCoord, color: lamp, isMe: true)
+            LocationPin(id: "me", name: "我", coordinate: myCoord, color: lamp, isMe: true, role: .me)
         ]
         // Show all guardians on the map
         if !coordinator.myGuardians.isEmpty {
@@ -488,7 +500,8 @@ struct ProtectedHomeView: View {
                     name: g.user.displayName,
                     coordinate: coord,
                     color: g.isOnDuty ? safe : Color(.systemGray3),
-                    status: g.isOnDuty ? "值班中" : timeOfDay(g.user.timeZone)
+                    status: g.isOnDuty ? "值班中" : timeOfDay(g.user.timeZone),
+                    role: .guardian
                 ))
             }
         }
@@ -657,8 +670,12 @@ struct ProtectedHomeView: View {
                     isSOSPressed = false
                     sosProgress = 0
                     UINotificationFeedbackGenerator().notificationOccurred(.warning)
-                    coordinator.triggerSOS(method: .longPress)
-                    showSOSActive = true
+                    if coordinator.myGuardians.isEmpty {
+                        showNoGuardianSOSWarning = true
+                    } else {
+                        coordinator.triggerSOS(method: .longPress)
+                        showSOSActive = true
+                    }
                 }
         )
         .simultaneousGesture(
@@ -673,6 +690,9 @@ struct ProtectedHomeView: View {
                     }
                 }
         )
+        .accessibilityLabel("紧急求助")
+        .accessibilityHint("双击并长按三秒发送SOS紧急求助信号给所有守护者")
+        .accessibilityAddTraits(.isButton)
     }
 
     // MARK: - Check-in Button
@@ -708,6 +728,8 @@ struct ProtectedHomeView: View {
             .clipShape(RoundedRectangle(cornerRadius: 13))
         }
         .disabled(checkInDone)
+        .accessibilityLabel(checkInDone ? "已报平安" : "报平安")
+        .accessibilityHint("告诉守护者你现在很安全")
     }
 
     // MARK: - Quick Actions
@@ -779,6 +801,7 @@ struct ProtectedHomeView: View {
             .clipShape(RoundedRectangle(cornerRadius: 10))
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(label)
     }
 
     // MARK: - Guardian List

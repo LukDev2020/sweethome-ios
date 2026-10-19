@@ -23,7 +23,11 @@ struct ProtectedActivityAttributes: ActivityAttributes {
         var emergencyPhone: String
         var emergencyLabel: String
 
-        /// Emergency medications (for lock screen display)
+        /// Emergency medical info (for lock screen first-responder display)
+        var bloodType: String?
+        var allergies: [String]
+        var conditions: [String]
+        var emergencyNote: String?
         var emergencyMedications: [MedInfo]
     }
 

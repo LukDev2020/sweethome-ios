@@ -8,6 +8,7 @@ import SwiftUI
 
 struct GuardianTabView: View {
     @AppStorage("debug_selected_tab") private var selectedTab = 0
+    @State private var showInvite = false
     private let pro = Color(red: 107/255, green: 92/255, blue: 165/255)
 
     private var tabs: [DuoTabItem] {
@@ -25,7 +26,10 @@ struct GuardianTabView: View {
             tabs: tabs,
             tintColor: pro,
             showInviteButton: true,
-            onInvite: { /* TODO: P1 — open invite flow */ }
+            onInvite: { showInvite = true }
         )
+        .sheet(isPresented: $showInvite) {
+            InviteGuardianView()
+        }
     }
 }
