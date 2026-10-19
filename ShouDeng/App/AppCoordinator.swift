@@ -519,12 +519,22 @@ final class AppCoordinator: ObservableObject {
                     isOnline: g.isOnDuty // approximate: on-duty ≈ online
                 )
             }
+            // Load emergency medications from cache
+            let medInfos: [ProtectedActivityAttributes.MedInfo] = {
+                guard let data = UserDefaults.standard.data(forKey: "medical_card_cache"),
+                      let card = try? JSONDecoder().decode(MedicalCardData.self, from: data) else { return [] }
+                return card.emergencyMedications.map {
+                    ProtectedActivityAttributes.MedInfo(name: $0.name, location: $0.storageLocation, dosage: $0.dosage)
+                }
+            }()
+
             liveActivityManager.startProtectedActivity(
                 userName: currentUser?.displayName ?? "",
                 guardians: guardianInfos,
                 lastCheckIn: nil,
                 emergencyPhone: emergencyPhone,
-                emergencyLabel: selectedHotline?.selectedLabel ?? "911"
+                emergencyLabel: selectedHotline?.selectedLabel ?? "911",
+                emergencyMedications: medInfos
             )
         } else {
             // Guardian: show each protected person's status
@@ -1069,6 +1079,17 @@ final class AppCoordinator: ObservableObject {
             )
         }
 
+        // Load emergency medications from medical card cache
+        let emergencyMeds: [WidgetMedication] = {
+            guard let data = UserDefaults.standard.data(forKey: "medical_card_cache"),
+                  let card = try? JSONDecoder().decode(MedicalCardData.self, from: data) else {
+                return []
+            }
+            return card.emergencyMedications.map {
+                WidgetMedication(id: $0.id, name: $0.name, location: $0.storageLocation, dosage: $0.dosage)
+            }
+        }()
+
         let state = WidgetState(
             isLoggedIn: authState != .loggedOut && authState != .unknown,
             userRole: userRole.rawValue,
@@ -1081,6 +1102,8 @@ final class AppCoordinator: ObservableObject {
             homeTimerDeadline: nil,
             homeTimerLabel: nil,
             protectedPersons: persons,
+            emergencyMedications: emergencyMeds,
+            emergencyPhone: selectedHotline?.emergency,
             updatedAt: Date()
         )
 

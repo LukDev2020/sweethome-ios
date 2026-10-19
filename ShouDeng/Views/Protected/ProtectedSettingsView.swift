@@ -322,6 +322,20 @@ struct ProtectedSettingsView: View {
             }
             .buttonStyle(.plain)
 
+            // Lock screen hint
+            HStack(spacing: 6) {
+                Image(systemName: "lock.display")
+                    .font(.scaled(size: 11))
+                    .foregroundStyle(.orange)
+                Text("在医疗卡中标记急救的药品会显示在锁屏小组件和实时活动中")
+                    .font(.scaled(size: 11))
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(Color.orange.opacity(0.06))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+
             Button { showEmergencyText = true } label: {
                 fixedRow("多语言急救卡", value: "查看 →", isWarning: false)
             }

@@ -17,6 +17,7 @@ router.put("/", authMiddleware, async (req: Request, res: Response) => {
     bloodType,
     allergies,
     medications,
+    medicationItems,
     conditions,
     insuranceProvider,
     insurancePolicyNumber,
@@ -36,6 +37,7 @@ router.put("/", authMiddleware, async (req: Request, res: Response) => {
           bloodType: bloodType || null,
           allergies: allergies || [],
           medications: medications || [],
+          medicationItems: medicationItems || [],
           conditions: conditions || [],
           insuranceProvider: insuranceProvider || null,
           insurancePolicyNumber: insurancePolicyNumber || null,
@@ -74,6 +76,7 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
       bloodType: data.bloodType,
       allergies: data.allergies,
       medications: data.medications,
+      medicationItems: data.medicationItems || [],
       conditions: data.conditions,
       insuranceProvider: data.insuranceProvider,
       insurancePolicyNumber: data.insurancePolicyNumber,
@@ -180,6 +183,123 @@ router.post("/share", authMiddleware, async (req: Request, res: Response) => {
   } catch (error) {
     console.error("[MedicalCard] share create error:", error);
     res.status(500).json({ error: "Failed to create share link" });
+  }
+});
+
+/**
+ * GET /v1/medical-card/:userId
+ * Guardian reads a protected person's medical card.
+ * Verifies guardianship before allowing access.
+ */
+router.get("/:userId", authMiddleware, async (req: Request, res: Response) => {
+  const guardianId = req.uid!;
+  const { userId } = req.params;
+
+  try {
+    // Verify guardianship
+    const relSnap = await db
+      .collection("relationships")
+      .where("guardianId", "==", guardianId)
+      .where("protectedPersonId", "==", userId)
+      .where("status", "==", "active")
+      .limit(1)
+      .get();
+
+    if (relSnap.empty) {
+      res.status(403).json({ error: "Not authorized to view this medical card" });
+      return;
+    }
+
+    const doc = await db.collection("medical_cards").doc(userId).get();
+    if (!doc.exists) {
+      res.json(null);
+      return;
+    }
+
+    const data = doc.data()!;
+    res.json({
+      bloodType: data.bloodType,
+      allergies: data.allergies,
+      medications: data.medications,
+      medicationItems: data.medicationItems || [],
+      conditions: data.conditions,
+      insuranceProvider: data.insuranceProvider,
+      insurancePolicyNumber: data.insurancePolicyNumber,
+      emergencyNote: data.emergencyNote,
+      organDonor: data.organDonor,
+      weight: data.weight,
+      height: data.height,
+    });
+  } catch (error) {
+    console.error("[MedicalCard] guardian get error:", error);
+    res.status(500).json({ error: "Failed to get medical card" });
+  }
+});
+
+/**
+ * PUT /v1/medical-card/:userId
+ * Guardian edits a protected person's medical card.
+ * Verifies guardianship before allowing write.
+ */
+router.put("/:userId", authMiddleware, async (req: Request, res: Response) => {
+  const guardianId = req.uid!;
+  const { userId } = req.params;
+  const {
+    bloodType,
+    allergies,
+    medications,
+    medicationItems,
+    conditions,
+    insuranceProvider,
+    insurancePolicyNumber,
+    emergencyNote,
+    organDonor,
+    weight,
+    height,
+  } = req.body;
+
+  try {
+    // Verify guardianship
+    const relSnap = await db
+      .collection("relationships")
+      .where("guardianId", "==", guardianId)
+      .where("protectedPersonId", "==", userId)
+      .where("status", "==", "active")
+      .limit(1)
+      .get();
+
+    if (relSnap.empty) {
+      res.status(403).json({ error: "Not authorized to edit this medical card" });
+      return;
+    }
+
+    await db
+      .collection("medical_cards")
+      .doc(userId)
+      .set(
+        {
+          userId: userId,
+          bloodType: bloodType || null,
+          allergies: allergies || [],
+          medications: medications || [],
+          medicationItems: medicationItems || [],
+          conditions: conditions || [],
+          insuranceProvider: insuranceProvider || null,
+          insurancePolicyNumber: insurancePolicyNumber || null,
+          emergencyNote: emergencyNote || null,
+          organDonor: organDonor ?? false,
+          weight: weight || null,
+          height: height || null,
+          lastEditedBy: guardianId,
+          updatedAt: admin.firestore.Timestamp.now(),
+        },
+        { merge: true }
+      );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("[MedicalCard] guardian save error:", error);
+    res.status(500).json({ error: "Failed to save medical card" });
   }
 });
 

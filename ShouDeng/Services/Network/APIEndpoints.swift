@@ -329,12 +329,31 @@ struct ItineraryItem: Codable, Identifiable {
     let status: String
 }
 
+// MARK: - Medication Item
+
+struct MedicationItem: Codable, Identifiable, Equatable {
+    var id: String
+    var name: String
+    var storageLocation: String   // 放置位置 (e.g. "床头柜第二层")
+    var dosage: String            // 服用方法 (e.g. "舌下含服1片")
+    var isEmergency: Bool         // 急救药品 — shows on lock screen
+
+    init(id: String = UUID().uuidString, name: String = "", storageLocation: String = "", dosage: String = "", isEmergency: Bool = false) {
+        self.id = id
+        self.name = name
+        self.storageLocation = storageLocation
+        self.dosage = dosage
+        self.isEmergency = isEmergency
+    }
+}
+
 // MARK: - Medical Card
 
 struct MedicalCardData: Codable {
     var bloodType: String?
     var allergies: [String]
-    var medications: [String]
+    var medications: [String]           // Legacy flat list (backward compat)
+    var medicationItems: [MedicationItem]  // Structured items with location/dosage
     var conditions: [String]
     var insuranceProvider: String?
     var insurancePolicyNumber: String?
@@ -345,6 +364,7 @@ struct MedicalCardData: Codable {
 
     init(
         bloodType: String? = nil, allergies: [String] = [], medications: [String] = [],
+        medicationItems: [MedicationItem] = [],
         conditions: [String] = [], insuranceProvider: String? = nil,
         insurancePolicyNumber: String? = nil, emergencyNote: String? = nil,
         organDonor: Bool = false, weight: Double? = nil, height: Double? = nil
@@ -352,6 +372,7 @@ struct MedicalCardData: Codable {
         self.bloodType = bloodType
         self.allergies = allergies
         self.medications = medications
+        self.medicationItems = medicationItems
         self.conditions = conditions
         self.insuranceProvider = insuranceProvider
         self.insurancePolicyNumber = insurancePolicyNumber
@@ -366,6 +387,7 @@ struct MedicalCardData: Codable {
         bloodType = try container.decodeIfPresent(String.self, forKey: .bloodType)
         allergies = (try? container.decodeIfPresent([String].self, forKey: .allergies)) ?? []
         medications = (try? container.decodeIfPresent([String].self, forKey: .medications)) ?? []
+        medicationItems = (try? container.decodeIfPresent([MedicationItem].self, forKey: .medicationItems)) ?? []
         conditions = (try? container.decodeIfPresent([String].self, forKey: .conditions)) ?? []
         insuranceProvider = try container.decodeIfPresent(String.self, forKey: .insuranceProvider)
         insurancePolicyNumber = try container.decodeIfPresent(String.self, forKey: .insurancePolicyNumber)
@@ -373,6 +395,11 @@ struct MedicalCardData: Codable {
         organDonor = (try? container.decodeIfPresent(Bool.self, forKey: .organDonor)) ?? false
         weight = try container.decodeIfPresent(Double.self, forKey: .weight)
         height = try container.decodeIfPresent(Double.self, forKey: .height)
+    }
+
+    /// Emergency medications only (for lock screen display)
+    var emergencyMedications: [MedicationItem] {
+        medicationItems.filter { $0.isEmergency }
     }
 
     static let empty = MedicalCardData()

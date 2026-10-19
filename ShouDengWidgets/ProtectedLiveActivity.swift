@@ -172,6 +172,39 @@ struct ProtectedLiveActivity: Widget {
                 }
             }
 
+            // Emergency medications (if any)
+            if !context.state.emergencyMedications.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("急救药品")
+                        .font(.caption2)
+                        .foregroundStyle(.white.opacity(0.5))
+                    ForEach(Array(context.state.emergencyMedications.prefix(3).enumerated()), id: \.offset) { _, med in
+                        HStack(spacing: 6) {
+                            Image(systemName: "cross.circle.fill")
+                                .font(.caption2)
+                                .foregroundStyle(.orange)
+                            Text(med.name)
+                                .font(.caption.bold())
+                                .foregroundStyle(.white)
+                            if !med.location.isEmpty {
+                                Text(med.location)
+                                    .font(.caption2)
+                                    .foregroundStyle(.white.opacity(0.7))
+                            }
+                            Spacer()
+                            if !med.dosage.isEmpty {
+                                Text(med.dosage)
+                                    .font(.caption2)
+                                    .foregroundStyle(.white.opacity(0.6))
+                            }
+                        }
+                    }
+                }
+                .padding(8)
+                .background(Color.orange.opacity(0.15))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+
             // Action buttons
             HStack(spacing: 8) {
                 Link(destination: URL(string: "shoudeng://sos")!) {

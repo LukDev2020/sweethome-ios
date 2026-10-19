@@ -9,7 +9,7 @@ import WidgetKit
     ProtectedStatusEntry(
         date: Date(), scenario: .normal, guardianCount: 3,
         lastCheckIn: Date().addingTimeInterval(-1800), sosTriggeredAt: nil,
-        timerDeadline: nil, timerLabel: nil, updatedAt: Date()
+        timerDeadline: nil, timerLabel: nil, emergencyMedications: [], emergencyPhone: nil, updatedAt: Date()
     )
 }
 
@@ -19,7 +19,7 @@ import WidgetKit
     ProtectedStatusEntry(
         date: Date(), scenario: .normal, guardianCount: 3,
         lastCheckIn: Date().addingTimeInterval(-1800), sosTriggeredAt: nil,
-        timerDeadline: nil, timerLabel: nil, updatedAt: Date()
+        timerDeadline: nil, timerLabel: nil, emergencyMedications: [], emergencyPhone: nil, updatedAt: Date()
     )
 }
 
@@ -29,7 +29,7 @@ import WidgetKit
     ProtectedStatusEntry(
         date: Date(), scenario: .normal, guardianCount: 3,
         lastCheckIn: Date().addingTimeInterval(-1800), sosTriggeredAt: nil,
-        timerDeadline: nil, timerLabel: nil, updatedAt: Date()
+        timerDeadline: nil, timerLabel: nil, emergencyMedications: [], emergencyPhone: nil, updatedAt: Date()
     )
 }
 
@@ -39,7 +39,7 @@ import WidgetKit
     ProtectedStatusEntry(
         date: Date(), scenario: .sosActive, guardianCount: 3,
         lastCheckIn: Date().addingTimeInterval(-1800), sosTriggeredAt: Date().addingTimeInterval(-300),
-        timerDeadline: nil, timerLabel: nil, updatedAt: Date()
+        timerDeadline: nil, timerLabel: nil, emergencyMedications: [], emergencyPhone: nil, updatedAt: Date()
     )
 }
 
@@ -49,7 +49,7 @@ import WidgetKit
     ProtectedStatusEntry(
         date: Date(), scenario: .sosActive, guardianCount: 3,
         lastCheckIn: Date().addingTimeInterval(-1800), sosTriggeredAt: Date().addingTimeInterval(-300),
-        timerDeadline: nil, timerLabel: nil, updatedAt: Date()
+        timerDeadline: nil, timerLabel: nil, emergencyMedications: [], emergencyPhone: nil, updatedAt: Date()
     )
 }
 
@@ -59,7 +59,7 @@ import WidgetKit
     ProtectedStatusEntry(
         date: Date(), scenario: .overdue, guardianCount: 3,
         lastCheckIn: Date().addingTimeInterval(-36000), sosTriggeredAt: nil,
-        timerDeadline: nil, timerLabel: nil, updatedAt: Date()
+        timerDeadline: nil, timerLabel: nil, emergencyMedications: [], emergencyPhone: nil, updatedAt: Date()
     )
 }
 
@@ -69,7 +69,7 @@ import WidgetKit
     ProtectedStatusEntry(
         date: Date(), scenario: .normal, guardianCount: 3,
         lastCheckIn: Date().addingTimeInterval(-1800), sosTriggeredAt: nil,
-        timerDeadline: nil, timerLabel: nil, updatedAt: Date()
+        timerDeadline: nil, timerLabel: nil, emergencyMedications: [], emergencyPhone: nil, updatedAt: Date()
     )
 }
 
@@ -79,7 +79,7 @@ import WidgetKit
     ProtectedStatusEntry(
         date: Date(), scenario: .sosActive, guardianCount: 3,
         lastCheckIn: Date().addingTimeInterval(-1800), sosTriggeredAt: Date().addingTimeInterval(-300),
-        timerDeadline: nil, timerLabel: nil, updatedAt: Date()
+        timerDeadline: nil, timerLabel: nil, emergencyMedications: [], emergencyPhone: nil, updatedAt: Date()
     )
 }
 
@@ -89,7 +89,7 @@ import WidgetKit
     ProtectedStatusEntry(
         date: Date(), scenario: .normal, guardianCount: 3,
         lastCheckIn: Date().addingTimeInterval(-1800), sosTriggeredAt: nil,
-        timerDeadline: nil, timerLabel: nil, updatedAt: Date()
+        timerDeadline: nil, timerLabel: nil, emergencyMedications: [], emergencyPhone: nil, updatedAt: Date()
     )
 }
 

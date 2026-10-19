@@ -22,6 +22,15 @@ struct ProtectedActivityAttributes: ActivityAttributes {
         /// Emergency call target
         var emergencyPhone: String
         var emergencyLabel: String
+
+        /// Emergency medications (for lock screen display)
+        var emergencyMedications: [MedInfo]
+    }
+
+    struct MedInfo: Codable, Hashable {
+        var name: String
+        var location: String
+        var dosage: String
     }
 
     struct GuardianInfo: Codable, Hashable {

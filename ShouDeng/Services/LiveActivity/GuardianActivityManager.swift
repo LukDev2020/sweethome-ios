@@ -16,7 +16,8 @@ final class GuardianActivityManager {
         guardians: [ProtectedActivityAttributes.GuardianInfo],
         lastCheckIn: Date?,
         emergencyPhone: String,
-        emergencyLabel: String
+        emergencyLabel: String,
+        emergencyMedications: [ProtectedActivityAttributes.MedInfo] = []
     ) {
         let authInfo = ActivityAuthorizationInfo()
         NSLog("[LiveActivity] Protected — areActivitiesEnabled: \(authInfo.areActivitiesEnabled)")
@@ -37,7 +38,8 @@ final class GuardianActivityManager {
             homeTimerDeadline: nil,
             homeTimerLabel: nil,
             emergencyPhone: emergencyPhone,
-            emergencyLabel: emergencyLabel
+            emergencyLabel: emergencyLabel,
+            emergencyMedications: emergencyMedications
         )
 
         do {

@@ -268,24 +268,44 @@ struct ProtectedMediumView: View {
                     }
                 }
                 Spacer()
-                // Right: guardian count ring
-                VStack(spacing: 4) {
-                    ZStack {
-                        Circle()
-                            .stroke(scenarioColor.opacity(0.3), lineWidth: 4)
-                            .frame(width: 48, height: 48)
-                        Circle()
-                            .trim(from: 0, to: Double(min(entry.guardianCount, 5)) / 5.0)
-                            .stroke(scenarioColor, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                            .frame(width: 48, height: 48)
-                            .rotationEffect(.degrees(-90))
-                        Text("\(entry.guardianCount)")
-                            .font(.title2.bold())
-                            .foregroundStyle(.white)
+                // Right: guardian count ring OR emergency meds
+                if !entry.emergencyMedications.isEmpty {
+                    VStack(alignment: .trailing, spacing: 4) {
+                        ForEach(Array(entry.emergencyMedications.prefix(2).enumerated()), id: \.offset) { _, med in
+                            HStack(spacing: 4) {
+                                Image(systemName: "cross.circle.fill")
+                                    .font(.system(size: 9))
+                                    .foregroundStyle(.orange)
+                                Text(med.name)
+                                    .font(.caption2.bold())
+                                    .foregroundStyle(.white)
+                            }
+                        }
+                        if let loc = entry.emergencyMedications.first, !loc.location.isEmpty {
+                            Text(loc.location)
+                                .font(.system(size: 9))
+                                .foregroundStyle(.white.opacity(0.6))
+                        }
                     }
-                    Text("守护者")
-                        .font(.caption2)
-                        .foregroundStyle(.white.opacity(0.6))
+                } else {
+                    VStack(spacing: 4) {
+                        ZStack {
+                            Circle()
+                                .stroke(scenarioColor.opacity(0.3), lineWidth: 4)
+                                .frame(width: 48, height: 48)
+                            Circle()
+                                .trim(from: 0, to: Double(min(entry.guardianCount, 5)) / 5.0)
+                                .stroke(scenarioColor, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                                .frame(width: 48, height: 48)
+                                .rotationEffect(.degrees(-90))
+                            Text("\(entry.guardianCount)")
+                                .font(.title2.bold())
+                                .foregroundStyle(.white)
+                        }
+                        Text("守护者")
+                            .font(.caption2)
+                            .foregroundStyle(.white.opacity(0.6))
+                    }
                 }
             }
             .padding()

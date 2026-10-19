@@ -347,6 +347,19 @@ struct GuardianSettingsView: View {
             }
             .buttonStyle(.plain)
 
+            HStack(spacing: 6) {
+                Image(systemName: "lock.display")
+                    .font(.scaled(size: 11))
+                    .foregroundStyle(.orange)
+                Text("标记急救的药品会显示在锁屏")
+                    .font(.scaled(size: 11))
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(Color.orange.opacity(0.06))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+
             Button { showEmergencyText = true } label: {
                 fixedRow("多语言急救卡", value: "查看 →", isWarning: false)
             }

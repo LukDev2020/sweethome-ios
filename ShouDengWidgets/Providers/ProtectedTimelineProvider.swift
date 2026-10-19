@@ -46,6 +46,8 @@ struct ProtectedTimelineProvider: TimelineProvider {
             sosTriggeredAt: state.sosTriggeredAt,
             timerDeadline: state.homeTimerDeadline,
             timerLabel: state.homeTimerLabel,
+            emergencyMedications: state.emergencyMedications,
+            emergencyPhone: state.emergencyPhone,
             updatedAt: state.updatedAt
         )
     }
@@ -59,6 +61,8 @@ struct ProtectedStatusEntry: TimelineEntry {
     let sosTriggeredAt: Date?
     let timerDeadline: Date?
     let timerLabel: String?
+    let emergencyMedications: [WidgetMedication]
+    let emergencyPhone: String?
     let updatedAt: Date
 
     static let placeholder = ProtectedStatusEntry(
@@ -69,6 +73,8 @@ struct ProtectedStatusEntry: TimelineEntry {
         sosTriggeredAt: nil,
         timerDeadline: nil,
         timerLabel: nil,
+        emergencyMedications: [],
+        emergencyPhone: nil,
         updatedAt: Date()
     )
 }

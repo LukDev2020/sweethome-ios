@@ -10,6 +10,10 @@ struct MedicalCardView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @Environment(\.dismiss) private var dismiss
 
+    /// Optional target user ID — when a guardian edits a protected person's card
+    var targetUserId: String?
+    var targetUserName: String?
+
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
@@ -24,6 +28,20 @@ struct MedicalCardView: View {
     @State private var newMedication = ""
     @State private var newCondition = ""
 
+    private var apiPath: String {
+        if let userId = targetUserId {
+            return "/v1/medical-card/\(userId)"
+        }
+        return "/v1/medical-card"
+    }
+
+    private var navTitle: String {
+        if let name = targetUserName {
+            return "\(name)的医疗卡"
+        }
+        return "紧急医疗卡"
+    }
+
     private let bloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
 
     var body: some View {
@@ -37,7 +55,7 @@ struct MedicalCardView: View {
                 }
             }
             .background(Color(.systemBackground))
-            .navigationTitle("紧急医疗卡")
+            .navigationTitle(navTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -103,14 +121,8 @@ struct MedicalCardView: View {
                     }
                 }
 
-                // Medications
-                section(title: "正在服用的药物") {
-                    tagList(items: card.medications) { card.medications.remove(at: $0) }
-                    addField(text: $newMedication, placeholder: "添加药物名称") {
-                        card.medications.append(newMedication)
-                        newMedication = ""
-                    }
-                }
+                // Medications (structured)
+                medicationItemsSection
 
                 // Conditions
                 section(title: "既往病史") {
@@ -159,6 +171,152 @@ struct MedicalCardView: View {
             }
             .padding(.horizontal, 16)
         }
+    }
+
+    // MARK: - Medication Items Section
+
+    private var medicationItemsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("药品管理")
+                    .font(.scaled(size: 12))
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text("标记为急救的药品将显示在锁屏")
+                    .font(.scaled(size: 10))
+                    .foregroundStyle(.tertiary)
+            }
+
+            ForEach(Array(card.medicationItems.enumerated()), id: \.element.id) { index, item in
+                medicationItemCard(index: index, item: item)
+            }
+
+            // Add new medication button
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    card.medicationItems.append(MedicationItem())
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.scaled(size: 14))
+                    Text("添加药品")
+                        .font(.scaled(size: 13, weight: .medium))
+                }
+                .foregroundStyle(safe)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(safe.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
+
+            // Legacy medications migration hint
+            if !card.medications.isEmpty && card.medicationItems.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("旧版药物记录")
+                        .font(.scaled(size: 11))
+                        .foregroundStyle(.secondary)
+                    ForEach(card.medications, id: \.self) { med in
+                        Text("• \(med)")
+                            .font(.scaled(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    Button("转换为新格式") {
+                        for med in card.medications {
+                            card.medicationItems.append(MedicationItem(name: med))
+                        }
+                        card.medications = []
+                    }
+                    .font(.scaled(size: 12, weight: .medium))
+                    .foregroundStyle(safe)
+                }
+                .padding(10)
+                .background(Color(.systemGray6))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    private func medicationItemCard(index: Int, item: MedicationItem) -> some View {
+        VStack(spacing: 8) {
+            // Header row: name + emergency toggle + delete
+            HStack(spacing: 8) {
+                Image(systemName: item.isEmergency ? "cross.circle.fill" : "pill.fill")
+                    .font(.scaled(size: 14))
+                    .foregroundStyle(item.isEmergency ? alert : ink.opacity(0.5))
+
+                TextField("药品名称", text: $card.medicationItems[index].name)
+                    .font(.scaled(size: 14, weight: .medium))
+
+                Spacer()
+
+                // Emergency toggle
+                Button {
+                    card.medicationItems[index].isEmergency.toggle()
+                } label: {
+                    HStack(spacing: 3) {
+                        Image(systemName: item.isEmergency ? "exclamationmark.triangle.fill" : "exclamationmark.triangle")
+                            .font(.scaled(size: 10))
+                        Text("急救")
+                            .font(.scaled(size: 10, weight: .medium))
+                    }
+                    .foregroundStyle(item.isEmergency ? .white : .orange)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(item.isEmergency ? Color.orange : Color.orange.opacity(0.1)))
+                }
+
+                // Delete
+                Button {
+                    withAnimation { _ = card.medicationItems.remove(at: index) }
+                } label: {
+                    Image(systemName: "trash")
+                        .font(.scaled(size: 12))
+                        .foregroundStyle(.red.opacity(0.6))
+                }
+            }
+
+            // Location + Dosage fields
+            HStack(spacing: 8) {
+                HStack(spacing: 4) {
+                    Image(systemName: "mappin.circle")
+                        .font(.scaled(size: 11))
+                        .foregroundStyle(.secondary)
+                    TextField("放置位置 (如 床头柜)", text: $card.medicationItems[index].storageLocation)
+                        .font(.scaled(size: 12))
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 6)
+                .background(Color(.systemGray6))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                HStack(spacing: 4) {
+                    Image(systemName: "clock")
+                        .font(.scaled(size: 11))
+                        .foregroundStyle(.secondary)
+                    TextField("服用方法 (如 每日2次)", text: $card.medicationItems[index].dosage)
+                        .font(.scaled(size: 12))
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 6)
+                .background(Color(.systemGray6))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+            }
+        }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(item.isEmergency ? Color.orange.opacity(0.04) : Color(.systemGray6).opacity(0.5))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(item.isEmergency ? Color.orange.opacity(0.2) : Color(.separator).opacity(0.15), lineWidth: 1)
+                )
+        )
     }
 
     // MARK: - Helpers
@@ -218,7 +376,7 @@ struct MedicalCardView: View {
         isLoading = true
         defer { isLoading = false }
         // Try server first, fall back to local cache
-        if let loaded: MedicalCardData = try? await coordinator.apiClient.get("/v1/medical-card") {
+        if let loaded: MedicalCardData = try? await coordinator.apiClient.get(apiPath) {
             await MainActor.run { card = loaded }
             cacheMedicalCard(loaded)
         } else if let cached = loadCachedMedicalCard() {
@@ -231,7 +389,7 @@ struct MedicalCardView: View {
         defer { isSaving = false }
         do {
             let _: SuccessResponse = try await coordinator.apiClient.put(
-                "/v1/medical-card",
+                apiPath,
                 body: card
             )
         } catch {
@@ -241,6 +399,8 @@ struct MedicalCardView: View {
         }
         // Always cache locally so EmergencyTextCardView and offline access work
         cacheMedicalCard(card)
+        // Sync emergency medications to lock screen widget
+        coordinator.syncWidgetState()
     }
 
     private func cacheMedicalCard(_ data: MedicalCardData) {
@@ -337,7 +497,62 @@ struct MedicalCardPreview: View {
                         previewRow("过敏", value: card.allergies.joined(separator: "、"))
                     }
 
-                    if !card.medications.isEmpty {
+                    if !card.medicationItems.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("药物")
+                                .font(.scaled(size: 12, weight: .medium))
+                                .foregroundStyle(.secondary)
+                            ForEach(card.medicationItems) { med in
+                                HStack(spacing: 8) {
+                                    if med.isEmergency {
+                                        Image(systemName: "cross.circle.fill")
+                                            .font(.scaled(size: 14))
+                                            .foregroundStyle(alert)
+                                    } else {
+                                        Image(systemName: "pill.fill")
+                                            .font(.scaled(size: 14))
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(med.name)
+                                            .font(.scaled(size: 16, weight: .semibold))
+                                        if !med.storageLocation.isEmpty {
+                                            HStack(spacing: 3) {
+                                                Image(systemName: "mappin.circle")
+                                                    .font(.scaled(size: 10))
+                                                Text(med.storageLocation)
+                                                    .font(.scaled(size: 13))
+                                            }
+                                            .foregroundStyle(.secondary)
+                                        }
+                                        if !med.dosage.isEmpty {
+                                            HStack(spacing: 3) {
+                                                Image(systemName: "clock")
+                                                    .font(.scaled(size: 10))
+                                                Text(med.dosage)
+                                                    .font(.scaled(size: 13))
+                                            }
+                                            .foregroundStyle(.secondary)
+                                        }
+                                    }
+                                    Spacer()
+                                    if med.isEmergency {
+                                        Text("急救")
+                                            .font(.scaled(size: 10, weight: .bold))
+                                            .foregroundStyle(.white)
+                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 2)
+                                            .background(Capsule().fill(alert))
+                                    }
+                                }
+                                .padding(10)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(med.isEmergency ? alert.opacity(0.08) : Color(.systemGray6))
+                                )
+                            }
+                        }
+                    } else if !card.medications.isEmpty {
                         previewRow("药物", value: card.medications.joined(separator: "、"))
                     }
 
