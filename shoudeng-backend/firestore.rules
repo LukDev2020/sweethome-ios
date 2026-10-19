@@ -130,6 +130,36 @@ service cloud.firestore {
       allow read, update, delete: if false;
     }
 
+    // Medical cards — owner read/write, guardians can read
+    match /medical_cards/{userId} {
+      allow read: if isOwner(userId) || isGuardianOf(userId);
+      allow write: if isOwner(userId);
+    }
+
+    // Medical card shares — public read by token, create by owner
+    match /medical_card_shares/{tokenId} {
+      allow read: if true; // Public access by share token
+      allow create: if isAuth();
+      allow delete: if isAuth() && resource.data.userId == request.auth.uid;
+    }
+
+    // Emergency contacts — owner only
+    match /emergency_contacts/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Organizations — members can read, admin can write
+    match /organizations/{orgId} {
+      allow read: if isAuth();
+      allow write: if false; // Server-side only
+    }
+
+    // Location history — owner only, server writes
+    match /location_history/{docId} {
+      allow read: if isAuth() && resource.data.userId == request.auth.uid;
+      allow write: if false; // Server-side only
+    }
+
     // Default deny
     match /{document=**} {
       allow read, write: if false;

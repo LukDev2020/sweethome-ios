@@ -325,18 +325,23 @@ struct GuardianHomeView: View {
             let myLocParts = [myCity, Self.countryName(myCountry)].filter { !$0.isEmpty }
             let myLabel = myLocParts.isEmpty ? "你" : "你 · \(myLocParts.joined(separator: ", "))"
             let myCoord: CLLocationCoordinate2D = {
+                if let live = coordinator.locationService.currentLocation {
+                    return live
+                }
                 if let loc = coordinator.locationManager.lastReportedLocation {
                     return loc.coordinate
                 }
                 return Self.coordForCity(myCity)
             }()
             p.append(.init(label: myLabel, latitude: myCoord.latitude, longitude: myCoord.longitude, color: safe, isMe: true))
-            // Protected persons
+            // Protected persons — prefer real coords from backend
             for person in coordinator.protectedPersons {
                 let lat: Double
                 let lng: Double
                 if let loc = person.lastKnownLocation {
                     lat = loc.latitude; lng = loc.longitude
+                } else if let memberLoc = coordinator.locationService.memberLocations[person.user.id] {
+                    lat = memberLoc.coordinate.latitude; lng = memberLoc.coordinate.longitude
                 } else {
                     let c = Self.coordForCity(person.user.cityName)
                     lat = c.latitude; lng = c.longitude
@@ -366,6 +371,9 @@ struct GuardianHomeView: View {
             let myLocStr = [myCity, Self.countryName(myCountry)].filter { !$0.isEmpty }.joined(separator: ", ")
             let myLabel = myLocStr.isEmpty ? "你" : "你 · \(myLocStr)"
             let myCoord: CLLocationCoordinate2D = {
+                if let live = coordinator.locationService.currentLocation {
+                    return live
+                }
                 if let loc = coordinator.locationManager.lastReportedLocation {
                     return loc.coordinate
                 }

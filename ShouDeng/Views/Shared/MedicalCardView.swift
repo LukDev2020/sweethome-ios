@@ -411,7 +411,15 @@ struct MedicalCardView: View {
             isLoading = false
         }
 
-        // Try server in background, update if successful
+        // Try server in background with timeout, update if successful
+        let timeoutTask = Task {
+            try? await Task.sleep(nanoseconds: 5_000_000_000)
+            if isLoading {
+                await MainActor.run { isLoading = false }
+            }
+        }
+        defer { timeoutTask.cancel() }
+
         if let loaded: MedicalCardData = try? await coordinator.apiClient.get(apiPath) {
             if let cached, !cached.medicationItems.isEmpty && loaded.medicationItems.isEmpty {
                 // Local cache has medication items server doesn't — keep local

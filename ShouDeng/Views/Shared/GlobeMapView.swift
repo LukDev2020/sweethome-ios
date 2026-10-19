@@ -175,41 +175,5 @@ extension GlobeMapView {
     private static let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private static let pro  = Color(red: 107/255, green: 92/255, blue: 165/255)
 
-    /// Protected Person portal (A1) — "me" is 小雨 in Kyiv
-    static let protectedPersonPins: [Pin] = [
-        Pin(label: "我 · 基辅",   latitude: 50.45,  longitude: 30.52,  color: lamp, isMe: true),
-        Pin(label: "妈妈",        latitude: 43.65,  longitude: -79.38, color: safe, isMe: false),
-        Pin(label: "姑姑",        latitude: -33.87, longitude: 151.21, color: safe, isMe: false),
-        Pin(label: "爸爸",        latitude: 44.15,  longitude: -79.88, color: safe, isMe: false),
-        Pin(label: "响应中心",     latitude: 25.20,  longitude: 55.27,  color: pro,  isMe: false),
-        Pin(label: "响应中心",     latitude: 50.11,  longitude: 8.68,   color: pro,  isMe: false),
-    ]
-
-    static let protectedPersonLinks: [Link] = [
-        Link(from: 1, to: 0), // 妈妈 → 我
-        Link(from: 2, to: 0), // 姑姑 → 我
-        Link(from: 3, to: 0), // 爸爸 → 我
-        Link(from: 4, to: 0), // 响应中心 Dubai → 我
-        Link(from: 5, to: 0), // 响应中心 Frankfurt → 我
-    ]
-
-    /// Guardian portal (B1) — "me" is 妈妈 in Toronto
-    static let guardianPins: [Pin] = [
-        Pin(label: "小雨 · 基辅",  latitude: 50.45,  longitude: 30.52,  color: lamp, isMe: false),
-        Pin(label: "奶奶 · 上海",  latitude: 31.23,  longitude: 121.47, color: lamp, isMe: false),
-        Pin(label: "弟弟 · 伦敦",  latitude: 51.50,  longitude: -0.12,  color: lamp, isMe: false),
-        Pin(label: "你 · 多伦多",  latitude: 43.65,  longitude: -79.38, color: safe, isMe: true),
-        Pin(label: "姑姑 · 悉尼",  latitude: -33.87, longitude: 151.21, color: safe, isMe: false),
-        Pin(label: "响应中心",     latitude: 25.20,  longitude: 55.27,  color: pro,  isMe: false),
-        Pin(label: "响应中心",     latitude: 1.35,   longitude: 103.82, color: pro,  isMe: false),
-    ]
-
-    static let guardianLinks: [Link] = [
-        Link(from: 3, to: 0), // 你 → 小雨
-        Link(from: 3, to: 1), // 你 → 奶奶
-        Link(from: 3, to: 2), // 你 → 弟弟
-        Link(from: 4, to: 0), // 姑姑 → 小雨
-        Link(from: 5, to: 0), // 响应中心 → 小雨
-        Link(from: 6, to: 1), // 响应中心 → 奶奶
-    ]
+    // Pin presets removed — globe now uses dynamic pins from real data only
 }

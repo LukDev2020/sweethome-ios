@@ -399,8 +399,17 @@ struct FamilyFeedView: View {
 
     private func loadPosts() async {
         isLoading = true
+        let timeoutTask = Task {
+            try? await Task.sleep(nanoseconds: 5_000_000_000)
+            if isLoading {
+                await MainActor.run { isLoading = false }
+            }
+        }
+        defer {
+            timeoutTask.cancel()
+            isLoading = false
+        }
         await coordinator.fetchFamilyPosts()
-        isLoading = false
     }
 
     private func loadImages(from items: [PhotosPickerItem]) async {

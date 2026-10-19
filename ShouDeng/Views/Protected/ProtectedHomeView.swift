@@ -310,20 +310,28 @@ struct ProtectedHomeView: View {
             let myLocParts = [myCity, Self.countryName(myCountry)].filter { !$0.isEmpty }
             let myLabel = myLocParts.isEmpty ? "我" : "我 · \(myLocParts.joined(separator: ", "))"
             let myCoord: CLLocationCoordinate2D = {
+                if let live = coordinator.locationService.currentLocation {
+                    return live
+                }
                 if let loc = coordinator.locationManager.lastReportedLocation {
                     return loc.coordinate
                 }
                 if let user = coordinator.currentUser, !user.cityName.isEmpty {
-                    return Self.coordForCity( user.cityName)
+                    return Self.coordForCity(user.cityName)
                 }
                 return CLLocationCoordinate2D(latitude: 39.9, longitude: 116.4)
             }()
             p.append(.init(label: myLabel, latitude: myCoord.latitude, longitude: myCoord.longitude, color: lamp, isMe: true))
             for g in coordinator.myGuardians {
-                let c = Self.coordForCity( g.user.cityName)
+                let gCoord: CLLocationCoordinate2D = {
+                    if let memberLoc = coordinator.locationService.memberLocations[g.user.id] {
+                        return memberLoc.coordinate
+                    }
+                    return Self.coordForCity(g.user.cityName)
+                }()
                 let gCity = g.user.cityName
                 let gLabel = gCity.isEmpty ? g.user.displayName : "\(g.user.displayName) · \(gCity)"
-                p.append(.init(label: gLabel, latitude: c.latitude, longitude: c.longitude, color: safe, isMe: false))
+                p.append(.init(label: gLabel, latitude: gCoord.latitude, longitude: gCoord.longitude, color: safe, isMe: false))
             }
             dynamicPins = p
             dynamicLinks = (1..<p.count).map { GlobeMapView.Link(from: $0, to: 0) }
@@ -343,11 +351,14 @@ struct ProtectedHomeView: View {
             let myLocStr = [myCity, Self.countryName(myCountry)].filter { !$0.isEmpty }.joined(separator: ", ")
             let myLabel = myLocStr.isEmpty ? "我" : "我 · \(myLocStr)"
             let fallbackCoord: CLLocationCoordinate2D = {
+                if let live = coordinator.locationService.currentLocation {
+                    return live
+                }
                 if let loc = coordinator.locationManager.lastReportedLocation {
                     return loc.coordinate
                 }
                 if let user = coordinator.currentUser, !user.cityName.isEmpty {
-                    return Self.coordForCity( user.cityName)
+                    return Self.coordForCity(user.cityName)
                 }
                 return CLLocationCoordinate2D(latitude: 39.9, longitude: 116.4)
             }()

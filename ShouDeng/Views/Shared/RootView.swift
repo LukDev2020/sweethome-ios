@@ -27,6 +27,7 @@ private struct AuthenticatedRootView: View {
     @AppStorage("setupWizardComplete") private var setupWizardComplete = false
     @ObservedObject private var biometric = BiometricAuthManager.shared
     @ObservedObject private var fontScale = FontScaleManager.shared
+    @ObservedObject private var langManager = LanguageManager.shared
     @State private var showBiometricPrompt = false
 
     var body: some View {
@@ -84,7 +85,7 @@ private struct AuthenticatedRootView: View {
                 }
             }
         }
-        .id(fontScale.level.rawValue)
+        .id("\(fontScale.level.rawValue)-\(langManager.current.rawValue)")
     }
 
     // MARK: - Beta Banner
