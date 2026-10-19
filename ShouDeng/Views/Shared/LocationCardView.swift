@@ -23,6 +23,7 @@ struct LocationCardView: View {
     @State private var position: MapCameraPosition
     @State private var addressText: String?
     @State private var showFullScreenMap = false
+    @State private var mapDragged = false
 
     init(pins: [LocationPin], centerCoordinate: CLLocationCoordinate2D? = nil,
          lastUpdateMinutes: Int? = nil, label: String? = nil,
@@ -175,6 +176,24 @@ struct LocationCardView: View {
                 }
                 .padding(8)
             }
+            // Recenter button (appears after user drags the map)
+            .overlay(alignment: .bottomLeading) {
+                if mapDragged {
+                    Button {
+                        recenterMap()
+                    } label: {
+                        Image(systemName: "location.fill")
+                            .font(.scaled(size: 13))
+                            .foregroundStyle(.white)
+                            .frame(width: 32, height: 32)
+                            .background(safe.opacity(0.85))
+                            .clipShape(Circle())
+                            .shadow(color: .black.opacity(0.2), radius: 3, y: 1)
+                    }
+                    .padding(8)
+                    .transition(.scale.combined(with: .opacity))
+                }
+            }
 
             // Address from reverse geocoding
             if let address = addressText {
@@ -237,6 +256,25 @@ struct LocationCardView: View {
             }
         }
         .mapStyle(style)
+        .onMapCameraChange { _ in
+            if !mapDragged {
+                withAnimation(.easeInOut(duration: 0.2)) { mapDragged = true }
+            }
+        }
+    }
+
+    private func recenterMap() {
+        let center = centerCoordinate ?? pins.first?.coordinate
+            ?? CLLocationCoordinate2D(latitude: 39.9, longitude: 116.4)
+        let span = pins.count > 1 ? Self.spanForPins(pins) : 0.05
+        withAnimation(.easeInOut(duration: 0.5)) {
+            position = .region(MKCoordinateRegion(
+                center: center,
+                span: MKCoordinateSpan(latitudeDelta: span, longitudeDelta: span)
+            ))
+            mapDragged = false
+            focusedPinId = nil
+        }
     }
 
     @ViewBuilder
@@ -326,6 +364,7 @@ struct FullScreenMapView: View {
     @State private var position: MapCameraPosition
     @State private var selectedPin: LocationPin?
     @State private var addressText: String?
+    @State private var fullMapDragged = false
 
     // Mock 24-hour trail for demo — in production this comes from server
     @State private var trailCoordinates: [String: [CLLocationCoordinate2D]] = [:]
@@ -376,6 +415,35 @@ struct FullScreenMapView: View {
             }
             .mapStyle(.standard(pointsOfInterest: .excludingAll))
             .ignoresSafeArea()
+            .onMapCameraChange { _ in
+                if !fullMapDragged {
+                    withAnimation(.easeInOut(duration: 0.2)) { fullMapDragged = true }
+                }
+            }
+
+            // Recenter button
+            if fullMapDragged {
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Button {
+                            recenterFullMap()
+                        } label: {
+                            Image(systemName: "location.fill")
+                                .font(.scaled(size: 16))
+                                .foregroundStyle(.white)
+                                .frame(width: 44, height: 44)
+                                .background(safe.opacity(0.9))
+                                .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.25), radius: 4, y: 2)
+                        }
+                        .padding(.trailing, 16)
+                        .padding(.bottom, 130)
+                    }
+                }
+                .transition(.scale.combined(with: .opacity))
+            }
 
             // Top bar overlay
             VStack(spacing: 0) {
@@ -535,9 +603,19 @@ struct FullScreenMapView: View {
         }
     }
 
-    // MARK: - Trail Data
-    // Trail data requires a /v1/location/trail API endpoint (not yet implemented).
-    // Until then, trails are empty — the map shows current pins only.
+    private func recenterFullMap() {
+        let center = pins.first?.coordinate
+            ?? CLLocationCoordinate2D(latitude: 39.9, longitude: 116.4)
+        let span = pins.count > 1 ? LocationCardView.spanForPins(pins) : 0.05
+        withAnimation(.easeInOut(duration: 0.5)) {
+            position = .region(MKCoordinateRegion(
+                center: center,
+                span: MKCoordinateSpan(latitudeDelta: span, longitudeDelta: span)
+            ))
+            fullMapDragged = false
+            selectedPin = nil
+        }
+    }
 
     // MARK: - Reverse Geocoding
 

@@ -308,7 +308,9 @@ struct GuardianHomeView: View {
             var p: [GlobeMapView.Pin] = []
             // Me (guardian)
             let myCity = coordinator.currentUser?.cityName ?? ""
-            let myLabel = myCity.isEmpty ? "你" : "你 · \(myCity)"
+            let myCountry = coordinator.currentUser?.countryCode ?? ""
+            let myLocParts = [myCity, Self.countryName(myCountry)].filter { !$0.isEmpty }
+            let myLabel = myLocParts.isEmpty ? "你" : "你 · \(myLocParts.joined(separator: ", "))"
             let myCoord: CLLocationCoordinate2D = {
                 if let loc = coordinator.locationManager.lastReportedLocation {
                     return loc.coordinate
@@ -329,28 +331,27 @@ struct GuardianHomeView: View {
                 let label = person.user.cityName.isEmpty ? person.user.displayName : "\(person.user.displayName) · \(person.user.cityName)"
                 p.append(.init(label: label, latitude: lat, longitude: lng, color: lamp, isMe: false))
             }
-            // Response centers
-            p.append(.init(label: "响应中心", latitude: 25.20, longitude: 55.27, color: pro, isMe: false))
-            p.append(.init(label: "响应中心", latitude: 1.35, longitude: 103.82, color: pro, isMe: false))
             dynamicPins = p
-            // Guardian → each protected person, response centers → first protected person
             var lnks: [GlobeMapView.Link] = []
             let protectedCount = coordinator.protectedPersons.count
             for i in 1...protectedCount { lnks.append(.init(from: 0, to: i)) }
-            for i in (protectedCount + 1)..<p.count { lnks.append(.init(from: i, to: 1)) }
             dynamicLinks = lnks
 
-            var countries = Set<String>()
-            if let cc = coordinator.currentUser?.countryCode, !cc.isEmpty { countries.insert(cc) }
-            for person in coordinator.protectedPersons { if !person.user.countryCode.isEmpty { countries.insert(person.user.countryCode) } }
+            var cities = [String]()
+            if let c = coordinator.currentUser?.cityName, !c.isEmpty { cities.append(c) }
+            for person in coordinator.protectedPersons { if !person.user.cityName.isEmpty && !cities.contains(person.user.cityName) { cities.append(person.user.cityName) } }
             let totalFamily = coordinator.protectedPersons.count
-            familyText = "\(totalFamily) 位家人"
-            subtitleText = "分布在 \(max(countries.count, 1)) 个国家"
+            familyText = "\(totalFamily) 位被守护者"
+            subtitleText = cities.isEmpty
+                ? "守护中"
+                : cities.prefix(3).joined(separator: " · ")
         } else {
-            // No protected persons yet — show just me + response centers
+            // No protected persons yet — show just me
             var p: [GlobeMapView.Pin] = []
             let myCity = coordinator.currentUser?.cityName ?? ""
-            let myLabel = myCity.isEmpty ? "你" : "你 · \(myCity)"
+            let myCountry = coordinator.currentUser?.countryCode ?? ""
+            let myLocStr = [myCity, Self.countryName(myCountry)].filter { !$0.isEmpty }.joined(separator: ", ")
+            let myLabel = myLocStr.isEmpty ? "你" : "你 · \(myLocStr)"
             let myCoord: CLLocationCoordinate2D = {
                 if let loc = coordinator.locationManager.lastReportedLocation {
                     return loc.coordinate
@@ -358,10 +359,8 @@ struct GuardianHomeView: View {
                 return Self.coordForCity(myCity)
             }()
             p.append(.init(label: myLabel, latitude: myCoord.latitude, longitude: myCoord.longitude, color: safe, isMe: true))
-            p.append(.init(label: "响应中心", latitude: 25.20, longitude: 55.27, color: pro, isMe: false))
-            p.append(.init(label: "响应中心", latitude: 1.35, longitude: 103.82, color: pro, isMe: false))
             dynamicPins = p
-            dynamicLinks = [.init(from: 1, to: 0), .init(from: 2, to: 0)]
+            dynamicLinks = []
             familyText = "守护者"
             subtitleText = "邀请家人加入"
         }
@@ -395,9 +394,8 @@ struct GuardianHomeView: View {
 
                 HStack(spacing: 11) {
                     Spacer()
-                    legendDot(color: lamp, label: "被守护")
-                    legendDot(color: safe, label: "守护者")
-                    legendDot(color: pro, label: "响应中心")
+                    legendDot(color: lamp, label: "被守护者")
+                    legendDot(color: safe, label: "我")
                     Spacer()
                 }
                 .padding(.bottom, 8)
@@ -411,15 +409,29 @@ struct GuardianHomeView: View {
 
     private static func coordForCity(_ city: String) -> CLLocationCoordinate2D {
         switch city {
-        case "多伦多": return CLLocationCoordinate2D(latitude: 43.65, longitude: -79.38)
-        case "上海": return CLLocationCoordinate2D(latitude: 31.23, longitude: 121.47)
-        case "悉尼": return CLLocationCoordinate2D(latitude: -33.87, longitude: 151.21)
-        case "伦敦": return CLLocationCoordinate2D(latitude: 51.50, longitude: -0.12)
-        case "基辅": return CLLocationCoordinate2D(latitude: 50.45, longitude: 30.52)
-        case "北京": return CLLocationCoordinate2D(latitude: 39.90, longitude: 116.40)
-        case "东京": return CLLocationCoordinate2D(latitude: 35.68, longitude: 139.69)
+        case "多伦多", "Toronto": return CLLocationCoordinate2D(latitude: 43.65, longitude: -79.38)
+        case "上海", "Shanghai": return CLLocationCoordinate2D(latitude: 31.23, longitude: 121.47)
+        case "悉尼", "Sydney": return CLLocationCoordinate2D(latitude: -33.87, longitude: 151.21)
+        case "伦敦", "London": return CLLocationCoordinate2D(latitude: 51.50, longitude: -0.12)
+        case "基辅", "Kyiv": return CLLocationCoordinate2D(latitude: 50.45, longitude: 30.52)
+        case "北京", "Beijing": return CLLocationCoordinate2D(latitude: 39.90, longitude: 116.40)
+        case "东京", "Tokyo": return CLLocationCoordinate2D(latitude: 35.68, longitude: 139.69)
+        case "温哥华", "Vancouver": return CLLocationCoordinate2D(latitude: 49.28, longitude: -123.12)
+        case "蒙特利尔", "Montreal": return CLLocationCoordinate2D(latitude: 45.50, longitude: -73.57)
+        case "纽约", "New York": return CLLocationCoordinate2D(latitude: 40.71, longitude: -74.01)
+        case "巴黎", "Paris": return CLLocationCoordinate2D(latitude: 48.86, longitude: 2.35)
+        case "首尔", "Seoul": return CLLocationCoordinate2D(latitude: 37.57, longitude: 126.98)
+        case "新加坡", "Singapore": return CLLocationCoordinate2D(latitude: 1.35, longitude: 103.82)
+        case "香港", "Hong Kong": return CLLocationCoordinate2D(latitude: 22.32, longitude: 114.17)
+        case "台北", "Taipei": return CLLocationCoordinate2D(latitude: 25.03, longitude: 121.57)
+        case "广州", "Guangzhou": return CLLocationCoordinate2D(latitude: 23.13, longitude: 113.26)
+        case "深圳", "Shenzhen": return CLLocationCoordinate2D(latitude: 22.54, longitude: 114.06)
         default: return CLLocationCoordinate2D(latitude: 40.0, longitude: -74.0)
         }
+    }
+
+    private static func countryName(_ code: String) -> String {
+        Locale.current.localizedString(forRegionCode: code) ?? ""
     }
 
     private func legendDot(color: Color, label: String) -> some View {

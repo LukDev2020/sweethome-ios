@@ -22,6 +22,11 @@ struct MedicalCardView: View {
     @State private var isLoading = true
     @State private var isSaving = false
     @State private var showPreview = false
+    @State private var saveResult: SaveResult?
+
+    private enum SaveResult {
+        case success, failure(String)
+    }
 
     // Editing fields
     @State private var newAllergy = ""
@@ -76,6 +81,29 @@ struct MedicalCardView: View {
             }
             .sheet(isPresented: $showPreview) {
                 MedicalCardPreview(card: card, userName: coordinator.currentUser?.displayName ?? "")
+            }
+            .overlay(alignment: .top) {
+                if let result = saveResult {
+                    HStack(spacing: 6) {
+                        switch result {
+                        case .success:
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(.green)
+                            Text("已保存")
+                        case .failure(let msg):
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.orange)
+                            Text(msg)
+                        }
+                    }
+                    .font(.scaled(size: 13, weight: .medium))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(Capsule().fill(Color(.systemGray2)))
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .padding(.top, 4)
+                }
             }
             .task { await loadCard() }
         }
@@ -375,11 +403,17 @@ struct MedicalCardView: View {
     private func loadCard() async {
         isLoading = true
         defer { isLoading = false }
-        // Try server first, fall back to local cache
+        let cached = loadCachedMedicalCard()
+        // Try server, fall back to local cache
         if let loaded: MedicalCardData = try? await coordinator.apiClient.get(apiPath) {
-            await MainActor.run { card = loaded }
-            cacheMedicalCard(loaded)
-        } else if let cached = loadCachedMedicalCard() {
+            // If local cache has medication items but server doesn't, prefer local
+            if let cached, !cached.medicationItems.isEmpty && loaded.medicationItems.isEmpty {
+                await MainActor.run { card = cached }
+            } else {
+                await MainActor.run { card = loaded }
+                cacheMedicalCard(loaded)
+            }
+        } else if let cached {
             await MainActor.run { card = cached }
         }
     }
@@ -387,20 +421,30 @@ struct MedicalCardView: View {
     private func saveCard() async {
         isSaving = true
         defer { isSaving = false }
+
+        // Always cache locally first
+        cacheMedicalCard(card)
+        // Sync emergency medications to lock screen widget immediately
+        coordinator.syncWidgetState()
+
+        var serverOK = false
         do {
             let _: SuccessResponse = try await coordinator.apiClient.put(
                 apiPath,
                 body: card
             )
+            serverOK = true
         } catch {
             #if DEBUG
-            print("[MedicalCard] save error (saving locally): \(error)")
+            print("[MedicalCard] save error: \(error)")
             #endif
         }
-        // Always cache locally so EmergencyTextCardView and offline access work
-        cacheMedicalCard(card)
-        // Sync emergency medications to lock screen widget
-        coordinator.syncWidgetState()
+
+        withAnimation(.easeInOut(duration: 0.3)) {
+            saveResult = serverOK ? .success : .failure("已本地保存，服务器同步失败")
+        }
+        try? await Task.sleep(nanoseconds: 2_000_000_000)
+        withAnimation(.easeInOut(duration: 0.3)) { saveResult = nil }
     }
 
     private func cacheMedicalCard(_ data: MedicalCardData) {
