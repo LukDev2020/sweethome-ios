@@ -55,7 +55,7 @@ struct ProtectedSettingsView: View {
                     settingsCompact
                 }
             }
-            .navigationTitle("设置")
+            .navigationTitle(langManager.localized("settings.title"))
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showProfileEdit, onDismiss: {
                 Task {
@@ -365,7 +365,7 @@ struct ProtectedSettingsView: View {
 
     private var lockScreenCardPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("锁屏实时活动")
+            Text(langManager.localized("settings.lockscreen"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
@@ -375,9 +375,9 @@ struct ProtectedSettingsView: View {
                     .foregroundStyle(safe)
                     .frame(width: 20)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("锁屏急救卡")
+                    Text(langManager.localized("settings.lockscreen"))
                         .font(.scaled(size: 13))
-                    Text("退出 App 时自动显示急救信息和家人状态")
+                    Text(langManager.localized("settings.lockscreen.desc"))
                         .font(.scaled(size: 11))
                         .foregroundStyle(.secondary)
                 }
@@ -406,7 +406,7 @@ struct ProtectedSettingsView: View {
 
     private var securityPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("安全")
+            Text(langManager.localized("settings.security"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
@@ -457,11 +457,11 @@ struct ProtectedSettingsView: View {
 
     private var languagePanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("语言")
+            Text(langManager.localized("settings.language"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             HStack {
-                Text("界面语言").font(.scaled(size: 13))
+                Text(langManager.localized("settings.language")).font(.scaled(size: 13))
                 Spacer()
                 Picker("", selection: $langManager.current) {
                     ForEach(AppLanguage.allCases, id: \.self) { lang in
@@ -472,11 +472,6 @@ struct ProtectedSettingsView: View {
                 .tint(safe)
             }
             .padding(.vertical, 2)
-            if !langManager.current.isFullySupported {
-                Text("当前仅登录页面支持此语言，主界面将逐步适配")
-                    .font(.scaled(size: 12))
-                    .foregroundStyle(.secondary.opacity(0.7))
-            }
         }
         .padding(12)
         .background(
@@ -489,7 +484,7 @@ struct ProtectedSettingsView: View {
 
     private var fontSizePanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("字体大小")
+            Text(langManager.localized("settings.fontsize"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             HStack(spacing: 8) {
@@ -558,7 +553,7 @@ struct ProtectedSettingsView: View {
             }
             .buttonStyle(.plain)
             Button { showDeleteConfirm = true } label: {
-                fixedRow("注销账号", value: "永久删除", isWarning: true)
+                fixedRow(langManager.localized("settings.delete.account"), value: "", isWarning: true)
             }
             .buttonStyle(.plain)
         }
@@ -585,7 +580,7 @@ struct ProtectedSettingsView: View {
             }
             .buttonStyle(.plain)
             Button { coordinator.authManager.logout() } label: {
-                fixedRow("退出登录", value: "", isWarning: true)
+                fixedRow(langManager.localized("settings.logout"), value: "", isWarning: true)
             }
             .buttonStyle(.plain)
         }

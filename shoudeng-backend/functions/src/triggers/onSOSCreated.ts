@@ -32,7 +32,7 @@ export const onSOSCreated = functions
       .get();
     const personName = userDoc.exists
       ? userDoc.data()!.displayName
-      : "被守护者";
+      : "Protected Person";
 
     // Find all guardians
     const linksSnapshot = await db
@@ -176,7 +176,7 @@ export const onSOSCreated = functions
       const { initiateVoiceCall } = await import("../services/twilio");
       const callbackUrl = `https://${process.env.GCLOUD_PROJECT}.cloudfunctions.net/api/v1/voice-callback`;
 
-      for (const guardianId of hop1Targets) {
+      for (const guardianId of guardianIds) {
         const callSid = await initiateVoiceCall(
           guardianId,
           sosId,

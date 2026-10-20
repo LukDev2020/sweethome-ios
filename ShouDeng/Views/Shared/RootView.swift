@@ -70,6 +70,12 @@ private struct AuthenticatedRootView: View {
                                     .environmentObject(coordinator)
                             }
                         }
+                        .overlay {
+                            if coordinator.showFallConfirmation {
+                                FallConfirmationOverlay()
+                                    .environmentObject(coordinator)
+                            }
+                        }
                         .sheet(isPresented: $showBiometricPrompt) {
                             BiometricEnablePromptView(isPresented: $showBiometricPrompt)
                         }

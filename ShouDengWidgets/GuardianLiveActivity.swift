@@ -6,6 +6,8 @@ import ActivityKit
 /// Shows: each protected person's status, city, battery, and a call button.
 struct GuardianLiveActivity: Widget {
 
+    private func L(_ key: String) -> String { WidgetDataStore.localized(key) }
+
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: GuardianActivityAttributes.self) { context in
             guardianLockScreenView(context: context)
@@ -21,7 +23,7 @@ struct GuardianLiveActivity: Widget {
                             Text(WidgetDataStore.appName)
                                 .font(.caption.bold())
                         }
-                        Text("\(context.state.persons.count)位家人")
+                        Text("\(context.state.persons.count)\(L("la.persons.count"))")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
@@ -62,7 +64,7 @@ struct GuardianLiveActivity: Widget {
                                 HStack(spacing: 4) {
                                     Image(systemName: "phone.fill")
                                         .font(.caption)
-                                    Text("呼叫 \(context.state.priorityPersonName)")
+                                    Text(L("la.call") + context.state.priorityPersonName)
                                         .font(.caption.weight(.semibold))
                                 }
                                 .frame(maxWidth: .infinity)
@@ -85,17 +87,17 @@ struct GuardianLiveActivity: Widget {
             } compactTrailing: {
                 switch context.state.overallStatus {
                 case .allSafe:
-                    Text("\(context.state.persons.count)人安全")
+                    Text("\(context.state.persons.count)\(L("la.people.safe"))")
                         .font(.caption2.bold())
                         .foregroundStyle(SharedColors.safe)
                 case .needsAttention:
                     let name = context.state.priorityPersonName
-                    Text("⚠\(name)")
+                    Text("\(name)")
                         .font(.caption2.bold())
                         .foregroundStyle(SharedColors.warning)
                 case .sosAlert:
                     let name = context.state.priorityPersonName
-                    Text("🆘\(name)")
+                    Text("SOS \(name)")
                         .font(.caption2.bold())
                         .foregroundStyle(SharedColors.alert)
                 }
@@ -124,7 +126,7 @@ struct GuardianLiveActivity: Widget {
                     Image("AppLogo")
                         .resizable()
                         .frame(width: 20, height: 20)
-                    Text("\(WidgetDataStore.appName) · \(context.state.persons.count)位家人")
+                    Text("\(WidgetDataStore.appName) · \(context.state.persons.count)\(L("la.persons.count"))")
                         .font(.subheadline.bold())
                         .foregroundStyle(.white)
                 }
@@ -189,7 +191,7 @@ struct GuardianLiveActivity: Widget {
                 Link(destination: url) {
                     HStack(spacing: 6) {
                         Image(systemName: "phone.fill")
-                        Text("呼叫 \(context.state.priorityPersonName)")
+                        Text(L("la.call") + context.state.priorityPersonName)
                             .fontWeight(.semibold)
                     }
                     .font(.subheadline)
@@ -225,10 +227,10 @@ struct GuardianLiveActivity: Widget {
 
     private func personStatusLabel(_ person: GuardianActivityAttributes.PersonInfo) -> String {
         switch person.status {
-        case .normal: return "安全"
-        case .overdue: return "未报平安"
-        case .alert: return "紧急求助"
-        case .unreachable: return "离线"
+        case .normal: return L("la.safe")
+        case .overdue: return L("la.overdue")
+        case .alert: return L("la.alert")
+        case .unreachable: return L("la.offline")
         }
     }
 

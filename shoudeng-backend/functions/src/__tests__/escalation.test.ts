@@ -233,24 +233,26 @@ describe("FCM Push Payload — PII Check", () => {
   });
 });
 
-describe("FCM Push — Locale (FINDING)", () => {
-  it("FINDING: All notification bodies are hardcoded in Chinese", () => {
-    // This is a known finding from Phase 0 (F-001)
-    // Verify it's still the case — when fixed, update this test
+describe("FCM Push — Locale (FIXED)", () => {
+  it("FIXED: FCM has per-locale notification routing", () => {
+    // F-001 fixed: FCM now has per-recipient locale routing
+    expect(fcmSource).toMatch(/getUserLocale/i);
+    expect(fcmSource).toMatch(/fcmStrings/);
+    // Still has Chinese as one of the supported locales
     const hasChineseChars = /[\u4e00-\u9fff]/.test(fcmSource);
     expect(hasChineseChars).toBe(true);
-
-    // Check that there's no per-locale routing
-    expect(fcmSource).not.toMatch(
-      /locale|language|i18n|getLocale|userLocale/i
-    );
+    // But also has English and French
+    expect(fcmSource).toContain("Emergency SOS");
+    expect(fcmSource).toContain("SOS Urgence");
   });
 });
 
-describe("SMS Templates — Locale (FINDING)", () => {
-  it("FINDING: SMS templates are hardcoded in Chinese", () => {
-    const hasChineseChars = /[\u4e00-\u9fff]/.test(smsSource);
-    expect(hasChineseChars).toBe(true);
+describe("SMS Templates — Locale (FIXED)", () => {
+  it("FIXED: SMS has per-locale template routing", () => {
+    // F-002 fixed: SMS now has per-recipient locale routing
+    expect(smsSource).toMatch(/getUserLocale|getSmsStrings/i);
+    expect(smsSource).toContain("Luma Emergency");
+    expect(smsSource).toContain("Luma Urgence");
   });
 });
 
@@ -263,6 +265,6 @@ describe("Escalation Chain — Edge Cases", () => {
   it("fetches protected person name with fallback", () => {
     // Should fallback to a default name if user doc doesn't exist
     expect(triggerSource).toMatch(/userDoc\.exists\s*\?/);
-    expect(triggerSource).toContain("被守护者");
+    expect(triggerSource).toContain("Protected Person");
   });
 });

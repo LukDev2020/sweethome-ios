@@ -45,3 +45,90 @@
 "picker.search" = "Rechercher un pays";
 "picker.title" = "Choisir un pays/région";
 "picker.cancel" = "Annuler";
+
+/* Tab Labels */
+"tab.home" = "Accueil";
+"tab.family" = "Famille";
+"tab.coverage" = "Couverture";
+"tab.records" = "Historique";
+"tab.settings" = "Paramètres";
+
+/* Navigation */
+"nav.title" = "Luma";
+"nav.you.are.here" = "Vous êtes ici";
+
+/* Home View - Protected */
+"home.sos" = "SOS";
+"home.sos.hold" = "Maintenez 3s pour SOS";
+"home.checkin" = "Je vais bien";
+"home.checkin.done" = "Signalé";
+"home.send.location" = "Envoyer position";
+"home.guardian.list" = "Mes gardiens";
+"home.no.guardian" = "Aucun gardien";
+"home.invite.guardian" = "Inviter un gardien";
+"home.quick.actions" = "Actions rapides";
+"home.timer" = "Minuterie maison";
+"home.itinerary" = "Partager itinéraire";
+"home.medical" = "Carte médicale";
+"home.emergency.text" = "SMS d'urgence";
+"home.consulate" = "Consulat";
+"home.claim" = "Documents";
+
+/* Home View - Guardian */
+"home.persons" = "Personnes protégées";
+"home.all.safe" = "Tous en sécurité";
+"home.needs.attention" = "Attention requise";
+"home.add.person" = "Ajouter une personne";
+"home.person.safe" = "En sécurité";
+"home.person.overdue" = "En retard";
+"home.person.alert" = "Alerte";
+"home.person.offline" = "Hors ligne";
+
+/* Settings */
+"settings.title" = "Paramètres";
+"settings.profile" = "Profil";
+"settings.lockscreen" = "Carte écran verrouillé";
+"settings.lockscreen.desc" = "Afficher automatiquement les infos d'urgence en quittant l'app";
+"settings.security" = "Sécurité";
+"settings.language" = "Langue";
+"settings.fontsize" = "Taille de police";
+"settings.about" = "À propos";
+"settings.logout" = "Déconnexion";
+"settings.delete.account" = "Supprimer le compte";
+
+/* SOS Alert */
+"sos.no.guardian.title" = "SOS non livrable";
+"sos.no.guardian.message" = "Vous n'avez ajouté aucun gardien. Les signaux SOS ne seront pas reçus.";
+"sos.send.anyway" = "Envoyer quand même";
+"sos.invite.first" = "Inviter un gardien d'abord";
+"sos.active" = "SOS actif";
+"sos.triggered" = "SOS Luma déclenché";
+
+/* Live Activity */
+"la.normal" = "Normal";
+"la.on.duty" = "En service";
+"la.guardians" = "gardiens";
+"la.online" = "en ligne";
+"la.sos.button" = "SOS";
+"la.checkin.button" = "OK";
+"la.location.button" = "Position";
+"la.home.countdown" = "Retour maison";
+"la.last.checkin" = "Dernier signal";
+"la.allergy" = "Allergies";
+"la.persons.count" = "membres";
+"la.all.safe" = "Tous en sécurité";
+"la.needs.attention" = "Attention";
+"la.emergency" = "Urgence";
+"la.call" = "Appeler";
+"la.safe" = "En sécurité";
+"la.overdue" = "En retard";
+"la.alert" = "Alerte";
+"la.offline" = "Hors ligne";
+"la.people.safe" = "en sécurité";
+"la.home.timer" = "Minuterie active";
+
+/* Fall Detection */
+"fall.detected.title" = "Chute détectée";
+"fall.detected.subtitle" = "Si vous allez bien, appuyez sur le bouton ci-dessous pour annuler l'alerte d'urgence.";
+"fall.sos.countdown" = "Le SOS sera envoyé automatiquement à la fin du compte à rebours";
+"fall.im.fine" = "Je vais bien";

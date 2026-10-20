@@ -2,6 +2,54 @@ import * as admin from "firebase-admin";
 
 const db = admin.firestore();
 
+// Per-locale notification strings
+const fcmStrings: Record<string, {
+  sosTitle: string;
+  sosBody: (name: string, loc?: string) => string;
+  checkinTitle: string;
+  checkinBody: (name: string) => string;
+  heartbeatTitle: string;
+  heartbeatBody: (name: string, mins: number) => string;
+  resolvedTitle: string;
+  resolvedBody: (name: string) => string;
+}> = {
+  zh: {
+    sosTitle: "紧急求助",
+    sosBody: (name, loc) => `${name}正在求助${loc ? "，位于" + loc : ""}`,
+    checkinTitle: "报平安提醒",
+    checkinBody: (name) => `${name}今天还没有报平安`,
+    heartbeatTitle: "设备离线提醒",
+    heartbeatBody: (name, mins) => `${name}的手机已 ${mins} 分钟未上报信号`,
+    resolvedTitle: "守护者已接手",
+    resolvedBody: (name) => `${name}已确认并接手处理`,
+  },
+  en: {
+    sosTitle: "Emergency SOS",
+    sosBody: (name, loc) => `${name} is calling for help${loc ? " near " + loc : ""}`,
+    checkinTitle: "Check-in Reminder",
+    checkinBody: (name) => `${name} hasn't checked in today`,
+    heartbeatTitle: "Device Offline",
+    heartbeatBody: (name, mins) => `${name}'s phone has been offline for ${mins} minutes`,
+    resolvedTitle: "Guardian Responded",
+    resolvedBody: (name) => `${name} has acknowledged and taken over`,
+  },
+  fr: {
+    sosTitle: "SOS Urgence",
+    sosBody: (name, loc) => `${name} demande de l'aide${loc ? " près de " + loc : ""}`,
+    checkinTitle: "Rappel de signal",
+    checkinBody: (name) => `${name} n'a pas donné signe de vie aujourd'hui`,
+    heartbeatTitle: "Appareil hors ligne",
+    heartbeatBody: (name, mins) => `Le téléphone de ${name} est hors ligne depuis ${mins} minutes`,
+    resolvedTitle: "Gardien a répondu",
+    resolvedBody: (name) => `${name} a confirmé et pris en charge`,
+  },
+};
+
+function getStrings(locale: string) {
+  const lang = (locale || "zh").substring(0, 2);
+  return fcmStrings[lang] || fcmStrings.zh;
+}
+
 /**
  * Get all device tokens for a user.
  */
@@ -11,6 +59,14 @@ async function getTokensForUser(userId: string): Promise<string[]> {
     .where("userId", "==", userId)
     .get();
   return snapshot.docs.map((doc) => doc.data().token);
+}
+
+/**
+ * Get user's preferred locale (defaults to "zh").
+ */
+async function getUserLocale(userId: string): Promise<string> {
+  const userDoc = await db.collection("users").doc(userId).get();
+  return userDoc.exists ? userDoc.data()?.locale || "zh" : "zh";
 }
 
 /**
@@ -43,11 +99,14 @@ export async function sendSOSAlert(
     return;
   }
 
+  const locale = await getUserLocale(guardianId);
+  const s = getStrings(locale);
+
   const message: admin.messaging.MulticastMessage = {
     tokens,
     notification: {
-      title: "紧急求助",
-      body: `${protectedPersonName}正在求助${locationDescription ? "，位于" + locationDescription : ""}`,
+      title: s.sosTitle,
+      body: s.sosBody(protectedPersonName, locationDescription),
     },
     apns: {
       headers: {
@@ -60,8 +119,8 @@ export async function sendSOSAlert(
           "interruption-level": "critical",
           "relevance-score": 1.0,
           alert: {
-            title: "紧急求助",
-            body: `${protectedPersonName}正在求助`,
+            title: s.sosTitle,
+            body: s.sosBody(protectedPersonName),
           },
         },
       },
@@ -95,11 +154,14 @@ export async function sendCheckinReminder(
   const tokens = await getTokensForUser(guardianId);
   if (tokens.length === 0) return;
 
+  const locale = await getUserLocale(guardianId);
+  const s = getStrings(locale);
+
   const message: admin.messaging.MulticastMessage = {
     tokens,
     notification: {
-      title: "报平安提醒",
-      body: `${protectedPersonName}今天还没有报平安`,
+      title: s.checkinTitle,
+      body: s.checkinBody(protectedPersonName),
     },
     apns: {
       payload: {
@@ -134,11 +196,14 @@ export async function sendHeartbeatMissingAlert(
   const tokens = await getTokensForUser(guardianId);
   if (tokens.length === 0) return;
 
+  const locale = await getUserLocale(guardianId);
+  const s = getStrings(locale);
+
   const message: admin.messaging.MulticastMessage = {
     tokens,
     notification: {
-      title: "设备离线提醒",
-      body: `${protectedPersonName}的手机已 ${lastSeenMinutes} 分钟未上报信号`,
+      title: s.heartbeatTitle,
+      body: s.heartbeatBody(protectedPersonName, lastSeenMinutes),
     },
     apns: {
       payload: {
@@ -201,11 +266,14 @@ export async function sendSOSResolvedNotification(
   const tokens = await getTokensForUser(protectedPersonId);
   if (tokens.length === 0) return;
 
+  const locale = await getUserLocale(protectedPersonId);
+  const s = getStrings(locale);
+
   const message: admin.messaging.MulticastMessage = {
     tokens,
     notification: {
-      title: "守护者已接手",
-      body: `${resolvedByName}已确认并接手处理`,
+      title: s.resolvedTitle,
+      body: s.resolvedBody(resolvedByName),
     },
     data: {
       action: "sos_resolved",

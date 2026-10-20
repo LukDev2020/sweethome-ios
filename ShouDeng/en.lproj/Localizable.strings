@@ -45,3 +45,90 @@
 "picker.search" = "Search countries";
 "picker.title" = "Select Country/Region";
 "picker.cancel" = "Cancel";
+
+/* Tab Labels */
+"tab.home" = "Home";
+"tab.family" = "Family";
+"tab.coverage" = "Coverage";
+"tab.records" = "Records";
+"tab.settings" = "Settings";
+
+/* Navigation */
+"nav.title" = "Luma";
+"nav.you.are.here" = "You're here";
+
+/* Home View - Protected */
+"home.sos" = "SOS";
+"home.sos.hold" = "Hold 3s to send SOS";
+"home.checkin" = "I'm OK";
+"home.checkin.done" = "Checked in";
+"home.send.location" = "Send Location";
+"home.guardian.list" = "My Guardians";
+"home.no.guardian" = "No guardians yet";
+"home.invite.guardian" = "Invite Guardian";
+"home.quick.actions" = "Quick Actions";
+"home.timer" = "Home Timer";
+"home.itinerary" = "Share Itinerary";
+"home.medical" = "Medical Card";
+"home.emergency.text" = "Emergency Text";
+"home.consulate" = "Consulate";
+"home.claim" = "Claim Materials";
+
+/* Home View - Guardian */
+"home.persons" = "Protected Persons";
+"home.all.safe" = "All Safe";
+"home.needs.attention" = "Needs Attention";
+"home.add.person" = "Add Protected Person";
+"home.person.safe" = "Safe";
+"home.person.overdue" = "Overdue";
+"home.person.alert" = "Alert";
+"home.person.offline" = "Offline";
+
+/* Settings */
+"settings.title" = "Settings";
+"settings.profile" = "Profile";
+"settings.lockscreen" = "Lock Screen Card";
+"settings.lockscreen.desc" = "Auto-show emergency info and family status when leaving app";
+"settings.security" = "Security";
+"settings.language" = "Language";
+"settings.fontsize" = "Font Size";
+"settings.about" = "About";
+"settings.logout" = "Log Out";
+"settings.delete.account" = "Delete Account";
+
+/* SOS Alert */
+"sos.no.guardian.title" = "SOS Cannot Be Delivered";
+"sos.no.guardian.message" = "You haven't added any guardians. SOS signals won't be received. Invite a family member first.";
+"sos.send.anyway" = "Send Anyway";
+"sos.invite.first" = "Invite Guardian First";
+"sos.active" = "SOS Active";
+"sos.triggered" = "Luma SOS has been triggered";
+
+/* Live Activity */
+"la.normal" = "Normal";
+"la.on.duty" = "On Duty";
+"la.guardians" = "guardians";
+"la.online" = "online";
+"la.sos.button" = "SOS";
+"la.checkin.button" = "OK";
+"la.location.button" = "Location";
+"la.home.countdown" = "Home countdown";
+"la.last.checkin" = "Last check-in";
+"la.allergy" = "Allergies";
+"la.persons.count" = "family members";
+"la.all.safe" = "All Safe";
+"la.needs.attention" = "Needs Attention";
+"la.emergency" = "Emergency";
+"la.call" = "Call";
+"la.safe" = "Safe";
+"la.overdue" = "Overdue";
+"la.alert" = "Alert";
+"la.offline" = "Offline";
+"la.people.safe" = "safe";
+"la.home.timer" = "Timer active";
+
+/* Fall Detection */
+"fall.detected.title" = "Fall Detected";
+"fall.detected.subtitle" = "If you're okay, tap the button below to cancel the emergency alert.";
+"fall.sos.countdown" = "SOS will be sent automatically when countdown ends";
+"fall.im.fine" = "I'm Fine";

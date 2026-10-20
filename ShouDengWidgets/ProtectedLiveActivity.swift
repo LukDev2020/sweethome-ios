@@ -6,6 +6,8 @@ import ActivityKit
 /// Shows: who is guarding you, your status, SOS + check-in buttons.
 struct ProtectedLiveActivity: Widget {
 
+    private func L(_ key: String) -> String { WidgetDataStore.localized(key) }
+
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: ProtectedActivityAttributes.self) { context in
             protectedLockScreenView(context: context)
@@ -23,7 +25,7 @@ struct ProtectedLiveActivity: Widget {
                         }
                         let onDuty = context.state.guardians.filter(\.isOnDuty)
                         if !onDuty.isEmpty {
-                            Text("\(onDuty.first!.name)值班中")
+                            Text("\(onDuty.first!.name) \(L("la.on.duty"))")
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
                         }
@@ -31,10 +33,10 @@ struct ProtectedLiveActivity: Widget {
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     VStack(alignment: .trailing, spacing: 4) {
-                        Text("\(context.state.guardians.count)位守护者")
+                        Text("\(context.state.guardians.count)\(L("la.guardians"))")
                             .font(.caption.bold())
                         let online = context.state.guardians.filter(\.isOnline).count
-                        Text("\(online)人在线")
+                        Text("\(online)\(L("la.online"))")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
@@ -46,7 +48,7 @@ struct ProtectedLiveActivity: Widget {
                             HStack(spacing: 4) {
                                 Image(systemName: "sos")
                                     .font(.caption)
-                                Text("紧急求助")
+                                Text(L("la.sos.button"))
                                     .font(.caption.weight(.semibold))
                             }
                             .frame(maxWidth: .infinity)
@@ -60,7 +62,7 @@ struct ProtectedLiveActivity: Widget {
                             HStack(spacing: 4) {
                                 Image(systemName: "checkmark.circle.fill")
                                     .font(.caption)
-                                Text("报平安")
+                                Text(L("la.checkin.button"))
                                     .font(.caption.weight(.semibold))
                             }
                             .frame(maxWidth: .infinity)
@@ -82,11 +84,11 @@ struct ProtectedLiveActivity: Widget {
             } compactTrailing: {
                 let onDuty = context.state.guardians.first(where: \.isOnDuty)
                 if let g = onDuty {
-                    Text("\(g.name)值班")
+                    Text("\(g.name) \(L("la.on.duty"))")
                         .font(.caption2.bold())
                         .foregroundStyle(SharedColors.lamp)
                 } else {
-                    Text("\(context.state.guardians.count)位守护")
+                    Text("\(context.state.guardians.count)\(L("la.guardians"))")
                         .font(.caption2.bold())
                         .foregroundStyle(SharedColors.lamp)
                 }
@@ -159,7 +161,7 @@ struct ProtectedLiveActivity: Widget {
                     Image(systemName: "timer")
                         .font(.system(size: 9))
                         .foregroundStyle(.white.opacity(0.6))
-                    Text("回家倒计时")
+                    Text(L("la.home.countdown"))
                         .font(.system(size: 10))
                         .foregroundStyle(.white.opacity(0.6))
                     Spacer()
@@ -172,7 +174,7 @@ struct ProtectedLiveActivity: Widget {
                     Image(systemName: "checkmark.circle")
                         .font(.system(size: 9))
                         .foregroundStyle(.white.opacity(0.6))
-                    Text("上次报平安")
+                    Text(L("la.last.checkin"))
                         .font(.system(size: 10))
                         .foregroundStyle(.white.opacity(0.6))
                     Spacer()
@@ -206,14 +208,14 @@ struct ProtectedLiveActivity: Widget {
                                 Image(systemName: "exclamationmark.triangle.fill")
                                     .font(.system(size: 8))
                                     .foregroundStyle(.yellow)
-                                Text("过敏: " + context.state.allergies.prefix(2).joined(separator: "、"))
+                                Text(L("la.allergy") + context.state.allergies.prefix(2).joined(separator: ", "))
                                     .font(.system(size: 10))
                                     .foregroundStyle(.white)
                                     .lineLimit(1)
                             }
                         }
                         if !context.state.conditions.isEmpty {
-                            Text(context.state.conditions.prefix(2).joined(separator: "、"))
+                            Text(context.state.conditions.prefix(2).joined(separator: ", "))
                                 .font(.system(size: 10))
                                 .foregroundStyle(.white.opacity(0.8))
                                 .lineLimit(1)
@@ -261,7 +263,7 @@ struct ProtectedLiveActivity: Widget {
                     HStack(spacing: 2) {
                         Image(systemName: "sos")
                             .font(.system(size: 9))
-                        Text("求助")
+                        Text(L("la.sos.button"))
                             .font(.caption2.weight(.semibold))
                     }
                     .frame(maxWidth: .infinity)
@@ -274,7 +276,7 @@ struct ProtectedLiveActivity: Widget {
                     HStack(spacing: 2) {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 9))
-                        Text("平安")
+                        Text(L("la.checkin.button"))
                             .font(.caption2.weight(.semibold))
                     }
                     .frame(maxWidth: .infinity)
@@ -287,7 +289,7 @@ struct ProtectedLiveActivity: Widget {
                     HStack(spacing: 2) {
                         Image(systemName: "location.fill")
                             .font(.system(size: 9))
-                        Text("位置")
+                        Text(L("la.location.button"))
                             .font(.caption2.weight(.semibold))
                     }
                     .frame(maxWidth: .infinity)

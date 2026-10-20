@@ -36,7 +36,7 @@ final class GuardianActivityManager {
         let attributes = ProtectedActivityAttributes(userName: userName)
         let state = ProtectedActivityAttributes.ContentState(
             status: .normal,
-            statusText: "正常",
+            statusText: WidgetDataStore.localized("la.normal"),
             guardians: guardians,
             lastCheckIn: lastCheckIn,
             homeTimerDeadline: nil,
@@ -134,7 +134,7 @@ final class GuardianActivityManager {
             var state = activity.content.state
             state.lastCheckIn = Date()
             state.status = .normal
-            state.statusText = "正常"
+            state.statusText = WidgetDataStore.localized("la.normal")
             await activity.update(.init(state: state, staleDate: Date().addingTimeInterval(600)))
         }
     }
@@ -146,7 +146,7 @@ final class GuardianActivityManager {
             state.homeTimerDeadline = deadline
             state.homeTimerLabel = label
             state.status = deadline != nil ? .timerRunning : .normal
-            state.statusText = deadline != nil ? "回家计时中" : "正常"
+            state.statusText = deadline != nil ? WidgetDataStore.localized("la.home.timer") : WidgetDataStore.localized("la.normal")
             await activity.update(.init(state: state, staleDate: Date().addingTimeInterval(600)))
         }
     }
@@ -180,14 +180,14 @@ final class GuardianActivityManager {
             Task {
                 var state = activity.content.state
                 state.status = .sosActive
-                state.statusText = "紧急求助中"
+                state.statusText = WidgetDataStore.localized("la.sos.active")
                 state.emergencyPhone = localEmergencyNumber
                 state.emergencyLabel = localEmergencyNumber
                 await activity.update(
                     .init(state: state, staleDate: Date().addingTimeInterval(600)),
                     alertConfiguration: .init(
-                        title: "SOS 紧急求助",
-                        body: "守灯已触发紧急求助",
+                        title: "SOS",
+                        body: "SOS",
                         sound: .default
                     )
                 )
@@ -201,7 +201,7 @@ final class GuardianActivityManager {
             Task {
                 var state = activity.content.state
                 state.status = .normal
-                state.statusText = "正常"
+                state.statusText = WidgetDataStore.localized("la.normal")
                 await activity.update(.init(state: state, staleDate: Date().addingTimeInterval(600)))
             }
         }
@@ -272,9 +272,9 @@ final class GuardianActivityManager {
 
     private static func overallStatusText(_ status: GuardianActivityAttributes.OverallStatus, count: Int) -> String {
         switch status {
-        case .allSafe: return "全部安全"
-        case .needsAttention: return "需关注"
-        case .sosAlert: return "紧急"
+        case .allSafe: return WidgetDataStore.localized("la.all.safe")
+        case .needsAttention: return WidgetDataStore.localized("la.needs.attention")
+        case .sosAlert: return WidgetDataStore.localized("la.emergency")
         }
     }
 }

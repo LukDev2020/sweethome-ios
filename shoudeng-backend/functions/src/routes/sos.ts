@@ -83,23 +83,12 @@ router.post("/trigger", createRateLimiter(RATE_LIMITS.sos), async (req: Request,
       return;
     }
 
-    // Add timeline entry
-    const triggerLabels: Record<string, string> = {
-      longPress: "长按",
-      fallDetection: "摔倒检测",
-      watchQuickAction: "手表快捷操作",
-      bluetoothButton: "蓝牙按钮",
-      duressPassword: "胁迫密码",
-      voiceWakeWord: "语音唤醒",
-    };
-    const triggerLabel =
-      triggerLabels[triggerMethod || "longPress"] || triggerMethod;
-
+    // Add timeline entry (informational, outside transaction is acceptable)
     await db.collection("timeline_entries").add({
       userId: protectedPersonId,
       timestamp: now,
       type: "sosTriggered",
-      description: `触发紧急求助（${triggerLabel}）`,
+      description: `SOS triggered (${triggerMethod || "longPress"})`,
       detail: null,
     });
 
@@ -166,20 +155,11 @@ router.post("/resolve", async (req: Request, res: Response) => {
     });
 
     // Add timeline entry
-    const resolutionLabels: Record<string, string> = {
-      guardianConfirmedSafe: "守护者确认安全",
-      protectedCancelled: "取消了紧急求助",
-      responderHandled: "专员已处理",
-      falseAlarm: "误触",
-      timeout: "超时自动解除",
-    };
-    const resolutionLabel = resolutionLabels[resolution] || resolution;
-
     await db.collection("timeline_entries").add({
       userId: sosData.protectedPersonId,
       timestamp: now,
       type: "sosResolved",
-      description: resolutionLabel,
+      description: `SOS resolved (${resolution})`,
       detail: null,
     });
 
@@ -188,7 +168,7 @@ router.post("/resolve", async (req: Request, res: Response) => {
       const resolverDoc = await db.collection("users").doc(uid).get();
       const resolverName = resolverDoc.exists
         ? resolverDoc.data()!.displayName
-        : "守护者";
+        : "Guardian";
       await sendSOSResolvedNotification(
         sosData.protectedPersonId,
         resolverName
@@ -246,7 +226,7 @@ router.post("/voice-call", async (req: Request, res: Response) => {
     const callSid = await initiateVoiceCall(
       guardianId,
       sosEventId,
-      protectedPersonName || "被守护者",
+      protectedPersonName || "Protected Person",
       callbackUrl
     );
 

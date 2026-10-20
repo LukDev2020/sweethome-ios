@@ -45,3 +45,90 @@
 "picker.search" = "搜索国家或地区";
 "picker.title" = "选择国家/地区";
 "picker.cancel" = "取消";
+
+/* Tab Labels */
+"tab.home" = "首页";
+"tab.family" = "家庭圈";
+"tab.coverage" = "覆盖";
+"tab.records" = "记录";
+"tab.settings" = "设置";
+
+/* Navigation */
+"nav.title" = "守灯";
+"nav.you.are.here" = "你在这";
+
+/* Home View - Protected */
+"home.sos" = "紧急求助";
+"home.sos.hold" = "长按 3 秒发送 SOS";
+"home.checkin" = "报平安";
+"home.checkin.done" = "已报平安";
+"home.send.location" = "发送位置";
+"home.guardian.list" = "我的守护者";
+"home.no.guardian" = "还没有守护者";
+"home.invite.guardian" = "邀请守护者";
+"home.quick.actions" = "快捷操作";
+"home.timer" = "到家计时";
+"home.itinerary" = "行程分享";
+"home.medical" = "急救卡";
+"home.emergency.text" = "紧急短信";
+"home.consulate" = "使领馆";
+"home.claim" = "理赔材料";
+
+/* Home View - Guardian */
+"home.persons" = "被守护者";
+"home.all.safe" = "全部安全";
+"home.needs.attention" = "需关注";
+"home.add.person" = "添加被守护者";
+"home.person.safe" = "安全";
+"home.person.overdue" = "未报平安";
+"home.person.alert" = "紧急求助";
+"home.person.offline" = "离线";
+
+/* Settings */
+"settings.title" = "设置";
+"settings.profile" = "个人资料";
+"settings.lockscreen" = "锁屏卡片";
+"settings.lockscreen.desc" = "退出 App 时自动显示急救信息和家人状态";
+"settings.security" = "安全";
+"settings.language" = "语言";
+"settings.fontsize" = "字体大小";
+"settings.about" = "关于";
+"settings.logout" = "退出登录";
+"settings.delete.account" = "删除账户";
+
+/* SOS Alert */
+"sos.no.guardian.title" = "SOS无法送达";
+"sos.no.guardian.message" = "你还没有添加任何守护者，SOS信号将无人接收。建议先邀请家人成为你的守护者。";
+"sos.send.anyway" = "仍然发送";
+"sos.invite.first" = "先邀请守护者";
+"sos.active" = "紧急求助中";
+"sos.triggered" = "守灯已触发紧急求助";
+
+/* Live Activity */
+"la.normal" = "正常";
+"la.on.duty" = "值班中";
+"la.guardians" = "位守护者";
+"la.online" = "人在线";
+"la.sos.button" = "求助";
+"la.checkin.button" = "平安";
+"la.location.button" = "位置";
+"la.home.countdown" = "回家倒计时";
+"la.last.checkin" = "上次报平安";
+"la.allergy" = "过敏";
+"la.persons.count" = "位家人";
+"la.all.safe" = "全部安全";
+"la.needs.attention" = "需关注";
+"la.emergency" = "紧急";
+"la.call" = "呼叫";
+"la.safe" = "安全";
+"la.overdue" = "未报平安";
+"la.alert" = "紧急求助";
+"la.offline" = "离线";
+"la.people.safe" = "人安全";
+"la.home.timer" = "回家计时中";
+
+/* Fall Detection */
+"fall.detected.title" = "检测到跌倒";
+"fall.detected.subtitle" = "如果你没事，请点击下方按钮取消紧急求助。";
+"fall.sos.countdown" = "倒计时结束后将自动发送 SOS";
+"fall.im.fine" = "我没事";

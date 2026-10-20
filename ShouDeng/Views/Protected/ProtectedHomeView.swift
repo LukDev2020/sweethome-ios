@@ -13,6 +13,7 @@ import Combine
 
 struct ProtectedHomeView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var lang = LanguageManager.shared
     @State private var isSOSPressed = false
     @State private var sosProgress: Double = 0
     @State private var showSOSActive = false
@@ -51,7 +52,7 @@ struct ProtectedHomeView: View {
                 }
             }
             .toolbar(sizeClass == .regular ? .hidden : .visible, for: .navigationBar)
-            .navigationTitle("守灯")
+            .navigationTitle(lang.localized("nav.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(safe.opacity(0.08), for: .navigationBar)
             .toolbar {
@@ -86,16 +87,16 @@ struct ProtectedHomeView: View {
             .sheet(isPresented: $showSOSActive) {
                 SOSActiveView()
             }
-            .alert("SOS无法送达", isPresented: $showNoGuardianSOSWarning) {
-                Button("仍然发送") {
+            .alert(lang.localized("sos.no.guardian.title"), isPresented: $showNoGuardianSOSWarning) {
+                Button(lang.localized("sos.send.anyway")) {
                     coordinator.triggerSOS(method: .longPress)
                     showSOSActive = true
                 }
-                Button("先邀请守护者", role: .cancel) {
+                Button(lang.localized("sos.invite.first"), role: .cancel) {
                     showInviteGuardian = true
                 }
             } message: {
-                Text("你还没有添加任何守护者，SOS信号将无人接收。建议先邀请家人成为你的守护者。")
+                Text(lang.localized("sos.no.guardian.message"))
             }
             .sheet(isPresented: $showInviteGuardian) {
                 InviteGuardianView()
@@ -663,7 +664,7 @@ struct ProtectedHomeView: View {
                 .frame(height: 52)
                 .clipShape(RoundedRectangle(cornerRadius: 13))
 
-                Text(isSOSPressed ? "继续按住..." : "长按发送紧急求助")
+                Text(isSOSPressed ? lang.localized("home.sos.hold") : lang.localized("home.sos.hold"))
                     .font(.scaled(size: 15, weight: .medium))
                     .foregroundStyle(.white)
             }
@@ -725,11 +726,11 @@ struct ProtectedHomeView: View {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.scaled(size: 14))
                         .foregroundStyle(Color(red: 44/255, green: 107/255, blue: 81/255))
-                    Text("已报平安")
+                    Text(lang.localized("home.checkin.done"))
                         .font(.scaled(size: 14, weight: .medium))
                         .foregroundStyle(Color(red: 44/255, green: 107/255, blue: 81/255))
                 } else {
-                    Text("今天我很好，报个平安")
+                    Text(lang.localized("home.checkin"))
                         .font(.scaled(size: 14, weight: .medium))
                         .foregroundStyle(Color(red: 44/255, green: 107/255, blue: 81/255))
                 }
@@ -751,17 +752,17 @@ struct ProtectedHomeView: View {
             // Row 1: Daily use tools
             HStack(spacing: 8) {
                 quickActionButton(
-                    icon: "house.fill", label: "回家计时",
+                    icon: "house.fill", label: lang.localized("home.timer"),
                     color: safe
                 ) { showHomeTimer = true }
 
                 quickActionButton(
-                    icon: "mappin.circle.fill", label: "到达报告",
+                    icon: "mappin.circle.fill", label: lang.localized("home.itinerary"),
                     color: safe
                 ) { showArrivalReport = true }
 
                 quickActionButton(
-                    icon: "airplane", label: "共享行程",
+                    icon: "airplane", label: lang.localized("home.itinerary"),
                     color: safe
                 ) { showItinerary = true }
             }
@@ -769,17 +770,17 @@ struct ProtectedHomeView: View {
             // Row 2: Emergency tools
             HStack(spacing: 8) {
                 quickActionButton(
-                    icon: "staroflife.fill", label: "医疗卡",
+                    icon: "staroflife.fill", label: lang.localized("home.medical"),
                     color: alert
                 ) { showMedicalCard = true }
 
                 quickActionButton(
-                    icon: "text.bubble.fill", label: "多语言急救",
+                    icon: "text.bubble.fill", label: lang.localized("home.emergency.text"),
                     color: alert
                 ) { showEmergencyText = true }
 
                 quickActionButton(
-                    icon: "building.columns.fill", label: "领事电话",
+                    icon: "building.columns.fill", label: lang.localized("home.consulate"),
                     color: pro
                 ) { showConsulate = true }
             }
@@ -787,7 +788,7 @@ struct ProtectedHomeView: View {
             // Row 3: Insurance & records
             HStack(spacing: 8) {
                 quickActionButton(
-                    icon: "doc.text.magnifyingglass", label: "理赔材料",
+                    icon: "doc.text.magnifyingglass", label: lang.localized("home.claim"),
                     color: safe
                 ) { showClaimMaterials = true }
 
@@ -869,7 +870,7 @@ struct ProtectedHomeView: View {
                     Image(systemName: "person.2.slash")
                         .font(.scaled(size: 28))
                         .foregroundStyle(ink.opacity(0.25))
-                    Text("还没有守护者")
+                    Text(lang.localized("home.no.guardian"))
                         .font(.scaled(size: 14, weight: .medium))
                         .foregroundStyle(ink.opacity(0.6))
                     Text("邀请家人成为你的守护者，他们可以在紧急时刻收到你的求助信号。")

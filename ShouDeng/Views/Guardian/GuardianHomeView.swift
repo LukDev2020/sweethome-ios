@@ -12,6 +12,7 @@ import MapKit
 
 struct GuardianHomeView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var lang = LanguageManager.shared
     @State private var mapFocusId: String?
     @State private var showInviteSheet = false
     @State private var showMedicalCard = false
@@ -38,7 +39,7 @@ struct GuardianHomeView: View {
             result.append((
                 user.cityName.isEmpty ? "我" : user.cityName,
                 localTime(user.timeZone),
-                "你在这",
+                lang.localized("nav.you.are.here"),
                 true
             ))
         }
@@ -67,7 +68,7 @@ struct GuardianHomeView: View {
                 }
             }
             .toolbar(sizeClass == .regular ? .hidden : .visible, for: .navigationBar)
-            .navigationTitle("守灯")
+            .navigationTitle(lang.localized("nav.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(pro.opacity(0.06), for: .navigationBar)
             .toolbar {
@@ -359,7 +360,7 @@ struct GuardianHomeView: View {
             if let c = coordinator.currentUser?.cityName, !c.isEmpty { cities.append(c) }
             for person in coordinator.protectedPersons { if !person.user.cityName.isEmpty && !cities.contains(person.user.cityName) { cities.append(person.user.cityName) } }
             let totalFamily = coordinator.protectedPersons.count
-            familyText = "\(totalFamily) 位被守护者"
+            familyText = "\(totalFamily) \(lang.localized("home.persons"))"
             subtitleText = cities.isEmpty
                 ? "守护中"
                 : cities.prefix(3).joined(separator: " · ")
@@ -415,7 +416,7 @@ struct GuardianHomeView: View {
 
                 HStack(spacing: 11) {
                     Spacer()
-                    legendDot(color: lamp, label: "被守护者")
+                    legendDot(color: lamp, label: lang.localized("home.persons"))
                     legendDot(color: safe, label: "我")
                     Spacer()
                 }

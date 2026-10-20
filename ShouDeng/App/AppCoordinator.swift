@@ -20,6 +20,8 @@ final class AppCoordinator: ObservableObject {
     @Published var myGuardians: [Guardian] = []               // Protected person sees these
     @Published var activeSOSEvent: SOSEvent?
     @Published var sosDeliveryFailed = false
+    @Published var showFallConfirmation = false
+    @Published var fallConfirmationDeadline: Date?
     @Published var currentRiskScores: [String: BaselineScorer.RiskScore] = [:]
     @Published var currentCoverage: DutyScheduler.DayCoverage?
     @Published var authState: AuthManager.AuthState = .unknown
@@ -100,7 +102,10 @@ final class AppCoordinator: ObservableObject {
         wireServices()
         restoreLocalState()
         observeAuthState()
-        if UserDefaults.standard.bool(forKey: "lockscreen_card_enabled") {
+        // Start Live Activity after restoring local state (so we have cached user/guardian data)
+        if case .loggedIn = authState,
+           UserDefaults.standard.bool(forKey: "lockscreen_card_enabled"),
+           currentUser != nil {
             startLiveActivityIfNeeded()
         }
     }
@@ -181,8 +186,20 @@ final class AppCoordinator: ObservableObject {
         // Flush any queued offline requests
         Task { await apiClient.flushOfflineQueue() }
 
-        // Fetch fresh data from server
-        Task { await fetchUserProfile() }
+        // Fetch fresh data from server, then restart Live Activity with real data
+        Task {
+            await fetchUserProfile()
+            if userRole == .guardian {
+                await fetchProtectedPersons()
+            } else {
+                await fetchGuardians()
+            }
+            await MainActor.run {
+                if UserDefaults.standard.bool(forKey: "lockscreen_card_enabled") {
+                    startLiveActivityIfNeeded()
+                }
+            }
+        }
 
         // Sync local notification preferences to server
         syncNotificationPrefs()
@@ -821,9 +838,25 @@ final class AppCoordinator: ObservableObject {
         #if DEBUG
         print("[Coordinator] Fall candidate detected — showing confirmation dialog")
         #endif
+        // Show 60-second confirmation dialog. If user doesn't dismiss,
+        // FallDetector transitions to .confirmed → handleFallConfirmed() → SOS
+        fallConfirmationDeadline = Date().addingTimeInterval(60)
+        showFallConfirmation = true
+
+        // Play haptic + audio alert
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.warning)
+    }
+
+    func dismissFallConfirmation() {
+        showFallConfirmation = false
+        fallConfirmationDeadline = nil
+        motionService.userDismissedFallAlert()
     }
 
     private func handleFallConfirmed() {
+        showFallConfirmation = false
+        fallConfirmationDeadline = nil
         triggerSOS(method: .fallDetection)
     }
 

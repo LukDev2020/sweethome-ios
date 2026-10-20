@@ -65,12 +65,12 @@ final class TrajectoryProcessor {
     }
 
     enum TransportMode: String {
-        case walking = "步行"
-        case cycling = "骑行"
-        case driving = "车辆"
-        case flying = "飞行"
-        case stationary = "停留"
-        case unknown = "未知"
+        case walking = "walking"
+        case cycling = "cycling"
+        case driving = "driving"
+        case flying = "flying"
+        case stationary = "stationary"
+        case unknown = "unknown"
     }
 
     // MARK: - Properties
@@ -132,8 +132,19 @@ final class TrajectoryProcessor {
                 let timeDelta = point.timestamp.timeIntervalSince(lastAccepted.timestamp)
                 if timeDelta > 0 {
                     let speedKmh = (distance / timeDelta) * 3.6
+                    // Two-tier speed filter: ground cap (200 km/h) and flying cap (1200 km/h)
+                    // Points between maxSpeedKmh and flyingSpeedKmh are only kept if
+                    // the device has reported flight-like altitude or sustained high speed
                     if speedKmh > config.flyingSpeedKmh {
                         continue
+                    }
+                    if speedKmh > config.maxSpeedKmh {
+                        // Allow if device-reported speed suggests flight
+                        let deviceSpeed = point.speed ?? 0
+                        let deviceSpeedKmh = deviceSpeed * 3.6
+                        if deviceSpeedKmh < config.maxSpeedKmh {
+                            continue
+                        }
                     }
                 }
             }

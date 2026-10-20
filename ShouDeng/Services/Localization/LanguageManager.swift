@@ -23,7 +23,7 @@ enum AppLanguage: String, CaseIterable {
     }
 
     var isFullySupported: Bool {
-        self == .chinese
+        true // All 3 languages now supported across main UI
     }
 }
 
