@@ -102,6 +102,12 @@ struct ConsulateView: View {
                     }
                 } header: {
                     Text("所有国家")
+                } footer: {
+                    Text(LanguageManager.shared.localized("disclaimer.reference.only"))
+                        .font(.scaled(size: 11))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 8)
                 }
             }
             .searchable(text: $searchText, prompt: "搜索国家")

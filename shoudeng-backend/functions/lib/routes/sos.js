@@ -37,6 +37,7 @@ const express_1 = require("express");
 const admin = __importStar(require("firebase-admin"));
 const uuid_1 = require("uuid");
 const auth_1 = require("../middleware/auth");
+const rateLimit_1 = require("../middleware/rateLimit");
 const fcm_1 = require("../services/fcm");
 const router = (0, express_1.Router)();
 const db = admin.firestore();
@@ -46,7 +47,7 @@ router.use(auth_1.authMiddleware);
  * Trigger an SOS event from the protected person's device.
  * Creates a Firestore document which triggers the onSOSCreated escalation chain.
  */
-router.post("/trigger", async (req, res) => {
+router.post("/trigger", (0, rateLimit_1.createRateLimiter)(rateLimit_1.RATE_LIMITS.sos), async (req, res) => {
     const { protectedPersonId, triggerMethod, latitude, longitude, batteryLevel, } = req.body;
     if (!protectedPersonId) {
         res.status(400).json({ error: "protectedPersonId is required" });

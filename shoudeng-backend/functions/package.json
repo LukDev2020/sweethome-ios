@@ -17,7 +17,7 @@
     "test:e2e": "FIRESTORE_EMULATOR_HOST=localhost:8080 FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 FUNCTIONS_EMULATOR=true jest --config jest.config.js --testPathPattern e2e-bots --runInBand --forceExit"
   },
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "dependencies": {
     "@google-cloud/bigquery": "^7.5.0",

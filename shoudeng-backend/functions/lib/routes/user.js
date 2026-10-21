@@ -58,6 +58,7 @@ router.get("/me", async (req, res) => {
             displayName: data.displayName,
             role: data.role,
             avatarInitial: data.avatarInitial,
+            email: data.email || null,
             timeZone: data.timeZone,
             countryCode: data.countryCode,
             cityName: data.cityName,
@@ -75,7 +76,7 @@ router.get("/me", async (req, res) => {
  */
 router.put("/me", async (req, res) => {
     const uid = req.uid;
-    const { displayName, timeZone, cityName, countryCode } = req.body;
+    const { displayName, email, timeZone, cityName, countryCode } = req.body;
     const updates = {
         updatedAt: admin.firestore.Timestamp.now(),
     };
@@ -86,6 +87,13 @@ router.put("/me", async (req, res) => {
         }
         updates.displayName = displayName;
         updates.avatarInitial = displayName.charAt(0);
+    }
+    if (email !== undefined) {
+        if (typeof email !== "string" || email.length > 200 || (email.length > 0 && !email.includes("@"))) {
+            res.status(400).json({ error: "Invalid email format" });
+            return;
+        }
+        updates.email = email;
     }
     if (timeZone !== undefined)
         updates.timeZone = timeZone;

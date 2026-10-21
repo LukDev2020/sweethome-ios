@@ -195,6 +195,12 @@ struct MedicalCardView: View {
                     .font(.scaled(size: 12))
                     .foregroundStyle(.secondary.opacity(0.7))
                     .padding(.top, 8)
+
+                Text(LanguageManager.shared.localized("disclaimer.reference.only"))
+                    .font(.scaled(size: 11))
+                    .foregroundStyle(.secondary.opacity(0.6))
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
                     .padding(.bottom, 24)
             }
             .padding(.horizontal, 16)

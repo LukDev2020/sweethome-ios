@@ -2,19 +2,22 @@ CFBundleDisplayName = "Luma";
 CFBundleName = "Luma";
 
 /* Location — Always */
-NSLocationAlwaysAndWhenInUseUsageDescription = "Luma needs continuous access to your location so it can report your position to family in an emergency and notify guardians when you enter or leave a safe zone.";
+NSLocationAlwaysAndWhenInUseUsageDescription = "Luma shares your location with family members you choose, so they can reach you in an emergency. Location is also used for safe-zone notifications. Sharing begins only after you accept the in-app consent prompt.";
 
 /* Location — When In Use */
-NSLocationWhenInUseUsageDescription = "Luma needs your location to show your current position and send it to family during an emergency SOS.";
+NSLocationWhenInUseUsageDescription = "Luma uses your location to show where you are on the map and to send your position to chosen family members during an SOS. Used only after you accept in-app consent.";
 
 /* Motion / Accelerometer */
-NSMotionUsageDescription = "Luma uses motion sensors to detect falls and other anomalies, automatically alerting your family when you cannot call for help yourself.";
+NSMotionUsageDescription = "Luma uses the accelerometer to detect possible falls. If a fall is detected, you have 60 seconds to dismiss the alert before your family members are notified. This feature activates only after you turn on fall detection in the app.";
+
+/* Face ID */
+NSFaceIDUsageDescription = "Luma uses Face ID to verify your identity and protect access to your family safety data.";
 
 /* Microphone */
-NSMicrophoneUsageDescription = "The microphone is used only when an emergency SOS is triggered, to record ambient audio that helps guardians assess the situation. Recording requires legal permission in your jurisdiction; some regions require consent from all parties present.";
+NSMicrophoneUsageDescription = "During an active SOS, the microphone may record ambient audio to help your chosen family members assess the situation. Recording starts only if you have enabled this option and local laws permit it.";
 
 /* Photo Library */
-NSPhotoLibraryUsageDescription = "Allows sharing photos in the family circle. Your photos are visible only to family members within a guardianship relationship.";
+NSPhotoLibraryUsageDescription = "Share photos with family members in your guardian circle. Photos are visible only to people in your guardianship relationship.";
 
 /* Contacts */
-NSContactsUsageDescription = "Luma needs access to your contacts to quickly add emergency contact information.";
+NSContactsUsageDescription = "Access your contacts to quickly add emergency contact information. Contact data is not uploaded to our servers.";

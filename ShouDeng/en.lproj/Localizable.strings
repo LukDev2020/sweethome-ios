@@ -132,3 +132,7 @@
 "fall.detected.subtitle" = "If you're okay, tap the button below to cancel the emergency alert.";
 "fall.sos.countdown" = "SOS will be sent automatically when countdown ends";
 "fall.im.fine" = "I'm Fine";
+
+/* Reference-Only Disclaimers */
+"disclaimer.reference.only" = "For reference only — verify with professionals";
+"disclaimer.not.emergency.service" = "This app notifies your family. It does not replace emergency services.";

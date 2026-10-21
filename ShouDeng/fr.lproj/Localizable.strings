@@ -132,3 +132,7 @@
 "fall.detected.subtitle" = "Si vous allez bien, appuyez sur le bouton ci-dessous pour annuler l'alerte d'urgence.";
 "fall.sos.countdown" = "Le SOS sera envoyé automatiquement à la fin du compte à rebours";
 "fall.im.fine" = "Je vais bien";
+
+/* Reference-Only Disclaimers */
+"disclaimer.reference.only" = "A titre indicatif uniquement — verifiez aupres de professionnels";
+"disclaimer.not.emergency.service" = "Cette application notifie votre famille. Elle ne remplace pas les services d'urgence.";

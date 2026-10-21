@@ -132,3 +132,7 @@
 "fall.detected.subtitle" = "如果你没事，请点击下方按钮取消紧急求助。";
 "fall.sos.countdown" = "倒计时结束后将自动发送 SOS";
 "fall.im.fine" = "我没事";
+
+/* 仅供参考声明 */
+"disclaimer.reference.only" = "仅供参考，请向专业人士确认";
+"disclaimer.not.emergency.service" = "本应用通知你的家人，不能替代紧急救援服务。";

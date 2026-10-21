@@ -294,7 +294,7 @@ router.post("/login", async (req, res) => {
  * Accepts optional countryCode from client for accurate geo assignment.
  */
 router.post("/signup", async (req, res) => {
-    const { idToken, displayName, role, countryCode: clientCountryCode } = req.body;
+    const { idToken, displayName, role, countryCode: clientCountryCode, email } = req.body;
     if (!idToken || !displayName || !role) {
         res
             .status(400)
@@ -328,6 +328,9 @@ router.post("/signup", async (req, res) => {
             createdAt: now,
             updatedAt: now,
         };
+        if (email && typeof email === "string" && email.includes("@")) {
+            userDoc.email = email;
+        }
         await db.collection("users").doc(uid).set(userDoc);
         const tokens = generateTokens(uid);
         res.status(201).json({

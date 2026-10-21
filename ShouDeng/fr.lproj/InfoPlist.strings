@@ -2,19 +2,22 @@ CFBundleDisplayName = "Luma";
 CFBundleName = "Luma";
 
 /* Localisation — Toujours */
-NSLocationAlwaysAndWhenInUseUsageDescription = "Luma a besoin d'un accès permanent à votre position afin de signaler votre emplacement à votre famille en cas d'urgence et d'avertir les tuteurs lorsque vous entrez ou quittez une zone sécurisée.";
+NSLocationAlwaysAndWhenInUseUsageDescription = "Luma partage votre position avec les membres de la famille que vous choisissez, afin qu'ils puissent vous joindre en cas d'urgence. La position est aussi utilisee pour les notifications de zone securisee. Le partage ne commence qu'apres votre acceptation dans l'application.";
 
 /* Localisation — En cours d'utilisation */
-NSLocationWhenInUseUsageDescription = "Luma a besoin de votre position pour afficher votre emplacement actuel et l'envoyer à votre famille lors d'un appel SOS d'urgence.";
+NSLocationWhenInUseUsageDescription = "Luma utilise votre position pour afficher ou vous etes sur la carte et pour l'envoyer aux membres de votre famille choisis lors d'un SOS. Utilise uniquement apres votre consentement dans l'application.";
 
 /* Capteurs de mouvement */
-NSMotionUsageDescription = "Luma utilise les capteurs de mouvement pour détecter les chutes et autres anomalies, alertant automatiquement votre famille lorsque vous ne pouvez pas appeler à l'aide.";
+NSMotionUsageDescription = "Luma utilise l'accelerometre pour detecter les chutes possibles. En cas de detection, vous avez 60 secondes pour annuler l'alerte avant que votre famille soit notifiee. Cette fonction ne s'active qu'apres activation dans l'application.";
+
+/* Face ID */
+NSFaceIDUsageDescription = "Luma utilise Face ID pour verifier votre identite et proteger l'acces a vos donnees de securite familiale.";
 
 /* Microphone */
-NSMicrophoneUsageDescription = "Le microphone est utilisé uniquement lors du déclenchement d'un SOS d'urgence, pour enregistrer l'audio ambiant afin d'aider les tuteurs à évaluer la situation. L'enregistrement nécessite une autorisation légale dans votre juridiction.";
+NSMicrophoneUsageDescription = "Pendant un SOS actif, le microphone peut enregistrer l'audio ambiant pour aider vos proches a evaluer la situation. L'enregistrement ne demarre que si vous avez active cette option et que la loi locale le permet.";
 
-/* Photothèque */
-NSPhotoLibraryUsageDescription = "Permet de partager des photos dans le cercle familial. Vos photos ne sont visibles que par les membres de la famille dans une relation de tutelle.";
+/* Phototheque */
+NSPhotoLibraryUsageDescription = "Partagez des photos avec les membres de votre cercle familial. Les photos ne sont visibles que par les personnes dans votre relation de tutelle.";
 
 /* Contacts */
-NSContactsUsageDescription = "Luma a besoin d'accéder à vos contacts pour ajouter rapidement les coordonnées de vos contacts d'urgence.";
+NSContactsUsageDescription = "Accedez a vos contacts pour ajouter rapidement des coordonnees d'urgence. Les donnees de contact ne sont pas envoyees a nos serveurs.";
