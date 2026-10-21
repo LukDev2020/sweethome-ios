@@ -201,6 +201,9 @@ final class AppCoordinator: ObservableObject {
             }
         }
 
+        // Sync subscription status from StoreKit (catches overnight expirations/renewals)
+        Task { await storeKitManager.refreshSubscriptionStatus() }
+
         // Sync local notification preferences to server
         syncNotificationPrefs()
 

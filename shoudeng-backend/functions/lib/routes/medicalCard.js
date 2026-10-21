@@ -37,6 +37,7 @@ const express_1 = require("express");
 const admin = __importStar(require("firebase-admin"));
 const crypto = __importStar(require("crypto"));
 const auth_1 = require("../middleware/auth");
+const rateLimit_1 = require("../middleware/rateLimit");
 const router = (0, express_1.Router)();
 const db = admin.firestore();
 /**
@@ -171,7 +172,7 @@ router.get("/share/:token", async (req, res) => {
  * POST /v1/medical-card/share
  * Create a share token for the medical card.
  */
-router.post("/share", auth_1.authMiddleware, async (req, res) => {
+router.post("/share", auth_1.authMiddleware, (0, rateLimit_1.createRateLimiter)(rateLimit_1.RATE_LIMITS.general), async (req, res) => {
     const uid = req.uid;
     try {
         const token = crypto.randomBytes(32).toString("hex");

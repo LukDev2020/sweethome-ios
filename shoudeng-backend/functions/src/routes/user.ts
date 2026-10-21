@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
+import { createRateLimiter, RATE_LIMITS } from "../middleware/rateLimit";
 
 const router = Router();
 const db = admin.firestore();
@@ -123,7 +124,7 @@ router.put("/notification-preferences", async (req: Request, res: Response) => {
  * Delete user account and all associated data (GDPR right to erasure).
  * This is irreversible.
  */
-router.post("/delete", async (req: Request, res: Response) => {
+router.post("/delete", createRateLimiter(RATE_LIMITS.auth), async (req: Request, res: Response) => {
   const uid = req.uid!;
 
   try {

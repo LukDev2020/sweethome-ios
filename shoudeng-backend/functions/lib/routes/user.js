@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const admin = __importStar(require("firebase-admin"));
 const auth_1 = require("../middleware/auth");
+const rateLimit_1 = require("../middleware/rateLimit");
 const router = (0, express_1.Router)();
 const db = admin.firestore();
 // All user routes require authentication
@@ -153,7 +154,7 @@ router.put("/notification-preferences", async (req, res) => {
  * Delete user account and all associated data (GDPR right to erasure).
  * This is irreversible.
  */
-router.post("/delete", async (req, res) => {
+router.post("/delete", (0, rateLimit_1.createRateLimiter)(rateLimit_1.RATE_LIMITS.auth), async (req, res) => {
     const uid = req.uid;
     try {
         // Helper: delete all docs from a query, respecting Firestore batch limit (500)

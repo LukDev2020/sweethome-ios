@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import * as crypto from "crypto";
 import { authMiddleware } from "../middleware/auth";
+import { createRateLimiter, RATE_LIMITS } from "../middleware/rateLimit";
 
 const router = Router();
 const db = admin.firestore();
@@ -166,7 +167,7 @@ router.get("/share/:token", async (req: Request, res: Response) => {
  * POST /v1/medical-card/share
  * Create a share token for the medical card.
  */
-router.post("/share", authMiddleware, async (req: Request, res: Response) => {
+router.post("/share", authMiddleware, createRateLimiter(RATE_LIMITS.general), async (req: Request, res: Response) => {
   const uid = req.uid!;
 
   try {

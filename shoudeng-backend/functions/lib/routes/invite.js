@@ -37,6 +37,7 @@ const express_1 = require("express");
 const admin = __importStar(require("firebase-admin"));
 const crypto = __importStar(require("crypto"));
 const auth_1 = require("../middleware/auth");
+const rateLimit_1 = require("../middleware/rateLimit");
 const bigquery_1 = require("../services/bigquery");
 const payment_1 = require("../services/payment");
 const router = (0, express_1.Router)();
@@ -81,7 +82,7 @@ router.post("/create", async (req, res) => {
  * POST /v1/invite/accept
  * Accept an invite code to establish guardian ↔ protected relationship.
  */
-router.post("/accept", async (req, res) => {
+router.post("/accept", (0, rateLimit_1.createRateLimiter)(rateLimit_1.RATE_LIMITS.general), async (req, res) => {
     const uid = req.uid;
     const { inviteId, code } = req.body;
     try {

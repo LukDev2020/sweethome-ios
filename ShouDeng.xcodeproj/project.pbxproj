@@ -60,6 +60,9 @@
 		5A6CAAC1591FE8ACEF13D5F6 /* TimerTimelineProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96C48470EB56FBDBE742EDEB /* TimerTimelineProvider.swift */; };
 		5A9F01A61315F1C229230439 /* GuardianSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB252440C67956A6E95C34C2 /* GuardianSettingsView.swift */; };
 		5BF317DDA31D8A059C33D9FC /* ProtectedCoverageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2CBED579613C2FC6F68B5B6 /* ProtectedCoverageView.swift */; };
+				A1B2C3D4E5F60001B0000001 /* StoreKitGatingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60001A0000001 /* StoreKitGatingTests.swift */; };
+				A1B2C3D4E5F60001B0000002 /* ConsentLoggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60001A0000002 /* ConsentLoggerTests.swift */; };
+				A1B2C3D4E5F60001B0000003 /* KeychainHelperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60001A0000003 /* KeychainHelperTests.swift */; };
 		5E1BA1B8E61306352C819EA8 /* AuthManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C38041E8CCB6EAE0ECF2D4F /* AuthManagerTests.swift */; };
 		5EB4D8C3B5424318A166AA9B /* CrashReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C2AFD6DEC7BB6A319D0C0A1 /* CrashReporter.swift */; };
 		61586C8E3D663CC027C5804E /* GuardianAlertResponseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43D8A8B0CD131E9E09E02BF6 /* GuardianAlertResponseView.swift */; };
@@ -208,6 +211,9 @@
 		35327FBDA1338FA0E3A57540 /* ConsentLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsentLogger.swift; sourceTree = "<group>"; };
 		36FD0E52F4564B5B9E057EB3 /* LocationCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationCardView.swift; sourceTree = "<group>"; };
 		37E2174A14C8BD5D344A7E54 /* GuardianTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianTabView.swift; sourceTree = "<group>"; };
+				A1B2C3D4E5F60001A0000001 /* StoreKitGatingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitGatingTests.swift; sourceTree = "<group>"; };
+				A1B2C3D4E5F60001A0000002 /* ConsentLoggerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsentLoggerTests.swift; sourceTree = "<group>"; };
+				A1B2C3D4E5F60001A0000003 /* KeychainHelperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelperTests.swift; sourceTree = "<group>"; };
 		3C38041E8CCB6EAE0ECF2D4F /* AuthManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManagerTests.swift; sourceTree = "<group>"; };
 		3D4BC3608A17EB87F1339C43 /* LegalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalView.swift; sourceTree = "<group>"; };
 		3D922CFCBCCE8F87BD686AD8 /* FallDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallDetector.swift; sourceTree = "<group>"; };
@@ -654,6 +660,9 @@
 				C5D6E7F8A9B0C1D2E3F4A5B6 /* ReactiveLocationServiceTests.swift */,
 				B273093A701FBEED8E657124 /* APIClientTests.swift */,
 				3C38041E8CCB6EAE0ECF2D4F /* AuthManagerTests.swift */,
+				A1B2C3D4E5F60001A0000003 /* KeychainHelperTests.swift */,
+				A1B2C3D4E5F60001A0000002 /* ConsentLoggerTests.swift */,
+				A1B2C3D4E5F60001A0000001 /* StoreKitGatingTests.swift */,
 				C3DFF6F31788D3DCA3A0EA15 /* BaselineScorerTests.swift */,
 				2FC2559DEFD8D966B804EC79 /* ClaimMaterialTests.swift */,
 				DC654D034E59F72E979F06BE /* CountryCodeTests.swift */,
@@ -1015,6 +1024,9 @@
 				F0FFEA124608CCCA60504A62 /* AdaptiveLocationManagerTests.swift in Sources */,
 				B3C4D5E6F7A8B9C0D1E2F3A4 /* ReactiveLocationServiceTests.swift in Sources */,
 				5E1BA1B8E61306352C819EA8 /* AuthManagerTests.swift in Sources */,
+				A1B2C3D4E5F60001B0000003 /* KeychainHelperTests.swift in Sources */,
+				A1B2C3D4E5F60001B0000002 /* ConsentLoggerTests.swift in Sources */,
+				A1B2C3D4E5F60001B0000001 /* StoreKitGatingTests.swift in Sources */,
 				1DFEC1C4BFFAE279D78FB734 /* BaselineScorerTests.swift in Sources */,
 				F961424AEC6B46170477E03A /* ClaimMaterialTests.swift in Sources */,
 				270DE17DDB5012F906FAE7D2 /* CountryCodeTests.swift in Sources */,

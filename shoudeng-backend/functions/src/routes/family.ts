@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
+import { createRateLimiter, RATE_LIMITS } from "../middleware/rateLimit";
 
 const router = Router();
 const db = admin.firestore();
@@ -117,7 +118,7 @@ router.get("/posts", async (req: Request, res: Response) => {
  * POST /v1/family/posts
  * Create a new post in the family feed.
  */
-router.post("/posts", async (req: Request, res: Response) => {
+router.post("/posts", createRateLimiter(RATE_LIMITS.general), async (req: Request, res: Response) => {
   const uid = req.uid!;
   const { text, mediaURLs } = req.body;
 

@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import * as crypto from "crypto";
 import { authMiddleware } from "../middleware/auth";
+import { createRateLimiter, RATE_LIMITS } from "../middleware/rateLimit";
 import { insertConsentAudit } from "../services/bigquery";
 import { getSubscription, PLANS, PlanId } from "../services/payment";
 
@@ -55,7 +56,7 @@ router.post("/create", async (req: Request, res: Response) => {
  * POST /v1/invite/accept
  * Accept an invite code to establish guardian ↔ protected relationship.
  */
-router.post("/accept", async (req: Request, res: Response) => {
+router.post("/accept", createRateLimiter(RATE_LIMITS.general), async (req: Request, res: Response) => {
   const uid = req.uid!;
   const { inviteId, code } = req.body;
 

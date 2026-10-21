@@ -122,7 +122,7 @@ router.post("/trigger", (0, rateLimit_1.createRateLimiter)(rateLimit_1.RATE_LIMI
  * POST /v1/sos/resolve
  * Resolve an active SOS event (guardian "I've taken over" or protected person cancel).
  */
-router.post("/resolve", async (req, res) => {
+router.post("/resolve", (0, rateLimit_1.createRateLimiter)(rateLimit_1.RATE_LIMITS.general), async (req, res) => {
     const uid = req.uid;
     const { sosEventId, resolution } = req.body;
     if (!sosEventId || !resolution) {

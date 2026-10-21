@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const admin = __importStar(require("firebase-admin"));
 const auth_1 = require("../middleware/auth");
+const rateLimit_1 = require("../middleware/rateLimit");
 const router = (0, express_1.Router)();
 const db = admin.firestore();
 router.use(auth_1.authMiddleware);
@@ -134,7 +135,7 @@ router.get("/posts", async (req, res) => {
  * POST /v1/family/posts
  * Create a new post in the family feed.
  */
-router.post("/posts", async (req, res) => {
+router.post("/posts", (0, rateLimit_1.createRateLimiter)(rateLimit_1.RATE_LIMITS.general), async (req, res) => {
     const uid = req.uid;
     const { text, mediaURLs } = req.body;
     if (!text && (!mediaURLs || mediaURLs.length === 0)) {
