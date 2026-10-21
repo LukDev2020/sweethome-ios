@@ -199,7 +199,7 @@ router.get("/:userId", auth_1.authMiddleware, async (req, res) => {
     try {
         // Verify guardianship
         const relSnap = await db
-            .collection("relationships")
+            .collection("guardian_links")
             .where("guardianId", "==", guardianId)
             .where("protectedPersonId", "==", userId)
             .where("status", "==", "active")
@@ -246,7 +246,7 @@ router.put("/:userId", auth_1.authMiddleware, async (req, res) => {
     try {
         // Verify guardianship
         const relSnap = await db
-            .collection("relationships")
+            .collection("guardian_links")
             .where("guardianId", "==", guardianId)
             .where("protectedPersonId", "==", userId)
             .where("status", "==", "active")

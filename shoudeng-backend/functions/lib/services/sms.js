@@ -40,6 +40,38 @@ exports.hasAppInstalled = hasAppInstalled;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const db = admin.firestore();
+// Per-locale SMS templates
+const smsStrings = {
+    zh: {
+        sosBody: (name, url) => url
+            ? `【守灯紧急通知】${name}正在求助！请立即查看详情：${url}`
+            : `【守灯紧急通知】${name}正在求助！请立即打开守灯应用查看。`,
+        checkinBody: (name) => `【守灯提醒】${name}今天尚未报平安，请关注。`,
+        verifyBody: (code) => `【守灯】您的验证码是 ${code}，5 分钟内有效。`,
+    },
+    en: {
+        sosBody: (name, url) => url
+            ? `[Luma Emergency] ${name} is calling for help! View details: ${url}`
+            : `[Luma Emergency] ${name} is calling for help! Open the Luma app now.`,
+        checkinBody: (name) => `[Luma] ${name} hasn't checked in today. Please follow up.`,
+        verifyBody: (code) => `[Luma] Your verification code is ${code}. Valid for 5 minutes.`,
+    },
+    fr: {
+        sosBody: (name, url) => url
+            ? `[Luma Urgence] ${name} demande de l'aide ! Voir les détails : ${url}`
+            : `[Luma Urgence] ${name} demande de l'aide ! Ouvrez l'application Luma maintenant.`,
+        checkinBody: (name) => `[Luma] ${name} n'a pas donné signe de vie aujourd'hui.`,
+        verifyBody: (code) => `[Luma] Votre code de vérification est ${code}. Valide 5 minutes.`,
+    },
+};
+function getSmsStrings(locale) {
+    const lang = (locale || "zh").substring(0, 2);
+    return smsStrings[lang] || smsStrings.zh;
+}
+async function getUserLocale(userId) {
+    const userDoc = await db.collection("users").doc(userId).get();
+    return userDoc.exists ? userDoc.data()?.locale || "zh" : "zh";
+}
 // Twilio client for SMS — initialized lazily
 let twilioClient = null;
 function createClient() {
@@ -75,9 +107,9 @@ async function sendSOSSms(guardianId, protectedPersonName, sosEventId, shareUrl)
     const fromNumber = functions.config().twilio?.sms_from || functions.config().twilio?.from_number;
     if (!fromNumber)
         return false;
-    const body = shareUrl
-        ? `【守灯紧急通知】${protectedPersonName}正在求助！请立即查看详情：${shareUrl}`
-        : `【守灯紧急通知】${protectedPersonName}正在求助！请立即打开守灯应用查看。`;
+    const locale = await getUserLocale(guardianId);
+    const s = getSmsStrings(locale);
+    const body = s.sosBody(protectedPersonName, shareUrl);
     try {
         const message = await client.messages.create({
             body,
@@ -105,9 +137,11 @@ async function sendCheckinReminderSms(guardianId, protectedPersonName) {
     const fromNumber = functions.config().twilio?.sms_from || functions.config().twilio?.from_number;
     if (!fromNumber)
         return false;
+    const locale = await getUserLocale(guardianId);
+    const s = getSmsStrings(locale);
     try {
         await client.messages.create({
-            body: `【守灯提醒】${protectedPersonName}今天尚未报平安，请关注。`,
+            body: s.checkinBody(protectedPersonName),
             to: phone,
             from: fromNumber,
         });
@@ -128,9 +162,12 @@ async function sendVerificationSms(phone, code) {
     const fromNumber = functions.config().twilio?.sms_from || functions.config().twilio?.from_number;
     if (!fromNumber)
         return false;
+    // Verification SMS uses phone's country to guess locale (no userId available)
+    const locale = phone.startsWith("+33") ? "fr" : phone.startsWith("+1") || phone.startsWith("+44") || phone.startsWith("+61") ? "en" : "zh";
+    const s = getSmsStrings(locale);
     try {
         await client.messages.create({
-            body: `【守灯】您的验证码是 ${code}，5 分钟内有效。`,
+            body: s.verifyBody(code),
             to: phone,
             from: fromNumber,
         });

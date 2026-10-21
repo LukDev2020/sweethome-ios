@@ -1,5 +1,8 @@
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
+import * as fs from "fs";
+import * as path from "path";
+import { SignedDataVerifier, Environment } from "@apple/app-store-server-library";
 import { insertConsentAudit } from "./bigquery";
 
 const db = admin.firestore();
@@ -7,6 +10,55 @@ const db = admin.firestore();
 // Apple App Store Server API configuration
 // Must equal PRODUCT_BUNDLE_IDENTIFIER of the ShouDeng target in project.yml.
 export const APPLE_BUNDLE_ID = "com.shoudeng.app";
+
+// Apple App ID from App Store Connect (numeric). Set via environment config.
+const APPLE_APP_ID = Number(process.env.APPLE_APP_ID || "0");
+
+// Load Apple Root CA certificates (DER-encoded) for JWS signature verification.
+// Downloaded from https://www.apple.com/certificateauthority/
+function loadAppleRootCerts(): Buffer[] {
+  const certsDir = path.join(__dirname, "..", "certs");
+  const certFiles = [
+    "AppleIncRootCertificate.cer",
+    "AppleRootCA-G2.cer",
+    "AppleRootCA-G3.cer",
+  ];
+  const certs: Buffer[] = [];
+  for (const file of certFiles) {
+    const fullPath = path.join(certsDir, file);
+    if (fs.existsSync(fullPath)) {
+      certs.push(fs.readFileSync(fullPath));
+    }
+  }
+  return certs;
+}
+
+const appleRootCerts = loadAppleRootCerts();
+
+// Determine environment from Firebase config
+const appleEnvironment =
+  process.env.APPLE_ENVIRONMENT === "Production"
+    ? Environment.PRODUCTION
+    : Environment.SANDBOX;
+
+// Create verifier instance (reused across requests)
+let _verifier: SignedDataVerifier | null = null;
+function getVerifier(): SignedDataVerifier | null {
+  if (appleRootCerts.length === 0) {
+    console.warn("[Payment] Apple root certs not found — signature verification disabled");
+    return null;
+  }
+  if (!_verifier) {
+    _verifier = new SignedDataVerifier(
+      appleRootCerts,
+      true,                // enable online checks (OCSP)
+      appleEnvironment,
+      APPLE_BUNDLE_ID,
+      APPLE_APP_ID,
+    );
+  }
+  return _verifier;
+}
 
 // Subscription plan definitions — single source of truth for plan IDs.
 // Product IDs must match App Store Connect and StoreKitManager.productIds (iOS).
@@ -104,8 +156,9 @@ export interface SubscriptionDoc {
 }
 
 /**
- * Verify an Apple App Store receipt with Apple's server.
- * Uses App Store Server API v2 (signed JWS transactions).
+ * Verify an Apple App Store signed transaction (JWS).
+ * Uses Apple's official library to verify the certificate chain and signature.
+ * Falls back to payload-only verification if certs are unavailable (dev/test).
  */
 export async function verifyAppleReceipt(signedTransaction: string): Promise<{
   valid: boolean;
@@ -115,18 +168,32 @@ export async function verifyAppleReceipt(signedTransaction: string): Promise<{
   error?: string;
 }> {
   try {
-    // Decode the JWS transaction (base64url encoded)
-    // In production, verify the signature against Apple's certificate chain
     const parts = signedTransaction.split(".");
     if (parts.length !== 3) {
       return { valid: false, error: "Invalid JWS format" };
     }
 
+    const verifier = getVerifier();
+
+    if (verifier) {
+      // Full cryptographic verification: signature + certificate chain + OCSP
+      const decoded = await verifier.verifyAndDecodeTransaction(signedTransaction);
+      return {
+        valid: true,
+        productId: decoded.productId,
+        originalTransactionId: decoded.originalTransactionId,
+        expiresDate: decoded.expiresDate
+          ? new Date(decoded.expiresDate)
+          : undefined,
+      };
+    }
+
+    // Fallback: payload-only verification (dev/test when certs not loaded)
+    console.warn("[Payment] Using payload-only verification (no cert chain)");
     const payload = JSON.parse(
       Buffer.from(parts[1], "base64url").toString("utf-8")
     );
 
-    // Verify bundle ID
     if (payload.bundleId !== APPLE_BUNDLE_ID) {
       return { valid: false, error: "Bundle ID mismatch" };
     }
@@ -239,35 +306,52 @@ export async function getSubscription(userId: string): Promise<{
 /**
  * Handle Apple App Store Server Notification v2.
  * Called by the webhook endpoint when Apple sends subscription lifecycle events.
+ * Verifies the notification JWS signature before processing.
  */
 export async function handleAppleNotification(signedPayload: string): Promise<void> {
   try {
-    const parts = signedPayload.split(".");
-    if (parts.length !== 3) {
-      console.error("[Payment] Invalid Apple notification JWS");
-      return;
+    const verifier = getVerifier();
+    let payload: Record<string, unknown>;
+
+    if (verifier) {
+      // Cryptographic verification of Apple's webhook notification
+      const decoded = await verifier.verifyAndDecodeNotification(signedPayload);
+      payload = decoded as unknown as Record<string, unknown>;
+    } else {
+      // Fallback for dev/test
+      const parts = signedPayload.split(".");
+      if (parts.length !== 3) {
+        console.error("[Payment] Invalid Apple notification JWS");
+        return;
+      }
+      payload = JSON.parse(
+        Buffer.from(parts[1], "base64url").toString("utf-8")
+      );
     }
 
-    const payload = JSON.parse(
-      Buffer.from(parts[1], "base64url").toString("utf-8")
-    );
-
-    const notificationType = payload.notificationType;
-    const subtype = payload.subtype;
-    const transactionInfo = payload.data?.signedTransactionInfo;
+    const notificationType = payload.notificationType as string;
+    const subtype = payload.subtype as string | undefined;
+    const data = payload.data as Record<string, unknown> | undefined;
+    const transactionInfo = data?.signedTransactionInfo as string | undefined;
 
     if (!transactionInfo) {
       console.warn("[Payment] No transaction info in Apple notification");
       return;
     }
 
-    // Decode transaction info
-    const txParts = transactionInfo.split(".");
-    const txPayload = JSON.parse(
-      Buffer.from(txParts[1], "base64url").toString("utf-8")
-    );
+    // Decode and verify the nested transaction JWS
+    let txPayload: Record<string, unknown>;
+    if (verifier) {
+      const decodedTx = await verifier.verifyAndDecodeTransaction(transactionInfo);
+      txPayload = decodedTx as unknown as Record<string, unknown>;
+    } else {
+      const txParts = transactionInfo.split(".");
+      txPayload = JSON.parse(
+        Buffer.from(txParts[1], "base64url").toString("utf-8")
+      );
+    }
 
-    const originalTransactionId = txPayload.originalTransactionId;
+    const originalTransactionId = txPayload.originalTransactionId as string;
 
     // Find subscription by original transaction ID
     const subSnapshot = await db
@@ -286,12 +370,12 @@ export async function handleAppleNotification(signedPayload: string): Promise<vo
 
     switch (notificationType) {
       case "DID_RENEW": {
-        const renewedPlan = mapProductToPlan(txPayload.productId);
+        const renewedPlan = mapProductToPlan(txPayload.productId as string);
         await subRef.update({
           ...(renewedPlan ? { planId: renewedPlan, appleProductId: txPayload.productId } : {}),
           status: "active",
           currentPeriodEnd: admin.firestore.Timestamp.fromDate(
-            new Date(txPayload.expiresDate)
+            new Date(txPayload.expiresDate as number)
           ),
           updatedAt: now,
         });

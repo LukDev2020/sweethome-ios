@@ -20,6 +20,7 @@
     "node": "22"
   },
   "dependencies": {
+    "@apple/app-store-server-library": "^3.1.0",
     "@google-cloud/bigquery": "^7.5.0",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",

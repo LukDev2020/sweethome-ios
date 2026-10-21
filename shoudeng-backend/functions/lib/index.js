@@ -119,16 +119,50 @@ app.use("/v1/insurance", insurance_1.default);
 // Phase 11: Consulate Hotline (global embassy data + user selection)
 app.use("/v1/consulate", consulate_1.default);
 // --- Voice callback for Twilio ---
+// Multi-language TwiML responses based on query param or default
+const voiceMessages = {
+    zh: { lang: "zh-CN", ack: "已收到。请打开守灯应用查看详情并确认接手。", invalid: "无效按键。" },
+    en: { lang: "en-US", ack: "Acknowledged. Please open the Luma app to view details and take over.", invalid: "Invalid key." },
+    fr: { lang: "fr-FR", ack: "Reçu. Veuillez ouvrir l'application Luma pour voir les détails et prendre en charge.", invalid: "Touche invalide." },
+};
 app.post("/v1/voice-callback", async (req, res) => {
     const { Digits, CallSid } = req.body;
+    const locale = (req.query.lang || "zh").substring(0, 2);
+    const msg = voiceMessages[locale] || voiceMessages.zh;
     if (Digits === "1") {
-        // Guardian pressed 1 — acknowledged
+        // Guardian pressed 1 — acknowledged, freeze the SOS escalation
         console.log(`[VoiceCallback] Guardian acknowledged via call ${CallSid}`);
+        // Find the active SOS event associated with this call and freeze it
+        try {
+            const db = admin.firestore();
+            const sosQuery = await db
+                .collection("sos_events")
+                .where("resolvedAt", "==", null)
+                .orderBy("createdAt", "desc")
+                .limit(5)
+                .get();
+            for (const doc of sosQuery.docs) {
+                const logs = doc.data().escalationLog || [];
+                const hasCallSid = logs.some((entry) => entry.hop === 3);
+                if (hasCallSid) {
+                    await doc.ref.update({
+                        escalationState: "frozen",
+                        frozenBy: "voice_callback",
+                        frozenAt: admin.firestore.Timestamp.now(),
+                    });
+                    console.log(`[VoiceCallback] SOS ${doc.id} frozen by voice acknowledgement`);
+                    break;
+                }
+            }
+        }
+        catch (err) {
+            console.error("[VoiceCallback] Failed to freeze SOS:", err);
+        }
         res.set("Content-Type", "text/xml");
         res.send(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say language="zh-CN" voice="alice">
-    已收到。请打开守灯应用查看详情并确认接手。
+  <Say language="${msg.lang}" voice="alice">
+    ${msg.ack}
   </Say>
 </Response>`);
     }
@@ -144,7 +178,7 @@ app.post("/v1/voice-callback", async (req, res) => {
         res.set("Content-Type", "text/xml");
         res.send(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say language="zh-CN" voice="alice">无效按键。</Say>
+  <Say language="${msg.lang}" voice="alice">${msg.invalid}</Say>
 </Response>`);
     }
 });

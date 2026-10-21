@@ -100,21 +100,12 @@ router.post("/trigger", (0, rateLimit_1.createRateLimiter)(rateLimit_1.RATE_LIMI
             });
             return;
         }
-        // Add timeline entry
-        const triggerLabels = {
-            longPress: "长按",
-            fallDetection: "摔倒检测",
-            watchQuickAction: "手表快捷操作",
-            bluetoothButton: "蓝牙按钮",
-            duressPassword: "胁迫密码",
-            voiceWakeWord: "语音唤醒",
-        };
-        const triggerLabel = triggerLabels[triggerMethod || "longPress"] || triggerMethod;
+        // Add timeline entry (informational, outside transaction is acceptable)
         await db.collection("timeline_entries").add({
             userId: protectedPersonId,
             timestamp: now,
             type: "sosTriggered",
-            description: `触发紧急求助（${triggerLabel}）`,
+            description: `SOS triggered (${triggerMethod || "longPress"})`,
             detail: null,
         });
         res.status(201).json({
@@ -172,19 +163,11 @@ router.post("/resolve", async (req, res) => {
             resolution,
         });
         // Add timeline entry
-        const resolutionLabels = {
-            guardianConfirmedSafe: "守护者确认安全",
-            protectedCancelled: "取消了紧急求助",
-            responderHandled: "专员已处理",
-            falseAlarm: "误触",
-            timeout: "超时自动解除",
-        };
-        const resolutionLabel = resolutionLabels[resolution] || resolution;
         await db.collection("timeline_entries").add({
             userId: sosData.protectedPersonId,
             timestamp: now,
             type: "sosResolved",
-            description: resolutionLabel,
+            description: `SOS resolved (${resolution})`,
             detail: null,
         });
         // Notify the protected person that a guardian has taken over
@@ -192,7 +175,7 @@ router.post("/resolve", async (req, res) => {
             const resolverDoc = await db.collection("users").doc(uid).get();
             const resolverName = resolverDoc.exists
                 ? resolverDoc.data().displayName
-                : "守护者";
+                : "Guardian";
             await (0, fcm_1.sendSOSResolvedNotification)(sosData.protectedPersonId, resolverName);
         }
         res.json({ success: true });
@@ -239,7 +222,7 @@ router.post("/voice-call", async (req, res) => {
         // Import dynamically to avoid initialization issues
         const { initiateVoiceCall } = await Promise.resolve().then(() => __importStar(require("../services/twilio")));
         const callbackUrl = `${req.protocol}://${req.get("host")}/v1/voice-callback`;
-        const callSid = await initiateVoiceCall(guardianId, sosEventId, protectedPersonName || "被守护者", callbackUrl);
+        const callSid = await initiateVoiceCall(guardianId, sosEventId, protectedPersonName || "Protected Person", callbackUrl);
         // Update escalation log
         if (callSid) {
             const sosRef = db.collection("sos_events").doc(sosEventId);

@@ -15,7 +15,6 @@ struct GuardianPlanBillingView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @State private var billingCycle: BillingCycle = .monthly
     @State private var selectedPlan: PlanTier = .single
-    @State private var selectedPayment: PaymentMethod = .applePay
     @State private var showRestoreAlert = false
     @State private var showPaymentSheet = false
     @State private var showPaymentSuccess = false
@@ -271,33 +270,17 @@ struct GuardianPlanBillingView: View {
     }
 
     private func subscribeToPlan(_ planId: String, product: Product?) {
-        if selectedPayment == .applePay || selectedPayment == .creditCard {
-            // Use StoreKit IAP for Apple Pay (App Store billing)
-            guard let product else { return }
-            Task {
-                let success = await coordinator.storeKitManager.purchase(product)
-                if success {
-                    await coordinator.fetchSubscription()
-                    showPaymentSuccess = true
-                }
-            }
-        } else {
-            // Use PaymentMethodManager for Alipay / WeChat Pay / PayPal
-            Task {
-                let cycle = billingCycle == .monthly ? "monthly" : "yearly"
-                let success = await coordinator.paymentMethodManager.createPayment(
-                    planId: planId,
-                    billingCycle: cycle
-                )
-                if success {
-                    await coordinator.fetchSubscription()
-                    showPaymentSuccess = true
-                }
+        guard let product else { return }
+        Task {
+            let success = await coordinator.storeKitManager.purchase(product)
+            if success {
+                await coordinator.fetchSubscription()
+                showPaymentSuccess = true
             }
         }
     }
 
-    // MARK: - Payment Method Section
+    // MARK: - Payment Info Section
 
     private var paymentMethodSection: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -305,84 +288,30 @@ struct GuardianPlanBillingView: View {
                 .font(.scaled(size: 13, weight: .semibold))
                 .foregroundStyle(ink)
 
-            VStack(spacing: 0) {
-                // App Store requires StoreKit IAP for digital subscriptions (Guideline 3.1.1)
-                // External payment methods (Alipay/WeChat/PayPal) removed for submission
-                paymentMethodRow(.applePay)
+            HStack(spacing: 12) {
+                Image(systemName: "apple.logo")
+                    .font(.scaled(size: 22))
+                    .foregroundStyle(ink)
+                    .frame(width: 36, height: 36)
+                    .background(Color(.systemGray6))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("通过 App Store 订阅")
+                        .font(.scaled(size: 14, weight: .medium))
+                        .foregroundStyle(ink)
+                    Text("支持 Apple Pay、信用卡、借记卡、Apple ID 余额")
+                        .font(.scaled(size: 12))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "checkmark.shield.fill")
+                    .font(.scaled(size: 16))
+                    .foregroundStyle(safe)
             }
+            .padding(14)
             .background(Color(.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 12))
-        }
-    }
-
-    private func paymentMethodRow(_ method: PaymentMethod) -> some View {
-        Button {
-            withAnimation(.easeInOut(duration: 0.15)) {
-                selectedPayment = method
-                coordinator.paymentMethodManager.selectedMethod = method
-            }
-        } label: {
-            HStack(spacing: 12) {
-                paymentIcon(method)
-                    .frame(width: 28, height: 28)
-
-                Text(method.displayName)
-                    .font(.scaled(size: 14))
-                    .foregroundStyle(ink)
-
-                Spacer()
-
-                Image(systemName: selectedPayment == method
-                      ? "checkmark.circle.fill"
-                      : "circle")
-                    .font(.scaled(size: 18))
-                    .foregroundStyle(selectedPayment == method ? accent : Color(.systemGray4))
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-
-    @ViewBuilder
-    private func paymentIcon(_ method: PaymentMethod) -> some View {
-        switch method {
-        case .applePay:
-            Image(systemName: "apple.logo")
-                .font(.scaled(size: 18))
-                .foregroundStyle(ink)
-        case .creditCard:
-            Image(systemName: "creditcard.fill")
-                .font(.scaled(size: 16))
-                .foregroundStyle(.blue)
-        case .alipay:
-            ZStack {
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(Color(red: 0.02, green: 0.55, blue: 0.95))
-                    .frame(width: 28, height: 28)
-                Text("支")
-                    .font(.scaled(size: 14, weight: .bold))
-                    .foregroundStyle(.white)
-            }
-        case .wechatPay:
-            ZStack {
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(Color(red: 0.07, green: 0.73, blue: 0.31))
-                    .frame(width: 28, height: 28)
-                Image(systemName: "message.fill")
-                    .font(.scaled(size: 13))
-                    .foregroundStyle(.white)
-            }
-        case .paypal:
-            ZStack {
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(Color(red: 0.0, green: 0.19, blue: 0.56))
-                    .frame(width: 28, height: 28)
-                Text("P")
-                    .font(.scaled(size: 16, weight: .bold))
-                    .foregroundStyle(.white)
-            }
         }
     }
 
@@ -540,13 +469,6 @@ struct GuardianPlanBillingView: View {
                     .multilineTextAlignment(.center)
             }
 
-            if let error = coordinator.paymentMethodManager.errorMessage {
-                Text(error)
-                    .font(.scaled(size: 13))
-                    .foregroundStyle(.red)
-                    .multilineTextAlignment(.center)
-            }
-
             // Manage subscription (for existing subscribers)
             if coordinator.storeKitManager.subscriptionStatus?.isActive == true {
                 Button {
@@ -578,7 +500,7 @@ struct GuardianPlanBillingView: View {
             .disabled(coordinator.storeKitManager.isLoading)
 
             // Legal
-            Text("通过 Apple Pay 订阅将通过您的 Apple ID 账户扣款。其他支付方式通过第三方支付平台处理。除非在当前订阅期结束前至少 24 小时关闭自动续订，否则订阅将自动续订。")
+            Text("订阅费用将通过您的 Apple ID 账户扣款，支持 Apple Pay、信用卡、借记卡及 Apple ID 余额。除非在当前订阅期结束前至少 24 小时关闭自动续订，否则订阅将自动续订。")
                 .font(.scaled(size: 12))
                 .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)
