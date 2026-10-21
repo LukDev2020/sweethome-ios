@@ -38,6 +38,7 @@ const admin = __importStar(require("firebase-admin"));
 const crypto = __importStar(require("crypto"));
 const auth_1 = require("../middleware/auth");
 const bigquery_1 = require("../services/bigquery");
+const payment_1 = require("../services/payment");
 const router = (0, express_1.Router)();
 const db = admin.firestore();
 router.use(auth_1.authMiddleware);
@@ -153,6 +154,20 @@ router.post("/accept", async (req, res) => {
                 guardianId = inviteData.createdBy;
                 protectedPersonId = uid;
             }
+            // Check guardian's plan capacity (protected person limit)
+            const guardianSub = await (0, payment_1.getSubscription)(guardianId);
+            const guardianPlan = payment_1.PLANS[guardianSub.planId] || payment_1.PLANS.free;
+            const maxProtected = guardianPlan.maxProtected ?? 1;
+            if (maxProtected >= 0) {
+                const existingLinks = await db
+                    .collection("guardian_links")
+                    .where("guardianId", "==", guardianId)
+                    .where("status", "==", "active")
+                    .get();
+                if (existingLinks.size >= maxProtected) {
+                    throw new Error("PLAN_LIMIT");
+                }
+            }
             const now = admin.firestore.Timestamp.now();
             const linkId = `${guardianId}_${protectedPersonId}`;
             const linkRef = db.collection("guardian_links").doc(linkId);
@@ -203,6 +218,9 @@ router.post("/accept", async (req, res) => {
         }
         else if (error.message === "ROLE_MISMATCH") {
             res.status(400).json({ error: "Guardian and protected person roles do not match" });
+        }
+        else if (error.message === "PLAN_LIMIT") {
+            res.status(403).json({ error: "Guardian's plan limit reached. Upgrade to add more protected persons.", upgrade: true });
         }
         else {
             console.error("[Invite] accept error:", error);

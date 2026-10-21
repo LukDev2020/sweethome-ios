@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const admin = __importStar(require("firebase-admin"));
 const auth_1 = require("../middleware/auth");
+const subscription_1 = require("../middleware/subscription");
 const evidence_1 = require("../services/evidence");
 const bigquery_1 = require("../services/bigquery");
 const storage_1 = require("../services/storage");
@@ -44,9 +45,9 @@ const db = admin.firestore();
 /**
  * POST /v1/evidence/generate
  * Generate an evidence bundle (PDF data, JSON, or GPX) for a protected person.
- * Requires authentication — only guardians of the person can request.
+ * Requires authentication + export_pdf feature (single+ plan).
  */
-router.post("/generate", auth_1.authMiddleware, async (req, res) => {
+router.post("/generate", auth_1.authMiddleware, (0, subscription_1.requireFeature)("export_pdf"), async (req, res) => {
     const uid = req.uid;
     const { protectedPersonId, timeWindowStart, timeWindowEnd, format, reason } = req.body;
     if (!protectedPersonId || !timeWindowStart || !timeWindowEnd) {

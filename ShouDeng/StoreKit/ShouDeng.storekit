@@ -1,0 +1,304 @@
+{
+  "identifier" : "4E66F4B3-C2A1-4D1E-B5F0-A1B2C3D4E5F6",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "0",
+    "_developerTeamID" : "B98QT5LTWZ",
+    "_failTransactionsEnabled" : false,
+    "_lastError" : "",
+    "_locale" : "en_CA",
+    "_storefront" : "CAN",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Transaction Listener"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "shoudeng_subscriptions",
+      "localizations" : [
+        {
+          "description" : "",
+          "displayName" : "ShouDeng Subscriptions",
+          "locale" : "en_CA"
+        },
+        {
+          "description" : "",
+          "displayName" : "ShouDeng Subscriptions",
+          "locale" : "zh_Hans"
+        }
+      ],
+      "name" : "ShouDeng Subscriptions",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "1.49",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "single_monthly_001",
+          "introductoryOffer" : {
+            "displayPrice" : "0",
+            "internalID" : "trial_single_monthly",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Guard 1 person, up to 3 guardians, 90-day timeline",
+              "displayName" : "Single Plan Monthly",
+              "locale" : "en_CA"
+            },
+            {
+              "description" : "守护1人，最多3位守护者，90天时间线",
+              "displayName" : "单人关注版 月付",
+              "locale" : "zh_Hans"
+            }
+          ],
+          "productID" : "com.shoudeng.app.single.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Single Monthly",
+          "subscriptionGroupID" : "shoudeng_subscriptions",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "14.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "single_yearly_001",
+          "introductoryOffer" : {
+            "displayPrice" : "0",
+            "internalID" : "trial_single_yearly",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Guard 1 person, up to 3 guardians, 90-day timeline. Save 20%.",
+              "displayName" : "Single Plan Yearly",
+              "locale" : "en_CA"
+            },
+            {
+              "description" : "守护1人，最多3位守护者，90天时间线。省20%。",
+              "displayName" : "单人关注版 年付",
+              "locale" : "zh_Hans"
+            }
+          ],
+          "productID" : "com.shoudeng.app.single.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Single Yearly",
+          "subscriptionGroupID" : "shoudeng_subscriptions",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "4.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "family_monthly_001",
+          "introductoryOffer" : {
+            "displayPrice" : "0",
+            "internalID" : "trial_family_monthly",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Guard up to 4 people, unlimited guardians, 180-day timeline, SMS",
+              "displayName" : "Family Plan Monthly",
+              "locale" : "en_CA"
+            },
+            {
+              "description" : "守护最多4人，无限守护者，180天时间线，短信通知",
+              "displayName" : "家庭版 月付",
+              "locale" : "zh_Hans"
+            }
+          ],
+          "productID" : "com.shoudeng.app.family.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Family Monthly",
+          "subscriptionGroupID" : "shoudeng_subscriptions",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "49.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "family_yearly_001",
+          "introductoryOffer" : {
+            "displayPrice" : "0",
+            "internalID" : "trial_family_yearly",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Guard up to 4 people, unlimited guardians, 180-day timeline, SMS. Save 20%.",
+              "displayName" : "Family Plan Yearly",
+              "locale" : "en_CA"
+            },
+            {
+              "description" : "守护最多4人，无限守护者，180天时间线，短信通知。省20%。",
+              "displayName" : "家庭版 年付",
+              "locale" : "zh_Hans"
+            }
+          ],
+          "productID" : "com.shoudeng.app.family.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Family Yearly",
+          "subscriptionGroupID" : "shoudeng_subscriptions",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "19.99",
+          "familyShareable" : false,
+          "groupNumber" : 3,
+          "internalID" : "ultimate_monthly_001",
+          "introductoryOffer" : {
+            "displayPrice" : "0",
+            "internalID" : "trial_ultimate_monthly",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Unlimited protection, 365-day timeline, priority support",
+              "displayName" : "Ultimate Plan Monthly",
+              "locale" : "en_CA"
+            },
+            {
+              "description" : "无限守护，365天时间线，专属客服",
+              "displayName" : "企业版 月付",
+              "locale" : "zh_Hans"
+            }
+          ],
+          "productID" : "com.shoudeng.app.ultimate.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Ultimate Monthly",
+          "subscriptionGroupID" : "shoudeng_subscriptions",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "199.99",
+          "familyShareable" : false,
+          "groupNumber" : 3,
+          "internalID" : "ultimate_yearly_001",
+          "introductoryOffer" : {
+            "displayPrice" : "0",
+            "internalID" : "trial_ultimate_yearly",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Unlimited protection, 365-day timeline, priority support. Save 20%.",
+              "displayName" : "Ultimate Plan Yearly",
+              "locale" : "en_CA"
+            },
+            {
+              "description" : "无限守护，365天时间线，专属客服。省20%。",
+              "displayName" : "企业版 年付",
+              "locale" : "zh_Hans"
+            }
+          ],
+          "productID" : "com.shoudeng.app.ultimate.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Ultimate Yearly",
+          "subscriptionGroupID" : "shoudeng_subscriptions",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

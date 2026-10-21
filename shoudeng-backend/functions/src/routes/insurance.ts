@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import * as crypto from "crypto";
 import { authMiddleware } from "../middleware/auth";
+import { requireFeature } from "../middleware/subscription";
 
 const router = Router();
 const db = admin.firestore();
@@ -14,9 +15,9 @@ router.use(authMiddleware);
 /**
  * POST /v1/insurance/claim-materials
  * Export user device records around an incident — reference only.
- * User controls what to include. Vela does NOT certify or guarantee anything.
+ * Requires: export_pdf feature (single+ plan)
  */
-router.post("/claim-materials", async (req: Request, res: Response) => {
+router.post("/claim-materials", requireFeature("export_pdf"), async (req: Request, res: Response) => {
   const uid = req.uid!;
   const {
     incidentDate,

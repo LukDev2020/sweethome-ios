@@ -43,10 +43,18 @@ struct ClaimMaterialsView: View {
     var body: some View {
         NavigationStack {
             Group {
-                switch step {
-                case 0: scopeStep
-                case 1: previewStep
-                default: resultStep
+                if coordinator.storeKitManager.canAccessFeature("export_pdf") {
+                    switch step {
+                    case 0: scopeStep
+                    case 1: previewStep
+                    default: resultStep
+                    }
+                } else {
+                    SubscriptionGateView(
+                        feature: "export_pdf",
+                        featureName: "理赔材料导出",
+                        onDismiss: { dismiss() }
+                    )
                 }
             }
             .background(Color(.systemBackground))

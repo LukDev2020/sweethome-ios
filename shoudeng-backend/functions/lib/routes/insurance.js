@@ -37,6 +37,7 @@ const express_1 = require("express");
 const admin = __importStar(require("firebase-admin"));
 const crypto = __importStar(require("crypto"));
 const auth_1 = require("../middleware/auth");
+const subscription_1 = require("../middleware/subscription");
 const router = (0, express_1.Router)();
 const db = admin.firestore();
 const DISCLAIMER = "本导出内容来源于用户设备记录与守灯服务器日志，仅供用户自行参考使用。守灯不对记录的准确性、完整性或适用性作任何明示或暗示的保证，不对使用本内容产生的任何后果承担责任。";
@@ -44,9 +45,9 @@ router.use(auth_1.authMiddleware);
 /**
  * POST /v1/insurance/claim-materials
  * Export user device records around an incident — reference only.
- * User controls what to include. Vela does NOT certify or guarantee anything.
+ * Requires: export_pdf feature (single+ plan)
  */
-router.post("/claim-materials", async (req, res) => {
+router.post("/claim-materials", (0, subscription_1.requireFeature)("export_pdf"), async (req, res) => {
     const uid = req.uid;
     const { incidentDate, windowHours = 24, description, insuranceType, policyNumber, includeSOS = true, includeCheckIns = true, includeTimeline = true, includeLocation = true, includeMedicalCard = true, } = req.body;
     if (!incidentDate) {

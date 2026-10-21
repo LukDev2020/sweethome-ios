@@ -246,6 +246,73 @@ final class StoreKitManager: ObservableObject {
         }
     }
 
+    // MARK: - Feature Gating
+
+    /// Features available per plan tier. Must match backend PLANS definition.
+    private static let planFeatures: [String: Set<String>] = [
+        "free": ["basic_sos", "checkin"],
+        "single": ["basic_sos", "checkin", "duty_schedule", "voice_call_escalation", "export_pdf"],
+        "family": ["basic_sos", "checkin", "duty_schedule", "voice_call_escalation", "export_pdf",
+                    "sms_fallback", "family_dashboard", "location_history_export"],
+        "ultimate": ["basic_sos", "checkin", "duty_schedule", "voice_call_escalation", "export_pdf",
+                      "sms_fallback", "family_dashboard", "location_history_export", "priority_support"],
+    ]
+
+    private static let planLimits: [String: (maxGuardians: Int, maxProtected: Int)] = [
+        "free": (1, 1),
+        "single": (3, 1),
+        "family": (-1, 4),    // -1 = unlimited
+        "ultimate": (-1, -1),
+    ]
+
+    private static let planTimelineDays: [String: Int] = [
+        "free": 1,
+        "single": 90,
+        "family": 180,
+        "ultimate": 365,
+    ]
+
+    /// Current active plan ID (defaults to "free")
+    @MainActor
+    var activePlanId: String {
+        purchasedPlanId ?? "free"
+    }
+
+    /// Check if user's plan includes a specific feature
+    @MainActor
+    func canAccessFeature(_ feature: String) -> Bool {
+        let plan = activePlanId
+        return Self.planFeatures[plan]?.contains(feature) ?? false
+    }
+
+    /// Minimum plan tier required for a feature
+    static func minimumPlan(for feature: String) -> String {
+        for tier in ["single", "family", "ultimate"] {
+            if planFeatures[tier]?.contains(feature) == true {
+                return tier
+            }
+        }
+        return "ultimate"
+    }
+
+    /// Guardian count limit for current plan (-1 = unlimited)
+    @MainActor
+    var maxGuardians: Int {
+        Self.planLimits[activePlanId]?.maxGuardians ?? 1
+    }
+
+    /// Protected person count limit for current plan (-1 = unlimited)
+    @MainActor
+    var maxProtected: Int {
+        Self.planLimits[activePlanId]?.maxProtected ?? 1
+    }
+
+    /// Timeline retention days for current plan
+    @MainActor
+    var timelineDays: Int {
+        Self.planTimelineDays[activePlanId] ?? 1
+    }
+
     // MARK: - Helpers
 
     func planId(for product: Product) -> String {

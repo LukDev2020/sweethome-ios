@@ -104,6 +104,8 @@
 		AD23A78C32CCD971A61339E5 /* ScreenshotCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8535651F2DB69973FF91C722 /* ScreenshotCapture.swift */; };
 		AD4EEDE8D4D564EFAD174F4F /* ScreenshotGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C7B0C757327205457963B8 /* ScreenshotGalleryView.swift */; };
 		AF92E9F1A99C0FD92B75DBBE /* ConsulateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64A2DB8BEDB820B83E3C2C1 /* ConsulateView.swift */; };
+		080054E8DA343B6945EEB577 /* SubscriptionGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8130AA6130EF43DD276D5249 /* SubscriptionGateView.swift */; };
+		8130AA6130EF43DD276D5249 /* SubscriptionGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionGateView.swift; sourceTree = "<group>"; };
 		B10FAF76F9E10CCC8BC26F3C /* DeepLinkRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E0BD2D71506972187AC0C6E /* DeepLinkRouter.swift */; };
 		B712A85CDBFC03DA14F23067 /* FamilyFeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FF7D56256DE548ED29CCF50 /* FamilyFeedView.swift */; };
 		B8AC6ECB78F7B63BAF202361 /* GuardianActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C46D74589EDCD39D1DFAAF /* GuardianActivityManager.swift */; };
@@ -520,6 +522,7 @@
 			isa = PBXGroup;
 			children = (
 				F64A2DB8BEDB820B83E3C2C1 /* ConsulateView.swift */,
+				8130AA6130EF43DD276D5249 /* SubscriptionGateView.swift */,
 				50C6D87FF7D442419388289E /* DegradationBannerView.swift */,
 				52F330C107DBD7227EB0831B /* EmergencyContactsView.swift */,
 				FEFD93DE7D272B9E6D75E3E9 /* EmergencyTextCardView.swift */,
@@ -929,6 +932,7 @@
 				987EA4563028AC5BDB0BDEE8 /* ClaimPDFGenerator.swift in Sources */,
 				0A520BDDFC2C9F526CAEB9EC /* ConsentLogger.swift in Sources */,
 				AF92E9F1A99C0FD92B75DBBE /* ConsulateView.swift in Sources */,
+				080054E8DA343B6945EEB577 /* SubscriptionGateView.swift in Sources */,
 				791C1055A0D240706A687AD6 /* CountryCode.swift in Sources */,
 				8627C03A13BF47323E31243F /* CountryCodePicker.swift in Sources */,
 				5EB4D8C3B5424318A166AA9B /* CrashReporter.swift in Sources */,

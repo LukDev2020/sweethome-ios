@@ -274,17 +274,46 @@ struct GuardianHomeView: View {
     }
 
     private var addPersonButton: some View {
-        Button { showInviteSheet = true } label: {
-            Text("添加要守护的人")
-                .font(.scaled(size: 13))
-                .foregroundStyle(ink.opacity(0.6))
+        let maxProtected = coordinator.storeKitManager.maxProtected
+        let currentCount = coordinator.protectedPersons.count
+        let atLimit = maxProtected >= 0 && currentCount >= maxProtected
+
+        return Group {
+            if atLimit {
+                VStack(spacing: 6) {
+                    Text("已达当前方案上限（\(currentCount)/\(maxProtected)位被守护者）")
+                        .font(.scaled(size: 12))
+                        .foregroundStyle(.secondary)
+                    NavigationLink {
+                        GuardianPlanBillingView()
+                            .environmentObject(coordinator)
+                    } label: {
+                        Text("升级方案以添加更多")
+                            .font(.scaled(size: 13, weight: .medium))
+                            .foregroundStyle(pro)
+                    }
+                }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 11)
                 .background(
                     RoundedRectangle(cornerRadius: 12)
                         .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [5, 3]))
-                        .foregroundStyle(ink.opacity(0.28))
+                        .foregroundStyle(pro.opacity(0.28))
                 )
+            } else {
+                Button { showInviteSheet = true } label: {
+                    Text("添加要守护的人")
+                        .font(.scaled(size: 13))
+                        .foregroundStyle(ink.opacity(0.6))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 11)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [5, 3]))
+                                .foregroundStyle(ink.opacity(0.28))
+                        )
+                }
+            }
         }
     }
 

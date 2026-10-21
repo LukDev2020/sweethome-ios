@@ -445,20 +445,30 @@ struct GuardianRecordsView: View {
     // MARK: - Schedule Content
 
     private var scheduleContent: some View {
-        VStack(spacing: 12) {
-            VStack(spacing: 2) {
-                Text(scheduleSubtitle)
-                    .font(.scaled(size: 13))
-                    .foregroundStyle(.secondary)
-            }
+        Group {
+            if coordinator.storeKitManager.canAccessFeature("duty_schedule") {
+                VStack(spacing: 12) {
+                    VStack(spacing: 2) {
+                        Text(scheduleSubtitle)
+                            .font(.scaled(size: 13))
+                            .foregroundStyle(.secondary)
+                    }
 
-            coverageTrack
-            todayShiftsPanel
-            gapHandlingPanel
-            upsellCard
+                    coverageTrack
+                    todayShiftsPanel
+                    gapHandlingPanel
+                    upsellCard
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 24)
+            } else {
+                SubscriptionGateView(
+                    feature: "duty_schedule",
+                    featureName: "值班排程",
+                    onDismiss: { selectedTab = .timeline }
+                )
+            }
         }
-        .padding(.horizontal, 16)
-        .padding(.bottom, 24)
     }
 
     // MARK: - 24h Coverage Track

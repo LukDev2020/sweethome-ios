@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const admin = __importStar(require("firebase-admin"));
 const auth_1 = require("../middleware/auth");
+const subscription_1 = require("../middleware/subscription");
 const router = (0, express_1.Router)();
 const db = admin.firestore();
 router.use(auth_1.authMiddleware);
@@ -43,8 +44,9 @@ router.use(auth_1.authMiddleware);
  * PUT /v1/duty-schedule
  * Update duty schedule for a guardian-protected pair.
  * Called by the protected person to assign schedule to a guardian.
+ * Requires: duty_schedule feature (single+ plan)
  */
-router.put("/", async (req, res) => {
+router.put("/", (0, subscription_1.requireFeature)("duty_schedule"), async (req, res) => {
     const uid = req.uid;
     const { guardianId, slots } = req.body;
     if (!guardianId || !slots) {

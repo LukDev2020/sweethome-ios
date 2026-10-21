@@ -29,6 +29,20 @@ struct GuardianDutyScheduleView: View {
     }
 
     var body: some View {
+        Group {
+            if coordinator.storeKitManager.canAccessFeature("duty_schedule") {
+                dutyScheduleContent
+            } else {
+                SubscriptionGateView(
+                    feature: "duty_schedule",
+                    featureName: "值班排程",
+                    onDismiss: {}
+                )
+            }
+        }
+    }
+
+    private var dutyScheduleContent: some View {
         ScrollView {
             VStack(spacing: 12) {
                 // Header

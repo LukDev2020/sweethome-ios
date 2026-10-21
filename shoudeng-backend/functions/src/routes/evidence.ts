@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
+import { requireFeature } from "../middleware/subscription";
 import {
   generateEvidenceBundle,
   generateGPX,
@@ -15,9 +16,9 @@ const db = admin.firestore();
 /**
  * POST /v1/evidence/generate
  * Generate an evidence bundle (PDF data, JSON, or GPX) for a protected person.
- * Requires authentication — only guardians of the person can request.
+ * Requires authentication + export_pdf feature (single+ plan).
  */
-router.post("/generate", authMiddleware, async (req: Request, res: Response) => {
+router.post("/generate", authMiddleware, requireFeature("export_pdf"), async (req: Request, res: Response) => {
   const uid = req.uid!;
   const { protectedPersonId, timeWindowStart, timeWindowEnd, format, reason } =
     req.body;

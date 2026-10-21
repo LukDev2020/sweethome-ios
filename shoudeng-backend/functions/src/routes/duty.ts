@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
+import { requireFeature } from "../middleware/subscription";
 
 const router = Router();
 const db = admin.firestore();
@@ -11,8 +12,9 @@ router.use(authMiddleware);
  * PUT /v1/duty-schedule
  * Update duty schedule for a guardian-protected pair.
  * Called by the protected person to assign schedule to a guardian.
+ * Requires: duty_schedule feature (single+ plan)
  */
-router.put("/", async (req: Request, res: Response) => {
+router.put("/", requireFeature("duty_schedule"), async (req: Request, res: Response) => {
   const uid = req.uid!;
   const { guardianId, slots } = req.body;
 

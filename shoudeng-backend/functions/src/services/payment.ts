@@ -12,7 +12,11 @@ const db = admin.firestore();
 export const APPLE_BUNDLE_ID = "com.shoudeng.app";
 
 // Apple App ID from App Store Connect (numeric). Set via environment config.
+// In production, this MUST be set — JWS verification will fail otherwise.
 const APPLE_APP_ID = Number(process.env.APPLE_APP_ID || "0");
+if (APPLE_APP_ID === 0 && process.env.FUNCTIONS_EMULATOR !== "true" && !process.env.JEST_WORKER_ID) {
+  console.warn("[Payment] APPLE_APP_ID not set — JWS signature verification may fail in production");
+}
 
 // Load Apple Root CA certificates (DER-encoded) for JWS signature verification.
 // Downloaded from https://www.apple.com/certificateauthority/
