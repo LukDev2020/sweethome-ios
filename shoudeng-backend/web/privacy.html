@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>隐私政策 — 守灯 ShouDeng Privacy Policy</title>
+<style>
+  :root { --ink: #12203a; --lamp: #e8a33d; --bg: #fafaf8; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif; color: var(--ink); background: var(--bg); line-height: 1.8; }
+  .container { max-width: 680px; margin: 0 auto; padding: 48px 24px 80px; }
+  .logo { text-align: center; margin-bottom: 32px; }
+  .logo h1 { font-size: 28px; font-weight: 700; }
+  .logo span { color: var(--lamp); }
+  .date { text-align: center; color: #888; font-size: 14px; margin-bottom: 40px; }
+  .lang-toggle { text-align: center; margin-bottom: 32px; }
+  .lang-toggle a { display: inline-block; padding: 6px 16px; border: 1px solid var(--ink); border-radius: 20px; text-decoration: none; color: var(--ink); font-size: 14px; margin: 0 4px; }
+  .lang-toggle a.active { background: var(--ink); color: #fff; }
+  .section { display: none; }
+  .section.active { display: block; }
+  h2 { font-size: 20px; margin: 32px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--lamp); }
+  h3 { font-size: 16px; margin: 20px 0 8px; }
+  p, li { font-size: 15px; margin-bottom: 8px; }
+  ul { padding-left: 20px; }
+  .footer { text-align: center; margin-top: 48px; padding-top: 24px; border-top: 1px solid #ddd; color: #888; font-size: 13px; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0e1620; --ink: #e8e8e8; }
+    .lang-toggle a { border-color: #666; color: #ccc; }
+    .lang-toggle a.active { background: #333; color: #fff; }
+    .footer { border-color: #333; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo"><h1><span>守</span>灯</h1></div>
+  <div class="date">最后更新 / Last Updated: 2026-09-01</div>
+  <div class="lang-toggle">
+    <a href="#" class="active" onclick="switchLang('zh')">中文</a>
+    <a href="#" onclick="switchLang('en')">English</a>
+  </div>
+
+  <!-- 中文版 -->
+  <div id="zh" class="section active">
+    <h2>隐私政策</h2>
+
+    <h3>一、我们收集哪些信息</h3>
+    <ul>
+      <li><strong>位置信息</strong>：用于安全区检测、紧急求助定位、行动轨迹记录。仅在授权后采集，仅与您指定的守护者共享。</li>
+      <li><strong>运动传感器数据</strong>：用于跌倒检测。数据仅在本地处理，不上传服务器。</li>
+      <li><strong>手机号码</strong>：用于注册账号及紧急短信通知。</li>
+      <li><strong>设备信息</strong>：电量、在线状态等，用于守护者了解被守护设备是否正常运行。</li>
+      <li><strong>姓名与头像</strong>：用于家庭圈内成员识别。</li>
+      <li><strong>通讯录</strong>：仅在您主动添加紧急联络人时读取，不会后台扫描或上传完整通讯录。</li>
+      <li><strong>照片</strong>：仅在您主动分享到家庭圈时使用，照片仅对守护关系内的家人可见。</li>
+      <li><strong>医疗信息</strong>：血型、过敏史、用药等，由您手动输入，用于紧急情况下供守护者参考。</li>
+    </ul>
+
+    <h3>二、我们如何使用信息</h3>
+    <ul>
+      <li><strong>紧急求助</strong>：触发 SOS 时向守护者发送您的位置。</li>
+      <li><strong>安全监测</strong>：检测异常（跌倒、失联）并及时通知守护者。</li>
+      <li><strong>报平安</strong>：让守护者了解您的安全状态。</li>
+    </ul>
+
+    <h3>三、数据保留</h3>
+    <ul>
+      <li>免费用户：位置数据保留 7 天，签到记录保留 30 天。</li>
+      <li>付费用户：位置数据保留 90 天，签到记录永久保留。</li>
+      <li>SOS 事件记录及知情同意审计日志永久保留。</li>
+    </ul>
+
+    <h3>四、数据共享</h3>
+    <ul>
+      <li>您的位置与安全信息仅与您明确授权的守护者共享。</li>
+      <li>我们不会将您的个人信息出售给任何第三方。</li>
+      <li>紧急分享链接仅在您或系统自动升级时创建，有效期不超过 48 小时。</li>
+    </ul>
+
+    <h3>五、数据安全</h3>
+    <ul>
+      <li>所有数据传输使用 TLS 加密。</li>
+      <li>敏感凭证存储在 iOS 钥匙串（Keychain）中。</li>
+      <li>服务器端数据静态加密。</li>
+    </ul>
+
+    <h3>六、您的权利</h3>
+    <ul>
+      <li><strong>访问权</strong>：在设置中随时导出您的所有数据。</li>
+      <li><strong>删除权</strong>：在设置中删除账号，将永久删除所有数据。</li>
+      <li><strong>撤回同意</strong>：随时在系统设置中关闭位置或运动传感器权限。</li>
+    </ul>
+
+    <h3>七、联系我们</h3>
+    <p>如对本隐私政策有任何疑问，请联系：<a href="mailto:privacy@shoudeng.app">privacy@shoudeng.app</a></p>
+  </div>
+
+  <!-- English version -->
+  <div id="en" class="section">
+    <h2>Privacy Policy</h2>
+
+    <h3>1. Information We Collect</h3>
+    <ul>
+      <li><strong>Location</strong>: Used for safe-zone detection, emergency SOS positioning, and movement trajectory recording. Collected only with your authorization and shared only with your designated guardians.</li>
+      <li><strong>Motion Sensor Data</strong>: Used for fall detection. Processed locally on your device; not uploaded to our servers.</li>
+      <li><strong>Phone Number</strong>: Used for account registration and emergency SMS notifications.</li>
+      <li><strong>Device Information</strong>: Battery level, online status, etc., so guardians can monitor whether the protected device is functioning normally.</li>
+      <li><strong>Name &amp; Profile Photo</strong>: Used for member identification within the family circle.</li>
+      <li><strong>Contacts</strong>: Read only when you actively add an emergency contact. We never scan or upload your full address book in the background.</li>
+      <li><strong>Photos</strong>: Used only when you share to the family feed. Photos are visible only to family members within a guardianship relationship.</li>
+      <li><strong>Medical Information</strong>: Blood type, allergies, medications, etc. Manually entered by you, available to guardians for reference in emergencies.</li>
+    </ul>
+
+    <h3>2. How We Use Your Information</h3>
+    <ul>
+      <li><strong>Emergency Assistance</strong>: Sending your location to guardians when SOS is triggered.</li>
+      <li><strong>Safety Monitoring</strong>: Detecting anomalies (falls, loss of connectivity) and promptly notifying guardians.</li>
+      <li><strong>Check-Ins</strong>: Letting guardians know you are safe.</li>
+    </ul>
+
+    <h3>3. Data Retention</h3>
+    <ul>
+      <li>Free users: Location data retained for 7 days; check-in records for 30 days.</li>
+      <li>Paid users: Location data retained for 90 days; check-in records retained permanently.</li>
+      <li>SOS event records and consent audit logs are retained permanently.</li>
+    </ul>
+
+    <h3>4. Data Sharing</h3>
+    <ul>
+      <li>Your location and safety information are shared only with guardians you have explicitly authorized.</li>
+      <li>We do not sell your personal information to any third party.</li>
+      <li>Emergency share links are created only when you or the system escalates automatically and are valid for no more than 48 hours.</li>
+    </ul>
+
+    <h3>5. Data Security</h3>
+    <ul>
+      <li>All data transmissions use TLS encryption.</li>
+      <li>Sensitive credentials are stored in the iOS Keychain.</li>
+      <li>Server-side data is encrypted at rest.</li>
+    </ul>
+
+    <h3>6. Your Rights</h3>
+    <ul>
+      <li><strong>Access</strong>: Export all your data anytime from Settings.</li>
+      <li><strong>Deletion</strong>: Delete your account from Settings; all data will be permanently removed.</li>
+      <li><strong>Withdraw Consent</strong>: Disable location or motion sensor permissions anytime in system settings.</li>
+    </ul>
+
+    <h3>7. Contact Us</h3>
+    <p>If you have any questions about this Privacy Policy, please contact us at <a href="mailto:privacy@shoudeng.app">privacy@shoudeng.app</a>.</p>
+  </div>
+
+  <div class="footer">
+    <p>&copy; 2026 Vela Care Technology. All rights reserved.</p>
+  </div>
+</div>
+<script>
+function switchLang(lang) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(lang).classList.add('active');
+  document.querySelectorAll('.lang-toggle a').forEach(a => a.classList.remove('active'));
+  event.target.classList.add('active');
+  event.preventDefault();
+}
+</script>
+</body>
+</html>

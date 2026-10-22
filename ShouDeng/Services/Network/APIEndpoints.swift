@@ -564,6 +564,46 @@ struct SelectedHotlineRequest: Codable {
     let selectedLabel: String?
 }
 
+// MARK: - Location Batch
+
+struct LocationBatchRequest: Codable {
+    let reports: [LocationReportRequest]
+}
+
+struct LocationBatchResponse: Codable {
+    let success: Bool
+    let processed: Int
+    let errors: Int
+}
+
+// MARK: - Voice Note
+
+struct VoiceNoteRequest: Codable {
+    let transcript: String
+    let duration: Double
+    let keywords: [String]
+    let senderRole: String
+}
+
+struct VoiceNoteResponse: Codable {
+    let noteId: String
+    let createdAt: Date
+}
+
+struct VoiceNoteItem: Codable, Identifiable {
+    let id: String
+    let senderId: String
+    let senderRole: String
+    let transcript: String
+    let duration: Double
+    let keywords: [String]
+    let createdAt: Date
+}
+
+struct VoiceNotesListResponse: Codable {
+    let notes: [VoiceNoteItem]
+}
+
 // MARK: - Empty Body (for POST with no payload)
 
 struct EmptyBody: Codable {}

@@ -152,8 +152,9 @@ describe("Escalation Chain — SMS Fallback", () => {
   });
 
   it("logs channel type (push vs sms) in escalation log", () => {
-    expect(triggerSource).toContain('channel:');
-    expect(triggerSource).toMatch(/hasApp\s*\?\s*["']push["']\s*:\s*["']sms["']/);
+    expect(triggerSource).toContain('channel');
+    // SMS fallback triggers on push failure OR no app installed
+    expect(triggerSource).toContain("sms_fallback");
   });
 });
 

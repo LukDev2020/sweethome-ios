@@ -7,6 +7,9 @@ struct ShouDengWidgetBundle: WidgetBundle {
         ProtectedStatusWidget()
         GuardianStatusWidget()
         ProtectedTimerWidget()
+        if #available(iOS 17.0, *) {
+            SOSWidget()
+        }
         ProtectedLiveActivity()
         GuardianLiveActivity()
     }

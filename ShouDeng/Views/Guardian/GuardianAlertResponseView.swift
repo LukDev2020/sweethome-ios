@@ -330,6 +330,7 @@ struct GuardianAlertResponseView: View {
         case .voiceWakeWord: return "语音唤醒"
         case .audioDistress: return "异常声音检测"
         case .voiceCommand: return "语音指令求助"
+        case .widgetTap: return "小组件一键求助"
         }
     }
 

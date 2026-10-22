@@ -57,6 +57,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     }
 
     func startServices(_ application: UIApplication) {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-screenshot") { return }
+        #endif
         appCoordinator.pushService.registerForPushNotifications()
         application.registerForRemoteNotifications()
         appCoordinator.heartbeatService.start()

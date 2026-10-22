@@ -41,6 +41,7 @@ import emergencyTextRoutes from "./routes/emergencyText";
 import organizationRoutes from "./routes/organization";
 import insuranceRoutes from "./routes/insurance";
 import consulateRoutes from "./routes/consulate";
+import voiceNoteRoutes from "./routes/voiceNote";
 import { createRateLimiter, RATE_LIMITS } from "./middleware/rateLimit";
 
 // --- Mount Routes ---
@@ -99,6 +100,9 @@ app.use("/v1/insurance", insuranceRoutes);
 
 // Phase 11: Consulate Hotline (global embassy data + user selection)
 app.use("/v1/consulate", consulateRoutes);
+
+// Phase 12: SOS Voice Notes
+app.use("/v1/sos", voiceNoteRoutes);
 
 // --- Voice callback for Twilio ---
 // Multi-language TwiML responses based on query param or default

@@ -47,6 +47,9 @@ final class DeviceHealthMonitor: ObservableObject {
 
     init(protectedPersonName: String = "被守护者") {
         self.protectedPersonName = protectedPersonName
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-screenshot") { return }
+        #endif
         if UserDefaults.standard.bool(forKey: "onboardingComplete") {
             startMonitoring()
         }

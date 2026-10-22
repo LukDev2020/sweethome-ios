@@ -68,6 +68,9 @@ final class AppCoordinator: ObservableObject {
     lazy var e2eEncryption = E2ELocationEncryption(keyManager: keyManager)
     let storeKitManager: StoreKitManager
     let paymentMethodManager: PaymentMethodManager
+    let mapTileCacheManager = MapTileCacheManager()
+    let locationBatchUploader = LocationBatchUploader()
+    let voiceNoteService = VoiceNoteService()
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -191,6 +194,14 @@ final class AppCoordinator: ObservableObject {
         // Flush any queued offline requests
         Task { await apiClient.flushOfflineQueue() }
 
+        // Configure location batch uploader for offline → batch mode
+        if let userId = currentUser?.id {
+            locationBatchUploader.configure(apiClient: apiClient, userId: userId)
+        }
+
+        // Check for widget-triggered SOS
+        checkWidgetSOSIntent()
+
         // Fetch fresh data from server, then restart Live Activity with real data
         Task {
             await fetchUserProfile()
@@ -240,6 +251,8 @@ final class AppCoordinator: ObservableObject {
         locationManager.isTrackingPaused = false
         audioCoordinator.stopAll()
         keyManager.clearPeerKeys()
+        locationBatchUploader.stop()
+        locationBatchUploader.clearAll()
         localStore.clearAll()
         offlineQueue.clearAll()
         WidgetDataStore.clear()
@@ -267,6 +280,27 @@ final class AppCoordinator: ObservableObject {
         for key in userKeys {
             UserDefaults.standard.removeObject(forKey: key)
         }
+    }
+
+    // MARK: - Widget SOS Intent
+
+    /// Check if the SOS widget triggered an intent while the app was closed.
+    private func checkWidgetSOSIntent() {
+        guard let defaults = UserDefaults(suiteName: WidgetDataStore.appGroupId) else { return }
+        guard defaults.bool(forKey: "widget_sos_pending") else { return }
+
+        // Clear the flag immediately to prevent re-triggering
+        defaults.set(false, forKey: "widget_sos_pending")
+
+        // Only honor if the intent was within the last 60 seconds
+        let timestamp = defaults.double(forKey: "widget_sos_timestamp")
+        let age = Date().timeIntervalSince1970 - timestamp
+        guard age < 60, age > 0 else { return }
+
+        #if DEBUG
+        print("[AppCoordinator] Widget SOS intent detected — triggering SOS")
+        #endif
+        triggerSOS(method: .widgetTap)
     }
 
     // MARK: - Deep Link Handling

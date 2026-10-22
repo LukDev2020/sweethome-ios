@@ -1,0 +1,44 @@
+ShouDeng — Family Safety, One Light of Protection
+
+ShouDeng is a family safety app that creates reliable safety connections between loved ones. Whether it's elderly parents living alone, children coming home late, or family members traveling abroad, ShouDeng helps you stay informed about your family's wellbeing.
+
+Key Features:
+
+EMERGENCY SOS
+One tap to send an emergency alert with your precise location. Guardians receive instant push notifications to respond immediately.
+
+REAL-TIME LOCATION SHARING
+Protected persons share their location on their own terms. Guardians can check in anytime. Set safe zones with automatic alerts when boundaries are crossed. Location is visible only to authorized guardians.
+
+CHECK-IN
+A simple tap to let family know you're safe. Set scheduled reminders — guardians are notified if a check-in is overdue.
+
+DUTY SCHEDULE
+Multiple guardians can set up a rotation schedule, ensuring someone is always watching.
+
+MEDICAL CARD
+Record blood type, allergies, medications, and more — available for first responders in emergencies.
+
+FAMILY FEED
+Share daily moments and photos within your family circle.
+
+Privacy First:
+- No behavioral tracking, no ads
+- No third-party analytics
+- Location shared only with authorized guardians
+- Pause location sharing anytime
+- Delete all data with one tap
+
+Important Notice:
+ShouDeng is a supplementary safety tool and does not replace professional emergency services (911, 112, etc.). In an emergency, always call your local emergency number first.
+
+Subscription Plans:
+- Free: Basic SOS, check-in (1 guardian)
+- Single: Duty schedule, PDF export, trajectory replay (up to 3 guardians)
+- Family: SMS fallback, family dashboard (up to 4 protected persons)
+- Ultimate: Priority support, unlimited members
+
+Subscriptions are processed through Apple and can be cancelled anytime in your Apple ID settings.
+
+Privacy Policy: https://sweethome-b4e82.web.app/privacy
+Terms of Service: https://sweethome-b4e82.web.app/terms

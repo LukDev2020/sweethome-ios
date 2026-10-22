@@ -89,6 +89,12 @@ enum WidgetDataStore {
         case "la.offline":      return isZh ? "离线" : isFr ? "Hors ligne" : "Offline"
         case "la.people.safe":  return isZh ? "人安全" : isFr ? " en sécurité" : " safe"
 
+        // Widget — SOS
+        case "widget.sos.title":   return isZh ? "紧急求助" : isFr ? "SOS Urgence" : "Emergency SOS"
+        case "widget.sos.description": return isZh ? "一键触发紧急求助" : isFr ? "SOS en un tap" : "One-tap SOS"
+        case "widget.sos.tap":     return isZh ? "点击求助" : isFr ? "Appuyer" : "Tap for SOS"
+        case "widget.login.required": return isZh ? "请先登录" : isFr ? "Connexion requise" : "Login required"
+
         default: return key
         }
     }

@@ -1,0 +1,41 @@
+Review Notes for Apple App Review Team
+
+1. APP PURPOSE
+ShouDeng is a family safety app. It connects "Protected Persons" (e.g., elderly parents, children) with "Guardians" (family members who watch over them). The app provides emergency SOS alerts, location sharing, check-ins, and medical card features.
+
+2. TEST ACCOUNT
+Phone: +1 650-555-0100
+OTP Code: 123456
+Role: Guardian (has one linked protected person)
+
+3. SOS FEATURE EXPLANATION
+The app has a prominent red SOS button. When tapped:
+- It sends push notifications to all linked guardians with the user's GPS location
+- It does NOT call 911 or any emergency services
+- The onboarding flow clearly disclaims this: "ShouDeng is not an emergency service"
+- Users must acknowledge this disclaimer before using the app
+
+4. LOCATION USAGE
+- Location is used to share the protected person's position with their guardians
+- "Always" location is requested so check-in reminders and safe-zone alerts work in the background
+- Users can pause location sharing at any time from Settings
+- Location is never shared with third parties or used for advertising
+
+5. BACKGROUND MODES
+- Location updates: For safe-zone monitoring and heartbeat signals
+- Remote notifications: For SOS alerts and check-in reminders
+- Background fetch: To refresh subscription status
+
+6. SUBSCRIPTIONS
+- 3 paid tiers (Single, Family, Ultimate) x 2 periods (Monthly, Yearly) = 6 products
+- Free tier is fully functional for basic SOS and check-in with 1 guardian
+- No paywall blocks core safety features
+- Subscription can be cancelled anytime via Apple ID settings
+
+7. HEALTH DATA
+- Medical card data (blood type, allergies, medications) is user-entered, not collected from HealthKit
+- No HealthKit integration
+
+8. CONTACTS
+- Contacts are accessed only when the user manually adds an emergency contact
+- The full address book is never uploaded or scanned in the background

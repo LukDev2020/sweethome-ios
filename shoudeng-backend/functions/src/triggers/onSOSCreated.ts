@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import { sendSOSAlert } from "../services/fcm";
+import { sendSOSAlert, PushResult } from "../services/fcm";
 import { sendSOSSms, hasAppInstalled } from "../services/sms";
 
 const db = admin.firestore();
@@ -93,7 +93,15 @@ export const onSOSCreated = functions
       onDutyGuardians.length > 0 ? onDutyGuardians : [guardianIds[0]];
 
     for (const guardianId of hop1Targets) {
-      await sendSOSAlert(guardianId, personName, sosId);
+      const pushResult = await sendSOSAlert(guardianId, personName, sosId);
+      let channel = "push";
+
+      // SMS fallback: if push completely failed, send SMS immediately
+      if (pushResult.allFailed) {
+        const smsSent = await sendSOSSms(guardianId, personName, sosId);
+        channel = smsSent ? "sms_fallback" : "failed";
+        console.log(`[Escalation] Hop 1: Push failed for ${guardianId}, SMS fallback: ${smsSent}`);
+      }
 
       // Log to escalation_log
       await snapshot.ref.update({
@@ -106,6 +114,7 @@ export const onSOSCreated = functions
           readAt: null,
           respondedAt: null,
           response: null,
+          channel,
         }),
       });
     }
@@ -132,13 +141,19 @@ export const onSOSCreated = functions
 
     for (const guardianId of guardianIds) {
       // Send push notification
-      await sendSOSAlert(guardianId, personName, sosId);
+      const pushResult = await sendSOSAlert(guardianId, personName, sosId);
 
-      // SMS fallback for guardians who don't have the app installed
+      // SMS fallback: if push failed OR guardian doesn't have the app
+      let channel = "push";
       const hasApp = await hasAppInstalled(guardianId);
-      if (!hasApp) {
-        await sendSOSSms(guardianId, personName, sosId);
-        console.log(`[Escalation] SMS fallback sent to ${guardianId} (no app)`);
+      if (!hasApp || pushResult.allFailed) {
+        const smsSent = await sendSOSSms(guardianId, personName, sosId);
+        channel = smsSent ? "sms_fallback" : (hasApp ? "push_failed" : "sms");
+        if (!hasApp) {
+          console.log(`[Escalation] SMS fallback sent to ${guardianId} (no app)`);
+        } else {
+          console.log(`[Escalation] SMS fallback sent to ${guardianId} (push failed)`);
+        }
       }
 
       await snapshot.ref.update({
@@ -151,7 +166,7 @@ export const onSOSCreated = functions
           readAt: null,
           respondedAt: null,
           response: null,
-          channel: hasApp ? "push" : "sms",
+          channel,
         }),
       });
     }

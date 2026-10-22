@@ -1,0 +1,53 @@
+version: "1.0"
+date: "2026-10-20"
+
+gates:
+  g1_build:
+    name: "Clean Build"
+    criteria: "0 errors, 0 warnings on xcodebuild"
+    blocking: true
+
+  g2_unit_tests:
+    name: "Unit Tests"
+    criteria: "219 iOS tests pass, 304 backend static tests pass"
+    blocking: true
+
+  g3_safety_suite:
+    name: "Safety Suite"
+    criteria: "SOS, fall, missed check-in, degradation: 200/200 scripted runs"
+    blocking: true
+
+  g4_rules:
+    name: "Firestore Rules"
+    criteria: "0 failures on rules test suite"
+    blocking: true
+
+  g5_i18n:
+    name: "Internationalization"
+    criteria: "0 missing keys, 0 hardcoded user-facing strings"
+    blocking: true
+
+  g6_algorithms:
+    name: "Algorithm Verification"
+    criteria: "All algorithm tables delivered, every code-vs-docs mismatch filed"
+    blocking: true
+
+  g7_ux:
+    name: "UX Persona Walk"
+    criteria: "No alert action > 2 taps, no truncation at AX5, both roles pass"
+    blocking: true
+
+  g8_performance:
+    name: "Performance"
+    criteria: "Launch < 2s, no hangs > 500ms, Functions p95 < 500ms"
+    blocking: false
+
+  g9_flaky:
+    name: "Test Stability"
+    criteria: "0 flaky tests over 3 consecutive full runs"
+    blocking: true
+
+  g10_p0p1:
+    name: "Critical Bugs"
+    criteria: "0 open P0/P1 auto-fix items"
+    blocking: true

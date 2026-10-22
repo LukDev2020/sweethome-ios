@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "B98QT5LTWZ.com.shoudeng.app",
+        "paths": [
+          "/invite/*",
+          "/evidence/*",
+          "/sos/*"
+        ]
+      }
+    ]
+  }
+}

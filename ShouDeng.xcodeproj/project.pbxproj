@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6381F3B161D54F6CAFF43D6A /* VoiceNoteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331DA921543B4CBF8494F9CB /* VoiceNoteService.swift */; };
+		83319C5123A244E5A04A6F69 /* MapTileCacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4164ACB441247EC971F57AE /* MapTileCacheManager.swift */; };
+		60EB257ED1324508AA9FF43D /* LocationBatchUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE1267A17B7842458F45DF8F /* LocationBatchUploader.swift */; };
+		63A5E7FB29564BFDA8AC649A /* SOSIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C31E30D854D419485218EB5 /* SOSIntent.swift */; };
+		5DBA9286D1814F94900F3CCD /* SOSWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CC500243E04462A86E5F65 /* SOSWidget.swift */; };
 		02E7F90A2B6831265F6305B0 /* ProtectedActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CD6466B4BA2EA1E57F4AEBC /* ProtectedActivityAttributes.swift */; };
 		0505E7358600028AB24F69D6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B0993240A8B2FFA1C6928BF2 /* Assets.xcassets */; };
 		06386B2FC24D4DFE3C69F2CB /* HotlineCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 525930DD8BF30E7421491576 /* HotlineCardView.swift */; };
@@ -325,6 +330,11 @@
 		3650C968B13243ACA7C7214C /* DistressDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistressDetectionService.swift; sourceTree = "<group>"; };
 		81A8E640688E46F1A5BE45E8 /* VoiceCommandService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCommandService.swift; sourceTree = "<group>"; };
 		DFF29F4226BF4C368B186B83 /* AudioSessionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSessionCoordinator.swift; sourceTree = "<group>"; };
+		331DA921543B4CBF8494F9CB /* VoiceNoteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceNoteService.swift; sourceTree = "<group>"; };
+		E4164ACB441247EC971F57AE /* MapTileCacheManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapTileCacheManager.swift; sourceTree = "<group>"; };
+		AE1267A17B7842458F45DF8F /* LocationBatchUploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationBatchUploader.swift; sourceTree = "<group>"; };
+		2C31E30D854D419485218EB5 /* SOSIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SOSIntent.swift; sourceTree = "<group>"; };
+		B5CC500243E04462A86E5F65 /* SOSWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SOSWidget.swift; sourceTree = "<group>"; };
 		099EB6E94E794005BFD70016 /* E2ELocationEncryption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E2ELocationEncryption.swift; sourceTree = "<group>"; };
 		D7B6BDCCA1DB4D71BB081AEC /* KeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyManager.swift; sourceTree = "<group>"; };
 		B1C2D3E4F5A6B7C8D9E0F1A2 /* MLFallClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLFallClassifier.swift; sourceTree = "<group>"; };
@@ -442,6 +452,7 @@
 				F1B701F788B9889DD64303E4 /* LiveActivity */,
 				96CBEBED557E67E5211C30B1 /* Localization */,
 				632F2EFA5DEF1367F909B2AB /* Location */,
+				E4509D3D639E4FBBBA895104 /* Map */,
 				1ABB70C9C776A4ED817980BD /* Motion */,
 				D556AA218FBB44F58BA9F1D1 /* Audio */,
 				8F486E6F44264208B0B50CDB /* Crypto */,
@@ -520,6 +531,7 @@
 			isa = PBXGroup;
 			children = (
 				A1B2C3D4E5F6A7B8C9D0E1F2 /* ReactiveLocationService.swift */,
+				AE1267A17B7842458F45DF8F /* LocationBatchUploader.swift */,
 			);
 			path = Location;
 			sourceTree = "<group>";
@@ -597,6 +609,7 @@
 			children = (
 				ABAA69ADBB6EF5CD2EE9C115 /* CheckInIntent.swift */,
 				040C57BD82556A18B68CDDE7 /* DismissTimerIntent.swift */,
+				2C31E30D854D419485218EB5 /* SOSIntent.swift */,
 			);
 			path = Intents;
 			sourceTree = "<group>";
@@ -747,6 +760,7 @@
 				284B21E6768A3FB61D56C283 /* GuardianStatusWidget.swift */,
 				00D6D2187E81F7ADD2436B42 /* ProtectedStatusWidget.swift */,
 				28DD19C64B3FA4AFF3D91214 /* ProtectedTimerWidget.swift */,
+				B5CC500243E04462A86E5F65 /* SOSWidget.swift */,
 			);
 			path = Widgets;
 			sourceTree = "<group>";
@@ -815,12 +829,21 @@
 			path = App;
 			sourceTree = "<group>";
 		};
+		E4509D3D639E4FBBBA895104 /* Map */ = {
+			isa = PBXGroup;
+			children = (
+				E4164ACB441247EC971F57AE /* MapTileCacheManager.swift */,
+			);
+			path = Map;
+			sourceTree = "<group>";
+		};
 		D556AA218FBB44F58BA9F1D1 /* Audio */ = {
 			isa = PBXGroup;
 			children = (
 				3650C968B13243ACA7C7214C /* DistressDetectionService.swift */,
 				81A8E640688E46F1A5BE45E8 /* VoiceCommandService.swift */,
 				DFF29F4226BF4C368B186B83 /* AudioSessionCoordinator.swift */,
+				331DA921543B4CBF8494F9CB /* VoiceNoteService.swift */,
 			);
 			path = Audio;
 			sourceTree = "<group>";
@@ -1033,6 +1056,9 @@
 				C3915C653C3B43FEB158E261 /* AudioSessionCoordinator.swift in Sources */,
 				886F1FE080674640A06C0E51 /* VoiceCommandService.swift in Sources */,
 				589279344DF24A4C98FF98F8 /* DistressDetectionService.swift in Sources */,
+				6381F3B161D54F6CAFF43D6A /* VoiceNoteService.swift in Sources */,
+				83319C5123A244E5A04A6F69 /* MapTileCacheManager.swift in Sources */,
+				60EB257ED1324508AA9FF43D /* LocationBatchUploader.swift in Sources */,
 				FD27D57BCFCB4A4640B7864C /* OfflineQueue.swift in Sources */,
 				647CECC1E71D0A4EF094D5C7 /* OnboardingView.swift in Sources */,
 				91B694B65DF0CB555CA4C950 /* OrgDashboardView.swift in Sources */,
@@ -1107,6 +1133,8 @@
 				6AF177BA649E9E3A34CFDABB /* ProtectedTimerWidget.swift in Sources */,
 				62FB10DE6E9D973ED7612DA4 /* ProtectedWidgetViews.swift in Sources */,
 				104682298328A68ED6876ADA /* SharedColors.swift in Sources */,
+				63A5E7FB29564BFDA8AC649A /* SOSIntent.swift in Sources */,
+				5DBA9286D1814F94900F3CCD /* SOSWidget.swift in Sources */,
 				72311B032AFAD5E4C43442AA /* ShouDengWidgetBundle.swift in Sources */,
 				5A6CAAC1591FE8ACEF13D5F6 /* TimerTimelineProvider.swift in Sources */,
 				52489C60F5461F5FFB5287BF /* TimerWidgetViews.swift in Sources */,

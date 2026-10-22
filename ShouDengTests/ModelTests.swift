@@ -78,9 +78,9 @@ final class ModelTests: XCTestCase {
         let methods: [SOSTriggerMethod] = [
             .longPress, .watchQuickAction, .bluetoothButton,
             .duressPassword, .fallDetection, .voiceWakeWord,
-            .audioDistress, .voiceCommand,
+            .audioDistress, .voiceCommand, .widgetTap,
         ]
-        XCTAssertEqual(methods.count, 8)
+        XCTAssertEqual(methods.count, 9)
     }
 
     // MARK: - SOSResolution

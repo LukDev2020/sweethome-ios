@@ -87,16 +87,26 @@ async function isNotifEnabled(
 /**
  * Send SOS critical alert to a guardian.
  */
+/**
+ * Result of a push send attempt. Used by callers to decide whether
+ * to fall back to SMS.
+ */
+export interface PushResult {
+  successCount: number;
+  failureCount: number;
+  allFailed: boolean;
+}
+
 export async function sendSOSAlert(
   guardianId: string,
   protectedPersonName: string,
   sosEventId: string,
   locationDescription?: string
-): Promise<void> {
+): Promise<PushResult> {
   const tokens = await getTokensForUser(guardianId);
   if (tokens.length === 0) {
     console.warn(`[FCM] No tokens for guardian ${guardianId}`);
-    return;
+    return { successCount: 0, failureCount: 0, allFailed: true };
   }
 
   const locale = await getUserLocale(guardianId);
@@ -137,8 +147,36 @@ export async function sendSOSAlert(
     console.log(
       `[FCM] SOS alert sent to ${guardianId}: ${response.successCount} success, ${response.failureCount} failure`
     );
+
+    // Clean up invalid tokens (unregistered, invalid argument)
+    const invalidTokenErrors = ["messaging/registration-token-not-registered", "messaging/invalid-argument"];
+    const tokensToRemove: string[] = [];
+    response.responses.forEach((resp, idx) => {
+      if (resp.error && invalidTokenErrors.includes(resp.error.code)) {
+        tokensToRemove.push(tokens[idx]);
+      }
+    });
+    if (tokensToRemove.length > 0) {
+      const batch = db.batch();
+      for (const badToken of tokensToRemove) {
+        const snap = await db.collection("device_tokens")
+          .where("token", "==", badToken)
+          .limit(1)
+          .get();
+        snap.docs.forEach((doc) => batch.delete(doc.ref));
+      }
+      await batch.commit();
+      console.log(`[FCM] Cleaned up ${tokensToRemove.length} invalid tokens for ${guardianId}`);
+    }
+
+    return {
+      successCount: response.successCount,
+      failureCount: response.failureCount,
+      allFailed: response.successCount === 0,
+    };
   } catch (error) {
     console.error(`[FCM] Failed to send SOS alert to ${guardianId}:`, error);
+    return { successCount: 0, failureCount: tokens.length, allFailed: true };
   }
 }
 

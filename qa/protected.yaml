@@ -1,0 +1,247 @@
+version: "1.0"
+date: "2026-10-20"
+description: >
+  Protected zones require human approval before any change.
+  Values extracted from source code on 2026-10-20.
+
+# ─────────────────────────────────────────────────────────
+# FallDetector.swift — Four-Stage Sequential Pipeline
+# Source: ShouDeng/Core/Algorithms/FallDetector.swift
+# ─────────────────────────────────────────────────────────
+fall_thresholds:
+  youngAdult:
+    freeFallThresholdG: 0.6
+    freeFallMinDurationMs: 100
+    impactThresholdG: 2.5
+    impactWindowAfterFreeFallMs: 500
+    orientationChangeMinDegrees: 60
+    orientationSampleWindowSec: 2.0
+    stillnessMaxVariance: 0.05
+    stillnessDurationSec: 15.0
+    confirmationTimeoutSec: 60.0
+    sampleRateHz: 50.0
+
+  elderly:
+    freeFallThresholdG: 0.65
+    impactThresholdG: 2.0
+    orientationChangeMinDegrees: 50
+    stillnessMaxVariance: 0.06
+    stillnessDurationSec: 10.0
+
+  phoneInPocket:
+    impactThresholdG: 3.0
+    orientationChangeMinDegrees: 45
+
+  notes:
+    - "All four stages must fire in sequence; any break resets to monitoring"
+    - "Early exit: if recent variance > stillnessMaxVariance * 3, person recovered"
+    - "Buffer capacity = sampleRateHz * 5 = 250 samples (5 seconds)"
+    - "References: SisFall, UMAFall, FallAllD datasets"
+
+# ─────────────────────────────────────────────────────────
+# Confirmation window
+# Source: FallDetector.swift line 40
+# ─────────────────────────────────────────────────────────
+confirmation_window:
+  timeout_sec: 60
+  user_action: "'I'm fine' cancels; timeout escalates to SOS"
+  false_alarm_tracked: true
+
+# ─────────────────────────────────────────────────────────
+# BaselineScorer.swift — Missing Person Anomaly Scoring
+# Source: ShouDeng/Core/Algorithms/BaselineScorer.swift
+# ─────────────────────────────────────────────────────────
+missing_person_weights:
+  weightCheckInOvertime: 0.35
+  weightPhoneInactivity: 0.25
+  weightLocationAnomaly: 0.20
+  weightBatteryAnomaly: 0.10
+  weightRegionalRisk: 0.10
+  sum: 1.00
+  notes:
+    - "Weights must sum to 1.0"
+    - "yellowThreshold: 0.45 (score > 0.45 = warning)"
+    - "redThreshold: 0.70 (score > 0.70 = critical)"
+    - "baselineDaysRequired: 14 days"
+    - "baselineWindowDays: 30 (rolling window)"
+    - "Fallback fixed thresholds used when baseline data < 14 days"
+    - "Check-in deviation capped at 3x longest historical gap"
+
+# ─────────────────────────────────────────────────────────
+# EscalationEngine.swift — Multi-Hop State Machine
+# Source: ShouDeng/Core/StateMachine/EscalationEngine.swift
+# ─────────────────────────────────────────────────────────
+escalation_timers:
+  hop1_base_wait_sec: 180          # 3 minutes (daytime)
+  hop1_night_wait_sec: 90          # 1.5 minutes (nighttime: 23:00-07:00)
+  hop1_fast_responder_bonus_sec: 60  # +1 min if avg response < 60s
+  hop1_minimum_wait_sec: 30        # floor on computed wait
+  hop2_wait_sec: 120               # 2 minutes, all guardians simultaneously
+  hop3_max_call_attempts: 3        # per person
+  hop3_call_interval_sec: 30       # between attempts
+  night_hours_start: 23            # 11 PM
+  night_hours_end: 7               # 7 AM
+  max_retry_attempts: 3
+  retry_interval_sec: 60
+
+escalation_order:
+  - hop: 1
+    type: "onDutyGuardian"
+    channel: "push notification"
+    target: "on-duty guardian only"
+    dynamic_wait: true
+  - hop: 2
+    type: "allGuardians"
+    channel: "push + SMS (simultaneous)"
+    target: "all guardians"
+    dynamic_wait: false
+  - hop: 3
+    type: "voiceCall"
+    channel: "auto voice call loop"
+    target: "all guardians, max 3 attempts each"
+    dynamic_wait: false
+  - terminal: "exhausted"
+    description: "All voice call attempts failed, no acknowledgment received"
+
+escalation_freeze:
+  trigger: "'I've taken over' from any guardian"
+  effect: "Immediately freezes entire chain, cancels all scheduled hops"
+  state_transition: "any -> acknowledged"
+  notification: "All other guardians notified that someone has taken over"
+
+escalation_states:
+  - idle
+  - triggered
+  - notifyingPrimary    # Hop 1
+  - notifyingAll        # Hop 2
+  - voiceCalling        # Hop 3
+  - acknowledged        # Someone confirmed
+  - exhausted           # All attempts failed
+
+# ─────────────────────────────────────────────────────────
+# ConsentLogger.swift — Consent Logging Mechanism
+# Source: ShouDeng/Services/Compliance/ConsentLogger.swift
+# ─────────────────────────────────────────────────────────
+consent_logic:
+  storage_format: "JSONL (append-only)"
+  file_path: "Documents/consent_log.jsonl"
+  record_fields:
+    - userId
+    - timestamp (ISO 8601)
+    - item (consent key)
+    - copyVersion
+    - action (granted | denied | revoked)
+    - appVersion
+    - locale
+    - deviceId (identifierForVendor)
+  queue: "com.shoudeng.consent (utility QoS)"
+  singleton: true
+  convenience_methods:
+    - "logOnboardingScreen(screenId)"
+    - "logFeatureDisclosure(feature, granted)"
+    - "logSOSFirstUse()"
+    - "logDegradation(warningId)"
+  notes:
+    - "copyVersion is mandatory per PDF section 5"
+    - "Version bump re-triggers disclosure"
+    - "Append-only: no update or delete operations"
+
+# ─────────────────────────────────────────────────────────
+# Firestore Rules — Access Control
+# Source: shoudeng-backend/firestore.rules
+# ─────────────────────────────────────────────────────────
+firestore_rules_loosening:
+  description: "Any change that broadens access requires human approval"
+  current_public_read_collections:
+    - "medical_card_shares (public read by share token — intentional)"
+  server_write_only_collections:
+    - sos_events
+    - duty_schedules
+    - timeline_entries
+    - evidence_holds
+    - integrity_proofs
+    - subscriptions
+    - location_history
+    - organizations
+  owner_scoped_collections:
+    - users (read/write own profile, field validation on role + displayName + phone)
+    - safe_zones (userId == auth.uid)
+    - device_tokens (userId == auth.uid)
+    - emergency_contacts (owner only)
+    - medical_cards (owner write, guardians read via isGuardianOf helper)
+  guardian_link_access: "Both parties (guardianId or protectedPersonId) can read/update/delete; create requires one party"
+  invites_access: "Any auth user can read; create requires createdBy == auth.uid and status == pending"
+  family_posts: "Any auth user reads; author creates/updates/deletes; nested comments: auth create"
+  crash_reports: "Any auth user can create; no read/update/delete"
+  default_deny: "match /{document=**} { allow read, write: if false; }"
+  approval_triggers:
+    - "Adding allow read/write: if true to any collection"
+    - "Removing isOwner() or isGuardianOf() checks"
+    - "Broadening field validation constraints"
+    - "Removing server-write-only restriction"
+    - "Adding new public-read collections"
+
+# ─────────────────────────────────────────────────────────
+# DisclaimerCopy.swift — Legal Copy
+# Source: ShouDeng/Services/Compliance/DisclaimerCopy.swift
+# ─────────────────────────────────────────────────────────
+legal_copy:
+  onboarding_version: "v1.1"
+  onboarding_screens: 3
+  onboarding_screen_ids:
+    - "onboard.not_emergency"
+    - "onboard.scope"
+    - "onboard.control"
+  languages: ["chinese", "english", "french"]
+  feature_disclosure_version: "v1.1"
+  feature_disclosures:
+    - key: "consent.sos"
+      requires_opt_in: false
+    - key: "consent.location"
+      requires_opt_in: true
+    - key: "consent.trajectory"
+      requires_opt_in: true
+      high_sensitivity: true
+    - key: "consent.fall_detect"
+      requires_opt_in: true
+    - key: "consent.audio"
+      requires_opt_in: true
+    - key: "consent.voice_call"
+      requires_opt_in: false
+  degradation_warnings:
+    - location_revoked (critical)
+    - device_offline (caution/critical based on hours >= 4)
+    - battery_low (critical)
+    - bg_refresh_disabled (caution)
+    - notification_disabled (caution)
+    - no_guardian_on_duty (caution)
+    - server_fault (caution)
+  banned_words:
+    - "监控"
+    - "追踪"
+    - "保证"
+    - "确保"
+    - "保障"
+    - "报警"
+    - "实时"
+    - "一键报警"
+    - "精准检测"
+  location_display_rule: "Never show bare 'current location'; always format as '12 分钟前 · 基辅'"
+  sos_banner: "已通知你的家人。如情况危急，请同时拨打 112。"
+  sharing_disable_delay: "6 hours (anti-coercion)"
+  approval_triggers:
+    - "Any wording change to onboarding screens"
+    - "Adding or removing a feature disclosure"
+    - "Changing opt-in requirement for a disclosure"
+    - "Modifying banned words list"
+    - "Changing sharing disable delay"
+
+# ─────────────────────────────────────────────────────────
+# Pricing — Subscription Tiers
+# ─────────────────────────────────────────────────────────
+pricing:
+  note: "Subscription tiers managed server-side in subscriptions collection; write is server-only"
+  approval_triggers:
+    - "Any price change"
+    - "Adding or removing a subscription tier"
+    - "Changing feature gating between free and paid"

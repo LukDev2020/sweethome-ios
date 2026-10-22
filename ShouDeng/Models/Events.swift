@@ -31,6 +31,7 @@ enum SOSTriggerMethod: String, Codable {
     case voiceWakeWord       // "Help me" / custom phrase (V3)
     case audioDistress       // On-device scream/distress sound detection
     case voiceCommand        // On-device speech recognition ("救命", "help")
+    case widgetTap           // One-tap SOS from home screen widget (SafeTap)
 }
 
 enum SOSResolution: String, Codable {
