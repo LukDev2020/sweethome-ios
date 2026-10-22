@@ -34,6 +34,7 @@ router.get("/me", async (req: Request, res: Response) => {
       countryCode: data.countryCode,
       cityName: data.cityName,
       createdAt: data.createdAt.toDate().toISOString(),
+      publicKey: data.publicKey || null,
     });
   } catch (error) {
     console.error("[User] get profile error:", error);
@@ -47,7 +48,7 @@ router.get("/me", async (req: Request, res: Response) => {
  */
 router.put("/me", async (req: Request, res: Response) => {
   const uid = req.uid!;
-  const { displayName, email, timeZone, cityName, countryCode } = req.body;
+  const { displayName, email, timeZone, cityName, countryCode, publicKey } = req.body;
 
   const updates: Record<string, unknown> = {
     updatedAt: admin.firestore.Timestamp.now(),
@@ -82,6 +83,13 @@ router.put("/me", async (req: Request, res: Response) => {
       return;
     }
     updates.countryCode = countryCode;
+  }
+  if (publicKey !== undefined) {
+    if (typeof publicKey !== "string" || publicKey.length > 200) {
+      res.status(400).json({ error: "publicKey must be a base64 string of 200 characters or less" });
+      return;
+    }
+    updates.publicKey = publicKey;
   }
 
   try {

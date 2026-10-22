@@ -25,6 +25,7 @@ final class MotionService {
     private let motionManager = CMMotionManager()
     private let activityManager = CMMotionActivityManager()
     private let fallDetector: FallDetector
+    private let mlFallClassifier: MLFallClassifier
     private let operationQueue: OperationQueue
 
     private(set) var state: ServiceState = .stopped
@@ -39,8 +40,10 @@ final class MotionService {
 
     // MARK: - Init
 
-    init(fallDetectorConfig: FallDetector.Config = .youngAdult) {
+    init(fallDetectorConfig: FallDetector.Config = .youngAdult,
+         mlClassifierConfig: MLFallClassifier.Config = MLFallClassifier.Config()) {
         self.fallDetector = FallDetector(config: fallDetectorConfig)
+        self.mlFallClassifier = MLFallClassifier(config: mlClassifierConfig)
 
         self.operationQueue = OperationQueue()
         operationQueue.name = "com.shoudeng.motion"
@@ -98,15 +101,24 @@ final class MotionService {
         ) { [weak self] motion, error in
             guard let motion, error == nil else { return }
 
+            let totalAccel = CMAcceleration(
+                x: motion.userAcceleration.x + motion.gravity.x,
+                y: motion.userAcceleration.y + motion.gravity.y,
+                z: motion.userAcceleration.z + motion.gravity.z
+            )
+
             // Feed the four-stage fall detection pipeline
             self?.fallDetector.feed(
-                acceleration: CMAcceleration(
-                    x: motion.userAcceleration.x + motion.gravity.x,
-                    y: motion.userAcceleration.y + motion.gravity.y,
-                    z: motion.userAcceleration.z + motion.gravity.z
-                ),
+                acceleration: totalAccel,
                 gravity: motion.gravity,
                 userAcceleration: motion.userAcceleration,
+                timestamp: motion.timestamp
+            )
+
+            // Feed the ML classifier in parallel (shadow mode until model is available)
+            self?.mlFallClassifier.feed(
+                acceleration: totalAccel,
+                rotationRate: motion.rotationRate,
                 timestamp: motion.timestamp
             )
         }

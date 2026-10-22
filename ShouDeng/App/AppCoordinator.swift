@@ -61,6 +61,11 @@ final class AppCoordinator: ObservableObject {
     let crashReporter = CrashReporter.shared
     let liveActivityManager = GuardianActivityManager()
     let locationService = ReactiveLocationService()
+    let distressDetectionService = DistressDetectionService()
+    let voiceCommandService = VoiceCommandService()
+    let audioCoordinator = AudioSessionCoordinator()
+    let keyManager = KeyManager()
+    lazy var e2eEncryption = E2ELocationEncryption(keyManager: keyManager)
     let storeKitManager: StoreKitManager
     let paymentMethodManager: PaymentMethodManager
 
@@ -233,6 +238,8 @@ final class AppCoordinator: ObservableObject {
         trackingPauseTimer?.invalidate()
         trackingPauseTimer = nil
         locationManager.isTrackingPaused = false
+        audioCoordinator.stopAll()
+        keyManager.clearPeerKeys()
         localStore.clearAll()
         offlineQueue.clearAll()
         WidgetDataStore.clear()
@@ -254,6 +261,8 @@ final class AppCoordinator: ObservableObject {
             "signup_failed_attempts",
             "signup_lockout_until",
             "setupWizardComplete",
+            "distress_detection_enabled",
+            "voice_command_enabled",
         ]
         for key in userKeys {
             UserDefaults.standard.removeObject(forKey: key)
@@ -486,6 +495,9 @@ final class AppCoordinator: ObservableObject {
     // MARK: - Service Wiring
 
     private func wireServices() {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-screenshot") { return }
+        #endif
 
         // Location → Heartbeat + Server + Reactive SwiftUI bridge
         locationManager.onLocationReport = { [weak self] location in
@@ -519,6 +531,42 @@ final class AppCoordinator: ObservableObject {
         motionService.onFallConfirmed = { [weak self] in
             self?.handleFallConfirmed()
         }
+
+        // Motion → Activity type → Location manager
+        motionService.onActivityChange = { [weak self] activity in
+            guard let self else { return }
+            let type: Location.ActivityType
+            if activity.stationary { type = .stationary }
+            else if activity.walking { type = .walking }
+            else if activity.running { type = .running }
+            else if activity.automotive { type = .driving }
+            else if activity.cycling { type = .cycling }
+            else { type = .unknown }
+            self.locationManager.detectedActivityType = type
+        }
+
+        // Audio → Distress detection → SOS with countdown
+        audioCoordinator.distressService = distressDetectionService
+        audioCoordinator.voiceService = voiceCommandService
+
+        distressDetectionService.onDistressDetected = { [weak self] label, confidence in
+            #if DEBUG
+            print("[Coordinator] Distress sound: \(label) (\(Int(confidence * 100))%)")
+            #endif
+            self?.handleDistressDetected()
+        }
+
+        // Voice → SOS command
+        voiceCommandService.onSOSCommand = { [weak self] phrase in
+            #if DEBUG
+            print("[Coordinator] Voice SOS command: \"\(phrase)\"")
+            #endif
+            self?.handleVoiceSOSCommand(phrase: phrase)
+        }
+
+        // Restore audio service preferences
+        audioCoordinator.distressDetectionEnabled = UserDefaults.standard.bool(forKey: "distress_detection_enabled")
+        audioCoordinator.voiceCommandEnabled = UserDefaults.standard.bool(forKey: "voice_command_enabled")
 
         // Heartbeat → Server reporting
         heartbeatService.onHeartbeat = { [weak self] signal in
@@ -822,6 +870,25 @@ final class AppCoordinator: ObservableObject {
     // MARK: - Event Handlers
 
     private func handleLocationUpdate(_ location: Location) {
+        // Build E2E encrypted payload for each guardian who has a public key
+        var encryptedPayload: E2ELocationEncryption.EncryptedPayload?
+        if let firstGuardian = myGuardians.first,
+           let peerKeyData = keyManager.getPeerPublicKey(userId: firstGuardian.id) {
+            let payload = E2ELocationEncryption.LocationPayload(
+                latitude: location.latitude,
+                longitude: location.longitude,
+                accuracy: location.accuracy,
+                altitude: location.altitude,
+                speed: location.speed,
+                timestamp: location.timestamp,
+                activityType: location.activityType?.rawValue
+            )
+            encryptedPayload = try? e2eEncryption.encrypt(
+                location: payload,
+                forRecipientPublicKey: peerKeyData
+            )
+        }
+
         apiClient.postQueued("/v1/location/report", body: LocationReportRequest(
             userId: currentUser?.id ?? "",
             latitude: location.latitude,
@@ -831,7 +898,9 @@ final class AppCoordinator: ObservableObject {
             speed: location.speed,
             timestamp: location.timestamp,
             isInSafeZone: location.isInSafeZone,
-            safeZoneName: location.safeZoneName
+            safeZoneName: location.safeZoneName,
+            activityType: location.activityType?.rawValue,
+            encryptedPayload: encryptedPayload
         ))
 
         // Live Activity is updated via startLiveActivityIfNeeded / sync calls
@@ -861,6 +930,35 @@ final class AppCoordinator: ObservableObject {
         showFallConfirmation = false
         fallConfirmationDeadline = nil
         triggerSOS(method: .fallDetection)
+    }
+
+    private func handleDistressDetected() {
+        // Same countdown flow as fall detection — give user 60 sec to dismiss
+        fallConfirmationDeadline = Date().addingTimeInterval(60)
+        showFallConfirmation = true
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.warning)
+        // If user doesn't dismiss within 60 sec, trigger SOS
+        DispatchQueue.main.asyncAfter(deadline: .now() + 60) { [weak self] in
+            guard let self, self.showFallConfirmation else { return }
+            self.showFallConfirmation = false
+            self.fallConfirmationDeadline = nil
+            self.triggerSOS(method: .audioDistress)
+        }
+    }
+
+    private func handleVoiceSOSCommand(phrase: String) {
+        // Voice commands trigger the same confirmation countdown
+        fallConfirmationDeadline = Date().addingTimeInterval(60)
+        showFallConfirmation = true
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.warning)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 60) { [weak self] in
+            guard let self, self.showFallConfirmation else { return }
+            self.showFallConfirmation = false
+            self.fallConfirmationDeadline = nil
+            self.triggerSOS(method: .voiceCommand)
+        }
     }
 
     private func handleSOSTakenOver(sosId: String) {

@@ -328,6 +328,8 @@ struct GuardianAlertResponseView: View {
         case .duressPassword: return "胁迫密码"
         case .fallDetection: return "跌倒检测"
         case .voiceWakeWord: return "语音唤醒"
+        case .audioDistress: return "异常声音检测"
+        case .voiceCommand: return "语音指令求助"
         }
     }
 

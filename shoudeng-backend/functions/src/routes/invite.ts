@@ -58,7 +58,7 @@ router.post("/create", async (req: Request, res: Response) => {
  */
 router.post("/accept", createRateLimiter(RATE_LIMITS.general), async (req: Request, res: Response) => {
   const uid = req.uid!;
-  const { inviteId, code } = req.body;
+  const { inviteId, code, publicKey } = req.body;
 
   try {
     // Find invite by ID or code (outside transaction for query support)
@@ -157,6 +157,11 @@ router.post("/accept", createRateLimiter(RATE_LIMITS.general), async (req: Reque
       const linkId = `${guardianId}_${protectedPersonId}`;
       const linkRef = db.collection("guardian_links").doc(linkId);
 
+      // Store E2E public key on user doc if provided
+      if (publicKey) {
+        transaction.update(acceptorRef, { publicKey });
+      }
+
       // Atomically create link + mark invite as accepted
       transaction.set(linkRef, {
         guardianId,
@@ -166,6 +171,7 @@ router.post("/accept", createRateLimiter(RATE_LIMITS.general), async (req: Reque
         acceptedAt: now,
         revokedAt: null,
         protectionLayers: ["location", "heartbeat", "sos"],
+        ...(publicKey && { acceptorPublicKey: publicKey }),
       });
 
       transaction.update(inviteRef, {

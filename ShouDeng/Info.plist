@@ -28,7 +28,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>16</string>
+	<string>17</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSAppTransportSecurity</key>
@@ -50,6 +50,8 @@
 	<string>During an active SOS, the microphone may record ambient audio to help your chosen family members assess the situation. Recording starts only if you have enabled this option and local laws permit it.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>Luma uses the accelerometer to detect possible falls. If a fall is detected, you have 60 seconds to dismiss the alert before your family members are notified. This feature activates only after you turn on fall detection in the app.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Voice commands let you trigger an SOS hands-free by saying "help" or "救命". All recognition is processed on your device.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Share photos with family members in your guardian circle. Photos are visible only to people in your guardianship relationship.</string>
 	<key>NSSupportsLiveActivities</key>

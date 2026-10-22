@@ -12,6 +12,7 @@ final class ReactiveLocationService: ObservableObject {
     @Published var currentLocation: CLLocationCoordinate2D?
     @Published var currentHeading: CLLocationDirection = 0
     @Published var currentAccuracy: Double = 0
+    @Published var currentActivityType: Location.ActivityType = .unknown
     @Published var memberLocations: [String: MemberLocation] = [:]
     @Published var followMode: FollowMode = .followMe
     @Published var lastUpdateTime: Date?
@@ -61,6 +62,7 @@ final class ReactiveLocationService: ObservableObject {
                     longitude: location.longitude
                 )
                 self?.currentAccuracy = location.accuracy
+                self?.currentActivityType = location.activityType ?? .unknown
                 self?.lastUpdateTime = location.timestamp
             }
         }

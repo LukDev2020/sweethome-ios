@@ -130,6 +130,10 @@ final class AdaptiveLocationManager: NSObject {
     // MARK: - Start / Stop
 
     func start() {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-screenshot") { return }
+        #endif
+
         // Set delegate here (not in init) to avoid triggering
         // the location authorization dialog before onboarding completes.
         locationManager.delegate = self
@@ -377,7 +381,21 @@ final class AdaptiveLocationManager: NSObject {
         report(location)
     }
 
+    /// Current detected activity type (fed by MotionService via CMMotionActivityManager)
+    var detectedActivityType: Location.ActivityType = .unknown
+
     private func report(_ clLocation: CLLocation) {
+        // Infer activity from speed if motion service hasn't classified yet
+        let activity: Location.ActivityType = {
+            if detectedActivityType != .unknown { return detectedActivityType }
+            let speed = clLocation.speed
+            if speed < 0 { return .unknown }
+            if speed < 0.5 { return .stationary }
+            if speed < 2.0 { return .walking }
+            if speed < 4.0 { return .running }
+            return .driving
+        }()
+
         let location = Location(
             latitude: clLocation.coordinate.latitude,
             longitude: clLocation.coordinate.longitude,
@@ -387,7 +405,8 @@ final class AdaptiveLocationManager: NSObject {
             timestamp: clLocation.timestamp,
             address: nil,
             isInSafeZone: isInAnySafeZone(location: clLocation),
-            safeZoneName: safeZoneContaining(location: clLocation)?.name
+            safeZoneName: safeZoneContaining(location: clLocation)?.name,
+            activityType: activity
         )
 
         lastReportedLocation = clLocation

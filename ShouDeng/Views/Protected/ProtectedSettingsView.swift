@@ -23,6 +23,8 @@ struct ProtectedSettingsView: View {
     @AppStorage("sos_longPress") private var longPressEnabled = true
     @AppStorage("sos_watch") private var watchEnabled = true
     @AppStorage("sos_silentMode") private var silentMode = false
+    @AppStorage("distress_detection_enabled") private var distressDetectionEnabled = false
+    @AppStorage("voice_command_enabled") private var voiceCommandEnabled = false
     @AppStorage("notif_sos_alerts") private var notifSOS = true
     @AppStorage("notif_checkin_reminder") private var notifCheckin = true
     @AppStorage("notif_family_feed") private var notifFamilyFeed = true
@@ -134,6 +136,7 @@ struct ProtectedSettingsView: View {
                 emailMissingBanner
                 rolePanel
                 sosTriggerPanel
+                smartDetectionPanel
                 checkInPanel
                 safetyToolsPanel
                 lockScreenCardPanel
@@ -169,6 +172,7 @@ struct ProtectedSettingsView: View {
                     emailMissingBanner
                     rolePanel
                     sosTriggerPanel
+                    smartDetectionPanel
                     checkInPanel
                     Spacer().frame(height: 24)
                 }
@@ -287,6 +291,50 @@ struct ProtectedSettingsView: View {
             toggleRow("手表快捷键", isOn: $watchEnabled)
             fixedRow("蓝牙实体按钮", value: "未配对", isWarning: true)
             toggleRow("静默模式 · 本机无提示", isOn: $silentMode)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    // MARK: - Smart Detection Panel
+
+    private var smartDetectionPanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("智能检测")
+                .font(.scaled(size: 12))
+                .foregroundStyle(.secondary)
+
+            VStack(alignment: .leading, spacing: 2) {
+                toggleRow("异常声音检测", isOn: $distressDetectionEnabled)
+                Text("检测到尖叫等异常声音时自动触发 60 秒倒计时。全部在本机处理，不上传录音。")
+                    .font(.scaled(size: 11))
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 30)
+            }
+            .onChange(of: distressDetectionEnabled) { _, enabled in
+                coordinator.audioCoordinator.distressDetectionEnabled = enabled
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                toggleRow("语音求助", isOn: $voiceCommandEnabled)
+                Text("说出「救命」「help」即可触发求助。需要麦克风和语音识别权限。")
+                    .font(.scaled(size: 11))
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 30)
+            }
+            .onChange(of: voiceCommandEnabled) { _, enabled in
+                if enabled {
+                    VoiceCommandService.requestAuthorization { authorized in
+                        if !authorized {
+                            voiceCommandEnabled = false
+                        }
+                    }
+                }
+                coordinator.audioCoordinator.voiceCommandEnabled = enabled
+            }
         }
         .padding(12)
         .background(

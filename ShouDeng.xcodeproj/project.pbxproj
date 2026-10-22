@@ -144,6 +144,12 @@
 		FBCABBE2B5B113CB958B4515 /* ProtectedTimelineProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27916B4AF78CFA84BAE296F8 /* ProtectedTimelineProvider.swift */; };
 		FD27D57BCFCB4A4640B7864C /* OfflineQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4734D2EF45FF85A775F463A4 /* OfflineQueue.swift */; };
 		FE3E0D644B8AC2875D222B68 /* GuardianTimelineProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAAF4DB91B71052AABF5312A /* GuardianTimelineProvider.swift */; };
+		589279344DF24A4C98FF98F8 /* DistressDetectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3650C968B13243ACA7C7214C /* DistressDetectionService.swift */; };
+		886F1FE080674640A06C0E51 /* VoiceCommandService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81A8E640688E46F1A5BE45E8 /* VoiceCommandService.swift */; };
+		C3915C653C3B43FEB158E261 /* AudioSessionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFF29F4226BF4C368B186B83 /* AudioSessionCoordinator.swift */; };
+		FCC401088C3543D5B4D8E40A /* E2ELocationEncryption.swift in Sources */ = {isa = PBXBuildFile; fileRef = 099EB6E94E794005BFD70016 /* E2ELocationEncryption.swift */; };
+		5FDE248BEB7F461394A83256 /* KeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7B6BDCCA1DB4D71BB081AEC /* KeyManager.swift */; };
+		A2F1E0D9C8B7A6F5E4D3C2B1 /* MLFallClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A6B7C8D9E0F1A2 /* MLFallClassifier.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -316,6 +322,12 @@
 		FDB28CB4A33522FB7D99598E /* WidgetHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetHelpers.swift; sourceTree = "<group>"; };
 		FEFD93DE7D272B9E6D75E3E9 /* EmergencyTextCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyTextCardView.swift; sourceTree = "<group>"; };
 		FFA8CF629FC20FB22F8C8757 /* StoreKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitManager.swift; sourceTree = "<group>"; };
+		3650C968B13243ACA7C7214C /* DistressDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistressDetectionService.swift; sourceTree = "<group>"; };
+		81A8E640688E46F1A5BE45E8 /* VoiceCommandService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCommandService.swift; sourceTree = "<group>"; };
+		DFF29F4226BF4C368B186B83 /* AudioSessionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSessionCoordinator.swift; sourceTree = "<group>"; };
+		099EB6E94E794005BFD70016 /* E2ELocationEncryption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E2ELocationEncryption.swift; sourceTree = "<group>"; };
+		D7B6BDCCA1DB4D71BB081AEC /* KeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyManager.swift; sourceTree = "<group>"; };
+		B1C2D3E4F5A6B7C8D9E0F1A2 /* MLFallClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLFallClassifier.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -431,6 +443,8 @@
 				96CBEBED557E67E5211C30B1 /* Localization */,
 				632F2EFA5DEF1367F909B2AB /* Location */,
 				1ABB70C9C776A4ED817980BD /* Motion */,
+				D556AA218FBB44F58BA9F1D1 /* Audio */,
+				8F486E6F44264208B0B50CDB /* Crypto */,
 				A3C5016F1B235855CB5700B4 /* Network */,
 				D61FBDB5A20879AC289D362A /* Payment */,
 				BACCB2B26041901276283922 /* Push */,
@@ -591,6 +605,7 @@
 			isa = PBXGroup;
 			children = (
 				F1C3E65E036E4050F0B17429 /* Algorithms */,
+				C1D2E3F4A5B6C7D8E9F0A1B2 /* ML */,
 				4FB38713875861E0C84246EA /* StateMachine */,
 				8852CB21F0E5BF467313F73F /* Storage */,
 			);
@@ -800,6 +815,33 @@
 			path = App;
 			sourceTree = "<group>";
 		};
+		D556AA218FBB44F58BA9F1D1 /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				3650C968B13243ACA7C7214C /* DistressDetectionService.swift */,
+				81A8E640688E46F1A5BE45E8 /* VoiceCommandService.swift */,
+				DFF29F4226BF4C368B186B83 /* AudioSessionCoordinator.swift */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
+		8F486E6F44264208B0B50CDB /* Crypto */ = {
+			isa = PBXGroup;
+			children = (
+				099EB6E94E794005BFD70016 /* E2ELocationEncryption.swift */,
+				D7B6BDCCA1DB4D71BB081AEC /* KeyManager.swift */,
+			);
+			path = Crypto;
+			sourceTree = "<group>";
+		};
+		C1D2E3F4A5B6C7D8E9F0A1B2 /* ML */ = {
+			isa = PBXGroup;
+			children = (
+				B1C2D3E4F5A6B7C8D9E0F1A2 /* MLFallClassifier.swift */,
+			);
+			path = ML;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -985,6 +1027,12 @@
 				36E61D1756A635AC2E9CE3C6 /* LoginView.swift in Sources */,
 				E0C9BC98A1A4AAC92553E211 /* MedicalCardView.swift in Sources */,
 				C0B0BE414A87C5344A38B4E4 /* MotionService.swift in Sources */,
+				A2F1E0D9C8B7A6F5E4D3C2B1 /* MLFallClassifier.swift in Sources */,
+				5FDE248BEB7F461394A83256 /* KeyManager.swift in Sources */,
+				FCC401088C3543D5B4D8E40A /* E2ELocationEncryption.swift in Sources */,
+				C3915C653C3B43FEB158E261 /* AudioSessionCoordinator.swift in Sources */,
+				886F1FE080674640A06C0E51 /* VoiceCommandService.swift in Sources */,
+				589279344DF24A4C98FF98F8 /* DistressDetectionService.swift in Sources */,
 				FD27D57BCFCB4A4640B7864C /* OfflineQueue.swift in Sources */,
 				647CECC1E71D0A4EF094D5C7 /* OnboardingView.swift in Sources */,
 				91B694B65DF0CB555CA4C950 /* OrgDashboardView.swift in Sources */,
@@ -1142,7 +1190,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 16;
+				CURRENT_PROJECT_VERSION = 17;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1201,7 +1249,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 16;
+				CURRENT_PROJECT_VERSION = 17;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1389,7 +1437,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 16;
+				CURRENT_PROJECT_VERSION = 17;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;

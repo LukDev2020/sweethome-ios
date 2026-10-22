@@ -29,6 +29,8 @@ enum SOSTriggerMethod: String, Codable {
     case duressPassword      // Entered duress PIN — looks normal, silently alerts
     case fallDetection       // Automatic from fall algorithm
     case voiceWakeWord       // "Help me" / custom phrase (V3)
+    case audioDistress       // On-device scream/distress sound detection
+    case voiceCommand        // On-device speech recognition ("救命", "help")
 }
 
 enum SOSResolution: String, Codable {

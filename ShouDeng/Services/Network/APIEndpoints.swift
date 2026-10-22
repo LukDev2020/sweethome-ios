@@ -30,6 +30,8 @@ struct LocationReportRequest: Codable {
     let timestamp: Date
     let isInSafeZone: Bool?
     let safeZoneName: String?
+    var activityType: String?
+    var encryptedPayload: E2ELocationEncryption.EncryptedPayload?
 }
 
 // MARK: - SOS

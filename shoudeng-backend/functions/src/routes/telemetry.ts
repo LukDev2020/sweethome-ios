@@ -78,6 +78,8 @@ router.post("/location/report", async (req: Request, res: Response) => {
     timestamp,
     isInSafeZone,
     safeZoneName,
+    activityType,
+    encryptedPayload,
   } = req.body;
 
   if (!userId || latitude === undefined || longitude === undefined) {
@@ -103,6 +105,8 @@ router.post("/location/report", async (req: Request, res: Response) => {
       timestamp: timestamp || new Date().toISOString(),
       isInSafeZone,
       safeZoneName,
+      ...(activityType && { activityType }),
+      ...(encryptedPayload && { encryptedPayload }),
     });
 
     res.json({ success: true });

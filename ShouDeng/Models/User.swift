@@ -114,6 +114,26 @@ struct Location: Codable {
     var address: String?           // Reverse geocoded
     var isInSafeZone: Bool?
     var safeZoneName: String?
+    var activityType: ActivityType?
+
+    enum ActivityType: String, Codable {
+        case stationary
+        case walking
+        case running
+        case driving
+        case cycling
+        case unknown
+    }
+}
+
+// MARK: - E2E Encryption
+
+extension User {
+    /// Base64-encoded X25519 public key for E2E location encryption
+    var publicKey: String? {
+        get { UserDefaults.standard.string(forKey: "e2e_publicKey_\(id)") }
+        set { UserDefaults.standard.set(newValue, forKey: "e2e_publicKey_\(id)") }
+    }
 }
 
 // MARK: - Duty Schedule

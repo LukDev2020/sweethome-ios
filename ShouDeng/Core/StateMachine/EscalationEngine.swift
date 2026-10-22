@@ -394,6 +394,8 @@ final class EscalationEngine {
         case .duressPassword: methodDesc = "胁迫密码触发"
         case .fallDetection: methodDesc = "跌倒检测触发"
         case .voiceWakeWord: methodDesc = "语音触发"
+        case .audioDistress: methodDesc = "异常声音触发"
+        case .voiceCommand: methodDesc = "语音指令触发"
         }
         parts.append(methodDesc)
 
