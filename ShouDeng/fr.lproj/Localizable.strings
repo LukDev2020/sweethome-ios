@@ -182,6 +182,35 @@
 "silent.alarm.save" = "Enregistrer";
 "silent.alarm.minutes" = "%d min";
 
+/* Traqueur Bluetooth */
+"ble.tracker.title" = "Traqueur Bluetooth";
+"ble.tracker.subtitle" = "Associez des boutons ou balises BLE pour le déclenchement SOS et les alertes de séparation.";
+"ble.tracker.paired" = "Appareils associés";
+"ble.tracker.scan" = "Scanner et associer";
+"ble.tracker.scanning" = "Recherche d'appareils Bluetooth à proximité...";
+"ble.tracker.no.devices" = "Aucun appareil trouvé";
+"ble.tracker.ensure.on" = "Assurez-vous que l'appareil Bluetooth est allumé et à proximité";
+"ble.tracker.rescan" = "Rescanner";
+"ble.tracker.device.name" = "Nom de l'appareil";
+"ble.tracker.type" = "Type d'appareil";
+"ble.tracker.type.panic" = "Bouton panique";
+"ble.tracker.type.beacon" = "Alerte séparation";
+"ble.tracker.type.dual" = "Double mode";
+"ble.tracker.beacon.uuid" = "UUID iBeacon (optionnel)";
+"ble.tracker.pair" = "Associer";
+"ble.tracker.unpair.title" = "Dissocier ?";
+"ble.tracker.unpair.message" = "Cet appareil ne sera plus surveillé.";
+"ble.tracker.unpair" = "Dissocier";
+"ble.tracker.how.title" = "Comment ça marche";
+"ble.tracker.how.panic" = "Bouton panique : Appuyez pour déclencher un SOS instantané, notifiant tous les gardiens";
+"ble.tracker.how.beacon" = "Alerte séparation : Notification auto quand la balise sort de portée Bluetooth";
+"ble.tracker.how.location" = "Dernière position : Enregistre automatiquement la dernière position et l'heure de la balise";
+"ble.tracker.recommended" = "Appareils recommandés";
+"ble.tracker.devices" = "%d appareils";
+"ble.tracker.just.now" = "À l'instant";
+"ble.tracker.minutes.ago" = "Il y a %d min";
+"ble.tracker.not.detected" = "Non détecté";
+
 /* Vérification de trajet */
 "trip.destination" = "Destination (optionnel)";
 "trip.route.notes" = "Notes d'itinéraire (optionnel)";

@@ -182,6 +182,35 @@
 "silent.alarm.save" = "保存";
 "silent.alarm.minutes" = "%d 分钟";
 
+/* 蓝牙追踪器 */
+"ble.tracker.title" = "蓝牙追踪器";
+"ble.tracker.subtitle" = "配对 BLE 按钮或标签，用于紧急求助触发和分离提醒。";
+"ble.tracker.paired" = "已配对设备";
+"ble.tracker.scan" = "扫描并配对新设备";
+"ble.tracker.scanning" = "正在扫描附近的蓝牙设备...";
+"ble.tracker.no.devices" = "未发现设备";
+"ble.tracker.ensure.on" = "请确保蓝牙设备已开启且在附近";
+"ble.tracker.rescan" = "重新扫描";
+"ble.tracker.device.name" = "设备名称（如：妈妈的手环）";
+"ble.tracker.type" = "设备类型";
+"ble.tracker.type.panic" = "紧急按钮";
+"ble.tracker.type.beacon" = "分离提醒";
+"ble.tracker.type.dual" = "双模式";
+"ble.tracker.beacon.uuid" = "iBeacon UUID（可选）";
+"ble.tracker.pair" = "配对";
+"ble.tracker.unpair.title" = "取消配对？";
+"ble.tracker.unpair.message" = "取消配对后将停止监控此设备。";
+"ble.tracker.unpair" = "取消配对";
+"ble.tracker.how.title" = "使用方法";
+"ble.tracker.how.panic" = "紧急按钮模式：按下按钮立即触发 SOS，通知所有守护者";
+"ble.tracker.how.beacon" = "分离提醒模式：标签超出蓝牙范围时自动通知守护者";
+"ble.tracker.how.location" = "最后位置：自动记录标签最后出现的位置和时间";
+"ble.tracker.recommended" = "推荐设备";
+"ble.tracker.devices" = "%d 个设备";
+"ble.tracker.just.now" = "刚刚在线";
+"ble.tracker.minutes.ago" = "%d 分钟前";
+"ble.tracker.not.detected" = "未检测到";
+
 /* 行程报平安 */
 "trip.destination" = "目的地（可选）";
 "trip.route.notes" = "路线备注（可选）";

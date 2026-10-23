@@ -10,6 +10,8 @@
 		AA11BB2200001001 /* DuressCodeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB2200002001 /* DuressCodeSettingsView.swift */; };
 		AA11BB2200001002 /* SilentAlarmSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB2200002002 /* SilentAlarmSettingsView.swift */; };
 		AA11BB2200001003 /* SilentAlarmService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB2200002003 /* SilentAlarmService.swift */; };
+		AA11BB2200001004 /* BLETrackerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB2200002004 /* BLETrackerService.swift */; };
+		AA11BB2200001005 /* BLETrackerSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB2200002005 /* BLETrackerSettingsView.swift */; };
 		6381F3B161D54F6CAFF43D6A /* VoiceNoteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331DA921543B4CBF8494F9CB /* VoiceNoteService.swift */; };
 		83319C5123A244E5A04A6F69 /* MapTileCacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4164ACB441247EC971F57AE /* MapTileCacheManager.swift */; };
 		60EB257ED1324508AA9FF43D /* LocationBatchUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE1267A17B7842458F45DF8F /* LocationBatchUploader.swift */; };
@@ -337,6 +339,8 @@
 		AA11BB2200002001 /* DuressCodeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuressCodeSettingsView.swift; sourceTree = "<group>"; };
 		AA11BB2200002002 /* SilentAlarmSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilentAlarmSettingsView.swift; sourceTree = "<group>"; };
 		AA11BB2200002003 /* SilentAlarmService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilentAlarmService.swift; sourceTree = "<group>"; };
+		AA11BB2200002004 /* BLETrackerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLETrackerService.swift; sourceTree = "<group>"; };
+		AA11BB2200002005 /* BLETrackerSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLETrackerSettingsView.swift; sourceTree = "<group>"; };
 		E4164ACB441247EC971F57AE /* MapTileCacheManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapTileCacheManager.swift; sourceTree = "<group>"; };
 		AE1267A17B7842458F45DF8F /* LocationBatchUploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationBatchUploader.swift; sourceTree = "<group>"; };
 		2C31E30D854D419485218EB5 /* SOSIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SOSIntent.swift; sourceTree = "<group>"; };
@@ -462,6 +466,7 @@
 				1ABB70C9C776A4ED817980BD /* Motion */,
 				D556AA218FBB44F58BA9F1D1 /* Audio */,
 				8F486E6F44264208B0B50CDB /* Crypto */,
+				AA11BB2200003003 /* Bluetooth */,
 				AA11BB2200003002 /* Safety */,
 				A3C5016F1B235855CB5700B4 /* Network */,
 				D61FBDB5A20879AC289D362A /* Payment */,
@@ -878,8 +883,17 @@
 			children = (
 				AA11BB2200002001 /* DuressCodeSettingsView.swift */,
 				AA11BB2200002002 /* SilentAlarmSettingsView.swift */,
+				AA11BB2200002005 /* BLETrackerSettingsView.swift */,
 			);
 			path = Settings;
+			sourceTree = "<group>";
+		};
+		AA11BB2200003003 /* Bluetooth */ = {
+			isa = PBXGroup;
+			children = (
+				AA11BB2200002004 /* BLETrackerService.swift */,
+			);
+			path = Bluetooth;
 			sourceTree = "<group>";
 		};
 		AA11BB2200003002 /* Safety */ = {
@@ -1087,6 +1101,8 @@
 				AA11BB2200001001 /* DuressCodeSettingsView.swift in Sources */,
 				AA11BB2200001002 /* SilentAlarmSettingsView.swift in Sources */,
 				AA11BB2200001003 /* SilentAlarmService.swift in Sources */,
+				AA11BB2200001004 /* BLETrackerService.swift in Sources */,
+				AA11BB2200001005 /* BLETrackerSettingsView.swift in Sources */,
 				FD27D57BCFCB4A4640B7864C /* OfflineQueue.swift in Sources */,
 				647CECC1E71D0A4EF094D5C7 /* OnboardingView.swift in Sources */,
 				91B694B65DF0CB555CA4C950 /* OrgDashboardView.swift in Sources */,

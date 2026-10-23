@@ -71,6 +71,7 @@ final class AppCoordinator: ObservableObject {
     let mapTileCacheManager = MapTileCacheManager()
     let locationBatchUploader = LocationBatchUploader()
     let voiceNoteService = VoiceNoteService()
+    let bleTrackerService = BLETrackerService.shared
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -110,6 +111,21 @@ final class AppCoordinator: ObservableObject {
         // Wire silent alarm service
         SilentAlarmService.shared.configure(apiClient: apiClient)
         SilentAlarmService.registerNotificationCategory()
+
+        // Wire BLE tracker service
+        bleTrackerService.configure(
+            apiClient: apiClient,
+            onSOSTrigger: { [weak self] in
+                self?.triggerSOS(method: .bluetoothButton)
+            },
+            onSeparationAlert: { [weak self] tag in
+                self?.addTimelineEntry(type: .guardianAlert, description: "蓝牙标签「\(tag.name)」超出范围")
+                self?.notifyGuardiansOfSeparation(tagName: tag.name)
+            },
+            onReunion: { [weak self] tag in
+                self?.addTimelineEntry(type: .enteredSafeZone, description: "蓝牙标签「\(tag.name)」重新进入范围")
+            }
+        )
 
         wireServices()
         restoreLocalState()
@@ -792,6 +808,18 @@ final class AppCoordinator: ObservableObject {
             }
         }
         #endif
+    }
+
+    // MARK: - BLE Tag Separation Alert
+
+    private func notifyGuardiansOfSeparation(tagName: String) {
+        guard let userId = currentUser?.id else { return }
+        let location = locationManager.lastReportedLocation
+        apiClient.postQueued("/v1/device/ble-separation", body: BLESeparationRequest(
+            tagName: tagName,
+            latitude: location?.coordinate.latitude,
+            longitude: location?.coordinate.longitude
+        )) { _ in }
     }
 
     // MARK: - Duress Code SOS

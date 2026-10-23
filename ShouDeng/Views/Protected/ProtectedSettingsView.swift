@@ -49,6 +49,7 @@ struct ProtectedSettingsView: View {
     @State private var showClaimMaterials = false
     @State private var showDuressCode = false
     @State private var showSilentAlarm = false
+    @State private var showBLETracker = false
 
     var body: some View {
         NavigationStack {
@@ -124,6 +125,9 @@ struct ProtectedSettingsView: View {
             }
             .sheet(isPresented: $showSilentAlarm) {
                 SilentAlarmSettingsView().environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showBLETracker) {
+                BLETrackerSettingsView().environmentObject(coordinator)
             }
             .onChange(of: notifSOS) { coordinator.syncNotificationPrefs() }
             .onChange(of: notifCheckin) { coordinator.syncNotificationPrefs() }
@@ -550,6 +554,33 @@ struct ProtectedSettingsView: View {
                     Text(SilentAlarmService.shared.isEnabled ? "已启用" : "未启用")
                         .font(.scaled(size: 11))
                         .foregroundStyle(SilentAlarmService.shared.isEnabled ? safe : .secondary)
+                    Image(systemName: "chevron.right")
+                        .font(.scaled(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.vertical, 2)
+            }
+            .buttonStyle(.plain)
+
+            // BLE tracker
+            Button { showBLETracker = true } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "antenna.radiowaves.left.and.right")
+                        .font(.scaled(size: 14))
+                        .foregroundStyle(safe)
+                        .frame(width: 20)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("蓝牙追踪器")
+                            .font(.scaled(size: 13))
+                            .foregroundStyle(ink)
+                        Text("配对紧急按钮或分离提醒标签")
+                            .font(.scaled(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Text("\(BLETrackerService.shared.pairedTags.count) 个设备")
+                        .font(.scaled(size: 11))
+                        .foregroundStyle(BLETrackerService.shared.pairedTags.isEmpty ? .secondary : safe)
                     Image(systemName: "chevron.right")
                         .font(.scaled(size: 11))
                         .foregroundStyle(.secondary)

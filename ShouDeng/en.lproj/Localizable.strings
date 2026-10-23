@@ -182,6 +182,35 @@
 "silent.alarm.save" = "Save";
 "silent.alarm.minutes" = "%d min";
 
+/* BLE Tracker */
+"ble.tracker.title" = "Bluetooth Tracker";
+"ble.tracker.subtitle" = "Pair BLE buttons or tags for SOS trigger and separation alerts.";
+"ble.tracker.paired" = "Paired Devices";
+"ble.tracker.scan" = "Scan & Pair New Device";
+"ble.tracker.scanning" = "Scanning for nearby Bluetooth devices...";
+"ble.tracker.no.devices" = "No devices found";
+"ble.tracker.ensure.on" = "Make sure Bluetooth device is powered on and nearby";
+"ble.tracker.rescan" = "Rescan";
+"ble.tracker.device.name" = "Device name";
+"ble.tracker.type" = "Device Type";
+"ble.tracker.type.panic" = "Panic Button";
+"ble.tracker.type.beacon" = "Separation Alert";
+"ble.tracker.type.dual" = "Dual Mode";
+"ble.tracker.beacon.uuid" = "iBeacon UUID (optional)";
+"ble.tracker.pair" = "Pair";
+"ble.tracker.unpair.title" = "Unpair?";
+"ble.tracker.unpair.message" = "This device will no longer be monitored.";
+"ble.tracker.unpair" = "Unpair";
+"ble.tracker.how.title" = "How It Works";
+"ble.tracker.how.panic" = "Panic Button: Press button to trigger SOS instantly, notifying all guardians";
+"ble.tracker.how.beacon" = "Separation Alert: Auto-notify guardians when tag goes out of Bluetooth range";
+"ble.tracker.how.location" = "Last Location: Automatically records tag's last seen location and time";
+"ble.tracker.recommended" = "Recommended Devices";
+"ble.tracker.devices" = "%d devices";
+"ble.tracker.just.now" = "Just now";
+"ble.tracker.minutes.ago" = "%d min ago";
+"ble.tracker.not.detected" = "Not detected";
+
 /* Trip Check-In */
 "trip.destination" = "Destination (optional)";
 "trip.route.notes" = "Route notes (optional)";

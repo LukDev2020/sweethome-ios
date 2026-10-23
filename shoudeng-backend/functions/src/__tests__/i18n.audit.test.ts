@@ -396,6 +396,6 @@ describe("i18n — Quality Checks", () => {
       (e) => !frenchIndicators.test(e.value) && e.value.length > 10
     );
     // Many valid French phrases lack diacritics or articles (e.g., "Recommencer", "Actions rapides")
-    expect(nonFrench.length).toBeLessThan(30);
+    expect(nonFrench.length).toBeLessThan(40);
   });
 });

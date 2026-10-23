@@ -262,6 +262,14 @@ struct HomeTimerExpireRequest: Codable {
     let routeNotes: String?
 }
 
+// MARK: - BLE Tracker
+
+struct BLESeparationRequest: Codable {
+    let tagName: String
+    let latitude: Double?
+    let longitude: Double?
+}
+
 struct HomeTimerResponse: Codable {
     let userId: String
     let deadline: Date
