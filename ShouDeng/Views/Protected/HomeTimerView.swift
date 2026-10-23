@@ -16,11 +16,14 @@ struct HomeTimerView: View {
 
     @State private var selectedTime = Date().addingTimeInterval(3600)
     @State private var label = "回家"
+    @State private var destination = ""
+    @State private var routeNotes = ""
     @State private var isActive = false
     @State private var activeDeadline: Date?
     @State private var activeLabel: String?
     @State private var tick = Date()
     @State private var isLoading = false
+    @State private var hasEscalated = false
 
     nonisolated(unsafe) private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -41,7 +44,10 @@ struct HomeTimerView: View {
                     Button("关闭") { dismiss() }
                 }
             }
-            .onReceive(timer) { tick = $0 }
+            .onReceive(timer) { newTick in
+                tick = newTick
+                checkTimerExpiry()
+            }
             .task { await loadActiveTimer() }
         }
     }
@@ -67,6 +73,14 @@ struct HomeTimerView: View {
 
             VStack(spacing: 12) {
                 TextField("标签", text: $label)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(maxWidth: .infinity)
+
+                TextField("目的地（可选）", text: $destination)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(maxWidth: .infinity)
+
+                TextField("路线备注（可选）", text: $routeNotes)
                     .textFieldStyle(.roundedBorder)
                     .frame(maxWidth: .infinity)
 
@@ -182,6 +196,33 @@ struct HomeTimerView: View {
         }
     }
 
+    // MARK: - Expiry Check
+
+    private func checkTimerExpiry() {
+        guard isActive, let deadline = activeDeadline, !hasEscalated else { return }
+        let remaining = deadline.timeIntervalSince(tick)
+        if remaining <= 0 {
+            hasEscalated = true
+            // Auto-escalate: notify guardians via server
+            Task {
+                do {
+                    let _: SuccessResponse = try await coordinator.apiClient.post(
+                        "/v1/home-timer/expire",
+                        body: HomeTimerExpireRequest(
+                            destination: destination.isEmpty ? nil : destination,
+                            routeNotes: routeNotes.isEmpty ? nil : routeNotes
+                        )
+                    )
+                } catch {
+                    #if DEBUG
+                    print("[HomeTimer] expire escalation error: \(error)")
+                    #endif
+                }
+            }
+            coordinator.addTimelineEntry(type: .homeTimerExpired, description: "回家计时器已超时，已通知守护者")
+        }
+    }
+
     // MARK: - Actions
 
     private func startTimer() async {
@@ -196,7 +237,9 @@ struct HomeTimerView: View {
                     deadline: selectedTime,
                     label: label,
                     latitude: lastLocation?.coordinate.latitude,
-                    longitude: lastLocation?.coordinate.longitude
+                    longitude: lastLocation?.coordinate.longitude,
+                    destination: destination.isEmpty ? nil : destination,
+                    routeNotes: routeNotes.isEmpty ? nil : routeNotes
                 )
             )
         } catch {

@@ -107,6 +107,10 @@ final class AppCoordinator: ObservableObject {
         // Sync initial auth state before Combine subscription delivers asynchronously
         authState = authManager.state
 
+        // Wire silent alarm service
+        SilentAlarmService.shared.configure(apiClient: apiClient)
+        SilentAlarmService.registerNotificationCategory()
+
         wireServices()
         restoreLocalState()
         observeAuthState()
@@ -787,6 +791,16 @@ final class AppCoordinator: ObservableObject {
                 self?.sosDeliveryFailed = true
             }
         }
+        #endif
+    }
+
+    // MARK: - Duress Code SOS
+
+    func triggerDuressSOS() {
+        // Silently trigger SOS with duress method — no on-screen alerts
+        triggerSOS(method: .duressPassword)
+        #if DEBUG
+        print("[AppCoordinator] Duress code triggered — silent SOS activated")
         #endif
     }
 

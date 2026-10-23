@@ -42,6 +42,7 @@ import organizationRoutes from "./routes/organization";
 import insuranceRoutes from "./routes/insurance";
 import consulateRoutes from "./routes/consulate";
 import voiceNoteRoutes from "./routes/voiceNote";
+import silentAlarmRoutes from "./routes/silentAlarm";
 import { createRateLimiter, RATE_LIMITS } from "./middleware/rateLimit";
 
 // --- Mount Routes ---
@@ -103,6 +104,9 @@ app.use("/v1/consulate", consulateRoutes);
 
 // Phase 12: SOS Voice Notes
 app.use("/v1/sos", voiceNoteRoutes);
+
+// Phase 13: Silent Alarm (沉默即报警)
+app.use("/v1/silent-alarm", silentAlarmRoutes);
 
 // --- Voice callback for Twilio ---
 // Multi-language TwiML responses based on query param or default
@@ -193,3 +197,4 @@ export { checkCheckinOverdue } from "./scheduled/checkinOverdue";
 export { ttlCleanup } from "./scheduled/ttlCleanup";
 export { computeIntegrityProof } from "./scheduled/integrityProof";
 export { checkHomeTimerExpiry } from "./scheduled/homeTimerCheck";
+export { checkSilentAlarms } from "./scheduled/silentAlarmCheck";

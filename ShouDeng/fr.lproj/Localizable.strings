@@ -133,6 +133,59 @@
 "fall.sos.countdown" = "Le SOS sera envoyé automatiquement à la fin du compte à rebours";
 "fall.im.fine" = "Je vais bien";
 
+/* Vérification d'âge (COPPA) */
+"signup.birthdate" = "Date de naissance";
+"signup.age.restricted.title" = "Restriction d'âge";
+"signup.age.restricted.message" = "Vous devez avoir au moins 13 ans pour utiliser cette application. Un parent ou tuteur peut créer un compte en votre nom.";
+"signup.age.restricted.ok" = "OK";
+"signup.minor.parental.notice" = "Utilisateurs de moins de 18 ans : un parent ou tuteur doit être informé de votre utilisation de cette application.";
+
+/* Code de contrainte */
+"duress.title" = "Code de contrainte";
+"duress.warning" = "Si vous vous connectez avec ce code, un SOS silencieux sera déclenché sans alerte visible à l'écran.";
+"duress.new.code" = "Nouveau code";
+"duress.confirm.code" = "Confirmer le code";
+"duress.current" = "Code actuel";
+"duress.set" = "Défini";
+"duress.configured" = "Configuré";
+"duress.not.configured" = "Non défini";
+"duress.change" = "Modifier le code";
+"duress.remove" = "Supprimer le code";
+"duress.remove.confirm.title" = "Supprimer le code de contrainte ?";
+"duress.remove.confirm.message" = "Vous ne pourrez plus déclencher un SOS silencieux en entrant ce code à la connexion.";
+"duress.remove.confirm" = "Supprimer";
+"duress.how.title" = "Comment ça marche";
+"duress.how.step1" = "Définissez un code secret différent de votre code de vérification";
+"duress.how.step2" = "Si vous êtes forcé de déverrouiller votre téléphone, entrez ce code";
+"duress.how.step3" = "L'application semblera se connecter normalement";
+"duress.how.step4" = "Un SOS silencieux est envoyé à tous vos gardiens en arrière-plan";
+"duress.error.mismatch" = "Les codes ne correspondent pas";
+"duress.error.empty" = "Veuillez entrer un code";
+"duress.save.success" = "Code de contrainte enregistré";
+
+/* Alarme silencieuse */
+"silent.alarm.title" = "Alarme silencieuse";
+"silent.alarm.subtitle" = "Vérifications programmées — si vous en manquez trop, vos gardiens sont alertés automatiquement.";
+"silent.alarm.enabled" = "Activée";
+"silent.alarm.not.enabled" = "Non activée";
+"silent.alarm.toggle" = "Activer l'alarme silencieuse";
+"silent.alarm.times" = "Heures de vérification";
+"silent.alarm.add.time" = "Ajouter une heure";
+"silent.alarm.window" = "Fenêtre de confirmation";
+"silent.alarm.window.desc" = "Temps accordé pour confirmer après la notification";
+"silent.alarm.grace" = "Période de grâce";
+"silent.alarm.grace.desc" = "Absences consécutives avant escalade";
+"silent.alarm.miss" = "absence";
+"silent.alarm.misses" = "absences";
+"silent.alarm.escalation.title" = "Que se passe-t-il lors de l'escalade ?";
+"silent.alarm.escalation.desc" = "Après la période de grâce, vos gardiens recevront une notification d'urgence avec votre dernière position connue.";
+"silent.alarm.save" = "Enregistrer";
+"silent.alarm.minutes" = "%d min";
+
+/* Vérification de trajet */
+"trip.destination" = "Destination (optionnel)";
+"trip.route.notes" = "Notes d'itinéraire (optionnel)";
+
 /* Reference-Only Disclaimers */
-"disclaimer.reference.only" = "A titre indicatif uniquement — verifiez aupres de professionnels";
+"disclaimer.reference.only" = "À titre indicatif uniquement — vérifiez auprès de professionnels";
 "disclaimer.not.emergency.service" = "Cette application notifie votre famille. Elle ne remplace pas les services d'urgence.";

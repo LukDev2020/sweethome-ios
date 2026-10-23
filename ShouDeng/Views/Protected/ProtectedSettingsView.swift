@@ -47,6 +47,8 @@ struct ProtectedSettingsView: View {
     @State private var showEmergencyText = false
     @State private var showConsulate = false
     @State private var showClaimMaterials = false
+    @State private var showDuressCode = false
+    @State private var showSilentAlarm = false
 
     var body: some View {
         NavigationStack {
@@ -116,6 +118,12 @@ struct ProtectedSettingsView: View {
             }
             .sheet(isPresented: $showClaimMaterials) {
                 ClaimMaterialsView().environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showDuressCode) {
+                DuressCodeSettingsView().environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showSilentAlarm) {
+                SilentAlarmSettingsView().environmentObject(coordinator)
             }
             .onChange(of: notifSOS) { coordinator.syncNotificationPrefs() }
             .onChange(of: notifCheckin) { coordinator.syncNotificationPrefs() }
@@ -493,6 +501,62 @@ struct ProtectedSettingsView: View {
                 }
                 .padding(.vertical, 2)
             }
+
+            Divider().padding(.vertical, 4)
+
+            // Duress code
+            Button { showDuressCode = true } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.shield.fill")
+                        .font(.scaled(size: 14))
+                        .foregroundStyle(.orange)
+                        .frame(width: 20)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("胁迫密码")
+                            .font(.scaled(size: 13))
+                            .foregroundStyle(ink)
+                        Text("被迫解锁时静默触发求助")
+                            .font(.scaled(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Text(KeychainHelper.shared.read(.duressCode) != nil ? "已设置" : "未设置")
+                        .font(.scaled(size: 11))
+                        .foregroundStyle(KeychainHelper.shared.read(.duressCode) != nil ? safe : .secondary)
+                    Image(systemName: "chevron.right")
+                        .font(.scaled(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.vertical, 2)
+            }
+            .buttonStyle(.plain)
+
+            // Silent alarm
+            Button { showSilentAlarm = true } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "bell.slash.fill")
+                        .font(.scaled(size: 14))
+                        .foregroundStyle(.orange)
+                        .frame(width: 20)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("沉默报警")
+                            .font(.scaled(size: 13))
+                            .foregroundStyle(ink)
+                        Text("定时确认安全，未确认自动通知")
+                            .font(.scaled(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Text(SilentAlarmService.shared.isEnabled ? "已启用" : "未启用")
+                        .font(.scaled(size: 11))
+                        .foregroundStyle(SilentAlarmService.shared.isEnabled ? safe : .secondary)
+                    Image(systemName: "chevron.right")
+                        .font(.scaled(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.vertical, 2)
+            }
+            .buttonStyle(.plain)
         }
         .padding(12)
         .background(

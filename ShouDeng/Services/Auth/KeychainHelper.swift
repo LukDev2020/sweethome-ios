@@ -20,6 +20,7 @@ final class KeychainHelper {
         case refreshToken
         case userId
         case deviceSecret
+        case duressCode
     }
 
     // MARK: - CRUD
@@ -63,7 +64,7 @@ final class KeychainHelper {
     }
 
     func deleteAll() {
-        for key in [Key.accessToken, .refreshToken, .userId, .deviceSecret] {
+        for key in [Key.accessToken, .refreshToken, .userId, .deviceSecret, .duressCode] {
             delete(key)
         }
     }

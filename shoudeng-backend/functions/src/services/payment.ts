@@ -21,7 +21,7 @@ if (APPLE_APP_ID === 0 && process.env.FUNCTIONS_EMULATOR !== "true" && !process.
 // Load Apple Root CA certificates (DER-encoded) for JWS signature verification.
 // Downloaded from https://www.apple.com/certificateauthority/
 function loadAppleRootCerts(): Buffer[] {
-  const certsDir = path.join(__dirname, "..", "certs");
+  const certsDir = path.join(__dirname, "..", "..", "certs");
   const certFiles = [
     "AppleIncRootCertificate.cer",
     "AppleRootCA-G2.cer",

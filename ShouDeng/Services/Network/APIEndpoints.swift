@@ -253,6 +253,13 @@ struct HomeTimerRequest: Codable {
     let label: String?
     let latitude: Double?
     let longitude: Double?
+    let destination: String?
+    let routeNotes: String?
+}
+
+struct HomeTimerExpireRequest: Codable {
+    let destination: String?
+    let routeNotes: String?
 }
 
 struct HomeTimerResponse: Codable {

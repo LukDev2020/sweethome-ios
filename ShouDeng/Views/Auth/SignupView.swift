@@ -39,6 +39,8 @@ struct SignupView: View {
     @State private var showCountryPicker = false
     @State private var failedAttempts = 0
     @State private var isLocked = false
+    @State private var birthdate = Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
+    @State private var showAgeRestricted = false
 
     private enum Field { case phone, code, name }
     @FocusState private var focusedField: Field?
@@ -134,7 +136,16 @@ struct SignupView: View {
             .onDisappear {
                 countdownTimer?.invalidate()
             }
+            .alert(lang.localized("signup.age.restricted.title"), isPresented: $showAgeRestricted) {
+                Button(lang.localized("signup.age.restricted.ok")) { }
+            } message: {
+                Text(lang.localized("signup.age.restricted.message"))
+            }
         }
+    }
+
+    private var userAge: Int {
+        Calendar.current.dateComponents([.year], from: birthdate, to: Date()).year ?? 0
     }
 
     // MARK: - Locked View
@@ -248,6 +259,31 @@ struct SignupView: View {
                     )
 
                 VStack(alignment: .leading, spacing: 8) {
+                    Text(lang.localized("signup.birthdate"))
+                        .font(.scaled(size: 13))
+                        .foregroundStyle(.secondary)
+                    DatePicker("", selection: $birthdate, in: ...Date(), displayedComponents: .date)
+                        .datePickerStyle(.compact)
+                        .labelsHidden()
+                }
+
+                if userAge >= 13 && userAge < 18 {
+                    HStack(spacing: 6) {
+                        Image(systemName: "info.circle.fill")
+                            .foregroundStyle(lamp)
+                            .font(.scaled(size: 14))
+                        Text(lang.localized("signup.minor.parental.notice"))
+                            .font(.scaled(size: 12))
+                            .foregroundStyle(ink2)
+                    }
+                    .padding(10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(lamp.opacity(0.08))
+                    )
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
                     Text(lang.localized("signup.role.title"))
                         .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
@@ -333,6 +369,16 @@ struct SignupView: View {
                 UserDefaults.standard.set(0, forKey: failedAttemptsKey)
                 step = .profile
             case .profile:
+                if userAge < 13 {
+                    showAgeRestricted = true
+                    return
+                }
+                ConsentLogger.shared.log(
+                    userId: "pre-signup",
+                    item: "coppa.age_verification",
+                    copyVersion: "v1.0",
+                    action: userAge < 18 ? "minor_acknowledged" : "adult_verified"
+                )
                 try await coordinator.authManager.signup(
                     displayName: displayName,
                     role: selectedRole.rawValue,

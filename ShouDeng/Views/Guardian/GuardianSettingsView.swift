@@ -33,6 +33,7 @@ struct GuardianSettingsView: View {
     @State private var showConsulate = false
     @State private var showOrgDashboard = false
     @State private var showInsuranceReport = false
+    @State private var showDuressCode = false
 
     @AppStorage("notif_sos_alerts") private var notifSOS = true
     @AppStorage("notif_checkin_overdue") private var notifCheckinOverdue = true
@@ -110,6 +111,9 @@ struct GuardianSettingsView: View {
             }
             .sheet(isPresented: $showInsuranceReport) {
                 ClaimMaterialsView().environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showDuressCode) {
+                DuressCodeSettingsView().environmentObject(coordinator)
             }
             .onChange(of: notifSOS) { coordinator.syncNotificationPrefs() }
             .onChange(of: notifCheckinOverdue) { coordinator.syncNotificationPrefs() }
@@ -489,6 +493,35 @@ struct GuardianSettingsView: View {
                 }
                 .padding(.vertical, 2)
             }
+
+            Divider().padding(.vertical, 4)
+
+            // Duress code
+            Button { showDuressCode = true } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.shield.fill")
+                        .font(.scaled(size: 14))
+                        .foregroundStyle(.orange)
+                        .frame(width: 20)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("胁迫密码")
+                            .font(.scaled(size: 13))
+                            .foregroundStyle(ink)
+                        Text("被迫解锁时静默触发求助")
+                            .font(.scaled(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Text(KeychainHelper.shared.read(.duressCode) != nil ? "已设置" : "未设置")
+                        .font(.scaled(size: 11))
+                        .foregroundStyle(KeychainHelper.shared.read(.duressCode) != nil ? safe : .secondary)
+                    Image(systemName: "chevron.right")
+                        .font(.scaled(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.vertical, 2)
+            }
+            .buttonStyle(.plain)
         }
         .padding(12)
         .background(

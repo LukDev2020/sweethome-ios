@@ -228,12 +228,10 @@ describe("Firestore Rules — Collections Without Explicit Rules", () => {
   const unruled = [
     "checkins",
     "home_timers",
-    "medical_cards",
     "selected_hotlines",
     "arrival_reports",
     "itineraries",
     "evidence_shares",
-    "medical_card_shares",
     "rate_limits",
     "claim_material_exports",
   ];

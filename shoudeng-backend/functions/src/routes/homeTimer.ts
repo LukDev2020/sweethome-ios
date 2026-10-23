@@ -14,7 +14,7 @@ router.use(authMiddleware);
  */
 router.post("/", async (req: Request, res: Response) => {
   const uid = req.uid!;
-  const { deadline, label, latitude, longitude } = req.body;
+  const { deadline, label, latitude, longitude, destination, routeNotes } = req.body;
 
   if (!deadline) {
     res.status(400).json({ error: "deadline is required (ISO 8601)" });
@@ -37,6 +37,8 @@ router.post("/", async (req: Request, res: Response) => {
       label: label || "回家",
       latitude: latitude || null,
       longitude: longitude || null,
+      destination: destination || null,
+      routeNotes: routeNotes || null,
       status: "active",
       createdAt: now,
       dismissedAt: null,
@@ -155,6 +157,81 @@ router.post("/dismiss", async (req: Request, res: Response) => {
     }
     console.error("[HomeTimer] dismiss error:", error);
     res.status(500).json({ error: "Failed to dismiss timer" });
+  }
+});
+
+/**
+ * POST /v1/home-timer/expire
+ * Client-side escalation: timer expired, notify guardians with trip context.
+ */
+router.post("/expire", async (req: Request, res: Response) => {
+  const uid = req.uid!;
+  const { destination, routeNotes } = req.body;
+
+  try {
+    const timerRef = db.collection("home_timers").doc(uid);
+    const timerDoc = await timerRef.get();
+    if (!timerDoc.exists || timerDoc.data()!.status !== "active") {
+      res.status(404).json({ error: "No active timer" });
+      return;
+    }
+
+    const now = admin.firestore.Timestamp.now();
+    await timerRef.update({
+      status: "expired",
+      escalatedAt: now,
+    });
+
+    // Add timeline entry
+    await db.collection("timeline_entries").add({
+      userId: uid,
+      timestamp: now,
+      type: "homeTimerExpired",
+      description: "回家计时器已超时",
+      detail: destination || null,
+    });
+
+    // Notify all guardians
+    const linksSnapshot = await db
+      .collection("guardian_links")
+      .where("protectedPersonId", "==", uid)
+      .where("status", "==", "active")
+      .get();
+
+    const userDoc = await db.collection("users").doc(uid).get();
+    const userName = userDoc.exists ? userDoc.data()!.displayName : "被守护者";
+    const timerData = timerDoc.data()!;
+
+    let body = `${userName}的回家计时器已超时`;
+    if (destination) body += `\n目的地：${destination}`;
+    if (routeNotes) body += `\n路线：${routeNotes}`;
+
+    for (const linkDoc of linksSnapshot.docs) {
+      const guardianId = linkDoc.data().guardianId;
+      const tokens = await getTokensForUser(guardianId);
+      if (tokens.length > 0) {
+        await admin.messaging().sendEachForMulticast({
+          tokens,
+          notification: {
+            title: "回家计时器超时",
+            body,
+          },
+          data: {
+            action: "home_timer_expired",
+            protectedPersonId: uid,
+            destination: destination || "",
+            routeNotes: routeNotes || "",
+            lastLatitude: String(timerData.latitude || ""),
+            lastLongitude: String(timerData.longitude || ""),
+          },
+        });
+      }
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("[HomeTimer] expire error:", error);
+    res.status(500).json({ error: "Failed to expire timer" });
   }
 });
 

@@ -133,6 +133,59 @@
 "fall.sos.countdown" = "SOS will be sent automatically when countdown ends";
 "fall.im.fine" = "I'm Fine";
 
+/* Age Verification (COPPA) */
+"signup.birthdate" = "Date of birth";
+"signup.age.restricted.title" = "Age Restriction";
+"signup.age.restricted.message" = "You must be at least 13 years old to use this app. A parent or guardian may create an account on your behalf.";
+"signup.age.restricted.ok" = "OK";
+"signup.minor.parental.notice" = "Users under 18: a parent or guardian should be aware of your use of this app.";
+
+/* Duress Code */
+"duress.title" = "Duress Code";
+"duress.warning" = "If you log in with this code, a silent SOS will be triggered without any visible alert on screen.";
+"duress.new.code" = "New Duress Code";
+"duress.confirm.code" = "Confirm Code";
+"duress.current" = "Current Duress Code";
+"duress.set" = "Set";
+"duress.configured" = "Configured";
+"duress.not.configured" = "Not Set";
+"duress.change" = "Change Code";
+"duress.remove" = "Remove Code";
+"duress.remove.confirm.title" = "Remove Duress Code?";
+"duress.remove.confirm.message" = "You will no longer be able to trigger a silent SOS by entering this code at login.";
+"duress.remove.confirm" = "Remove";
+"duress.how.title" = "How It Works";
+"duress.how.step1" = "Set a secret code different from your login verification code";
+"duress.how.step2" = "If forced to unlock your phone, enter this code instead";
+"duress.how.step3" = "The app will appear to log in normally";
+"duress.how.step4" = "A silent SOS is sent to all your guardians in the background";
+"duress.error.mismatch" = "Codes do not match";
+"duress.error.empty" = "Please enter a code";
+"duress.save.success" = "Duress code saved";
+
+/* Silent Alarm */
+"silent.alarm.title" = "Silent Alarm";
+"silent.alarm.subtitle" = "Scheduled check-ins — if you miss enough, guardians are alerted automatically.";
+"silent.alarm.enabled" = "Enabled";
+"silent.alarm.not.enabled" = "Not Enabled";
+"silent.alarm.toggle" = "Enable Silent Alarm";
+"silent.alarm.times" = "Check-In Times";
+"silent.alarm.add.time" = "Add Time";
+"silent.alarm.window" = "Confirm Window";
+"silent.alarm.window.desc" = "Time allowed to confirm after notification";
+"silent.alarm.grace" = "Grace Period";
+"silent.alarm.grace.desc" = "Consecutive misses before escalation";
+"silent.alarm.miss" = "miss";
+"silent.alarm.misses" = "misses";
+"silent.alarm.escalation.title" = "What happens on escalation?";
+"silent.alarm.escalation.desc" = "After the grace period, your guardians will receive an emergency notification with your last known location.";
+"silent.alarm.save" = "Save";
+"silent.alarm.minutes" = "%d min";
+
+/* Trip Check-In */
+"trip.destination" = "Destination (optional)";
+"trip.route.notes" = "Route notes (optional)";
+
 /* Reference-Only Disclaimers */
 "disclaimer.reference.only" = "For reference only — verify with professionals";
 "disclaimer.not.emergency.service" = "This app notifies your family. It does not replace emergency services.";

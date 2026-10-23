@@ -133,6 +133,59 @@
 "fall.sos.countdown" = "倒计时结束后将自动发送 SOS";
 "fall.im.fine" = "我没事";
 
+/* 年龄验证 (COPPA) */
+"signup.birthdate" = "出生日期";
+"signup.age.restricted.title" = "年龄限制";
+"signup.age.restricted.message" = "你必须年满 13 岁才能使用本应用。家长或监护人可代为创建账户。";
+"signup.age.restricted.ok" = "好的";
+"signup.minor.parental.notice" = "未满 18 岁用户：请确保家长或监护人知晓你对本应用的使用。";
+
+/* 胁迫密码 */
+"duress.title" = "胁迫密码";
+"duress.warning" = "如果使用此密码登录，系统将在后台静默触发 SOS，屏幕上不会显示任何警报。";
+"duress.new.code" = "新胁迫密码";
+"duress.confirm.code" = "确认密码";
+"duress.current" = "当前胁迫密码";
+"duress.set" = "已设置";
+"duress.configured" = "已设置";
+"duress.not.configured" = "未设置";
+"duress.change" = "修改密码";
+"duress.remove" = "删除密码";
+"duress.remove.confirm.title" = "删除胁迫密码？";
+"duress.remove.confirm.message" = "删除后将无法通过输入此密码在登录时触发静默 SOS。";
+"duress.remove.confirm" = "删除";
+"duress.how.title" = "使用方法";
+"duress.how.step1" = "设置一个不同于登录验证码的秘密密码";
+"duress.how.step2" = "如果被迫解锁手机，输入此密码代替正常验证码";
+"duress.how.step3" = "应用将表现为正常登录";
+"duress.how.step4" = "系统会在后台静默向所有守护者发送 SOS";
+"duress.error.mismatch" = "两次输入的密码不一致";
+"duress.error.empty" = "请输入密码";
+"duress.save.success" = "胁迫密码已保存";
+
+/* 沉默即报警 */
+"silent.alarm.title" = "沉默即报警";
+"silent.alarm.subtitle" = "定时签到 — 如果连续错过签到，系统将自动通知守护者。";
+"silent.alarm.enabled" = "已启用";
+"silent.alarm.not.enabled" = "未启用";
+"silent.alarm.toggle" = "启用沉默即报警";
+"silent.alarm.times" = "签到时间";
+"silent.alarm.add.time" = "添加时间";
+"silent.alarm.window" = "确认窗口";
+"silent.alarm.window.desc" = "收到通知后允许确认的时间";
+"silent.alarm.grace" = "容错次数";
+"silent.alarm.grace.desc" = "触发报警前允许连续错过的次数";
+"silent.alarm.miss" = "次";
+"silent.alarm.misses" = "次";
+"silent.alarm.escalation.title" = "触发报警后会怎样？";
+"silent.alarm.escalation.desc" = "超过容错次数后，你的守护者将收到紧急通知，附带你的最后已知位置。";
+"silent.alarm.save" = "保存";
+"silent.alarm.minutes" = "%d 分钟";
+
+/* 行程报平安 */
+"trip.destination" = "目的地（可选）";
+"trip.route.notes" = "路线备注（可选）";
+
 /* 仅供参考声明 */
 "disclaimer.reference.only" = "仅供参考，请向专业人士确认";
 "disclaimer.not.emergency.service" = "本应用通知你的家人，不能替代紧急救援服务。";

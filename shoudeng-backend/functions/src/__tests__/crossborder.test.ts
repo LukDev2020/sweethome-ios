@@ -154,12 +154,12 @@ describe("Cross-Border — SMS Delivery for +86", () => {
     expect(smsSource).not.toMatch(/provider.*select|smsProvider|gateway/i);
   });
 
-  it("FINDING F-002: SMS templates are Chinese-only (no locale routing)", () => {
+  it("FIXED F-002: SMS templates have locale routing", () => {
     expect(smsSource).toContain("守灯紧急通知");
     expect(smsSource).toContain("守灯提醒");
     expect(smsSource).toContain("守灯");
-    // No locale parameter or language selection
-    expect(smsSource).not.toMatch(/locale|language|i18n|getLocale/i);
+    // Locale routing has been added
+    expect(smsSource).toMatch(/locale|getLocale/i);
   });
 });
 
@@ -174,13 +174,13 @@ describe("Cross-Border — FCM/APNs Pathway", () => {
     expect(fcmSource).toContain("heartbeat_wake");
   });
 
-  it("FINDING F-001: All FCM notification bodies are Chinese-only", () => {
+  it("FIXED F-001: FCM notification bodies have locale routing", () => {
     expect(fcmSource).toContain("紧急求助");
     expect(fcmSource).toContain("报平安提醒");
     expect(fcmSource).toContain("设备离线提醒");
     expect(fcmSource).toContain("守护者已接手");
-    // No locale routing
-    expect(fcmSource).not.toMatch(/locale|language|i18n|getLocale|userLocale/i);
+    // Locale routing has been added
+    expect(fcmSource).toMatch(/locale|getLocale|userLocale/i);
   });
 
   it("SOS alert uses critical interruption level", () => {
