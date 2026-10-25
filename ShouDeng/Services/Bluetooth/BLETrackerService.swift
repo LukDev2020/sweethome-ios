@@ -115,6 +115,7 @@ final class BLETrackerService: NSObject, ObservableObject {
         self.onSeparationAlert = onSeparationAlert
         self.onReunion = onReunion
 
+        #if !targetEnvironment(simulator)
         centralManager = CBCentralManager(delegate: self, queue: .global(qos: .utility), options: [
             CBCentralManagerOptionRestoreIdentifierKey: "com.shoudeng.ble-tracker"
         ])
@@ -129,6 +130,7 @@ final class BLETrackerService: NSObject, ObservableObject {
                 startBeaconMonitoring(uuid: beaconUUID, major: tag.beaconMajor, minor: tag.beaconMinor, tagId: tag.id)
             }
         }
+        #endif
     }
 
     // MARK: - Scanning for New Devices

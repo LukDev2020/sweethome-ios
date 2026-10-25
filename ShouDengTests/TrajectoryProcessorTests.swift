@@ -262,11 +262,11 @@ final class TrajectoryProcessorTests: XCTestCase {
     // MARK: - Transport Mode
 
     func testTransportModeRawValues() {
-        XCTAssertEqual(TrajectoryProcessor.TransportMode.walking.rawValue, "步行")
-        XCTAssertEqual(TrajectoryProcessor.TransportMode.cycling.rawValue, "骑行")
-        XCTAssertEqual(TrajectoryProcessor.TransportMode.driving.rawValue, "车辆")
-        XCTAssertEqual(TrajectoryProcessor.TransportMode.flying.rawValue, "飞行")
-        XCTAssertEqual(TrajectoryProcessor.TransportMode.stationary.rawValue, "停留")
+        XCTAssertEqual(TrajectoryProcessor.TransportMode.walking.rawValue, "walking")
+        XCTAssertEqual(TrajectoryProcessor.TransportMode.cycling.rawValue, "cycling")
+        XCTAssertEqual(TrajectoryProcessor.TransportMode.driving.rawValue, "driving")
+        XCTAssertEqual(TrajectoryProcessor.TransportMode.flying.rawValue, "flying")
+        XCTAssertEqual(TrajectoryProcessor.TransportMode.stationary.rawValue, "stationary")
     }
 
     // MARK: - Full Pipeline
