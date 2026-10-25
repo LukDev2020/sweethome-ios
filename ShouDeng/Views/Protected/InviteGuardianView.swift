@@ -8,6 +8,7 @@ import SwiftUI
 
 struct InviteGuardianView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var langManager = LanguageManager.shared
     @Environment(\.dismiss) var dismiss
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
@@ -27,9 +28,9 @@ struct InviteGuardianView: View {
                         Image(systemName: "person.badge.plus")
                             .font(.scaled(size: 36))
                             .foregroundStyle(safe)
-                        Text("邀请守护者")
+                        Text(langManager.localized("invite.title"))
                             .font(.scaled(size: 20, weight: .bold))
-                        Text("生成邀请码，发送给你的家人或朋友")
+                        Text(langManager.localized("invite.subtitle"))
                             .font(.scaled(size: 13))
                             .foregroundStyle(.secondary)
                     }
@@ -43,7 +44,7 @@ struct InviteGuardianView: View {
                         ShareLink(item: shareText(code: code)) {
                             HStack {
                                 Image(systemName: "square.and.arrow.up")
-                                Text("分享邀请码")
+                                Text(langManager.localized("invite.share"))
                             }
                             .font(.scaled(size: 15, weight: .medium))
                             .foregroundStyle(.white)
@@ -55,7 +56,7 @@ struct InviteGuardianView: View {
 
                         // Expiry note
                         if let expires = expiresAt {
-                            Text("邀请码 24 小时内有效（截止 \(formatExpiry(expires))）")
+                            Text(String(format: langManager.localized("invite.expiryNote"), formatExpiry(expires)))
                                 .font(.scaled(size: 11))
                                 .foregroundStyle(.secondary)
                         }
@@ -74,7 +75,7 @@ struct InviteGuardianView: View {
                                 } else {
                                     Image(systemName: "key.fill")
                                 }
-                                Text("生成邀请码")
+                                Text(langManager.localized("invite.generate"))
                             }
                             .font(.scaled(size: 15, weight: .medium))
                             .foregroundStyle(.white)
@@ -98,11 +99,11 @@ struct InviteGuardianView: View {
                 .padding(.horizontal, 16)
             }
             .background(Color(.systemBackground))
-            .navigationTitle("邀请守护者")
+            .navigationTitle(langManager.localized("invite.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("完成") { dismiss() }
+                    Button(langManager.localized("invite.done")) { dismiss() }
                 }
             }
         }
@@ -112,7 +113,7 @@ struct InviteGuardianView: View {
 
     private func codeCard(_ code: String) -> some View {
         VStack(spacing: 8) {
-            Text("邀请码")
+            Text(langManager.localized("invite.codeLabel"))
                 .font(.scaled(size: 11))
                 .foregroundStyle(.secondary)
             HStack(spacing: 8) {
@@ -131,7 +132,7 @@ struct InviteGuardianView: View {
             } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "doc.on.doc")
-                    Text("复制")
+                    Text(langManager.localized("invite.copy"))
                 }
                 .font(.scaled(size: 12))
                 .foregroundStyle(safe)
@@ -150,12 +151,12 @@ struct InviteGuardianView: View {
 
     private var instructionsPanel: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("如何使用")
+            Text(langManager.localized("invite.howToUse"))
                 .font(.scaled(size: 11))
                 .foregroundStyle(.secondary)
-            instructionRow("1", text: "将邀请码发送给你信任的家人或朋友")
-            instructionRow("2", text: "对方在「守灯」App 中输入邀请码")
-            instructionRow("3", text: "关系建立后，你可以随时调整权限或移除")
+            instructionRow("1", text: langManager.localized("invite.step1"))
+            instructionRow("2", text: langManager.localized("invite.step2"))
+            instructionRow("3", text: langManager.localized("invite.step3"))
         }
         .padding(12)
         .background(
@@ -201,8 +202,8 @@ struct InviteGuardianView: View {
     }
 
     private func shareText(code: String) -> String {
-        let name = coordinator.currentUser?.displayName ?? "我"
-        return "\(name)邀请你成为守灯守护者。请在「守灯」App 中输入邀请码：\(code)（24小时内有效）"
+        let name = coordinator.currentUser?.displayName ?? langManager.localized("invite.me")
+        return String(format: langManager.localized("invite.shareText"), name, code)
     }
 
     private func formatExpiry(_ isoString: String) -> String {

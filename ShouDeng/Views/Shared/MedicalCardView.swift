@@ -8,6 +8,7 @@ import SwiftUI
 
 struct MedicalCardView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var langManager = LanguageManager.shared
     @Environment(\.dismiss) private var dismiss
 
     /// Optional target user ID — when a guardian edits a protected person's card
@@ -42,9 +43,9 @@ struct MedicalCardView: View {
 
     private var navTitle: String {
         if let name = targetUserName {
-            return "\(name)的医疗卡"
+            return String(format: langManager.localized("medical.titleForUser"), name)
         }
-        return "紧急医疗卡"
+        return langManager.localized("medical.title")
     }
 
     private let bloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
@@ -64,7 +65,7 @@ struct MedicalCardView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("关闭") { dismiss() }
+                    Button(langManager.localized("medical.close")) { dismiss() }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -73,7 +74,7 @@ struct MedicalCardView: View {
                         if isSaving {
                             ProgressView()
                         } else {
-                            Text("保存").bold()
+                            Text(langManager.localized("medical.save")).bold()
                         }
                     }
                     .disabled(isSaving)
@@ -89,7 +90,7 @@ struct MedicalCardView: View {
                         case .success:
                             Image(systemName: "checkmark.circle.fill")
                                 .foregroundStyle(.green)
-                            Text("已保存")
+                            Text(langManager.localized("medical.saved"))
                         case .failure(let msg):
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .foregroundStyle(.orange)
@@ -116,7 +117,7 @@ struct MedicalCardView: View {
                 Button { showPreview = true } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "eye.fill")
-                        Text("预览急救卡")
+                        Text(langManager.localized("medical.preview"))
                             .font(.scaled(size: 14, weight: .medium))
                     }
                     .foregroundStyle(safe)
@@ -127,12 +128,12 @@ struct MedicalCardView: View {
                 }
 
                 // Blood Type
-                section(title: "血型") {
-                    Picker("血型", selection: Binding(
+                section(title: langManager.localized("medical.bloodType")) {
+                    Picker(langManager.localized("medical.bloodType"), selection: Binding(
                         get: { card.bloodType ?? "" },
                         set: { card.bloodType = $0.isEmpty ? nil : $0 }
                     )) {
-                        Text("未设置").tag("")
+                        Text(langManager.localized("medical.notSet")).tag("")
                         ForEach(bloodTypes, id: \.self) { type in
                             Text(type).tag(type)
                         }
@@ -141,9 +142,9 @@ struct MedicalCardView: View {
                 }
 
                 // Allergies
-                section(title: "过敏史") {
+                section(title: langManager.localized("medical.allergies")) {
                     tagList(items: card.allergies) { card.allergies.remove(at: $0) }
-                    addField(text: $newAllergy, placeholder: "添加过敏原 (如 青霉素)") {
+                    addField(text: $newAllergy, placeholder: langManager.localized("medical.addAllergy")) {
                         card.allergies.append(newAllergy)
                         newAllergy = ""
                     }
@@ -153,23 +154,23 @@ struct MedicalCardView: View {
                 medicationItemsSection
 
                 // Conditions
-                section(title: "既往病史") {
+                section(title: langManager.localized("medical.conditions")) {
                     tagList(items: card.conditions) { card.conditions.remove(at: $0) }
-                    addField(text: $newCondition, placeholder: "添加病史 (如 哮喘)") {
+                    addField(text: $newCondition, placeholder: langManager.localized("medical.addCondition")) {
                         card.conditions.append(newCondition)
                         newCondition = ""
                     }
                 }
 
                 // Insurance
-                section(title: "保险信息") {
-                    TextField("保险公司", text: Binding(
+                section(title: langManager.localized("medical.insurance")) {
+                    TextField(langManager.localized("medical.insuranceProvider"), text: Binding(
                         get: { card.insuranceProvider ?? "" },
                         set: { card.insuranceProvider = $0.isEmpty ? nil : $0 }
                     ))
                     .textFieldStyle(.roundedBorder)
 
-                    TextField("保单号", text: Binding(
+                    TextField(langManager.localized("medical.policyNumber"), text: Binding(
                         get: { card.insurancePolicyNumber ?? "" },
                         set: { card.insurancePolicyNumber = $0.isEmpty ? nil : $0 }
                     ))
@@ -177,8 +178,8 @@ struct MedicalCardView: View {
                 }
 
                 // Emergency Note
-                section(title: "紧急备注") {
-                    TextField("其他重要信息", text: Binding(
+                section(title: langManager.localized("medical.emergencyNote")) {
+                    TextField(langManager.localized("medical.otherInfo"), text: Binding(
                         get: { card.emergencyNote ?? "" },
                         set: { card.emergencyNote = $0.isEmpty ? nil : $0 }
                     ))
@@ -186,12 +187,12 @@ struct MedicalCardView: View {
                 }
 
                 // Organ Donor
-                section(title: "其他") {
-                    Toggle("器官捐献意愿", isOn: $card.organDonor)
+                section(title: langManager.localized("medical.other")) {
+                    Toggle(langManager.localized("medical.organDonor"), isOn: $card.organDonor)
                         .tint(safe)
                 }
 
-                Text("此信息存储在服务器，可通过紧急分享链接供急救人员查看。不需要解锁手机。")
+                Text(langManager.localized("medical.storageNote"))
                     .font(.scaled(size: 12))
                     .foregroundStyle(.secondary.opacity(0.7))
                     .padding(.top, 8)
@@ -212,11 +213,11 @@ struct MedicalCardView: View {
     private var medicationItemsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("药品管理")
+                Text(langManager.localized("medical.medicationMgmt"))
                     .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
                 Spacer()
-                Text("标记为急救的药品将显示在锁屏")
+                Text(langManager.localized("medical.emergencyMedNote"))
                     .font(.scaled(size: 10))
                     .foregroundStyle(.tertiary)
             }
@@ -234,7 +235,7 @@ struct MedicalCardView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "plus.circle.fill")
                         .font(.scaled(size: 14))
-                    Text("添加药品")
+                    Text(langManager.localized("medical.addMedication"))
                         .font(.scaled(size: 13, weight: .medium))
                 }
                 .foregroundStyle(safe)
@@ -243,12 +244,12 @@ struct MedicalCardView: View {
                 .background(safe.opacity(0.08))
                 .clipShape(RoundedRectangle(cornerRadius: 10))
             }
-            .accessibilityLabel("添加")
+            .accessibilityLabel(langManager.localized("medical.add"))
 
             // Legacy medications migration hint
             if !card.medications.isEmpty && card.medicationItems.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("旧版药物记录")
+                    Text(langManager.localized("medical.legacyMeds"))
                         .font(.scaled(size: 11))
                         .foregroundStyle(.secondary)
                     ForEach(card.medications, id: \.self) { med in
@@ -256,7 +257,7 @@ struct MedicalCardView: View {
                             .font(.scaled(size: 12))
                             .foregroundStyle(.secondary)
                     }
-                    Button("转换为新格式") {
+                    Button(langManager.localized("medical.convertFormat")) {
                         for med in card.medications {
                             card.medicationItems.append(MedicationItem(name: med))
                         }
@@ -285,7 +286,7 @@ struct MedicalCardView: View {
                     .font(.scaled(size: 14))
                     .foregroundStyle(item.isEmergency ? alert : ink.opacity(0.5))
 
-                TextField("药品名称", text: $card.medicationItems[index].name)
+                TextField(langManager.localized("medical.medName"), text: $card.medicationItems[index].name)
                     .font(.scaled(size: 14, weight: .medium))
 
                 Spacer()
@@ -297,7 +298,7 @@ struct MedicalCardView: View {
                     HStack(spacing: 3) {
                         Image(systemName: item.isEmergency ? "exclamationmark.triangle.fill" : "exclamationmark.triangle")
                             .font(.scaled(size: 10))
-                        Text("急救")
+                        Text(langManager.localized("medical.emergency"))
                             .font(.scaled(size: 10, weight: .medium))
                     }
                     .foregroundStyle(item.isEmergency ? .white : .orange)
@@ -305,7 +306,7 @@ struct MedicalCardView: View {
                     .padding(.vertical, 3)
                     .background(Capsule().fill(item.isEmergency ? Color.orange : Color.orange.opacity(0.1)))
                 }
-                .accessibilityLabel("标记为急救药物")
+                .accessibilityLabel(langManager.localized("medical.markEmergency"))
 
                 // Delete
                 Button {
@@ -323,7 +324,7 @@ struct MedicalCardView: View {
                     Image(systemName: "mappin.circle")
                         .font(.scaled(size: 11))
                         .foregroundStyle(.secondary)
-                    TextField("放置位置 (如 床头柜)", text: $card.medicationItems[index].storageLocation)
+                    TextField(langManager.localized("medical.storageLocation"), text: $card.medicationItems[index].storageLocation)
                         .font(.scaled(size: 12))
                 }
                 .padding(.horizontal, 8)
@@ -335,7 +336,7 @@ struct MedicalCardView: View {
                     Image(systemName: "clock")
                         .font(.scaled(size: 11))
                         .foregroundStyle(.secondary)
-                    TextField("服用方法 (如 每日2次)", text: $card.medicationItems[index].dosage)
+                    TextField(langManager.localized("medical.dosage"), text: $card.medicationItems[index].dosage)
                         .font(.scaled(size: 12))
                 }
                 .padding(.horizontal, 8)
@@ -381,7 +382,7 @@ struct MedicalCardView: View {
                         Image(systemName: "xmark")
                             .font(.scaled(size: 9, weight: .bold))
                     }
-                    .accessibilityLabel("删除")
+                    .accessibilityLabel(langManager.localized("medical.delete"))
                 }
                 .foregroundStyle(ink)
                 .padding(.horizontal, 10)
@@ -459,7 +460,7 @@ struct MedicalCardView: View {
             } catch {
                 await MainActor.run {
                     withAnimation(.easeInOut(duration: 0.3)) {
-                        saveResult = .failure("已本地保存，服务器同步失败")
+                        saveResult = .failure(langManager.localized("medical.syncFailed"))
                     }
                 }
                 #if DEBUG
@@ -552,27 +553,27 @@ struct MedicalCardPreview: View {
                         Image(systemName: "staroflife.fill")
                             .font(.scaled(size: 24))
                             .foregroundStyle(alert)
-                        Text("紧急医疗信息")
+                        Text(LanguageManager.shared.localized("medical.emergencyInfo"))
                             .font(.scaled(size: 20, weight: .bold))
                         Spacer()
                     }
                     .padding(.bottom, 4)
 
                     if !userName.isEmpty {
-                        previewRow("姓名", value: userName)
+                        previewRow(LanguageManager.shared.localized("medical.preview.name"), value: userName)
                     }
 
                     if let blood = card.bloodType {
-                        previewRow("血型", value: blood)
+                        previewRow(LanguageManager.shared.localized("medical.preview.bloodType"), value: blood)
                     }
 
                     if !card.allergies.isEmpty {
-                        previewRow("过敏", value: card.allergies.joined(separator: "、"))
+                        previewRow(LanguageManager.shared.localized("medical.preview.allergies"), value: card.allergies.joined(separator: "、"))
                     }
 
                     if !card.medicationItems.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("药物")
+                            Text(LanguageManager.shared.localized("medical.preview.medications"))
                                 .font(.scaled(size: 12, weight: .medium))
                                 .foregroundStyle(.secondary)
                             ForEach(card.medicationItems) { med in
@@ -610,7 +611,7 @@ struct MedicalCardPreview: View {
                                     }
                                     Spacer()
                                     if med.isEmergency {
-                                        Text("急救")
+                                        Text(LanguageManager.shared.localized("medical.emergency"))
                                             .font(.scaled(size: 10, weight: .bold))
                                             .foregroundStyle(.white)
                                             .padding(.horizontal, 6)
@@ -626,33 +627,33 @@ struct MedicalCardPreview: View {
                             }
                         }
                     } else if !card.medications.isEmpty {
-                        previewRow("药物", value: card.medications.joined(separator: "、"))
+                        previewRow(LanguageManager.shared.localized("medical.preview.medications"), value: card.medications.joined(separator: "、"))
                     }
 
                     if !card.conditions.isEmpty {
-                        previewRow("病史", value: card.conditions.joined(separator: "、"))
+                        previewRow(LanguageManager.shared.localized("medical.preview.conditions"), value: card.conditions.joined(separator: "、"))
                     }
 
                     if let provider = card.insuranceProvider {
-                        previewRow("保险", value: provider + (card.insurancePolicyNumber.map { " #\($0)" } ?? ""))
+                        previewRow(LanguageManager.shared.localized("medical.preview.insurance"), value: provider + (card.insurancePolicyNumber.map { " #\($0)" } ?? ""))
                     }
 
                     if let note = card.emergencyNote, !note.isEmpty {
-                        previewRow("备注", value: note)
+                        previewRow(LanguageManager.shared.localized("medical.preview.note"), value: note)
                     }
 
                     if card.organDonor {
-                        previewRow("器官捐献", value: "同意")
+                        previewRow(LanguageManager.shared.localized("medical.preview.organDonor"), value: LanguageManager.shared.localized("medical.preview.agreed"))
                     }
                 }
                 .padding(20)
             }
             .background(Color(.systemBackground))
-            .navigationTitle("急救卡预览")
+            .navigationTitle(LanguageManager.shared.localized("medical.preview.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("关闭") { dismiss() }
+                    Button(LanguageManager.shared.localized("medical.close")) { dismiss() }
                 }
             }
         }

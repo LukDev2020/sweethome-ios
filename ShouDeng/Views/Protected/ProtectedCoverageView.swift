@@ -10,6 +10,7 @@ import SwiftUI
 
 struct ProtectedCoverageView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var langManager = LanguageManager.shared
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
@@ -38,7 +39,7 @@ struct ProtectedCoverageView: View {
                 compactLayout
             }
         }
-        .navigationTitle("所在地覆盖")
+        .navigationTitle(langManager.localized("protected.coverage.title"))
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -46,7 +47,7 @@ struct ProtectedCoverageView: View {
         HStack(spacing: 4) {
             Image(systemName: "info.circle.fill")
                 .font(.caption2)
-            Text("以下为示例数据，实际覆盖因地区而异")
+            Text(langManager.localized("protected.coverage.sampleData"))
                 .font(.caption2)
         }
         .foregroundStyle(.secondary)
@@ -61,9 +62,9 @@ struct ProtectedCoverageView: View {
         ScrollView {
             VStack(spacing: 12) {
                 VStack(spacing: 2) {
-                    Text("所在地覆盖")
+                    Text(langManager.localized("protected.coverage.title"))
                         .font(.scaled(size: 20, weight: .bold))
-                    Text("换个国家，保护跟着换")
+                    Text(langManager.localized("protected.coverage.subtitle"))
                         .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                 }
@@ -72,7 +73,7 @@ struct ProtectedCoverageView: View {
                 localResourcesPanel
                 offlinePackPanel
                 weakNetworkPanel
-                Text("覆盖能力需要真实的本地对接与人力，是免费产品最难复制的部分。")
+                Text(langManager.localized("protected.coverage.footer"))
                     .font(.scaled(size: 12))
                     .foregroundStyle(.secondary.opacity(0.7))
                     .padding(.top, 8)
@@ -88,9 +89,9 @@ struct ProtectedCoverageView: View {
             ScrollView {
                 VStack(spacing: 12) {
                     VStack(spacing: 2) {
-                        Text("所在地覆盖")
+                        Text(langManager.localized("protected.coverage.title"))
                             .font(.scaled(size: 20, weight: .bold))
-                        Text("换个国家，保护跟着换")
+                        Text(langManager.localized("protected.coverage.subtitle"))
                             .font(.scaled(size: 13))
                             .foregroundStyle(.secondary)
                     }
@@ -109,7 +110,7 @@ struct ProtectedCoverageView: View {
                 VStack(spacing: 12) {
                     offlinePackPanel
                     weakNetworkPanel
-                    Text("覆盖能力需要真实的本地对接与人力，是免费产品最难复制的部分。")
+                    Text(langManager.localized("protected.coverage.footer"))
                         .font(.scaled(size: 12))
                         .foregroundStyle(.secondary.opacity(0.7))
                         .padding(.top, 8)
@@ -130,10 +131,10 @@ struct ProtectedCoverageView: View {
             Text("\(countryName)\(cityName.isEmpty ? "" : " · \(cityName)")（已自动识别）")
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            resourceRow("当地紧急号码", value: "112 已预置", isOk: true)
-            resourceRow("响应中心语言", value: "中 / 英 / 俄", isOk: true)
-            resourceRow("中国使馆直线", value: "已收录", isOk: true)
-            resourceRow("本地救援伙伴", value: "2 家已对接", isOk: true)
+            resourceRow(langManager.localized("protected.coverage.localNumber"), value: langManager.localized("protected.coverage.localNumberValue"), isOk: true)
+            resourceRow(langManager.localized("protected.coverage.responseLanguage"), value: langManager.localized("protected.coverage.responseLanguageValue"), isOk: true)
+            resourceRow(langManager.localized("protected.coverage.embassyLine"), value: langManager.localized("protected.coverage.embassyLineValue"), isOk: true)
+            resourceRow(langManager.localized("protected.coverage.rescuePartner"), value: langManager.localized("protected.coverage.rescuePartnerValue"), isOk: true)
         }
         .padding(12)
         .background(
@@ -146,12 +147,12 @@ struct ProtectedCoverageView: View {
 
     private var offlinePackPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("离线包 · 没有网络时仍可用")
+            Text(langManager.localized("protected.coverage.offlinePack"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            resourceRow("紧急号码与使馆信息", value: "已下载", isOk: true)
-            resourceRow("短信求助模板", value: "已下载", isOk: true)
-            resourceRow("离线地图\(cityName.isEmpty ? "" : " · \(cityName)")", value: "未下载 · 42MB", isOk: false)
+            resourceRow(langManager.localized("protected.coverage.offlineEmergency"), value: langManager.localized("protected.coverage.downloaded"), isOk: true)
+            resourceRow(langManager.localized("protected.coverage.offlineSMS"), value: langManager.localized("protected.coverage.downloaded"), isOk: true)
+            resourceRow(langManager.localized("protected.coverage.offlineMap") + (cityName.isEmpty ? "" : " · \(cityName)"), value: langManager.localized("protected.coverage.notDownloaded"), isOk: false)
         }
         .padding(12)
         .background(
@@ -164,11 +165,11 @@ struct ProtectedCoverageView: View {
 
     private var weakNetworkPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("弱网降级")
+            Text(langManager.localized("protected.coverage.weakNetwork"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            toggleRow("无数据网络时改走短信", isOn: $smsDowngrade)
-            toggleRow("低电量时降低上报频率", isOn: $lowPowerSaving)
+            toggleRow(langManager.localized("protected.coverage.smsFallback"), isOn: $smsDowngrade)
+            toggleRow(langManager.localized("protected.coverage.lowPowerSaving"), isOn: $lowPowerSaving)
         }
         .padding(12)
         .background(

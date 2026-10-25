@@ -181,7 +181,7 @@ struct ProtectedHomeView: View {
             ScrollView {
                 VStack(spacing: 0) {
                     HStack {
-                        Text("守灯")
+                        Text(lang.localized("protected.home.appName"))
                             .font(.scaled(size: 18, weight: .bold, design: .serif))
                             .foregroundStyle(ink)
                         Spacer()
@@ -291,9 +291,9 @@ struct ProtectedHomeView: View {
     private var toolbarBattery: String {
         let level = UIDevice.current.batteryLevel
         if level >= 0 {
-            return "电量 \(Int(level * 100))%"
+            return String(format: "%@ %d%%", lang.localized("protected.home.battery"), Int(level * 100))
         }
-        return "电量 --%"
+        return lang.localized("protected.home.battery") + " --%"
     }
 
     // MARK: - Globe Section
@@ -309,7 +309,7 @@ struct ProtectedHomeView: View {
             let myCity = coordinator.currentUser?.cityName ?? ""
             let myCountry = coordinator.currentUser?.countryCode ?? ""
             let myLocParts = [myCity, Self.countryName(myCountry)].filter { !$0.isEmpty }
-            let myLabel = myLocParts.isEmpty ? "我" : "我 · \(myLocParts.joined(separator: ", "))"
+            let myLabel = myLocParts.isEmpty ? lang.localized("protected.home.me") : "\(lang.localized("protected.home.me")) · \(myLocParts.joined(separator: ", "))"
             let myCoord: CLLocationCoordinate2D = {
                 if let live = coordinator.locationService.currentLocation {
                     return live
@@ -340,9 +340,9 @@ struct ProtectedHomeView: View {
             var cities = [String]()
             if let c = coordinator.currentUser?.cityName, !c.isEmpty { cities.append(c) }
             for g in coordinator.myGuardians { if !g.user.cityName.isEmpty && !cities.contains(g.user.cityName) { cities.append(g.user.cityName) } }
-            layersText = "\(coordinator.myGuardians.count) 位守护者"
+            layersText = String(format: "%d %@", coordinator.myGuardians.count, lang.localized("protected.home.guardianCount"))
             subtitleText = cities.isEmpty
-                ? "守护中"
+                ? lang.localized("protected.home.guarding")
                 : cities.prefix(3).joined(separator: " · ")
         } else {
             // No guardians yet — show just me
@@ -350,7 +350,7 @@ struct ProtectedHomeView: View {
             let myCity = coordinator.currentUser?.cityName ?? ""
             let myCountry = coordinator.currentUser?.countryCode ?? ""
             let myLocStr = [myCity, Self.countryName(myCountry)].filter { !$0.isEmpty }.joined(separator: ", ")
-            let myLabel = myLocStr.isEmpty ? "我" : "我 · \(myLocStr)"
+            let myLabel = myLocStr.isEmpty ? lang.localized("protected.home.me") : "\(lang.localized("protected.home.me")) · \(myLocStr)"
             let fallbackCoord: CLLocationCoordinate2D = {
                 if let live = coordinator.locationService.currentLocation {
                     return live
@@ -366,8 +366,8 @@ struct ProtectedHomeView: View {
             p.append(.init(label: myLabel, latitude: fallbackCoord.latitude, longitude: fallbackCoord.longitude, color: lamp, isMe: true))
             dynamicPins = p
             dynamicLinks = []
-            layersText = "守灯"
-            subtitleText = "邀请家人加入守护"
+            layersText = lang.localized("protected.home.appName")
+            subtitleText = lang.localized("protected.home.inviteFamily")
         }
 
         return ZStack {
@@ -402,8 +402,8 @@ struct ProtectedHomeView: View {
 
                 HStack(spacing: 16) {
                     Spacer()
-                    legendDot(color: lamp, label: "我")
-                    legendDot(color: safe, label: "守护者")
+                    legendDot(color: lamp, label: lang.localized("protected.home.me"))
+                    legendDot(color: safe, label: lang.localized("protected.home.guardian"))
                     Spacer()
                 }
                 .padding(.bottom, 8)
@@ -432,15 +432,15 @@ struct ProtectedHomeView: View {
             // My time
             if let user = coordinator.currentUser {
                 result.append((
-                    user.cityName.isEmpty ? "我" : user.cityName,
+                    user.cityName.isEmpty ? lang.localized("protected.home.me") : user.cityName,
                     localTime(user.timeZone),
-                    "我在这",
+                    lang.localized("protected.home.imHere"),
                     true
                 ))
             } else {
                 let formatter = DateFormatter()
                 formatter.dateFormat = "HH:mm"
-                result.append(("我", formatter.string(from: Date()), "我在这", true))
+                result.append((lang.localized("protected.home.me"), formatter.string(from: Date()), lang.localized("protected.home.imHere"), true))
             }
             // Guardian times
             if !coordinator.myGuardians.isEmpty {
@@ -501,7 +501,7 @@ struct ProtectedHomeView: View {
         }()
 
         var pins: [LocationPin] = [
-            LocationPin(id: "me", name: "我", coordinate: myCoord, color: lamp, isMe: true, role: .me)
+            LocationPin(id: "me", name: lang.localized("protected.home.me"), coordinate: myCoord, color: lamp, isMe: true, role: .me)
         ]
         // Show all guardians on the map
         if !coordinator.myGuardians.isEmpty {
@@ -512,7 +512,7 @@ struct ProtectedHomeView: View {
                     name: g.user.displayName,
                     coordinate: coord,
                     color: g.isOnDuty ? safe : Color(.systemGray3),
-                    status: g.isOnDuty ? "值班中" : timeOfDay(g.user.timeZone),
+                    status: g.isOnDuty ? lang.localized("protected.home.onDuty") : timeOfDay(g.user.timeZone),
                     role: .guardian
                 ))
             }
@@ -521,7 +521,7 @@ struct ProtectedHomeView: View {
             pins: pins,
             centerCoordinate: myCoord,
             lastUpdateMinutes: deviceLocation != nil ? Int(Date().timeIntervalSince(deviceLocation!.timestamp) / 60) : nil,
-            label: "我的位置",
+            label: lang.localized("protected.home.myLocation"),
             focusedPinId: $mapFocusId,
             locationService: coordinator.locationService
         )
@@ -536,7 +536,7 @@ struct ProtectedHomeView: View {
             HStack(spacing: 6) {
                 Image(systemName: "location.fill")
                     .font(.scaled(size: 12))
-                Text("发送我的位置给守护者")
+                Text(lang.localized("protected.home.sendLocation"))
                     .font(.scaled(size: 13, weight: .medium))
             }
             .foregroundStyle(safe)
@@ -555,7 +555,7 @@ struct ProtectedHomeView: View {
         guard let loc = coordinator.locationManager.bestAvailableLocation else { return }
         let lat = loc.coordinate.latitude
         let lng = loc.coordinate.longitude
-        let mapURL = "https://maps.apple.com/?ll=\(lat),\(lng)&q=\(coordinator.currentUser?.displayName ?? "我的位置")"
+        let mapURL = "https://maps.apple.com/?ll=\(lat),\(lng)&q=\(coordinator.currentUser?.displayName ?? lang.localized("protected.home.myLocation"))"
         let items: [Any] = [mapURL]
         let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)
         if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
@@ -612,13 +612,13 @@ struct ProtectedHomeView: View {
                     .foregroundStyle(isPaused ? .orange : safe)
 
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(isPaused ? "位置共享已暂停" : "位置共享中")
+                    Text(isPaused ? lang.localized("protected.home.trackingPaused") : lang.localized("protected.home.trackingActive"))
                         .font(.scaled(size: 13, weight: .medium))
                         .foregroundStyle(isPaused ? .orange : ink.opacity(0.7))
 
                     if isPaused {
                         let remaining = coordinator.trackingPauseRemainingMinutes
-                        Text(remaining > 60 ? "\(remaining / 60)小时\(remaining % 60)分钟后自动恢复" : "\(remaining)分钟后自动恢复")
+                        Text(remaining > 60 ? String(format: lang.localized("protected.home.resumeHoursMinutes"), remaining / 60, remaining % 60) : String(format: lang.localized("protected.home.resumeMinutes"), remaining))
                             .font(.scaled(size: 11))
                             .foregroundStyle(.orange.opacity(0.7))
                     }
@@ -626,7 +626,7 @@ struct ProtectedHomeView: View {
 
                 Spacer()
 
-                Text(isPaused ? "恢复" : "暂停")
+                Text(isPaused ? lang.localized("protected.home.resume") : lang.localized("protected.home.pause"))
                     .font(.scaled(size: 12, weight: .medium))
                     .foregroundStyle(isPaused ? .white : ink.opacity(0.5))
                     .padding(.horizontal, 10)
@@ -703,8 +703,8 @@ struct ProtectedHomeView: View {
                     }
                 }
         )
-        .accessibilityLabel("紧急求助")
-        .accessibilityHint("双击并长按三秒发送SOS紧急求助信号给所有守护者")
+        .accessibilityLabel(lang.localized("protected.home.sosLabel"))
+        .accessibilityHint(lang.localized("protected.home.sosHint"))
         .accessibilityAddTraits(.isButton)
     }
 
@@ -741,8 +741,8 @@ struct ProtectedHomeView: View {
             .clipShape(RoundedRectangle(cornerRadius: 13))
         }
         .disabled(checkInDone)
-        .accessibilityLabel(checkInDone ? "已报平安" : "报平安")
-        .accessibilityHint("告诉守护者你现在很安全")
+        .accessibilityLabel(checkInDone ? lang.localized("protected.home.checkedIn") : lang.localized("protected.home.checkIn"))
+        .accessibilityHint(lang.localized("protected.home.checkInHint"))
     }
 
     // MARK: - Quick Actions
@@ -826,12 +826,12 @@ struct ProtectedHomeView: View {
                 let offDuty = coordinator.myGuardians.filter { !$0.isOnDuty }
 
                 if !onDuty.isEmpty {
-                    sectionHeader("正在值班")
+                    sectionHeader(lang.localized("protected.home.onDutySection"))
                     ForEach(onDuty) { g in
                         NavigationLink(value: g.id) {
                             guardianCard(
                                 initial: g.user.avatarInitial, name: g.user.displayName,
-                                tag: "值班中", tagColor: safe,
+                                tag: lang.localized("protected.home.onDuty"), tagColor: safe,
                                 detail: "\(g.user.cityName) · \(permissionSummary(g.permissions))",
                                 time: localTime(g.user.timeZone), timeNote: timeOfDay(g.user.timeZone),
                                 isOnDuty: true,
@@ -846,7 +846,7 @@ struct ProtectedHomeView: View {
                 }
 
                 if !offDuty.isEmpty {
-                    sectionHeader("其他守护者")
+                    sectionHeader(lang.localized("protected.home.otherGuardians"))
                     ForEach(offDuty) { g in
                         NavigationLink(value: g.id) {
                             guardianCard(
@@ -873,7 +873,7 @@ struct ProtectedHomeView: View {
                     Text(lang.localized("home.no.guardian"))
                         .font(.scaled(size: 14, weight: .medium))
                         .foregroundStyle(ink.opacity(0.6))
-                    Text("邀请家人成为你的守护者，他们可以在紧急时刻收到你的求助信号。")
+                    Text(lang.localized("protected.home.inviteDescription"))
                         .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -891,7 +891,7 @@ struct ProtectedHomeView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "plus.circle.fill")
                         .font(.scaled(size: 16))
-                    Text("邀请新的守护者")
+                    Text(lang.localized("protected.home.inviteNew"))
                         .font(.scaled(size: 13, weight: .medium))
                 }
                 .foregroundStyle(safe)
@@ -906,7 +906,7 @@ struct ProtectedHomeView: View {
             // Footer
             VStack(spacing: 0) {
                 Divider()
-                Text("列表按「谁醒着」而非亲疏排序——慌乱时最需要知道的是谁最快能看到。")
+                Text(lang.localized("protected.home.sortExplanation"))
                     .font(.scaled(size: 12))
                     .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -920,10 +920,10 @@ struct ProtectedHomeView: View {
 
     private func permissionSummary(_ p: GuardianPermissions) -> String {
         var parts: [String] = []
-        if p.canSeeLocation { parts.append("位置") }
-        if p.canSeeBattery { parts.append("电量") }
-        if p.canSeeHealth { parts.append("健康") }
-        return parts.isEmpty ? "仅紧急时可见" : parts.joined(separator: "、")
+        if p.canSeeLocation { parts.append(lang.localized("protected.home.permLocation")) }
+        if p.canSeeBattery { parts.append(lang.localized("protected.home.permBattery")) }
+        if p.canSeeHealth { parts.append(lang.localized("protected.home.permHealth")) }
+        return parts.isEmpty ? lang.localized("protected.home.emergencyOnly") : parts.joined(separator: "、")
     }
 
     private func localTime(_ tz: TimeZone) -> String {
@@ -937,12 +937,12 @@ struct ProtectedHomeView: View {
         var cal = Calendar.current
         cal.timeZone = tz
         let hour = cal.component(.hour, from: Date())
-        if hour >= 6 && hour < 9 { return "清晨" }
-        if hour >= 9 && hour < 12 { return "上午" }
-        if hour >= 12 && hour < 14 { return "中午" }
-        if hour >= 14 && hour < 18 { return "下午" }
-        if hour >= 18 && hour < 22 { return "晚上" }
-        return "深夜"
+        if hour >= 6 && hour < 9 { return lang.localized("protected.home.earlyMorning") }
+        if hour >= 9 && hour < 12 { return lang.localized("protected.home.morning") }
+        if hour >= 12 && hour < 14 { return lang.localized("protected.home.noon") }
+        if hour >= 14 && hour < 18 { return lang.localized("protected.home.afternoon") }
+        if hour >= 18 && hour < 22 { return lang.localized("protected.home.evening") }
+        return lang.localized("protected.home.lateNight")
     }
 
     private func sectionHeader(_ title: String) -> some View {
@@ -1021,6 +1021,7 @@ struct ProtectedHomeView: View {
 struct SOSActiveView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @Environment(\.dismiss) var dismiss
+    @ObservedObject private var langManager = LanguageManager.shared
     @State private var tick = Date()
     @State private var showClaimMaterialsPrompt = false
     @State private var showClaimMaterials = false
@@ -1045,7 +1046,7 @@ struct SOSActiveView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "wifi.slash")
                             .font(.scaled(size: 12))
-                        Text("求助信号暂未送达服务器，已存入离线队列，恢复网络后将自动重发")
+                        Text(langManager.localized("protected.home.sosOfflineWarning"))
                             .font(.scaled(size: 12))
                     }
                     .foregroundStyle(.white)
@@ -1062,7 +1063,7 @@ struct SOSActiveView: View {
                                 .fill(alert)
                                 .frame(width: 142, height: 142)
                             VStack(spacing: 2) {
-                                Text("已发出")
+                                Text(langManager.localized("protected.home.sosSent"))
                                     .font(.scaled(size: 26, weight: .black, design: .serif))
                                     .foregroundStyle(.white)
                                 Text(sosTimeLocation)
@@ -1083,7 +1084,7 @@ struct SOSActiveView: View {
                             coordinator.cancelSOS()
                             showClaimMaterialsPrompt = true
                         } label: {
-                            Text("取消求助（我没事）")
+                            Text(langManager.localized("protected.home.cancelSOS"))
                                 .font(.scaled(size: 14))
                                 .foregroundStyle(.secondary)
                         }
@@ -1092,14 +1093,14 @@ struct SOSActiveView: View {
                     .padding(.horizontal, 16)
                 }
             }
-            .navigationTitle("求助已发出")
+            .navigationTitle(langManager.localized("protected.home.sosNavTitle"))
             .navigationBarTitleDisplayMode(.inline)
             .onReceive(timer) { tick = $0 }
-            .alert("需要整理相关记录吗？", isPresented: $showClaimMaterialsPrompt) {
-                Button("整理材料") { showClaimMaterials = true }
-                Button("不需要", role: .cancel) { dismiss() }
+            .alert(langManager.localized("protected.home.claimPrompt"), isPresented: $showClaimMaterialsPrompt) {
+                Button(langManager.localized("protected.home.claimOrganize")) { showClaimMaterials = true }
+                Button(langManager.localized("protected.home.claimNo"), role: .cancel) { dismiss() }
             } message: {
-                Text("导出事件前后的设备记录，供您自行使用。")
+                Text(langManager.localized("protected.home.claimDescription"))
             }
             .sheet(isPresented: $showClaimMaterials, onDismiss: { dismiss() }) {
                 ClaimMaterialsView().environmentObject(coordinator)
@@ -1143,7 +1144,7 @@ struct SOSActiveView: View {
 
         return VStack(spacing: 0) {
             HStack {
-                Text("已进行 \(mins) 分 \(secs) 秒")
+                Text(String(format: langManager.localized("protected.home.sosElapsed"), mins, secs))
                     .font(.scaled(size: 11.5, weight: .medium))
                     .foregroundStyle(alert)
                 Spacer()
@@ -1151,14 +1152,14 @@ struct SOSActiveView: View {
             .padding(12)
             .background(alert.opacity(0.09))
 
-            stepRow(number: "1", title: "家人已收到",
-                    detail: guardianNames.first.map { "\($0) 已通知" } ?? "正在通知家人",
+            stepRow(number: "1", title: langManager.localized("protected.home.sosStep1Title"),
+                    detail: guardianNames.first.map { String(format: langManager.localized("protected.home.sosStep1Done"), $0) } ?? langManager.localized("protected.home.sosStep1Pending"),
                     state: step1State)
-            stepRow(number: "2", title: "备用联系人已通知",
-                    detail: guardianNames.count > 1 ? "\(guardianNames.dropFirst().joined(separator: "、")) 已收到" : "等待通知备用联系人",
+            stepRow(number: "2", title: langManager.localized("protected.home.sosStep2Title"),
+                    detail: guardianNames.count > 1 ? String(format: langManager.localized("protected.home.sosStep2Done"), guardianNames.dropFirst().joined(separator: "、")) : langManager.localized("protected.home.sosStep2Pending"),
                     state: step2State)
-            stepRow(number: "3", title: "自动语音外呼",
-                    detail: "系统将依次拨打家人电话，直到有人接听确认",
+            stepRow(number: "3", title: langManager.localized("protected.home.sosStep3Title"),
+                    detail: langManager.localized("protected.home.sosStep3Detail"),
                     state: step3State)
         }
         .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -1207,12 +1208,12 @@ struct SOSActiveView: View {
 
     private var autoEnabledPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("求助期间自动开启，结束后恢复")
+            Text(langManager.localized("protected.home.sosAutoEnabled"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            statusRow("高频位置上报", value: "进行中", isActive: true)
-            statusRow("环境录音留证", value: "进行中", isActive: true)
-            statusRow("低电量省电模式", value: "已启用", isActive: true)
+            statusRow(langManager.localized("protected.home.sosHighFreqLocation"), value: langManager.localized("protected.home.sosInProgress"), isActive: true)
+            statusRow(langManager.localized("protected.home.sosAudioRecord"), value: langManager.localized("protected.home.sosInProgress"), isActive: true)
+            statusRow(langManager.localized("protected.home.sosLowPower"), value: langManager.localized("protected.home.sosEnabled"), isActive: true)
         }
         .padding(12)
         .background(

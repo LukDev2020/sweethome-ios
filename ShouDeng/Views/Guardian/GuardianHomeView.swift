@@ -37,7 +37,7 @@ struct GuardianHomeView: View {
         // My time (guardian)
         if let user = coordinator.currentUser {
             result.append((
-                user.cityName.isEmpty ? "我" : user.cityName,
+                user.cityName.isEmpty ? lang.localized("guardian.home.me") : user.cityName,
                 localTime(user.timeZone),
                 lang.localized("nav.you.are.here"),
                 true
@@ -94,11 +94,11 @@ struct GuardianHomeView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     // Only show duty text when there are protected persons
                     if !coordinator.protectedPersons.isEmpty {
-                        Text("守护中 · \(coordinator.protectedPersons.count)人")
+                        Text(String(format: lang.localized("guardian.home.guarding.count"), coordinator.protectedPersons.count))
                             .font(.scaled(size: 12))
                             .foregroundStyle(safe)
                     } else {
-                        Text("守灯")
+                        Text(lang.localized("guardian.home.shoudeng"))
                             .font(.scaled(size: 12))
                             .foregroundStyle(safe)
                     }
@@ -179,15 +179,15 @@ struct GuardianHomeView: View {
             ScrollView {
                 VStack(spacing: 0) {
                     HStack {
-                        Text("守灯")
+                        Text(lang.localized("guardian.home.shoudeng"))
                             .font(.scaled(size: 18, weight: .bold, design: .serif))
                             .foregroundStyle(ink)
                         Spacer()
                         Group {
                             if !coordinator.protectedPersons.isEmpty {
-                                Text("守护中 · \(coordinator.protectedPersons.count)人")
+                                Text(String(format: lang.localized("guardian.home.guarding.count"), coordinator.protectedPersons.count))
                             } else {
-                                Text("守灯")
+                                Text(lang.localized("guardian.home.shoudeng"))
                             }
                         }
                             .font(.scaled(size: 12))
@@ -281,14 +281,14 @@ struct GuardianHomeView: View {
         return Group {
             if atLimit {
                 VStack(spacing: 6) {
-                    Text("已达当前方案上限（\(currentCount)/\(maxProtected)位被守护者）")
+                    Text(String(format: lang.localized("guardian.home.at.limit"), currentCount, maxProtected))
                         .font(.scaled(size: 12))
                         .foregroundStyle(.secondary)
                     NavigationLink {
                         GuardianPlanBillingView()
                             .environmentObject(coordinator)
                     } label: {
-                        Text("升级方案以添加更多")
+                        Text(lang.localized("guardian.home.upgrade.plan"))
                             .font(.scaled(size: 13, weight: .medium))
                             .foregroundStyle(pro)
                     }
@@ -302,7 +302,7 @@ struct GuardianHomeView: View {
                 )
             } else {
                 Button { showInviteSheet = true } label: {
-                    Text("添加要守护的人")
+                    Text(lang.localized("guardian.home.add.person"))
                         .font(.scaled(size: 13))
                         .foregroundStyle(ink.opacity(0.6))
                         .frame(maxWidth: .infinity)
@@ -320,7 +320,7 @@ struct GuardianHomeView: View {
     private var footerNote: some View {
         VStack(spacing: 0) {
             Divider()
-            Text("世界钟解决跨国家庭每天都在做的心算：现在打过去会不会吵醒他。")
+            Text(lang.localized("guardian.home.footer.note"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(ink.opacity(0.55))
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -353,7 +353,8 @@ struct GuardianHomeView: View {
             let myCity = coordinator.currentUser?.cityName ?? ""
             let myCountry = coordinator.currentUser?.countryCode ?? ""
             let myLocParts = [myCity, Self.countryName(myCountry)].filter { !$0.isEmpty }
-            let myLabel = myLocParts.isEmpty ? "你" : "你 · \(myLocParts.joined(separator: ", "))"
+            let youText = lang.localized("guardian.home.you")
+            let myLabel = myLocParts.isEmpty ? youText : "\(youText) · \(myLocParts.joined(separator: ", "))"
             let myCoord: CLLocationCoordinate2D = {
                 if let live = coordinator.locationService.currentLocation {
                     return live
@@ -391,7 +392,7 @@ struct GuardianHomeView: View {
             let totalFamily = coordinator.protectedPersons.count
             familyText = "\(totalFamily) \(lang.localized("home.persons"))"
             subtitleText = cities.isEmpty
-                ? "守护中"
+                ? lang.localized("guardian.home.guarding")
                 : cities.prefix(3).joined(separator: " · ")
         } else {
             // No protected persons yet — show just me
@@ -399,7 +400,8 @@ struct GuardianHomeView: View {
             let myCity = coordinator.currentUser?.cityName ?? ""
             let myCountry = coordinator.currentUser?.countryCode ?? ""
             let myLocStr = [myCity, Self.countryName(myCountry)].filter { !$0.isEmpty }.joined(separator: ", ")
-            let myLabel = myLocStr.isEmpty ? "你" : "你 · \(myLocStr)"
+            let youText2 = lang.localized("guardian.home.you")
+            let myLabel = myLocStr.isEmpty ? youText2 : "\(youText2) · \(myLocStr)"
             let myCoord: CLLocationCoordinate2D = {
                 if let live = coordinator.locationService.currentLocation {
                     return live
@@ -412,8 +414,8 @@ struct GuardianHomeView: View {
             p.append(.init(label: myLabel, latitude: myCoord.latitude, longitude: myCoord.longitude, color: safe, isMe: true))
             dynamicPins = p
             dynamicLinks = []
-            familyText = "守护者"
-            subtitleText = "邀请家人加入"
+            familyText = lang.localized("guardian.home.guardian.role")
+            subtitleText = lang.localized("guardian.home.invite.family")
         }
 
         return ZStack {
@@ -446,7 +448,7 @@ struct GuardianHomeView: View {
                 HStack(spacing: 11) {
                     Spacer()
                     legendDot(color: lamp, label: lang.localized("home.persons"))
-                    legendDot(color: safe, label: "我")
+                    legendDot(color: safe, label: lang.localized("guardian.home.me"))
                     Spacer()
                 }
                 .padding(.bottom, 8)
@@ -542,7 +544,7 @@ struct GuardianHomeView: View {
         }()
 
         var pins: [LocationPin] = [
-            LocationPin(id: "me", name: "我", coordinate: myCoord, color: safe, isMe: true, role: .me)
+            LocationPin(id: "me", name: lang.localized("guardian.home.me"), coordinate: myCoord, color: safe, isMe: true, role: .me)
         ]
 
         // Protected persons' locations
@@ -562,7 +564,7 @@ struct GuardianHomeView: View {
             pins: pins,
             centerCoordinate: myCoord,
             lastUpdateMinutes: deviceLocation != nil ? Int(Date().timeIntervalSince(deviceLocation!.timestamp) / 60) : nil,
-            label: "家人位置",
+            label: lang.localized("guardian.home.family.location"),
             focusedPinId: $mapFocusId,
             locationService: coordinator.locationService
         )
@@ -576,7 +578,7 @@ struct GuardianHomeView: View {
         return Group {
             if !warningPersons.isEmpty {
                 VStack(alignment: .leading, spacing: 7) {
-                    Text("需要处理")
+                    Text(lang.localized("guardian.home.needs.attention"))
                         .font(.scaled(size: 12))
                         .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
                         .padding(.horizontal, 18)
@@ -586,7 +588,7 @@ struct GuardianHomeView: View {
                         NavigationLink(value: person.id) {
                             protectedPersonCard(
                                 initial: person.user.avatarInitial, name: person.user.displayName,
-                                tag: person.status == .alert ? "求助中" : "未打卡",
+                                tag: person.status == .alert ? lang.localized("guardian.home.sos.active") : lang.localized("guardian.home.missed.checkin"),
                                 tagColor: person.status == .alert ? alert : Color(red: 138/255, green: 100/255, blue: 40/255),
                                 tagBg: person.status == .alert ? alert : lamp,
                                 detail: "\(person.user.cityName) · \(statusDetail(person))",
@@ -609,13 +611,13 @@ struct GuardianHomeView: View {
     private var guardianQuickActions: some View {
         VStack(spacing: 8) {
             HStack(spacing: 8) {
-                gQuickButton(icon: "staroflife.fill", label: "医疗卡", color: alert) { showMedicalCard = true }
-                gQuickButton(icon: "text.bubble.fill", label: "多语言急救", color: alert) { showEmergencyText = true }
-                gQuickButton(icon: "building.columns.fill", label: "领事电话", color: pro) { showConsulate = true }
+                gQuickButton(icon: "staroflife.fill", label: lang.localized("guardian.home.medical.card"), color: alert) { showMedicalCard = true }
+                gQuickButton(icon: "text.bubble.fill", label: lang.localized("guardian.home.emergency.text"), color: alert) { showEmergencyText = true }
+                gQuickButton(icon: "building.columns.fill", label: lang.localized("guardian.home.consulate"), color: pro) { showConsulate = true }
             }
             HStack(spacing: 8) {
-                gQuickButton(icon: "building.2.fill", label: "机构看板", color: safe) { showOrgDashboard = true }
-                gQuickButton(icon: "doc.text.magnifyingglass", label: "理赔材料", color: safe) { showInsuranceReport = true }
+                gQuickButton(icon: "building.2.fill", label: lang.localized("guardian.home.org.dashboard"), color: safe) { showOrgDashboard = true }
+                gQuickButton(icon: "doc.text.magnifyingglass", label: lang.localized("guardian.home.claim.materials"), color: safe) { showInsuranceReport = true }
                 Color.clear.frame(maxWidth: .infinity, maxHeight: 1) // spacer
             }
         }
@@ -647,7 +649,7 @@ struct GuardianHomeView: View {
         return Group {
             if !normalPersons.isEmpty {
                 VStack(alignment: .leading, spacing: 7) {
-                    Text("一切正常")
+                    Text(lang.localized("guardian.home.all.normal"))
                         .font(.scaled(size: 12))
                         .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
                         .padding(.horizontal, 18)
@@ -675,10 +677,10 @@ struct GuardianHomeView: View {
                     Image(systemName: "shield.slash")
                         .font(.scaled(size: 28))
                         .foregroundStyle(ink.opacity(0.25))
-                    Text("还没有守护对象")
+                    Text(lang.localized("guardian.home.no.protected"))
                         .font(.scaled(size: 14, weight: .medium))
                         .foregroundStyle(ink.opacity(0.6))
-                    Text("邀请家人加入，你将能看到他们的安全状态并在紧急时刻收到通知。")
+                    Text(lang.localized("guardian.home.invite.description"))
                         .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -702,24 +704,24 @@ struct GuardianHomeView: View {
         var cal = Calendar.current
         cal.timeZone = tz
         let hour = cal.component(.hour, from: Date())
-        if hour >= 6 && hour < 9 { return "清晨" }
-        if hour >= 9 && hour < 12 { return "上午" }
-        if hour >= 12 && hour < 14 { return "中午" }
-        if hour >= 14 && hour < 18 { return "下午" }
-        if hour >= 18 && hour < 22 { return "晚上" }
-        return "深夜"
+        if hour >= 6 && hour < 9 { return lang.localized("guardian.home.time.dawn") }
+        if hour >= 9 && hour < 12 { return lang.localized("guardian.home.time.morning") }
+        if hour >= 12 && hour < 14 { return lang.localized("guardian.home.time.noon") }
+        if hour >= 14 && hour < 18 { return lang.localized("guardian.home.time.afternoon") }
+        if hour >= 18 && hour < 22 { return lang.localized("guardian.home.time.evening") }
+        return lang.localized("guardian.home.time.night")
     }
 
     private func statusDetail(_ person: ProtectedPerson) -> String {
         if let checkIn = person.lastCheckIn {
             let minutes = Int(Date().timeIntervalSince(checkIn) / 60)
             if minutes < 60 {
-                return "\(minutes) 分钟前报平安"
+                return String(format: lang.localized("guardian.home.checkin.minutes"), minutes)
             } else {
-                return "\(minutes / 60) 小时前报平安"
+                return String(format: lang.localized("guardian.home.checkin.hours"), minutes / 60)
             }
         }
-        return "尚未报平安"
+        return lang.localized("guardian.home.no.checkin")
     }
 
     // MARK: - Protected Person Card
@@ -762,10 +764,10 @@ struct GuardianHomeView: View {
 
             // Protection layers
             VStack(spacing: 1) {
-                Text("\(layers) 层")
+                Text(String(format: lang.localized("guardian.home.layers.count"), layers))
                     .font(.scaled(size: 13, weight: .semibold, design: .serif))
                     .foregroundStyle(ink)
-                Text("保护")
+                Text(lang.localized("guardian.home.protection"))
                     .font(.scaled(size: 12))
                     .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
             }

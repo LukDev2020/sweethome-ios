@@ -9,6 +9,7 @@ import SwiftUI
 
 struct GuardianRecordsView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var langManager = LanguageManager.shared
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
@@ -33,9 +34,10 @@ struct GuardianRecordsView: View {
     @State private var localEmergencyContacts: [LocalEmergencyContact] = []
 
     private var scheduleSubtitle: String {
-        let name = coordinator.protectedPersons.first?.user.displayName ?? "被守护者"
+        let name = coordinator.protectedPersons.first?.user.displayName ?? langManager.localized("guardian.records.protected.person")
         let city = coordinator.protectedPersons.first?.user.cityName ?? ""
-        return "\(name)的一天\(city.isEmpty ? "" : " · \(city)时间")"
+        let dayText = String(format: langManager.localized("guardian.records.person.day"), name)
+        return city.isEmpty ? dayText : "\(dayText) · \(String(format: langManager.localized("guardian.records.city.time"), city))"
     }
 
     enum RecordTab: String, CaseIterable {
@@ -53,7 +55,7 @@ struct GuardianRecordsView: View {
                     recordsCompact
                 }
             }
-            .navigationTitle("记录")
+            .navigationTitle(langManager.localized("guardian.records.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(sizeClass == .regular ? .hidden : .visible, for: .navigationBar)
             .onAppear {
@@ -84,7 +86,7 @@ struct GuardianRecordsView: View {
         VStack(spacing: 0) {
             Picker("", selection: $selectedTab) {
                 ForEach(RecordTab.allCases, id: \.self) { tab in
-                    Text(tab.rawValue).tag(tab)
+                    Text(langManager.localized("guardian.records.tab.\(tab)")).tag(tab)
                 }
             }
             .pickerStyle(.segmented)
@@ -112,13 +114,13 @@ struct GuardianRecordsView: View {
             // Left: header + picker + stats
             ScrollView {
                 VStack(spacing: 12) {
-                    Text("记录")
+                    Text(langManager.localized("guardian.records.title"))
                         .font(.scaled(size: 20, weight: .bold))
                         .padding(.top, 8)
 
                     Picker("", selection: $selectedTab) {
                         ForEach(RecordTab.allCases, id: \.self) { tab in
-                            Text(tab.rawValue).tag(tab)
+                            Text(langManager.localized("guardian.records.tab.\(tab)")).tag(tab)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -179,10 +181,10 @@ struct GuardianRecordsView: View {
 
     private var timelineStatBadges: some View {
         HStack(spacing: 16) {
-            statBadge(value: "\(coordinator.timeline.count)", label: "事件", color: ink)
+            statBadge(value: "\(coordinator.timeline.count)", label: langManager.localized("guardian.records.events"), color: ink)
             statBadge(
                 value: "\(coordinator.timeline.filter { $0.type == .checkIn }.count)",
-                label: "报平安", color: safe
+                label: langManager.localized("guardian.records.checkins"), color: safe
             )
             statBadge(
                 value: "\(coordinator.timeline.filter { $0.type == .sosTriggered }.count)",
@@ -195,15 +197,15 @@ struct GuardianRecordsView: View {
         HStack(spacing: 16) {
             statBadge(
                 value: "\(guardianMembers.filter { $0.status == .active }.count)",
-                label: "守护者", color: safe
+                label: langManager.localized("guardian.records.guardians"), color: safe
             )
             statBadge(
                 value: "\(guardianMembers.filter { $0.status == .pending }.count)",
-                label: "待接受", color: lamp
+                label: langManager.localized("guardian.records.pending"), color: lamp
             )
             statBadge(
                 value: "\(localEmergencyContacts.count)",
-                label: "紧急联络", color: alert
+                label: langManager.localized("guardian.records.emergency"), color: alert
             )
         }
     }
@@ -219,10 +221,10 @@ struct GuardianRecordsView: View {
                             Image(systemName: "clock")
                                 .font(.scaled(size: 28))
                                 .foregroundStyle(.tertiary)
-                            Text("暂无记录")
+                            Text(langManager.localized("guardian.records.empty"))
                                 .font(.scaled(size: 14, weight: .medium))
                                 .foregroundStyle(.secondary)
-                            Text("守护活动将在此显示")
+                            Text(langManager.localized("guardian.records.empty.subtitle"))
                                 .font(.scaled(size: 13))
                                 .foregroundStyle(.tertiary)
                         }
@@ -249,11 +251,11 @@ struct GuardianRecordsView: View {
             .padding(.horizontal, 16)
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("导出")
+                Text(langManager.localized("guardian.records.export"))
                     .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
-                exportRow("带时间戳的 PDF", value: "需升级")
-                exportRow("位置轨迹 GPX", value: "需升级")
+                exportRow(langManager.localized("guardian.records.export.pdf"), value: langManager.localized("guardian.records.export.upgrade"))
+                exportRow(langManager.localized("guardian.records.export.gpx"), value: langManager.localized("guardian.records.export.upgrade"))
             }
             .padding(12)
             .background(
@@ -272,10 +274,10 @@ struct GuardianRecordsView: View {
         VStack(spacing: 12) {
             // Summary
             HStack(spacing: 16) {
-                statBadge(value: "\(coordinator.timeline.count)", label: "事件", color: ink)
+                statBadge(value: "\(coordinator.timeline.count)", label: langManager.localized("guardian.records.events"), color: ink)
                 statBadge(
                     value: "\(coordinator.timeline.filter { $0.type == .checkIn }.count)",
-                    label: "报平安", color: safe
+                    label: langManager.localized("guardian.records.checkins"), color: safe
                 )
                 statBadge(
                     value: "\(coordinator.timeline.filter { $0.type == .sosTriggered }.count)",
@@ -293,10 +295,10 @@ struct GuardianRecordsView: View {
                             Image(systemName: "clock")
                                 .font(.scaled(size: 28))
                                 .foregroundStyle(.tertiary)
-                            Text("暂无记录")
+                            Text(langManager.localized("guardian.records.empty"))
                                 .font(.scaled(size: 14, weight: .medium))
                                 .foregroundStyle(.secondary)
-                            Text("守护活动将在此显示")
+                            Text(langManager.localized("guardian.records.empty.subtitle"))
                                 .font(.scaled(size: 13))
                                 .foregroundStyle(.tertiary)
                         }
@@ -324,11 +326,11 @@ struct GuardianRecordsView: View {
 
             // Export
             VStack(alignment: .leading, spacing: 8) {
-                Text("导出")
+                Text(langManager.localized("guardian.records.export"))
                     .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
-                exportRow("带时间戳的 PDF", value: "需升级")
-                exportRow("位置轨迹 GPX", value: "需升级")
+                exportRow(langManager.localized("guardian.records.export.pdf"), value: langManager.localized("guardian.records.export.upgrade"))
+                exportRow(langManager.localized("guardian.records.export.gpx"), value: langManager.localized("guardian.records.export.upgrade"))
             }
             .padding(12)
             .background(
@@ -419,10 +421,10 @@ struct GuardianRecordsView: View {
 
     private func formatDate(_ date: Date) -> String {
         let cal = Calendar.current
-        if cal.isDateInToday(date) { return "今天" }
-        if cal.isDateInYesterday(date) { return "昨天" }
+        if cal.isDateInToday(date) { return langManager.localized("guardian.records.today") }
+        if cal.isDateInYesterday(date) { return langManager.localized("guardian.records.yesterday") }
         let days = cal.dateComponents([.day], from: date, to: Date()).day ?? 0
-        return "\(days)天前"
+        return String(format: langManager.localized("guardian.records.days.ago"), days)
     }
 
     private func formatTime(_ date: Date) -> String {
@@ -464,7 +466,7 @@ struct GuardianRecordsView: View {
             } else {
                 SubscriptionGateView(
                     feature: "duty_schedule",
-                    featureName: "值班排程",
+                    featureName: langManager.localized("guardian.records.duty.schedule"),
                     onDismiss: { selectedTab = .timeline }
                 )
             }
@@ -479,7 +481,7 @@ struct GuardianRecordsView: View {
                 let w = geo.size.width
                 ZStack {
                     Rectangle().fill(pro.opacity(0.15))
-                    Text("尚未设置排班")
+                    Text(langManager.localized("guardian.records.no.schedule"))
                         .font(.scaled(size: 12, weight: .medium))
                         .foregroundStyle(pro)
                 }
@@ -505,12 +507,12 @@ struct GuardianRecordsView: View {
 
     private var todayShiftsPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("今日班次")
+            Text(langManager.localized("guardian.records.today.shifts"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             HStack {
                 Spacer()
-                Text("暂无班次安排")
+                Text(langManager.localized("guardian.records.no.shifts"))
                     .font(.scaled(size: 13))
                     .foregroundStyle(.tertiary)
                 Spacer()
@@ -537,11 +539,11 @@ struct GuardianRecordsView: View {
 
     private var gapHandlingPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("缺口处理")
+            Text(langManager.localized("guardian.records.gap.handling"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            toggleRow("无人时段转响应中心", isOn: $routeToCenter)
-            toggleRow("交接前提醒", isOn: $handoffReminder)
+            toggleRow(langManager.localized("guardian.records.route.to.center"), isOn: $routeToCenter)
+            toggleRow(langManager.localized("guardian.records.handoff.reminder"), isOn: $handoffReminder)
         }
         .padding(12)
         .background(
@@ -563,14 +565,14 @@ struct GuardianRecordsView: View {
 
     private var upsellCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("凌晨两点到六点三地家人都在睡。这四小时目前由专员补上——订阅的价值就是这块空缺。")
+            Text(langManager.localized("guardian.records.upsell.text"))
                 .font(.scaled(size: 13))
                 .foregroundStyle(.secondary)
             NavigationLink {
                 GuardianPlanBillingView()
                     .environmentObject(coordinator)
             } label: {
-                Text("查看响应中心记录")
+                Text(langManager.localized("guardian.records.view.center.log"))
                     .font(.scaled(size: 13, weight: .medium))
                     .foregroundStyle(pro)
             }
@@ -590,15 +592,15 @@ struct GuardianRecordsView: View {
             HStack(spacing: 16) {
                 statBadge(
                     value: "\(guardianMembers.filter { $0.status == .active }.count)",
-                    label: "守护者", color: safe
+                    label: langManager.localized("guardian.records.guardians"), color: safe
                 )
                 statBadge(
                     value: "\(guardianMembers.filter { $0.status == .pending }.count)",
-                    label: "待接受", color: lamp
+                    label: langManager.localized("guardian.records.pending"), color: lamp
                 )
                 statBadge(
                     value: "\(localEmergencyContacts.count)",
-                    label: "紧急联络", color: alert
+                    label: langManager.localized("guardian.records.emergency"), color: alert
                 )
             }
             .padding(.horizontal, 16)
@@ -622,7 +624,7 @@ struct GuardianRecordsView: View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
             HStack {
-                Text("守护圈成员")
+                Text(langManager.localized("guardian.records.circle.members"))
                     .font(.scaled(size: 13, weight: .semibold))
                     .foregroundStyle(ink)
                 Spacer()
@@ -632,7 +634,7 @@ struct GuardianRecordsView: View {
                     HStack(spacing: 3) {
                         Image(systemName: "person.badge.plus")
                             .font(.scaled(size: 12))
-                        Text("邀请")
+                        Text(langManager.localized("guardian.records.invite"))
                             .font(.scaled(size: 12, weight: .medium))
                     }
                     .foregroundStyle(safe)
@@ -675,7 +677,7 @@ struct GuardianRecordsView: View {
                         .font(.scaled(size: 13, weight: .medium))
                         .foregroundStyle(ink)
                     if member.isMe {
-                        Text("(我)")
+                        Text(langManager.localized("guardian.records.me"))
                             .font(.scaled(size: 12))
                             .foregroundStyle(.secondary)
                     }
@@ -714,19 +716,19 @@ struct GuardianRecordsView: View {
                 Button {
                     editingMember = member
                 } label: {
-                    Label("编辑角色", systemImage: "pencil")
+                    Label(langManager.localized("guardian.records.edit.role"), systemImage: "pencil")
                 }
                 if member.status == .pending {
                     Button {
                         resendInvite(member)
                     } label: {
-                        Label("重发邀请", systemImage: "arrow.clockwise")
+                        Label(langManager.localized("guardian.records.resend.invite"), systemImage: "arrow.clockwise")
                     }
                 }
                 Button(role: .destructive) {
                     removeMember(member)
                 } label: {
-                    Label("移除", systemImage: "person.badge.minus")
+                    Label(langManager.localized("guardian.records.remove"), systemImage: "person.badge.minus")
                 }
             }
         }
@@ -735,12 +737,12 @@ struct GuardianRecordsView: View {
                 Button(role: .destructive) {
                     removeMember(member)
                 } label: {
-                    Label("移除", systemImage: "trash")
+                    Label(langManager.localized("guardian.records.remove"), systemImage: "trash")
                 }
                 Button {
                     editingMember = member
                 } label: {
-                    Label("编辑", systemImage: "pencil")
+                    Label(langManager.localized("guardian.records.edit"), systemImage: "pencil")
                 }
                 .tint(safe)
             }
@@ -771,7 +773,7 @@ struct GuardianRecordsView: View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
             HStack {
-                Text("紧急联络人")
+                Text(langManager.localized("guardian.records.emergency.contacts"))
                     .font(.scaled(size: 13, weight: .semibold))
                     .foregroundStyle(ink)
                 Spacer()
@@ -781,7 +783,7 @@ struct GuardianRecordsView: View {
                     HStack(spacing: 3) {
                         Image(systemName: "plus.circle")
                             .font(.scaled(size: 12))
-                        Text("添加")
+                        Text(langManager.localized("guardian.records.add"))
                             .font(.scaled(size: 12, weight: .medium))
                     }
                     .foregroundStyle(safe)
@@ -799,10 +801,10 @@ struct GuardianRecordsView: View {
                         Image(systemName: "person.crop.circle.badge.plus")
                             .font(.scaled(size: 24))
                             .foregroundStyle(.tertiary)
-                        Text("暂无紧急联络人")
+                        Text(langManager.localized("guardian.records.no.emergency"))
                             .font(.scaled(size: 13))
                             .foregroundStyle(.tertiary)
-                        Text("录入邻居、社区、当地医院、大使馆等")
+                        Text(langManager.localized("guardian.records.emergency.hint"))
                             .font(.scaled(size: 12))
                             .foregroundStyle(.quaternary)
                     }
@@ -883,7 +885,7 @@ struct GuardianRecordsView: View {
             Button(role: .destructive) {
                 localEmergencyContacts.remove(at: index)
             } label: {
-                Label("删除", systemImage: "trash")
+                Label(langManager.localized("guardian.records.delete"), systemImage: "trash")
             }
         }
     }
@@ -898,9 +900,9 @@ struct GuardianRecordsView: View {
                 Image(systemName: "link.badge.plus")
                     .font(.scaled(size: 16))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("邀请新守护者加入")
+                    Text(langManager.localized("guardian.records.invite.new"))
                         .font(.scaled(size: 14, weight: .medium))
-                    Text("通过短信、微信或链接邀请家人加入守护圈")
+                    Text(langManager.localized("guardian.records.invite.subtitle"))
                         .font(.scaled(size: 12))
                         .foregroundStyle(.secondary)
                 }
@@ -964,7 +966,7 @@ struct GuardianRecordsView: View {
         if let user = coordinator.currentUser {
             members.append(GuardianMember(
                 id: user.id,
-                name: user.displayName.isEmpty ? "我" : user.displayName,
+                name: user.displayName.isEmpty ? langManager.localized("guardian.records.me.name") : user.displayName,
                 city: user.cityName,
                 phone: "",
                 role: .primary,

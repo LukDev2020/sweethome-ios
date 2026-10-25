@@ -8,6 +8,7 @@ import Combine
 
 struct HomeTimerView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var langManager = LanguageManager.shared
     @Environment(\.dismiss) private var dismiss
 
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
@@ -15,7 +16,7 @@ struct HomeTimerView: View {
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
 
     @State private var selectedTime = Date().addingTimeInterval(3600)
-    @State private var label = "回家"
+    @State private var label = ""
     @State private var destination = ""
     @State private var routeNotes = ""
     @State private var isActive = false
@@ -37,11 +38,11 @@ struct HomeTimerView: View {
                 }
             }
             .background(Color(.systemBackground))
-            .navigationTitle("回家计时器")
+            .navigationTitle(langManager.localized("homeTimer.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("关闭") { dismiss() }
+                    Button(langManager.localized("homeTimer.close")) { dismiss() }
                 }
             }
             .onReceive(timer) { newTick in
@@ -62,30 +63,30 @@ struct HomeTimerView: View {
                 .font(.scaled(size: 48))
                 .foregroundStyle(safe.opacity(0.6))
 
-            Text("设置回家时间")
+            Text(langManager.localized("homeTimer.setup"))
                 .font(.scaled(size: 20, weight: .semibold))
                 .foregroundStyle(ink)
 
-            Text("如果到时间还没有关闭计时器，\n系统会自动通知你的守护者。")
+            Text(langManager.localized("homeTimer.setupDesc"))
                 .font(.scaled(size: 14))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
             VStack(spacing: 12) {
-                TextField("标签", text: $label)
+                TextField(langManager.localized("homeTimer.label"), text: $label)
                     .textFieldStyle(.roundedBorder)
                     .frame(maxWidth: .infinity)
 
-                TextField("目的地（可选）", text: $destination)
+                TextField(langManager.localized("homeTimer.destination"), text: $destination)
                     .textFieldStyle(.roundedBorder)
                     .frame(maxWidth: .infinity)
 
-                TextField("路线备注（可选）", text: $routeNotes)
+                TextField(langManager.localized("homeTimer.routeNotes"), text: $routeNotes)
                     .textFieldStyle(.roundedBorder)
                     .frame(maxWidth: .infinity)
 
                 DatePicker(
-                    "预计时间",
+                    langManager.localized("homeTimer.estimatedTime"),
                     selection: $selectedTime,
                     in: Date()...,
                     displayedComponents: [.hourAndMinute]
@@ -104,7 +105,7 @@ struct HomeTimerView: View {
                         ProgressView()
                             .tint(.white)
                     }
-                    Text("开始计时")
+                    Text(langManager.localized("homeTimer.start"))
                         .font(.scaled(size: 16, weight: .semibold))
                 }
                 .foregroundStyle(.white)
@@ -118,7 +119,7 @@ struct HomeTimerView: View {
 
             Spacer()
 
-            Text("常用场景：夜间回家、独自出门、见陌生人")
+            Text(langManager.localized("homeTimer.commonScenarios"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary.opacity(0.6))
                 .padding(.bottom, 16)
@@ -154,14 +155,14 @@ struct HomeTimerView: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .font(.scaled(size: 32))
                             .foregroundStyle(alert)
-                        Text("已超时")
+                        Text(langManager.localized("homeTimer.expired"))
                             .font(.scaled(size: 16, weight: .bold))
                             .foregroundStyle(alert)
                     } else {
                         Text(String(format: "%02d:%02d:%02d", hours, minutes, seconds))
                             .font(.scaled(size: 36, weight: .bold, design: .monospaced))
                             .foregroundStyle(ink)
-                        Text("剩余时间")
+                        Text(langManager.localized("homeTimer.remaining"))
                             .font(.scaled(size: 12))
                             .foregroundStyle(.secondary)
                     }
@@ -172,7 +173,7 @@ struct HomeTimerView: View {
                 .font(.scaled(size: 18, weight: .medium))
                 .foregroundStyle(ink)
 
-            Text("到达后请关闭计时器")
+            Text(langManager.localized("homeTimer.dismissHint"))
                 .font(.scaled(size: 14))
                 .foregroundStyle(.secondary)
 
@@ -181,7 +182,7 @@ struct HomeTimerView: View {
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill")
-                    Text("我到了，关闭计时")
+                    Text(langManager.localized("homeTimer.arrived"))
                         .font(.scaled(size: 16, weight: .semibold))
                 }
                 .foregroundStyle(.white)
@@ -219,7 +220,7 @@ struct HomeTimerView: View {
                     #endif
                 }
             }
-            coordinator.addTimelineEntry(type: .homeTimerExpired, description: "回家计时器已超时，已通知守护者")
+            coordinator.addTimelineEntry(type: .homeTimerExpired, description: langManager.localized("homeTimer.expiredNotify"))
         }
     }
 
@@ -253,7 +254,7 @@ struct HomeTimerView: View {
             activeLabel = label
             isActive = true
         }
-        coordinator.addTimelineEntry(type: .homeTimerSet, description: "设置了回家计时：\(label)")
+        coordinator.addTimelineEntry(type: .homeTimerSet, description: String(format: langManager.localized("homeTimer.setEntry"), label))
     }
 
     private func dismissTimer() async {
@@ -273,7 +274,7 @@ struct HomeTimerView: View {
             activeDeadline = nil
             activeLabel = nil
         }
-        coordinator.addTimelineEntry(type: .homeTimerDismissed, description: "已安全到达")
+        coordinator.addTimelineEntry(type: .homeTimerDismissed, description: langManager.localized("homeTimer.safeArrival"))
         dismiss()
     }
 

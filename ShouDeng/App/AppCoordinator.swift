@@ -130,11 +130,29 @@ final class AppCoordinator: ObservableObject {
         wireServices()
         restoreLocalState()
         observeAuthState()
+        observeLanguageChange()
         // Start Live Activity after restoring local state (so we have cached user/guardian data)
         if case .loggedIn = authState,
            UserDefaults.standard.bool(forKey: "lockscreen_card_enabled"),
            currentUser != nil {
             startLiveActivityIfNeeded()
+        }
+    }
+
+    // MARK: - Language Change Observer
+
+    private func observeLanguageChange() {
+        NotificationCenter.default.addObserver(
+            forName: LanguageManager.languageDidChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self else { return }
+            // Restart Live Activity so it picks up the new language
+            self.liveActivityManager.endAllActivities()
+            if UserDefaults.standard.bool(forKey: "lockscreen_card_enabled") {
+                self.startLiveActivityIfNeeded()
+            }
         }
     }
 

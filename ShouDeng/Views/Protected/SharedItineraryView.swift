@@ -7,6 +7,7 @@ import SwiftUI
 
 struct SharedItineraryView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var langManager = LanguageManager.shared
     @Environment(\.dismiss) private var dismiss
 
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
@@ -29,11 +30,11 @@ struct SharedItineraryView: View {
                 }
             }
             .background(Color(.systemBackground))
-            .navigationTitle("共享行程")
+            .navigationTitle(langManager.localized("itinerary.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("关闭") { dismiss() }
+                    Button(langManager.localized("itinerary.close")) { dismiss() }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showAdd = true } label: {
@@ -56,15 +57,15 @@ struct SharedItineraryView: View {
             Image(systemName: "airplane")
                 .font(.scaled(size: 40))
                 .foregroundStyle(safe.opacity(0.4))
-            Text("还没有共享行程")
+            Text(langManager.localized("itinerary.empty"))
                 .font(.scaled(size: 15, weight: .medium))
                 .foregroundStyle(ink.opacity(0.6))
-            Text("添加航班或车次，家人可以看到你的行程状态")
+            Text(langManager.localized("itinerary.emptyHint"))
                 .font(.scaled(size: 13))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Button { showAdd = true } label: {
-                Text("添加行程")
+                Text(langManager.localized("itinerary.add"))
                     .font(.scaled(size: 14, weight: .medium))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 24)
@@ -146,11 +147,11 @@ struct SharedItineraryView: View {
     private func statusBadge(_ status: String) -> some View {
         let (text, color): (String, Color) = {
             switch status {
-            case "scheduled": return ("计划中", .secondary)
-            case "departed": return ("已出发", safe)
-            case "arrived": return ("已到达", safe)
-            case "delayed": return ("延误", .orange)
-            case "cancelled": return ("取消", .red)
+            case "scheduled": return (langManager.localized("itinerary.status.scheduled"), .secondary)
+            case "departed": return (langManager.localized("itinerary.status.departed"), safe)
+            case "arrived": return (langManager.localized("itinerary.status.arrived"), safe)
+            case "delayed": return (langManager.localized("itinerary.status.delayed"), .orange)
+            case "cancelled": return (langManager.localized("itinerary.status.cancelled"), .red)
             default: return (status, .secondary)
             }
         }()
@@ -192,6 +193,7 @@ struct SharedItineraryView: View {
 
 struct AddItinerarySheet: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var langManager = LanguageManager.shared
     @Environment(\.dismiss) private var dismiss
 
     let onAdded: () -> Void
@@ -211,30 +213,30 @@ struct AddItinerarySheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Picker("类型", selection: $type) {
-                    Text("航班").tag("flight")
-                    Text("火车").tag("train")
-                    Text("大巴").tag("bus")
+                Picker(langManager.localized("itinerary.type"), selection: $type) {
+                    Text(langManager.localized("itinerary.type.flight")).tag("flight")
+                    Text(langManager.localized("itinerary.type.train")).tag("train")
+                    Text(langManager.localized("itinerary.type.bus")).tag("bus")
                 }
 
                 if type == "flight" {
-                    TextField("航空公司代码 (如 CA)", text: $carrierCode)
-                    TextField("航班号 (如 981)", text: $flightNumber)
+                    TextField(langManager.localized("itinerary.carrierCode"), text: $carrierCode)
+                    TextField(langManager.localized("itinerary.flightNumber"), text: $flightNumber)
                 }
 
-                TextField("出发城市", text: $departureCity)
-                TextField("到达城市", text: $arrivalCity)
+                TextField(langManager.localized("itinerary.departureCity"), text: $departureCity)
+                TextField(langManager.localized("itinerary.arrivalCity"), text: $arrivalCity)
 
-                DatePicker("出发时间", selection: $departureTime)
-                DatePicker("预计到达", selection: $arrivalTime)
+                DatePicker(langManager.localized("itinerary.departureTime"), selection: $departureTime)
+                DatePicker(langManager.localized("itinerary.arrivalTime"), selection: $arrivalTime)
 
-                TextField("备注 (可选)", text: $note)
+                TextField(langManager.localized("itinerary.note"), text: $note)
             }
-            .navigationTitle("添加行程")
+            .navigationTitle(langManager.localized("itinerary.addTitle"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("取消") { dismiss() }
+                    Button(langManager.localized("itinerary.cancel")) { dismiss() }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -243,7 +245,7 @@ struct AddItinerarySheet: View {
                         if isSaving {
                             ProgressView()
                         } else {
-                            Text("保存").bold()
+                            Text(langManager.localized("itinerary.save")).bold()
                         }
                     }
                     .disabled(departureCity.isEmpty || arrivalCity.isEmpty || isSaving)

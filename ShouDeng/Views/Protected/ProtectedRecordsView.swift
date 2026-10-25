@@ -8,6 +8,7 @@ import SwiftUI
 
 struct ProtectedRecordsView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var langManager = LanguageManager.shared
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
@@ -38,7 +39,7 @@ struct ProtectedRecordsView: View {
                 recordsCompact
             }
         }
-        .navigationTitle("我的记录")
+        .navigationTitle(langManager.localized("protected.records.title"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(sizeClass == .regular ? .hidden : .visible, for: .navigationBar)
         .sheet(isPresented: $showAddContact) {
@@ -53,8 +54,8 @@ struct ProtectedRecordsView: View {
     private var recordsCompact: some View {
         VStack(spacing: 0) {
             Picker("", selection: $selectedTab) {
-                Text("时间线").tag(0)
-                Text("紧急联系人").tag(1)
+                Text(langManager.localized("protected.records.timeline")).tag(0)
+                Text(langManager.localized("protected.records.emergencyContacts")).tag(1)
             }
             .pickerStyle(.segmented)
             .padding(.horizontal, 16)
@@ -77,9 +78,9 @@ struct ProtectedRecordsView: View {
             ScrollView {
                 VStack(spacing: 12) {
                     VStack(spacing: 2) {
-                        Text("我的记录")
+                        Text(langManager.localized("protected.records.title"))
                             .font(.scaled(size: 20, weight: .bold))
-                        Text("90 天可查 · 专业版永久保存")
+                        Text(langManager.localized("protected.records.retention"))
                             .font(.scaled(size: 13))
                             .foregroundStyle(.secondary)
                     }
@@ -109,7 +110,7 @@ struct ProtectedRecordsView: View {
                         HStack(spacing: 6) {
                             Image(systemName: "plus.circle.fill")
                                 .font(.scaled(size: 16))
-                            Text("添加紧急联络人")
+                            Text(langManager.localized("protected.records.addContact"))
                                 .font(.scaled(size: 13, weight: .medium))
                         }
                         .foregroundStyle(safe)
@@ -119,7 +120,7 @@ struct ProtectedRecordsView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
 
-                    Text("紧急情况下，优先拨打当地急救电话。自定义联络人可提前录入邻居、社区、当地医院等信息。")
+                    Text(langManager.localized("protected.records.emergencyTip"))
                         .font(.scaled(size: 12))
                         .foregroundStyle(.tertiary)
                         .multilineTextAlignment(.center)
@@ -139,9 +140,9 @@ struct ProtectedRecordsView: View {
         ScrollView {
             VStack(spacing: 12) {
                 VStack(spacing: 2) {
-                    Text("我的记录")
+                    Text(langManager.localized("protected.records.title"))
                         .font(.scaled(size: 20, weight: .bold))
-                    Text("90 天可查 · 专业版永久保存")
+                    Text(langManager.localized("protected.records.retention"))
                         .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                 }
@@ -173,7 +174,7 @@ struct ProtectedRecordsView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "plus.circle.fill")
                             .font(.scaled(size: 16))
-                        Text("添加紧急联络人")
+                        Text(langManager.localized("protected.records.addContact"))
                             .font(.scaled(size: 13, weight: .medium))
                     }
                     .foregroundStyle(safe)
@@ -184,7 +185,7 @@ struct ProtectedRecordsView: View {
                 }
 
                 // Tip
-                Text("紧急情况下，优先拨打当地急救电话。自定义联络人可提前录入邻居、社区、当地医院等信息。")
+                Text(langManager.localized("protected.records.emergencyTip"))
                     .font(.scaled(size: 12))
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
@@ -205,7 +206,7 @@ struct ProtectedRecordsView: View {
                 Image(systemName: "phone.arrow.up.right.fill")
                     .font(.scaled(size: 13))
                     .foregroundStyle(alert)
-                Text("当地紧急服务")
+                Text(langManager.localized("protected.records.localEmergency"))
                     .font(.scaled(size: 13, weight: .semibold))
                 Spacer()
                 Text("\(info.regionName) \(info.areaCode)")
@@ -277,10 +278,10 @@ struct ProtectedRecordsView: View {
                         Image(systemName: "clock")
                             .font(.scaled(size: 28))
                             .foregroundStyle(.tertiary)
-                        Text("暂无记录")
+                        Text(langManager.localized("protected.records.noRecords"))
                             .font(.scaled(size: 14, weight: .medium))
                             .foregroundStyle(.secondary)
-                        Text("你的活动记录将在此显示")
+                        Text(langManager.localized("protected.records.noRecordsHint"))
                             .font(.scaled(size: 13))
                             .foregroundStyle(.tertiary)
                     }
@@ -306,10 +307,10 @@ struct ProtectedRecordsView: View {
 
     private func formatDate(_ date: Date) -> String {
         let cal = Calendar.current
-        if cal.isDateInToday(date) { return "今天" }
-        if cal.isDateInYesterday(date) { return "昨天" }
+        if cal.isDateInToday(date) { return langManager.localized("protected.records.today") }
+        if cal.isDateInYesterday(date) { return langManager.localized("protected.records.yesterday") }
         let days = cal.dateComponents([.day], from: date, to: Date()).day ?? 0
-        return "\(days)天前"
+        return String(format: langManager.localized("protected.records.daysAgo"), days)
     }
 
     private func formatTime(_ date: Date) -> String {
@@ -344,11 +345,11 @@ struct ProtectedRecordsView: View {
 
     private var exportPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("导出")
+            Text(langManager.localized("protected.records.export"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            exportRow("带时间戳的 PDF", value: "需升级")
-            exportRow("位置轨迹 GPX", value: "需升级")
+            exportRow(langManager.localized("protected.records.exportPDF"), value: langManager.localized("protected.records.needUpgrade"))
+            exportRow(langManager.localized("protected.records.exportGPX"), value: langManager.localized("protected.records.needUpgrade"))
         }
         .padding(12)
         .background(
@@ -372,18 +373,18 @@ struct ProtectedRecordsView: View {
 
     private var upsellCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("免费版仅保留 24 小时。升级后可查看 90 天完整时间线并导出——向警方、保险或律师说明情况时用得上。")
+            Text(langManager.localized("protected.records.upsellText"))
                 .font(.scaled(size: 13))
                 .foregroundStyle(.secondary)
             Button { showUpgradeHint = true } label: {
-                Text("升级查看全部记录")
+                Text(langManager.localized("protected.records.upgradeButton"))
                     .font(.scaled(size: 13, weight: .medium))
                     .foregroundStyle(pro)
             }
-            .alert("如何升级？", isPresented: $showUpgradeHint) {
-                Button("好的") {}
+            .alert(langManager.localized("protected.records.howToUpgrade"), isPresented: $showUpgradeHint) {
+                Button(langManager.localized("protected.records.ok")) {}
             } message: {
-                Text("请联系您的守护者升级订阅方案，升级后您将自动解锁完整时间线。")
+                Text(langManager.localized("protected.records.upgradeMessage"))
             }
         }
         .padding(12)
@@ -517,7 +518,7 @@ private struct EmergencyContactCardRow: View {
             Button(role: .destructive, action: onDelete) {
                 HStack(spacing: 3) {
                     Image(systemName: "trash").font(.scaled(size: 10))
-                    Text("删除").font(.scaled(size: 12))
+                    Text(LanguageManager.shared.localized("protected.records.delete")).font(.scaled(size: 12))
                 }
                 .foregroundStyle(.red.opacity(0.6))
             }
@@ -553,7 +554,7 @@ private struct CustomContactsPanel: View {
             Image(systemName: "person.2.fill")
                 .font(.scaled(size: 12))
                 .foregroundStyle(safe)
-            Text("自定义紧急联络人")
+            Text(LanguageManager.shared.localized("protected.records.customContacts"))
                 .font(.scaled(size: 13, weight: .semibold))
             Spacer()
             Text("\(contacts.count) 人")
@@ -578,10 +579,10 @@ private struct CustomContactsPanel: View {
             Image(systemName: "person.crop.circle.badge.plus")
                 .font(.scaled(size: 28))
                 .foregroundStyle(.tertiary)
-            Text("暂无紧急联络人")
+            Text(LanguageManager.shared.localized("protected.records.noContacts"))
                 .font(.scaled(size: 13))
                 .foregroundStyle(.secondary)
-            Text("录入邻居、社区工作人员、当地医院等")
+            Text(LanguageManager.shared.localized("protected.records.contactsHint"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.tertiary)
         }

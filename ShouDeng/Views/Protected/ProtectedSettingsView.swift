@@ -77,36 +77,36 @@ struct ProtectedSettingsView: View {
             .sheet(isPresented: $showAbout) {
                 AboutView()
             }
-            .alert("确认注销", isPresented: $showDeleteConfirm) {
-                Button("取消", role: .cancel) {}
-                Button("永久删除", role: .destructive) {
+            .alert(langManager.localized("settings.alert.deleteAccount.title"), isPresented: $showDeleteConfirm) {
+                Button(langManager.localized("settings.action.cancel"), role: .cancel) {}
+                Button(langManager.localized("settings.action.deletePermanently"), role: .destructive) {
                     Task { await deleteAccount() }
                 }
             } message: {
-                Text("注销账号将永久删除您的所有数据，此操作不可撤销。")
+                Text(langManager.localized("settings.alert.deleteAccount.message"))
             }
-            .alert("数据导出", isPresented: $showExportAlert) {
-                Button("请求导出") {
+            .alert(langManager.localized("settings.alert.dataExport.title"), isPresented: $showExportAlert) {
+                Button(langManager.localized("settings.action.requestExport")) {
                     Task { await requestDataExport() }
                 }
-                Button("取消", role: .cancel) {}
+                Button(langManager.localized("settings.action.cancel"), role: .cancel) {}
             } message: {
-                Text("确认后，数据将在 24 小时内通过邮件发送给您。")
+                Text(langManager.localized("settings.alert.dataExport.message"))
             }
-            .alert("导出已提交", isPresented: $showExportSent) {
-                Button("确定") {}
+            .alert(langManager.localized("settings.alert.exportSent.title"), isPresented: $showExportSent) {
+                Button(langManager.localized("settings.action.ok")) {}
             } message: {
-                Text("导出请求已发送，数据将在 24 小时内通过邮件发送给您。")
+                Text(langManager.localized("settings.alert.exportSent.message"))
             }
-            .alert("操作失败", isPresented: $showDeleteError) {
-                Button("确定") {}
+            .alert(langManager.localized("settings.alert.error.title"), isPresented: $showDeleteError) {
+                Button(langManager.localized("settings.action.ok")) {}
             } message: {
-                Text("操作未能完成，请检查网络连接后重试。")
+                Text(langManager.localized("settings.alert.error.message"))
             }
-            .alert("切换角色", isPresented: $showRoleSwitchInfo) {
-                Button("我知道了") {}
+            .alert(langManager.localized("settings.alert.roleSwitch.title"), isPresented: $showRoleSwitchInfo) {
+                Button(langManager.localized("settings.action.understood")) {}
             } message: {
-                Text("切换角色需要守护者同意。请联系您的守护者发起角色变更申请。")
+                Text(langManager.localized("protected.settings.alert.roleSwitch.message"))
             }
             .sheet(isPresented: $showMedicalCard) {
                 MedicalCardView().environmentObject(coordinator)
@@ -140,7 +140,7 @@ struct ProtectedSettingsView: View {
     private var settingsCompact: some View {
         ScrollView {
             VStack(spacing: 12) {
-                Text("求助方式与隐私")
+                Text(langManager.localized("protected.settings.section.sosAndPrivacy"))
                     .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
                     .padding(.top, 8)
@@ -161,7 +161,7 @@ struct ProtectedSettingsView: View {
                 #if DEBUG
                 devPanel
                 #endif
-                Text("求助方式给三种冗余：手机没在手上时，手表或实体按钮仍能触发。")
+                Text(langManager.localized("protected.settings.sos.redundancyHint"))
                     .font(.scaled(size: 12))
                     .foregroundStyle(.secondary.opacity(0.7))
                     .padding(.top, 8)
@@ -176,7 +176,7 @@ struct ProtectedSettingsView: View {
         HStack(spacing: 0) {
             ScrollView {
                 VStack(spacing: 12) {
-                    Text("账户与求助")
+                    Text(langManager.localized("protected.settings.section.accountAndSos"))
                         .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                         .padding(.top, 8)
@@ -197,7 +197,7 @@ struct ProtectedSettingsView: View {
 
             ScrollView {
                 VStack(spacing: 12) {
-                    Text("工具与安全")
+                    Text(langManager.localized("settings.section.toolsAndSecurity"))
                         .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                         .padding(.top, 8)
@@ -224,7 +224,7 @@ struct ProtectedSettingsView: View {
 
     private var profilePanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("个人资料")
+            Text(langManager.localized("settings.section.profile"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
@@ -232,7 +232,7 @@ struct ProtectedSettingsView: View {
                 HStack(spacing: 10) {
                     AvatarView(user: coordinator.currentUser, size: 36)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text(coordinator.currentUser?.displayName ?? "未设置")
+                        Text(coordinator.currentUser?.displayName ?? langManager.localized("settings.profile.notSet"))
                             .font(.scaled(size: 13, weight: .medium))
                             .foregroundStyle(ink)
                         Text(coordinator.currentUser?.cityName ?? "")
@@ -266,10 +266,10 @@ struct ProtectedSettingsView: View {
                         .font(.scaled(size: 14))
                         .foregroundStyle(.orange)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text("添加邮箱以便找回账号")
+                        Text(langManager.localized("settings.email.addTitle"))
                             .font(.scaled(size: 13, weight: .medium))
                             .foregroundStyle(ink)
-                        Text("遇到换手机或号码失效时可通过邮箱找回")
+                        Text(langManager.localized("settings.email.addDesc"))
                             .font(.scaled(size: 11))
                             .foregroundStyle(.secondary)
                     }
@@ -296,13 +296,13 @@ struct ProtectedSettingsView: View {
 
     private var sosTriggerPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("怎样触发求助")
+            Text(langManager.localized("protected.settings.section.sosTrigger"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            toggleRow("App 内长按 3 秒", isOn: $longPressEnabled)
-            toggleRow("手表快捷键", isOn: $watchEnabled)
-            fixedRow("蓝牙实体按钮", value: "未配对", isWarning: true)
-            toggleRow("静默模式 · 本机无提示", isOn: $silentMode)
+            toggleRow(langManager.localized("protected.settings.sos.longPress"), isOn: $longPressEnabled)
+            toggleRow(langManager.localized("protected.settings.sos.watch"), isOn: $watchEnabled)
+            fixedRow(langManager.localized("protected.settings.sos.bluetooth"), value: langManager.localized("protected.settings.sos.notPaired"), isWarning: true)
+            toggleRow(langManager.localized("protected.settings.sos.silentMode"), isOn: $silentMode)
         }
         .padding(12)
         .background(
@@ -315,13 +315,13 @@ struct ProtectedSettingsView: View {
 
     private var smartDetectionPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("智能检测")
+            Text(langManager.localized("protected.settings.section.smartDetection"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
             VStack(alignment: .leading, spacing: 2) {
-                toggleRow("异常声音检测", isOn: $distressDetectionEnabled)
-                Text("检测到尖叫等异常声音时自动触发 60 秒倒计时。全部在本机处理，不上传录音。")
+                toggleRow(langManager.localized("protected.settings.detection.distress"), isOn: $distressDetectionEnabled)
+                Text(langManager.localized("protected.settings.detection.distressDesc"))
                     .font(.scaled(size: 11))
                     .foregroundStyle(.secondary)
                     .padding(.leading, 30)
@@ -331,8 +331,8 @@ struct ProtectedSettingsView: View {
             }
 
             VStack(alignment: .leading, spacing: 2) {
-                toggleRow("语音求助", isOn: $voiceCommandEnabled)
-                Text("说出「救命」「help」即可触发求助。需要麦克风和语音识别权限。")
+                toggleRow(langManager.localized("protected.settings.detection.voiceCommand"), isOn: $voiceCommandEnabled)
+                Text(langManager.localized("protected.settings.detection.voiceCommandDesc"))
                     .font(.scaled(size: 11))
                     .foregroundStyle(.secondary)
                     .padding(.leading, 30)
@@ -359,11 +359,11 @@ struct ProtectedSettingsView: View {
 
     private var checkInPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("定时报平安")
+            Text(langManager.localized("protected.settings.section.checkIn"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            fixedRow("每天提醒", value: "09:00、21:00", isWarning: false)
-            fixedRow("超时多久算失联", value: "4 小时", isWarning: false)
+            fixedRow(langManager.localized("protected.settings.checkIn.dailyReminder"), value: "09:00、21:00", isWarning: false)
+            fixedRow(langManager.localized("protected.settings.checkIn.overdueThreshold"), value: langManager.localized("protected.settings.checkIn.fourHours"), isWarning: false)
         }
         .padding(12)
         .background(
@@ -376,12 +376,12 @@ struct ProtectedSettingsView: View {
 
     private var safetyToolsPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("安全工具")
+            Text(langManager.localized("settings.section.safetyTools"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
             Button { showMedicalCard = true } label: {
-                fixedRow("紧急医疗卡", value: "编辑 →", isWarning: false)
+                fixedRow(langManager.localized("settings.safetyTools.medicalCard"), value: langManager.localized("settings.action.edit"), isWarning: false)
             }
             .buttonStyle(.plain)
 
@@ -390,7 +390,7 @@ struct ProtectedSettingsView: View {
                 Image(systemName: "lock.display")
                     .font(.scaled(size: 11))
                     .foregroundStyle(.orange)
-                Text("在医疗卡中标记急救的药品会显示在锁屏小组件和实时活动中")
+                Text(langManager.localized("protected.settings.safetyTools.lockscreenHint"))
                     .font(.scaled(size: 11))
                     .foregroundStyle(.secondary)
             }
@@ -400,17 +400,17 @@ struct ProtectedSettingsView: View {
             .clipShape(RoundedRectangle(cornerRadius: 8))
 
             Button { showEmergencyText = true } label: {
-                fixedRow("多语言急救卡", value: "查看 →", isWarning: false)
+                fixedRow(langManager.localized("settings.safetyTools.emergencyCard"), value: langManager.localized("settings.action.view"), isWarning: false)
             }
             .buttonStyle(.plain)
 
             Button { showConsulate = true } label: {
-                fixedRow("领事与紧急电话", value: "查看 →", isWarning: false)
+                fixedRow(langManager.localized("settings.safetyTools.consulate"), value: langManager.localized("settings.action.view"), isWarning: false)
             }
             .buttonStyle(.plain)
 
             Button { showClaimMaterials = true } label: {
-                fixedRow("理赔材料整理", value: "开始 →", isWarning: false)
+                fixedRow(langManager.localized("settings.safetyTools.claimMaterials"), value: langManager.localized("settings.action.start"), isWarning: false)
             }
             .buttonStyle(.plain)
         }
@@ -476,7 +476,7 @@ struct ProtectedSettingsView: View {
                         .font(.scaled(size: 14))
                         .foregroundStyle(safe)
                         .frame(width: 20)
-                    Text("\(BiometricAuthManager.shared.biometricName) 登录")
+                    Text(String(format: langManager.localized("settings.security.biometricLogin"), BiometricAuthManager.shared.biometricName))
                         .font(.scaled(size: 13))
                     Spacer()
                     Toggle("", isOn: Binding(
@@ -499,7 +499,7 @@ struct ProtectedSettingsView: View {
                         .font(.scaled(size: 14))
                         .foregroundStyle(.secondary)
                         .frame(width: 20)
-                    Text("此设备不支持生物识别登录")
+                    Text(langManager.localized("settings.security.biometricUnavailable"))
                         .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                 }
@@ -516,15 +516,15 @@ struct ProtectedSettingsView: View {
                         .foregroundStyle(.orange)
                         .frame(width: 20)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text("胁迫密码")
+                        Text(langManager.localized("settings.security.duressCode"))
                             .font(.scaled(size: 13))
                             .foregroundStyle(ink)
-                        Text("被迫解锁时静默触发求助")
+                        Text(langManager.localized("settings.security.duressCodeDesc"))
                             .font(.scaled(size: 11))
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Text(KeychainHelper.shared.read(.duressCode) != nil ? "已设置" : "未设置")
+                    Text(KeychainHelper.shared.read(.duressCode) != nil ? langManager.localized("settings.status.configured") : langManager.localized("settings.status.notConfigured"))
                         .font(.scaled(size: 11))
                         .foregroundStyle(KeychainHelper.shared.read(.duressCode) != nil ? safe : .secondary)
                     Image(systemName: "chevron.right")
@@ -543,15 +543,15 @@ struct ProtectedSettingsView: View {
                         .foregroundStyle(.orange)
                         .frame(width: 20)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text("沉默报警")
+                        Text(langManager.localized("protected.settings.security.silentAlarm"))
                             .font(.scaled(size: 13))
                             .foregroundStyle(ink)
-                        Text("定时确认安全，未确认自动通知")
+                        Text(langManager.localized("protected.settings.security.silentAlarmDesc"))
                             .font(.scaled(size: 11))
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Text(SilentAlarmService.shared.isEnabled ? "已启用" : "未启用")
+                    Text(SilentAlarmService.shared.isEnabled ? langManager.localized("settings.status.enabled") : langManager.localized("settings.status.disabled"))
                         .font(.scaled(size: 11))
                         .foregroundStyle(SilentAlarmService.shared.isEnabled ? safe : .secondary)
                     Image(systemName: "chevron.right")
@@ -570,15 +570,15 @@ struct ProtectedSettingsView: View {
                         .foregroundStyle(safe)
                         .frame(width: 20)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text("蓝牙追踪器")
+                        Text(langManager.localized("settings.security.bleTracker"))
                             .font(.scaled(size: 13))
                             .foregroundStyle(ink)
-                        Text("配对紧急按钮或分离提醒标签")
+                        Text(langManager.localized("settings.security.bleTrackerDesc"))
                             .font(.scaled(size: 11))
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Text("\(BLETrackerService.shared.pairedTags.count) 个设备")
+                    Text(String(format: langManager.localized("settings.security.deviceCount"), BLETrackerService.shared.pairedTags.count))
                         .font(.scaled(size: 11))
                         .foregroundStyle(BLETrackerService.shared.pairedTags.isEmpty ? .secondary : safe)
                     Image(systemName: "chevron.right")
@@ -638,7 +638,7 @@ struct ProtectedSettingsView: View {
                         }
                     } label: {
                         VStack(spacing: 4) {
-                            Text("字")
+                            Text(langManager.localized("settings.fontsize.sample"))
                                 .font(.system(size: 11 * level.scale, weight: .medium))
                                 .foregroundStyle(fontScaleManager.level == level ? .white : ink)
                             Text(level.label)
@@ -654,7 +654,7 @@ struct ProtectedSettingsView: View {
                     }
                 }
             }
-            Text("调整后所有页面文字大小会立即变化")
+            Text(langManager.localized("settings.fontsize.hint"))
                 .font(.scaled(size: 11))
                 .foregroundStyle(.secondary.opacity(0.7))
         }
@@ -669,12 +669,12 @@ struct ProtectedSettingsView: View {
 
     private var notificationPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("通知偏好")
+            Text(langManager.localized("settings.section.notifications"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            toggleRow("紧急求助 (SOS)", isOn: $notifSOS)
-            toggleRow("报平安提醒", isOn: $notifCheckin)
-            toggleRow("家庭圈新动态", isOn: $notifFamilyFeed)
+            toggleRow(langManager.localized("settings.notification.sos"), isOn: $notifSOS)
+            toggleRow(langManager.localized("protected.settings.notification.checkInReminder"), isOn: $notifCheckin)
+            toggleRow(langManager.localized("settings.notification.familyFeed"), isOn: $notifFamilyFeed)
         }
         .padding(12)
         .background(
@@ -687,12 +687,12 @@ struct ProtectedSettingsView: View {
 
     private var dataPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("数据")
+            Text(langManager.localized("settings.section.data"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            fixedRow("位置保留时长", value: "90 天后自动删除", isWarning: false)
+            fixedRow(langManager.localized("settings.data.locationRetention"), value: langManager.localized("settings.data.locationRetentionValue"), isWarning: false)
             Button { showExportAlert = true } label: {
-                fixedRow("导出我的全部数据", value: "请求导出 →", isWarning: false)
+                fixedRow(langManager.localized("settings.data.exportAll"), value: langManager.localized("settings.action.requestExport"), isWarning: false)
             }
             .buttonStyle(.plain)
             Button { showDeleteConfirm = true } label: {
@@ -711,15 +711,15 @@ struct ProtectedSettingsView: View {
 
     private var legalPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("法律与关于")
+            Text(langManager.localized("settings.section.legal"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             Button { showPrivacy = true } label: {
-                fixedRow("隐私政策与服务条款", value: "查看 →", isWarning: false)
+                fixedRow(langManager.localized("settings.legal.privacyAndTerms"), value: langManager.localized("settings.action.view"), isWarning: false)
             }
             .buttonStyle(.plain)
             Button { showAbout = true } label: {
-                fixedRow("关于守灯", value: "v1.0.0", isWarning: false)
+                fixedRow(langManager.localized("settings.legal.about"), value: "v1.0.0", isWarning: false)
             }
             .buttonStyle(.plain)
             Button { coordinator.authManager.logout() } label: {
@@ -738,7 +738,7 @@ struct ProtectedSettingsView: View {
 
     private var rolePanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("当前角色")
+            Text(langManager.localized("settings.section.role"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
@@ -747,9 +747,9 @@ struct ProtectedSettingsView: View {
                     .font(.scaled(size: 14))
                     .foregroundStyle(safe)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("被守护者")
+                    Text(langManager.localized("protected.settings.role.protected"))
                         .font(.scaled(size: 13, weight: .medium))
-                    Text("家人会收到您的安全信号")
+                    Text(langManager.localized("protected.settings.role.protectedDesc"))
                         .font(.scaled(size: 12))
                         .foregroundStyle(.secondary)
                 }
@@ -759,10 +759,10 @@ struct ProtectedSettingsView: View {
 
             Button { showRoleSwitchInfo = true } label: {
                 HStack {
-                    Text("申请切换为守护者")
+                    Text(langManager.localized("protected.settings.role.switchToGuardian"))
                         .font(.scaled(size: 13))
                     Spacer()
-                    Text("需守护者同意")
+                    Text(langManager.localized("protected.settings.role.needsApproval"))
                         .font(.scaled(size: 12))
                         .foregroundStyle(.secondary)
                     Image(systemName: "chevron.right")
@@ -785,12 +785,12 @@ struct ProtectedSettingsView: View {
     #if DEBUG
     private var devPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("开发者选项")
+            Text(langManager.localized("settings.section.dev"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
             HStack {
-                Text("切换角色视图").font(.scaled(size: 13))
+                Text(langManager.localized("settings.dev.switchRole")).font(.scaled(size: 13))
                 Spacer()
                 Button {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
@@ -800,7 +800,7 @@ struct ProtectedSettingsView: View {
                     HStack(spacing: 4) {
                         Image(systemName: coordinator.userRole == .protected_ ? "shield.fill" : "eye.fill")
                             .font(.scaled(size: 10))
-                        Text(coordinator.userRole == .protected_ ? "被守护者" : "守护者")
+                        Text(coordinator.userRole == .protected_ ? langManager.localized("protected.settings.role.protected") : langManager.localized("guardian.settings.role.guardian"))
                             .font(.scaled(size: 12, weight: .medium))
                         Image(systemName: "arrow.triangle.2.circlepath")
                             .font(.scaled(size: 9))

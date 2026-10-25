@@ -11,6 +11,7 @@ import SwiftUI
 
 struct GuardianDutyScheduleView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var langManager = LanguageManager.shared
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
@@ -21,7 +22,7 @@ struct GuardianDutyScheduleView: View {
     @State private var handoffReminder = true
 
     private var firstProtectedName: String {
-        coordinator.protectedPersons.first?.user.displayName ?? "被守护者"
+        coordinator.protectedPersons.first?.user.displayName ?? langManager.localized("guardian.duty.protected.person")
     }
 
     private var firstProtectedCity: String {
@@ -35,7 +36,7 @@ struct GuardianDutyScheduleView: View {
             } else {
                 SubscriptionGateView(
                     feature: "duty_schedule",
-                    featureName: "值班排程",
+                    featureName: langManager.localized("guardian.duty.schedule"),
                     onDismiss: {}
                 )
             }
@@ -47,9 +48,12 @@ struct GuardianDutyScheduleView: View {
             VStack(spacing: 12) {
                 // Header
                 VStack(spacing: 2) {
-                    Text("值班排程")
+                    Text(langManager.localized("guardian.duty.schedule"))
                         .font(.scaled(size: 20, weight: .bold))
-                    Text("\(firstProtectedName)的一天\(firstProtectedCity.isEmpty ? "" : " · \(firstProtectedCity)时间")")
+                    Text({
+                        let dayText = String(format: langManager.localized("guardian.duty.person.day"), firstProtectedName)
+                        return firstProtectedCity.isEmpty ? dayText : "\(dayText) · \(String(format: langManager.localized("guardian.duty.city.time"), firstProtectedCity))"
+                    }())
                         .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                 }
@@ -70,11 +74,11 @@ struct GuardianDutyScheduleView: View {
             .padding(.horizontal, 16)
         }
         .background(Color(.systemBackground))
-        .navigationTitle("值班排程")
+        .navigationTitle(langManager.localized("guardian.duty.schedule"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Text("守护团队 \(max(1, coordinator.protectedPersons.count + 1)) 人")
+                Text(String(format: langManager.localized("guardian.duty.team.count"), max(1, coordinator.protectedPersons.count + 1)))
                     .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
             }
@@ -90,7 +94,7 @@ struct GuardianDutyScheduleView: View {
                 let w = geo.size.width
                 ZStack {
                     Rectangle().fill(pro.opacity(0.15))
-                    Text("尚未设置排班")
+                    Text(langManager.localized("guardian.duty.no.schedule"))
                         .font(.scaled(size: 12, weight: .medium))
                         .foregroundStyle(pro)
                 }
@@ -119,12 +123,12 @@ struct GuardianDutyScheduleView: View {
 
     private var todayShiftsPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("今日班次")
+            Text(langManager.localized("guardian.duty.today.shifts"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             HStack {
                 Spacer()
-                Text("暂无班次安排")
+                Text(langManager.localized("guardian.duty.no.shifts"))
                     .font(.scaled(size: 13))
                     .foregroundStyle(.tertiary)
                 Spacer()
@@ -142,11 +146,11 @@ struct GuardianDutyScheduleView: View {
 
     private var gapHandlingPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("缺口处理")
+            Text(langManager.localized("guardian.duty.gap.handling"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            toggleRow("无人时段转响应中心", isOn: $routeToCenter)
-            toggleRow("交接前提醒", isOn: $handoffReminder)
+            toggleRow(langManager.localized("guardian.duty.route.to.center"), isOn: $routeToCenter)
+            toggleRow(langManager.localized("guardian.duty.handoff.reminder"), isOn: $handoffReminder)
         }
         .padding(12)
         .background(
@@ -170,14 +174,14 @@ struct GuardianDutyScheduleView: View {
 
     private var upsellCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("凌晨两点到六点三地家人都在睡。这四小时目前由专员补上——订阅的价值就是这块空缺。")
+            Text(langManager.localized("guardian.duty.upsell.text"))
                 .font(.scaled(size: 13))
                 .foregroundStyle(.secondary)
             NavigationLink {
                 GuardianPlanBillingView()
                     .environmentObject(coordinator)
             } label: {
-                Text("查看响应中心记录")
+                Text(langManager.localized("guardian.duty.view.center.log"))
                     .font(.scaled(size: 13, weight: .medium))
                     .foregroundStyle(pro)
             }

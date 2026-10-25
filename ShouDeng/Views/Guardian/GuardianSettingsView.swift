@@ -67,36 +67,36 @@ struct GuardianSettingsView: View {
             .sheet(isPresented: $showAbout) {
                 AboutView()
             }
-            .alert("确认注销", isPresented: $showDeleteConfirm) {
-                Button("取消", role: .cancel) {}
-                Button("永久删除", role: .destructive) {
+            .alert(langManager.localized("settings.alert.deleteAccount.title"), isPresented: $showDeleteConfirm) {
+                Button(langManager.localized("settings.action.cancel"), role: .cancel) {}
+                Button(langManager.localized("settings.action.deletePermanently"), role: .destructive) {
                     Task { await deleteAccount() }
                 }
             } message: {
-                Text("注销账号将永久删除您的所有数据，此操作不可撤销。")
+                Text(langManager.localized("settings.alert.deleteAccount.message"))
             }
-            .alert("数据导出", isPresented: $showExportAlert) {
-                Button("请求导出") {
+            .alert(langManager.localized("settings.alert.dataExport.title"), isPresented: $showExportAlert) {
+                Button(langManager.localized("settings.action.requestExport")) {
                     Task { await requestDataExport() }
                 }
-                Button("取消", role: .cancel) {}
+                Button(langManager.localized("settings.action.cancel"), role: .cancel) {}
             } message: {
-                Text("确认后，数据将在 24 小时内通过邮件发送给您。")
+                Text(langManager.localized("settings.alert.dataExport.message"))
             }
-            .alert("导出已提交", isPresented: $showExportSent) {
-                Button("确定") {}
+            .alert(langManager.localized("settings.alert.exportSent.title"), isPresented: $showExportSent) {
+                Button(langManager.localized("settings.action.ok")) {}
             } message: {
-                Text("导出请求已发送，数据将在 24 小时内通过邮件发送给您。")
+                Text(langManager.localized("settings.alert.exportSent.message"))
             }
-            .alert("操作失败", isPresented: $showDeleteError) {
-                Button("确定") {}
+            .alert(langManager.localized("settings.alert.error.title"), isPresented: $showDeleteError) {
+                Button(langManager.localized("settings.action.ok")) {}
             } message: {
-                Text("操作未能完成，请检查网络连接后重试。")
+                Text(langManager.localized("settings.alert.error.message"))
             }
-            .alert("切换角色", isPresented: $showRoleSwitchInfo) {
-                Button("我知道了") {}
+            .alert(langManager.localized("settings.alert.roleSwitch.title"), isPresented: $showRoleSwitchInfo) {
+                Button(langManager.localized("settings.action.understood")) {}
             } message: {
-                Text("切换为被守护者后，您将不再收到被守护者的安全信号，且需要至少添加一位守护者才能获得保护。")
+                Text(langManager.localized("guardian.settings.alert.roleSwitch.message"))
             }
             .sheet(isPresented: $showMedicalCard) {
                 MedicalCardView().environmentObject(coordinator)
@@ -130,7 +130,7 @@ struct GuardianSettingsView: View {
     private var settingsCompact: some View {
         ScrollView {
             VStack(spacing: 12) {
-                Text("守护者偏好")
+                Text(langManager.localized("guardian.settings.section.preferences"))
                     .font(.scaled(size: 13))
                     .foregroundStyle(.secondary)
                     .padding(.top, 8)
@@ -161,7 +161,7 @@ struct GuardianSettingsView: View {
         HStack(spacing: 0) {
             ScrollView {
                 VStack(spacing: 12) {
-                    Text("账户")
+                    Text(langManager.localized("settings.section.account"))
                         .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                         .padding(.top, 8)
@@ -180,7 +180,7 @@ struct GuardianSettingsView: View {
 
             ScrollView {
                 VStack(spacing: 12) {
-                    Text("工具与安全")
+                    Text(langManager.localized("settings.section.toolsAndSecurity"))
                         .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                         .padding(.top, 8)
@@ -208,7 +208,7 @@ struct GuardianSettingsView: View {
 
     private var profilePanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("个人资料")
+            Text(langManager.localized("settings.section.profile"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
@@ -216,7 +216,7 @@ struct GuardianSettingsView: View {
                 HStack(spacing: 10) {
                     AvatarView(user: coordinator.currentUser, size: 36)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text(coordinator.currentUser?.displayName ?? "未设置")
+                        Text(coordinator.currentUser?.displayName ?? langManager.localized("settings.profile.notSet"))
                             .font(.scaled(size: 13, weight: .medium))
                             .foregroundStyle(ink)
                         Text(coordinator.currentUser?.cityName ?? "")
@@ -250,10 +250,10 @@ struct GuardianSettingsView: View {
                         .font(.scaled(size: 14))
                         .foregroundStyle(.orange)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text("添加邮箱以便找回账号")
+                        Text(langManager.localized("settings.email.addTitle"))
                             .font(.scaled(size: 13, weight: .medium))
                             .foregroundStyle(ink)
-                        Text("遇到换手机或号码失效时可通过邮箱找回")
+                        Text(langManager.localized("settings.email.addDesc"))
                             .font(.scaled(size: 11))
                             .foregroundStyle(.secondary)
                     }
@@ -280,7 +280,7 @@ struct GuardianSettingsView: View {
 
     private var subscriptionPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("订阅与账单")
+            Text(langManager.localized("guardian.settings.section.subscription"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
@@ -293,7 +293,7 @@ struct GuardianSettingsView: View {
                         Text(coordinator.storeKitManager.planDisplayName(for: status.planId))
                             .font(.scaled(size: 13, weight: .medium))
                         if let expires = status.expiresDate {
-                            Text("有效期至 \(expires.formatted(.dateTime.year().month().day()))")
+                            Text(String(format: langManager.localized("guardian.settings.subscription.expiresAt"), expires.formatted(.dateTime.year().month().day())))
                                 .font(.scaled(size: 12))
                                 .foregroundStyle(.secondary)
                         }
@@ -307,9 +307,9 @@ struct GuardianSettingsView: View {
                         .foregroundStyle(.secondary)
                         .font(.scaled(size: 14))
                     VStack(alignment: .leading, spacing: 1) {
-                        Text("免费版")
+                        Text(langManager.localized("guardian.settings.subscription.free"))
                             .font(.scaled(size: 13, weight: .medium))
-                        Text("升级解锁更强守护功能")
+                        Text(langManager.localized("guardian.settings.subscription.upgradeHint"))
                             .font(.scaled(size: 12))
                             .foregroundStyle(.secondary)
                     }
@@ -324,7 +324,7 @@ struct GuardianSettingsView: View {
             } label: {
                 HStack {
                     Text(coordinator.storeKitManager.subscriptionStatus?.isActive == true
-                         ? "管理方案与账单" : "查看方案")
+                         ? langManager.localized("guardian.settings.subscription.manage") : langManager.localized("guardian.settings.subscription.viewPlans"))
                         .font(.scaled(size: 13))
                     Spacer()
                     Image(systemName: "chevron.right")
@@ -349,12 +349,12 @@ struct GuardianSettingsView: View {
 
     private var safetyToolsPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("安全工具")
+            Text(langManager.localized("settings.section.safetyTools"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
             Button { showMedicalCard = true } label: {
-                fixedRow("紧急医疗卡", value: "编辑 →", isWarning: false)
+                fixedRow(langManager.localized("settings.safetyTools.medicalCard"), value: langManager.localized("settings.action.edit"), isWarning: false)
             }
             .buttonStyle(.plain)
 
@@ -362,7 +362,7 @@ struct GuardianSettingsView: View {
                 Image(systemName: "lock.display")
                     .font(.scaled(size: 11))
                     .foregroundStyle(.orange)
-                Text("标记急救的药品会显示在锁屏")
+                Text(langManager.localized("guardian.settings.safetyTools.lockscreenHint"))
                     .font(.scaled(size: 11))
                     .foregroundStyle(.secondary)
             }
@@ -372,12 +372,12 @@ struct GuardianSettingsView: View {
             .clipShape(RoundedRectangle(cornerRadius: 8))
 
             Button { showEmergencyText = true } label: {
-                fixedRow("多语言急救卡", value: "查看 →", isWarning: false)
+                fixedRow(langManager.localized("settings.safetyTools.emergencyCard"), value: langManager.localized("settings.action.view"), isWarning: false)
             }
             .buttonStyle(.plain)
 
             Button { showConsulate = true } label: {
-                fixedRow("领事与紧急电话", value: "查看 →", isWarning: false)
+                fixedRow(langManager.localized("settings.safetyTools.consulate"), value: langManager.localized("settings.action.view"), isWarning: false)
             }
             .buttonStyle(.plain)
         }
@@ -392,17 +392,17 @@ struct GuardianSettingsView: View {
 
     private var organizationPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("机构管理")
+            Text(langManager.localized("guardian.settings.section.organization"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
             Button { showOrgDashboard = true } label: {
-                fixedRow("合规看板", value: "查看 →", isWarning: false)
+                fixedRow(langManager.localized("guardian.settings.org.complianceDashboard"), value: langManager.localized("settings.action.view"), isWarning: false)
             }
             .buttonStyle(.plain)
 
             Button { showInsuranceReport = true } label: {
-                fixedRow("理赔材料整理", value: "开始 →", isWarning: false)
+                fixedRow(langManager.localized("settings.safetyTools.claimMaterials"), value: langManager.localized("settings.action.start"), isWarning: false)
             }
             .buttonStyle(.plain)
         }
@@ -468,7 +468,7 @@ struct GuardianSettingsView: View {
                         .font(.scaled(size: 14))
                         .foregroundStyle(safe)
                         .frame(width: 20)
-                    Text("\(BiometricAuthManager.shared.biometricName) 登录")
+                    Text(String(format: langManager.localized("settings.security.biometricLogin"), BiometricAuthManager.shared.biometricName))
                         .font(.scaled(size: 13))
                     Spacer()
                     Toggle("", isOn: Binding(
@@ -491,7 +491,7 @@ struct GuardianSettingsView: View {
                         .font(.scaled(size: 14))
                         .foregroundStyle(.secondary)
                         .frame(width: 20)
-                    Text("此设备不支持生物识别登录")
+                    Text(langManager.localized("settings.security.biometricUnavailable"))
                         .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                 }
@@ -508,15 +508,15 @@ struct GuardianSettingsView: View {
                         .foregroundStyle(.orange)
                         .frame(width: 20)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text("胁迫密码")
+                        Text(langManager.localized("settings.security.duressCode"))
                             .font(.scaled(size: 13))
                             .foregroundStyle(ink)
-                        Text("被迫解锁时静默触发求助")
+                        Text(langManager.localized("settings.security.duressCodeDesc"))
                             .font(.scaled(size: 11))
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Text(KeychainHelper.shared.read(.duressCode) != nil ? "已设置" : "未设置")
+                    Text(KeychainHelper.shared.read(.duressCode) != nil ? langManager.localized("settings.status.configured") : langManager.localized("settings.status.notConfigured"))
                         .font(.scaled(size: 11))
                         .foregroundStyle(KeychainHelper.shared.read(.duressCode) != nil ? safe : .secondary)
                     Image(systemName: "chevron.right")
@@ -535,15 +535,15 @@ struct GuardianSettingsView: View {
                         .foregroundStyle(safe)
                         .frame(width: 20)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text("蓝牙追踪器")
+                        Text(langManager.localized("settings.security.bleTracker"))
                             .font(.scaled(size: 13))
                             .foregroundStyle(ink)
-                        Text("配对紧急按钮或分离提醒标签")
+                        Text(langManager.localized("settings.security.bleTrackerDesc"))
                             .font(.scaled(size: 11))
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Text("\(BLETrackerService.shared.pairedTags.count) 个设备")
+                    Text(String(format: langManager.localized("settings.security.deviceCount"), BLETrackerService.shared.pairedTags.count))
                         .font(.scaled(size: 11))
                         .foregroundStyle(BLETrackerService.shared.pairedTags.isEmpty ? .secondary : safe)
                     Image(systemName: "chevron.right")
@@ -603,7 +603,7 @@ struct GuardianSettingsView: View {
                         }
                     } label: {
                         VStack(spacing: 4) {
-                            Text("字")
+                            Text(langManager.localized("settings.fontsize.sample"))
                                 .font(.system(size: 11 * level.scale, weight: .medium))
                                 .foregroundStyle(fontScaleManager.level == level ? .white : ink)
                             Text(level.label)
@@ -619,7 +619,7 @@ struct GuardianSettingsView: View {
                     }
                 }
             }
-            Text("调整后所有页面文字大小会立即变化")
+            Text(langManager.localized("settings.fontsize.hint"))
                 .font(.scaled(size: 11))
                 .foregroundStyle(.secondary.opacity(0.7))
         }
@@ -634,12 +634,12 @@ struct GuardianSettingsView: View {
 
     private var notificationPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("通知偏好")
+            Text(langManager.localized("settings.section.notifications"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            toggleRow("紧急求助 (SOS)", isOn: $notifSOS)
-            toggleRow("报平安超时提醒", isOn: $notifCheckinOverdue)
-            toggleRow("家庭圈新动态", isOn: $notifFamilyFeed)
+            toggleRow(langManager.localized("settings.notification.sos"), isOn: $notifSOS)
+            toggleRow(langManager.localized("guardian.settings.notification.checkInOverdue"), isOn: $notifCheckinOverdue)
+            toggleRow(langManager.localized("settings.notification.familyFeed"), isOn: $notifFamilyFeed)
         }
         .padding(12)
         .background(
@@ -652,11 +652,11 @@ struct GuardianSettingsView: View {
 
     private var dataPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("数据")
+            Text(langManager.localized("settings.section.data"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             Button { showExportAlert = true } label: {
-                fixedRow("导出我的全部数据", value: "请求导出 →", isWarning: false)
+                fixedRow(langManager.localized("settings.data.exportAll"), value: langManager.localized("settings.action.requestExport"), isWarning: false)
             }
             .buttonStyle(.plain)
             Button { showDeleteConfirm = true } label: {
@@ -675,15 +675,15 @@ struct GuardianSettingsView: View {
 
     private var legalPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("法律与关于")
+            Text(langManager.localized("settings.section.legal"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             Button { showPrivacy = true } label: {
-                fixedRow("隐私政策与服务条款", value: "查看 →", isWarning: false)
+                fixedRow(langManager.localized("settings.legal.privacyAndTerms"), value: langManager.localized("settings.action.view"), isWarning: false)
             }
             .buttonStyle(.plain)
             Button { showAbout = true } label: {
-                fixedRow("关于守灯", value: "v1.0.0", isWarning: false)
+                fixedRow(langManager.localized("settings.legal.about"), value: "v1.0.0", isWarning: false)
             }
             .buttonStyle(.plain)
             Button { coordinator.authManager.logout() } label: {
@@ -702,7 +702,7 @@ struct GuardianSettingsView: View {
 
     private var rolePanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("当前角色")
+            Text(langManager.localized("settings.section.role"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
@@ -711,9 +711,9 @@ struct GuardianSettingsView: View {
                     .font(.scaled(size: 14))
                     .foregroundStyle(pro)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("守护者")
+                    Text(langManager.localized("guardian.settings.role.guardian"))
                         .font(.scaled(size: 13, weight: .medium))
-                    Text("您正在关注家人的安全状态")
+                    Text(langManager.localized("guardian.settings.role.guardianDesc"))
                         .font(.scaled(size: 12))
                         .foregroundStyle(.secondary)
                 }
@@ -723,10 +723,10 @@ struct GuardianSettingsView: View {
 
             Button { showRoleSwitchInfo = true } label: {
                 HStack {
-                    Text("申请切换为被守护者")
+                    Text(langManager.localized("guardian.settings.role.switchToProtected"))
                         .font(.scaled(size: 13))
                     Spacer()
-                    Text("需确认")
+                    Text(langManager.localized("guardian.settings.role.needsConfirm"))
                         .font(.scaled(size: 12))
                         .foregroundStyle(.secondary)
                     Image(systemName: "chevron.right")
@@ -749,12 +749,12 @@ struct GuardianSettingsView: View {
     #if DEBUG
     private var devPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("开发者选项")
+            Text(langManager.localized("settings.section.dev"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
             HStack {
-                Text("切换角色视图").font(.scaled(size: 13))
+                Text(langManager.localized("settings.dev.switchRole")).font(.scaled(size: 13))
                 Spacer()
                 Button {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
@@ -764,7 +764,7 @@ struct GuardianSettingsView: View {
                     HStack(spacing: 4) {
                         Image(systemName: coordinator.userRole == .protected_ ? "shield.fill" : "eye.fill")
                             .font(.scaled(size: 10))
-                        Text(coordinator.userRole == .protected_ ? "被守护者" : "守护者")
+                        Text(coordinator.userRole == .protected_ ? langManager.localized("protected.settings.role.protected") : langManager.localized("guardian.settings.role.guardian"))
                             .font(.scaled(size: 12, weight: .medium))
                         Image(systemName: "arrow.triangle.2.circlepath")
                             .font(.scaled(size: 9))

@@ -9,6 +9,7 @@ import ContactsUI
 
 struct EmergencyContactsView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var langManager = LanguageManager.shared
 
     let personName: String
     let countryCode: String  // ISO 3166-1 alpha-2 (e.g. "UA", "CN", "CA")
@@ -29,9 +30,9 @@ struct EmergencyContactsView: View {
                     Image(systemName: "phone.arrow.up.right.fill")
                         .font(.scaled(size: 28))
                         .foregroundStyle(alert)
-                    Text("紧急救援电话")
+                    Text(langManager.localized("emergency.contacts.title"))
                         .font(.scaled(size: 18, weight: .bold))
-                    Text("\(personName)所在地区: \(regionInfo.regionName)")
+                    Text(String(format: langManager.localized("emergency.contacts.regionInfo"), personName, regionInfo.regionName))
                         .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                 }
@@ -44,7 +45,7 @@ struct EmergencyContactsView: View {
                 localContactsPanel
 
                 // Tip
-                Text("紧急情况下，优先拨打当地急救电话。自定义联络人可提前录入邻居、社区工作人员、当地医院等信息。")
+                Text(langManager.localized("emergency.contacts.tip"))
                     .font(.scaled(size: 12))
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
@@ -54,7 +55,7 @@ struct EmergencyContactsView: View {
             .padding(.horizontal, 16)
         }
         .background(Color(.systemBackground))
-        .navigationTitle("紧急电话")
+        .navigationTitle(langManager.localized("emergency.contacts.navTitle"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -90,11 +91,11 @@ struct EmergencyContactsView: View {
     private var regionalNumbersPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("当地紧急号码")
+                Text(langManager.localized("emergency.contacts.localNumbers"))
                     .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
                 Spacer()
-                Text("区号: \(regionInfo.areaCode)")
+                Text(String(format: langManager.localized("emergency.contacts.areaCode"), regionInfo.areaCode))
                     .font(.scaled(size: 12, weight: .medium))
                     .foregroundStyle(ink)
             }
@@ -155,7 +156,7 @@ struct EmergencyContactsView: View {
     private var localContactsPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("自定义紧急联络人")
+                Text(langManager.localized("emergency.contacts.customContacts"))
                     .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -165,7 +166,7 @@ struct EmergencyContactsView: View {
                     HStack(spacing: 2) {
                         Image(systemName: "plus.circle")
                             .font(.scaled(size: 12))
-                        Text("添加")
+                        Text(langManager.localized("emergency.contacts.add"))
                             .font(.scaled(size: 12))
                     }
                     .foregroundStyle(safe)
@@ -179,10 +180,10 @@ struct EmergencyContactsView: View {
                         Image(systemName: "person.crop.circle.badge.plus")
                             .font(.scaled(size: 24))
                             .foregroundStyle(.tertiary)
-                        Text("暂无自定义联络人")
+                        Text(langManager.localized("emergency.contacts.noContacts"))
                             .font(.scaled(size: 12))
                             .foregroundStyle(.tertiary)
-                        Text("可以录入邻居、社区、当地医院等")
+                        Text(langManager.localized("emergency.contacts.noContactsHint"))
                             .font(.scaled(size: 12))
                             .foregroundStyle(.quaternary)
                     }
@@ -253,7 +254,7 @@ struct EmergencyContactsView: View {
             Button(role: .destructive) {
                 customContacts.remove(at: index)
             } label: {
-                Label("删除", systemImage: "trash")
+                Label(langManager.localized("emergency.contacts.delete"), systemImage: "trash")
             }
         }
     }
@@ -296,7 +297,17 @@ struct AddEmergencyContactView: View {
     @State private var address = ""
     @State private var showContactPicker = false
 
-    private let relationshipOptions = ["邻居", "社区工作人员", "当地医院", "朋友", "房东", "同事", "其他"]
+    private var relationshipOptions: [String] {
+        [
+            LanguageManager.shared.localized("emergency.contacts.rel.neighbor"),
+            LanguageManager.shared.localized("emergency.contacts.rel.community"),
+            LanguageManager.shared.localized("emergency.contacts.rel.hospital"),
+            LanguageManager.shared.localized("emergency.contacts.rel.friend"),
+            LanguageManager.shared.localized("emergency.contacts.rel.landlord"),
+            LanguageManager.shared.localized("emergency.contacts.rel.colleague"),
+            LanguageManager.shared.localized("emergency.contacts.rel.other"),
+        ]
+    }
 
     var body: some View {
         NavigationStack {
@@ -309,7 +320,7 @@ struct AddEmergencyContactView: View {
                         HStack {
                             Image(systemName: "person.crop.circle.badge.plus")
                                 .font(.scaled(size: 18))
-                            Text("从通讯录选择")
+                            Text(LanguageManager.shared.localized("emergency.contacts.fromContacts"))
                                 .font(.scaled(size: 14, weight: .medium))
                         }
                         .foregroundStyle(safe)
@@ -318,38 +329,38 @@ struct AddEmergencyContactView: View {
                     }
                 }
 
-                Section("基本信息") {
-                    TextField("姓名", text: $name)
-                    Picker("关系", selection: $relationship) {
-                        Text("请选择").tag("")
+                Section(LanguageManager.shared.localized("emergency.contacts.basicInfo")) {
+                    TextField(LanguageManager.shared.localized("emergency.contacts.name"), text: $name)
+                    Picker(LanguageManager.shared.localized("emergency.contacts.relationship"), selection: $relationship) {
+                        Text(LanguageManager.shared.localized("emergency.contacts.selectRelation")).tag("")
                         ForEach(relationshipOptions, id: \.self) { option in
                             Text(option).tag(option)
                         }
                     }
                 }
-                Section("联系方式") {
-                    TextField("电话 (含区号)", text: $phone)
+                Section(LanguageManager.shared.localized("emergency.contacts.contactInfo")) {
+                    TextField(LanguageManager.shared.localized("emergency.contacts.phone"), text: $phone)
                         .keyboardType(.phonePad)
-                    TextField("电子邮件 (可选)", text: $email)
+                    TextField(LanguageManager.shared.localized("emergency.contacts.email"), text: $email)
                         .keyboardType(.emailAddress)
                         .textInputAutocapitalization(.never)
                 }
-                Section("地址 (可选)") {
-                    TextField("详细地址", text: $address)
+                Section(LanguageManager.shared.localized("emergency.contacts.addressSection")) {
+                    TextField(LanguageManager.shared.localized("emergency.contacts.address"), text: $address)
                 }
             }
-            .navigationTitle("添加紧急联络人")
+            .navigationTitle(LanguageManager.shared.localized("emergency.contacts.addTitle"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("取消") { dismiss() }
+                    Button(LanguageManager.shared.localized("emergency.contacts.cancel")) { dismiss() }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("保存") {
+                    Button(LanguageManager.shared.localized("emergency.contacts.save")) {
                         let contact = LocalEmergencyContact(
                             id: UUID().uuidString,
                             name: name,
-                            relationship: relationship.isEmpty ? "其他" : relationship,
+                            relationship: relationship.isEmpty ? LanguageManager.shared.localized("emergency.contacts.rel.other") : relationship,
                             phone: phone,
                             email: email,
                             address: address,

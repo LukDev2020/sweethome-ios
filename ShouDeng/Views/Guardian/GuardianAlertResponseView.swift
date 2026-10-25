@@ -8,6 +8,7 @@ import MapKit
 
 struct GuardianAlertResponseView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var langManager = LanguageManager.shared
     @Environment(\.dismiss) var dismiss
     let personId: String
 
@@ -27,7 +28,7 @@ struct GuardianAlertResponseView: View {
     }
 
     private var personName: String {
-        person?.user.displayName ?? "被守护者"
+        person?.user.displayName ?? langManager.localized("guardian.alert.protected.person")
     }
 
     private var personCity: String {
@@ -40,7 +41,7 @@ struct GuardianAlertResponseView: View {
                 VStack(spacing: 12) {
                     // Header — real data
                     VStack(spacing: 2) {
-                        Text("\(personName)正在求助")
+                        Text(String(format: langManager.localized("guardian.alert.seeking.help"), personName))
                             .font(.scaled(size: 20, weight: .bold))
                             .foregroundStyle(alert)
                         Text(headerSubtitle)
@@ -60,7 +61,7 @@ struct GuardianAlertResponseView: View {
                                 UIApplication.shared.open(url)
                             }
                         } label: {
-                            Text("立即拨号")
+                            Text(langManager.localized("guardian.alert.call.now"))
                                 .font(.scaled(size: 13.5, weight: .medium))
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
@@ -73,7 +74,7 @@ struct GuardianAlertResponseView: View {
                             coordinator.cancelSOS()
                             showClaimMaterialsPrompt = true
                         } label: {
-                            Text("我已接手")
+                            Text(langManager.localized("guardian.alert.i.got.it"))
                                 .font(.scaled(size: 13.5, weight: .medium))
                                 .foregroundStyle(ink)
                                 .frame(maxWidth: .infinity)
@@ -92,20 +93,20 @@ struct GuardianAlertResponseView: View {
                 .padding(.horizontal, 16)
             }
             .background(Color(.systemBackground))
-            .navigationTitle("警报中")
+            .navigationTitle(langManager.localized("guardian.alert.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Text("警报中")
+                    Text(langManager.localized("guardian.alert.title"))
                         .font(.scaled(size: 12))
                         .foregroundStyle(alert)
                 }
             }
-            .alert("需要整理相关记录吗？", isPresented: $showClaimMaterialsPrompt) {
-                Button("整理材料") { showClaimMaterials = true }
-                Button("不需要", role: .cancel) { dismiss() }
+            .alert(langManager.localized("guardian.alert.claim.prompt"), isPresented: $showClaimMaterialsPrompt) {
+                Button(langManager.localized("guardian.alert.claim.organize")) { showClaimMaterials = true }
+                Button(langManager.localized("guardian.alert.claim.no"), role: .cancel) { dismiss() }
             } message: {
-                Text("导出事件前后的设备记录，供您自行使用。")
+                Text(langManager.localized("guardian.alert.claim.description"))
             }
             .sheet(isPresented: $showClaimMaterials, onDismiss: { dismiss() }) {
                 ClaimMaterialsView().environmentObject(coordinator)
@@ -128,7 +129,7 @@ struct GuardianAlertResponseView: View {
             let elapsed = Int(Date().timeIntervalSince(sos.triggeredAt))
             let mins = elapsed / 60
             let secs = elapsed % 60
-            parts.append("\(mins) 分 \(secs) 秒前")
+            parts.append(String(format: langManager.localized("guardian.alert.elapsed"), mins, secs))
         }
         return parts.joined(separator: " · ")
     }
@@ -156,7 +157,7 @@ struct GuardianAlertResponseView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .overlay(alignment: .bottomLeading) {
                     if let accuracy = sosEvent?.location?.accuracy {
-                        Text("精度约 \(Int(accuracy)) 米")
+                        Text(String(format: langManager.localized("guardian.alert.accuracy"), Int(accuracy)))
                             .font(.scaled(size: 12))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 8)
@@ -184,7 +185,7 @@ struct GuardianAlertResponseView: View {
                 .frame(height: 180)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .overlay(alignment: .bottomLeading) {
-                    Text("最后已知位置")
+                    Text(langManager.localized("guardian.alert.last.known"))
                         .font(.scaled(size: 12))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 8)
@@ -202,7 +203,7 @@ struct GuardianAlertResponseView: View {
                         Image(systemName: "mappin.slash")
                             .font(.scaled(size: 28))
                             .foregroundStyle(alert)
-                        Text("暂无位置信息")
+                        Text(langManager.localized("guardian.alert.no.location"))
                             .font(.scaled(size: 12))
                             .foregroundStyle(.secondary)
                     }
@@ -228,7 +229,7 @@ struct GuardianAlertResponseView: View {
 
         return VStack(spacing: 0) {
             HStack {
-                Text("升级链")
+                Text(langManager.localized("guardian.alert.escalation"))
                     .font(.scaled(size: 12, weight: .medium))
                     .foregroundStyle(alert)
                 Spacer()
@@ -236,14 +237,14 @@ struct GuardianAlertResponseView: View {
             .padding(12)
             .background(alert.opacity(0.09))
 
-            stepRow(number: "1", title: "你已收到并查看",
-                    detail: sosEvent.map { "触发于 \(formatTime($0.triggeredAt))" } ?? "正在通知",
+            stepRow(number: "1", title: langManager.localized("guardian.alert.step1.title"),
+                    detail: sosEvent.map { String(format: langManager.localized("guardian.alert.triggered.at"), formatTime($0.triggeredAt)) } ?? langManager.localized("guardian.alert.notifying"),
                     state: step1State)
-            stepRow(number: "2", title: "备用联系人已通知",
-                    detail: "等待确认",
+            stepRow(number: "2", title: langManager.localized("guardian.alert.step2.title"),
+                    detail: langManager.localized("guardian.alert.step2.detail"),
                     state: step2State)
-            stepRow(number: "3", title: "自动语音外呼",
-                    detail: "系统将拨打电话直到有人接听 · 点「我已接手」可停止",
+            stepRow(number: "3", title: langManager.localized("guardian.alert.step3.title"),
+                    detail: langManager.localized("guardian.alert.step3.detail"),
                     state: step3State)
         }
         .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -296,21 +297,21 @@ struct GuardianAlertResponseView: View {
 
     private var sceneInfoPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("现场信息")
+            Text(langManager.localized("guardian.alert.scene.info"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             if let battery = person?.batteryLevel ?? sosEvent?.batteryLevel {
                 let pct = Int(battery * 100)
-                infoRow("手机电量", value: "\(pct)%\(pct < 20 ? " 持续下降" : "")", isAlert: pct < 20)
+                infoRow(langManager.localized("guardian.alert.battery"), value: "\(pct)%\(pct < 20 ? " \(langManager.localized("guardian.alert.declining"))" : "")", isAlert: pct < 20)
             } else {
-                infoRow("手机电量", value: "未知", isAlert: false)
+                infoRow(langManager.localized("guardian.alert.battery"), value: langManager.localized("guardian.alert.unknown"), isAlert: false)
             }
             if let lastActivity = person?.lastPhoneActivity {
                 let minutes = Int(Date().timeIntervalSince(lastActivity) / 60)
-                infoRow("最后一次交互", value: "\(minutes) 分钟前", isAlert: minutes > 10)
+                infoRow(langManager.localized("guardian.alert.last.interaction"), value: String(format: langManager.localized("guardian.alert.minutes.ago"), minutes), isAlert: minutes > 10)
             }
             if let sos = sosEvent {
-                infoRow("触发方式", value: triggerMethodText(sos.triggerMethod), isAlert: false)
+                infoRow(langManager.localized("guardian.alert.trigger.method"), value: triggerMethodText(sos.triggerMethod), isAlert: false)
             }
         }
         .padding(12)
@@ -322,15 +323,15 @@ struct GuardianAlertResponseView: View {
 
     private func triggerMethodText(_ method: SOSTriggerMethod) -> String {
         switch method {
-        case .longPress: return "长按求助按钮"
+        case .longPress: return langManager.localized("guardian.alert.trigger.longpress")
         case .watchQuickAction: return "Apple Watch"
-        case .bluetoothButton: return "蓝牙紧急按钮"
-        case .duressPassword: return "胁迫密码"
-        case .fallDetection: return "跌倒检测"
-        case .voiceWakeWord: return "语音唤醒"
-        case .audioDistress: return "异常声音检测"
-        case .voiceCommand: return "语音指令求助"
-        case .widgetTap: return "小组件一键求助"
+        case .bluetoothButton: return langManager.localized("guardian.alert.trigger.bluetooth")
+        case .duressPassword: return langManager.localized("guardian.alert.trigger.duress")
+        case .fallDetection: return langManager.localized("guardian.alert.trigger.fall")
+        case .voiceWakeWord: return langManager.localized("guardian.alert.trigger.voice.wake")
+        case .audioDistress: return langManager.localized("guardian.alert.trigger.audio")
+        case .voiceCommand: return langManager.localized("guardian.alert.trigger.voice.command")
+        case .widgetTap: return langManager.localized("guardian.alert.trigger.widget")
         }
     }
 

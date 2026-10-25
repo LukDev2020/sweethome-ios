@@ -56,6 +56,7 @@ struct AvatarView: View {
 
 struct ProfileEditView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var langManager = LanguageManager.shared
     @Environment(\.dismiss) var dismiss
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
@@ -99,7 +100,7 @@ struct ProfileEditView: View {
                             if isSaving {
                                 ProgressView().tint(.white)
                             }
-                            Text("保存")
+                            Text(langManager.localized("profile.save"))
                         }
                         .font(.scaled(size: 15, weight: .medium))
                         .foregroundStyle(.white)
@@ -114,7 +115,7 @@ struct ProfileEditView: View {
                     HStack(spacing: 6) {
                         Image(systemName: coordinator.userRole == .protected_ ? "shield.fill" : "eye.fill")
                             .font(.scaled(size: 11))
-                        Text(coordinator.userRole == .protected_ ? "被守护者" : "守护者")
+                        Text(coordinator.userRole == .protected_ ? langManager.localized("profile.roleProtected") : langManager.localized("profile.roleGuardian"))
                             .font(.scaled(size: 12))
                     }
                     .foregroundStyle(.secondary)
@@ -124,16 +125,16 @@ struct ProfileEditView: View {
                 .padding(.top, 16)
             }
             .background(Color(.systemBackground))
-            .navigationTitle("编辑资料")
+            .navigationTitle(langManager.localized("profile.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("取消") { dismiss() }
+                    Button(langManager.localized("profile.cancel")) { dismiss() }
                 }
             }
             .onAppear { loadCurrentProfile() }
-            .alert("已保存", isPresented: $showSuccess) {
-                Button("好") { dismiss() }
+            .alert(langManager.localized("profile.saved"), isPresented: $showSuccess) {
+                Button(langManager.localized("profile.ok")) { dismiss() }
             }
         }
     }
@@ -172,7 +173,7 @@ struct ProfileEditView: View {
                         .shadow(color: .black.opacity(0.15), radius: 2, y: 1)
                 }
             }
-            Text("点击更换头像")
+            Text(langManager.localized("profile.changeAvatar"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
         }
@@ -185,19 +186,19 @@ struct ProfileEditView: View {
 
     private var fieldSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("基本信息")
+            Text(langManager.localized("profile.basicInfo"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
             VStack(spacing: 0) {
-                fieldRow("昵称") {
-                    TextField("输入昵称", text: $displayName)
+                fieldRow(langManager.localized("profile.nickname")) {
+                    TextField(langManager.localized("profile.enterNickname"), text: $displayName)
                         .font(.scaled(size: 14))
                         .multilineTextAlignment(.trailing)
                 }
                 Divider()
-                fieldRow("邮箱") {
-                    TextField("用于找回账号", text: $email)
+                fieldRow(langManager.localized("profile.email")) {
+                    TextField(langManager.localized("profile.emailHint"), text: $email)
                         .font(.scaled(size: 14))
                         .keyboardType(.emailAddress)
                         .textContentType(.emailAddress)
@@ -205,8 +206,8 @@ struct ProfileEditView: View {
                         .multilineTextAlignment(.trailing)
                 }
                 Divider()
-                fieldRow("城市") {
-                    TextField("输入城市", text: $cityName)
+                fieldRow(langManager.localized("profile.city")) {
+                    TextField(langManager.localized("profile.enterCity"), text: $cityName)
                         .font(.scaled(size: 14))
                         .multilineTextAlignment(.trailing)
                 }
@@ -223,18 +224,18 @@ struct ProfileEditView: View {
 
     private var timezoneSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("时区")
+            Text(langManager.localized("profile.timezone"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
             VStack(spacing: 0) {
-                fieldRow("当前时区") {
+                fieldRow(langManager.localized("profile.currentTimezone")) {
                     Text(selectedTimeZone.identifier)
                         .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                 }
                 Divider()
-                fieldRow("本地时间") {
+                fieldRow(langManager.localized("profile.localTime")) {
                     let formatter = DateFormatter()
                     let _ = formatter.dateFormat = "HH:mm"
                     let _ = formatter.timeZone = selectedTimeZone
@@ -346,7 +347,7 @@ struct ProfileEditView: View {
             }
             #else
             await MainActor.run {
-                errorMessage = "保存失败：\(error.localizedDescription)"
+                errorMessage = String(format: langManager.localized("profile.saveFailed"), error.localizedDescription)
             }
             #endif
         }

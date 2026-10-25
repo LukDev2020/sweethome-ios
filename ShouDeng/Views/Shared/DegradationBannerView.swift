@@ -56,7 +56,7 @@ struct DegradationBannerView: View {
 
                 Spacer()
 
-                Text("详情")
+                Text(LanguageManager.shared.localized("degradation.details"))
                     .font(.scaled(size: 12))
                     .foregroundStyle(ink.opacity(0.45))
             }

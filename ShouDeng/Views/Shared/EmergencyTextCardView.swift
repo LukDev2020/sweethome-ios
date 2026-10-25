@@ -8,6 +8,7 @@ import SwiftUI
 
 struct EmergencyTextCardView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var langManager = LanguageManager.shared
     @Environment(\.dismiss) private var dismiss
 
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
@@ -123,7 +124,7 @@ struct EmergencyTextCardView: View {
                     Button { showFullScreen = true } label: {
                         HStack(spacing: 8) {
                             Image(systemName: "arrow.up.left.and.arrow.down.right")
-                            Text("全屏显示")
+                            Text(langManager.localized("emergencyCard.fullScreen"))
                                 .font(.scaled(size: 14, weight: .medium))
                         }
                         .foregroundStyle(alert)
@@ -134,7 +135,7 @@ struct EmergencyTextCardView: View {
                     }
                     .padding(.horizontal, 16)
 
-                    Text("语言不通时，将屏幕展示给身边的人。\n急救卡信息离线可用，不需要网络。")
+                    Text(langManager.localized("emergencyCard.tip"))
                         .font(.scaled(size: 12))
                         .foregroundStyle(.secondary.opacity(0.7))
                         .multilineTextAlignment(.center)
@@ -143,11 +144,11 @@ struct EmergencyTextCardView: View {
                 .padding(.top, 8)
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("多语言急救卡")
+            .navigationTitle(langManager.localized("emergencyCard.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("关闭") { dismiss() }
+                    Button(langManager.localized("emergencyCard.close")) { dismiss() }
                 }
             }
             .fullScreenCover(isPresented: $showFullScreen) {
@@ -187,7 +188,7 @@ struct EmergencyTextCardView: View {
                 Spacer()
 
                 Button { showFullScreen = false } label: {
-                    Text("关闭")
+                    Text(langManager.localized("emergencyCard.close"))
                         .font(.scaled(size: 16))
                         .foregroundStyle(.secondary)
                 }

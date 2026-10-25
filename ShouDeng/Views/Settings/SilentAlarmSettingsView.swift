@@ -7,6 +7,7 @@ import SwiftUI
 
 struct SilentAlarmSettingsView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var langManager = LanguageManager.shared
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var service = SilentAlarmService.shared
 
@@ -95,9 +96,9 @@ struct SilentAlarmSettingsView: View {
                                 .foregroundStyle(.secondary)
 
                             Picker("", selection: $service.confirmWindowMinutes) {
-                                Text("15 分钟").tag(15)
-                                Text("30 分钟").tag(30)
-                                Text("60 分钟").tag(60)
+                                Text(langManager.localized("silent.alarm.15min")).tag(15)
+                                Text(langManager.localized("silent.alarm.30min")).tag(30)
+                                Text(langManager.localized("silent.alarm.60min")).tag(60)
                             }
                             .pickerStyle(.segmented)
                         }
@@ -117,9 +118,9 @@ struct SilentAlarmSettingsView: View {
                                 .foregroundStyle(.secondary)
 
                             Picker("", selection: $service.gracePeriodMisses) {
-                                Text("1 次").tag(1)
-                                Text("2 次").tag(2)
-                                Text("3 次").tag(3)
+                                Text(langManager.localized("silent.alarm.1miss")).tag(1)
+                                Text(langManager.localized("silent.alarm.2miss")).tag(2)
+                                Text(langManager.localized("silent.alarm.3miss")).tag(3)
                             }
                             .pickerStyle(.segmented)
                         }
@@ -157,10 +158,10 @@ struct SilentAlarmSettingsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("关闭") { dismiss() }
+                    Button(langManager.localized("silent.alarm.close")) { dismiss() }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("保存") {
+                    Button(langManager.localized("silent.alarm.save")) {
                         Task {
                             await service.syncScheduleToServer()
                             ConsentLogger.shared.log(
@@ -186,7 +187,7 @@ struct SilentAlarmSettingsView: View {
             VStack(spacing: 20) {
                 Spacer()
                 HStack(spacing: 0) {
-                    Picker("时", selection: $newHour) {
+                    Picker(langManager.localized("silent.alarm.hour"), selection: $newHour) {
                         ForEach(0..<24, id: \.self) { h in
                             Text(String(format: "%02d", h)).tag(h)
                         }
@@ -197,7 +198,7 @@ struct SilentAlarmSettingsView: View {
                     Text(":")
                         .font(.scaled(size: 24, weight: .bold))
 
-                    Picker("分", selection: $newMinute) {
+                    Picker(langManager.localized("silent.alarm.minute"), selection: $newMinute) {
                         ForEach([0, 15, 30, 45], id: \.self) { m in
                             Text(String(format: "%02d", m)).tag(m)
                         }
@@ -214,7 +215,7 @@ struct SilentAlarmSettingsView: View {
                     }
                     showAddTime = false
                 } label: {
-                    Text("添加")
+                    Text(langManager.localized("silent.alarm.add"))
                         .font(.scaled(size: 15, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
@@ -228,11 +229,11 @@ struct SilentAlarmSettingsView: View {
 
                 Spacer()
             }
-            .navigationTitle("添加时间")
+            .navigationTitle(langManager.localized("silent.alarm.addTime"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("取消") { showAddTime = false }
+                    Button(langManager.localized("silent.alarm.cancel")) { showAddTime = false }
                 }
             }
         }

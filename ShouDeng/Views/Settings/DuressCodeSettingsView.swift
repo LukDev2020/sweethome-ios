@@ -8,6 +8,7 @@ import SwiftUI
 
 struct DuressCodeSettingsView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var langManager = LanguageManager.shared
     @Environment(\.dismiss) private var dismiss
 
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
@@ -84,11 +85,11 @@ struct DuressCodeSettingsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("关闭") { dismiss() }
+                    Button(langManager.localized("duress.close")) { dismiss() }
                 }
             }
             .alert("duress.remove.title", isPresented: $showRemoveConfirm) {
-                Button("取消", role: .cancel) {}
+                Button(langManager.localized("duress.cancel"), role: .cancel) {}
                 Button("duress.remove.confirm", role: .destructive) {
                     KeychainHelper.shared.delete(.duressCode)
                     ConsentLogger.shared.log(
@@ -103,7 +104,7 @@ struct DuressCodeSettingsView: View {
                 Text("duress.remove.message")
             }
             .alert("duress.saved.title", isPresented: $showSuccess) {
-                Button("好的") { dismiss() }
+                Button(langManager.localized("duress.ok")) { dismiss() }
             } message: {
                 Text("duress.saved.message")
             }

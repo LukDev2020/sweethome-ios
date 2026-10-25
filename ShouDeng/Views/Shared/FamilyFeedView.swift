@@ -11,6 +11,7 @@ import PhotosUI
 
 struct FamilyFeedView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var langManager = LanguageManager.shared
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
@@ -40,7 +41,7 @@ struct FamilyFeedView: View {
             .onTapGesture {
                 isInputFocused = false
             }
-            .navigationTitle("家庭圈")
+            .navigationTitle(langManager.localized("familyFeed.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(sizeClass == .regular ? .hidden : .visible, for: .navigationBar)
             .task {
@@ -90,7 +91,7 @@ struct FamilyFeedView: View {
             // Right: family members panel
             ScrollView {
                 VStack(spacing: 12) {
-                    Text("家庭成员")
+                    Text(langManager.localized("familyFeed.members"))
                         .font(.scaled(size: 16, weight: .bold))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.top, 12)
@@ -119,7 +120,7 @@ struct FamilyFeedView: View {
                         name: person.user.displayName,
                         initial: person.user.avatarInitial,
                         city: person.user.cityName,
-                        role: "被守护者"
+                        role: langManager.localized("familyFeed.roleProtected")
                     )
                 }
             }
@@ -130,7 +131,7 @@ struct FamilyFeedView: View {
                         name: guardian.user.displayName,
                         initial: guardian.user.avatarInitial,
                         city: guardian.user.cityName,
-                        role: "守护者"
+                        role: langManager.localized("familyFeed.roleGuardian")
                     )
                 }
             }
@@ -138,10 +139,10 @@ struct FamilyFeedView: View {
             // Current user
             if let user = coordinator.currentUser {
                 memberRow(
-                    name: user.displayName.isEmpty ? "我" : user.displayName,
+                    name: user.displayName.isEmpty ? langManager.localized("familyFeed.me") : user.displayName,
                     initial: user.avatarInitial,
                     city: user.cityName,
-                    role: user.role == .guardian ? "守护者（我）" : "被守护者（我）"
+                    role: user.role == .guardian ? langManager.localized("familyFeed.roleGuardianMe") : langManager.localized("familyFeed.roleProtectedMe")
                 )
             }
 
@@ -150,7 +151,7 @@ struct FamilyFeedView: View {
                     Image(systemName: "person.3")
                         .font(.scaled(size: 28))
                         .foregroundStyle(.tertiary)
-                    Text("暂无家庭成员")
+                    Text(langManager.localized("familyFeed.noMembers"))
                         .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                 }
@@ -215,10 +216,10 @@ struct FamilyFeedView: View {
             Image(systemName: "bubble.left.and.bubble.right")
                 .font(.scaled(size: 44))
                 .foregroundStyle(safe.opacity(0.35))
-            Text("家庭圈还没有消息")
+            Text(langManager.localized("familyFeed.empty"))
                 .font(.scaled(size: 16, weight: .medium))
                 .foregroundStyle(ink)
-            Text("发一条消息，分享照片或生活点滴")
+            Text(langManager.localized("familyFeed.emptyHint"))
                 .font(.scaled(size: 13))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -295,8 +296,8 @@ struct FamilyFeedView: View {
     }
 
     private func dateLabel(for date: Date, cal: Calendar) -> String {
-        if cal.isDateInToday(date) { return "今天" }
-        if cal.isDateInYesterday(date) { return "昨天" }
+        if cal.isDateInToday(date) { return langManager.localized("familyFeed.today") }
+        if cal.isDateInYesterday(date) { return langManager.localized("familyFeed.yesterday") }
         let formatter = DateFormatter()
         formatter.dateFormat = "M月d日"
         return formatter.string(from: date)
@@ -354,7 +355,7 @@ struct FamilyFeedView: View {
                 }
 
                 // Text field
-                TextField("发消息...", text: $messageText)
+                TextField(langManager.localized("familyFeed.sendMessage"), text: $messageText)
                     .font(.scaled(size: 15))
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
@@ -481,8 +482,8 @@ struct FamilyFeedView: View {
             let localPost = FamilyPost(
                 id: UUID().uuidString,
                 authorId: coordinator.currentUser?.id ?? "local",
-                authorName: coordinator.currentUser?.displayName ?? "我",
-                authorInitial: coordinator.currentUser?.avatarInitial ?? "我",
+                authorName: coordinator.currentUser?.displayName ?? langManager.localized("familyFeed.me"),
+                authorInitial: coordinator.currentUser?.avatarInitial ?? langManager.localized("familyFeed.me"),
                 authorAvatarPath: coordinator.currentUser?.avatarLocalPath,
                 text: text,
                 mediaURLs: finalMediaURLs,
@@ -547,16 +548,16 @@ struct MessageBubbleView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     // Editing mode
                     if isEditing {
-                        TextField("编辑消息", text: $editText, axis: .vertical)
+                        TextField(LanguageManager.shared.localized("familyFeed.editMessage"), text: $editText, axis: .vertical)
                             .font(.scaled(size: 14))
                             .lineLimit(1...10)
                         HStack(spacing: 12) {
-                            Button("取消") {
+                            Button(LanguageManager.shared.localized("familyFeed.cancel")) {
                                 isEditing = false
                             }
                             .font(.scaled(size: 12))
                             .foregroundStyle(.secondary)
-                            Button("保存") {
+                            Button(LanguageManager.shared.localized("familyFeed.save")) {
                                 saveEdit()
                             }
                             .font(.scaled(size: 12, weight: .medium))
@@ -585,15 +586,15 @@ struct MessageBubbleView: View {
                 .onLongPressGesture {
                     if isOwnMessage { showActions = true }
                 }
-                .confirmationDialog("消息操作", isPresented: $showActions) {
-                    Button("编辑") {
+                .confirmationDialog(LanguageManager.shared.localized("familyFeed.messageActions"), isPresented: $showActions) {
+                    Button(LanguageManager.shared.localized("familyFeed.edit")) {
                         editText = post.text
                         isEditing = true
                     }
-                    Button("删除", role: .destructive) {
+                    Button(LanguageManager.shared.localized("familyFeed.deleteMsg"), role: .destructive) {
                         deletePost()
                     }
-                    Button("取消", role: .cancel) {}
+                    Button(LanguageManager.shared.localized("familyFeed.cancel"), role: .cancel) {}
                 }
 
                 // Time for own messages
@@ -611,7 +612,7 @@ struct MessageBubbleView: View {
                         HStack(spacing: 3) {
                             Image(systemName: "bubble.right")
                                 .font(.scaled(size: 10))
-                            Text("\(post.commentCount) 条回复")
+                            Text(String(format: LanguageManager.shared.localized("familyFeed.replies"), post.commentCount))
                                 .font(.scaled(size: 12))
                         }
                         .foregroundStyle(.secondary)
@@ -709,7 +710,7 @@ struct MessageBubbleView: View {
             }
 
             HStack(spacing: 6) {
-                TextField("回复...", text: $commentText)
+                TextField(LanguageManager.shared.localized("familyFeed.reply"), text: $commentText)
                     .font(.scaled(size: 12))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
@@ -777,8 +778,8 @@ struct MessageBubbleView: View {
 
     private func timeString(_ date: Date) -> String {
         let diff = Date().timeIntervalSince(date)
-        if diff < 60 { return "刚刚" }
-        if diff < 3600 { return "\(Int(diff / 60))分钟前" }
+        if diff < 60 { return LanguageManager.shared.localized("familyFeed.justNow") }
+        if diff < 3600 { return String(format: LanguageManager.shared.localized("familyFeed.minutesAgo"), Int(diff / 60)) }
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm"
         return formatter.string(from: date)

@@ -9,6 +9,7 @@ import CryptoKit
 
 struct ClaimMaterialsView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var langManager = LanguageManager.shared
     @Environment(\.dismiss) private var dismiss
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
@@ -52,20 +53,20 @@ struct ClaimMaterialsView: View {
                 } else {
                     SubscriptionGateView(
                         feature: "export_pdf",
-                        featureName: "理赔材料导出",
+                        featureName: langManager.localized("claim.featureName"),
                         onDismiss: { dismiss() }
                     )
                 }
             }
             .background(Color(.systemBackground))
-            .navigationTitle("整理理赔材料")
+            .navigationTitle(langManager.localized("claim.navTitle"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     if step == 0 {
-                        Button("关闭") { dismiss() }
+                        Button(langManager.localized("claim.close")) { dismiss() }
                     } else if step == 1 && !isLoading {
-                        Button("上一步") { step = 0 }
+                        Button(langManager.localized("claim.back")) { step = 0 }
                     }
                 }
             }
@@ -82,10 +83,10 @@ struct ClaimMaterialsView: View {
                     Image(systemName: "doc.text.magnifyingglass")
                         .font(.scaled(size: 36))
                         .foregroundStyle(safe.opacity(0.6))
-                    Text("整理设备记录")
+                    Text(langManager.localized("claim.headerTitle"))
                         .font(.scaled(size: 18, weight: .semibold))
                         .foregroundStyle(ink)
-                    Text("选择时间范围和记录类型，\n导出事件前后的设备记录供您自行使用。")
+                    Text(langManager.localized("claim.headerDesc"))
                         .font(.scaled(size: 12.5))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -115,7 +116,7 @@ struct ClaimMaterialsView: View {
                     step = 1
                     Task { await generateExport() }
                 } label: {
-                    Text("预览记录")
+                    Text(langManager.localized("claim.previewRecords"))
                         .font(.scaled(size: 15, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
@@ -138,10 +139,10 @@ struct ClaimMaterialsView: View {
 
     private var insuranceTypePicker: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("险种参考 (可选)")
+            Text(langManager.localized("claim.insuranceType"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            Text("选择险种后将显示对应的材料参考清单")
+            Text(langManager.localized("claim.insuranceTypeHint"))
                 .font(.scaled(size: 10.5))
                 .foregroundStyle(.tertiary)
 
@@ -183,7 +184,7 @@ struct ClaimMaterialsView: View {
 
     private var dateSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("事件日期")
+            Text(langManager.localized("claim.incidentDate"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             DatePicker(
@@ -205,13 +206,13 @@ struct ClaimMaterialsView: View {
 
     private var windowSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("导出范围")
+            Text(langManager.localized("claim.exportRange"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             Picker("", selection: $windowHours) {
-                Text("前后 12 小时").tag(12)
-                Text("前后 24 小时").tag(24)
-                Text("前后 48 小时").tag(48)
+                Text(langManager.localized("claim.window12h")).tag(12)
+                Text(langManager.localized("claim.window24h")).tag(24)
+                Text(langManager.localized("claim.window48h")).tag(48)
             }
             .pickerStyle(.segmented)
         }
@@ -226,10 +227,10 @@ struct ClaimMaterialsView: View {
 
     private var policySection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("保单号 (可选，仅记录在导出文件中)")
+            Text(langManager.localized("claim.policyNumber"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            TextField("例如 PA-20260101-XXX", text: $policyNumber)
+            TextField(langManager.localized("claim.policyPlaceholder"), text: $policyNumber)
                 .font(.scaled(size: 13))
                 .textFieldStyle(.roundedBorder)
         }
@@ -244,14 +245,14 @@ struct ClaimMaterialsView: View {
 
     private var inclusionToggles: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("选择要包含的记录")
+            Text(langManager.localized("claim.selectRecords"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            toggleRow("SOS 求助记录", isOn: $includeSOS)
-            toggleRow("签到 (报平安) 记录", isOn: $includeCheckIns)
-            toggleRow("时间线事件", isOn: $includeTimeline)
-            toggleRow("位置轨迹", isOn: $includeLocation)
-            toggleRow("医疗卡快照", isOn: $includeMedicalCard)
+            toggleRow(langManager.localized("claim.toggleSOS"), isOn: $includeSOS)
+            toggleRow(langManager.localized("claim.toggleCheckIns"), isOn: $includeCheckIns)
+            toggleRow(langManager.localized("claim.toggleTimeline"), isOn: $includeTimeline)
+            toggleRow(langManager.localized("claim.toggleLocation"), isOn: $includeLocation)
+            toggleRow(langManager.localized("claim.toggleMedical"), isOn: $includeMedicalCard)
         }
         .padding(12)
         .background(
@@ -264,10 +265,10 @@ struct ClaimMaterialsView: View {
 
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("备注 (可选，仅记录在导出文件中)")
+            Text(langManager.localized("claim.notes"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            TextField("简要描述发生了什么", text: $userDescription, axis: .vertical)
+            TextField(langManager.localized("claim.notesPlaceholder"), text: $userDescription, axis: .vertical)
                 .lineLimit(2...4)
                 .font(.scaled(size: 13))
                 .textFieldStyle(.roundedBorder)
@@ -288,7 +289,7 @@ struct ClaimMaterialsView: View {
                     VStack(spacing: 12) {
                         ProgressView()
                             .controlSize(.large)
-                        Text("正在整理记录...")
+                        Text(langManager.localized("claim.loading"))
                             .font(.scaled(size: 14))
                             .foregroundStyle(.secondary)
                     }
@@ -303,7 +304,7 @@ struct ClaimMaterialsView: View {
                             .font(.scaled(size: 13))
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
-                        Button("重试") {
+                        Button(langManager.localized("claim.retry")) {
                             Task { await generateExport() }
                         }
                         .font(.scaled(size: 14, weight: .medium))
@@ -323,10 +324,10 @@ struct ClaimMaterialsView: View {
         VStack(alignment: .leading, spacing: 14) {
             // Summary header
             VStack(spacing: 4) {
-                Text("记录预览")
+                Text(langManager.localized("claim.previewTitle"))
                     .font(.scaled(size: 18, weight: .semibold))
                     .foregroundStyle(ink)
-                Text("请确认以下内容，确认后可导出")
+                Text(langManager.localized("claim.previewHint"))
                     .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
             }
@@ -335,21 +336,21 @@ struct ClaimMaterialsView: View {
 
             // Basic info
             infoCard {
-                previewRow("导出编号", value: export.exportId)
-                previewRow("当事人", value: export.personName)
-                previewRow("事件日期", value: formatDateTime(export.incidentDate))
-                previewRow("时间范围", value: "\(formatDateTime(export.window.start)) ~ \(formatDateTime(export.window.end))")
+                previewRow(langManager.localized("claim.exportId"), value: export.exportId)
+                previewRow(langManager.localized("claim.person"), value: export.personName)
+                previewRow(langManager.localized("claim.incidentDate"), value: formatDateTime(export.incidentDate))
+                previewRow(langManager.localized("claim.timeRange"), value: "\(formatDateTime(export.window.start)) ~ \(formatDateTime(export.window.end))")
             }
 
             // SOS Events
             if let sos = export.sosEvents, !sos.isEmpty {
-                sectionCard(title: "SOS 求助记录", count: sos.count) {
+                sectionCard(title: langManager.localized("claim.toggleSOS"), count: sos.count) {
                     ForEach(sos) { event in
                         HStack {
                             Text(formatISOTime(event.triggeredAt))
                                 .font(.scaled(size: 11, design: .monospaced))
                                 .foregroundStyle(.secondary)
-                            Text("SOS 触发")
+                            Text(langManager.localized("claim.sosTrigger"))
                                 .font(.scaled(size: 12))
                             if let method = event.triggerMethod {
                                 Text("(\(method))")
@@ -365,13 +366,13 @@ struct ClaimMaterialsView: View {
 
             // Check-ins
             if let checkIns = export.checkIns, !checkIns.isEmpty {
-                sectionCard(title: "签到记录", count: checkIns.count) {
+                sectionCard(title: langManager.localized("claim.checkInRecords"), count: checkIns.count) {
                     ForEach(checkIns) { ci in
                         HStack {
                             Text(formatISOTime(ci.timestamp))
                                 .font(.scaled(size: 11, design: .monospaced))
                                 .foregroundStyle(.secondary)
-                            Text("报平安")
+                            Text(langManager.localized("claim.checkInLabel"))
                                 .font(.scaled(size: 12))
                             if let note = ci.note, !note.isEmpty {
                                 Text(note)
@@ -388,14 +389,14 @@ struct ClaimMaterialsView: View {
 
             // Timeline
             if let timeline = export.timeline, !timeline.isEmpty {
-                sectionCard(title: "时间线事件", count: timeline.count) {
+                sectionCard(title: langManager.localized("claim.toggleTimeline"), count: timeline.count) {
                     ForEach(timeline) { entry in
                         HStack(alignment: .top) {
                             Text(formatISOTime(entry.timestamp))
                                 .font(.scaled(size: 11, design: .monospaced))
                                 .foregroundStyle(.secondary)
                                 .frame(width: 44, alignment: .trailing)
-                            Text(entry.description ?? entry.type ?? "事件")
+                            Text(entry.description ?? entry.type ?? langManager.localized("claim.event"))
                                 .font(.scaled(size: 12))
                                 .lineLimit(2)
                             Spacer()
@@ -407,21 +408,21 @@ struct ClaimMaterialsView: View {
 
             // Medical snapshot
             if let med = export.medicalSnapshot {
-                sectionCard(title: "医疗卡快照", count: nil) {
+                sectionCard(title: langManager.localized("claim.toggleMedical"), count: nil) {
                     if let bt = med.bloodType, !bt.isEmpty {
-                        previewRow("血型", value: bt)
+                        previewRow(langManager.localized("claim.bloodType"), value: bt)
                     }
                     if let allergies = med.allergies, !allergies.isEmpty {
-                        previewRow("过敏", value: allergies.joined(separator: "、"))
+                        previewRow(langManager.localized("claim.allergies"), value: allergies.joined(separator: "、"))
                     }
                     if let conditions = med.conditions, !conditions.isEmpty {
-                        previewRow("病史", value: conditions.joined(separator: "、"))
+                        previewRow(langManager.localized("claim.conditions"), value: conditions.joined(separator: "、"))
                     }
                     if let provider = med.insuranceProvider, !provider.isEmpty {
-                        previewRow("保险公司", value: provider)
+                        previewRow(langManager.localized("claim.insuranceProvider"), value: provider)
                     }
                     if let policy = med.policyNumber, !policy.isEmpty {
-                        previewRow("保单号", value: policy)
+                        previewRow(langManager.localized("claim.policyLabel"), value: policy)
                     }
                 }
             }
@@ -433,8 +434,8 @@ struct ClaimMaterialsView: View {
 
             // Hash
             infoCard {
-                previewRow("内容哈希 (SHA-256)", value: String(export.contentHash.prefix(24)) + "...")
-                Text("此哈希值供您自行校验导出内容未被修改")
+                previewRow(langManager.localized("claim.contentHash"), value: String(export.contentHash.prefix(24)) + "...")
+                Text(langManager.localized("claim.hashNote"))
                     .font(.scaled(size: 10))
                     .foregroundStyle(.tertiary)
             }
@@ -449,7 +450,7 @@ struct ClaimMaterialsView: View {
                 )
                 step = 2
             } label: {
-                Text("确认并导出 PDF")
+                Text(langManager.localized("claim.exportPDF"))
                     .font(.scaled(size: 15, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
@@ -473,13 +474,13 @@ struct ClaimMaterialsView: View {
                 Image(systemName: "checklist")
                     .font(.scaled(size: 13))
                     .foregroundStyle(lamp)
-                Text("材料参考清单 · \(type.displayName)")
+                Text(String(format: langManager.localized("claim.referenceChecklist"), type.displayName))
                     .font(.scaled(size: 13, weight: .semibold))
             }
 
             // Insurer requires
             VStack(alignment: .leading, spacing: 4) {
-                Text("保险公司通常要求 (需您自行获取)")
+                Text(langManager.localized("claim.insurerRequires"))
                     .font(.scaled(size: 11, weight: .medium))
                     .foregroundStyle(.secondary)
                 ForEach(type.insurerRequires, id: \.self) { item in
@@ -497,7 +498,7 @@ struct ClaimMaterialsView: View {
 
             // Vela records
             VStack(alignment: .leading, spacing: 4) {
-                Text("您的设备记录中包含")
+                Text(langManager.localized("claim.velaProvides"))
                     .font(.scaled(size: 11, weight: .medium))
                     .foregroundStyle(.secondary)
                 ForEach(type.velaCanProvide, id: \.self) { item in
@@ -537,17 +538,17 @@ struct ClaimMaterialsView: View {
                 .font(.scaled(size: 56))
                 .foregroundStyle(safe)
 
-            Text("记录已导出")
+            Text(langManager.localized("claim.exported"))
                 .font(.scaled(size: 20, weight: .bold))
                 .foregroundStyle(ink)
 
             if let export = exportResult {
                 VStack(spacing: 8) {
-                    resultRow("导出编号", value: export.exportId)
-                    resultRow("当事人", value: export.personName)
-                    resultRow("事件日期", value: formatDateTime(export.incidentDate))
-                    resultRow("导出时间", value: formatDateTime(export.exportedAt))
-                    resultRow("哈希值", value: String(export.contentHash.prefix(16)) + "...")
+                    resultRow(langManager.localized("claim.exportId"), value: export.exportId)
+                    resultRow(langManager.localized("claim.person"), value: export.personName)
+                    resultRow(langManager.localized("claim.incidentDate"), value: formatDateTime(export.incidentDate))
+                    resultRow(langManager.localized("claim.exportTime"), value: formatDateTime(export.exportedAt))
+                    resultRow(langManager.localized("claim.hashValue"), value: String(export.contentHash.prefix(16)) + "...")
                 }
                 .padding(16)
                 .background(
@@ -563,7 +564,7 @@ struct ClaimMaterialsView: View {
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "square.and.arrow.up")
-                        Text("分享 PDF 文件")
+                        Text(langManager.localized("claim.sharePDF"))
                     }
                     .font(.scaled(size: 15, weight: .medium))
                     .foregroundStyle(.white)
@@ -586,7 +587,7 @@ struct ClaimMaterialsView: View {
                 }
             }
 
-            Button("完成") { dismiss() }
+            Button(langManager.localized("claim.done")) { dismiss() }
                 .font(.scaled(size: 15, weight: .medium))
                 .foregroundStyle(safe)
                 .padding(.top, 4)
@@ -632,7 +633,7 @@ struct ClaimMaterialsView: View {
             let mock = buildLocalExport()
             await MainActor.run { exportResult = mock }
             #else
-            await MainActor.run { errorMessage = "无法获取记录，请检查网络后重试。" }
+            await MainActor.run { errorMessage = langManager.localized("claim.networkError") }
             #endif
         }
     }
@@ -654,7 +655,7 @@ struct ClaimMaterialsView: View {
             .map { TimelineRecordItem(timestamp: $0.timestamp.ISO8601Format(), type: nil, description: $0.description) }
             : nil
 
-        let name = coordinator.currentUser?.displayName ?? "用户"
+        let name = coordinator.currentUser?.displayName ?? langManager.localized("claim.defaultUser")
         let exportId = "EXP-\(UUID().uuidString.prefix(8).uppercased())"
 
         let content = "\(exportId)\(name)\(incidentDate)"
@@ -728,7 +729,7 @@ struct ClaimMaterialsView: View {
                     .font(.scaled(size: 12, weight: .semibold))
                     .foregroundStyle(ink)
                 if let count {
-                    Text("\(count) 条")
+                    Text(String(format: langManager.localized("claim.countItems"), count))
                         .font(.scaled(size: 10))
                         .foregroundStyle(.secondary)
                 }

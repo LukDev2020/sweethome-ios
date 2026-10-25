@@ -8,6 +8,7 @@ import SwiftUI
 
 struct OrgDashboardView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var langManager = LanguageManager.shared
     @Environment(\.dismiss) private var dismiss
 
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
@@ -34,11 +35,11 @@ struct OrgDashboardView: View {
                 }
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("合规看板")
+            .navigationTitle(langManager.localized("org.navTitle"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("关闭") { dismiss() }
+                    Button(langManager.localized("org.close")) { dismiss() }
                 }
             }
             .sheet(isPresented: $showCreateOrg) {
@@ -81,17 +82,17 @@ struct OrgDashboardView: View {
                 ], spacing: 12) {
                     summaryCard(
                         value: "\(data.summary.totalMembers)",
-                        label: "总成员",
+                        label: langManager.localized("org.totalMembers"),
                         color: ink
                     )
                     summaryCard(
                         value: "\(data.summary.activated)",
-                        label: "已激活",
+                        label: langManager.localized("org.activated"),
                         color: safe
                     )
                     summaryCard(
                         value: "\(data.summary.notInstalled)",
-                        label: "未安装",
+                        label: langManager.localized("org.notInstalled"),
                         color: data.summary.notInstalled > 0 ? alert : .secondary
                     )
                 }
@@ -103,17 +104,17 @@ struct OrgDashboardView: View {
                 ], spacing: 12) {
                     summaryCard(
                         value: "\(data.summary.permissionsAbnormal)",
-                        label: "权限异常",
+                        label: langManager.localized("org.permissionsAbnormal"),
                         color: data.summary.permissionsAbnormal > 0 ? warning : .secondary
                     )
                     summaryCard(
                         value: "\(data.summary.recentCheckIns)",
-                        label: "近期签到",
+                        label: langManager.localized("org.recentCheckIns"),
                         color: safe
                     )
                     summaryCard(
                         value: "\(data.summary.overdueCheckIns)",
-                        label: "超时未签",
+                        label: langManager.localized("org.overdueCheckIns"),
                         color: data.summary.overdueCheckIns > 0 ? alert : .secondary
                     )
                 }
@@ -123,7 +124,7 @@ struct OrgDashboardView: View {
                     Button { showAlert = true } label: {
                         HStack(spacing: 6) {
                             Image(systemName: "megaphone.fill")
-                            Text("发送预警")
+                            Text(langManager.localized("org.sendAlert"))
                         }
                         .font(.scaled(size: 14, weight: .medium))
                         .foregroundStyle(.white)
@@ -136,7 +137,7 @@ struct OrgDashboardView: View {
                     Button { showReport = true } label: {
                         HStack(spacing: 6) {
                             Image(systemName: "doc.text.fill")
-                            Text("导出报告")
+                            Text(langManager.localized("org.exportReport"))
                         }
                         .font(.scaled(size: 14, weight: .medium))
                         .foregroundStyle(ink)
@@ -149,7 +150,7 @@ struct OrgDashboardView: View {
 
                 // Member list
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("成员状态")
+                    Text(langManager.localized("org.memberStatus"))
                         .font(.scaled(size: 12))
                         .foregroundStyle(.secondary)
 
@@ -227,10 +228,10 @@ struct OrgDashboardView: View {
 
     private func statusLabel(_ status: String) -> String {
         switch status {
-        case "normal": return "正常"
-        case "overdue": return "超时"
-        case "permissions_abnormal": return "权限异常"
-        case "not_installed": return "未安装"
+        case "normal": return langManager.localized("org.statusNormal")
+        case "overdue": return langManager.localized("org.statusOverdue")
+        case "permissions_abnormal": return langManager.localized("org.statusPermissions")
+        case "not_installed": return langManager.localized("org.statusNotInstalled")
         default: return status
         }
     }
@@ -242,15 +243,15 @@ struct OrgDashboardView: View {
             Image(systemName: "building.2.fill")
                 .font(.scaled(size: 40))
                 .foregroundStyle(safe.opacity(0.4))
-            Text("还没有创建机构")
+            Text(langManager.localized("org.noOrgTitle"))
                 .font(.scaled(size: 16, weight: .medium))
                 .foregroundStyle(ink.opacity(0.6))
-            Text("机构版可以批量管理成员安全状态，\n一键发送预警，生成合规报告。")
+            Text(langManager.localized("org.noOrgDesc"))
                 .font(.scaled(size: 13))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Button { showCreateOrg = true } label: {
-                Text("创建机构")
+                Text(langManager.localized("org.createOrg"))
                     .font(.scaled(size: 14, weight: .medium))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 24)
@@ -305,28 +306,28 @@ struct CreateOrgSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                TextField("机构名称", text: $name)
-                Picker("类型", selection: $type) {
-                    Text("大学国际处").tag("university")
-                    Text("留学中介").tag("agency")
-                    Text("外派雇主").tag("employer")
-                    Text("劳务派遣").tag("labor")
+                TextField(LanguageManager.shared.localized("org.orgName"), text: $name)
+                Picker(LanguageManager.shared.localized("org.orgType"), selection: $type) {
+                    Text(LanguageManager.shared.localized("org.typeUniversity")).tag("university")
+                    Text(LanguageManager.shared.localized("org.typeAgency")).tag("agency")
+                    Text(LanguageManager.shared.localized("org.typeEmployer")).tag("employer")
+                    Text(LanguageManager.shared.localized("org.typeLabor")).tag("labor")
                     Text("NGO").tag("ngo")
-                    Text("其他").tag("other")
+                    Text(LanguageManager.shared.localized("org.typeOther")).tag("other")
                 }
-                TextField("联系邮箱 (可选)", text: $email)
+                TextField(LanguageManager.shared.localized("org.contactEmail"), text: $email)
             }
-            .navigationTitle("创建机构")
+            .navigationTitle(LanguageManager.shared.localized("org.createOrg"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("取消") { dismiss() }
+                    Button(LanguageManager.shared.localized("org.cancel")) { dismiss() }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         Task { await create() }
                     } label: {
-                        if isSaving { ProgressView() } else { Text("创建").bold() }
+                        if isSaving { ProgressView() } else { Text(LanguageManager.shared.localized("org.create")).bold() }
                     }
                     .disabled(name.isEmpty || isSaving)
                 }
@@ -381,11 +382,11 @@ struct SendAlertSheet: View {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.scaled(size: 48))
                         .foregroundStyle(.green)
-                    Text("预警已发送")
+                    Text(LanguageManager.shared.localized("org.alertSent"))
                         .font(.scaled(size: 18, weight: .bold))
-                    Text("已通知 \(result.sentCount) 人")
+                    Text(String(format: LanguageManager.shared.localized("org.alertNotified"), result.sentCount))
                         .foregroundStyle(.secondary)
-                    Button("完成") {
+                    Button(LanguageManager.shared.localized("org.done")) {
                         onSent()
                         dismiss()
                     }
@@ -394,26 +395,26 @@ struct SendAlertSheet: View {
                 }
             } else {
                 Form {
-                    TextField("预警标题", text: $title)
-                    TextField("详细描述", text: $body_, axis: .vertical)
+                    TextField(LanguageManager.shared.localized("org.alertTitle"), text: $title)
+                    TextField(LanguageManager.shared.localized("org.alertDesc"), text: $body_, axis: .vertical)
                         .lineLimit(3...6)
-                    Picker("严重程度", selection: $severity) {
-                        Text("提醒").tag("info")
-                        Text("警告").tag("warning")
-                        Text("紧急").tag("critical")
+                    Picker(LanguageManager.shared.localized("org.alertSeverity"), selection: $severity) {
+                        Text(LanguageManager.shared.localized("org.severityInfo")).tag("info")
+                        Text(LanguageManager.shared.localized("org.severityWarning")).tag("warning")
+                        Text(LanguageManager.shared.localized("org.severityCritical")).tag("critical")
                     }
                 }
-                .navigationTitle("发送区域预警")
+                .navigationTitle(LanguageManager.shared.localized("org.sendRegionAlert"))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
-                        Button("取消") { dismiss() }
+                        Button(LanguageManager.shared.localized("org.cancel")) { dismiss() }
                     }
                     ToolbarItem(placement: .topBarTrailing) {
                         Button {
                             Task { await send() }
                         } label: {
-                            if isSending { ProgressView() } else { Text("发送").bold().foregroundStyle(alert) }
+                            if isSending { ProgressView() } else { Text(LanguageManager.shared.localized("org.send")).bold().foregroundStyle(alert) }
                         }
                         .disabled(title.isEmpty || body_.isEmpty || isSending)
                     }

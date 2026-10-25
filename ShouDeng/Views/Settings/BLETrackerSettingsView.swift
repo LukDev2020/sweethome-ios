@@ -10,6 +10,7 @@ import SwiftUI
 
 struct BLETrackerSettingsView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var langManager = LanguageManager.shared
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var service = BLETrackerService.shared
 
@@ -36,10 +37,10 @@ struct BLETrackerSettingsView: View {
                             .font(.scaled(size: 22))
                             .foregroundStyle(safe)
                         VStack(alignment: .leading, spacing: 3) {
-                            Text("蓝牙追踪器")
+                            Text(langManager.localized("ble.title"))
                                 .font(.scaled(size: 14, weight: .semibold))
                                 .foregroundStyle(ink)
-                            Text("配对 BLE 按钮或标签，用于紧急求助触发和分离提醒。")
+                            Text(langManager.localized("ble.subtitle"))
                                 .font(.scaled(size: 11))
                                 .foregroundStyle(.secondary)
                         }
@@ -57,7 +58,7 @@ struct BLETrackerSettingsView: View {
                     // Paired tags
                     if !service.pairedTags.isEmpty {
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("已配对设备")
+                            Text(langManager.localized("ble.pairedDevices"))
                                 .font(.scaled(size: 13, weight: .semibold))
                                 .foregroundStyle(ink)
 
@@ -79,7 +80,7 @@ struct BLETrackerSettingsView: View {
                     } label: {
                         HStack(spacing: 8) {
                             Image(systemName: "plus.circle.fill")
-                            Text("扫描并配对新设备")
+                            Text(langManager.localized("ble.scanAndPair"))
                                 .font(.scaled(size: 15, weight: .semibold))
                         }
                         .foregroundStyle(.white)
@@ -92,13 +93,13 @@ struct BLETrackerSettingsView: View {
 
                     // How it works
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("使用方法")
+                        Text(langManager.localized("ble.howToUse"))
                             .font(.scaled(size: 13, weight: .semibold))
                             .foregroundStyle(ink)
 
-                        howRow("1", icon: "button.programmable", text: "紧急按钮模式：按下按钮立即触发 SOS，通知所有守护者")
-                        howRow("2", icon: "dot.radiowaves.right", text: "分离提醒模式：标签超出蓝牙范围时自动通知守护者")
-                        howRow("3", icon: "mappin.and.ellipse", text: "最后位置：自动记录标签最后出现的位置和时间")
+                        howRow("1", icon: "button.programmable", text: langManager.localized("ble.how1"))
+                        howRow("2", icon: "dot.radiowaves.right", text: langManager.localized("ble.how2"))
+                        howRow("3", icon: "mappin.and.ellipse", text: langManager.localized("ble.how3"))
                     }
                     .padding(14)
                     .background(
@@ -108,11 +109,11 @@ struct BLETrackerSettingsView: View {
 
                     // Recommended devices
                     VStack(alignment: .leading, spacing: 6) {
-                        Label("推荐设备", systemImage: "cart.fill")
+                        Label(langManager.localized("ble.recommended"), systemImage: "cart.fill")
                             .font(.scaled(size: 13, weight: .semibold))
                             .foregroundStyle(lamp)
 
-                        Text("Blue Charm BC011 (~$12) — 按钮 + iBeacon\nKKM B2 (~$15) — 单/双/长按，nRF52\nLansitec i5 (~$20) — 手环式，IP67 防水\n任何 BLE 4.0+ iBeacon 兼容标签均可使用")
+                        Text(langManager.localized("ble.recommendedList"))
                             .font(.scaled(size: 11))
                             .foregroundStyle(.secondary)
                     }
@@ -129,23 +130,23 @@ struct BLETrackerSettingsView: View {
                 .padding(16)
             }
             .background(Color(.systemBackground))
-            .navigationTitle("蓝牙追踪器")
+            .navigationTitle(langManager.localized("ble.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("关闭") { dismiss() }
+                    Button(langManager.localized("ble.close")) { dismiss() }
                 }
             }
             .sheet(isPresented: $showPairSheet) {
                 scanSheet
             }
-            .alert("取消配对？", isPresented: $showUnpairConfirm) {
-                Button("取消", role: .cancel) {}
-                Button("取消配对", role: .destructive) {
+            .alert(langManager.localized("ble.unpairConfirmTitle"), isPresented: $showUnpairConfirm) {
+                Button(langManager.localized("ble.cancel"), role: .cancel) {}
+                Button(langManager.localized("ble.unpair"), role: .destructive) {
                     if let id = unpairTagId { service.unpairTag(id) }
                 }
             } message: {
-                Text("取消配对后将停止监控此设备。")
+                Text(langManager.localized("ble.unpairMessage"))
             }
         }
     }
@@ -174,11 +175,11 @@ struct BLETrackerSettingsView: View {
 
                     if let sighting = service.lastSeenLocations[tag.id] {
                         let ago = Int(Date().timeIntervalSince(sighting.timestamp) / 60)
-                        Text(ago < 1 ? "刚刚在线" : "\(ago) 分钟前")
+                        Text(ago < 1 ? langManager.localized("ble.justOnline") : String(format: langManager.localized("ble.minutesAgo"), ago))
                             .font(.scaled(size: 10))
                             .foregroundStyle(.secondary)
                     } else {
-                        Text("未检测到")
+                        Text(langManager.localized("ble.notDetected"))
                             .font(.scaled(size: 10))
                             .foregroundStyle(.secondary)
                     }
@@ -206,7 +207,7 @@ struct BLETrackerSettingsView: View {
                 if service.isScanning {
                     HStack(spacing: 8) {
                         ProgressView()
-                        Text("正在扫描附近的蓝牙设备...")
+                        Text(langManager.localized("ble.scanning"))
                             .font(.scaled(size: 14))
                             .foregroundStyle(.secondary)
                     }
@@ -218,10 +219,10 @@ struct BLETrackerSettingsView: View {
                         Image(systemName: "antenna.radiowaves.left.and.right.slash")
                             .font(.scaled(size: 36))
                             .foregroundStyle(.secondary)
-                        Text("未发现设备")
+                        Text(langManager.localized("ble.noDevices"))
                             .font(.scaled(size: 14))
                             .foregroundStyle(.secondary)
-                        Text("请确保蓝牙设备已开启且在附近")
+                        Text(langManager.localized("ble.noDevicesHint"))
                             .font(.scaled(size: 12))
                             .foregroundStyle(.secondary.opacity(0.6))
                     }
@@ -238,7 +239,7 @@ struct BLETrackerSettingsView: View {
                                     Image(systemName: "wave.3.right.circle.fill")
                                         .foregroundStyle(safe)
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text(device.name ?? "未知设备")
+                                        Text(device.name ?? langManager.localized("ble.unknownDevice"))
                                             .font(.scaled(size: 13, weight: .medium))
                                             .foregroundStyle(ink)
                                         Text("信号: \(device.rssi) dBm")
@@ -266,7 +267,7 @@ struct BLETrackerSettingsView: View {
                     Button {
                         service.startDiscovery()
                     } label: {
-                        Text("重新扫描")
+                        Text(langManager.localized("ble.rescan"))
                             .font(.scaled(size: 14, weight: .medium))
                             .foregroundStyle(safe)
                     }
@@ -274,11 +275,11 @@ struct BLETrackerSettingsView: View {
 
                 Spacer()
             }
-            .navigationTitle("扫描设备")
+            .navigationTitle(langManager.localized("ble.scanTitle"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("取消") {
+                    Button(langManager.localized("ble.cancel")) {
                         service.stopDiscovery()
                         showPairSheet = false
                     }
@@ -296,25 +297,25 @@ struct BLETrackerSettingsView: View {
     private func pairConfigSheet(device: BLETrackerService.DiscoveredDevice) -> some View {
         NavigationStack {
             VStack(spacing: 20) {
-                TextField("设备名称（如：妈妈的手环）", text: $pairName)
+                TextField(langManager.localized("ble.deviceName"), text: $pairName)
                     .textFieldStyle(.roundedBorder)
                     .padding(.top, 20)
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("设备类型")
+                    Text(langManager.localized("ble.deviceType"))
                         .font(.scaled(size: 13, weight: .semibold))
                         .foregroundStyle(ink)
                     Picker("", selection: $pairType) {
-                        Text("紧急按钮").tag(BLETrackerService.TrackerTag.TagType.panicButton)
-                        Text("分离提醒").tag(BLETrackerService.TrackerTag.TagType.beacon)
-                        Text("双模式").tag(BLETrackerService.TrackerTag.TagType.dual)
+                        Text(langManager.localized("ble.typePanic")).tag(BLETrackerService.TrackerTag.TagType.panicButton)
+                        Text(langManager.localized("ble.typeBeacon")).tag(BLETrackerService.TrackerTag.TagType.beacon)
+                        Text(langManager.localized("ble.typeDual")).tag(BLETrackerService.TrackerTag.TagType.dual)
                     }
                     .pickerStyle(.segmented)
                 }
 
                 if pairType == .beacon || pairType == .dual {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("iBeacon UUID（可选）")
+                        Text(langManager.localized("ble.beaconUUID"))
                             .font(.scaled(size: 13, weight: .semibold))
                             .foregroundStyle(ink)
                         TextField("E2C56DB5-DFFB-48D2-B060-D0F5A71096E0", text: $pairBeaconUUID)
@@ -328,7 +329,7 @@ struct BLETrackerSettingsView: View {
                     let beaconUUID = pairBeaconUUID.isEmpty ? BLETrackerService.defaultBeaconUUID : pairBeaconUUID
                     service.pairTag(
                         device,
-                        name: pairName.isEmpty ? (device.name ?? "蓝牙标签") : pairName,
+                        name: pairName.isEmpty ? (device.name ?? langManager.localized("ble.defaultTag")) : pairName,
                         type: pairType,
                         beaconUUID: (pairType == .beacon || pairType == .dual) ? beaconUUID : nil
                     )
@@ -341,7 +342,7 @@ struct BLETrackerSettingsView: View {
                     selectedDevice = nil
                     showPairSheet = false
                 } label: {
-                    Text("配对")
+                    Text(langManager.localized("ble.pair"))
                         .font(.scaled(size: 15, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
@@ -352,7 +353,7 @@ struct BLETrackerSettingsView: View {
                 Spacer()
             }
             .padding(.horizontal, 16)
-            .navigationTitle("配对设备")
+            .navigationTitle(langManager.localized("ble.pairTitle"))
             .navigationBarTitleDisplayMode(.inline)
         }
         .presentationDetents([.medium])
@@ -362,9 +363,9 @@ struct BLETrackerSettingsView: View {
 
     private func typeLabel(_ type: BLETrackerService.TrackerTag.TagType) -> String {
         switch type {
-        case .panicButton: return "紧急按钮"
-        case .beacon: return "分离提醒"
-        case .dual: return "双模式"
+        case .panicButton: return langManager.localized("ble.typePanic")
+        case .beacon: return langManager.localized("ble.typeBeacon")
+        case .dual: return langManager.localized("ble.typeDual")
         }
     }
 

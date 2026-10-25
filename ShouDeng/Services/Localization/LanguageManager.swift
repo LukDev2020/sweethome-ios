@@ -31,12 +31,15 @@ final class LanguageManager: ObservableObject {
     static let shared = LanguageManager()
 
     private let key = "app_language"
+    static let languageDidChangeNotification = Notification.Name("ShouDengLanguageDidChange")
+
     @Published var current: AppLanguage {
         didSet {
             UserDefaults.standard.set(current.rawValue, forKey: key)
             UserDefaults.standard.set([current.rawValue], forKey: "AppleLanguages")
             bundle = Self.loadBundle(for: current)
             WidgetDataStore.writeLanguage(current.rawValue)
+            NotificationCenter.default.post(name: Self.languageDidChangeNotification, object: nil)
         }
     }
 

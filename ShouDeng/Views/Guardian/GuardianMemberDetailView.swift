@@ -8,6 +8,7 @@ import MapKit
 
 struct GuardianMemberDetailView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var langManager = LanguageManager.shared
     let personId: String
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
@@ -54,7 +55,7 @@ struct GuardianMemberDetailView: View {
                             Image(systemName: "phone.arrow.up.right.fill")
                                 .font(.scaled(size: 14))
                                 .foregroundStyle(.red)
-                            Text("紧急救援电话")
+                            Text(langManager.localized("guardian.member.emergency.phone"))
                                 .font(.scaled(size: 13, weight: .medium))
                                 .foregroundStyle(ink)
                             Spacer()
@@ -75,13 +76,13 @@ struct GuardianMemberDetailView: View {
 
                     // Action buttons
                     HStack(spacing: 8) {
-                        actionButton("发消息", icon: "message.fill") {
+                        actionButton(langManager.localized("guardian.member.send.message"), icon: "message.fill") {
                             if let phone = person.user.phone,
                                let url = URL(string: "sms:\(phone)") {
                                 UIApplication.shared.open(url)
                             }
                         }
-                        actionButton("拨号", icon: "phone.fill") {
+                        actionButton(langManager.localized("guardian.member.call"), icon: "phone.fill") {
                             if let phone = person.user.phone,
                                let url = URL(string: "tel://\(phone)") {
                                 UIApplication.shared.open(url)
@@ -92,18 +93,18 @@ struct GuardianMemberDetailView: View {
                 .padding(.horizontal, 16)
             } else {
                 ContentUnavailableView(
-                    "找不到此人",
+                    langManager.localized("guardian.member.not.found"),
                     systemImage: "person.slash",
-                    description: Text("该被守护者可能已被移除")
+                    description: Text(langManager.localized("guardian.member.may.removed"))
                 )
             }
         }
         .background(Color(.systemBackground))
-        .navigationTitle("成员详情")
+        .navigationTitle(langManager.localized("guardian.member.detail.title"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Text("你正在值班")
+                Text(langManager.localized("guardian.member.on.duty"))
                     .font(.scaled(size: 12))
                     .foregroundStyle(safe)
             }
@@ -120,8 +121,8 @@ struct GuardianMemberDetailView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm"
         formatter.timeZone = person.user.timeZone
-        parts.append("当地 \(formatter.string(from: Date()))")
-        parts.append("\(person.protectionLayers) 层保护")
+        parts.append(String(format: langManager.localized("guardian.member.local.time"), formatter.string(from: Date())))
+        parts.append(String(format: langManager.localized("guardian.member.layers"), person.protectionLayers))
         return parts.joined(separator: " · ")
     }
 
@@ -167,7 +168,7 @@ struct GuardianMemberDetailView: View {
                         Image(systemName: "mappin.slash")
                             .font(.scaled(size: 28))
                             .foregroundStyle(.secondary)
-                        Text("暂无位置信息")
+                        Text(langManager.localized("guardian.member.no.location"))
                             .font(.scaled(size: 12))
                             .foregroundStyle(.secondary)
                     }
@@ -180,27 +181,27 @@ struct GuardianMemberDetailView: View {
 
     private func statusPanel(_ person: ProtectedPerson) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("此刻")
+            Text(langManager.localized("guardian.member.now"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            statusRow("状态", value: statusText(person.status), isOk: person.status == .normal)
+            statusRow(langManager.localized("guardian.member.status"), value: statusText(person.status), isOk: person.status == .normal)
             if let battery = person.batteryLevel {
-                statusRow("电量", value: "\(Int(battery * 100))%", isOk: battery > 0.2)
+                statusRow(langManager.localized("guardian.member.battery"), value: "\(Int(battery * 100))%", isOk: battery > 0.2)
             } else {
-                statusRow("电量", value: "未知", isOk: false)
+                statusRow(langManager.localized("guardian.member.battery"), value: langManager.localized("guardian.member.unknown"), isOk: false)
             }
             if let lastActivity = person.lastPhoneActivity {
                 let minutes = Int(Date().timeIntervalSince(lastActivity) / 60)
-                statusRow("手机", value: minutes < 5 ? "在线 · \(minutes) 分钟前使用过" : "\(minutes) 分钟前活跃", isOk: minutes < 30)
+                statusRow(langManager.localized("guardian.member.phone"), value: minutes < 5 ? String(format: langManager.localized("guardian.member.online.minutes"), minutes) : String(format: langManager.localized("guardian.member.active.minutes"), minutes), isOk: minutes < 30)
             } else {
-                statusRow("手机", value: "未知", isOk: false)
+                statusRow(langManager.localized("guardian.member.phone"), value: langManager.localized("guardian.member.unknown"), isOk: false)
             }
             if let checkIn = person.lastCheckIn {
                 let minutes = Int(Date().timeIntervalSince(checkIn) / 60)
-                let text = minutes < 60 ? "\(minutes) 分钟前" : "\(minutes / 60) 小时前"
-                statusRow("上次报平安", value: text, isOk: !person.isOverdue)
+                let text = minutes < 60 ? String(format: langManager.localized("guardian.member.minutes.ago"), minutes) : String(format: langManager.localized("guardian.member.hours.ago"), minutes / 60)
+                statusRow(langManager.localized("guardian.member.last.checkin"), value: text, isOk: !person.isOverdue)
             } else {
-                statusRow("上次报平安", value: "从未", isOk: false)
+                statusRow(langManager.localized("guardian.member.last.checkin"), value: langManager.localized("guardian.member.never"), isOk: false)
             }
         }
         .padding(12)
@@ -212,11 +213,11 @@ struct GuardianMemberDetailView: View {
 
     private func statusText(_ status: SafetyStatus) -> String {
         switch status {
-        case .normal: return "正常"
-        case .pendingCheckIn: return "待打卡"
-        case .overdue: return "超时未打卡"
-        case .alert: return "求助中"
-        case .unreachable: return "无法联系"
+        case .normal: return langManager.localized("guardian.member.status.normal")
+        case .pendingCheckIn: return langManager.localized("guardian.member.status.pending")
+        case .overdue: return langManager.localized("guardian.member.status.overdue")
+        case .alert: return langManager.localized("guardian.member.status.alert")
+        case .unreachable: return langManager.localized("guardian.member.status.unreachable")
         }
     }
 

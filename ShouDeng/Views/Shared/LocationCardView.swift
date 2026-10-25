@@ -162,7 +162,7 @@ struct LocationCardView: View {
                                 .clipShape(Capsule())
                         }
                         if let mins = liveUpdateMinutes {
-                            Text(mins < 1 ? "刚刚更新" : "\(mins) 分钟前更新")
+                            Text(mins < 1 ? LanguageManager.shared.localized("location.justUpdated") : String(format: LanguageManager.shared.localized("location.minutesAgoUpdated"), mins))
                                 .font(.scaled(size: 11))
                                 .foregroundStyle(.white.opacity(0.9))
                                 .padding(.horizontal, 7)
@@ -200,7 +200,7 @@ struct LocationCardView: View {
                                 HStack(spacing: 3) {
                                     Image(systemName: "arrow.down.right.and.arrow.up.left")
                                         .font(.scaled(size: 9))
-                                    Text("收起")
+                                    Text(LanguageManager.shared.localized("location.collapse"))
                                         .font(.scaled(size: 12))
                                 }
                                 .foregroundStyle(.white)
@@ -209,7 +209,7 @@ struct LocationCardView: View {
                                 .background(ink.opacity(0.6))
                                 .clipShape(Capsule())
                             }
-                            .accessibilityLabel("收起地图")
+                            .accessibilityLabel(LanguageManager.shared.localized("location.collapseMap"))
                         }
                         .padding(8)
                     }
@@ -231,7 +231,7 @@ struct LocationCardView: View {
                         .background(ink.opacity(0.65))
                         .clipShape(Circle())
                 }
-                .accessibilityLabel("展开地图")
+                .accessibilityLabel(LanguageManager.shared.localized("location.expandMap"))
                 .padding(8)
             }
             // Recenter button (appears after user drags the map)
@@ -248,7 +248,7 @@ struct LocationCardView: View {
                             .clipShape(Circle())
                             .shadow(color: .black.opacity(0.2), radius: 3, y: 1)
                     }
-                    .accessibilityLabel("回到当前位置")
+                    .accessibilityLabel(LanguageManager.shared.localized("location.recenter"))
                     .padding(8)
                     .transition(.scale.combined(with: .opacity))
                 }
@@ -454,9 +454,9 @@ struct LocationCardView: View {
 
     private func memberRoleLabel(_ pin: LocationPin) -> String {
         switch pin.role {
-        case .me: return "我"
-        case .guardian: return pin.status ?? "守护者"
-        case .protected_: return pin.status ?? "被守护"
+        case .me: return LanguageManager.shared.localized("location.roleMe")
+        case .guardian: return pin.status ?? LanguageManager.shared.localized("location.roleGuardian")
+        case .protected_: return pin.status ?? LanguageManager.shared.localized("location.roleProtected")
         }
     }
 
@@ -629,7 +629,7 @@ struct FullScreenMapView: View {
                                 .clipShape(Circle())
                                 .shadow(color: .black.opacity(0.25), radius: 4, y: 2)
                         }
-                        .accessibilityLabel("回到当前位置")
+                        .accessibilityLabel(LanguageManager.shared.localized("location.recenter"))
                         .padding(.trailing, 16)
                         .padding(.bottom, 130)
                     }
@@ -647,7 +647,7 @@ struct FullScreenMapView: View {
                             .font(.scaled(size: 28))
                             .foregroundStyle(.white, ink.opacity(0.6))
                     }
-                    .accessibilityLabel("关闭地图")
+                    .accessibilityLabel(LanguageManager.shared.localized("location.closeMap"))
 
                     Spacer()
 
@@ -668,7 +668,7 @@ struct FullScreenMapView: View {
                         RoundedRectangle(cornerRadius: 1.5)
                             .fill(safe.opacity(0.6))
                             .frame(width: 16, height: 3)
-                        Text("24h 轨迹")
+                        Text(LanguageManager.shared.localized("location.trail24h"))
                             .font(.scaled(size: 12))
                     }
                     .foregroundStyle(.white)
@@ -760,7 +760,7 @@ struct FullScreenMapView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             if let trail = trailCoordinates[pin.id] {
-                Text("过去 24 小时 · \(trail.count) 个位置记录")
+                Text(String(format: LanguageManager.shared.localized("location.trailInfo"), trail.count))
                     .font(.scaled(size: 12))
                     .foregroundStyle(.white.opacity(0.5))
                     .frame(maxWidth: .infinity, alignment: .leading)

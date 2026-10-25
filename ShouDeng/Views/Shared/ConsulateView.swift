@@ -7,6 +7,7 @@ import SwiftUI
 
 struct ConsulateView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var langManager = LanguageManager.shared
     @Environment(\.dismiss) private var dismiss
 
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
@@ -61,7 +62,7 @@ struct ConsulateView: View {
                                 Text(pinned.name)
                                     .font(.scaled(size: 15, weight: .medium))
                                     .foregroundStyle(ink)
-                                Text("已设为常用")
+                                Text(langManager.localized("consulate.pinned"))
                                     .font(.scaled(size: 12))
                                     .foregroundStyle(safe)
                             }
@@ -70,7 +71,7 @@ struct ConsulateView: View {
                                 .foregroundStyle(safe)
                         }
                     } header: {
-                        Text("当前常用")
+                        Text(langManager.localized("consulate.currentPinned"))
                     }
                 }
 
@@ -84,7 +85,7 @@ struct ConsulateView: View {
                                     Text(country.name)
                                         .font(.scaled(size: 15, weight: .medium))
                                         .foregroundStyle(ink)
-                                    Text("紧急电话: \(country.emergency)")
+                                    Text(String(format: langManager.localized("consulate.emergencyPhone"), country.emergency))
                                         .font(.scaled(size: 12))
                                         .foregroundStyle(.secondary)
                                 }
@@ -101,7 +102,7 @@ struct ConsulateView: View {
                         }
                     }
                 } header: {
-                    Text("所有国家")
+                    Text(langManager.localized("consulate.allCountries"))
                 } footer: {
                     Text(LanguageManager.shared.localized("disclaimer.reference.only"))
                         .font(.scaled(size: 11))
@@ -110,12 +111,12 @@ struct ConsulateView: View {
                         .padding(.top, 8)
                 }
             }
-            .searchable(text: $searchText, prompt: "搜索国家")
-            .navigationTitle("领事与紧急电话")
+            .searchable(text: $searchText, prompt: langManager.localized("consulate.search"))
+            .navigationTitle(langManager.localized("consulate.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("关闭") { dismiss() }
+                    Button(langManager.localized("consulate.close")) { dismiss() }
                 }
             }
             .sheet(item: $selectedCountry) { country in
@@ -194,7 +195,7 @@ struct ConsulateDetailSheet: View {
                         HStack(spacing: 6) {
                             Image(systemName: isPinned ? "pin.slash.fill" : "pin.fill")
                                 .font(.scaled(size: 13))
-                            Text(isPinned ? "取消常用" : "设为常用 — 显示在首页")
+                            Text(isPinned ? LanguageManager.shared.localized("consulate.unpin") : LanguageManager.shared.localized("consulate.pin"))
                                 .font(.scaled(size: 14, weight: .medium))
                         }
                         .foregroundStyle(.white)
@@ -205,31 +206,31 @@ struct ConsulateDetailSheet: View {
                     }
 
                     // Emergency numbers
-                    sectionCard(title: "紧急电话", icon: "phone.fill", color: alert) {
-                        phoneRow("综合紧急", number: country.emergency)
+                    sectionCard(title: LanguageManager.shared.localized("consulate.emergencyNumbers"), icon: "phone.fill", color: alert) {
+                        phoneRow(LanguageManager.shared.localized("consulate.generalEmergency"), number: country.emergency)
                         if country.police != country.emergency {
-                            phoneRow("警察", number: country.police)
+                            phoneRow(LanguageManager.shared.localized("consulate.police"), number: country.police)
                         }
                         if country.ambulance != country.emergency {
-                            phoneRow("急救", number: country.ambulance)
+                            phoneRow(LanguageManager.shared.localized("consulate.ambulance"), number: country.ambulance)
                         }
                     }
 
                     // Chinese Embassy — consular protection numbers
-                    sectionCard(title: "中国使领馆领事保护", icon: "building.columns.fill", color: safe) {
-                        phoneRow("大使馆", number: country.embassy)
+                    sectionCard(title: LanguageManager.shared.localized("consulate.embassySection"), icon: "building.columns.fill", color: safe) {
+                        phoneRow(LanguageManager.shared.localized("consulate.embassy"), number: country.embassy)
                         ForEach(Array(country.consulates.enumerated()), id: \.offset) { _, number in
-                            phoneRow("总领馆", number: number)
+                            phoneRow(LanguageManager.shared.localized("consulate.consulate"), number: number)
                         }
                     }
 
                     // Global consular protection hotline
-                    sectionCard(title: "外交部全球领保热线 (24小时)", icon: "globe", color: .blue) {
-                        phoneRow("12308热线", number: "+86-10-12308")
-                        phoneRow("备用号码", number: "+86-10-59913991")
+                    sectionCard(title: LanguageManager.shared.localized("consulate.globalHotline"), icon: "globe", color: .blue) {
+                        phoneRow(LanguageManager.shared.localized("consulate.hotline12308"), number: "+86-10-12308")
+                        phoneRow(LanguageManager.shared.localized("consulate.backupNumber"), number: "+86-10-59913991")
                     }
 
-                    Text("电话号码可直接拨打。数据离线可用。\n号码来源：中国外交部及各使领馆官网。")
+                    Text(LanguageManager.shared.localized("consulate.footer"))
                         .font(.scaled(size: 12))
                         .foregroundStyle(.secondary.opacity(0.7))
                         .multilineTextAlignment(.center)
@@ -241,7 +242,7 @@ struct ConsulateDetailSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("关闭") { dismiss() }
+                    Button(LanguageManager.shared.localized("consulate.close")) { dismiss() }
                 }
             }
         }

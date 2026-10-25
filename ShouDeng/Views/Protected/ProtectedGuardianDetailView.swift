@@ -10,6 +10,7 @@ import SwiftUI
 
 struct ProtectedGuardianDetailView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var langManager = LanguageManager.shared
     let guardianId: String
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
@@ -48,23 +49,23 @@ struct ProtectedGuardianDetailView: View {
                     // Safe revocation
                     revocationPanel
 
-                    Text("延迟生效为胁迫场景准备：被逼当场关闭时，家人仍能在六小时内看到。")
+                    Text(langManager.localized("guardian.detail.delayExplanation"))
                         .font(.scaled(size: 12))
                         .foregroundStyle(.secondary.opacity(0.7))
                         .padding(.top, 8)
                         .padding(.bottom, 24)
                 } else {
                     ContentUnavailableView(
-                        "找不到守护者",
+                        langManager.localized("guardian.detail.notFound"),
                         systemImage: "person.slash",
-                        description: Text("该守护者可能已被移除")
+                        description: Text(langManager.localized("guardian.detail.notFoundDesc"))
                     )
                 }
             }
             .padding(.horizontal, 16)
         }
         .background(Color(.systemBackground))
-        .navigationTitle("守护者详情")
+        .navigationTitle(langManager.localized("guardian.detail.title"))
         .navigationBarTitleDisplayMode(.inline)
         .featureDisclosure(.location, trigger: $locationDisclosureTrigger)
         .featureDisclosure(.emergencyAudio, trigger: $audioDisclosureTrigger)
@@ -77,14 +78,14 @@ struct ProtectedGuardianDetailView: View {
                 audioDisclosureTrigger = true
             }
         }
-        .alert("移除守护者", isPresented: $showRemoveConfirm) {
-            Button("取消", role: .cancel) {}
-            Button("确认移除", role: .destructive) {
+        .alert(langManager.localized("guardian.detail.removeTitle"), isPresented: $showRemoveConfirm) {
+            Button(langManager.localized("guardian.detail.cancel"), role: .cancel) {}
+            Button(langManager.localized("guardian.detail.confirmRemove"), role: .destructive) {
                 Task { await removeGuardian() }
             }
         } message: {
             if let g = guardian {
-                Text("确定要移除「\(g.user.displayName)」吗？移除后对方将无法查看你的状态。")
+                Text(String(format: langManager.localized("guardian.detail.removeMessage"), g.user.displayName))
             }
         }
     }
@@ -173,7 +174,7 @@ struct ProtectedGuardianDetailView: View {
                     Text(g.user.displayName)
                         .font(.scaled(size: 15, weight: .medium))
                     if g.isOnDuty {
-                        Text("值班中")
+                        Text(langManager.localized("guardian.detail.onDuty"))
                             .font(.scaled(size: 11))
                             .padding(.horizontal, 7)
                             .padding(.vertical, 2)
@@ -182,7 +183,7 @@ struct ProtectedGuardianDetailView: View {
                             .clipShape(Capsule())
                     }
                 }
-                Text("\(g.user.cityName) · 自 \(linkedSinceText(g.linkedSince)) 起")
+                Text(String(format: langManager.localized("guardian.detail.since"), g.user.cityName, linkedSinceText(g.linkedSince)))
                     .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
             }
@@ -197,7 +198,7 @@ struct ProtectedGuardianDetailView: View {
 
     private func linkedSinceText(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy 年 M 月"
+        formatter.dateFormat = langManager.localized("guardian.detail.dateFormat")
         return formatter.string(from: date)
     }
 
@@ -206,7 +207,7 @@ struct ProtectedGuardianDetailView: View {
     private var dailyVisiblePanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("日常可见")
+                Text(langManager.localized("guardian.detail.dailyVisible"))
                     .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -221,10 +222,10 @@ struct ProtectedGuardianDetailView: View {
                         .lineLimit(1)
                 }
             }
-            permissionToggle("我的位置", isOn: $shareLocation)
-            permissionToggle("电量与在线状态", isOn: $shareBattery)
-            permissionToggle("健康与跌倒检测", isOn: $shareHealth)
-            permissionToggle("手机活跃信号", isOn: $sharePhoneActivity)
+            permissionToggle(langManager.localized("guardian.detail.myLocation"), isOn: $shareLocation)
+            permissionToggle(langManager.localized("guardian.detail.batteryStatus"), isOn: $shareBattery)
+            permissionToggle(langManager.localized("guardian.detail.healthFall"), isOn: $shareHealth)
+            permissionToggle(langManager.localized("guardian.detail.phoneActivity"), isOn: $sharePhoneActivity)
         }
         .padding(12)
         .background(
@@ -254,12 +255,12 @@ struct ProtectedGuardianDetailView: View {
 
     private var emergencyPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("紧急时自动开启")
+            Text(langManager.localized("guardian.detail.emergencyAuto"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            fixedRow("高频位置上报", value: "始终开启", isOk: true)
+            fixedRow(langManager.localized("guardian.detail.highFreqLocation"), value: langManager.localized("guardian.detail.alwaysOn"), isOk: true)
             HStack {
-                Text("环境录音").font(.scaled(size: 13))
+                Text(langManager.localized("guardian.detail.ambientAudio")).font(.scaled(size: 13))
                 Spacer()
                 Toggle("", isOn: Binding(
                     get: { shareEmergencyAudio },
@@ -284,22 +285,22 @@ struct ProtectedGuardianDetailView: View {
 
     private var revocationPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("安全撤销")
+            Text(langManager.localized("guardian.detail.safeRevocation"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            fixedRow("关闭共享延迟生效", value: "6 小时后", isOk: false)
+            fixedRow(langManager.localized("guardian.detail.shareDelay"), value: langManager.localized("guardian.detail.sixHoursLater"), isOk: false)
 
             Button {
                 showRemoveConfirm = true
             } label: {
                 HStack {
-                    Text("移除这位守护者").font(.scaled(size: 13))
+                    Text(langManager.localized("guardian.detail.removeGuardian")).font(.scaled(size: 13))
                     Spacer()
                     if isRemoving {
                         ProgressView()
                             .scaleEffect(0.7)
                     } else {
-                        Text("需二次确认")
+                        Text(langManager.localized("guardian.detail.requireConfirm"))
                             .font(.scaled(size: 11.5))
                             .foregroundStyle(alert)
                     }
