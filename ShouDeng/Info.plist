@@ -28,7 +28,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>21</string>
+	<string>22</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSAppTransportSecurity</key>
@@ -38,6 +38,8 @@
 	</dict>
 	<key>NSPrivacyPolicyURL</key>
 	<string>https://shoudeng.app/privacy</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Luma connects to your Bluetooth panic button and tracking tags to trigger SOS alerts and detect separation. Bluetooth is used only after you pair a device in Settings.</string>
 	<key>NSContactsUsageDescription</key>
 	<string>Access your contacts to quickly add emergency contact information. Contact data is not uploaded to our servers.</string>
 	<key>NSFaceIDUsageDescription</key>
@@ -58,6 +60,7 @@
 	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
+		<string>bluetooth-central</string>
 		<string>location</string>
 		<string>remote-notification</string>
 	</array>
