@@ -1,0 +1,1866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShouDeng Synthesis v6 — Dual Portal</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+:root{
+  --bg:#E8DEDA;--sf:#F0E9E5;--card:#F5F0EC;--burnt:#DD4C27;--cobalt:#1B5EBD;--forest:#4C7C4B;
+  --ink:#1B1B1B;--ink55:rgba(30,20,15,.55);--ink30:rgba(30,20,15,.30);--ink12:rgba(30,20,15,.12);--ink06:rgba(30,20,15,.06);
+  --lamp:#E8A33D;--safe:#3F8F6E;--alert:#C4453C;--pro:#6B5CA5;--r:22px;--r2:16px;--r3:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:'Inter',-apple-system,sans-serif;display:flex;flex-direction:column;justify-content:flex-start;align-items:center;min-height:100vh;overflow-x:auto;overflow-y:auto;-webkit-font-smoothing:antialiased;padding:20px 0 60px;}
+.bgd{position:fixed;inset:0;pointer-events:none;overflow:hidden;}
+.bgd i{position:absolute;border:1px solid rgba(80,60,50,.04);border-radius:50%;}
+.bgd i:nth-child(1){width:1000px;height:1000px;top:-300px;right:-200px;}
+.bgd i:nth-child(2){width:700px;height:700px;bottom:-200px;left:-150px;}
+
+.dual-container{display:flex;gap:60px;align-items:flex-start;padding:20px;position:relative;z-index:1;}
+.portal-col{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.portal-label{font-size:15px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--ink55);}
+.portal-label span{font-size:12px;font-weight:500;display:block;text-transform:none;letter-spacing:0;margin-top:2px;color:var(--ink30);}
+
+.phone{width:393px;height:852px;background:var(--sf);border-radius:52px;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(40,25,20,.04),0 30px 80px rgba(40,25,20,.13);}
+.island{width:126px;height:36px;background:#000;border-radius:20px;position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:200;}
+.status-bar{position:absolute;top:0;left:0;right:0;height:54px;display:flex;justify-content:space-between;align-items:center;padding:14px 32px 0;z-index:150;font-size:14px;font-weight:600;color:var(--ink);}
+.status-bar .time{flex:1;}.status-bar .icons{flex:1;text-align:right;font-size:12px;letter-spacing:1px;}
+
+.screen{position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;border-radius:52px;}
+.tab-content{position:absolute;top:54px;left:0;right:0;bottom:80px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+.tab-content::-webkit-scrollbar{display:none;}
+.tab-pane{display:none;padding:12px 20px 20px;}
+.tab-pane.active{display:block;}
+
+.tab-bar{position:absolute;bottom:0;left:0;right:0;height:80px;background:rgba(240,233,229,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--ink06);display:flex;align-items:flex-start;padding-top:10px;z-index:100;}
+.tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;cursor:pointer;font-size:10px;font-weight:500;color:var(--ink30);transition:color .2s;}
+.tab-btn.active{color:var(--burnt);}
+.tab-btn svg{width:24px;height:24px;fill:currentColor;}
+
+/* card deck */
+.card-deck{position:relative;width:100%;height:220px;margin:8px 0 16px;overflow:hidden;border-radius:var(--r);}
+.card-deck-inner{display:flex;gap:0;transition:transform .4s cubic-bezier(.25,.1,.25,1);will-change:transform;}
+.hero-card{min-width:100%;height:210px;border-radius:var(--r);position:relative;overflow:hidden;cursor:grab;user-select:none;flex-shrink:0;}
+
+/* location share card in feed */
+.loc-share-card{background:linear-gradient(135deg,#1a2a3a,#0f1f30);border-radius:12px;padding:12px;margin-top:6px;color:#fff;position:relative;overflow:hidden;}
+.loc-share-card::before{content:'';position:absolute;top:-10px;right:-10px;width:50px;height:50px;border-radius:50%;background:rgba(221,76,39,.15);}
+.loc-share-card .lsc-head{display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:10px;font-weight:600;}
+.loc-share-card .lsc-pulse{width:6px;height:6px;border-radius:50%;background:var(--safe);animation:pulse 1.5s ease-in-out infinite;}
+.loc-share-card .lsc-addr{font-size:13px;font-weight:600;margin-bottom:3px;}
+.loc-share-card .lsc-coord{font-size:9px;color:rgba(255,255,255,.45);font-family:'SF Mono',monospace;}
+.loc-share-card .lsc-map{width:100%;height:80px;border-radius:8px;margin-top:8px;overflow:hidden;position:relative;}
+.loc-share-card .lsc-map img{width:100%;height:100%;object-fit:cover;}
+.loc-share-card .lsc-pin{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:50%;background:#DD4C27;border:2px solid #fff;box-shadow:0 0 0 4px rgba(221,76,39,.25);}
+.share-loc-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--burnt),#c4412a);color:#fff;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;transition:opacity .15s;}
+.share-loc-btn:hover{opacity:.85;}
+.share-loc-btn svg{width:16px;height:16px;fill:#fff;}
+
+/* country selector */
+.country-select{display:flex;align-items:center;gap:6px;margin-bottom:12px;}
+.country-select select{flex:1;padding:8px 10px;border-radius:var(--r3);border:1px solid var(--ink12);background:var(--card);font-size:12px;font-weight:500;color:var(--ink);font-family:inherit;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%231B1B1B' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;}
+.country-select label{font-size:11px;font-weight:600;color:var(--ink55);white-space:nowrap;}
+
+/* yellow pages card */
+.yp-card{background:var(--card);border-radius:var(--r2);padding:14px;margin-bottom:10px;border:1px solid var(--ink06);}
+.yp-card h4{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.yp-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--ink06);}
+.yp-row:last-child{border:none;}
+.yp-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;flex-shrink:0;}
+.yp-text{flex:1;}
+.yp-text h5{font-size:11px;font-weight:600;color:var(--ink);}
+.yp-text p{font-size:10px;color:var(--ink55);}
+.yp-call{font-size:10px;font-weight:700;color:var(--cobalt);padding:4px 8px;border-radius:6px;background:rgba(27,94,189,.08);white-space:nowrap;}
+.hero-card:active{cursor:grabbing;}
+.card-earth{background:linear-gradient(135deg,#0a0e1a 0%,#101830 50%,#0c1a3a 100%);}
+.card-map{background:#e8e0d8;}
+.card-sos{background:linear-gradient(135deg,var(--alert) 0%,#a83832 100%);}
+.card-status{background:linear-gradient(135deg,var(--safe) 0%,#2d7a5a 100%);}
+
+.earth-wrap{width:100%;height:100%;position:relative;overflow:hidden;}
+.earth-canvas{width:100%;height:100%;}
+.earth-overlay{position:absolute;bottom:12px;left:16px;right:16px;display:flex;justify-content:space-between;align-items:flex-end;}
+.earth-overlay h3{color:#fff;font-size:16px;font-weight:700;}
+.earth-overlay p{color:rgba(255,255,255,.6);font-size:11px;margin-top:1px;}
+.earth-overlay .eo-right{text-align:right;}
+
+.map-wrap{width:100%;height:100%;position:relative;}
+.map-wrap .leaflet-container{width:100%;height:100%;border-radius:var(--r);}
+.map-overlay{position:absolute;bottom:0;left:0;right:0;padding:10px 14px;background:linear-gradient(transparent,rgba(0,0,0,.55));border-radius:0 0 var(--r) var(--r);z-index:500;}
+.map-overlay h3{color:#fff;font-size:14px;font-weight:600;}
+.map-overlay p{color:rgba(255,255,255,.8);font-size:11px;}
+
+.sos-card-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#fff;text-align:center;padding:20px;}
+.sos-btn-mock{width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.15);border:3px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;margin-bottom:10px;animation:sosPulse 2s ease-in-out infinite;}
+@keyframes sosPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.3);}50%{box-shadow:0 0 0 18px rgba(255,255,255,0);}}
+.sos-card-inner h3{font-size:16px;font-weight:700;}
+.sos-card-inner p{font-size:11px;opacity:.8;margin-top:3px;}
+
+.status-card-inner{display:flex;flex-direction:column;justify-content:center;height:100%;color:#fff;padding:24px;}
+.status-card-inner h3{font-size:20px;font-weight:700;margin-bottom:6px;}
+.status-row{display:flex;gap:10px;margin-top:8px;}
+.status-pill{background:rgba(255,255,255,.2);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;}
+
+.card-dots{display:flex;justify-content:center;gap:6px;margin-top:8px;}
+.card-dot{width:6px;height:6px;border-radius:50%;background:var(--ink12);transition:all .3s;cursor:pointer;}
+.card-dot.active{width:18px;border-radius:3px;background:var(--burnt);}
+
+.section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--ink55);margin:20px 0 10px;display:flex;align-items:center;gap:8px;}
+.section-title::after{content:'';flex:1;height:1px;background:var(--ink06);}
+
+.info-card{background:var(--card);border-radius:var(--r2);padding:14px;margin-bottom:10px;border:1px solid var(--ink06);}
+.info-card h4{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:3px;}
+.info-card p{font-size:11px;color:var(--ink55);line-height:1.5;}
+
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
+.quick-item{background:var(--card);border-radius:var(--r3);padding:12px 4px;text-align:center;border:1px solid var(--ink06);cursor:pointer;transition:all .15s;}
+.quick-item:hover{background:#ebe3de;transform:translateY(-1px);}
+.quick-item .qi-icon{font-size:22px;margin-bottom:4px;}
+.quick-item .qi-label{font-size:9px;font-weight:600;color:var(--ink55);line-height:1.2;}
+
+.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--ink06);}
+.toggle-row:last-child{border-bottom:none;}
+.toggle-label{font-size:13px;font-weight:500;color:var(--ink);}
+.toggle-sub{font-size:10px;color:var(--ink30);margin-top:1px;}
+.toggle-switch{width:44px;height:26px;border-radius:13px;background:var(--ink12);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;}
+.toggle-switch.on{background:var(--safe);}
+.toggle-switch::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15);transition:transform .2s;}
+.toggle-switch.on::after{transform:translateX(18px);}
+
+.list-item{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--ink06);cursor:pointer;}
+.list-item:last-child{border-bottom:none;}
+.list-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.list-text h4{font-size:13px;font-weight:600;color:var(--ink);}
+.list-text p{font-size:10px;color:var(--ink55);margin-top:1px;}
+.list-arrow{margin-left:auto;color:var(--ink30);font-size:14px;}
+
+/* guardian row with location */
+.guardian-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--ink06);}
+.guardian-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;position:relative;}
+.guardian-avatar .ga-dot{position:absolute;bottom:0;right:0;width:12px;height:12px;border-radius:50%;border:2px solid var(--sf);}
+.guardian-info{flex:1;}
+.guardian-info h4{font-size:13px;font-weight:600;color:var(--ink);}
+.guardian-loc{font-size:10px;color:var(--ink55);margin-top:1px;display:flex;align-items:center;gap:4px;}
+.guardian-loc .gl-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0;}
+.guardian-time{font-size:11px;font-weight:600;color:var(--ink30);text-align:right;white-space:nowrap;}
+
+/* current location banner */
+.loc-banner{background:linear-gradient(135deg,#1a2a3a,#0f1f30);border-radius:var(--r2);padding:14px 16px;margin-bottom:12px;color:#fff;position:relative;overflow:hidden;}
+.loc-banner::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(63,143,110,.15);}
+.loc-banner .lb-status{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:3px 10px;border-radius:10px;margin-bottom:8px;}
+.loc-banner .lb-status.on{background:rgba(63,143,110,.25);color:#5ec49a;}
+.loc-banner .lb-status.off{background:rgba(196,69,60,.25);color:#e8837c;}
+.loc-banner .lb-pulse{width:6px;height:6px;border-radius:50%;animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(1.3);}}
+.loc-banner .lb-addr{font-size:14px;font-weight:600;line-height:1.3;margin-bottom:4px;}
+.loc-banner .lb-coord{font-size:10px;color:rgba(255,255,255,.5);font-family:'SF Mono',monospace;}
+.loc-banner .lb-time{font-size:10px;color:rgba(255,255,255,.45);margin-top:3px;}
+.loc-banner .lb-toggle{position:absolute;top:14px;right:14px;}
+
+/* weather card */
+.weather-card{background:linear-gradient(135deg,#4a90d9,#3672b5);border-radius:var(--r2);padding:14px 16px;margin-bottom:10px;color:#fff;}
+.weather-main{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.weather-main .wm-temp{font-size:36px;font-weight:300;line-height:1;}
+.weather-main .wm-icon{font-size:36px;}
+.weather-main .wm-desc{font-size:12px;opacity:.8;margin-top:2px;}
+.weather-details{display:flex;gap:12px;font-size:10px;opacity:.7;margin-bottom:10px;}
+.weather-forecast{display:flex;gap:0;border-top:1px solid rgba(255,255,255,.15);padding-top:8px;}
+.weather-forecast .wf-day{flex:1;text-align:center;font-size:10px;}
+.weather-forecast .wf-day .wf-icon{font-size:16px;margin:3px 0;}
+.weather-forecast .wf-day .wf-hi{font-weight:600;}
+.weather-forecast .wf-day .wf-lo{opacity:.6;}
+
+/* medical card */
+.med-card{background:var(--card);border-radius:var(--r2);padding:12px;margin-bottom:8px;border:1px solid var(--ink06);display:flex;gap:12px;align-items:flex-start;}
+.med-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.med-body{flex:1;}
+.med-body h4{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:2px;}
+.med-body p{font-size:10px;color:var(--ink55);line-height:1.4;}
+.med-body .mb-tag{display:inline-block;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;margin-top:3px;}
+
+/* AQI bar */
+.aqi-card{background:var(--card);border-radius:var(--r2);padding:12px;margin-bottom:10px;border:1px solid var(--ink06);}
+.aqi-bar{height:6px;border-radius:3px;background:linear-gradient(to right,#4caf50,#ffeb3b,#ff9800,#f44336,#9c27b0);margin:8px 0 4px;position:relative;}
+.aqi-marker{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+
+/* feed */
+.feed-item{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--ink06);}
+.feed-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;}
+.feed-body{flex:1;}.feed-body h4{font-size:12px;font-weight:600;color:var(--ink);}
+.feed-body p{font-size:12px;color:var(--ink55);margin-top:2px;line-height:1.4;}
+.feed-time{font-size:10px;color:var(--ink30);margin-top:3px;}
+.feed-photo{width:100%;height:90px;background:linear-gradient(135deg,#ddd,#ccc);border-radius:8px;margin-top:6px;}
+
+.timeline-item{display:flex;gap:12px;padding:10px 0;position:relative;}
+.timeline-dot{width:10px;height:10px;border-radius:50%;margin-top:4px;flex-shrink:0;position:relative;z-index:1;}
+.timeline-item:not(:last-child) .timeline-dot::after{content:'';position:absolute;top:12px;left:4px;width:2px;height:calc(100% + 12px);background:var(--ink06);}
+.timeline-text h4{font-size:12px;font-weight:600;color:var(--ink);}
+.timeline-text p{font-size:10px;color:var(--ink55);margin-top:1px;}
+
+.coverage-card{background:var(--card);border-radius:var(--r2);padding:12px;margin-bottom:10px;border:1px solid var(--ink06);}
+.coverage-card h4{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+.coverage-num{display:flex;gap:6px;flex-wrap:wrap;}
+.coverage-num span{font-size:10px;background:var(--sf);padding:4px 8px;border-radius:6px;color:var(--ink55);font-weight:500;}
+
+.contact-card{display:flex;align-items:center;gap:10px;background:var(--card);padding:10px;border-radius:var(--r3);margin-bottom:8px;border:1px solid var(--ink06);}
+.contact-card .cc-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;flex-shrink:0;}
+.contact-card h4{font-size:12px;font-weight:600;color:var(--ink);}
+.contact-card p{font-size:10px;color:var(--ink55);}
+
+.clock-row{display:flex;gap:8px;margin-bottom:10px;overflow-x:auto;}
+.clock-row::-webkit-scrollbar{display:none;}
+.clock-pill{background:var(--card);border-radius:var(--r3);padding:6px 10px;text-align:center;border:1px solid var(--ink06);min-width:72px;flex-shrink:0;}
+.clock-pill .cp-city{font-size:8px;font-weight:600;color:var(--ink55);text-transform:uppercase;letter-spacing:.3px;}
+.clock-pill .cp-time{font-size:13px;font-weight:700;color:var(--ink);margin-top:1px;}
+
+.sub-card{background:linear-gradient(135deg,var(--pro),#5a4d99);border-radius:var(--r2);padding:14px;color:#fff;margin-bottom:12px;}
+.sub-card h4{font-size:13px;font-weight:700;}.sub-card p{font-size:10px;opacity:.8;margin-top:3px;line-height:1.4;}
+
+.person-card{background:var(--card);border-radius:var(--r2);padding:12px;margin-bottom:10px;border:1px solid var(--ink06);display:flex;align-items:center;gap:12px;}
+.person-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#fff;}
+.person-info{flex:1;}.person-info h4{font-size:13px;font-weight:600;color:var(--ink);}
+.person-info p{font-size:10px;color:var(--ink55);margin-top:1px;}
+.person-badge{padding:3px 8px;border-radius:8px;font-size:9px;font-weight:700;}
+
+.duty-card{background:var(--card);border-radius:var(--r2);padding:12px;margin-bottom:10px;border:1px solid var(--ink06);}
+.duty-card h4{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+.duty-slot{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--ink06);font-size:11px;}
+.duty-slot:last-child{border:none;}
+
+.logout-btn{width:100%;padding:14px;border:none;border-radius:var(--r2);background:var(--alert);color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-top:16px;transition:opacity .15s;}
+.logout-btn:hover{opacity:.85;}
+
+/* safety advisory */
+.advisory-card{border-radius:var(--r2);padding:12px;margin-bottom:10px;border:1px solid;display:flex;gap:10px;align-items:flex-start;}
+.advisory-card .ac-level{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0;}
+.advisory-card h4{font-size:12px;font-weight:600;color:var(--ink);}
+.advisory-card p{font-size:10px;color:var(--ink55);line-height:1.4;margin-top:2px;}
+
+/* local tips */
+.tips-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.tip-card{background:var(--card);border-radius:var(--r3);padding:10px;border:1px solid var(--ink06);text-align:center;}
+.tip-card .tc-icon{font-size:20px;margin-bottom:4px;}
+.tip-card .tc-label{font-size:9px;font-weight:600;color:var(--ink55);margin-bottom:2px;}
+.tip-card .tc-value{font-size:12px;font-weight:700;color:var(--ink);}
+
+/* ===== LOCK SCREEN ===== */
+.lock-row{display:flex;gap:60px;justify-content:center;margin-top:40px;position:relative;z-index:1;}
+.lock-row .portal-label{margin-bottom:16px;}
+.lock-phone{width:393px;height:852px;border-radius:52px;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(40,25,20,.04),0 30px 80px rgba(40,25,20,.13);}
+.lock-wallpaper{position:absolute;inset:0;background:linear-gradient(160deg,#0a0e1a 0%,#101830 30%,#1a2848 60%,#0c1a3a 100%);}
+.lock-wallpaper::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(80,120,200,.12) 0%,transparent 60%);}
+.lock-island{width:126px;height:36px;background:#000;border-radius:20px;position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:10;}
+.lock-status{position:absolute;top:16px;left:32px;right:32px;display:flex;justify-content:space-between;font-size:14px;font-weight:600;color:rgba(255,255,255,.8);z-index:5;}
+.lock-time-block{text-align:center;position:absolute;top:70px;left:0;right:0;z-index:5;}
+.lock-time-block .lt-time{font-size:76px;font-weight:200;color:#fff;letter-spacing:-2px;line-height:1;}
+.lock-time-block .lt-date{font-size:17px;font-weight:400;color:rgba(255,255,255,.7);margin-top:4px;}
+
+/* lock screen widgets */
+.lock-widgets{position:absolute;top:220px;left:24px;right:24px;z-index:5;display:flex;flex-direction:column;gap:12px;}
+
+/* rectangular widget */
+.lw-rect{background:rgba(255,255,255,.12);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-radius:20px;padding:14px 16px;border:1px solid rgba(255,255,255,.08);}
+.lw-rect .lwr-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.lw-rect .lwr-icon{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;}
+.lw-rect .lwr-title{font-size:11px;font-weight:700;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.5px;}
+.lw-rect .lwr-body{color:#fff;}
+
+/* small square widget row */
+.lw-row{display:flex;gap:12px;}
+.lw-sq{flex:1;aspect-ratio:1;background:rgba(255,255,255,.12);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-radius:20px;padding:12px;border:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;justify-content:space-between;}
+.lw-sq .lws-icon{font-size:20px;}
+.lw-sq .lws-label{font-size:9px;font-weight:600;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.3px;}
+.lw-sq .lws-value{font-size:18px;font-weight:700;color:#fff;line-height:1;}
+.lw-sq .lws-sub{font-size:9px;color:rgba(255,255,255,.45);margin-top:1px;}
+
+/* SOS slide widget */
+.lw-sos{background:rgba(196,69,60,.35);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-radius:20px;padding:14px 16px;border:1px solid rgba(196,69,60,.3);display:flex;align-items:center;gap:12px;}
+.lw-sos .lws-circle{width:44px;height:44px;border-radius:50%;background:rgba(196,69,60,.8);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:0 0 0 4px rgba(196,69,60,.2);}
+.lw-sos .lws-text h4{font-size:14px;font-weight:700;color:#fff;}
+.lw-sos .lws-text p{font-size:10px;color:rgba(255,255,255,.6);margin-top:1px;}
+
+/* medical ID widget */
+.lw-med{display:flex;flex-direction:column;gap:6px;}
+.lw-med-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;}
+.lw-med-row .lmr-label{font-size:10px;color:rgba(255,255,255,.45);font-weight:500;}
+.lw-med-row .lmr-value{font-size:12px;color:#fff;font-weight:600;}
+
+/* status dots in widget */
+.lw-persons{display:flex;flex-direction:column;gap:6px;}
+.lw-person{display:flex;align-items:center;gap:8px;}
+.lw-person .lwp-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.lw-person .lwp-name{font-size:12px;font-weight:600;color:#fff;flex:1;}
+.lw-person .lwp-status{font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;}
+
+/* home indicator */
+.lock-home{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:rgba(255,255,255,.35);z-index:5;}
+
+/* flashlight / camera buttons */
+.lock-bottom{position:absolute;bottom:24px;left:36px;right:36px;display:flex;justify-content:space-between;z-index:5;}
+.lock-btn{width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.12);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:center;font-size:22px;color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.08);}
+
+/* settings lock screen customizer */
+.ls-customizer{background:var(--card);border-radius:var(--r2);padding:14px;margin-bottom:10px;border:1px solid var(--ink06);}
+.ls-customizer h4{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:10px;}
+.ls-preview{background:linear-gradient(160deg,#0a0e1a,#1a2848);border-radius:12px;padding:12px;margin-bottom:12px;min-height:100px;position:relative;overflow:hidden;}
+.ls-preview::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 20%,rgba(80,120,200,.1) 0%,transparent 60%);pointer-events:none;}
+.ls-preview-widget{background:rgba(255,255,255,.12);border-radius:10px;padding:8px 10px;margin-bottom:6px;border:1px solid rgba(255,255,255,.06);color:#fff;font-size:10px;position:relative;z-index:1;}
+.ls-preview-widget h5{font-size:9px;font-weight:700;opacity:.6;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;}
+.ls-preview-widget .lpw-val{font-size:12px;font-weight:600;}
+.ls-option{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--ink06);}
+.ls-option:last-child{border:none;}
+.ls-option .lso-left{display:flex;align-items:center;gap:8px;}
+.ls-option .lso-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;}
+.ls-option .lso-text h5{font-size:12px;font-weight:600;color:var(--ink);}
+.ls-option .lso-text p{font-size:9px;color:var(--ink30);margin-top:1px;}
+
+/* section divider for lock row */
+.section-divider{width:100%;text-align:center;padding:40px 0 10px;position:relative;z-index:1;}
+.section-divider h2{font-size:18px;font-weight:800;color:var(--ink55);text-transform:uppercase;letter-spacing:1px;}
+.section-divider p{font-size:12px;color:var(--ink30);margin-top:4px;}
+
+/* ===== UX IMPROVEMENTS ===== */
+
+/* 1. Floating SOS button — always visible */
+.fab-sos{position:absolute;bottom:96px;right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#C4453C,#a83832);border:none;color:#fff;font-size:16px;font-weight:900;cursor:pointer;z-index:150;box-shadow:0 4px 16px rgba(196,69,60,.4),0 0 0 0 rgba(196,69,60,.3);animation:fabPulse 2.5s ease-in-out infinite;display:flex;align-items:center;justify-content:center;letter-spacing:-.5px;transition:transform .15s;}
+.fab-sos:active{transform:scale(.92);}
+@keyframes fabPulse{0%,100%{box-shadow:0 4px 16px rgba(196,69,60,.4),0 0 0 0 rgba(196,69,60,.3);}50%{box-shadow:0 4px 16px rgba(196,69,60,.4),0 0 0 10px rgba(196,69,60,0);}}
+
+/* 2. Urgent alert card */
+.alert-urgent{background:linear-gradient(135deg,rgba(196,69,60,.08),rgba(196,69,60,.03));border-radius:var(--r2);padding:14px;margin-bottom:10px;border:1px solid rgba(196,69,60,.25);position:relative;overflow:hidden;animation:alertBorder 2s ease-in-out infinite;}
+.alert-urgent::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--alert);border-radius:4px 0 0 4px;}
+.alert-urgent h4{font-size:13px;font-weight:700;color:var(--alert);margin-bottom:3px;display:flex;align-items:center;gap:6px;}
+.alert-urgent p{font-size:11px;color:var(--ink55);line-height:1.5;}
+.alert-urgent .au-actions{display:flex;gap:8px;margin-top:10px;}
+.alert-urgent .au-btn{padding:7px 14px;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;transition:opacity .15s;}
+.alert-urgent .au-btn:hover{opacity:.85;}
+.alert-urgent .au-btn.primary{background:var(--alert);color:#fff;}
+.alert-urgent .au-btn.secondary{background:rgba(196,69,60,.1);color:var(--alert);}
+@keyframes alertBorder{0%,100%{border-color:rgba(196,69,60,.25);}50%{border-color:rgba(196,69,60,.5);}}
+
+/* 3. "I'm Home Safe" button */
+.home-safe-btn{width:100%;padding:14px;border:none;border-radius:var(--r2);background:linear-gradient(135deg,var(--safe),#2d7a5a);color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;box-shadow:0 2px 12px rgba(63,143,110,.25);}
+.home-safe-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(63,143,110,.35);}
+.home-safe-btn:active{transform:scale(.98);}
+.home-safe-btn.confirmed{background:linear-gradient(135deg,#4a9b72,#3a8a62);pointer-events:none;}
+.home-safe-btn svg{width:20px;height:20px;fill:#fff;}
+
+/* 4. Battery indicator */
+.battery-chip{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;white-space:nowrap;}
+.battery-chip.high{background:rgba(63,143,110,.12);color:var(--safe);}
+.battery-chip.mid{background:rgba(232,163,61,.12);color:var(--lamp);}
+.battery-chip.low{background:rgba(196,69,60,.12);color:var(--alert);animation:batteryPulse 1.5s ease-in-out infinite;}
+@keyframes batteryPulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+.battery-bar{width:14px;height:7px;border:1px solid currentColor;border-radius:1.5px;position:relative;display:inline-block;}
+.battery-bar::after{content:'';position:absolute;right:-3px;top:1.5px;width:2px;height:3px;background:currentColor;border-radius:0 1px 1px 0;}
+.battery-bar-fill{position:absolute;left:1px;top:1px;bottom:1px;border-radius:.5px;background:currentColor;}
+
+/* 5. Notification badge */
+.tab-btn{position:relative;}
+.notif-badge{position:absolute;top:2px;right:50%;transform:translateX(calc(50% + 10px));width:16px;height:16px;border-radius:50%;background:var(--alert);color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;pointer-events:none;box-shadow:0 1px 4px rgba(196,69,60,.4);}
+
+/* 6. Distance/ETA chip */
+.distance-chip{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:500;color:var(--ink30);margin-top:2px;}
+.distance-chip svg{width:10px;height:10px;fill:var(--ink30);}
+
+/* 7. Quick reply in chat */
+.feed-reactions{display:flex;gap:4px;margin-top:6px;}
+.feed-react-btn{padding:3px 8px;border-radius:12px;border:1px solid var(--ink06);background:var(--card);font-size:12px;cursor:pointer;transition:all .15s;}
+.feed-react-btn:hover{background:var(--sf);border-color:var(--ink12);}
+.feed-react-btn.reacted{background:rgba(221,76,39,.08);border-color:rgba(221,76,39,.2);}
+.feed-reply{display:flex;gap:6px;margin-top:8px;align-items:center;}
+.feed-reply-input{flex:1;padding:7px 10px;border-radius:16px;border:1px solid var(--ink12);background:var(--card);font-size:11px;font-family:inherit;color:var(--ink);outline:none;transition:border-color .2s;}
+.feed-reply-input:focus{border-color:var(--burnt);}
+.feed-reply-send{width:28px;height:28px;border-radius:50%;background:var(--burnt);border:none;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s;}
+.feed-reply-send:hover{opacity:.85;}
+
+/* 8. Larger card dots for better touch targets */
+.card-dot{width:8px;height:8px;border-radius:50%;background:var(--ink12);transition:all .3s;cursor:pointer;padding:4px;background-clip:content-box;border:4px solid transparent;}
+.card-dot.active{width:24px;border-radius:4px;background:var(--burnt);background-clip:unset;border:none;padding:0;height:8px;}
+
+/* 9. Slide-to-SOS on lock screen */
+.slide-sos{position:relative;width:100%;height:52px;background:rgba(196,69,60,.2);border-radius:26px;overflow:hidden;margin-top:12px;border:1px solid rgba(196,69,60,.15);}
+.slide-sos-track{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.5px;}
+.slide-sos-track::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);animation:slideShimmer 2.5s ease-in-out infinite;}
+@keyframes slideShimmer{0%{left:-100%;}100%{left:100%;}}
+.slide-sos-thumb{position:absolute;left:4px;top:4px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#C4453C,#a83832);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;box-shadow:0 2px 8px rgba(196,69,60,.4);cursor:grab;transition:left .1s;}
+.slide-sos-thumb:active{cursor:grabbing;}
+
+/* 10. Improved profile card */
+.profile-card{background:var(--card);border-radius:var(--r2);padding:16px;margin-bottom:12px;border:1px solid var(--ink06);display:flex;align-items:center;gap:14px;}
+.profile-avatar{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;position:relative;flex-shrink:0;}
+.profile-avatar .pa-camera{position:absolute;bottom:-2px;right:-2px;width:20px;height:20px;border-radius:50%;background:var(--sf);border:2px solid var(--card);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--ink55);}
+.profile-info{flex:1;}
+.profile-info h4{font-size:15px;font-weight:700;color:var(--ink);}
+.profile-info p{font-size:11px;color:var(--ink55);margin-top:2px;}
+.profile-info .pi-role{font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;display:inline-block;margin-top:4px;}
+.profile-edit{font-size:10px;font-weight:600;color:var(--cobalt);padding:6px 12px;border-radius:8px;background:rgba(27,94,189,.08);border:none;cursor:pointer;white-space:nowrap;}
+
+/* 11. Micro-animation for confirmations */
+@keyframes checkPop{0%{transform:scale(0);}50%{transform:scale(1.2);}100%{transform:scale(1);}}
+.check-pop{animation:checkPop .4s cubic-bezier(.25,.1,.25,1);}
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.fade-slide-up{animation:fadeSlideUp .3s ease-out;}
+
+/* Quick pill buttons */
+.quick-pill:hover{background:var(--sf) !important;border-color:var(--ink30) !important;transform:translateY(-1px);}
+.quick-pill:active{transform:scale(.96);}
+
+/* 12. Dark mode toggle visual */
+.appearance-toggle{display:flex;background:var(--ink06);border-radius:10px;overflow:hidden;}
+.appearance-opt{flex:1;padding:8px;text-align:center;font-size:11px;font-weight:600;color:var(--ink55);cursor:pointer;transition:all .2s;border:none;background:none;font-family:inherit;}
+.appearance-opt.active{background:var(--card);color:var(--ink);border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+</style>
+</head>
+<body>
+<div class="bgd"><i></i><i></i></div>
+
+<div class="dual-container">
+<!-- ==================== PROTECTED PERSON ==================== -->
+<div class="portal-col">
+  <div class="portal-label">Protected Person<span>被守护者 — Lucy Chen</span></div>
+  <div class="phone" id="phone-protected">
+    <div class="island"></div>
+    <div class="status-bar"><span class="time">9:41</span><span class="icons">5G &#9679; 100%</span></div>
+    <div class="screen">
+      <!-- Floating SOS button — always visible -->
+      <button class="fab-sos" onclick="this.style.transform='scale(1.1)';setTimeout(()=>this.style.transform='',200)">SOS</button>
+
+      <div class="tab-content" id="protected-content">
+        <!-- ===== HOME ===== -->
+        <div class="tab-pane active" data-tab="p-home">
+          <div style="height:4px;"></div>
+
+          <!-- Current location banner -->
+          <div class="loc-banner">
+            <div class="lb-status on"><div class="lb-pulse" style="background:var(--safe);"></div> Live Tracking: ON</div>
+            <div class="lb-addr">27 King's College Cir, Toronto</div>
+            <div class="lb-coord">43.6629° N, 79.3957° W &middot; Ontario, Canada</div>
+            <div class="lb-time">Updated just now &middot; Sharing with 3 guardians</div>
+            <div class="lb-toggle">
+              <div class="toggle-switch on" onclick="toggleTracking(this)" style="transform:scale(.85);"></div>
+            </div>
+          </div>
+
+          <!-- world clocks -->
+          <div class="clock-row">
+            <div class="clock-pill"><div class="cp-city">Beijing</div><div class="cp-time">21:41</div></div>
+            <div class="clock-pill"><div class="cp-city">Toronto</div><div class="cp-time">09:41</div></div>
+            <div class="clock-pill"><div class="cp-city">London</div><div class="cp-time">14:41</div></div>
+            <div class="clock-pill"><div class="cp-city">Sydney</div><div class="cp-time">00:41</div></div>
+          </div>
+
+          <!-- card deck -->
+          <div class="card-deck">
+            <div class="card-deck-inner" id="p-deck">
+              <div class="hero-card card-earth">
+                <div class="earth-wrap">
+                  <canvas class="earth-canvas" id="p-earth-canvas"></canvas>
+                  <div class="earth-overlay">
+                    <div><h3>My World</h3><p>3 guardians connected</p></div>
+                    <div class="eo-right"><p style="font-size:10px;opacity:.5;">Rotate to explore</p></div>
+                  </div>
+                </div>
+              </div>
+              <div class="hero-card card-map">
+                <div class="map-wrap">
+                  <div id="p-map" style="width:100%;height:100%;border-radius:var(--r);"></div>
+                  <div class="map-overlay">
+                    <h3>27 King's College Cir</h3>
+                    <p>Toronto, ON, Canada &middot; Updated just now</p>
+                  </div>
+                </div>
+              </div>
+              <div class="hero-card card-sos">
+                <div class="sos-card-inner">
+                  <div class="sos-btn-mock">SOS</div>
+                  <h3>Emergency SOS</h3>
+                  <p>Press & hold 3s to alert all guardians</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-dots" id="p-dots"><div class="card-dot active"></div><div class="card-dot"></div><div class="card-dot"></div></div>
+
+          <!-- Quick action row: Home Safe + Language + Font Size -->
+          <div style="display:flex;justify-content:center;gap:8px;margin:8px 0 12px;flex-wrap:wrap;">
+            <button class="home-safe-btn" style="width:auto;display:inline-flex;padding:9px 16px;font-size:12px;margin:0;border-radius:20px;box-shadow:0 2px 8px rgba(63,143,110,.2);" onclick="homeSafeConfirm(this)">
+              <svg viewBox="0 0 24 24" style="width:14px;height:14px;"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+              Home Safe
+            </button>
+            <button class="quick-pill" onclick="cycleLang(this)" style="display:inline-flex;align-items:center;gap:5px;padding:9px 14px;border-radius:20px;border:1px solid var(--ink12);background:var(--card);font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;">
+              <span style="font-size:14px;">&#127760;</span><span class="lang-label">EN</span>
+            </button>
+            <button class="quick-pill" onclick="cycleFont(this)" style="display:inline-flex;align-items:center;gap:5px;padding:9px 14px;border-radius:20px;border:1px solid var(--ink12);background:var(--card);font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;">
+              <span style="font-size:14px;">Aa</span><span class="font-label">M</span>
+            </button>
+          </div>
+
+          <!-- Guardians with real locations -->
+          <div class="section-title">My Guardians</div>
+          <div class="guardian-row">
+            <div class="guardian-avatar" style="background:var(--cobalt);"><div class="ga-dot" style="background:var(--safe);"></div>M</div>
+            <div class="guardian-info">
+              <h4>Mom (Chen Wei)</h4>
+              <div class="guardian-loc"><div class="gl-dot" style="background:var(--safe);"></div>Haidian District, Beijing, China</div>
+              <div class="distance-chip"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>10,900 km away</div>
+            </div>
+            <div class="guardian-time">21:41<br><span style="font-size:9px;color:var(--ink30);">CST</span></div>
+          </div>
+          <div class="guardian-row">
+            <div class="guardian-avatar" style="background:var(--forest);"><div class="ga-dot" style="background:var(--safe);"></div>D</div>
+            <div class="guardian-info">
+              <h4>Dad (Chen Ming)</h4>
+              <div class="guardian-loc"><div class="gl-dot" style="background:var(--safe);"></div>Chaoyang District, Beijing, China</div>
+              <div class="distance-chip"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>10,920 km away</div>
+            </div>
+            <div class="guardian-time">21:41<br><span style="font-size:9px;color:var(--ink30);">CST</span></div>
+          </div>
+          <div class="guardian-row">
+            <div class="guardian-avatar" style="background:var(--lamp);"><div class="ga-dot" style="background:var(--lamp);"></div>S</div>
+            <div class="guardian-info">
+              <h4>Sister (Chen Yue)</h4>
+              <div class="guardian-loc"><div class="gl-dot" style="background:var(--lamp);"></div>Shibuya, Tokyo, Japan</div>
+              <div class="distance-chip"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>10,340 km away</div>
+            </div>
+            <div class="guardian-time">22:41<br><span style="font-size:9px;color:var(--ink30);">JST</span></div>
+          </div>
+
+          <div class="section-title">Quick Actions</div>
+          <div class="quick-grid">
+            <div class="quick-item"><div class="qi-icon">&#128179;</div><div class="qi-label">Medical Card</div></div>
+            <div class="quick-item"><div class="qi-icon">&#128172;</div><div class="qi-label">Emergency Text</div></div>
+            <div class="quick-item"><div class="qi-icon">&#127963;</div><div class="qi-label">Consulate</div></div>
+            <div class="quick-item"><div class="qi-icon">&#128203;</div><div class="qi-label">Insurance Claim</div></div>
+            <div class="quick-item"><div class="qi-icon">&#9201;</div><div class="qi-label">Home Timer</div></div>
+            <div class="quick-item"><div class="qi-icon">&#9992;</div><div class="qi-label">Itinerary</div></div>
+            <div class="quick-item"><div class="qi-icon">&#128225;</div><div class="qi-label">BLE Tracker</div></div>
+            <div class="quick-item"><div class="qi-icon">&#128264;</div><div class="qi-label">Silent Alarm</div></div>
+          </div>
+
+          <div class="section-title">Check-In</div>
+          <div class="info-card">
+            <h4>Next check-in: 6:00 PM</h4>
+            <p>Auto-alert if missed by 15 min. Guardians notified with last known location.</p>
+          </div>
+        </div>
+
+        <!-- ===== FAMILY ===== -->
+        <div class="tab-pane" data-tab="p-family">
+          <div style="height:4px;"></div>
+
+          <!-- Share Location Button -->
+          <button class="share-loc-btn" onclick="this.style.display='none';document.getElementById('p-loc-sent').style.display='block';">
+            <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            Share My Live Location
+          </button>
+
+          <div class="section-title">Family Feed</div>
+
+          <!-- Sent location card (hidden initially, shown on click) -->
+          <div class="feed-item" id="p-loc-sent" style="display:none;">
+            <div class="feed-avatar" style="background:var(--burnt);">Me</div>
+            <div class="feed-body">
+              <h4>Me</h4>
+              <div class="loc-share-card">
+                <div class="lsc-head"><div class="lsc-pulse"></div> Live Location</div>
+                <div class="lsc-addr">27 King's College Cir, Toronto</div>
+                <div class="lsc-coord">43.6629° N, 79.3957° W &middot; Ontario, Canada</div>
+                <div class="lsc-map">
+                  <img src="https://api.mapbox.com/styles/v1/mapbox/light-v11/static/-79.3957,43.6629,15,0/300x120?access_token=pk.placeholder" alt="map" onerror="this.parentElement.style.background='linear-gradient(135deg,#c8d8c8,#b0c0b0)';this.style.display='none';">
+                  <div class="lsc-pin"></div>
+                </div>
+              </div>
+              <div class="feed-time">Just now &middot; Sharing for 1 hour</div>
+            </div>
+          </div>
+
+          <div class="feed-item">
+            <div class="feed-avatar" style="background:var(--cobalt);">M</div>
+            <div class="feed-body">
+              <h4>Mom</h4><p>Are you home safe? Call me when you can.</p>
+              <div class="feed-reactions">
+                <button class="feed-react-btn" onclick="this.classList.toggle('reacted')">&#128077;</button>
+                <button class="feed-react-btn" onclick="this.classList.toggle('reacted')">&#10084;</button>
+                <button class="feed-react-btn" onclick="this.classList.toggle('reacted')">&#128079;</button>
+              </div>
+              <div class="feed-reply">
+                <input class="feed-reply-input" placeholder="Reply to Mom...">
+                <button class="feed-reply-send">&#8593;</button>
+              </div>
+              <div class="feed-time">2 min ago</div>
+            </div>
+          </div>
+          <div class="feed-item">
+            <div class="feed-avatar" style="background:var(--burnt);">Me</div>
+            <div class="feed-body">
+              <h4>Me</h4><p>Just got back to the dorm! All good.</p><div class="feed-photo"></div>
+              <div class="feed-reactions">
+                <button class="feed-react-btn reacted">&#10084; <span style="font-size:10px;color:var(--ink55);margin-left:2px;">2</span></button>
+              </div>
+              <div class="feed-time">5 min ago</div>
+            </div>
+          </div>
+          <div class="feed-item">
+            <div class="feed-avatar" style="background:var(--forest);">D</div>
+            <div class="feed-body">
+              <h4>Dad</h4><p>Weather looks bad tomorrow, be careful going out.</p>
+              <div class="feed-reactions">
+                <button class="feed-react-btn" onclick="this.classList.toggle('reacted')">&#128077;</button>
+                <button class="feed-react-btn" onclick="this.classList.toggle('reacted')">&#10084;</button>
+              </div>
+              <div class="feed-time">1 hour ago</div>
+            </div>
+          </div>
+          <div class="feed-item">
+            <div class="feed-avatar" style="background:var(--lamp);">S</div>
+            <div class="feed-body"><h4>Sister</h4>
+              <div style="background:var(--card);border-radius:12px;padding:8px 12px;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ink06);margin-top:4px;">
+                <span style="font-size:16px;">&#127908;</span>
+                <div style="display:flex;gap:2px;align-items:center;">
+                  <span style="width:2px;height:8px;background:var(--burnt);border-radius:1px;"></span>
+                  <span style="width:2px;height:14px;background:var(--burnt);border-radius:1px;"></span>
+                  <span style="width:2px;height:6px;background:var(--burnt);border-radius:1px;"></span>
+                  <span style="width:2px;height:12px;background:var(--burnt);border-radius:1px;"></span>
+                  <span style="width:2px;height:4px;background:var(--burnt);border-radius:1px;"></span>
+                </div>
+                <span style="font-size:11px;color:var(--ink55);margin-left:4px;">0:12</span>
+              </div>
+              <div class="feed-time">3 hours ago</div>
+            </div>
+          </div>
+          <div class="section-title">Location Sharing</div>
+          <div class="info-card"><h4>Live location is ON</h4><p>Sharing with: Mom, Dad, Sister. Updated every 30 seconds.</p></div>
+        </div>
+
+        <!-- ===== COVERAGE (Enhanced) ===== -->
+        <div class="tab-pane" data-tab="p-coverage">
+          <div style="height:4px;"></div>
+
+          <div class="section-title">Current Region</div>
+          <div class="info-card">
+            <h4>&#127464;&#127462; Canada — Ontario, Toronto</h4>
+            <p>Safety level: Low risk &middot; Local time: 9:41 AM EST &middot; Home TZ: +13h ahead</p>
+          </div>
+
+          <!-- Weather -->
+          <div class="section-title">Weather</div>
+          <div class="weather-card">
+            <div class="weather-main">
+              <div>
+                <div class="wm-temp">12°C</div>
+                <div class="wm-desc">Partly Cloudy</div>
+              </div>
+              <div class="wm-icon">&#9925;</div>
+            </div>
+            <div class="weather-details">
+              <span>Wind: 15 km/h NW</span>
+              <span>Humidity: 65%</span>
+              <span>UV: 3 (Moderate)</span>
+            </div>
+            <div class="weather-forecast">
+              <div class="wf-day"><div>Mon</div><div class="wf-icon">&#9728;</div><div class="wf-hi">15°</div><div class="wf-lo">8°</div></div>
+              <div class="wf-day"><div>Tue</div><div class="wf-icon">&#127783;</div><div class="wf-hi">11°</div><div class="wf-lo">6°</div></div>
+              <div class="wf-day"><div>Wed</div><div class="wf-icon">&#127782;</div><div class="wf-hi">9°</div><div class="wf-lo">4°</div></div>
+              <div class="wf-day"><div>Thu</div><div class="wf-icon">&#9925;</div><div class="wf-hi">13°</div><div class="wf-lo">7°</div></div>
+              <div class="wf-day"><div>Fri</div><div class="wf-icon">&#9728;</div><div class="wf-hi">16°</div><div class="wf-lo">9°</div></div>
+            </div>
+          </div>
+
+          <!-- Air Quality -->
+          <div class="aqi-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <h4 style="font-size:12px;font-weight:600;color:var(--ink);">Air Quality Index</h4>
+              <span style="font-size:14px;font-weight:700;color:var(--safe);">32 Good</span>
+            </div>
+            <div class="aqi-bar">
+              <div class="aqi-marker" style="left:10%;background:var(--safe);"></div>
+            </div>
+            <p style="font-size:10px;color:var(--ink30);">Safe for outdoor activities. No health concerns.</p>
+          </div>
+
+          <!-- Safety Advisory -->
+          <div class="section-title">Safety Advisory</div>
+          <div class="advisory-card" style="background:rgba(63,143,110,.06);border-color:rgba(63,143,110,.2);">
+            <div class="ac-level" style="background:var(--safe);">1</div>
+            <div>
+              <h4>Level 1 — Exercise Normal Precautions</h4>
+              <p>Canada is generally safe. Standard safety measures apply. Be aware of weather conditions in winter.</p>
+            </div>
+          </div>
+
+          <!-- Nearby Medical -->
+          <div class="section-title">Nearby Medical</div>
+          <div class="med-card">
+            <div class="med-icon" style="background:rgba(196,69,60,.1);">&#127973;</div>
+            <div class="med-body">
+              <h4>Toronto General Hospital</h4>
+              <p>200 Elizabeth St &middot; 1.2 km &middot; 24/7 ER</p>
+              <span class="mb-tag" style="background:rgba(63,143,110,.12);color:var(--safe);">Open Now</span>
+            </div>
+          </div>
+          <div class="med-card">
+            <div class="med-icon" style="background:rgba(27,94,189,.1);">&#128137;</div>
+            <div class="med-body">
+              <h4>U of T Health & Wellness</h4>
+              <p>214 College St &middot; 0.4 km &middot; Walk-in clinic</p>
+              <span class="mb-tag" style="background:rgba(63,143,110,.12);color:var(--safe);">Open until 5 PM</span>
+            </div>
+          </div>
+          <div class="med-card">
+            <div class="med-icon" style="background:rgba(107,92,165,.1);">&#128138;</div>
+            <div class="med-body">
+              <h4>Shoppers Drug Mart Pharmacy</h4>
+              <p>326 Bloor St W &middot; 0.8 km &middot; 24h pharmacy</p>
+              <span class="mb-tag" style="background:rgba(107,92,165,.12);color:var(--pro);">24 Hours</span>
+            </div>
+          </div>
+
+          <!-- Emergency Numbers -->
+          <div class="section-title">Emergency Numbers</div>
+          <div class="coverage-card">
+            <h4>Local Emergency Services</h4>
+            <div class="coverage-num">
+              <span>&#128658; Police: 911</span><span>&#128657; Fire: 911</span><span>&#128656; Ambulance: 911</span>
+            </div>
+          </div>
+          <div class="coverage-card">
+            <h4>Chinese Consulate — Toronto</h4>
+            <div class="coverage-num">
+              <span>&#128222; +1-416-964-7260</span><span>&#127759; 24h: 12308</span>
+            </div>
+          </div>
+
+          <!-- Local Info -->
+          <div class="section-title">Local Info</div>
+          <div class="tips-grid">
+            <div class="tip-card"><div class="tc-icon">&#128176;</div><div class="tc-label">Currency</div><div class="tc-value">CAD $</div></div>
+            <div class="tip-card"><div class="tc-icon">&#127760;</div><div class="tc-label">Language</div><div class="tc-value">EN / FR</div></div>
+            <div class="tip-card"><div class="tc-icon">&#128268;</div><div class="tc-label">Power</div><div class="tc-value">120V / Type A</div></div>
+            <div class="tip-card"><div class="tc-icon">&#128222;</div><div class="tc-label">Country Code</div><div class="tc-value">+1</div></div>
+          </div>
+
+          <!-- Offline pack -->
+          <div class="section-title">Offline Safety Pack</div>
+          <div class="info-card">
+            <h4>Canada Pack — Downloaded</h4>
+            <p>Emergency numbers, hospital locations, consulate info available offline. Updated: Oct 25, 2026</p>
+          </div>
+
+          <div class="section-title">Network</div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">Weak Network Mode</div><div class="toggle-sub">SMS fallback when data unavailable</div></div>
+            <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">Satellite SOS</div><div class="toggle-sub">Emergency via satellite (iPhone 14+)</div></div>
+            <div class="toggle-switch" onclick="this.classList.toggle('on')"></div>
+          </div>
+        </div>
+
+        <!-- ===== RECORDS ===== -->
+        <div class="tab-pane" data-tab="p-records">
+          <div style="height:4px;"></div>
+          <div class="section-title">Activity Timeline</div>
+          <div class="timeline-item"><div class="timeline-dot" style="background:var(--safe);"></div><div class="timeline-text"><h4>Check-in completed</h4><p>Today, 3:00 PM — Confirmed safe</p></div></div>
+          <div class="timeline-item"><div class="timeline-dot" style="background:var(--cobalt);"></div><div class="timeline-text"><h4>Location shared</h4><p>Today, 2:45 PM — 27 King's College Cir</p></div></div>
+          <div class="timeline-item"><div class="timeline-dot" style="background:var(--lamp);"></div><div class="timeline-text"><h4>Entered safe zone</h4><p>Today, 1:20 PM — Home</p></div></div>
+          <div class="timeline-item"><div class="timeline-dot" style="background:var(--alert);"></div><div class="timeline-text"><h4>SOS test triggered</h4><p>Yesterday, 10:00 AM — Drill mode</p></div></div>
+          <div class="timeline-item"><div class="timeline-dot" style="background:var(--safe);"></div><div class="timeline-text"><h4>Trip check-in</h4><p>Oct 23 — Arrived safely</p></div></div>
+
+          <!-- Emergency Yellow Pages with country selector -->
+          <div class="section-title">Emergency Yellow Pages</div>
+          <div class="country-select">
+            <label>Region:</label>
+            <select onchange="switchYellowPages(this.value, 'p-yp')">
+              <option value="ca">&#127464;&#127462; Canada</option>
+              <option value="cn">&#127464;&#127475; China</option>
+              <option value="jp">&#127471;&#127477; Japan</option>
+              <option value="us">&#127482;&#127480; United States</option>
+              <option value="uk">&#127468;&#127463; United Kingdom</option>
+              <option value="au">&#127462;&#127482; Australia</option>
+              <option value="fr">&#127467;&#127479; France</option>
+              <option value="de">&#127465;&#127466; Germany</option>
+            </select>
+          </div>
+          <div id="p-yp">
+            <div class="yp-card" data-yp="ca">
+              <h4>&#127464;&#127462; Canada Emergency Directory</h4>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--alert);">&#128658;</div><div class="yp-text"><h5>Police / Fire / Ambulance</h5><p>All emergencies</p></div><div class="yp-call">911</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--cobalt);">&#127963;</div><div class="yp-text"><h5>Chinese Consulate — Toronto</h5><p>240 St George St</p></div><div class="yp-call">+1-416-964-7260</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--safe);">&#128137;</div><div class="yp-text"><h5>Poison Control</h5><p>24/7 hotline</p></div><div class="yp-call">1-800-268-9017</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--pro);">&#128156;</div><div class="yp-text"><h5>Crisis Helpline</h5><p>Mental health support</p></div><div class="yp-call">988</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--lamp);">&#128222;</div><div class="yp-text"><h5>Non-Emergency Police</h5><p>Toronto Police</p></div><div class="yp-call">+1-416-808-2222</div></div>
+            </div>
+            <div class="yp-card" data-yp="cn" style="display:none;">
+              <h4>&#127464;&#127475; China Emergency Directory</h4>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--alert);">&#128658;</div><div class="yp-text"><h5>Police</h5><p>Public security</p></div><div class="yp-call">110</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--alert);">&#128657;</div><div class="yp-text"><h5>Fire Department</h5><p>Fire emergencies</p></div><div class="yp-call">119</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--safe);">&#128656;</div><div class="yp-text"><h5>Ambulance</h5><p>Medical emergency</p></div><div class="yp-call">120</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--cobalt);">&#127759;</div><div class="yp-text"><h5>MFA Consular Protection</h5><p>Overseas citizens 24h</p></div><div class="yp-call">12308</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--pro);">&#128156;</div><div class="yp-text"><h5>Mental Health Hotline</h5><p>Beijing Psychological Crisis</p></div><div class="yp-call">010-82951332</div></div>
+            </div>
+            <div class="yp-card" data-yp="jp" style="display:none;">
+              <h4>&#127471;&#127477; Japan Emergency Directory</h4>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--alert);">&#128658;</div><div class="yp-text"><h5>Police</h5><p>Keisatsu</p></div><div class="yp-call">110</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--safe);">&#128656;</div><div class="yp-text"><h5>Fire / Ambulance</h5><p>Shoubousha / Kyuukyuusha</p></div><div class="yp-call">119</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--cobalt);">&#127963;</div><div class="yp-text"><h5>Chinese Embassy — Tokyo</h5><p>3-4-33 Moto-Azabu, Minato</p></div><div class="yp-call">+81-3-3403-3388</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--lamp);">&#127760;</div><div class="yp-text"><h5>JNTO Tourist Helpline</h5><p>English support 24h</p></div><div class="yp-call">050-3816-2787</div></div>
+            </div>
+            <div class="yp-card" data-yp="us" style="display:none;">
+              <h4>&#127482;&#127480; United States Emergency Directory</h4>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--alert);">&#128658;</div><div class="yp-text"><h5>Police / Fire / Ambulance</h5><p>All emergencies</p></div><div class="yp-call">911</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--cobalt);">&#127963;</div><div class="yp-text"><h5>Chinese Embassy — D.C.</h5><p>3505 International Pl NW</p></div><div class="yp-call">+1-202-495-2266</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--safe);">&#128137;</div><div class="yp-text"><h5>Poison Control</h5><p>24/7 hotline</p></div><div class="yp-call">1-800-222-1222</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--pro);">&#128156;</div><div class="yp-text"><h5>Suicide & Crisis Lifeline</h5><p>24/7 support</p></div><div class="yp-call">988</div></div>
+            </div>
+            <div class="yp-card" data-yp="uk" style="display:none;">
+              <h4>&#127468;&#127463; United Kingdom Emergency Directory</h4>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--alert);">&#128658;</div><div class="yp-text"><h5>Police / Fire / Ambulance</h5><p>All emergencies</p></div><div class="yp-call">999</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--cobalt);">&#127963;</div><div class="yp-text"><h5>Chinese Embassy — London</h5><p>49 Portland Pl</p></div><div class="yp-call">+44-20-7299-4049</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--safe);">&#128137;</div><div class="yp-text"><h5>NHS Non-Emergency</h5><p>Health advice 24h</p></div><div class="yp-call">111</div></div>
+            </div>
+            <div class="yp-card" data-yp="au" style="display:none;">
+              <h4>&#127462;&#127482; Australia Emergency Directory</h4>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--alert);">&#128658;</div><div class="yp-text"><h5>Police / Fire / Ambulance</h5><p>All emergencies</p></div><div class="yp-call">000</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--cobalt);">&#127963;</div><div class="yp-text"><h5>Chinese Embassy — Canberra</h5><p>15 Coronation Dr, Yarralumla</p></div><div class="yp-call">+61-2-6228-3999</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--safe);">&#128137;</div><div class="yp-text"><h5>Poisons Information</h5><p>24h hotline</p></div><div class="yp-call">13 11 26</div></div>
+            </div>
+            <div class="yp-card" data-yp="fr" style="display:none;">
+              <h4>&#127467;&#127479; France Emergency Directory</h4>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--alert);">&#128658;</div><div class="yp-text"><h5>SAMU (Medical)</h5><p>Urgences medicales</p></div><div class="yp-call">15</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--alert);">&#128658;</div><div class="yp-text"><h5>Police</h5><p>Gendarmerie</p></div><div class="yp-call">17</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--alert);">&#128657;</div><div class="yp-text"><h5>Fire / Pompiers</h5><p>Sapeurs-pompiers</p></div><div class="yp-call">18</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--cobalt);">&#127963;</div><div class="yp-text"><h5>Chinese Embassy — Paris</h5><p>11 Avenue George V</p></div><div class="yp-call">+33-1-4952-1950</div></div>
+            </div>
+            <div class="yp-card" data-yp="de" style="display:none;">
+              <h4>&#127465;&#127466; Germany Emergency Directory</h4>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--alert);">&#128658;</div><div class="yp-text"><h5>Police</h5><p>Polizei</p></div><div class="yp-call">110</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--safe);">&#128656;</div><div class="yp-text"><h5>Fire / Ambulance</h5><p>Feuerwehr / Rettungsdienst</p></div><div class="yp-call">112</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--cobalt);">&#127963;</div><div class="yp-text"><h5>Chinese Embassy — Berlin</h5><p>Markisches Ufer 54</p></div><div class="yp-call">+49-30-27588-0</div></div>
+            </div>
+          </div>
+
+          <div class="section-title">Export</div>
+          <div class="info-card"><h4>Export Records</h4><p>Download activity log as PDF or CSV for personal records or insurance claims.</p></div>
+        </div>
+
+        <!-- ===== SETTINGS ===== -->
+        <div class="tab-pane" data-tab="p-settings">
+          <div style="height:4px;"></div>
+          <div class="section-title">Profile</div>
+          <div class="profile-card">
+            <div class="profile-avatar" style="background:var(--burnt);">L<div class="pa-camera">&#128247;</div></div>
+            <div class="profile-info">
+              <h4>Lucy Chen</h4>
+              <p>lucy.chen@university.ca</p>
+              <span class="pi-role" style="background:rgba(221,76,39,.1);color:var(--burnt);">Protected Person</span>
+            </div>
+            <button class="profile-edit">Edit</button>
+          </div>
+          <!-- Medical summary inline -->
+          <div class="info-card" style="display:flex;gap:12px;align-items:center;">
+            <div style="display:flex;gap:8px;flex:1;">
+              <div style="text-align:center;"><div style="font-size:9px;font-weight:600;color:var(--ink30);text-transform:uppercase;">Blood</div><div style="font-size:16px;font-weight:700;color:var(--ink);">A+</div></div>
+              <div style="width:1px;background:var(--ink06);"></div>
+              <div style="text-align:center;"><div style="font-size:9px;font-weight:600;color:var(--ink30);text-transform:uppercase;">Allergy</div><div style="font-size:11px;font-weight:600;color:var(--alert);">Penicillin</div></div>
+              <div style="width:1px;background:var(--ink06);"></div>
+              <div style="text-align:center;"><div style="font-size:9px;font-weight:600;color:var(--ink30);text-transform:uppercase;">ICE</div><div style="font-size:11px;font-weight:600;color:var(--safe);">Mom</div></div>
+            </div>
+            <div class="list-arrow">&#8250;</div>
+          </div>
+
+          <div class="section-title">SOS Triggers</div>
+          <div class="toggle-row"><div><div class="toggle-label">Power Button (5 presses)</div><div class="toggle-sub">System-level SOS</div></div><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="toggle-row"><div><div class="toggle-label">Voice Command</div><div class="toggle-sub">"Help" or "Jiu Ming"</div></div><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="toggle-row"><div><div class="toggle-label">Shake to SOS</div><div class="toggle-sub">Shake device 3x</div></div><div class="toggle-switch" onclick="this.classList.toggle('on')"></div></div>
+
+          <div class="section-title">Smart Detection</div>
+          <div class="toggle-row"><div><div class="toggle-label">Fall Detection</div><div class="toggle-sub">CoreML accelerometer analysis</div></div><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="toggle-row"><div><div class="toggle-label">Audio Distress Detection</div><div class="toggle-sub">Screams, breaking glass</div></div><div class="toggle-switch" onclick="this.classList.toggle('on')"></div></div>
+
+          <div class="section-title">Check-In Schedule</div>
+          <div class="toggle-row"><div><div class="toggle-label">Auto Check-In</div><div class="toggle-sub">Every 6 hours, alert if missed</div></div><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div></div>
+
+          <div class="section-title">Safety Tools</div>
+          <div class="list-item"><div class="list-icon" style="background:rgba(221,76,39,.1);color:var(--burnt);">&#128179;</div><div class="list-text"><h4>Medical Card</h4><p>Blood type, allergies, medications</p></div><div class="list-arrow">&#8250;</div></div>
+          <div class="list-item"><div class="list-icon" style="background:rgba(27,94,189,.1);color:var(--cobalt);">&#128172;</div><div class="list-text"><h4>Emergency Text Templates</h4><p>Pre-written SOS messages</p></div><div class="list-arrow">&#8250;</div></div>
+          <div class="list-item"><div class="list-icon" style="background:rgba(76,124,75,.1);color:var(--forest);">&#127963;</div><div class="list-text"><h4>Consulate Directory</h4></div><div class="list-arrow">&#8250;</div></div>
+          <div class="list-item"><div class="list-icon" style="background:rgba(232,163,61,.1);color:var(--lamp);">&#128203;</div><div class="list-text"><h4>Claim Materials</h4></div><div class="list-arrow">&#8250;</div></div>
+
+          <div class="section-title">Lock Screen Widgets</div>
+          <div class="ls-customizer">
+            <h4>Customize Lock Screen</h4>
+            <div class="ls-preview">
+              <div class="ls-preview-widget"><h5>SOS</h5><div class="lpw-val">Tap to trigger SOS</div></div>
+              <div class="ls-preview-widget"><h5>Medical ID</h5><div class="lpw-val">A+ &middot; Penicillin allergy</div></div>
+              <div class="ls-preview-widget" style="display:flex;gap:12px;">
+                <div><h5>Status</h5><div class="lpw-val">Safe</div></div>
+                <div><h5>Check-in</h5><div class="lpw-val">2h 19m</div></div>
+              </div>
+            </div>
+            <div class="ls-option">
+              <div class="lso-left"><div class="lso-icon" style="background:var(--alert);">&#128680;</div><div class="lso-text"><h5>SOS Quick Trigger</h5><p>One-tap emergency from lock screen</p></div></div>
+              <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="ls-option">
+              <div class="lso-left"><div class="lso-icon" style="background:var(--cobalt);">&#128179;</div><div class="lso-text"><h5>Medical ID Card</h5><p>Blood type, allergies, medications</p></div></div>
+              <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="ls-option">
+              <div class="lso-left"><div class="lso-icon" style="background:var(--safe);">&#9201;</div><div class="lso-text"><h5>Check-In Countdown</h5><p>Time until next scheduled check-in</p></div></div>
+              <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="ls-option">
+              <div class="lso-left"><div class="lso-icon" style="background:var(--burnt);">&#128205;</div><div class="lso-text"><h5>Current Location</h5><p>Street address on lock screen</p></div></div>
+              <div class="toggle-switch" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="ls-option">
+              <div class="lso-left"><div class="lso-icon" style="background:var(--lamp);">&#128101;</div><div class="lso-text"><h5>Guardian Status</h5><p>Show who is online / on duty</p></div></div>
+              <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="ls-option">
+              <div class="lso-left"><div class="lso-icon" style="background:var(--pro);">&#128222;</div><div class="lso-text"><h5>Emergency Contacts</h5><p>ICE numbers visible without unlock</p></div></div>
+              <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="ls-option">
+              <div class="lso-left"><div class="lso-icon" style="background:var(--forest);">&#127777;</div><div class="lso-text"><h5>Weather Alert</h5><p>Severe weather warnings</p></div></div>
+              <div class="toggle-switch" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="ls-option">
+              <div class="lso-left"><div class="lso-icon" style="background:var(--ink55);">&#128225;</div><div class="lso-text"><h5>BLE Tracker Status</h5><p>Connected device & separation alert</p></div></div>
+              <div class="toggle-switch" onclick="this.classList.toggle('on')"></div>
+            </div>
+          </div>
+
+          <div class="section-title">Security</div>
+          <div class="toggle-row"><div><div class="toggle-label">Face ID / Touch ID</div></div><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="list-item"><div class="list-icon" style="background:rgba(196,69,60,.1);color:var(--alert);">&#128274;</div><div class="list-text"><h4>Duress Code</h4><p>Secret code triggers silent alarm</p></div><div class="list-arrow">&#8250;</div></div>
+          <div class="list-item"><div class="list-icon" style="background:rgba(196,69,60,.1);color:var(--alert);">&#128264;</div><div class="list-text"><h4>Silent Alarm</h4></div><div class="list-arrow">&#8250;</div></div>
+          <div class="list-item"><div class="list-icon" style="background:rgba(27,94,189,.1);color:var(--cobalt);">&#128225;</div><div class="list-text"><h4>BLE Tracker</h4><p>Pair panic button / tracking tags</p></div><div class="list-arrow">&#8250;</div></div>
+
+          <div class="section-title">Preferences</div>
+          <div class="info-card">
+            <h4 style="margin-bottom:8px;">Appearance</h4>
+            <div class="appearance-toggle">
+              <button class="appearance-opt active" onclick="setAppearance(this)">&#9728; Light</button>
+              <button class="appearance-opt" onclick="setAppearance(this)">&#127769; Dark</button>
+              <button class="appearance-opt" onclick="setAppearance(this)">&#128241; Auto</button>
+            </div>
+          </div>
+          <div class="list-item"><div class="list-icon" style="background:rgba(107,92,165,.1);color:var(--pro);">&#127760;</div><div class="list-text"><h4>Language</h4><p>English / Chinese / French</p></div><div class="list-arrow">&#8250;</div></div>
+          <div class="list-item"><div class="list-icon" style="background:var(--ink06);color:var(--ink55);">Aa</div><div class="list-text"><h4>Font Size</h4></div><div class="list-arrow">&#8250;</div></div>
+
+          <div class="section-title">Notifications</div>
+          <div class="toggle-row"><div><div class="toggle-label">SOS Alerts</div><div class="toggle-sub">Critical — always on</div></div><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="toggle-row"><div><div class="toggle-label">Check-In Reminders</div></div><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="toggle-row"><div><div class="toggle-label">Family Feed</div></div><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div></div>
+
+          <div class="section-title">Data & Privacy</div>
+          <div class="list-item"><div class="list-icon" style="background:rgba(63,143,110,.1);color:var(--safe);">&#128274;</div><div class="list-text"><h4>Privacy Policy</h4></div><div class="list-arrow">&#8250;</div></div>
+          <div class="list-item"><div class="list-icon" style="background:rgba(196,69,60,.1);color:var(--alert);">&#128465;</div><div class="list-text"><h4>Delete Account</h4></div><div class="list-arrow">&#8250;</div></div>
+          <button class="logout-btn">Log Out</button>
+          <div style="height:20px;"></div>
+        </div>
+      </div>
+
+      <div class="tab-bar" id="p-tabbar">
+        <button class="tab-btn active" data-target="p-home"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></button>
+        <button class="tab-btn" data-target="p-family"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg><span>Family</span></button>
+        <button class="tab-btn" data-target="p-coverage"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg><span>Coverage</span></button>
+        <button class="tab-btn" data-target="p-records"><svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg><span>Records</span></button>
+        <button class="tab-btn" data-target="p-settings"><svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg><span>Settings</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== GUARDIAN ==================== -->
+<div class="portal-col">
+  <div class="portal-label">Guardian<span>守护者 — Chen Wei (Mom)</span></div>
+  <div class="phone" id="phone-guardian">
+    <div class="island"></div>
+    <div class="status-bar"><span class="time">21:41</span><span class="icons">5G &#9679; 88%</span></div>
+    <div class="screen">
+      <div class="tab-content" id="guardian-content">
+        <!-- ===== HOME ===== -->
+        <div class="tab-pane active" data-tab="g-home">
+          <div style="height:4px;"></div>
+          <div class="clock-row">
+            <div class="clock-pill"><div class="cp-city">Beijing</div><div class="cp-time">21:41</div></div>
+            <div class="clock-pill"><div class="cp-city">Toronto</div><div class="cp-time">09:41</div></div>
+            <div class="clock-pill"><div class="cp-city">Tokyo</div><div class="cp-time">22:41</div></div>
+          </div>
+
+          <div class="card-deck">
+            <div class="card-deck-inner" id="g-deck">
+              <div class="hero-card card-earth">
+                <div class="earth-wrap">
+                  <canvas class="earth-canvas" id="g-earth-canvas"></canvas>
+                  <div class="earth-overlay">
+                    <div><h3>Guardian View</h3><p>2 people under protection</p></div>
+                    <div class="eo-right"><p style="font-size:10px;opacity:.5;">Rotate to explore</p></div>
+                  </div>
+                </div>
+              </div>
+              <div class="hero-card card-map">
+                <div class="map-wrap">
+                  <div id="g-map" style="width:100%;height:100%;border-radius:var(--r);"></div>
+                  <div class="map-overlay">
+                    <h3>Protected Persons</h3>
+                    <p>All safe &middot; Last update 1 min ago</p>
+                  </div>
+                </div>
+              </div>
+              <div class="hero-card card-status">
+                <div class="status-card-inner">
+                  <h3>All Safe</h3>
+                  <p style="opacity:.8;font-size:12px;">No alerts in the last 24 hours</p>
+                  <div class="status-row">
+                    <div class="status-pill">Lucy: Safe</div>
+                    <div class="status-pill">Grandma: Home</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-dots" id="g-dots"><div class="card-dot active"></div><div class="card-dot"></div><div class="card-dot"></div></div>
+
+          <div class="section-title">Needs Attention</div>
+          <div class="alert-urgent">
+            <h4>&#9888; Lucy missed check-in</h4>
+            <p>Expected 3:00 PM, now 15 min late. Last known: 27 King's College Cir, Toronto, ON.</p>
+            <div class="au-actions">
+              <button class="au-btn primary" onclick="this.textContent='Calling...';setTimeout(()=>this.textContent='Call Lucy',1500)">Call Lucy</button>
+              <button class="au-btn secondary">View Location</button>
+              <button class="au-btn secondary" onclick="this.closest('.alert-urgent').style.display='none'">Dismiss</button>
+            </div>
+          </div>
+
+          <div class="section-title">Protected Persons</div>
+          <div class="person-card">
+            <div class="person-avatar" style="background:var(--burnt);">L</div>
+            <div class="person-info">
+              <h4>Lucy Chen</h4>
+              <p style="display:flex;align-items:center;gap:4px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--safe);display:inline-block;"></span>27 King's College Cir, Toronto, ON</p>
+              <p style="font-size:9px;color:var(--ink30);margin-top:1px;">43.6629°N, 79.3957°W &middot; 5 min ago &middot; 09:41 EST</p>
+              <div style="display:flex;gap:8px;margin-top:4px;align-items:center;">
+                <span class="battery-chip high"><span class="battery-bar"><span class="battery-bar-fill" style="width:80%;"></span></span> 85%</span>
+                <span class="distance-chip"><svg viewBox="0 0 24 24" style="width:10px;height:10px;fill:var(--ink30);"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>10,900 km</span>
+              </div>
+            </div>
+            <div class="person-badge" style="background:rgba(63,143,110,.15);color:var(--safe);">Safe</div>
+          </div>
+          <div class="person-card">
+            <div class="person-avatar" style="background:var(--forest);">G</div>
+            <div class="person-info">
+              <h4>Grandma Chen</h4>
+              <p style="display:flex;align-items:center;gap:4px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--safe);display:inline-block;"></span>12 Zhongguancun St, Haidian, Beijing</p>
+              <p style="font-size:9px;color:var(--ink30);margin-top:1px;">39.9842°N, 116.3065°E &middot; 2 min ago &middot; 21:41 CST</p>
+              <div style="display:flex;gap:8px;margin-top:4px;align-items:center;">
+                <span class="battery-chip low"><span class="battery-bar"><span class="battery-bar-fill" style="width:12%;"></span></span> 12%</span>
+                <span class="distance-chip"><svg viewBox="0 0 24 24" style="width:10px;height:10px;fill:var(--ink30);"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>8.3 km</span>
+              </div>
+            </div>
+            <div class="person-badge" style="background:rgba(63,143,110,.15);color:var(--safe);">Home</div>
+          </div>
+
+          <div class="section-title">Quick Actions</div>
+          <div class="quick-grid">
+            <div class="quick-item"><div class="qi-icon">&#128205;</div><div class="qi-label">Locate All</div></div>
+            <div class="quick-item"><div class="qi-icon">&#128172;</div><div class="qi-label">Group Msg</div></div>
+            <div class="quick-item"><div class="qi-icon">&#128276;</div><div class="qi-label">Send Alert</div></div>
+            <div class="quick-item"><div class="qi-icon">&#128203;</div><div class="qi-label">Duty Roster</div></div>
+            <div class="quick-item"><div class="qi-icon">&#127963;</div><div class="qi-label">Org Dash</div></div>
+            <div class="quick-item"><div class="qi-icon">&#128179;</div><div class="qi-label">Medical Cards</div></div>
+            <div class="quick-item"><div class="qi-icon">&#128176;</div><div class="qi-label">Billing</div></div>
+            <div class="quick-item"><div class="qi-icon">&#128202;</div><div class="qi-label">Reports</div></div>
+          </div>
+        </div>
+
+        <!-- ===== FAMILY ===== -->
+        <div class="tab-pane" data-tab="g-family">
+          <div style="height:4px;"></div>
+          <div class="section-title">Family Feed</div>
+
+          <!-- Lucy's shared location card (visible to guardian) -->
+          <div class="feed-item">
+            <div class="feed-avatar" style="background:var(--burnt);">L</div>
+            <div class="feed-body">
+              <h4>Lucy</h4>
+              <div class="loc-share-card">
+                <div class="lsc-head"><div class="lsc-pulse"></div> Live Location Shared</div>
+                <div class="lsc-addr">27 King's College Cir, Toronto</div>
+                <div class="lsc-coord">43.6629° N, 79.3957° W &middot; Ontario, Canada</div>
+                <div class="lsc-map">
+                  <img src="https://api.mapbox.com/styles/v1/mapbox/light-v11/static/-79.3957,43.6629,15,0/300x120?access_token=pk.placeholder" alt="map" onerror="this.parentElement.style.background='linear-gradient(135deg,#c8d8c8,#b0c0b0)';this.style.display='none';">
+                  <div class="lsc-pin"></div>
+                </div>
+              </div>
+              <div class="feed-time">2 min ago &middot; Live for 1 hour</div>
+            </div>
+          </div>
+
+          <div class="feed-item">
+            <div class="feed-avatar" style="background:var(--burnt);">L</div>
+            <div class="feed-body"><h4>Lucy</h4><p>Just got back to the dorm! All good.</p><div class="feed-photo"></div><div class="feed-time">5 min ago</div></div>
+          </div>
+          <div class="feed-item">
+            <div class="feed-avatar" style="background:var(--forest);">G</div>
+            <div class="feed-body"><h4>Grandma Chen</h4><p>Finished morning walk. Blood pressure normal today.</p><div class="feed-time">2 hours ago</div></div>
+          </div>
+          <div class="feed-item">
+            <div class="feed-avatar" style="background:var(--cobalt);">M</div>
+            <div class="feed-body"><h4>Me (Mom)</h4><p>Everyone remember to check in tonight! Love you all.</p><div class="feed-time">4 hours ago</div></div>
+          </div>
+          <div class="section-title">Location Overview</div>
+          <div class="person-card">
+            <div class="person-avatar" style="background:var(--burnt);">L</div>
+            <div class="person-info">
+              <h4>Lucy Chen</h4>
+              <p style="display:flex;align-items:center;gap:4px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--cobalt);display:inline-block;"></span>27 King's College Cir, Toronto</p>
+            </div>
+            <div class="person-badge" style="background:rgba(27,94,189,.15);color:var(--cobalt);">Live</div>
+          </div>
+          <div class="person-card">
+            <div class="person-avatar" style="background:var(--forest);">G</div>
+            <div class="person-info">
+              <h4>Grandma Chen</h4>
+              <p style="display:flex;align-items:center;gap:4px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--safe);display:inline-block;"></span>12 Zhongguancun St, Haidian, Beijing</p>
+            </div>
+            <div class="person-badge" style="background:rgba(63,143,110,.15);color:var(--safe);">Home</div>
+          </div>
+        </div>
+
+        <!-- ===== RECORDS ===== -->
+        <div class="tab-pane" data-tab="g-records">
+          <div style="height:4px;"></div>
+          <div class="section-title">Activity Timeline</div>
+          <div class="timeline-item"><div class="timeline-dot" style="background:var(--safe);"></div><div class="timeline-text"><h4>Lucy checked in</h4><p>Today, 3:00 PM — 27 King's College Cir, Toronto</p></div></div>
+          <div class="timeline-item"><div class="timeline-dot" style="background:var(--cobalt);"></div><div class="timeline-text"><h4>Grandma entered safe zone</h4><p>Today, 2:30 PM — Home, Haidian, Beijing</p></div></div>
+          <div class="timeline-item"><div class="timeline-dot" style="background:var(--lamp);"></div><div class="timeline-text"><h4>Lucy left safe zone</h4><p>Today, 8:15 AM — Home to campus</p></div></div>
+          <div class="timeline-item"><div class="timeline-dot" style="background:var(--safe);"></div><div class="timeline-text"><h4>Grandma morning walk</h4><p>Today, 6:30 AM — Zhongguancun Park</p></div></div>
+
+          <div class="section-title">Duty Schedule</div>
+          <div class="duty-card">
+            <h4>This Week</h4>
+            <div class="duty-slot"><span class="ds-time" style="color:var(--ink55);">Mon-Wed</span><span style="color:var(--ink);font-weight:600;">Mom (Chen Wei)</span></div>
+            <div class="duty-slot"><span class="ds-time" style="color:var(--ink55);">Thu-Fri</span><span style="color:var(--ink);font-weight:600;">Dad (Chen Ming)</span></div>
+            <div class="duty-slot"><span class="ds-time" style="color:var(--ink55);">Sat-Sun</span><span style="color:var(--ink);font-weight:600;">Sister (Chen Yue)</span></div>
+          </div>
+
+          <!-- Emergency Yellow Pages with country selector -->
+          <div class="section-title">Emergency Yellow Pages</div>
+          <div class="country-select">
+            <label>Region:</label>
+            <select onchange="switchYellowPages(this.value, 'g-yp')">
+              <option value="cn">&#127464;&#127475; China</option>
+              <option value="ca">&#127464;&#127462; Canada</option>
+              <option value="jp">&#127471;&#127477; Japan</option>
+              <option value="us">&#127482;&#127480; United States</option>
+              <option value="uk">&#127468;&#127463; United Kingdom</option>
+              <option value="au">&#127462;&#127482; Australia</option>
+              <option value="fr">&#127467;&#127479; France</option>
+              <option value="de">&#127465;&#127466; Germany</option>
+            </select>
+          </div>
+          <div id="g-yp">
+            <div class="yp-card" data-yp="cn">
+              <h4>&#127464;&#127475; China Emergency Directory</h4>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--alert);">&#128658;</div><div class="yp-text"><h5>Police</h5><p>Public security</p></div><div class="yp-call">110</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--alert);">&#128657;</div><div class="yp-text"><h5>Fire Department</h5><p>Fire emergencies</p></div><div class="yp-call">119</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--safe);">&#128656;</div><div class="yp-text"><h5>Ambulance</h5><p>Medical emergency</p></div><div class="yp-call">120</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--cobalt);">&#127759;</div><div class="yp-text"><h5>MFA Consular Protection</h5><p>Overseas citizens 24h</p></div><div class="yp-call">12308</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--pro);">&#128156;</div><div class="yp-text"><h5>Mental Health Hotline</h5><p>Beijing Psychological Crisis</p></div><div class="yp-call">010-82951332</div></div>
+            </div>
+            <div class="yp-card" data-yp="ca" style="display:none;">
+              <h4>&#127464;&#127462; Canada Emergency Directory</h4>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--alert);">&#128658;</div><div class="yp-text"><h5>Police / Fire / Ambulance</h5><p>All emergencies</p></div><div class="yp-call">911</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--cobalt);">&#127963;</div><div class="yp-text"><h5>Chinese Consulate — Toronto</h5><p>240 St George St</p></div><div class="yp-call">+1-416-964-7260</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--safe);">&#128137;</div><div class="yp-text"><h5>Poison Control</h5><p>24/7 hotline</p></div><div class="yp-call">1-800-268-9017</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--pro);">&#128156;</div><div class="yp-text"><h5>Crisis Helpline</h5><p>Mental health support</p></div><div class="yp-call">988</div></div>
+            </div>
+            <div class="yp-card" data-yp="jp" style="display:none;">
+              <h4>&#127471;&#127477; Japan Emergency Directory</h4>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--alert);">&#128658;</div><div class="yp-text"><h5>Police</h5><p>Keisatsu</p></div><div class="yp-call">110</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--safe);">&#128656;</div><div class="yp-text"><h5>Fire / Ambulance</h5><p>Shoubousha / Kyuukyuusha</p></div><div class="yp-call">119</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--cobalt);">&#127963;</div><div class="yp-text"><h5>Chinese Embassy — Tokyo</h5><p>3-4-33 Moto-Azabu, Minato</p></div><div class="yp-call">+81-3-3403-3388</div></div>
+            </div>
+            <div class="yp-card" data-yp="us" style="display:none;">
+              <h4>&#127482;&#127480; United States Emergency Directory</h4>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--alert);">&#128658;</div><div class="yp-text"><h5>Police / Fire / Ambulance</h5><p>All emergencies</p></div><div class="yp-call">911</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--cobalt);">&#127963;</div><div class="yp-text"><h5>Chinese Embassy — D.C.</h5><p>3505 International Pl NW</p></div><div class="yp-call">+1-202-495-2266</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--safe);">&#128137;</div><div class="yp-text"><h5>Poison Control</h5><p>24/7 hotline</p></div><div class="yp-call">1-800-222-1222</div></div>
+            </div>
+            <div class="yp-card" data-yp="uk" style="display:none;">
+              <h4>&#127468;&#127463; United Kingdom Emergency Directory</h4>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--alert);">&#128658;</div><div class="yp-text"><h5>Police / Fire / Ambulance</h5><p>All emergencies</p></div><div class="yp-call">999</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--cobalt);">&#127963;</div><div class="yp-text"><h5>Chinese Embassy — London</h5><p>49 Portland Pl</p></div><div class="yp-call">+44-20-7299-4049</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--safe);">&#128137;</div><div class="yp-text"><h5>NHS Non-Emergency</h5><p>Health advice 24h</p></div><div class="yp-call">111</div></div>
+            </div>
+            <div class="yp-card" data-yp="au" style="display:none;">
+              <h4>&#127462;&#127482; Australia Emergency Directory</h4>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--alert);">&#128658;</div><div class="yp-text"><h5>Police / Fire / Ambulance</h5></div><div class="yp-call">000</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--cobalt);">&#127963;</div><div class="yp-text"><h5>Chinese Embassy — Canberra</h5><p>15 Coronation Dr</p></div><div class="yp-call">+61-2-6228-3999</div></div>
+            </div>
+            <div class="yp-card" data-yp="fr" style="display:none;">
+              <h4>&#127467;&#127479; France Emergency Directory</h4>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--alert);">&#128658;</div><div class="yp-text"><h5>SAMU / Police / Fire</h5><p>15 / 17 / 18</p></div><div class="yp-call">112</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--cobalt);">&#127963;</div><div class="yp-text"><h5>Chinese Embassy — Paris</h5><p>11 Avenue George V</p></div><div class="yp-call">+33-1-4952-1950</div></div>
+            </div>
+            <div class="yp-card" data-yp="de" style="display:none;">
+              <h4>&#127465;&#127466; Germany Emergency Directory</h4>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--alert);">&#128658;</div><div class="yp-text"><h5>Police / Fire / Ambulance</h5><p>110 / 112</p></div><div class="yp-call">112</div></div>
+              <div class="yp-row"><div class="yp-icon" style="background:var(--cobalt);">&#127963;</div><div class="yp-text"><h5>Chinese Embassy — Berlin</h5><p>Markisches Ufer 54</p></div><div class="yp-call">+49-30-27588-0</div></div>
+            </div>
+          </div>
+
+          <div class="section-title">Export</div>
+          <div class="info-card"><h4>Export All Records</h4><p>Download complete guardian activity log for all protected persons.</p></div>
+        </div>
+
+        <!-- ===== SETTINGS ===== -->
+        <div class="tab-pane" data-tab="g-settings">
+          <div style="height:4px;"></div>
+          <div class="section-title">Profile</div>
+          <div class="profile-card">
+            <div class="profile-avatar" style="background:var(--cobalt);">W<div class="pa-camera">&#128247;</div></div>
+            <div class="profile-info">
+              <h4>Chen Wei (Mom)</h4>
+              <p>wei.chen@email.com</p>
+              <span class="pi-role" style="background:rgba(27,94,189,.1);color:var(--cobalt);">Guardian</span>
+            </div>
+            <button class="profile-edit">Edit</button>
+          </div>
+
+          <div class="section-title">Subscription</div>
+          <div class="sub-card"><h4>Guardian Pro Plan</h4><p>Unlimited protected persons, priority alerts, 24/7 dashboard, duty scheduling.</p></div>
+
+          <div class="section-title">Safety Tools</div>
+          <div class="list-item"><div class="list-icon" style="background:rgba(221,76,39,.1);color:var(--burnt);">&#128179;</div><div class="list-text"><h4>Medical Cards</h4><p>View protected persons' medical info</p></div><div class="list-arrow">&#8250;</div></div>
+          <div class="list-item"><div class="list-icon" style="background:rgba(27,94,189,.1);color:var(--cobalt);">&#128172;</div><div class="list-text"><h4>Emergency Text Templates</h4></div><div class="list-arrow">&#8250;</div></div>
+          <div class="list-item"><div class="list-icon" style="background:rgba(76,124,75,.1);color:var(--forest);">&#127963;</div><div class="list-text"><h4>Consulate Directory</h4></div><div class="list-arrow">&#8250;</div></div>
+
+          <div class="section-title">Organization</div>
+          <div class="list-item"><div class="list-icon" style="background:rgba(107,92,165,.1);color:var(--pro);">&#127963;</div><div class="list-text"><h4>Organization Dashboard</h4></div><div class="list-arrow">&#8250;</div></div>
+          <div class="list-item"><div class="list-icon" style="background:rgba(232,163,61,.1);color:var(--lamp);">&#128176;</div><div class="list-text"><h4>Billing & Subscription</h4></div><div class="list-arrow">&#8250;</div></div>
+
+          <div class="section-title">Lock Screen Widgets</div>
+          <div class="ls-customizer">
+            <h4>Customize Lock Screen</h4>
+            <div class="ls-preview">
+              <div class="ls-preview-widget" style="display:flex;justify-content:space-between;align-items:center;">
+                <div><h5>All Persons</h5><div class="lpw-val">All Safe</div></div>
+                <div style="font-size:16px;">&#9989;</div>
+              </div>
+              <div class="ls-preview-widget" style="display:flex;gap:12px;">
+                <div><h5>Lucy</h5><div class="lpw-val" style="color:#5ec49a;">Safe &middot; Toronto</div></div>
+                <div><h5>Grandma</h5><div class="lpw-val" style="color:#5ec49a;">Home &middot; Beijing</div></div>
+              </div>
+            </div>
+            <div class="ls-option">
+              <div class="lso-left"><div class="lso-icon" style="background:var(--safe);">&#9989;</div><div class="lso-text"><h5>All-Safe Status</h5><p>Overview of all protected persons</p></div></div>
+              <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="ls-option">
+              <div class="lso-left"><div class="lso-icon" style="background:var(--burnt);">&#128205;</div><div class="lso-text"><h5>Person Locations</h5><p>City / street for each protected person</p></div></div>
+              <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="ls-option">
+              <div class="lso-left"><div class="lso-icon" style="background:var(--alert);">&#128276;</div><div class="lso-text"><h5>Alert Notifications</h5><p>Missed check-in, SOS, zone exit</p></div></div>
+              <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="ls-option">
+              <div class="lso-left"><div class="lso-icon" style="background:var(--lamp);">&#128197;</div><div class="lso-text"><h5>Duty Schedule</h5><p>Who's on duty right now</p></div></div>
+              <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="ls-option">
+              <div class="lso-left"><div class="lso-icon" style="background:var(--cobalt);">&#9201;</div><div class="lso-text"><h5>Next Check-In</h5><p>Countdown for each person</p></div></div>
+              <div class="toggle-switch" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="ls-option">
+              <div class="lso-left"><div class="lso-icon" style="background:var(--pro);">&#128222;</div><div class="lso-text"><h5>Emergency Contacts</h5><p>Quick dial from lock screen</p></div></div>
+              <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="ls-option">
+              <div class="lso-left"><div class="lso-icon" style="background:var(--forest);">&#127777;</div><div class="lso-text"><h5>Weather at Person Location</h5><p>Weather alerts where they are</p></div></div>
+              <div class="toggle-switch" onclick="this.classList.toggle('on')"></div>
+            </div>
+          </div>
+
+          <div class="section-title">Security</div>
+          <div class="toggle-row"><div><div class="toggle-label">Face ID / Touch ID</div></div><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="list-item"><div class="list-icon" style="background:rgba(27,94,189,.1);color:var(--cobalt);">&#128225;</div><div class="list-text"><h4>BLE Tracker</h4><p>Pair tags for protected persons</p></div><div class="list-arrow">&#8250;</div></div>
+
+          <div class="section-title">Preferences</div>
+          <div class="list-item"><div class="list-icon" style="background:rgba(107,92,165,.1);color:var(--pro);">&#127760;</div><div class="list-text"><h4>Language</h4><p>English / Chinese / French</p></div><div class="list-arrow">&#8250;</div></div>
+          <div class="list-item"><div class="list-icon" style="background:var(--ink06);color:var(--ink55);">Aa</div><div class="list-text"><h4>Font Size</h4></div><div class="list-arrow">&#8250;</div></div>
+
+          <div class="section-title">Notifications</div>
+          <div class="toggle-row"><div><div class="toggle-label">SOS Alerts</div><div class="toggle-sub">Critical — always on</div></div><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="toggle-row"><div><div class="toggle-label">Check-In Missed</div></div><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="toggle-row"><div><div class="toggle-label">Safe Zone Alerts</div></div><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="toggle-row"><div><div class="toggle-label">Family Feed</div></div><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div></div>
+
+          <div class="section-title">Data & Privacy</div>
+          <div class="list-item"><div class="list-icon" style="background:rgba(63,143,110,.1);color:var(--safe);">&#128274;</div><div class="list-text"><h4>Privacy Policy</h4></div><div class="list-arrow">&#8250;</div></div>
+          <div class="list-item"><div class="list-icon" style="background:rgba(196,69,60,.1);color:var(--alert);">&#128465;</div><div class="list-text"><h4>Delete Account</h4></div><div class="list-arrow">&#8250;</div></div>
+          <button class="logout-btn">Log Out</button>
+          <div style="height:20px;"></div>
+        </div>
+      </div>
+
+      <div class="tab-bar" id="g-tabbar">
+        <button class="tab-btn active" data-target="g-home"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span><div class="notif-badge">1</div></button>
+        <button class="tab-btn" data-target="g-family"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg><span>Family</span><div class="notif-badge">3</div></button>
+        <button class="tab-btn" data-target="g-records"><svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg><span>Records</span></button>
+        <button class="tab-btn" data-target="g-settings"><svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg><span>Settings</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ==================== LOCK SCREENS ==================== -->
+<div class="section-divider">
+  <h2>Lock Screen Widgets</h2>
+  <p>Emergency info accessible without unlocking</p>
+</div>
+
+<div class="lock-row">
+  <!-- Protected Person Lock Screen -->
+  <div class="portal-col">
+    <div class="portal-label">Protected Lock Screen<span>被守护者 — Lucy Chen</span></div>
+    <div class="lock-phone">
+      <div class="lock-wallpaper"></div>
+      <div class="lock-island"></div>
+      <div class="lock-status"><span>9:41</span><span style="font-size:12px;letter-spacing:1px;">5G &#9679; 100%</span></div>
+      <div class="lock-time-block">
+        <div class="lt-time">9:41</div>
+        <div class="lt-date">Sunday, October 26</div>
+      </div>
+
+      <div class="lock-widgets">
+        <!-- Single compact widget card -->
+        <div class="lw-rect" style="padding:16px 18px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:28px;height:28px;border-radius:8px;background:var(--burnt);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;">&#128694;</div>
+              <div>
+                <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.9);letter-spacing:.3px;">ShouDeng</div>
+                <div style="font-size:9px;color:rgba(255,255,255,.4);">Safe &middot; Check-in 2h 19m</div>
+              </div>
+            </div>
+            <div style="width:36px;height:36px;border-radius:50%;background:rgba(196,69,60,.7);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;box-shadow:0 0 0 3px rgba(196,69,60,.2);">SOS</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:10px;">
+            <div style="flex:1;background:rgba(255,255,255,.06);border-radius:8px;padding:8px;">
+              <div style="font-size:8px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;">Blood</div>
+              <div style="font-size:16px;font-weight:700;color:#fff;">A+</div>
+            </div>
+            <div style="flex:1;background:rgba(255,255,255,.06);border-radius:8px;padding:8px;">
+              <div style="font-size:8px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;">Allergy</div>
+              <div style="font-size:11px;font-weight:600;color:#e8837c;">Penicillin</div>
+            </div>
+            <div style="flex:1;background:rgba(255,255,255,.06);border-radius:8px;padding:8px;">
+              <div style="font-size:8px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;">ICE</div>
+              <div style="font-size:11px;font-weight:600;color:#5ec49a;">Mom</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="width:6px;height:6px;border-radius:50%;background:var(--safe);"></div>
+            <span style="font-size:10px;color:rgba(255,255,255,.5);">3 guardians online</span>
+            <span style="margin-left:auto;font-size:9px;color:rgba(255,255,255,.3);">911 &middot; Consulate</span>
+          </div>
+          <!-- Slide to SOS -->
+          <div class="slide-sos">
+            <div class="slide-sos-track">Slide to trigger SOS &raquo;</div>
+            <div class="slide-sos-thumb" id="sos-thumb">SOS</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lock-bottom">
+        <div class="lock-btn">&#128294;</div>
+        <div class="lock-btn">&#128247;</div>
+      </div>
+      <div class="lock-home"></div>
+    </div>
+  </div>
+
+  <!-- Guardian Lock Screen -->
+  <div class="portal-col">
+    <div class="portal-label">Guardian Lock Screen<span>守护者 — Chen Wei (Mom)</span></div>
+    <div class="lock-phone">
+      <div class="lock-wallpaper" style="background:linear-gradient(160deg,#0a1a0e 0%,#102018 30%,#1a3828 60%,#0c2a1a 100%);"></div>
+      <div class="lock-island"></div>
+      <div class="lock-status"><span>21:41</span><span style="font-size:12px;letter-spacing:1px;">5G &#9679; 88%</span></div>
+      <div class="lock-time-block">
+        <div class="lt-time">21:41</div>
+        <div class="lt-date">Sunday, October 26</div>
+      </div>
+
+      <div class="lock-widgets">
+        <!-- Single compact widget card -->
+        <div class="lw-rect" style="padding:16px 18px;border-color:rgba(94,196,154,.15);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:28px;height:28px;border-radius:8px;background:var(--safe);display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;">&#128737;</div>
+              <div>
+                <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.9);letter-spacing:.3px;">ShouDeng Guardian</div>
+                <div style="font-size:9px;color:rgba(255,255,255,.4);">On Duty &middot; Mon-Wed</div>
+              </div>
+            </div>
+            <div style="font-size:11px;font-weight:700;color:#5ec49a;background:rgba(94,196,154,.15);padding:4px 10px;border-radius:8px;">All Safe</div>
+          </div>
+          <!-- Person rows -->
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.05);border-radius:8px;padding:8px 10px;">
+              <div style="width:24px;height:24px;border-radius:50%;background:var(--burnt);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;">L</div>
+              <div style="flex:1;">
+                <div style="font-size:11px;font-weight:600;color:#fff;">Lucy</div>
+                <div style="font-size:9px;color:rgba(255,255,255,.4);">Toronto &middot; 09:41 EST</div>
+              </div>
+              <div style="font-size:9px;font-weight:600;color:#5ec49a;">Safe</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.05);border-radius:8px;padding:8px 10px;">
+              <div style="width:24px;height:24px;border-radius:50%;background:var(--forest);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;">G</div>
+              <div style="flex:1;">
+                <div style="font-size:11px;font-weight:600;color:#fff;">Grandma</div>
+                <div style="font-size:9px;color:rgba(255,255,255,.4);">Beijing &middot; 21:41 CST</div>
+              </div>
+              <div style="font-size:9px;font-weight:600;color:#5ec49a;">Home</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:9px;color:rgba(255,255,255,.3);">Next check-in: Lucy 2h 19m</span>
+            <span style="margin-left:auto;font-size:9px;color:rgba(255,255,255,.3);">110 &middot; 911</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="lock-bottom">
+        <div class="lock-btn">&#128294;</div>
+        <div class="lock-btn">&#128247;</div>
+      </div>
+      <div class="lock-home"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== TAB SWITCHING =====
+function setupTabs(tabbarId, contentId) {
+  const tabbar = document.getElementById(tabbarId);
+  const content = document.getElementById(contentId);
+  tabbar.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabbar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      content.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      content.querySelector(`[data-tab="${btn.dataset.target}"]`).classList.add('active');
+      content.scrollTop = 0;
+      if (btn.dataset.target === 'p-home' && pMap) setTimeout(() => pMap.invalidateSize(), 100);
+      if (btn.dataset.target === 'g-home' && gMap) setTimeout(() => gMap.invalidateSize(), 100);
+    });
+  });
+}
+setupTabs('p-tabbar', 'protected-content');
+setupTabs('g-tabbar', 'guardian-content');
+
+// ===== TRACKING TOGGLE =====
+function toggleTracking(el) {
+  el.classList.toggle('on');
+  const banner = el.closest('.loc-banner');
+  const status = banner.querySelector('.lb-status');
+  const pulse = banner.querySelector('.lb-pulse');
+  if (el.classList.contains('on')) {
+    status.className = 'lb-status on';
+    status.innerHTML = '<div class="lb-pulse" style="background:var(--safe);"></div> Live Tracking: ON';
+  } else {
+    status.className = 'lb-status off';
+    status.innerHTML = '<div class="lb-pulse" style="background:var(--alert);"></div> Location Sharing: PAUSED';
+  }
+}
+
+// ===== YELLOW PAGES SWITCHER =====
+function switchYellowPages(country, containerId) {
+  const container = document.getElementById(containerId);
+  container.querySelectorAll('.yp-card').forEach(card => {
+    card.style.display = card.dataset.yp === country ? 'block' : 'none';
+  });
+}
+
+// ===== CARD DECK SWIPE =====
+function setupDeck(deckId, dotsId) {
+  const deck = document.getElementById(deckId);
+  const dots = document.getElementById(dotsId).querySelectorAll('.card-dot');
+  let current = 0, startX = 0, dx = 0, dragging = false;
+  const total = deck.children.length;
+  function goTo(i) {
+    current = Math.max(0, Math.min(total - 1, i));
+    deck.style.transform = `translateX(-${current * 100}%)`;
+    dots.forEach((d, idx) => d.classList.toggle('active', idx === current));
+  }
+  deck.addEventListener('pointerdown', e => { startX = e.clientX; dragging = true; deck.style.transition = 'none'; });
+  deck.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    dx = e.clientX - startX;
+    deck.style.transform = `translateX(${-current * 100 + (dx / deck.parentElement.offsetWidth) * 100}%)`;
+  });
+  const end = () => {
+    if (!dragging) return; dragging = false;
+    deck.style.transition = 'transform .4s cubic-bezier(.25,.1,.25,1)';
+    if (Math.abs(dx) > 50) goTo(current + (dx < 0 ? 1 : -1)); else goTo(current);
+    dx = 0;
+  };
+  deck.addEventListener('pointerup', end);
+  deck.addEventListener('pointerleave', end);
+  dots.forEach((d, i) => d.addEventListener('click', () => { deck.style.transition = 'transform .4s cubic-bezier(.25,.1,.25,1)'; goTo(i); }));
+}
+setupDeck('p-deck', 'p-dots');
+setupDeck('g-deck', 'g-dots');
+
+// ===== PREMIUM GLOBE (ported from GlobeMapView.swift) =====
+function drawGlobe(canvasId, config) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  let w, h;
+
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    w = rect.width; h = rect.height;
+    canvas.width = w * dpr; canvas.height = h * dpr;
+    canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  resize();
+
+  const RAD = Math.PI / 180;
+  const tilt = 20 * RAD;  // matches Swift: private let tilt: Double = 20
+  const speed = 6;        // matches Swift: private let speed: Double = 6
+  const initLon = -40;    // matches Swift: var initialLongitude: Double = -40
+
+  // pins: [{label, lat, lon, color, isMe}]
+  const pins = config.pins;
+  // links: [{from, to}]
+  const links = config.links || [];
+
+  function proj(lon, lat, lam) {
+    const l = lon * RAD + lam;
+    const p = lat * RAD;
+    const cp = Math.cos(p), sp = Math.sin(p), cl = Math.cos(l), sl = Math.sin(l);
+    const cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.42;
+    return {
+      x: cx + R * cp * sl,
+      y: cy - R * (Math.cos(tilt) * sp - Math.sin(tilt) * cp * cl),
+      z: Math.sin(tilt) * sp + Math.cos(tilt) * cp * cl,
+      R
+    };
+  }
+
+  // SLERP for great-circle arcs (matches Swift slerp function)
+  function vec3(lon, lat) {
+    const a = lon * RAD, b = lat * RAD, cb = Math.cos(b);
+    return [cb * Math.cos(a), cb * Math.sin(a), Math.sin(b)];
+  }
+  function toLL(v) {
+    return [Math.atan2(v[1], v[0]) / RAD, Math.asin(Math.max(-1, Math.min(1, v[2]))) / RAD];
+  }
+  function slerp(aPin, bPin, t) {
+    const u = vec3(aPin.lon, aPin.lat);
+    const v = vec3(bPin.lon, bPin.lat);
+    const d = Math.max(-1, Math.min(1, u[0]*v[0] + u[1]*v[1] + u[2]*v[2]));
+    const omega = Math.acos(d);
+    if (omega < 1e-6) return toLL(u);
+    const so = Math.sin(omega);
+    const s1 = Math.sin((1-t)*omega)/so, s2 = Math.sin(t*omega)/so;
+    return toLL([u[0]*s1+v[0]*s2, u[1]*s1+v[1]*s2, u[2]*s1+v[2]*s2]);
+  }
+
+  let startTime = null;
+
+  function draw(ts) {
+    if (!startTime) startTime = ts;
+    const elapsed = (ts - startTime) / 1000;
+    const lam = (initLon + elapsed * speed) * RAD;
+    const cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.42;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Atmosphere glow
+    const atm = ctx.createRadialGradient(cx, cy, R * 0.85, cx, cy, R * 1.4);
+    atm.addColorStop(0, 'rgba(80,140,255,.08)');
+    atm.addColorStop(1, 'transparent');
+    ctx.fillStyle = atm;
+    ctx.fillRect(0, 0, w, h);
+
+    // Globe body — matches Swift: Color(red:44/255, green:70/255, blue:112/255).opacity(0.2)
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(44,70,112,0.2)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+
+    // Grid lines — matches Swift: stride(-180,180,24) for lon, stride(-60,60,24) for lat
+    ctx.strokeStyle = 'rgba(255,255,255,0.09)';
+    ctx.lineWidth = 0.5;
+    // Longitude lines
+    for (let i = -180; i < 180; i += 24) {
+      ctx.beginPath();
+      let on = false;
+      for (let j = -90; j <= 90; j += 4) {
+        const pt = proj(i, j, lam);
+        if (pt.z > 0) { if (!on) { ctx.moveTo(pt.x, pt.y); on = true; } else ctx.lineTo(pt.x, pt.y); } else on = false;
+      }
+      ctx.stroke();
+    }
+    // Latitude lines
+    for (let i = -60; i <= 60; i += 24) {
+      ctx.beginPath();
+      let on = false;
+      for (let j = -180; j <= 180; j += 4) {
+        const pt = proj(j, i, lam);
+        if (pt.z > 0) { if (!on) { ctx.moveTo(pt.x, pt.y); on = true; } else ctx.lineTo(pt.x, pt.y); } else on = false;
+      }
+      ctx.stroke();
+    }
+
+    // Great-circle connection arcs — matches Swift lampArc/proArc
+    links.forEach(link => {
+      if (link.from >= pins.length || link.to >= pins.length) return;
+      const a = pins[link.from], b = pins[link.to];
+      ctx.beginPath();
+      let on = false;
+      for (let t = 0; t <= 1; t += 0.025) {
+        const [lo, la] = slerp(a, b, t);
+        const pt = proj(lo, la, lam);
+        if (pt.z > 0) { if (!on) { ctx.moveTo(pt.x, pt.y); on = true; } else ctx.lineTo(pt.x, pt.y); } else on = false;
+      }
+      ctx.strokeStyle = link.color || 'rgba(232,163,61,0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    });
+
+    // Animated pulse on arcs
+    links.forEach(link => {
+      if (link.from >= pins.length || link.to >= pins.length) return;
+      const a = pins[link.from], b = pins[link.to];
+      const pulseT = (elapsed * 0.3) % 1;
+      const [lo, la] = slerp(a, b, pulseT);
+      const pt = proj(lo, la, lam);
+      if (pt.z > 0) {
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(232,163,61,0.6)';
+        ctx.fill();
+      }
+    });
+
+    // Dots & labels — matches Swift 3-layer glow system
+    pins.forEach(pin => {
+      const pt = proj(pin.lon, pin.lat, lam);
+      if (pt.z <= 0) return;
+      const alpha = Math.min(1, 0.4 + pt.z);
+
+      // Outer glow — matches Swift: glowR = isMe ? 14 : 10
+      const glowR = pin.isMe ? 14 : 10;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, glowR, 0, Math.PI * 2);
+      ctx.fillStyle = hexToRgba(pin.color, 0.18 * alpha);
+      ctx.fill();
+
+      // Inner glow — matches Swift: innerR = isMe ? 8 : 6
+      const innerR = pin.isMe ? 8 : 6;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, innerR, 0, Math.PI * 2);
+      ctx.fillStyle = hexToRgba(pin.color, 0.35 * alpha);
+      ctx.fill();
+
+      // Core dot — matches Swift: coreR = isMe ? 5.5 : 4
+      const coreR = pin.isMe ? 5.5 : 4;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, coreR, 0, Math.PI * 2);
+      ctx.fillStyle = hexToRgba(pin.color, alpha);
+      ctx.fill();
+
+      // Animated ring for "me" pin
+      if (pin.isMe) {
+        const ringR = 12 + Math.sin(elapsed * 2) * 4;
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, ringR, 0, Math.PI * 2);
+        ctx.strokeStyle = hexToRgba(pin.color, 0.15 * alpha);
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+
+      // City label — matches Swift: if pt.z > 0.2
+      if (pt.z > 0.2) {
+        ctx.font = '600 11px Inter, -apple-system, sans-serif';
+        ctx.fillStyle = `rgba(255,255,255,${0.9 * alpha})`;
+        ctx.textAlign = 'center';
+        ctx.fillText(pin.label, pt.x, pt.y - glowR - 5);
+      }
+    });
+
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+}
+
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// Protected person globe
+drawGlobe('p-earth-canvas', {
+  pins: [
+    { label: 'Toronto', lat: 43.66, lon: -79.39, color: '#DD4C27', isMe: true },
+    { label: 'Beijing', lat: 39.90, lon: 116.40, color: '#1B5EBD', isMe: false },
+    { label: 'Beijing', lat: 39.92, lon: 116.46, color: '#4C7C4B', isMe: false },
+    { label: 'Tokyo', lat: 35.68, lon: 139.69, color: '#E8A33D', isMe: false }
+  ],
+  links: [
+    { from: 0, to: 1, color: 'rgba(232,163,61,0.4)' },
+    { from: 0, to: 2, color: 'rgba(232,163,61,0.35)' },
+    { from: 0, to: 3, color: 'rgba(107,92,165,0.45)' }
+  ]
+});
+
+// Guardian globe
+drawGlobe('g-earth-canvas', {
+  pins: [
+    { label: 'Beijing', lat: 39.90, lon: 116.40, color: '#1B5EBD', isMe: true },
+    { label: 'Toronto', lat: 43.66, lon: -79.39, color: '#DD4C27', isMe: false },
+    { label: 'Beijing', lat: 39.98, lon: 116.31, color: '#4C7C4B', isMe: false },
+    { label: 'Tokyo', lat: 35.68, lon: 139.69, color: '#E8A33D', isMe: false }
+  ],
+  links: [
+    { from: 0, to: 1, color: 'rgba(232,163,61,0.4)' },
+    { from: 0, to: 2, color: 'rgba(63,143,110,0.4)' },
+    { from: 0, to: 3, color: 'rgba(107,92,165,0.45)' }
+  ]
+});
+
+// ===== LEAFLET MAPS =====
+let pMap, gMap;
+function initMaps() {
+  const tiles = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+  const attr = '&copy; OpenStreetMap &copy; CARTO';
+
+  // Protected — zoomed to street level at U of T
+  pMap = L.map('p-map', { zoomControl: false, attributionControl: false, dragging: false }).setView([43.6629, -79.3957], 16);
+  L.tileLayer(tiles, { attribution: attr }).addTo(pMap);
+  // My location pin with pulse
+  const myIcon = L.divIcon({
+    className: '',
+    html: '<div style="width:16px;height:16px;border-radius:50%;background:#DD4C27;border:3px solid #fff;box-shadow:0 0 0 4px rgba(221,76,39,.25),0 2px 6px rgba(0,0,0,.2);"></div>',
+    iconSize: [16,16], iconAnchor: [8,8]
+  });
+  L.marker([43.6629, -79.3957], { icon: myIcon }).addTo(pMap).bindPopup('<b>Lucy</b><br>27 King\'s College Cir');
+
+  // Guardian map — wider view with both persons
+  gMap = L.map('g-map', { zoomControl: false, attributionControl: false, dragging: false }).setView([43.6629, -79.3957], 13);
+  L.tileLayer(tiles, { attribution: attr }).addTo(gMap);
+  const lucyIcon = L.divIcon({
+    className: '',
+    html: '<div style="width:14px;height:14px;border-radius:50%;background:#DD4C27;border:2px solid #fff;box-shadow:0 0 0 3px rgba(221,76,39,.2);"></div>',
+    iconSize: [14,14], iconAnchor: [7,7]
+  });
+  const grandmaIcon = L.divIcon({
+    className: '',
+    html: '<div style="width:14px;height:14px;border-radius:50%;background:#4C7C4B;border:2px solid #fff;box-shadow:0 0 0 3px rgba(76,124,75,.2);"></div>',
+    iconSize: [14,14], iconAnchor: [7,7]
+  });
+  L.marker([43.6629, -79.3957], { icon: lucyIcon }).addTo(gMap).bindPopup('<b>Lucy</b><br>27 King\'s College Cir');
+  L.marker([43.7000, -79.4160], { icon: grandmaIcon }).addTo(gMap).bindPopup('<b>Grandma</b><br>12 Zhongguancun St');
+}
+setTimeout(initMaps, 400);
+
+// ===== "I'M HOME SAFE" =====
+function homeSafeConfirm(btn) {
+  btn.classList.add('confirmed');
+  btn.innerHTML = '<svg viewBox="0 0 24 24" class="check-pop"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Confirmed Safe &middot; Guardians Notified';
+  setTimeout(() => {
+    btn.classList.remove('confirmed');
+    btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> I\'m Home Safe';
+  }, 4000);
+}
+
+// ===== LANGUAGE CYCLE =====
+const langs = ['EN','中文','FR'];
+let langIdx = 0;
+function cycleLang(btn) {
+  langIdx = (langIdx + 1) % langs.length;
+  btn.querySelector('.lang-label').textContent = langs[langIdx];
+  btn.style.borderColor = 'var(--cobalt)';
+  setTimeout(() => btn.style.borderColor = '', 300);
+}
+
+// ===== FONT SIZE CYCLE =====
+const fonts = [{label:'S',size:'13px'},{label:'M',size:'15px'},{label:'L',size:'17px'},{label:'XL',size:'19px'}];
+let fontIdx = 1;
+function cycleFont(btn) {
+  fontIdx = (fontIdx + 1) % fonts.length;
+  btn.querySelector('.font-label').textContent = fonts[fontIdx].label;
+  const phone = document.getElementById('phone-protected');
+  if (phone) phone.querySelector('.tab-content').style.fontSize = fonts[fontIdx].size;
+  btn.style.borderColor = 'var(--cobalt)';
+  setTimeout(() => btn.style.borderColor = '', 300);
+}
+
+// ===== APPEARANCE TOGGLE =====
+function setAppearance(btn) {
+  btn.parentElement.querySelectorAll('.appearance-opt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ===== SLIDE TO SOS =====
+(function() {
+  const thumb = document.getElementById('sos-thumb');
+  if (!thumb) return;
+  const track = thumb.parentElement;
+  let dragging = false, startX = 0, left = 4;
+  const maxLeft = () => track.offsetWidth - thumb.offsetWidth - 4;
+
+  thumb.addEventListener('pointerdown', e => {
+    dragging = true; startX = e.clientX - left;
+    thumb.setPointerCapture(e.pointerId);
+    thumb.style.transition = 'none';
+  });
+  thumb.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    left = Math.max(4, Math.min(maxLeft(), e.clientX - startX));
+    thumb.style.left = left + 'px';
+  });
+  thumb.addEventListener('pointerup', e => {
+    if (!dragging) return; dragging = false;
+    thumb.style.transition = 'left .3s ease';
+    if (left > maxLeft() * 0.75) {
+      thumb.style.left = maxLeft() + 'px';
+      track.querySelector('.slide-sos-track').textContent = 'SOS ACTIVATED';
+      track.style.background = 'rgba(196,69,60,.5)';
+      thumb.style.background = '#C4453C';
+      setTimeout(() => {
+        thumb.style.left = '4px'; left = 4;
+        track.querySelector('.slide-sos-track').innerHTML = 'Slide to trigger SOS &raquo;';
+        track.style.background = '';
+        thumb.style.background = '';
+      }, 2500);
+    } else {
+      thumb.style.left = '4px'; left = 4;
+    }
+  });
+})();
+</script>
+</body>
+</html>
