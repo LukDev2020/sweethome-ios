@@ -57,6 +57,11 @@ final class LanguageManager: ObservableObject {
         bundle.localizedString(forKey: key, value: nil, table: nil)
     }
 
+    func localized(_ key: String, fallback: String) -> String {
+        let result = bundle.localizedString(forKey: key, value: fallback, table: nil)
+        return result == key ? fallback : result
+    }
+
     private static func detectLanguage() -> AppLanguage {
         guard let preferred = Locale.preferredLanguages.first else { return .english }
         if preferred.hasPrefix("zh") { return .chinese }

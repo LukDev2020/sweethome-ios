@@ -263,7 +263,13 @@ struct GuardianRecordsView: View {
                     .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
             )
             .padding(.horizontal, 16)
-            .padding(.bottom, 24)
+
+            // Emergency Yellow Pages
+            sectionHeader(langManager.localized("coverage_emergency", fallback: "Emergency Yellow Pages"))
+                .padding(.horizontal, 16)
+            EmergencyYellowPagesView()
+                .padding(.horizontal, 16)
+                .padding(.bottom, 24)
         }
         .padding(.top, 8)
     }
@@ -324,6 +330,12 @@ struct GuardianRecordsView: View {
             )
             .padding(.horizontal, 16)
 
+            // Emergency Yellow Pages
+            sectionHeader(langManager.localized("coverage_emergency", fallback: "Emergency Yellow Pages"))
+                .padding(.horizontal, 16)
+            EmergencyYellowPagesView()
+                .padding(.horizontal, 16)
+
             // Export
             VStack(alignment: .leading, spacing: 8) {
                 Text(langManager.localized("guardian.records.export"))
@@ -341,6 +353,18 @@ struct GuardianRecordsView: View {
             .padding(.bottom, 24)
         }
         .padding(.top, 4)
+    }
+
+    private func sectionHeader(_ title: String) -> some View {
+        HStack {
+            Text(title)
+                .font(.system(size: 13, weight: .bold))
+                .textCase(.uppercase)
+                .tracking(0.8)
+                .foregroundColor(ink.opacity(0.55))
+            Rectangle().fill(ink.opacity(0.06)).frame(height: 1)
+        }
+        .padding(.top, 12)
     }
 
     private func statBadge(value: String, label: String, color: Color) -> some View {

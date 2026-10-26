@@ -148,6 +148,12 @@ struct ProtectedHomeView: View {
                 globeSection
                 worldClocks
                     .padding(.top, 4)
+
+                // Quick action pills: Home Safe + Language + Font Size
+                QuickPillRow()
+                    .padding(.horizontal, 16)
+                    .padding(.top, 6)
+
                 locationCard
                     .padding(.top, 10)
                 sendLocationButton

@@ -43,6 +43,9 @@ import insuranceRoutes from "./routes/insurance";
 import consulateRoutes from "./routes/consulate";
 import voiceNoteRoutes from "./routes/voiceNote";
 import silentAlarmRoutes from "./routes/silentAlarm";
+import badgeRoutes from "./routes/badges";
+import widgetRoutes from "./routes/widget";
+import coverageRoutes from "./routes/coverage";
 import { createRateLimiter, RATE_LIMITS } from "./middleware/rateLimit";
 
 // --- Mount Routes ---
@@ -107,6 +110,11 @@ app.use("/v1/sos", voiceNoteRoutes);
 
 // Phase 13: Silent Alarm (沉默即报警)
 app.use("/v1/silent-alarm", silentAlarmRoutes);
+
+// Phase 14: Badge Counts, Widget Data, Coverage Info
+app.use("/v1/badges", badgeRoutes);
+app.use("/v1/widget", widgetRoutes);
+app.use("/v1/coverage", coverageRoutes);
 
 // --- Voice callback for Twilio ---
 // Multi-language TwiML responses based on query param or default

@@ -149,6 +149,17 @@ struct ProtectedRecordsView: View {
                 .padding(.top, 8)
 
                 timelineSection
+
+                // Emergency Yellow Pages
+                Text(langManager.localized("yp_title", fallback: "Emergency Yellow Pages"))
+                    .font(.system(size: 13, weight: .bold))
+                    .textCase(.uppercase)
+                    .tracking(0.8)
+                    .foregroundColor(ink.opacity(0.55))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 16)
+                EmergencyYellowPagesView()
+
                 exportPanel
                 upsellCard
             }

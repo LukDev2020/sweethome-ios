@@ -25,6 +25,7 @@ private struct AuthenticatedRootView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @AppStorage("onboardingComplete") private var onboardingComplete = false
     @AppStorage("setupWizardComplete") private var setupWizardComplete = false
+    @AppStorage("app_dark_mode") private var darkModeEnabled = false
     @ObservedObject private var biometric = BiometricAuthManager.shared
     @ObservedObject private var fontScale = FontScaleManager.shared
     @ObservedObject private var langManager = LanguageManager.shared
@@ -91,6 +92,7 @@ private struct AuthenticatedRootView: View {
                 }
             }
         }
+        .preferredColorScheme(darkModeEnabled ? .dark : .light)
         .id("\(fontScale.level.rawValue)-\(langManager.current.rawValue)")
     }
 

@@ -20,6 +20,7 @@ struct ProtectedSettingsView: View {
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
 
+    @AppStorage("app_dark_mode") private var darkModeEnabled = false
     @AppStorage("sos_longPress") private var longPressEnabled = true
     @AppStorage("sos_watch") private var watchEnabled = true
     @AppStorage("sos_silentMode") private var silentMode = false
@@ -155,6 +156,7 @@ struct ProtectedSettingsView: View {
                 securityPanel
                 languagePanel
                 fontSizePanel
+                darkModePanel
                 notificationPanel
                 dataPanel
                 legalPanel
@@ -657,6 +659,34 @@ struct ProtectedSettingsView: View {
             Text(langManager.localized("settings.fontsize.hint"))
                 .font(.scaled(size: 11))
                 .foregroundStyle(.secondary.opacity(0.7))
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    // MARK: - Dark Mode Panel
+
+    private var darkModePanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(langManager.localized("settings.appearance", fallback: "Appearance"))
+                .font(.scaled(size: 12))
+                .foregroundStyle(.secondary)
+            HStack {
+                Image(systemName: darkModeEnabled ? "moon.fill" : "sun.max.fill")
+                    .font(.scaled(size: 14))
+                    .foregroundStyle(darkModeEnabled ? .indigo : .orange)
+                    .frame(width: 20)
+                Text(langManager.localized("settings.darkMode", fallback: "Dark Mode"))
+                    .font(.scaled(size: 13))
+                Spacer()
+                Toggle("", isOn: $darkModeEnabled)
+                    .labelsHidden()
+                    .tint(safe)
+            }
+            .padding(.vertical, 2)
         }
         .padding(12)
         .background(

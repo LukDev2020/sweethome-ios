@@ -160,6 +160,18 @@
 		FCC401088C3543D5B4D8E40A /* E2ELocationEncryption.swift in Sources */ = {isa = PBXBuildFile; fileRef = 099EB6E94E794005BFD70016 /* E2ELocationEncryption.swift */; };
 		5FDE248BEB7F461394A83256 /* KeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7B6BDCCA1DB4D71BB081AEC /* KeyManager.swift */; };
 		A2F1E0D9C8B7A6F5E4D3C2B1 /* MLFallClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A6B7C8D9E0F1A2 /* MLFallClassifier.swift */; };
+		27B0B7CDEE2B49B18E8FDE32 /* FloatingSOSButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD670A9F667544F38781B41A /* FloatingSOSButton.swift */; };
+		1D0F0A554877406A9B2D7355 /* BatteryIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C54FBFA48A54BBFA4C1B499 /* BatteryIndicatorView.swift */; };
+		862F35BC5650451AB0F25C79 /* HomeSafePill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C0C843D3C714D578DFF5690 /* HomeSafePill.swift */; };
+		B31C2969CC6A4B1B9786BAE8 /* ReactionBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78D285E5A8124670ACBD6168 /* ReactionBarView.swift */; };
+		F3DCD539ABF44643B97B26C7 /* LocationShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D406A35BC93841D6B5C20657 /* LocationShareCardView.swift */; };
+		2FC0842B41A54B05BF837FDD /* WeatherCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F14713FC3A945F1BDB7E1C4 /* WeatherCardView.swift */; };
+		26A969A0A650465DBF322EDE /* AQICardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547D595952554712916A1CBB /* AQICardView.swift */; };
+		7FD9111E1828425CAE596D67 /* NearbyMedicalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B71440EA719B4424A9482450 /* NearbyMedicalView.swift */; };
+		A55FEA65AAA9438CAC9E5B19 /* EmergencyYellowPagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0DD42673F884099A22B8D95 /* EmergencyYellowPagesView.swift */; };
+		A564FF58AC074932AC628DC6 /* DistanceChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7173B2045F3B489BBE9829FD /* DistanceChip.swift */; };
+		1DF0F898F11E477AB44333D8 /* ProfileHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B42A39FB29524D9EB5A92D30 /* ProfileHeaderView.swift */; };
+		76B5D435EF724E4B9C29D909 /* QuickPillRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0388C3F37466486A86EE7FF1 /* QuickPillRow.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -348,6 +360,18 @@
 		099EB6E94E794005BFD70016 /* E2ELocationEncryption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E2ELocationEncryption.swift; sourceTree = "<group>"; };
 		D7B6BDCCA1DB4D71BB081AEC /* KeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyManager.swift; sourceTree = "<group>"; };
 		B1C2D3E4F5A6B7C8D9E0F1A2 /* MLFallClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLFallClassifier.swift; sourceTree = "<group>"; };
+		DD670A9F667544F38781B41A /* FloatingSOSButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingSOSButton.swift; sourceTree = "<group>"; };
+		9C54FBFA48A54BBFA4C1B499 /* BatteryIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryIndicatorView.swift; sourceTree = "<group>"; };
+		1C0C843D3C714D578DFF5690 /* HomeSafePill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeSafePill.swift; sourceTree = "<group>"; };
+		78D285E5A8124670ACBD6168 /* ReactionBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionBarView.swift; sourceTree = "<group>"; };
+		D406A35BC93841D6B5C20657 /* LocationShareCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationShareCardView.swift; sourceTree = "<group>"; };
+		0F14713FC3A945F1BDB7E1C4 /* WeatherCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherCardView.swift; sourceTree = "<group>"; };
+		547D595952554712916A1CBB /* AQICardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AQICardView.swift; sourceTree = "<group>"; };
+		B71440EA719B4424A9482450 /* NearbyMedicalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbyMedicalView.swift; sourceTree = "<group>"; };
+		B0DD42673F884099A22B8D95 /* EmergencyYellowPagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyYellowPagesView.swift; sourceTree = "<group>"; };
+		7173B2045F3B489BBE9829FD /* DistanceChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistanceChip.swift; sourceTree = "<group>"; };
+		B42A39FB29524D9EB5A92D30 /* ProfileHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileHeaderView.swift; sourceTree = "<group>"; };
+		0388C3F37466486A86EE7FF1 /* QuickPillRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickPillRow.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -566,6 +590,18 @@
 		77A7B02D23FB0255C4D07867 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				DD670A9F667544F38781B41A /* FloatingSOSButton.swift */,
+				9C54FBFA48A54BBFA4C1B499 /* BatteryIndicatorView.swift */,
+				1C0C843D3C714D578DFF5690 /* HomeSafePill.swift */,
+				78D285E5A8124670ACBD6168 /* ReactionBarView.swift */,
+				D406A35BC93841D6B5C20657 /* LocationShareCardView.swift */,
+				0F14713FC3A945F1BDB7E1C4 /* WeatherCardView.swift */,
+				547D595952554712916A1CBB /* AQICardView.swift */,
+				B71440EA719B4424A9482450 /* NearbyMedicalView.swift */,
+				B0DD42673F884099A22B8D95 /* EmergencyYellowPagesView.swift */,
+				7173B2045F3B489BBE9829FD /* DistanceChip.swift */,
+				B42A39FB29524D9EB5A92D30 /* ProfileHeaderView.swift */,
+				0388C3F37466486A86EE7FF1 /* QuickPillRow.swift */,
 				F64A2DB8BEDB820B83E3C2C1 /* ConsulateView.swift */,
 				8130AA6130EF43DD276D5249 /* SubscriptionGateView.swift */,
 				50C6D87FF7D442419388289E /* DegradationBannerView.swift */,
@@ -1028,6 +1064,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27B0B7CDEE2B49B18E8FDE32 /* FloatingSOSButton.swift in Sources */,
+				1D0F0A554877406A9B2D7355 /* BatteryIndicatorView.swift in Sources */,
+				862F35BC5650451AB0F25C79 /* HomeSafePill.swift in Sources */,
+				B31C2969CC6A4B1B9786BAE8 /* ReactionBarView.swift in Sources */,
+				F3DCD539ABF44643B97B26C7 /* LocationShareCardView.swift in Sources */,
+				2FC0842B41A54B05BF837FDD /* WeatherCardView.swift in Sources */,
+				26A969A0A650465DBF322EDE /* AQICardView.swift in Sources */,
+				7FD9111E1828425CAE596D67 /* NearbyMedicalView.swift in Sources */,
+				A55FEA65AAA9438CAC9E5B19 /* EmergencyYellowPagesView.swift in Sources */,
+				A564FF58AC074932AC628DC6 /* DistanceChip.swift in Sources */,
+				1DF0F898F11E477AB44333D8 /* ProfileHeaderView.swift in Sources */,
+				76B5D435EF724E4B9C29D909 /* QuickPillRow.swift in Sources */,
 				96A2973D8E8E4D03F87C9086 /* APIClient.swift in Sources */,
 				99541A8CAB47148212819EA3 /* APIEndpoints.swift in Sources */,
 				F4098E23D57249FA9DBC132D /* AdaptiveLocationManager.swift in Sources */,

@@ -71,6 +71,30 @@ struct ProtectedCoverageView: View {
                 .padding(.top, 8)
                 sampleDataBanner
                 localResourcesPanel
+
+                // Weather
+                sectionHeader(langManager.localized("coverage_weather", fallback: "Weather"))
+                WeatherCardView()
+
+                // Air Quality
+                AQICardView(value: 32, label: "Good")
+
+                // Safety Advisory
+                sectionHeader(langManager.localized("coverage_advisory", fallback: "Safety Advisory"))
+                safetyAdvisoryCard
+
+                // Nearby Medical
+                sectionHeader(langManager.localized("coverage_medical", fallback: "Nearby Medical"))
+                NearbyMedicalView()
+
+                // Emergency Numbers
+                sectionHeader(langManager.localized("coverage_emergency", fallback: "Emergency Numbers"))
+                emergencyNumbersCard
+
+                // Local Info
+                sectionHeader(langManager.localized("coverage_local_info", fallback: "Local Info"))
+                localInfoGrid
+
                 offlinePackPanel
                 weakNetworkPanel
                 Text(langManager.localized("protected.coverage.footer"))
@@ -198,5 +222,82 @@ struct ProtectedCoverageView: View {
                 .tint(safe)
         }
         .padding(.vertical, 2)
+    }
+
+    private func sectionHeader(_ title: String) -> some View {
+        HStack {
+            Text(title)
+                .font(.system(size: 13, weight: .bold))
+                .textCase(.uppercase)
+                .tracking(0.8)
+                .foregroundColor(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.55))
+            Rectangle().fill(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.06)).frame(height: 1)
+        }
+        .padding(.top, 12)
+    }
+
+    private var safetyAdvisoryCard: some View {
+        HStack(alignment: .top, spacing: 10) {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(safe)
+                .frame(width: 36, height: 36)
+                .overlay(
+                    Text("1").font(.system(size: 16, weight: .heavy)).foregroundColor(.white)
+                )
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Level 1 \u{2014} Exercise Normal Precautions")
+                    .font(.system(size: 12, weight: .semibold))
+                Text("\(countryName) is generally safe. Standard safety measures apply.")
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(12)
+        .background(safe.opacity(0.06))
+        .cornerRadius(16)
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(safe.opacity(0.2), lineWidth: 1))
+    }
+
+    private var emergencyNumbersCard: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(langManager.localized("coverage_local_emergency", fallback: "Local Emergency Services"))
+                .font(.system(size: 12, weight: .semibold))
+            HStack(spacing: 6) {
+                Text("Police: 911").font(.system(size: 10)).padding(.horizontal, 8).padding(.vertical, 4).background(Color(.secondarySystemBackground)).cornerRadius(6)
+                Text("Fire: 911").font(.system(size: 10)).padding(.horizontal, 8).padding(.vertical, 4).background(Color(.secondarySystemBackground)).cornerRadius(6)
+                Text("Ambulance: 911").font(.system(size: 10)).padding(.horizontal, 8).padding(.vertical, 4).background(Color(.secondarySystemBackground)).cornerRadius(6)
+            }
+        }
+        .padding(12)
+        .background(Color(.secondarySystemBackground).opacity(0.5))
+        .cornerRadius(16)
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(.separator).opacity(0.3), lineWidth: 1))
+    }
+
+    private var localInfoGrid: some View {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+            localInfoCard(icon: "dollarsign.circle", label: "Currency", value: "CAD $")
+            localInfoCard(icon: "globe", label: "Language", value: "EN / FR")
+            localInfoCard(icon: "powerplug", label: "Power", value: "120V / Type A")
+            localInfoCard(icon: "phone", label: "Country Code", value: "+1")
+        }
+    }
+
+    private func localInfoCard(icon: String, label: String, value: String) -> some View {
+        VStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.system(size: 20))
+                .foregroundColor(.secondary)
+            Text(label)
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundColor(.secondary)
+            Text(value)
+                .font(.system(size: 12, weight: .bold))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(10)
+        .background(Color(.secondarySystemBackground).opacity(0.5))
+        .cornerRadius(10)
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(.separator).opacity(0.3), lineWidth: 1))
     }
 }

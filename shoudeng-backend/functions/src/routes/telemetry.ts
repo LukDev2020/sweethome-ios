@@ -54,6 +54,18 @@ router.post("/heartbeat", async (req: Request, res: Response) => {
       accuracy,
     });
 
+    // Also write battery level to Firestore for real-time access (widget, guardian view)
+    if (batteryLevel !== undefined) {
+      await db.collection("user_telemetry").doc(userId).set(
+        {
+          batteryLevel,
+          batteryState: batteryState || null,
+          lastHeartbeat: admin.firestore.Timestamp.now(),
+        },
+        { merge: true }
+      );
+    }
+
     res.json({ success: true });
   } catch (error) {
     console.error("[Telemetry] heartbeat insert error:", error);

@@ -22,15 +22,22 @@ struct GuardianTabView: View {
     }
 
     var body: some View {
-        DuoAdaptiveTabContainer(
-            selectedTab: $selectedTab,
-            tabs: tabs,
-            tintColor: pro,
-            showInviteButton: true,
-            onInvite: { showInvite = true }
-        )
-        .sheet(isPresented: $showInvite) {
-            InviteGuardianView()
+        ZStack(alignment: .bottomTrailing) {
+            DuoAdaptiveTabContainer(
+                selectedTab: $selectedTab,
+                tabs: tabs,
+                tintColor: pro,
+                showInviteButton: true,
+                onInvite: { showInvite = true }
+            )
+            .sheet(isPresented: $showInvite) {
+                InviteGuardianView()
+            }
+
+            // Persistent floating SOS button — always accessible
+            FloatingSOSButton()
+                .padding(.trailing, 20)
+                .padding(.bottom, 96)
         }
     }
 }

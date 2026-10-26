@@ -604,6 +604,9 @@ struct MessageBubbleView: View {
                         .foregroundStyle(.tertiary)
                 }
 
+                // Reaction bar
+                ReactionBarView(postId: post.id)
+
                 // Comment count / reply button
                 if post.commentCount > 0 || showComments {
                     Button {
