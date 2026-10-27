@@ -145,6 +145,10 @@ struct ProtectedHomeView: View {
     private var compactLayout: some View {
         ScrollView {
             VStack(spacing: 0) {
+                liveTrackingBanner
+                    .padding(.horizontal, 16)
+                    .padding(.top, 4)
+
                 globeSection
                 worldClocks
                     .padding(.top, 4)
@@ -159,9 +163,6 @@ struct ProtectedHomeView: View {
                 sendLocationButton
                     .padding(.horizontal, 16)
                     .padding(.top, 6)
-                trackingPauseToggle
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
                 sosButton
                     .padding(.horizontal, 16)
                     .padding(.top, 12)
@@ -222,6 +223,10 @@ struct ProtectedHomeView: View {
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
+
+                    liveTrackingBanner
+                        .padding(.horizontal, 16)
+                        .padding(.top, 4)
 
                     globeSection
                     worldClocks
@@ -526,7 +531,7 @@ struct ProtectedHomeView: View {
         return LocationCardView(
             pins: pins,
             centerCoordinate: myCoord,
-            lastUpdateMinutes: deviceLocation != nil ? Int(Date().timeIntervalSince(deviceLocation!.timestamp) / 60) : nil,
+            lastUpdateMinutes: deviceLocation.map { Int(Date().timeIntervalSince($0.timestamp) / 60) },
             label: lang.localized("protected.home.myLocation"),
             focusedPinId: $mapFocusId,
             locationService: coordinator.locationService
@@ -595,6 +600,110 @@ struct ProtectedHomeView: View {
 
     private static func countryName(_ code: String) -> String {
         Locale.current.localizedString(forRegionCode: code) ?? ""
+    }
+
+    // MARK: - Live Tracking Banner (loc-banner from prototype)
+
+    private var liveTrackingBanner: some View {
+        let isPaused = coordinator.isTrackingPaused
+        let deviceLocation = coordinator.locationManager.bestAvailableLocation
+        let guardianCount = coordinator.myGuardians.count
+
+        return Button {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            withAnimation(.easeInOut(duration: 0.3)) {
+                if isPaused {
+                    coordinator.resumeTracking()
+                } else {
+                    coordinator.pauseTracking()
+                }
+            }
+        } label: {
+            ZStack(alignment: .topTrailing) {
+                VStack(alignment: .leading, spacing: 6) {
+                    // Status badge
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(isPaused ? alert : safe)
+                            .frame(width: 8, height: 8)
+                            .overlay(
+                                Circle()
+                                    .fill(isPaused ? alert.opacity(0.3) : safe.opacity(0.3))
+                                    .frame(width: 16, height: 16)
+                            )
+
+                        Text(isPaused
+                             ? lang.localized("tracking.banner.paused", fallback: "Live Tracking: PAUSED")
+                             : lang.localized("tracking.banner.on", fallback: "Live Tracking: ON"))
+                            .font(.scaled(size: 13, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+
+                    // Address
+                    if let user = coordinator.currentUser, !user.cityName.isEmpty {
+                        Text(user.cityName)
+                            .font(.scaled(size: 12))
+                            .foregroundStyle(.white.opacity(0.85))
+                    }
+
+                    // Coordinates
+                    if let loc = deviceLocation {
+                        let lat = loc.coordinate.latitude
+                        let lng = loc.coordinate.longitude
+                        let latDir = lat >= 0 ? "N" : "S"
+                        let lngDir = lng >= 0 ? "E" : "W"
+                        Text(String(format: "%.4f° %@ , %.4f° %@", abs(lat), latDir, abs(lng), lngDir))
+                            .font(.system(size: 11, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.6))
+                    }
+
+                    // Update time + guardian count
+                    HStack(spacing: 4) {
+                        if let loc = deviceLocation {
+                            let mins = Int(Date().timeIntervalSince(loc.timestamp) / 60)
+                            Text(mins < 1
+                                 ? lang.localized("tracking.banner.justNow", fallback: "Updated just now")
+                                 : String(format: lang.localized("tracking.banner.minsAgo", fallback: "Updated %d min ago"), mins))
+                                .font(.scaled(size: 11))
+                                .foregroundStyle(.white.opacity(0.55))
+                        }
+                        if guardianCount > 0 {
+                            Text("·")
+                                .font(.scaled(size: 11))
+                                .foregroundStyle(.white.opacity(0.35))
+                            Text(String(format: lang.localized("tracking.banner.sharing", fallback: "Sharing with %d guardians"), guardianCount))
+                                .font(.scaled(size: 11))
+                                .foregroundStyle(.white.opacity(0.55))
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                // Toggle indicator
+                ZStack {
+                    Capsule()
+                        .fill(isPaused ? alert.opacity(0.4) : safe.opacity(0.4))
+                        .frame(width: 44, height: 24)
+                    Circle()
+                        .fill(.white)
+                        .frame(width: 20, height: 20)
+                        .offset(x: isPaused ? -10 : 10)
+                        .animation(.easeInOut(duration: 0.2), value: isPaused)
+                }
+                .padding(.top, 2)
+            }
+            .padding(16)
+            .background(
+                LinearGradient(
+                    colors: isPaused
+                        ? [Color(red: 50/255, green: 30/255, blue: 30/255), Color(red: 80/255, green: 40/255, blue: 35/255)]
+                        : [Color(red: 18/255, green: 32/255, blue: 58/255), Color(red: 30/255, green: 52/255, blue: 80/255)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+        }
     }
 
     // MARK: - Tracking Pause Toggle

@@ -1173,7 +1173,7 @@ final class AppCoordinator: ObservableObject {
         }
     }
 
-    func createFamilyPost(text: String, mediaURLs: [String]) async throws {
+    func createFamilyPost(text: String, mediaURLs: [String], latitude: Double? = nil, longitude: Double? = nil, locationName: String? = nil) async throws {
         let response: CreatePostResponse = try await apiClient.post(
             "/v1/family/posts",
             body: CreatePostRequest(text: text, mediaURLs: mediaURLs)
@@ -1189,7 +1189,10 @@ final class AppCoordinator: ObservableObject {
             mediaURLs: mediaURLs,
             createdAt: Date(),
             comments: [],
-            commentCount: 0
+            commentCount: 0,
+            latitude: latitude,
+            longitude: longitude,
+            locationName: locationName
         )
         await MainActor.run {
             familyPosts.insert(post, at: 0)

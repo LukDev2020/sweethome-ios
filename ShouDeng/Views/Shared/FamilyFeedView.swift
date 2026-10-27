@@ -472,9 +472,15 @@ struct FamilyFeedView: View {
             return
         }
 
+        // Capture current location for the message
+        let loc = coordinator.locationManager.bestAvailableLocation
+        let lat = loc?.coordinate.latitude
+        let lng = loc?.coordinate.longitude
+        let locName = coordinator.currentUser?.cityName
+
         // Create post — if API fails, add locally so chat still works
         do {
-            try await coordinator.createFamilyPost(text: text, mediaURLs: finalMediaURLs)
+            try await coordinator.createFamilyPost(text: text, mediaURLs: finalMediaURLs, latitude: lat, longitude: lng, locationName: locName)
         } catch {
             #if DEBUG
             print("[FamilyFeed] Send failed (adding locally): \(error)")
@@ -489,7 +495,10 @@ struct FamilyFeedView: View {
                 mediaURLs: finalMediaURLs,
                 createdAt: Date(),
                 comments: [],
-                commentCount: 0
+                commentCount: 0,
+                latitude: lat,
+                longitude: lng,
+                locationName: locName
             )
             await MainActor.run {
                 coordinator.familyPosts.insert(localPost, at: 0)
@@ -532,7 +541,7 @@ struct MessageBubbleView: View {
             }
 
             VStack(alignment: isOwnMessage ? .trailing : .leading, spacing: 3) {
-                // Name + time
+                // Name + time + location
                 if !isOwnMessage {
                     HStack(spacing: 4) {
                         Text(post.authorName)
@@ -541,6 +550,14 @@ struct MessageBubbleView: View {
                         Text(timeString(post.createdAt))
                             .font(.scaled(size: 12))
                             .foregroundStyle(.tertiary)
+                        if let locName = post.locationName, !locName.isEmpty {
+                            Image(systemName: "location.fill")
+                                .font(.system(size: 8))
+                                .foregroundStyle(.tertiary)
+                            Text(locName)
+                                .font(.scaled(size: 11))
+                                .foregroundStyle(.tertiary)
+                        }
                     }
                 }
 
@@ -597,11 +614,21 @@ struct MessageBubbleView: View {
                     Button(LanguageManager.shared.localized("familyFeed.cancel"), role: .cancel) {}
                 }
 
-                // Time for own messages
+                // Time + location for own messages
                 if isOwnMessage {
-                    Text(timeString(post.createdAt))
-                        .font(.scaled(size: 12))
-                        .foregroundStyle(.tertiary)
+                    HStack(spacing: 4) {
+                        Text(timeString(post.createdAt))
+                            .font(.scaled(size: 12))
+                            .foregroundStyle(.tertiary)
+                        if let locName = post.locationName, !locName.isEmpty {
+                            Image(systemName: "location.fill")
+                                .font(.system(size: 8))
+                                .foregroundStyle(.tertiary)
+                            Text(locName)
+                                .font(.scaled(size: 11))
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
                 }
 
                 // Reaction bar

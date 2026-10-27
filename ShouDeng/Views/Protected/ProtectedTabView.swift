@@ -8,7 +8,7 @@ import SwiftUI
 
 struct ProtectedTabView: View {
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
-    @AppStorage("debug_selected_tab") private var selectedTab = 0
+    @AppStorage("protected_selected_tab") private var selectedTab = 0
     @ObservedObject private var lang = LanguageManager.shared
 
     private var tabs: [DuoTabItem] {

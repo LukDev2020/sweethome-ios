@@ -7,7 +7,7 @@ import SwiftUI
 // On Duo inner screen, switches to vertical rail layout.
 
 struct GuardianTabView: View {
-    @AppStorage("debug_selected_tab") private var selectedTab = 0
+    @AppStorage("guardian_selected_tab") private var selectedTab = 0
     @State private var showInvite = false
     @ObservedObject private var lang = LanguageManager.shared
     private let pro = Color(red: 107/255, green: 92/255, blue: 165/255)

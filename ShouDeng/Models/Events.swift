@@ -156,6 +156,9 @@ struct FamilyPost: Codable, Identifiable {
     let createdAt: Date
     var comments: [FamilyComment]
     var commentCount: Int
+    var latitude: Double?
+    var longitude: Double?
+    var locationName: String?
 }
 
 struct FamilyComment: Codable, Identifiable {

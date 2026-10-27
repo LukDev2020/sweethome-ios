@@ -464,8 +464,10 @@ struct LocationCardView: View {
         guard pins.count > 1 else { return 0.05 }
         let lats = pins.map(\.coordinate.latitude)
         let lons = pins.map(\.coordinate.longitude)
-        let latSpan = (lats.max()! - lats.min()!) * 1.5
-        let lonSpan = (lons.max()! - lons.min()!) * 1.5
+        guard let maxLat = lats.max(), let minLat = lats.min(),
+              let maxLon = lons.max(), let minLon = lons.min() else { return 0.05 }
+        let latSpan = (maxLat - minLat) * 1.5
+        let lonSpan = (maxLon - minLon) * 1.5
         return max(max(latSpan, lonSpan), 0.02)
     }
 
