@@ -69,6 +69,14 @@ router.post("/heartbeat", async (req, res) => {
             longitude,
             accuracy,
         });
+        // Also write battery level to Firestore for real-time access (widget, guardian view)
+        if (batteryLevel !== undefined) {
+            await db.collection("user_telemetry").doc(userId).set({
+                batteryLevel,
+                batteryState: batteryState || null,
+                lastHeartbeat: admin.firestore.Timestamp.now(),
+            }, { merge: true });
+        }
         res.json({ success: true });
     }
     catch (error) {
@@ -83,7 +91,7 @@ router.post("/heartbeat", async (req, res) => {
  * Written to BigQuery for time-series and trail reconstruction.
  */
 router.post("/location/report", async (req, res) => {
-    const { userId, latitude, longitude, accuracy, altitude, speed, timestamp, isInSafeZone, safeZoneName, } = req.body;
+    const { userId, latitude, longitude, accuracy, altitude, speed, timestamp, isInSafeZone, safeZoneName, activityType, encryptedPayload, } = req.body;
     if (!userId || latitude === undefined || longitude === undefined) {
         res
             .status(400)
@@ -105,6 +113,8 @@ router.post("/location/report", async (req, res) => {
             timestamp: timestamp || new Date().toISOString(),
             isInSafeZone,
             safeZoneName,
+            ...(activityType && { activityType }),
+            ...(encryptedPayload && { encryptedPayload }),
         });
         res.json({ success: true });
     }
@@ -172,6 +182,56 @@ router.post("/checkin", async (req, res) => {
         console.error("[Telemetry] checkin error:", error);
         res.status(500).json({ error: "Failed to record check-in" });
     }
+});
+/**
+ * POST /v1/location/batch
+ * Accept an array of queued location reports (from offline queue).
+ * Reduces round-trips when device comes back online after being
+ * in a tunnel, airplane, or poor connectivity area.
+ */
+router.post("/location/batch", async (req, res) => {
+    const { reports } = req.body;
+    if (!Array.isArray(reports) || reports.length === 0) {
+        res.status(400).json({ error: "reports array is required" });
+        return;
+    }
+    // Cap at 100 reports per batch to prevent abuse
+    const batch = reports.slice(0, 100);
+    let successCount = 0;
+    let errorCount = 0;
+    for (const report of batch) {
+        const { userId, latitude, longitude, accuracy, altitude, speed, timestamp, isInSafeZone, safeZoneName, activityType, encryptedPayload, } = report;
+        // Skip reports that don't belong to the authenticated user
+        if (userId !== req.uid) {
+            errorCount++;
+            continue;
+        }
+        if (latitude === undefined || longitude === undefined) {
+            errorCount++;
+            continue;
+        }
+        try {
+            await (0, bigquery_1.insertLocationReport)({
+                userId,
+                latitude,
+                longitude,
+                accuracy: accuracy || 0,
+                altitude,
+                speed,
+                timestamp: timestamp || new Date().toISOString(),
+                isInSafeZone,
+                safeZoneName,
+                ...(activityType && { activityType }),
+                ...(encryptedPayload && { encryptedPayload }),
+            });
+            successCount++;
+        }
+        catch (error) {
+            errorCount++;
+            // Continue processing — don't fail the whole batch
+        }
+    }
+    res.json({ success: true, processed: successCount, errors: errorCount });
 });
 exports.default = router;
 //# sourceMappingURL=telemetry.js.map

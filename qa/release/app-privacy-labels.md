@@ -1,4 +1,4 @@
-# App Privacy Labels — Luma (守灯) v1.0.0
+# App Privacy Labels — Lantern Care (守灯) v1.0.0
 
 Cross-reference: must match `ShouDeng/PrivacyInfo.xcprivacy` exactly.
 

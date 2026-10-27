@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkHomeTimerExpiry = exports.computeIntegrityProof = exports.ttlCleanup = exports.checkCheckinOverdue = exports.checkHeartbeatMissing = exports.onSOSCreated = exports.api = void 0;
+exports.checkSilentAlarms = exports.checkHomeTimerExpiry = exports.computeIntegrityProof = exports.ttlCleanup = exports.checkCheckinOverdue = exports.checkHeartbeatMissing = exports.onSOSCreated = exports.api = void 0;
 const admin = __importStar(require("firebase-admin"));
 const functions = __importStar(require("firebase-functions"));
 const express_1 = __importDefault(require("express"));
@@ -75,6 +75,11 @@ const emergencyText_1 = __importDefault(require("./routes/emergencyText"));
 const organization_1 = __importDefault(require("./routes/organization"));
 const insurance_1 = __importDefault(require("./routes/insurance"));
 const consulate_1 = __importDefault(require("./routes/consulate"));
+const voiceNote_1 = __importDefault(require("./routes/voiceNote"));
+const silentAlarm_1 = __importDefault(require("./routes/silentAlarm"));
+const badges_1 = __importDefault(require("./routes/badges"));
+const widget_1 = __importDefault(require("./routes/widget"));
+const coverage_1 = __importDefault(require("./routes/coverage"));
 const rateLimit_1 = require("./middleware/rateLimit");
 // --- Mount Routes ---
 // Phase 1: Auth & Users
@@ -118,12 +123,20 @@ app.use("/v1/org", organization_1.default);
 app.use("/v1/insurance", insurance_1.default);
 // Phase 11: Consulate Hotline (global embassy data + user selection)
 app.use("/v1/consulate", consulate_1.default);
+// Phase 12: SOS Voice Notes
+app.use("/v1/sos", voiceNote_1.default);
+// Phase 13: Silent Alarm (沉默即报警)
+app.use("/v1/silent-alarm", silentAlarm_1.default);
+// Phase 14: Badge Counts, Widget Data, Coverage Info
+app.use("/v1/badges", badges_1.default);
+app.use("/v1/widget", widget_1.default);
+app.use("/v1/coverage", coverage_1.default);
 // --- Voice callback for Twilio ---
 // Multi-language TwiML responses based on query param or default
 const voiceMessages = {
     zh: { lang: "zh-CN", ack: "已收到。请打开守灯应用查看详情并确认接手。", invalid: "无效按键。" },
-    en: { lang: "en-US", ack: "Acknowledged. Please open the Luma app to view details and take over.", invalid: "Invalid key." },
-    fr: { lang: "fr-FR", ack: "Reçu. Veuillez ouvrir l'application Luma pour voir les détails et prendre en charge.", invalid: "Touche invalide." },
+    en: { lang: "en-US", ack: "Acknowledged. Please open the Lantern Care app to view details and take over.", invalid: "Invalid key." },
+    fr: { lang: "fr-FR", ack: "Reçu. Veuillez ouvrir l'application Lantern Care pour voir les détails et prendre en charge.", invalid: "Touche invalide." },
 };
 app.post("/v1/voice-callback", async (req, res) => {
     const { Digits, CallSid } = req.body;
@@ -206,4 +219,6 @@ var integrityProof_1 = require("./scheduled/integrityProof");
 Object.defineProperty(exports, "computeIntegrityProof", { enumerable: true, get: function () { return integrityProof_1.computeIntegrityProof; } });
 var homeTimerCheck_1 = require("./scheduled/homeTimerCheck");
 Object.defineProperty(exports, "checkHomeTimerExpiry", { enumerable: true, get: function () { return homeTimerCheck_1.checkHomeTimerExpiry; } });
+var silentAlarmCheck_1 = require("./scheduled/silentAlarmCheck");
+Object.defineProperty(exports, "checkSilentAlarms", { enumerable: true, get: function () { return silentAlarmCheck_1.checkSilentAlarms; } });
 //# sourceMappingURL=index.js.map

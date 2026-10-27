@@ -1,9 +1,9 @@
-# App Store Review Notes — Luma (守灯) v1.0.0
+# App Store Review Notes — Lantern Care (守灯) v1.0.0
 
 ## Background Location
 
 ### Why "Always" is required
-Luma is a passive family safety monitoring app. The core value proposition depends on continuous location availability: if a user falls or triggers SOS, their family needs to see where they are — even if the app is in the background or the screen is locked. Safe-zone entry/exit monitoring (geofencing) also requires background location.
+Lantern Care is a passive family safety monitoring app. The core value proposition depends on continuous location availability: if a user falls or triggers SOS, their family needs to see where they are — even if the app is in the background or the screen is locked. Safe-zone entry/exit monitoring (geofencing) also requires background location.
 
 ### What happens with "While In Use"
 If the user downgrades to "While In Use":
@@ -14,12 +14,12 @@ If the user downgrades to "While In Use":
 - SOS still works (foreground) but location may be outdated
 
 ### How to disable
-- Settings > Privacy & Security > Location Services > Luma > Never
+- Settings > Privacy & Security > Location Services > Lantern Care > Never
 - In-app: Settings > toggle off location sharing (takes effect after 6-hour safety delay)
 - The 6-hour delay is a duress protection feature — documented in onboarding disclaimer screen 3
 
 ### Consent flow
-1. Onboarding screen 1: "Luma is not an emergency service" (must acknowledge)
+1. Onboarding screen 1: "Lantern Care is not an emergency service" (must acknowledge)
 2. Onboarding screen 2: "We only see what safety requires" (must acknowledge)
 3. Onboarding screen 3: "You are in control" including 6-hour delay (must acknowledge)
 4. In-app feature disclosure for Location (opt-in consent, logged with version)

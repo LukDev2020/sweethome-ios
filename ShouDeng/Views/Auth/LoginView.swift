@@ -288,7 +288,7 @@ struct LoginView: View {
                     .tracking(1.5)
                     .padding(.top, 10)
 
-                Text(lang.current == .chinese ? "Luma" : "守灯")
+                Text(lang.current == .chinese ? "Lantern Care" : "守灯")
                     .font(.scaled(size: 12, weight: .medium))
                     .foregroundStyle(Color(red: 26/255, green: 106/255, blue: 138/255))
                     .tracking(3.5)

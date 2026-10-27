@@ -1,17 +1,17 @@
-CFBundleDisplayName = "Luma";
-CFBundleName = "Luma";
+CFBundleDisplayName = "Lantern Care";
+CFBundleName = "Lantern Care";
 
 /* Localisation — Toujours */
-NSLocationAlwaysAndWhenInUseUsageDescription = "Luma partage votre position avec les membres de la famille que vous choisissez, afin qu'ils puissent vous joindre en cas d'urgence. La position est aussi utilisee pour les notifications de zone securisee. Le partage ne commence qu'apres votre acceptation dans l'application.";
+NSLocationAlwaysAndWhenInUseUsageDescription = "Lantern Care partage votre position avec les membres de la famille que vous choisissez, afin qu'ils puissent vous joindre en cas d'urgence. La position est aussi utilisee pour les notifications de zone securisee. Le partage ne commence qu'apres votre acceptation dans l'application.";
 
 /* Localisation — En cours d'utilisation */
-NSLocationWhenInUseUsageDescription = "Luma utilise votre position pour afficher ou vous etes sur la carte et pour l'envoyer aux membres de votre famille choisis lors d'un SOS. Utilise uniquement apres votre consentement dans l'application.";
+NSLocationWhenInUseUsageDescription = "Lantern Care utilise votre position pour afficher ou vous etes sur la carte et pour l'envoyer aux membres de votre famille choisis lors d'un SOS. Utilise uniquement apres votre consentement dans l'application.";
 
 /* Capteurs de mouvement */
-NSMotionUsageDescription = "Luma utilise l'accelerometre pour detecter les chutes possibles. En cas de detection, vous avez 60 secondes pour annuler l'alerte avant que votre famille soit notifiee. Cette fonction ne s'active qu'apres activation dans l'application.";
+NSMotionUsageDescription = "Lantern Care utilise l'accelerometre pour detecter les chutes possibles. En cas de detection, vous avez 60 secondes pour annuler l'alerte avant que votre famille soit notifiee. Cette fonction ne s'active qu'apres activation dans l'application.";
 
 /* Face ID */
-NSFaceIDUsageDescription = "Luma utilise Face ID pour verifier votre identite et proteger l'acces a vos donnees de securite familiale.";
+NSFaceIDUsageDescription = "Lantern Care utilise Face ID pour verifier votre identite et proteger l'acces a vos donnees de securite familiale.";
 
 /* Microphone */
 NSMicrophoneUsageDescription = "Pendant un SOS actif, le microphone peut enregistrer l'audio ambiant pour aider vos proches a evaluer la situation. L'enregistrement ne demarre que si vous avez active cette option et que la loi locale le permet.";

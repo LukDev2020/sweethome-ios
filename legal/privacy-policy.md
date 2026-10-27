@@ -1,4 +1,4 @@
-# Privacy Policy — Luma (守灯)
+# Privacy Policy — Lantern Care (守灯)
 **DRAFT FOR LEGAL REVIEW**
 
 *Last updated: 2026-10-20*
@@ -9,7 +9,7 @@
 ## English
 
 ### 1. Who We Are
-Luma is operated by Vela Care Technology (15407168 Canada Inc.), Ontario, Canada. Contact: privacy@shoudeng.app
+Lantern Care is operated by Vela Care Technology (15407168 Canada Inc.), Ontario, Canada. Contact: privacy@shoudeng.app
 
 ### 2. What We Collect and Why
 
@@ -58,7 +58,7 @@ We do NOT use your data for advertising, profiling, or sale to third parties.
 - **Withdraw consent**: Disable any sharing feature at any time (6-hour safety delay applies)
 
 ### 7. Children
-Luma is not directed at children under 13. We do not knowingly collect data from children.
+Lantern Care is not directed at children under 13. We do not knowingly collect data from children.
 
 ### 8. Changes
 We will notify you of material changes via in-app notification and update the version number of this policy.
@@ -68,7 +68,7 @@ We will notify you of material changes via in-app notification and update the ve
 ## Francais
 
 ### 1. Qui sommes-nous
-Luma est exploite par Vela Care Technology (15407168 Canada Inc.), Ontario, Canada. Contact : privacy@shoudeng.app
+Lantern Care est exploite par Vela Care Technology (15407168 Canada Inc.), Ontario, Canada. Contact : privacy@shoudeng.app
 
 ### 2. Donnees collectees et finalites
 

@@ -43,10 +43,10 @@ enum WidgetDataStore {
     }
 
     /// Returns the app's display name based on language setting.
-    /// Chinese → "守灯", English/French/other → "Luma"
+    /// Chinese → "守灯", English/French/other → "Lantern Care"
     static var appName: String {
         let lang = sharedDefaults?.string(forKey: languageKey) ?? "zh-Hans"
-        return lang.hasPrefix("zh") ? "守灯" : "Luma"
+        return lang.hasPrefix("zh") ? "守灯" : "Lantern Care"
     }
 
     /// Current language code (for widget/Live Activity localization)
@@ -75,7 +75,7 @@ enum WidgetDataStore {
         case "la.home.timer":   return isZh ? "回家计时中" : isFr ? "Minuterie active" : "Timer active"
         case "la.sos.active":   return isZh ? "紧急求助中" : isFr ? "SOS actif" : "SOS Active"
         case "la.sos.title":    return isZh ? "SOS 紧急求助" : isFr ? "SOS d'urgence" : "SOS Emergency"
-        case "la.sos.body":     return isZh ? "守灯已触发紧急求助" : isFr ? "Le SOS Luma a été déclenché" : "Luma SOS has been triggered"
+        case "la.sos.body":     return isZh ? "守灯已触发紧急求助" : isFr ? "Le SOS Lantern Care a été déclenché" : "Lantern Care SOS has been triggered"
 
         // Live Activity - Guardian
         case "la.persons.count": return isZh ? "位家人" : isFr ? " membres" : " family"

@@ -59,8 +59,8 @@ enum DisclaimerCopy {
             Screen(
                 id: "onboard.not_emergency",
                 icon: "exclamationmark.triangle",
-                title: "Luma Is Not an Emergency Service",
-                body: "In an emergency, always call your local emergency number first.\n\nLuma notifies your family and contacts — it cannot replace police, fire, or medical services. We do our best to deliver notifications, but cannot guarantee network, device, or recipient availability.",
+                title: "Lantern Care Is Not an Emergency Service",
+                body: "In an emergency, always call your local emergency number first.\n\nLantern Care notifies your family and contacts — it cannot replace police, fire, or medical services. We do our best to deliver notifications, but cannot guarantee network, device, or recipient availability.",
                 buttonTitle: "I Understand"
             ),
             Screen(
@@ -83,8 +83,8 @@ enum DisclaimerCopy {
             Screen(
                 id: "onboard.not_emergency",
                 icon: "exclamationmark.triangle",
-                title: "Luma n'est pas un service d'urgence",
-                body: "En cas de danger, appelez d'abord le numéro d'urgence local.\n\nLuma prévient votre famille et vos contacts — il ne remplace ni la police, ni les pompiers, ni les secours. Nous faisons de notre mieux pour transmettre les notifications, mais ne pouvons garantir la disponibilité du réseau, de l'appareil ou du destinataire.",
+                title: "Lantern Care n'est pas un service d'urgence",
+                body: "En cas de danger, appelez d'abord le numéro d'urgence local.\n\nLantern Care prévient votre famille et vos contacts — il ne remplace ni la police, ni les pompiers, ni les secours. Nous faisons de notre mieux pour transmettre les notifications, mais ne pouvons garantir la disponibilité du réseau, de l'appareil ou du destinataire.",
                 buttonTitle: "Je comprends"
             ),
             Screen(

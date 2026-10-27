@@ -252,8 +252,8 @@ describe("SMS Templates — Locale (FIXED)", () => {
   it("FIXED: SMS has per-locale template routing", () => {
     // F-002 fixed: SMS now has per-recipient locale routing
     expect(smsSource).toMatch(/getUserLocale|getSmsStrings/i);
-    expect(smsSource).toContain("Luma Emergency");
-    expect(smsSource).toContain("Luma Urgence");
+    expect(smsSource).toContain("Lantern Care Emergency");
+    expect(smsSource).toContain("Lantern Care Urgence");
   });
 });
 

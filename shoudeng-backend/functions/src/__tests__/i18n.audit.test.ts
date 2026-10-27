@@ -208,9 +208,9 @@ describe("i18n — Format String Consistency", () => {
 });
 
 describe("i18n — Terminology Enforcement", () => {
-  it("EN uses 'Luma' as app name", () => {
+  it("EN uses 'Lantern Care' as app name", () => {
     const appName = enStrings.find((e) => e.key === "app.name");
-    expect(appName?.value).toBe("Luma");
+    expect(appName?.value).toBe("Lantern Care");
   });
 
   it("zh-Hans uses '守灯' as app name", () => {
@@ -218,9 +218,9 @@ describe("i18n — Terminology Enforcement", () => {
     expect(appName?.value).toBe("守灯");
   });
 
-  it("FR uses 'Luma' as app name", () => {
+  it("FR uses 'Lantern Care' as app name", () => {
     const appName = frStrings.find((e) => e.key === "app.name");
-    expect(appName?.value).toBe("Luma");
+    expect(appName?.value).toBe("Lantern Care");
   });
 
   it("EN uses 'Protected Person' for care receiver role", () => {
@@ -359,7 +359,7 @@ describe("i18n — Quality Checks", () => {
       const zh = zhStrings.find((z) => z.key === en.key);
       if (zh && zh.value === en.value && en.value.length > 3) {
         // Exclude very short values (numbers, symbols, "Vela", etc.)
-        if (!/^[A-Z0-9]{1,5}$|^Luma$/.test(en.value)) {
+        if (!/^[A-Z0-9]{1,5}$|^Lantern Care$/.test(en.value)) {
           identical.push(en.key);
         }
       }
@@ -374,7 +374,7 @@ describe("i18n — Quality Checks", () => {
     for (const en of enStrings) {
       const fr = frStrings.find((f) => f.key === en.key);
       if (fr && fr.value === en.value && en.value.length > 3) {
-        if (!/^[A-Z0-9]{1,5}$|^Luma$/.test(en.value)) {
+        if (!/^[A-Z0-9]{1,5}$|^Lantern Care$/.test(en.value)) {
           identical.push(en.key);
         }
       }

@@ -84,7 +84,7 @@ router.post("/create", async (req, res) => {
  */
 router.post("/accept", (0, rateLimit_1.createRateLimiter)(rateLimit_1.RATE_LIMITS.general), async (req, res) => {
     const uid = req.uid;
-    const { inviteId, code } = req.body;
+    const { inviteId, code, publicKey } = req.body;
     try {
         // Find invite by ID or code (outside transaction for query support)
         let inviteRef;
@@ -172,6 +172,10 @@ router.post("/accept", (0, rateLimit_1.createRateLimiter)(rateLimit_1.RATE_LIMIT
             const now = admin.firestore.Timestamp.now();
             const linkId = `${guardianId}_${protectedPersonId}`;
             const linkRef = db.collection("guardian_links").doc(linkId);
+            // Store E2E public key on user doc if provided
+            if (publicKey) {
+                transaction.update(acceptorRef, { publicKey });
+            }
             // Atomically create link + mark invite as accepted
             transaction.set(linkRef, {
                 guardianId,
@@ -181,6 +185,7 @@ router.post("/accept", (0, rateLimit_1.createRateLimiter)(rateLimit_1.RATE_LIMIT
                 acceptedAt: now,
                 revokedAt: null,
                 protectionLayers: ["location", "heartbeat", "sos"],
+                ...(publicKey && { acceptorPublicKey: publicKey }),
             });
             transaction.update(inviteRef, {
                 status: "accepted",

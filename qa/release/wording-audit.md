@@ -54,7 +54,7 @@ All 4 permission strings (location, microphone, motion, Face ID) describe data s
 
 ### Store Metadata (en-CA, fr-CA, zh-Hans)
 
-All three store descriptions include explicit "What Luma is NOT" section stating the app is not an emergency service.
+All three store descriptions include explicit "What Lantern Care is NOT" section stating the app is not an emergency service.
 
 ## Conclusion
 

@@ -120,8 +120,8 @@ app.use("/v1/coverage", coverageRoutes);
 // Multi-language TwiML responses based on query param or default
 const voiceMessages: Record<string, { lang: string; ack: string; invalid: string }> = {
   zh: { lang: "zh-CN", ack: "已收到。请打开守灯应用查看详情并确认接手。", invalid: "无效按键。" },
-  en: { lang: "en-US", ack: "Acknowledged. Please open the Luma app to view details and take over.", invalid: "Invalid key." },
-  fr: { lang: "fr-FR", ack: "Reçu. Veuillez ouvrir l'application Luma pour voir les détails et prendre en charge.", invalid: "Touche invalide." },
+  en: { lang: "en-US", ack: "Acknowledged. Please open the Lantern Care app to view details and take over.", invalid: "Invalid key." },
+  fr: { lang: "fr-FR", ack: "Reçu. Veuillez ouvrir l'application Lantern Care pour voir les détails et prendre en charge.", invalid: "Touche invalide." },
 };
 app.post("/v1/voice-callback", async (req, res) => {
   const { Digits, CallSid } = req.body;

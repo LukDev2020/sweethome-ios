@@ -1,6 +1,6 @@
 /* Login */
 "app.name" = "守灯";
-"app.tagline" = "在紧急时刻更快联系上你的家人";
+"app.tagline" = "为家人守护的那盏灯";
 "login.phone.placeholder" = "手机号码";
 "login.code.placeholder" = "验证码";
 "login.get.code" = "获取验证码";

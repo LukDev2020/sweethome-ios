@@ -481,7 +481,7 @@ struct PostSignupWizardView: View {
 
                 Button {
                     let av = UIActivityViewController(activityItems: [
-                        "我在用守灯(Luma)守护家人安全，请输入邀请码加入：\(code)"
+                        "我在用守灯(Lantern Care)守护家人安全，请输入邀请码加入：\(code)"
                     ], applicationActivities: nil)
                     if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                        let root = scene.windows.first?.rootViewController {

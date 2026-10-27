@@ -1,18 +1,18 @@
 # App Store Metadata — fr-CA
 
 ## Nom de l'application
-Luma — Securite familiale
+Lantern Care — Securite familiale
 
 ## Sous-titre
-Prevenez votre famille plus vite en cas d'urgence
+Une lumière qui veille sur votre famille
 
 ## Description
-Luma est un outil de notification de securite familiale qui aide vos proches a savoir ou vous etes et a vous joindre quand c'est important.
+Lantern Care est un outil de notification de securite familiale qui aide vos proches a savoir ou vous etes et a vous joindre quand c'est important.
 
 **Comment ca marche :**
 - Les personnes protegees partagent leur position avec les membres de la famille qu'elles choisissent
 - Les gardiens recoivent des signaux de securite et des notifications de check-in
-- En cas de probleme, Luma notifie votre famille par notification push, SMS et appel vocal — en escaladant jusqu'a ce que quelqu'un reponde
+- En cas de probleme, Lantern Care notifie votre famille par notification push, SMS et appel vocal — en escaladant jusqu'a ce que quelqu'un reponde
 
 **Fonctionnalites principales :**
 - Alerte SOS avec escalade multi-niveaux (push, SMS, appel vocal)
@@ -23,8 +23,8 @@ Luma est un outil de notification de securite familiale qui aide vos proches a s
 - Repertoire de numeros consulaires pour les voyageurs
 - Cercle familial avec planification des gardes
 
-**Ce que Luma n'est PAS :**
-Luma n'est pas un service d'urgence. En cas de danger, appelez toujours votre numero d'urgence local en premier (911 en Amerique du Nord). Luma previent votre famille — il n'envoie pas de secours.
+**Ce que Lantern Care n'est PAS :**
+Lantern Care n'est pas un service d'urgence. En cas de danger, appelez toujours votre numero d'urgence local en premier (911 en Amerique du Nord). Lantern Care previent votre famille — il n'envoie pas de secours.
 
 ## Mots-cles
 famille,securite,SOS,gardien,aine,chute,detection,urgence,contact,notification,aidant,localisation

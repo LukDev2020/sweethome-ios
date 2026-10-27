@@ -51,17 +51,17 @@ const smsStrings = {
     },
     en: {
         sosBody: (name, url) => url
-            ? `[Luma Emergency] ${name} is calling for help! View details: ${url}`
-            : `[Luma Emergency] ${name} is calling for help! Open the Luma app now.`,
-        checkinBody: (name) => `[Luma] ${name} hasn't checked in today. Please follow up.`,
-        verifyBody: (code) => `[Luma] Your verification code is ${code}. Valid for 5 minutes.`,
+            ? `[Lantern Care Emergency] ${name} is calling for help! View details: ${url}`
+            : `[Lantern Care Emergency] ${name} is calling for help! Open the Lantern Care app now.`,
+        checkinBody: (name) => `[Lantern Care] ${name} hasn't checked in today. Please follow up.`,
+        verifyBody: (code) => `[Lantern Care] Your verification code is ${code}. Valid for 5 minutes.`,
     },
     fr: {
         sosBody: (name, url) => url
-            ? `[Luma Urgence] ${name} demande de l'aide ! Voir les détails : ${url}`
-            : `[Luma Urgence] ${name} demande de l'aide ! Ouvrez l'application Luma maintenant.`,
-        checkinBody: (name) => `[Luma] ${name} n'a pas donné signe de vie aujourd'hui.`,
-        verifyBody: (code) => `[Luma] Votre code de vérification est ${code}. Valide 5 minutes.`,
+            ? `[Lantern Care Urgence] ${name} demande de l'aide ! Voir les détails : ${url}`
+            : `[Lantern Care Urgence] ${name} demande de l'aide ! Ouvrez l'application Lantern Care maintenant.`,
+        checkinBody: (name) => `[Lantern Care] ${name} n'a pas donné signe de vie aujourd'hui.`,
+        verifyBody: (code) => `[Lantern Care] Votre code de vérification est ${code}. Valide 5 minutes.`,
     },
 };
 function getSmsStrings(locale) {

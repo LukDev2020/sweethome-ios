@@ -1,17 +1,17 @@
-CFBundleDisplayName = "Luma";
-CFBundleName = "Luma";
+CFBundleDisplayName = "Lantern Care";
+CFBundleName = "Lantern Care";
 
 /* Location — Always */
-NSLocationAlwaysAndWhenInUseUsageDescription = "Luma shares your location with family members you choose, so they can reach you in an emergency. Location is also used for safe-zone notifications. Sharing begins only after you accept the in-app consent prompt.";
+NSLocationAlwaysAndWhenInUseUsageDescription = "Lantern Care shares your location with family members you choose, so they can reach you in an emergency. Location is also used for safe-zone notifications. Sharing begins only after you accept the in-app consent prompt.";
 
 /* Location — When In Use */
-NSLocationWhenInUseUsageDescription = "Luma uses your location to show where you are on the map and to send your position to chosen family members during an SOS. Used only after you accept in-app consent.";
+NSLocationWhenInUseUsageDescription = "Lantern Care uses your location to show where you are on the map and to send your position to chosen family members during an SOS. Used only after you accept in-app consent.";
 
 /* Motion / Accelerometer */
-NSMotionUsageDescription = "Luma uses the accelerometer to detect possible falls. If a fall is detected, you have 60 seconds to dismiss the alert before your family members are notified. This feature activates only after you turn on fall detection in the app.";
+NSMotionUsageDescription = "Lantern Care uses the accelerometer to detect possible falls. If a fall is detected, you have 60 seconds to dismiss the alert before your family members are notified. This feature activates only after you turn on fall detection in the app.";
 
 /* Face ID */
-NSFaceIDUsageDescription = "Luma uses Face ID to verify your identity and protect access to your family safety data.";
+NSFaceIDUsageDescription = "Lantern Care uses Face ID to verify your identity and protect access to your family safety data.";
 
 /* Microphone */
 NSMicrophoneUsageDescription = "During an active SOS, the microphone may record ambient audio to help your chosen family members assess the situation. Recording starts only if you have enabled this option and local laws permit it.";

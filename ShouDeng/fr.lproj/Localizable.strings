@@ -1,6 +1,6 @@
 /* Login */
-"app.name" = "Luma";
-"app.tagline" = "Joindre votre famille plus vite en cas d'urgence";
+"app.name" = "Lantern Care";
+"app.tagline" = "Une lumière qui veille sur votre famille";
 "login.phone.placeholder" = "Numéro de téléphone";
 "login.code.placeholder" = "Code de vérification";
 "login.get.code" = "Obtenir le code";
@@ -21,7 +21,7 @@
 /* Login - Security */
 "login.reset" = "Recommencer";
 "login.locked.title" = "Compte verrouillé";
-"login.locked.message" = "Trop de tentatives échouées. Veuillez contacter l'équipe Luma.";
+"login.locked.message" = "Trop de tentatives échouées. Veuillez contacter l'équipe Lantern Care.";
 "login.locked.contact" = "Contacter le support";
 "login.attempts.warning" = "%d tentatives restantes";
 
@@ -54,7 +54,7 @@
 "tab.settings" = "Paramètres";
 
 /* Navigation */
-"nav.title" = "Luma";
+"nav.title" = "Lantern Care";
 "nav.you.are.here" = "Vous êtes ici";
 
 /* Home View - Protected */
@@ -102,7 +102,7 @@
 "sos.send.anyway" = "Envoyer quand même";
 "sos.invite.first" = "Inviter un gardien d'abord";
 "sos.active" = "SOS actif";
-"sos.triggered" = "SOS Luma déclenché";
+"sos.triggered" = "SOS Lantern Care déclenché";
 
 /* Live Activity */
 "la.normal" = "Normal";
@@ -486,11 +486,11 @@
 "guardian.home.consulate" = "Consulat";
 "guardian.home.emergency.text" = "SMS d'urgence";
 "guardian.home.family.location" = "Position famille";
-"guardian.home.footer.note" = "Luma notifie la famille, ne remplace pas les services d'urgence";
+"guardian.home.footer.note" = "Lantern Care notifie la famille, ne remplace pas les services d'urgence";
 "guardian.home.guardian.role" = "Gardien";
 "guardian.home.guarding" = "En protection";
 "guardian.home.guarding.count" = "Protection de %d personnes";
-"guardian.home.invite.description" = "Inviter la famille à rejoindre Luma";
+"guardian.home.invite.description" = "Inviter la famille à rejoindre Lantern Care";
 "guardian.home.invite.family" = "Inviter la famille";
 "guardian.home.layers.count" = "%d couches de protection";
 "guardian.home.me" = "Moi";
@@ -501,7 +501,7 @@
 "guardian.home.no.protected" = "Aucun protégé";
 "guardian.home.org.dashboard" = "Tableau de bord org";
 "guardian.home.protection" = "Protection active";
-"guardian.home.shoudeng" = "Luma";
+"guardian.home.shoudeng" = "Lantern Care";
 "guardian.home.sos.active" = "SOS actif";
 "guardian.home.time.afternoon" = "Après-midi";
 "guardian.home.time.dawn" = "Aube";
@@ -623,9 +623,9 @@ vos gardiens seront automatiquement notifiés.";
 "invite.howToUse" = "Comment utiliser";
 "invite.me" = "Moi";
 "invite.share" = "Partager";
-"invite.shareText" = "%@ vous invite à devenir gardien Luma. Entrez le code dans l'app Luma : %@ (valide 24h)";
+"invite.shareText" = "%@ vous invite à devenir gardien Lantern Care. Entrez le code dans l'app Lantern Care : %@ (valide 24h)";
 "invite.step1" = "Envoyez le code à un proche de confiance";
-"invite.step2" = "Ils entrent le code dans l'app Luma";
+"invite.step2" = "Ils entrent le code dans l'app Lantern Care";
 "invite.step3" = "Après connexion, ajustez les permissions à tout moment";
 "invite.subtitle" = "Inviter la famille comme gardien";
 "invite.title" = "Inviter un gardien";
@@ -731,7 +731,7 @@ vos gardiens seront automatiquement notifiés.";
 "protected.coverage.title" = "Couverture";
 "protected.coverage.weakNetwork" = "Réseau faible";
 "protected.home.afternoon" = "Après-midi";
-"protected.home.appName" = "Luma";
+"protected.home.appName" = "Lantern Care";
 "protected.home.battery" = "Batterie %d%%";
 "protected.home.cancelSOS" = "Annuler SOS";
 "protected.home.checkIn" = "Signaler OK";
@@ -748,7 +748,7 @@ vos gardiens seront automatiquement notifiés.";
 "protected.home.guardianCount" = "%d gardiens";
 "protected.home.guarding" = "En protection";
 "protected.home.imHere" = "Je suis ici";
-"protected.home.inviteDescription" = "Inviter la famille à Luma";
+"protected.home.inviteDescription" = "Inviter la famille à Lantern Care";
 "protected.home.inviteFamily" = "Inviter la famille";
 "protected.home.inviteNew" = "Inviter un gardien";
 "protected.home.lateNight" = "Nuit";
@@ -818,7 +818,7 @@ vos gardiens seront automatiquement notifiés.";
 "protected.settings.detection.distress" = "Détection audio de détresse";
 "protected.settings.detection.distressDesc" = "SOS auto sur sons de détresse (cris, chocs)";
 "protected.settings.detection.voiceCommand" = "Commande vocale SOS";
-"protected.settings.detection.voiceCommandDesc" = "Dites 'Luma aide-moi' pour SOS auto";
+"protected.settings.detection.voiceCommandDesc" = "Dites 'Lantern Care aide-moi' pour SOS auto";
 "protected.settings.notification.checkInReminder" = "Rappel de signalement";
 "protected.settings.role.needsApproval" = "Approbation requise";
 "protected.settings.role.protected" = "Personne protégée";
@@ -864,7 +864,7 @@ vos gardiens seront automatiquement notifiés.";
 "settings.email.addTitle" = "Ajouter un e-mail";
 "settings.fontsize.hint" = "La taille s'applique immédiatement partout";
 "settings.fontsize.sample" = "A";
-"settings.legal.about" = "À propos de Luma";
+"settings.legal.about" = "À propos de Lantern Care";
 "settings.legal.privacyAndTerms" = "Confidentialité et conditions";
 "settings.notification.familyFeed" = "Nouvelles du cercle familial";
 "settings.notification.sos" = "SOS d'urgence";

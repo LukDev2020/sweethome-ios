@@ -1216,7 +1216,7 @@ struct InviteGuardianSheet: View {
             case .wechat:
                 // Use system share sheet as fallback
                 let activityVC = UIActivityViewController(
-                    activityItems: ["加入Luma守护圈：\(inviteLink)"],
+                    activityItems: ["加入守灯(Lantern Care)守护圈：\(inviteLink)"],
                     applicationActivities: nil
                 )
                 if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,

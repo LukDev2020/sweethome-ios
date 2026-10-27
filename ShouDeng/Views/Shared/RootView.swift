@@ -125,7 +125,7 @@ private struct AuthenticatedRootView: View {
                 .scaledToFit()
                 .frame(width: 96, height: 96)
                 .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-            Text(LanguageManager.shared.current == .chinese ? "守灯" : "Luma")
+            Text(LanguageManager.shared.current == .chinese ? "守灯" : "Lantern Care")
                 .font(.scaled(size: 24, weight: .bold, design: .serif))
                 .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255))
         }
