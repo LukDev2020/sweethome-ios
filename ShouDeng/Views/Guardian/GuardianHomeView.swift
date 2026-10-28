@@ -20,6 +20,9 @@ struct GuardianHomeView: View {
     @State private var showConsulate = false
     @State private var showOrgDashboard = false
     @State private var showInsuranceReport = false
+    @State private var showTripHistory = false
+    @State private var tripHistoryUserId: String?
+    @State private var tripHistoryUserName: String?
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
@@ -133,6 +136,10 @@ struct GuardianHomeView: View {
             }
             .sheet(isPresented: $showInsuranceReport) {
                 ClaimMaterialsView()
+                    .environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showTripHistory) {
+                TripHistoryView(targetUserId: tripHistoryUserId, targetUserName: tripHistoryUserName)
                     .environmentObject(coordinator)
             }
             .task {
@@ -597,6 +604,15 @@ struct GuardianHomeView: View {
                             )
                         }
                         .buttonStyle(.plain)
+                        .contextMenu {
+                            Button {
+                                tripHistoryUserId = person.id
+                                tripHistoryUserName = person.user.displayName
+                                showTripHistory = true
+                            } label: {
+                                Label(lang.localized("trip.history.title"), systemImage: "map")
+                            }
+                        }
                         .simultaneousGesture(TapGesture().onEnded {
                             withAnimation { mapFocusId = person.id }
                         })
@@ -666,6 +682,15 @@ struct GuardianHomeView: View {
                             )
                         }
                         .buttonStyle(.plain)
+                        .contextMenu {
+                            Button {
+                                tripHistoryUserId = person.id
+                                tripHistoryUserName = person.user.displayName
+                                showTripHistory = true
+                            } label: {
+                                Label(lang.localized("trip.history.title"), systemImage: "map")
+                            }
+                        }
                         .simultaneousGesture(TapGesture().onEnded {
                             withAnimation { mapFocusId = person.id }
                         })

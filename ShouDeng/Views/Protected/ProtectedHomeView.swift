@@ -29,6 +29,9 @@ struct ProtectedHomeView: View {
     @State private var showConsulate = false
     @State private var showClaimMaterials = false
     @State private var showNoGuardianSOSWarning = false
+    @State private var showTripHistory = false
+    @State private var showTripStartConfirm = false
+    @State private var showTripEndConfirm = false
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     // Design system colors from the HTML
@@ -130,6 +133,26 @@ struct ProtectedHomeView: View {
                 ClaimMaterialsView()
                     .environmentObject(coordinator)
             }
+            .sheet(isPresented: $showTripHistory) {
+                TripHistoryView()
+                    .environmentObject(coordinator)
+            }
+            .alert(lang.localized("trip.record.start"), isPresented: $showTripStartConfirm) {
+                Button(lang.localized("settings.action.confirm")) {
+                    Task { try? await coordinator.tripRecordingService.startRecording() }
+                }
+                Button(lang.localized("settings.action.cancel"), role: .cancel) {}
+            } message: {
+                Text(lang.localized("trip.record.confirm.start"))
+            }
+            .alert(lang.localized("trip.record.stop"), isPresented: $showTripEndConfirm) {
+                Button(lang.localized("settings.action.confirm")) {
+                    Task { try? await coordinator.tripRecordingService.stopRecording() }
+                }
+                Button(lang.localized("settings.action.cancel"), role: .cancel) {}
+            } message: {
+                Text(lang.localized("trip.record.confirm.end"))
+            }
             .featureDisclosure(.sos, trigger: $sosDisclosureTrigger)
             .task {
                 coordinator.locationManager.requestSingleLocation()
@@ -160,6 +183,9 @@ struct ProtectedHomeView: View {
 
                 locationCard
                     .padding(.top, 10)
+                tripRecordingSection
+                    .padding(.horizontal, 16)
+                    .padding(.top, 6)
                 sendLocationButton
                     .padding(.horizontal, 16)
                     .padding(.top, 6)
@@ -536,6 +562,80 @@ struct ProtectedHomeView: View {
             focusedPinId: $mapFocusId,
             locationService: coordinator.locationService
         )
+    }
+
+    // MARK: - Trip Recording Section
+
+    @ViewBuilder
+    private var tripRecordingSection: some View {
+        if coordinator.tripRecordingService.isRecording {
+            // Recording banner
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(Color.red)
+                    .frame(width: 10, height: 10)
+                Text(lang.localized("trip.record.recording"))
+                    .font(.scaled(size: 13, weight: .semibold))
+                    .foregroundStyle(.white)
+                Text(coordinator.tripRecordingService.elapsedFormatted)
+                    .font(.scaled(size: 13, weight: .medium).monospacedDigit())
+                    .foregroundStyle(.white.opacity(0.9))
+                Text(coordinator.tripRecordingService.distanceFormatted)
+                    .font(.scaled(size: 12))
+                    .foregroundStyle(.white.opacity(0.7))
+                Spacer()
+                Button {
+                    showTripEndConfirm = true
+                } label: {
+                    Text(lang.localized("trip.record.stop"))
+                        .font(.scaled(size: 12, weight: .medium))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Color.white.opacity(0.25))
+                        .clipShape(Capsule())
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(Color.red.opacity(0.85))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+        } else {
+            // Start recording + view history
+            HStack(spacing: 8) {
+                Button {
+                    showTripStartConfirm = true
+                } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "record.circle")
+                            .font(.scaled(size: 13))
+                        Text(lang.localized("trip.record.start"))
+                            .font(.scaled(size: 13, weight: .medium))
+                    }
+                    .foregroundStyle(ink)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(ink.opacity(0.06))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+
+                Button {
+                    showTripHistory = true
+                } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.scaled(size: 13))
+                        Text(lang.localized("trip.history.title"))
+                            .font(.scaled(size: 13, weight: .medium))
+                    }
+                    .foregroundStyle(ink)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(ink.opacity(0.06))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+            }
+        }
     }
 
     // MARK: - Send Location Button

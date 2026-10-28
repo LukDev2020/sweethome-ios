@@ -950,6 +950,41 @@
 "silent.alarm.hour" = "小时";
 "silent.alarm.minute" = "分钟";
 
+// MARK: - Trip Recording & History
+"trip.record.start" = "记录行程";
+"trip.record.stop" = "结束行程";
+"trip.record.cancel" = "取消行程";
+"trip.record.confirm.start" = "开始记录您的路线？您的守护者将能够查看此行程。";
+"trip.record.confirm.end" = "结束行程记录？";
+"trip.record.recording" = "记录中";
+"trip.history.title" = "行程历史";
+"trip.history.titleFor" = "%@的行程";
+"trip.history.empty" = "暂无行程记录";
+"trip.history.viewTrips" = "查看行程";
+"trip.status.recording" = "记录中";
+"trip.points.count" = "%d 个点";
+"trip.detail.title" = "行程详情";
+"trip.detail.noPoints" = "未记录GPS数据";
+"trip.detail.start" = "起点";
+"trip.detail.end" = "终点";
+"trip.export.gpx" = "导出 GPX";
+"trip.mode.walking" = "步行";
+"trip.mode.cycling" = "骑行";
+"trip.mode.driving" = "驾车";
+"trip.mode.stationary" = "静止";
+
+// MARK: - Map Search
+"map.search.placeholder" = "搜索地点...";
+"map.search.hospital" = "医院";
+"map.search.police" = "警察局";
+"map.search.pharmacy" = "药店";
+"map.search.gas" = "加油站";
+"map.search.unknown" = "未知地点";
+"map.search.food" = "餐饮";
+"map.search.cafe" = "咖啡";
+"map.search.noResults" = "未找到结果";
+"map.search.openInMaps" = "在地图中打开";
+
 // MARK: - Guardian Records Tabs (dynamic)
 "guardian.records.tab.时间线" = "时间线";
 "guardian.records.tab.排班" = "排班";

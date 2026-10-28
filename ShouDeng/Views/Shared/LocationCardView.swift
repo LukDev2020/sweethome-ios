@@ -526,6 +526,34 @@ struct FullScreenMapView: View {
 
     @State private var trailCoordinates: [String: [CLLocationCoordinate2D]] = [:]
 
+    // Search state
+    @State private var searchText = ""
+    @State private var searchResults: [MKMapItem] = []
+    @State private var isSearching = false
+    @State private var showSearchBar = false
+    @State private var selectedSearchItem: MKMapItem?
+    @FocusState private var searchFieldFocused: Bool
+
+    // Trail time range
+    @State private var trailTimeRange: TrailTimeRange = .h24
+
+    enum TrailTimeRange: String, CaseIterable {
+        case h1 = "1h"
+        case h6 = "6h"
+        case h24 = "24h"
+        case d7 = "7d"
+    }
+
+    // POI categories
+    private let poiCategories: [(icon: String, label: String, category: MKPointOfInterestCategory)] = [
+        ("cross.fill", "map.search.hospital", .hospital),
+        ("shield.fill", "map.search.police", .police),
+        ("pills.fill", "map.search.pharmacy", .pharmacy),
+        ("fuelpump.fill", "map.search.gas", .gasStation),
+        ("fork.knife", "map.search.food", .restaurant),
+        ("cup.and.saucer.fill", "map.search.cafe", .cafe),
+    ]
+
     init(pins: [LocationPin], label: String? = nil, focusedPinId: Binding<String?>,
          locationService: ReactiveLocationService = ReactiveLocationService()) {
         self.pins = pins
@@ -584,11 +612,32 @@ struct FullScreenMapView: View {
                     }
                 }
 
-                // 24-hour trail polylines
+                // Trail polylines
                 ForEach(currentPins) { pin in
                     if let trail = trailCoordinates[pin.id], trail.count > 1 {
                         MapPolyline(coordinates: trail)
                             .stroke(pin.color.opacity(0.6), lineWidth: 3)
+                    }
+                }
+
+                // Search result pin
+                if let item = selectedSearchItem,
+                   let coord = item.placemark.location?.coordinate {
+                    Annotation(item.name ?? "", coordinate: coord) {
+                        VStack(spacing: 2) {
+                            Image(systemName: "mappin.circle.fill")
+                                .font(.system(size: 28))
+                                .foregroundStyle(.red)
+                                .background(Circle().fill(.white).frame(width: 20, height: 20))
+                            Text(item.name ?? "")
+                                .font(.scaled(size: 11, weight: .semibold))
+                                .foregroundStyle(ink)
+                                .lineLimit(1)
+                                .padding(.horizontal, 4)
+                                .padding(.vertical, 2)
+                                .background(.white.opacity(0.8))
+                                .clipShape(RoundedRectangle(cornerRadius: 4))
+                        }
                     }
                 }
             }
@@ -653,34 +702,71 @@ struct FullScreenMapView: View {
 
                     Spacer()
 
-                    if let label {
-                        Text(label)
-                            .font(.scaled(size: 13, weight: .semibold))
+                    if !showSearchBar {
+                        if let label {
+                            Text(label)
+                                .font(.scaled(size: 13, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 5)
+                                .background(ink.opacity(0.7))
+                                .clipShape(Capsule())
+                        }
+
+                        Spacer()
+                    }
+
+                    // Search toggle
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            showSearchBar.toggle()
+                            if !showSearchBar {
+                                searchText = ""
+                                searchResults = []
+                                selectedSearchItem = nil
+                            } else {
+                                searchFieldFocused = true
+                            }
+                        }
+                    } label: {
+                        Image(systemName: showSearchBar ? "xmark" : "magnifyingglass")
+                            .font(.scaled(size: 14, weight: .medium))
                             .foregroundStyle(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 5)
-                            .background(ink.opacity(0.7))
-                            .clipShape(Capsule())
+                            .frame(width: 34, height: 34)
+                            .background(ink.opacity(0.65))
+                            .clipShape(Circle())
                     }
 
-                    Spacer()
-
-                    // Trail legend
-                    HStack(spacing: 4) {
-                        RoundedRectangle(cornerRadius: 1.5)
-                            .fill(safe.opacity(0.6))
-                            .frame(width: 16, height: 3)
-                        Text(LanguageManager.shared.localized("location.trail24h"))
-                            .font(.scaled(size: 12))
+                    if !showSearchBar {
+                        // Trail time range picker
+                        trailTimePicker
                     }
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(ink.opacity(0.6))
-                    .clipShape(Capsule())
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 60)
+
+                // Search bar
+                if showSearchBar {
+                    searchBarView
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
+
+                // POI quick filters
+                if showSearchBar && searchText.isEmpty {
+                    poiChipsView
+                        .padding(.top, 6)
+                        .transition(.opacity)
+                }
+
+                // Search results list
+                if !searchResults.isEmpty {
+                    searchResultsView
+                        .padding(.horizontal, 16)
+                        .padding(.top, 4)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
 
                 Spacer()
 
@@ -822,6 +908,203 @@ struct FullScreenMapView: View {
             isFollowing = true
             selectedPin = nil
         }
+    }
+
+    // MARK: - Search Bar
+
+    private var searchBarView: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .font(.scaled(size: 14))
+                .foregroundStyle(.white.opacity(0.6))
+            TextField(LanguageManager.shared.localized("map.search.placeholder"), text: $searchText)
+                .font(.scaled(size: 14))
+                .foregroundStyle(.white)
+                .tint(.white)
+                .focused($searchFieldFocused)
+                .onSubmit { performSearch() }
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                    searchResults = []
+                    selectedSearchItem = nil
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.scaled(size: 14))
+                        .foregroundStyle(.white.opacity(0.5))
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(ink.opacity(0.75))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    // MARK: - POI Quick Filters
+
+    private var poiChipsView: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                ForEach(poiCategories, id: \.label) { poi in
+                    Button {
+                        searchPOI(category: poi.category)
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: poi.icon)
+                                .font(.scaled(size: 11))
+                            Text(LanguageManager.shared.localized(poi.label))
+                                .font(.scaled(size: 12))
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(ink.opacity(0.6))
+                        .clipShape(Capsule())
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+        }
+    }
+
+    // MARK: - Search Results
+
+    private var searchResultsView: some View {
+        VStack(spacing: 2) {
+            ForEach(searchResults.prefix(5), id: \.self) { item in
+                Button {
+                    selectSearchResult(item)
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "mappin.circle.fill")
+                            .font(.scaled(size: 16))
+                            .foregroundStyle(safe)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(item.name ?? LanguageManager.shared.localized("map.search.unknown"))
+                                .font(.scaled(size: 13, weight: .medium))
+                                .foregroundStyle(.white)
+                                .lineLimit(1)
+                            if let address = item.placemark.title {
+                                Text(address)
+                                    .font(.scaled(size: 11))
+                                    .foregroundStyle(.white.opacity(0.6))
+                                    .lineLimit(1)
+                            }
+                        }
+                        Spacer()
+                        if let location = item.placemark.location,
+                           let myLoc = locationService.currentLocation {
+                            let dist = location.distance(from: CLLocation(latitude: myLoc.latitude, longitude: myLoc.longitude))
+                            Text(formatSearchDistance(dist))
+                                .font(.scaled(size: 11))
+                                .foregroundStyle(.white.opacity(0.5))
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                }
+            }
+        }
+        .background(ink.opacity(0.75))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    // MARK: - Trail Time Picker
+
+    private var trailTimePicker: some View {
+        HStack(spacing: 2) {
+            ForEach(TrailTimeRange.allCases, id: \.self) { range in
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        trailTimeRange = range
+                    }
+                } label: {
+                    Text(range.rawValue)
+                        .font(.scaled(size: 11, weight: trailTimeRange == range ? .bold : .medium))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 4)
+                        .background(trailTimeRange == range ? safe.opacity(0.7) : ink.opacity(0.4))
+                        .clipShape(Capsule())
+                }
+            }
+        }
+        .padding(.horizontal, 4)
+        .padding(.vertical, 2)
+        .background(ink.opacity(0.5))
+        .clipShape(Capsule())
+    }
+
+    // MARK: - Search Logic
+
+    private func performSearch() {
+        guard !searchText.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        isSearching = true
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = searchText
+
+        // Search near current map region
+        if let coord = locationService.currentLocation ?? pins.first?.coordinate {
+            request.region = MKCoordinateRegion(
+                center: coord,
+                span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
+            )
+        }
+
+        let search = MKLocalSearch(request: request)
+        search.start { response, error in
+            isSearching = false
+            guard let response, error == nil else {
+                searchResults = []
+                return
+            }
+            searchResults = response.mapItems
+        }
+    }
+
+    private func searchPOI(category: MKPointOfInterestCategory) {
+        isSearching = true
+        let request = MKLocalSearch.Request()
+        request.pointOfInterestFilter = MKPointOfInterestFilter(including: [category])
+        if let coord = locationService.currentLocation ?? pins.first?.coordinate {
+            request.region = MKCoordinateRegion(
+                center: coord,
+                span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+            )
+        }
+        let search = MKLocalSearch(request: request)
+        search.start { response, error in
+            isSearching = false
+            guard let response, error == nil else {
+                searchResults = []
+                return
+            }
+            searchResults = response.mapItems
+        }
+    }
+
+    private func selectSearchResult(_ item: MKMapItem) {
+        selectedSearchItem = item
+        searchResults = []
+        searchFieldFocused = false
+        if let coord = item.placemark.location?.coordinate {
+            withAnimation(.easeInOut(duration: 0.5)) {
+                position = .region(MKCoordinateRegion(
+                    center: coord,
+                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                ))
+                isFollowing = false
+            }
+            addressText = item.name
+        }
+    }
+
+    private func formatSearchDistance(_ meters: Double) -> String {
+        if meters >= 1000 {
+            return String(format: "%.1f km", meters / 1000)
+        }
+        return String(format: "%.0f m", meters)
     }
 
     // MARK: - Reverse Geocoding

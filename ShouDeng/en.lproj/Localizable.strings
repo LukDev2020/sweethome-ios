@@ -950,6 +950,41 @@ your guardians will be automatically notified.";
 "silent.alarm.hour" = "hour";
 "silent.alarm.minute" = "min";
 
+// MARK: - Trip Recording & History
+"trip.record.start" = "Record Trip";
+"trip.record.stop" = "End Trip";
+"trip.record.cancel" = "Cancel Trip";
+"trip.record.confirm.start" = "Start recording your route? Your guardians will be able to view this trip.";
+"trip.record.confirm.end" = "End trip recording?";
+"trip.record.recording" = "Recording";
+"trip.history.title" = "Trip History";
+"trip.history.titleFor" = "%@'s Trips";
+"trip.history.empty" = "No trips recorded yet";
+"trip.history.viewTrips" = "View Trips";
+"trip.status.recording" = "Recording";
+"trip.points.count" = "%d pts";
+"trip.detail.title" = "Trip Detail";
+"trip.detail.noPoints" = "No GPS points recorded";
+"trip.detail.start" = "Start";
+"trip.detail.end" = "End";
+"trip.export.gpx" = "Export GPX";
+"trip.mode.walking" = "Walking";
+"trip.mode.cycling" = "Cycling";
+"trip.mode.driving" = "Driving";
+"trip.mode.stationary" = "Stationary";
+
+// MARK: - Map Search
+"map.search.placeholder" = "Search places...";
+"map.search.hospital" = "Hospital";
+"map.search.police" = "Police";
+"map.search.pharmacy" = "Pharmacy";
+"map.search.gas" = "Gas";
+"map.search.unknown" = "Unknown place";
+"map.search.food" = "Food";
+"map.search.cafe" = "Cafe";
+"map.search.noResults" = "No results found";
+"map.search.openInMaps" = "Open in Maps";
+
 // MARK: - Guardian Records Tabs (dynamic)
 "guardian.records.tab.时间线" = "Timeline";
 "guardian.records.tab.排班" = "Schedule";

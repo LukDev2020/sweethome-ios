@@ -950,6 +950,41 @@ vos gardiens seront automatiquement notifiés.";
 "silent.alarm.hour" = "heure";
 "silent.alarm.minute" = "min";
 
+// MARK: - Trip Recording & History
+"trip.record.start" = "Enregistrer le trajet";
+"trip.record.stop" = "Terminer le trajet";
+"trip.record.cancel" = "Annuler le trajet";
+"trip.record.confirm.start" = "Commencer l'enregistrement de votre itinéraire ? Vos gardiens pourront voir ce trajet.";
+"trip.record.confirm.end" = "Terminer l'enregistrement du trajet ?";
+"trip.record.recording" = "Enregistrement";
+"trip.history.title" = "Historique des trajets";
+"trip.history.titleFor" = "Trajets de %@";
+"trip.history.empty" = "Aucun trajet enregistré";
+"trip.history.viewTrips" = "Voir les trajets";
+"trip.status.recording" = "En cours";
+"trip.points.count" = "%d pts";
+"trip.detail.title" = "Détail du trajet";
+"trip.detail.noPoints" = "Aucun point GPS enregistré";
+"trip.detail.start" = "Départ";
+"trip.detail.end" = "Arrivée";
+"trip.export.gpx" = "Exporter GPX";
+"trip.mode.walking" = "Marche";
+"trip.mode.cycling" = "Vélo";
+"trip.mode.driving" = "Voiture";
+"trip.mode.stationary" = "Stationnaire";
+
+// MARK: - Map Search
+"map.search.placeholder" = "Rechercher des lieux...";
+"map.search.hospital" = "Hôpital";
+"map.search.police" = "Police";
+"map.search.pharmacy" = "Pharmacie";
+"map.search.gas" = "Essence";
+"map.search.unknown" = "Lieu inconnu";
+"map.search.food" = "Restaurant";
+"map.search.cafe" = "Café";
+"map.search.noResults" = "Aucun résultat";
+"map.search.openInMaps" = "Ouvrir dans Plans";
+
 // MARK: - Guardian Records Tabs (dynamic)
 "guardian.records.tab.时间线" = "Chronologie";
 "guardian.records.tab.排班" = "Planning";

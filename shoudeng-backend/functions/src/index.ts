@@ -46,6 +46,7 @@ import silentAlarmRoutes from "./routes/silentAlarm";
 import badgeRoutes from "./routes/badges";
 import widgetRoutes from "./routes/widget";
 import coverageRoutes from "./routes/coverage";
+import tripRoutes from "./routes/trip";
 import { createRateLimiter, RATE_LIMITS } from "./middleware/rateLimit";
 
 // --- Mount Routes ---
@@ -115,6 +116,9 @@ app.use("/v1/silent-alarm", silentAlarmRoutes);
 app.use("/v1/badges", badgeRoutes);
 app.use("/v1/widget", widgetRoutes);
 app.use("/v1/coverage", coverageRoutes);
+
+// Phase 15: Trip Recording & History
+app.use("/v1/trip", tripRoutes);
 
 // --- Voice callback for Twilio ---
 // Multi-language TwiML responses based on query param or default

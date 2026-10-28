@@ -72,6 +72,7 @@ final class AppCoordinator: ObservableObject {
     let locationBatchUploader = LocationBatchUploader()
     let voiceNoteService = VoiceNoteService()
     let bleTrackerService = BLETrackerService.shared
+    let tripRecordingService = TripRecordingService()
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -126,6 +127,9 @@ final class AppCoordinator: ObservableObject {
                 self?.addTimelineEntry(type: .enteredSafeZone, description: "蓝牙标签「\(tag.name)」重新进入范围")
             }
         )
+
+        // Wire trip recording service
+        tripRecordingService.configure(apiClient: apiClient)
 
         wireServices()
         restoreLocalState()
@@ -588,10 +592,23 @@ final class AppCoordinator: ObservableObject {
         if ProcessInfo.processInfo.arguments.contains("-screenshot") { return }
         #endif
 
-        // Location → Heartbeat + Server + Reactive SwiftUI bridge
+        // Location → Heartbeat + Server + Reactive SwiftUI bridge + Trip recording
         locationManager.onLocationReport = { [weak self] location in
             self?.heartbeatService.recordBeat(source: .significantLocation, location: location)
             self?.handleLocationUpdate(location)
+            // Feed location to trip recording if active
+            if self?.tripRecordingService.isRecording == true {
+                let clLoc = CLLocation(
+                    coordinate: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude),
+                    altitude: location.altitude ?? 0,
+                    horizontalAccuracy: location.accuracy,
+                    verticalAccuracy: -1,
+                    course: -1,
+                    speed: location.speed ?? -1,
+                    timestamp: location.timestamp
+                )
+                self?.tripRecordingService.addPoint(clLoc)
+            }
         }
         // Bind reactive service AFTER setting the callback — it preserves the chain
         locationService.bind(to: locationManager)

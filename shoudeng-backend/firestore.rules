@@ -160,6 +160,20 @@ service cloud.firestore {
       allow write: if false; // Server-side only
     }
 
+    // Trips — owner read/write, linked guardians can read
+    match /trips/{tripId} {
+      allow read: if isAuth() && (
+        resource.data.userId == request.auth.uid ||
+        isGuardianOf(resource.data.userId)
+      );
+      allow write: if false; // Server-side only
+
+      match /points/{pointId} {
+        allow read: if isAuth();
+        allow write: if false; // Server-side only
+      }
+    }
+
     // Default deny
     match /{document=**} {
       allow read, write: if false;

@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BB22CC3300001001 /* TripRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC3300002001 /* TripRecord.swift */; };
+		BB22CC3300001002 /* TripRecordingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC3300002002 /* TripRecordingService.swift */; };
+		BB22CC3300001003 /* TripHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC3300002003 /* TripHistoryView.swift */; };
+		BB22CC3300001004 /* TripDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC3300002004 /* TripDetailView.swift */; };
 		AA11BB2200001001 /* DuressCodeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB2200002001 /* DuressCodeSettingsView.swift */; };
 		AA11BB2200001002 /* SilentAlarmSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB2200002002 /* SilentAlarmSettingsView.swift */; };
 		AA11BB2200001003 /* SilentAlarmService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB2200002003 /* SilentAlarmService.swift */; };
@@ -348,6 +352,10 @@
 		81A8E640688E46F1A5BE45E8 /* VoiceCommandService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCommandService.swift; sourceTree = "<group>"; };
 		DFF29F4226BF4C368B186B83 /* AudioSessionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSessionCoordinator.swift; sourceTree = "<group>"; };
 		331DA921543B4CBF8494F9CB /* VoiceNoteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceNoteService.swift; sourceTree = "<group>"; };
+		BB22CC3300002001 /* TripRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRecord.swift; sourceTree = "<group>"; };
+		BB22CC3300002002 /* TripRecordingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRecordingService.swift; sourceTree = "<group>"; };
+		BB22CC3300002003 /* TripHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripHistoryView.swift; sourceTree = "<group>"; };
+		BB22CC3300002004 /* TripDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripDetailView.swift; sourceTree = "<group>"; };
 		AA11BB2200002001 /* DuressCodeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuressCodeSettingsView.swift; sourceTree = "<group>"; };
 		AA11BB2200002002 /* SilentAlarmSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilentAlarmSettingsView.swift; sourceTree = "<group>"; };
 		AA11BB2200002003 /* SilentAlarmService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilentAlarmService.swift; sourceTree = "<group>"; };
@@ -538,6 +546,7 @@
 				F6FB12D36F67ADB24BA2DDD5 /* CountryCode.swift */,
 				090ED02D65906AB2947D49C5 /* Events.swift */,
 				F1C3DE3DA8E9EEE6CEB01B71 /* User.swift */,
+				BB22CC3300002001 /* TripRecord.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -568,6 +577,7 @@
 			children = (
 				A1B2C3D4E5F6A7B8C9D0E1F2 /* ReactiveLocationService.swift */,
 				AE1267A17B7842458F45DF8F /* LocationBatchUploader.swift */,
+				BB22CC3300002002 /* TripRecordingService.swift */,
 			);
 			path = Location;
 			sourceTree = "<group>";
@@ -614,6 +624,8 @@
 				525930DD8BF30E7421491576 /* HotlineCardView.swift */,
 				3D4BC3608A17EB87F1339C43 /* LegalView.swift */,
 				36FD0E52F4564B5B9E057EB3 /* LocationCardView.swift */,
+				BB22CC3300002003 /* TripHistoryView.swift */,
+				BB22CC3300002004 /* TripDetailView.swift */,
 				0879BC98D0B4991130725412 /* MedicalCardView.swift */,
 				3466851E2976AD062984576F /* OnboardingView.swift */,
 				5A999FE740978FB9A70C0B89 /* ProfileEditView.swift */,
@@ -1176,6 +1188,10 @@
 				C980F286538D455C19BECABA /* StoreKitManager.swift in Sources */,
 				47CD6276A165F690D3747109 /* TrajectoryProcessor.swift in Sources */,
 				35159B7DB49900FACD831968 /* User.swift in Sources */,
+				BB22CC3300001001 /* TripRecord.swift in Sources */,
+				BB22CC3300001002 /* TripRecordingService.swift in Sources */,
+				BB22CC3300001003 /* TripHistoryView.swift in Sources */,
+				BB22CC3300001004 /* TripDetailView.swift in Sources */,
 				0B1E36F80D59153D5A93D7BA /* VerticalTabRail.swift in Sources */,
 				42A6F0543B22E8DBB972EEBD /* WidgetDataStore.swift in Sources */,
 				56AD258510E394952C8E2319 /* WidgetState.swift in Sources */,
@@ -1310,7 +1326,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 26;
+				CURRENT_PROJECT_VERSION = 27;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1369,7 +1385,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 26;
+				CURRENT_PROJECT_VERSION = 27;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1557,7 +1573,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 26;
+				CURRENT_PROJECT_VERSION = 27;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
