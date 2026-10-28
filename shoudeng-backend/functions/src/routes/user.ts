@@ -48,12 +48,19 @@ router.get("/me", async (req: Request, res: Response) => {
  */
 router.put("/me", async (req: Request, res: Response) => {
   const uid = req.uid!;
-  const { displayName, email, timeZone, cityName, countryCode, publicKey } = req.body;
+  const { displayName, email, timeZone, cityName, countryCode, publicKey, role } = req.body;
 
   const updates: Record<string, unknown> = {
     updatedAt: admin.firestore.Timestamp.now(),
   };
 
+  if (role !== undefined) {
+    if (!["protected", "guardian"].includes(role)) {
+      res.status(400).json({ error: "Role must be 'protected' or 'guardian'" });
+      return;
+    }
+    updates.role = role;
+  }
   if (displayName !== undefined) {
     if (typeof displayName !== "string" || displayName.length > 100) {
       res.status(400).json({ error: "displayName must be a string of 100 characters or less" });

@@ -840,6 +840,7 @@
 "protected.settings.sos.watch" = "Apple Watch";
 
 "settings.action.cancel" = "取消";
+"settings.action.confirm" = "确认";
 "settings.action.deletePermanently" = "永久删除";
 "settings.action.edit" = "编辑";
 "settings.action.ok" = "好的";

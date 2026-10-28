@@ -426,6 +426,23 @@ final class AppCoordinator: ObservableObject {
         }
     }
 
+    // MARK: - Switch Role
+
+    func switchRole(to newRole: UserRole) async throws {
+        let _: [String: Bool] = try await apiClient.put(
+            "/v1/user/me",
+            body: ["role": newRole.rawValue]
+        )
+        await MainActor.run {
+            self.userRole = newRole
+            self.currentUser?.role = newRole
+            if let user = self.currentUser {
+                self.localStore.saveCurrentUser(user)
+            }
+            self.localStore.saveUserRole(newRole)
+        }
+    }
+
     // MARK: - Fetch Data
 
     func fetchProtectedPersons() async {

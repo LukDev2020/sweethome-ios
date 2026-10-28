@@ -132,6 +132,10 @@ struct SignupView: View {
                     coordinator.signupCountry = nil
                 }
                 checkLockout()
+                applyLanguageForCountry(selectedCountry)
+            }
+            .onChange(of: selectedCountry) { _, newCountry in
+                applyLanguageForCountry(newCountry)
             }
             .onDisappear {
                 countdownTimer?.invalidate()
@@ -168,6 +172,23 @@ struct SignupView: View {
                 .lineSpacing(4)
                 .padding(.top, 12)
                 .padding(.horizontal, 40)
+        }
+    }
+
+    // MARK: - Language Auto-Switch
+
+    private func applyLanguageForCountry(_ country: CountryCode) {
+        let chineseRegions: Set<String> = ["CN", "HK", "MO", "TW"]
+        let target: AppLanguage
+        if chineseRegions.contains(country.isoCode) {
+            target = .chinese
+        } else if country.isoCode == "FR" {
+            target = .french
+        } else {
+            target = .english
+        }
+        if lang.current != target {
+            lang.current = target
         }
     }
 

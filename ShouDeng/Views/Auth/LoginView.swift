@@ -65,6 +65,10 @@ struct LoginView: View {
         }
         .onAppear {
             checkLockout()
+            applyLanguageForCountry(selectedCountry)
+        }
+        .onChange(of: selectedCountry) { _, newCountry in
+            applyLanguageForCountry(newCountry)
         }
         .onDisappear {
             countdownTimer?.invalidate()
@@ -427,6 +431,23 @@ struct LoginView: View {
     }
 
     // MARK: - Helpers
+
+    /// Auto-switch app language based on selected country code.
+    /// China/HK/Macau/Taiwan → Chinese, France → French, rest → English.
+    private func applyLanguageForCountry(_ country: CountryCode) {
+        let chineseRegions: Set<String> = ["CN", "HK", "MO", "TW"]
+        let target: AppLanguage
+        if chineseRegions.contains(country.isoCode) {
+            target = .chinese
+        } else if country.isoCode == "FR" {
+            target = .french
+        } else {
+            target = .english
+        }
+        if lang.current != target {
+            lang.current = target
+        }
+    }
 
     private var fullPhoneNumber: String {
         let cleaned = phone.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)

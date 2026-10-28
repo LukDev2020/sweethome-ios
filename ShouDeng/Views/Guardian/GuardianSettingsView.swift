@@ -95,7 +95,18 @@ struct GuardianSettingsView: View {
                 Text(langManager.localized("settings.alert.error.message"))
             }
             .alert(langManager.localized("settings.alert.roleSwitch.title"), isPresented: $showRoleSwitchInfo) {
-                Button(langManager.localized("settings.action.understood")) {}
+                Button(langManager.localized("settings.action.confirm"), role: .destructive) {
+                    Task {
+                        do {
+                            try await coordinator.switchRole(to: .protected_)
+                        } catch {
+                            #if DEBUG
+                            print("[Settings] Role switch failed: \(error)")
+                            #endif
+                        }
+                    }
+                }
+                Button(langManager.localized("settings.action.cancel"), role: .cancel) {}
             } message: {
                 Text(langManager.localized("guardian.settings.alert.roleSwitch.message"))
             }

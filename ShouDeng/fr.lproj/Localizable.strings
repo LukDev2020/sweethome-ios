@@ -840,6 +840,7 @@ vos gardiens seront automatiquement notifiés.";
 "protected.settings.sos.watch" = "Apple Watch";
 
 "settings.action.cancel" = "Annuler";
+"settings.action.confirm" = "Confirmer";
 "settings.action.deletePermanently" = "Supprimer définitivement";
 "settings.action.edit" = "Modifier";
 "settings.action.ok" = "OK";
