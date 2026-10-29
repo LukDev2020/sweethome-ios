@@ -146,10 +146,13 @@ final class TrackerDetectionService: NSObject, ObservableObject {
     private var centralManager: CBCentralManager?
     private var locationManager: CLLocationManager?
 
+    /// Serial queue protecting allSightings from concurrent BLE + main thread access
+    private let dataQueue = DispatchQueue(label: "com.shoudeng.tracker-detection.data")
+
     /// Raw sighting log — persisted, pruned on every scan cycle.
-    private var allSightings: [TrackerSighting] = [] {
-        didSet { persistSightings() }
-    }
+    /// Access ONLY from dataQueue.
+    private var allSightings: [TrackerSighting] = []
+    private var sightingsDirty = false
 
     /// Peripheral IDs the user has chosen to ignore.
     private(set) var ignoredTrackers: Set<UUID> = [] {
@@ -159,7 +162,7 @@ final class TrackerDetectionService: NSObject, ObservableObject {
     /// User's recent location history, used for "following" pattern detection.
     private var userLocationHistory: [CLLocation] = []
 
-    private var scanTimer: Timer?
+    private var scanTimer: DispatchSourceTimer?
 
     // MARK: - Init
 
@@ -220,42 +223,46 @@ final class TrackerDetectionService: NSObject, ObservableObject {
 
     private func scheduleScanCycle() {
         cancelScanTimer()
-        // Fire immediately, then every scanInterval seconds.
         performScanCycle()
-        scanTimer = Timer.scheduledTimer(
-            withTimeInterval: Keys.scanInterval,
-            repeats: true
-        ) { [weak self] _ in
+        let timer = DispatchSource.makeTimerSource(queue: .global(qos: .utility))
+        timer.schedule(deadline: .now() + Keys.scanInterval, repeating: Keys.scanInterval)
+        timer.setEventHandler { [weak self] in
             self?.performScanCycle()
         }
+        timer.resume()
+        scanTimer = timer
     }
 
     private func cancelScanTimer() {
-        scanTimer?.invalidate()
+        scanTimer?.cancel()
         scanTimer = nil
     }
 
     private func performScanCycle() {
         guard let central = centralManager, central.state == .poweredOn else { return }
 
-        // Stop any ongoing scan, prune old data, then restart.
         central.stopScan()
-        pruneOldSightings()
+        dataQueue.async { [weak self] in
+            self?.pruneOldSightings()
+        }
 
-        // Scan ALL BLE advertisements with duplicates allowed (we want RSSI updates).
-        // Note: CBCentralManagerScanOptionAllowDuplicatesKey is ignored in background.
         central.scanForPeripherals(withServices: nil, options: [
             CBCentralManagerScanOptionAllowDuplicatesKey: true
         ])
 
         DispatchQueue.main.async { self.isScanning = true }
 
-        // Stop after 25 seconds (5 s buffer before next 30-s cycle).
         DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 25) { [weak self] in
             guard let self else { return }
             self.centralManager?.stopScan()
             DispatchQueue.main.async { self.isScanning = false }
-            // Recompute threat scores across all known trackers.
+            // Persist once per cycle instead of on every BLE callback
+            self.dataQueue.async {
+                if self.sightingsDirty {
+                    self.persistSightings()
+                    self.sightingsDirty = false
+                }
+            }
             self.recomputeAllThreatScores()
         }
     }
@@ -277,14 +284,15 @@ final class TrackerDetectionService: NSObject, ObservableObject {
             timestamp: Date()
         )
 
-        allSightings.append(sighting)
-
-        // Cap total stored entries.
-        if allSightings.count > Keys.maxSightings {
-            allSightings.removeFirst(allSightings.count - Keys.maxSightings)
+        dataQueue.async { [weak self] in
+            guard let self else { return }
+            self.allSightings.append(sighting)
+            if self.allSightings.count > Keys.maxSightings {
+                self.allSightings.removeFirst(self.allSightings.count - Keys.maxSightings)
+            }
+            self.sightingsDirty = true
         }
 
-        // Eagerly update or insert the DetectedTracker model on main thread.
         let name = advertisementData[CBAdvertisementDataLocalNameKey] as? String
         let type = inferTrackerType(advertisementData: advertisementData)
 
@@ -331,15 +339,18 @@ final class TrackerDetectionService: NSObject, ObservableObject {
     // MARK: - Threat Scoring
 
     private func recomputeAllThreatScores() {
-        DispatchQueue.main.async { [weak self] in
+        // Snapshot sightings under dataQueue to avoid data races
+        dataQueue.async { [weak self] in
             guard let self else { return }
-            for idx in self.detectedTrackers.indices {
-                // Refresh sightings from persisted log.
-                self.detectedTrackers[idx].sightings = self.allSightings.filter {
-                    $0.peripheralId == self.detectedTrackers[idx].peripheralId
+            let snapshot = self.allSightings
+            DispatchQueue.main.async {
+                for idx in self.detectedTrackers.indices {
+                    self.detectedTrackers[idx].sightings = snapshot.filter {
+                        $0.peripheralId == self.detectedTrackers[idx].peripheralId
+                    }
+                    self.recomputeThreatScore(for: &self.detectedTrackers[idx])
+                    self.evaluateAlerts(for: self.detectedTrackers[idx])
                 }
-                self.recomputeThreatScore(for: &self.detectedTrackers[idx])
-                self.evaluateAlerts(for: self.detectedTrackers[idx])
             }
         }
     }

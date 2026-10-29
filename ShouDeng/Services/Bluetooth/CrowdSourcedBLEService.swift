@@ -39,7 +39,7 @@ final class CrowdSourcedBLEService: NSObject, ObservableObject {
     private let queue = DispatchQueue(label: "com.shoudeng.crowd-ble", qos: .utility)
 
     // Injected API client (set via configure())
-    private var apiClient: APIClient?
+    private weak var apiClient: APIClient?
     private var encryption: E2ELocationEncryption?
 
     struct CrowdSighting: Codable {
@@ -78,9 +78,10 @@ final class CrowdSourcedBLEService: NSObject, ObservableObject {
         locationManager = CLLocationManager()
         locationManager?.desiredAccuracy = kCLLocationAccuracyHundredMeters
         locationManager?.allowsBackgroundLocationUpdates = true
+        locationManager?.startUpdatingLocation()
 
         startFlushTimer()
-        isParticipating = true
+        DispatchQueue.main.async { self.isParticipating = true }
 
         Task { await refreshKnownTags() }
     }

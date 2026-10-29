@@ -447,17 +447,23 @@ final class IndoorPositioningService: NSObject, ObservableObject {
         currentHeadingRadians = (.pi / 2) - yaw
     }
 
+    private var previousCumulativeDistance: Double = 0
+    private var previousCumulativeSteps: Int = 0
+
     private func handlePedometerData(_ data: CMPedometerData) {
         guard let dist = data.distance?.doubleValue else {
-            // Fallback: steps × stride length
-            let steps = data.numberOfSteps.intValue
+            // Fallback: steps × stride length (CMPedometer steps are cumulative)
+            let cumulativeSteps = data.numberOfSteps.intValue
+            let deltaSteps = max(cumulativeSteps - previousCumulativeSteps, 0)
+            previousCumulativeSteps = cumulativeSteps
             let stride = effectiveStrideLengthMetres()
-            let totalDist = Double(steps) * stride
-            pendingStepDistance += max(totalDist - (data.numberOfSteps.intValue == 0 ? 0 : 0), 0)
+            pendingStepDistance += Double(deltaSteps) * stride
             return
         }
-        // CMPedometer gives cumulative distance since start — take delta
-        pendingStepDistance += dist
+        // CMPedometer distance is cumulative since startUpdates — compute delta
+        let delta = max(dist - previousCumulativeDistance, 0)
+        previousCumulativeDistance = dist
+        pendingStepDistance += delta
     }
 
     private func handleMotionActivity(_ activity: CMMotionActivity) {

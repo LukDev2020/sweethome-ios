@@ -711,9 +711,10 @@ final class DeadManSwitchService: ObservableObject {
             options: []
         )
 
-        UNUserNotificationCenter.current().setNotificationCategories(
-            [warningCategory, expiredCategory]
-        )
+        let center = UNUserNotificationCenter.current()
+        center.getNotificationCategories { existing in
+            center.setNotificationCategories(existing.union([warningCategory, expiredCategory]))
+        }
     }
 
     // MARK: - Notification Response Handling

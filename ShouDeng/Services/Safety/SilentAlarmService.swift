@@ -171,6 +171,9 @@ final class SilentAlarmService: ObservableObject {
             intentIdentifiers: [],
             options: [.customDismissAction]
         )
-        UNUserNotificationCenter.current().setNotificationCategories([category])
+        let center = UNUserNotificationCenter.current()
+        center.getNotificationCategories { existing in
+            center.setNotificationCategories(existing.union([category]))
+        }
     }
 }

@@ -122,9 +122,10 @@ final class PushService: NSObject {
         )
 
         let center = UNUserNotificationCenter.current()
-        center.setNotificationCategories([
-            sosCategory, warningCategory, checkInCategory, handoffCategory
-        ])
+        let newCategories: Set<UNNotificationCategory> = [sosCategory, warningCategory, checkInCategory, handoffCategory]
+        center.getNotificationCategories { existing in
+            center.setNotificationCategories(existing.union(newCategories))
+        }
     }
 
     // MARK: - Schedule Local Notifications

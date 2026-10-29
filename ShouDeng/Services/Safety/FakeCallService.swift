@@ -241,7 +241,11 @@ final class FakeCallService: NSObject, ObservableObject {
         callState = .active
         callDuration = 0
         startDurationTimer()
+        #if targetEnvironment(simulator)
+        // On simulator, no CallKit didActivate — start audio directly
         startConversationAudio()
+        #endif
+        // On device, audio is started by provider(_:didActivate:) to avoid double playback
     }
 
     private func startDurationTimer() {
@@ -363,7 +367,10 @@ final class FakeCallService: NSObject, ObservableObject {
             intentIdentifiers: [],
             options: [.customDismissAction]
         )
-        UNUserNotificationCenter.current().setNotificationCategories([category])
+        let center = UNUserNotificationCenter.current()
+        center.getNotificationCategories { existing in
+            center.setNotificationCategories(existing.union([category]))
+        }
     }
 }
 
@@ -396,6 +403,7 @@ extension FakeCallService: CXProviderDelegate {
     func provider(_ provider: CXProvider, didDeactivate audioSession: AVAudioSession) {
         audioPlayer?.stop()
         audioPlayer = nil
+        deactivateAudioSession()
     }
 
     func provider(_ provider: CXProvider, perform action: CXSetMutedCallAction) {

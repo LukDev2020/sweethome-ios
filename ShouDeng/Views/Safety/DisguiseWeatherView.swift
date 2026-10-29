@@ -17,6 +17,8 @@ struct DisguiseWeatherView: View {
 
     private let conditions = ["sun.max.fill", "cloud.sun.fill", "cloud.fill", "cloud.rain.fill", "cloud.bolt.fill"]
     @State private var conditionIndex = Int.random(in: 0...4)
+    @State private var hourlyOffsets: [Int] = (0..<12).map { _ in Int.random(in: -3...3) }
+    @State private var uvIndex = Int.random(in: 1...8)
 
     private let weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
@@ -74,7 +76,7 @@ struct DisguiseWeatherView: View {
                                 Image(systemName: conditions[(conditionIndex + hour) % conditions.count])
                                     .font(.system(size: 20))
                                     .foregroundStyle(.white)
-                                Text("\(temperature + Int.random(in: -3...3))\u{00B0}")
+                                Text("\(temperature + hourlyOffsets[hour])\u{00B0}")
                                     .font(.system(size: 16, weight: .medium))
                                     .foregroundStyle(.white)
                             }
@@ -148,7 +150,7 @@ struct DisguiseWeatherView: View {
                         Text("UV Index")
                             .font(.system(size: 12))
                             .foregroundStyle(.white.opacity(0.5))
-                        Text("\(Int.random(in: 1...8))")
+                        Text("\(uvIndex)")
                             .font(.system(size: 16))
                             .foregroundStyle(.white)
                     }
