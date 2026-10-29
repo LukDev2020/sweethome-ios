@@ -985,6 +985,16 @@ vos gardiens seront automatiquement notifiés.";
 "map.search.noResults" = "Aucun résultat";
 "map.search.openInMaps" = "Ouvrir dans Plans";
 
+// MARK: - Navigation Route
+"map.route.navigate" = "Naviguer";
+"map.route.walking" = "Marche";
+"map.route.cycling" = "Vélo";
+"map.route.driving" = "Voiture";
+"map.route.transit" = "Transport";
+"map.route.steps" = "%d étapes";
+"map.route.duration.m" = "%d min";
+"map.route.duration.hm" = "%dh %dm";
+
 // MARK: - Guardian Records Tabs (dynamic)
 "guardian.records.tab.时间线" = "Chronologie";
 "guardian.records.tab.排班" = "Planning";

@@ -544,6 +544,55 @@ struct FullScreenMapView: View {
         case d7 = "7d"
     }
 
+    // Navigation route state
+    @State private var activeRoute: MKRoute?
+    @State private var routeTransportMode: RouteTransportMode = .walking
+    @State private var isCalculatingRoute = false
+    @State private var routeSteps: [MKRoute.Step] = []
+    @State private var showRouteSteps = false
+
+    enum RouteTransportMode: String, CaseIterable {
+        case walking
+        case cycling
+        case driving
+        case transit
+
+        var icon: String {
+            switch self {
+            case .walking: return "figure.walk"
+            case .cycling: return "bicycle"
+            case .driving: return "car.fill"
+            case .transit: return "bus.fill"
+            }
+        }
+
+        var mkType: MKDirectionsTransportType {
+            switch self {
+            case .walking, .cycling: return .walking
+            case .driving: return .automobile
+            case .transit: return .transit
+            }
+        }
+
+        var mapLaunchMode: String {
+            switch self {
+            case .walking: return MKLaunchOptionsDirectionsModeWalking
+            case .cycling: return MKLaunchOptionsDirectionsModeWalking
+            case .driving: return MKLaunchOptionsDirectionsModeDriving
+            case .transit: return MKLaunchOptionsDirectionsModeTransit
+            }
+        }
+
+        var color: Color {
+            switch self {
+            case .walking: return Color(red: 63/255, green: 143/255, blue: 110/255)
+            case .cycling: return Color(red: 61/255, green: 154/255, blue: 192/255)
+            case .driving: return Color(red: 107/255, green: 92/255, blue: 165/255)
+            case .transit: return Color(red: 232/255, green: 163/255, blue: 61/255)
+            }
+        }
+    }
+
     // POI categories
     private let poiCategories: [(icon: String, label: String, category: MKPointOfInterestCategory)] = [
         ("cross.fill", "map.search.hospital", .hospital),
@@ -640,6 +689,12 @@ struct FullScreenMapView: View {
                         }
                     }
                 }
+
+                // Navigation route polyline
+                if let route = activeRoute {
+                    MapPolyline(route.polyline)
+                        .stroke(routeTransportMode.color, lineWidth: 5)
+                }
             }
             .mapStyle(.standard(pointsOfInterest: .excludingAll))
             .ignoresSafeArea()
@@ -724,6 +779,7 @@ struct FullScreenMapView: View {
                                 searchText = ""
                                 searchResults = []
                                 selectedSearchItem = nil
+                                clearRoute()
                             } else {
                                 searchFieldFocused = true
                             }
@@ -770,8 +826,18 @@ struct FullScreenMapView: View {
 
                 Spacer()
 
+                // Navigation route panel
+                if activeRoute != nil {
+                    routePanel
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+                // Navigate button for selected search result (no active route)
+                else if selectedSearchItem != nil && activeRoute == nil {
+                    navigateButton
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
                 // Bottom info panel
-                if let pin = selectedPin {
+                else if let pin = selectedPin {
                     selectedPinPanel(pin)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 } else if let address = addressText {
@@ -908,6 +974,218 @@ struct FullScreenMapView: View {
             isFollowing = true
             selectedPin = nil
         }
+    }
+
+    // MARK: - Navigate Button
+
+    private var navigateButton: some View {
+        Button {
+            calculateRoute()
+        } label: {
+            HStack(spacing: 6) {
+                if isCalculatingRoute {
+                    ProgressView()
+                        .tint(.white)
+                        .scaleEffect(0.8)
+                } else {
+                    Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
+                        .font(.scaled(size: 14))
+                }
+                Text(LanguageManager.shared.localized("map.route.navigate"))
+                    .font(.scaled(size: 14, weight: .semibold))
+            }
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(safe)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+        .disabled(isCalculatingRoute)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
+    }
+
+    // MARK: - Route Panel
+
+    private var routePanel: some View {
+        VStack(spacing: 10) {
+            // ETA + distance
+            if let route = activeRoute {
+                HStack {
+                    Image(systemName: routeTransportMode.icon)
+                        .font(.scaled(size: 16))
+                        .foregroundStyle(routeTransportMode.color)
+                    Text(formatRouteDuration(route.expectedTravelTime))
+                        .font(.scaled(size: 16, weight: .bold))
+                        .foregroundStyle(.white)
+                    Text("·")
+                        .foregroundStyle(.white.opacity(0.4))
+                    Text(formatSearchDistance(route.distance))
+                        .font(.scaled(size: 14))
+                        .foregroundStyle(.white.opacity(0.7))
+                    Spacer()
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            clearRoute()
+                        }
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.scaled(size: 22))
+                            .foregroundStyle(.white.opacity(0.5))
+                    }
+                }
+            }
+
+            // Transport mode picker
+            HStack(spacing: 4) {
+                ForEach(RouteTransportMode.allCases, id: \.self) { mode in
+                    Button {
+                        routeTransportMode = mode
+                        calculateRoute()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: mode.icon)
+                                .font(.scaled(size: 12))
+                            Text(LanguageManager.shared.localized("map.route.\(mode.rawValue)"))
+                                .font(.scaled(size: 11, weight: .medium))
+                        }
+                        .foregroundStyle(routeTransportMode == mode ? .white : .white.opacity(0.6))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(routeTransportMode == mode ? mode.color.opacity(0.8) : ink.opacity(0.3))
+                        .clipShape(Capsule())
+                    }
+                }
+            }
+
+            // Directions steps (collapsible)
+            if !routeSteps.isEmpty {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showRouteSteps.toggle()
+                    }
+                } label: {
+                    HStack {
+                        Image(systemName: "list.bullet")
+                            .font(.scaled(size: 12))
+                        Text(String(format: LanguageManager.shared.localized("map.route.steps"), routeSteps.count))
+                            .font(.scaled(size: 12))
+                        Spacer()
+                        Image(systemName: showRouteSteps ? "chevron.up" : "chevron.down")
+                            .font(.scaled(size: 10))
+                    }
+                    .foregroundStyle(.white.opacity(0.7))
+                }
+
+                if showRouteSteps {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 6) {
+                            ForEach(Array(routeSteps.enumerated()), id: \.offset) { idx, step in
+                                if !step.instructions.isEmpty {
+                                    HStack(alignment: .top, spacing: 8) {
+                                        Text("\(idx + 1)")
+                                            .font(.scaled(size: 11, weight: .bold))
+                                            .foregroundStyle(routeTransportMode.color)
+                                            .frame(width: 20)
+                                        VStack(alignment: .leading, spacing: 1) {
+                                            Text(step.instructions)
+                                                .font(.scaled(size: 12))
+                                                .foregroundStyle(.white)
+                                            if step.distance > 0 {
+                                                Text(formatSearchDistance(step.distance))
+                                                    .font(.scaled(size: 10))
+                                                    .foregroundStyle(.white.opacity(0.5))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .frame(maxHeight: 160)
+                }
+            }
+
+            // Open in Apple Maps
+            Button {
+                openInAppleMaps()
+            } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "map.fill")
+                        .font(.scaled(size: 12))
+                    Text(LanguageManager.shared.localized("map.search.openInMaps"))
+                        .font(.scaled(size: 13, weight: .medium))
+                }
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(ink.opacity(0.4))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+        }
+        .padding(14)
+        .background(ink.opacity(0.85))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
+    }
+
+    // MARK: - Route Logic
+
+    private func calculateRoute() {
+        guard let item = selectedSearchItem,
+              let destCoord = item.placemark.location?.coordinate,
+              let myCoord = locationService.currentLocation else { return }
+
+        isCalculatingRoute = true
+        let request = MKDirections.Request()
+        request.source = MKMapItem(placemark: MKPlacemark(coordinate: myCoord))
+        request.destination = item
+        request.transportType = routeTransportMode.mkType
+
+        let directions = MKDirections(request: request)
+        directions.calculate { response, error in
+            isCalculatingRoute = false
+            guard let response, let route = response.routes.first else {
+                // Fallback: if transit not available, try automobile
+                if routeTransportMode == .transit {
+                    activeRoute = nil
+                    routeSteps = []
+                }
+                return
+            }
+            withAnimation(.easeInOut(duration: 0.3)) {
+                activeRoute = route
+                routeSteps = route.steps
+                // Fit map to show entire route
+                let rect = route.polyline.boundingMapRect
+                let padding = UIEdgeInsets(top: 80, left: 40, bottom: 200, right: 40)
+                position = .rect(rect)
+            }
+        }
+    }
+
+    private func clearRoute() {
+        activeRoute = nil
+        routeSteps = []
+        showRouteSteps = false
+    }
+
+    private func openInAppleMaps() {
+        guard let item = selectedSearchItem else { return }
+        item.openInMaps(launchOptions: [
+            MKLaunchOptionsDirectionsModeKey: routeTransportMode.mapLaunchMode,
+        ])
+    }
+
+    private func formatRouteDuration(_ seconds: TimeInterval) -> String {
+        let mins = Int(seconds) / 60
+        if mins >= 60 {
+            let hours = mins / 60
+            let remainMins = mins % 60
+            return String(format: LanguageManager.shared.localized("map.route.duration.hm"), hours, remainMins)
+        }
+        return String(format: LanguageManager.shared.localized("map.route.duration.m"), mins)
     }
 
     // MARK: - Search Bar

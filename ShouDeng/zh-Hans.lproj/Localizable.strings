@@ -985,6 +985,16 @@
 "map.search.noResults" = "未找到结果";
 "map.search.openInMaps" = "在地图中打开";
 
+// MARK: - Navigation Route
+"map.route.navigate" = "导航";
+"map.route.walking" = "步行";
+"map.route.cycling" = "骑行";
+"map.route.driving" = "驾车";
+"map.route.transit" = "公交";
+"map.route.steps" = "%d 步骤";
+"map.route.duration.m" = "%d 分钟";
+"map.route.duration.hm" = "%d小时%d分";
+
 // MARK: - Guardian Records Tabs (dynamic)
 "guardian.records.tab.时间线" = "时间线";
 "guardian.records.tab.排班" = "排班";
