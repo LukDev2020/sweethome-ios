@@ -468,8 +468,8 @@ struct LoginView: View {
         isLoading = true
         defer { isLoading = false }
 
-        // Dev/test login bypass
-        // Phone: 6479283746 → code: 928374 (guardian) or 928375 (protected)
+        #if DEBUG
+        // Dev/test login bypass — DEBUG ONLY, never ships in production
         let devPhone = phone.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
         if devPhone == "6479283746" || devPhone == "6479283747" {
             if !codeSent {
@@ -479,7 +479,6 @@ struct LoginView: View {
             let devRole: String? = code == "928374" ? "guardian" : code == "928375" ? "protected" : nil
             if let devRole {
                 coordinator.authManager.devLogin(role: devRole)
-                // Set up dev user profile so home views have data
                 let devUser = User(
                     id: coordinator.authManager.currentUserId ?? "dev",
                     displayName: devRole == "guardian" ? "测试守护者" : "测试被守护者",
@@ -507,13 +506,13 @@ struct LoginView: View {
                 )
                 coordinator.currentUser = devUser
                 coordinator.userRole = devUser.role
-                // Trigger setup wizard for first-time dev users
                 if !UserDefaults.standard.bool(forKey: "setupWizardComplete") {
                     coordinator.showSetupWizard = true
                 }
                 return
             }
         }
+        #endif
 
         do {
             if codeSent {

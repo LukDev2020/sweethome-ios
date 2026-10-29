@@ -1,6 +1,7 @@
 import UIKit
 import CoreBluetooth
 import CoreLocation
+import CryptoKit
 
 // MARK: - Crowd-Sourced BLE Sighting Network
 //
@@ -150,7 +151,12 @@ final class CrowdSourcedBLEService: NSObject, ObservableObject {
             return
         }
 
-        let deviceId = UIDevice.current.identifierForVendor?.uuidString ?? "unknown"
+        // Rotating daily hash — prevents cross-session reporter correlation
+        let rawId = (UIDevice.current.identifierForVendor?.uuidString ?? "unknown")
+        let daySalt = ISO8601DateFormatter().string(from: Date()).prefix(10)
+        let input = Data((rawId + String(daySalt)).utf8)
+        let hash = SHA256.hash(data: input)
+        let deviceId = hash.prefix(8).map { String(format: "%02x", $0) }.joined()
         let sighting = CrowdSighting(
             tagUUID: upperUUID,
             encryptedLocation: encryptedLocation,

@@ -131,7 +131,12 @@ final class ConsentLogger {
             handle.write(data)
             handle.closeFile()
         } else {
-            try? data.write(to: fileURL, options: .atomic)
+            try? data.write(to: fileURL, options: [.atomic, .completeFileProtection])
+            // Exclude from device backups to prevent PII leakage
+            var resourceURL = fileURL
+            var values = URLResourceValues()
+            values.isExcludedFromBackup = true
+            try? resourceURL.setResourceValues(values)
         }
     }
 

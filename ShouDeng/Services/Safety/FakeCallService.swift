@@ -56,19 +56,22 @@ final class FakeCallService: NSObject, ObservableObject {
 
     // MARK: - Persisted Settings
 
-    @Published var callerName: String = UserDefaults.standard.string(forKey: "fakeCall_callerName") ?? "妈妈" {
-        didSet { UserDefaults.standard.set(callerName, forKey: "fakeCall_callerName") }
+    // Settings stored in Keychain to prevent discovery via device backup inspection
+    @Published var callerName: String = KeychainHelper.shared.read("fc_cn") ?? "妈妈" {
+        didSet { KeychainHelper.shared.save("fc_cn", value: callerName) }
     }
 
     @Published var selectedDelay: FakeCallDelay = {
-        let raw = UserDefaults.standard.integer(forKey: "fakeCall_delay")
-        return FakeCallDelay(rawValue: raw) ?? .five
+        if let raw = KeychainHelper.shared.read("fc_dl"), let val = Int(raw) {
+            return FakeCallDelay(rawValue: val) ?? .five
+        }
+        return .five
     }() {
-        didSet { UserDefaults.standard.set(selectedDelay.rawValue, forKey: "fakeCall_delay") }
+        didSet { KeychainHelper.shared.save("fc_dl", value: String(selectedDelay.rawValue)) }
     }
 
-    @Published var triggerSilentSOSOnEnd: Bool = UserDefaults.standard.bool(forKey: "fakeCall_autoSOS") {
-        didSet { UserDefaults.standard.set(triggerSilentSOSOnEnd, forKey: "fakeCall_autoSOS") }
+    @Published var triggerSilentSOSOnEnd: Bool = KeychainHelper.shared.read("fc_sos") == "1" {
+        didSet { KeychainHelper.shared.save("fc_sos", value: triggerSilentSOSOnEnd ? "1" : "0") }
     }
 
     // MARK: - Runtime State

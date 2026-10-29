@@ -67,6 +67,11 @@ final class OfflineQueue {
                 handle.closeFile()
             } else {
                 try? data.write(to: self.fileURL, options: [.atomic, .completeFileProtection])
+                // Exclude from device backups
+                var resourceURL = self.fileURL
+                var values = URLResourceValues()
+                values.isExcludedFromBackup = true
+                try? resourceURL.setResourceValues(values)
             }
         }
     }

@@ -111,15 +111,14 @@ final class DeadManSwitchService: ObservableObject {
 
     // MARK: - UserDefaults Keys
 
-    private enum UDKey {
-        static let isActive      = "dms_is_active"
-        static let startTime     = "dms_start_time"
-        static let totalDuration = "dms_total_duration"
-        static let isPaused      = "dms_is_paused"
-        static let pausedAt      = "dms_paused_at"
-        // Seconds remaining at the moment the timer was paused.
-        // Needed to reconstruct remaining when paused across a kill/relaunch.
-        static let remainingAtPause = "dms_remaining_at_pause"
+    // Keychain keys — neutral names to avoid revealing safety timer in backups
+    private enum KCKey {
+        static let isActive      = "dt_a"
+        static let startTime     = "dt_s"
+        static let totalDuration = "dt_d"
+        static let isPaused      = "dt_p"
+        static let pausedAt      = "dt_pa"
+        static let remainingAtPause = "dt_r"
     }
 
     // MARK: - Dependencies (injected after init)
@@ -242,14 +241,14 @@ final class DeadManSwitchService: ObservableObject {
     /// Call this once on app launch (e.g. from AppCoordinator.onAppear).
     /// Reconnects the in-memory timer to any persisted state that survived a kill.
     func restoreIfNeeded() {
-        let ud = UserDefaults.standard
-        guard ud.bool(forKey: UDKey.isActive) else { return }
+        let state = loadPersistedState()
+        guard state.isActive else { return }
 
-        let savedTotal     = ud.integer(forKey: UDKey.totalDuration)
-        let wasPaused      = ud.bool(forKey: UDKey.isPaused)
-        let savedStart     = ud.object(forKey: UDKey.startTime) as? Date
-        let savedPausedAt  = ud.object(forKey: UDKey.pausedAt) as? Date
-        let savedRemaining = ud.integer(forKey: UDKey.remainingAtPause)
+        let savedTotal     = state.totalDuration
+        let wasPaused      = state.isPaused
+        let savedStart     = state.startTime
+        let savedPausedAt  = state.pausedAt
+        let savedRemaining = state.remainingAtPause ?? 0
 
         guard savedTotal > 0 else {
             clearPersistence()
@@ -628,51 +627,59 @@ final class DeadManSwitchService: ObservableObject {
         pausedAt: Date?,
         remainingAtPause: Int?
     ) {
-        let ud = UserDefaults.standard
-        ud.set(true,          forKey: UDKey.isActive)
-        ud.set(startTime,     forKey: UDKey.startTime)
-        ud.set(totalDuration, forKey: UDKey.totalDuration)
-        ud.set(isPaused,      forKey: UDKey.isPaused)
-        if let pausedAt {
-            ud.set(pausedAt,  forKey: UDKey.pausedAt)
-        } else {
-            ud.removeObject(forKey: UDKey.pausedAt)
-        }
-        if let remaining = remainingAtPause {
-            ud.set(remaining, forKey: UDKey.remainingAtPause)
-        } else {
-            ud.removeObject(forKey: UDKey.remainingAtPause)
-        }
+        savePersistedState(PersistedTimerState(
+            isActive: true, startTime: startTime, totalDuration: totalDuration,
+            isPaused: isPaused, pausedAt: pausedAt, remainingAtPause: remainingAtPause
+        ))
     }
 
     /// Lightweight update for pause/resume/extend without re-writing start time.
     private func persistUpdate(isPaused: Bool, pausedAt: Date?, remainingAtPause: Int?) {
-        let ud = UserDefaults.standard
-        ud.set(isPaused, forKey: UDKey.isPaused)
-        if let pausedAt {
-            ud.set(pausedAt, forKey: UDKey.pausedAt)
-        } else {
-            ud.removeObject(forKey: UDKey.pausedAt)
-        }
-        if let remaining = remainingAtPause {
-            ud.set(remaining, forKey: UDKey.remainingAtPause)
-        } else {
-            ud.removeObject(forKey: UDKey.remainingAtPause)
-        }
-        if !isPaused {
-            // Also update total in case extend() changed it.
-            ud.set(totalSeconds, forKey: UDKey.totalDuration)
-        }
+        var state = loadPersistedState()
+        state.isPaused = isPaused
+        state.pausedAt = pausedAt
+        state.remainingAtPause = remainingAtPause
+        if !isPaused { state.totalDuration = totalSeconds }
+        savePersistedState(state)
     }
 
     private func clearPersistence() {
-        let ud = UserDefaults.standard
-        ud.set(false, forKey: UDKey.isActive)
-        ud.removeObject(forKey: UDKey.startTime)
-        ud.removeObject(forKey: UDKey.totalDuration)
-        ud.removeObject(forKey: UDKey.isPaused)
-        ud.removeObject(forKey: UDKey.pausedAt)
-        ud.removeObject(forKey: UDKey.remainingAtPause)
+        savePersistedState(PersistedTimerState(isActive: false, startTime: nil, totalDuration: 0, isPaused: false, pausedAt: nil, remainingAtPause: nil))
+    }
+
+    // Encrypted file persistence — hidden from device backups
+    private struct PersistedTimerState: Codable {
+        var isActive: Bool
+        var startTime: Date?
+        var totalDuration: Int
+        var isPaused: Bool
+        var pausedAt: Date?
+        var remainingAtPause: Int?
+    }
+
+    private var timerStateURL: URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("dt_state.enc")
+    }
+
+    private func savePersistedState(_ state: PersistedTimerState) {
+        let url = timerStateURL
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        if let data = try? JSONEncoder().encode(state) {
+            try? data.write(to: url, options: [.completeFileProtection])
+            var resourceURL = url
+            var values = URLResourceValues()
+            values.isExcludedFromBackup = true
+            try? resourceURL.setResourceValues(values)
+        }
+    }
+
+    private func loadPersistedState() -> PersistedTimerState {
+        guard let data = try? Data(contentsOf: timerStateURL),
+              let state = try? JSONDecoder().decode(PersistedTimerState.self, from: data) else {
+            return PersistedTimerState(isActive: false, startTime: nil, totalDuration: 0, isPaused: false, pausedAt: nil, remainingAtPause: nil)
+        }
+        return state
     }
 
     // MARK: - Notification Category Registration

@@ -20,12 +20,14 @@ final class SilentAlarmService: ObservableObject {
 
     // MARK: - Published State
 
-    @Published var isEnabled: Bool = UserDefaults.standard.bool(forKey: "silent_alarm_enabled") {
-        didSet { UserDefaults.standard.set(isEnabled, forKey: "silent_alarm_enabled") }
+    // Settings stored in Keychain to prevent discovery via device backup inspection
+    @Published var isEnabled: Bool = KeychainHelper.shared.read("sa_en") == "1" {
+        didSet { KeychainHelper.shared.save("sa_en", value: isEnabled ? "1" : "0") }
     }
 
     @Published var checkInTimes: [CheckInTime] = {
-        if let data = UserDefaults.standard.data(forKey: "silent_alarm_times"),
+        if let json = KeychainHelper.shared.read("sa_times"),
+           let data = json.data(using: .utf8),
            let times = try? JSONDecoder().decode([CheckInTime].self, from: data) {
             return times
         }
@@ -35,18 +37,25 @@ final class SilentAlarmService: ObservableObject {
         ]
     }() {
         didSet {
-            if let data = try? JSONEncoder().encode(checkInTimes) {
-                UserDefaults.standard.set(data, forKey: "silent_alarm_times")
+            if let data = try? JSONEncoder().encode(checkInTimes),
+               let json = String(data: data, encoding: .utf8) {
+                KeychainHelper.shared.save("sa_times", value: json)
             }
         }
     }
 
-    @Published var confirmWindowMinutes: Int = UserDefaults.standard.object(forKey: "silent_alarm_window") as? Int ?? 30 {
-        didSet { UserDefaults.standard.set(confirmWindowMinutes, forKey: "silent_alarm_window") }
+    @Published var confirmWindowMinutes: Int = {
+        if let val = KeychainHelper.shared.read("sa_win"), let n = Int(val) { return n }
+        return 30
+    }() {
+        didSet { KeychainHelper.shared.save("sa_win", value: String(confirmWindowMinutes)) }
     }
 
-    @Published var gracePeriodMisses: Int = UserDefaults.standard.object(forKey: "silent_alarm_grace") as? Int ?? 3 {
-        didSet { UserDefaults.standard.set(gracePeriodMisses, forKey: "silent_alarm_grace") }
+    @Published var gracePeriodMisses: Int = {
+        if let val = KeychainHelper.shared.read("sa_grace"), let n = Int(val) { return n }
+        return 3
+    }() {
+        didSet { KeychainHelper.shared.save("sa_grace", value: String(gracePeriodMisses)) }
     }
 
     @Published var pendingCheckIn: PendingCheckIn?

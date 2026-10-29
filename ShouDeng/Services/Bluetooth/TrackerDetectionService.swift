@@ -536,15 +536,33 @@ final class TrackerDetectionService: NSObject, ObservableObject {
 
     // MARK: - Persistence: Sightings
 
+    private var sightingsFileURL: URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("tds_data.enc")
+    }
+
     private func persistSightings() {
         guard let data = try? JSONEncoder().encode(allSightings) else { return }
-        UserDefaults.standard.set(data, forKey: Keys.sightingHistory)
+        let url = sightingsFileURL
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? data.write(to: url, options: [.completeFileProtection])
+        var resourceURL = url
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        try? resourceURL.setResourceValues(values)
     }
 
     private func loadSightings() {
-        guard
-            let data = UserDefaults.standard.data(forKey: Keys.sightingHistory),
-            let decoded = try? JSONDecoder().decode([TrackerSighting].self, from: data)
+        // Migrate from legacy UserDefaults if present
+        if let legacyData = UserDefaults.standard.data(forKey: Keys.sightingHistory),
+           let decoded = try? JSONDecoder().decode([TrackerSighting].self, from: legacyData) {
+            allSightings = decoded
+            persistSightings() // migrate to encrypted file
+            UserDefaults.standard.removeObject(forKey: Keys.sightingHistory)
+            return
+        }
+        guard let data = try? Data(contentsOf: sightingsFileURL),
+              let decoded = try? JSONDecoder().decode([TrackerSighting].self, from: data)
         else { return }
         allSightings = decoded
     }
