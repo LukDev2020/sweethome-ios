@@ -32,6 +32,10 @@ struct ProtectedHomeView: View {
     @State private var showTripHistory = false
     @State private var showTripStartConfirm = false
     @State private var showTripEndConfirm = false
+    @State private var showFakeCall = false
+    @State private var showDeadManSwitch = false
+    @State private var showTrackerDetection = false
+    @State private var showDisguiseMode = false
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     // Design system colors from the HTML
@@ -135,6 +139,18 @@ struct ProtectedHomeView: View {
             }
             .sheet(isPresented: $showTripHistory) {
                 TripHistoryView()
+                    .environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showFakeCall) {
+                FakeCallSettingsView()
+                    .environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showDeadManSwitch) {
+                DeadManSwitchView()
+                    .environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showTrackerDetection) {
+                TrackerDetectionView()
                     .environmentObject(coordinator)
             }
             .alert(lang.localized("trip.record.start"), isPresented: $showTripStartConfirm) {
@@ -1000,7 +1016,25 @@ struct ProtectedHomeView: View {
                 ) { showConsulate = true }
             }
 
-            // Row 3: Insurance & records
+            // Row 3: Safety tools
+            HStack(spacing: 8) {
+                quickActionButton(
+                    icon: "phone.arrow.down.left.fill", label: lang.localized("home.fakeCall"),
+                    color: pro
+                ) { showFakeCall = true }
+
+                quickActionButton(
+                    icon: "timer.circle.fill", label: lang.localized("home.safetyTimer"),
+                    color: lamp
+                ) { showDeadManSwitch = true }
+
+                quickActionButton(
+                    icon: "antenna.radiowaves.left.and.right", label: lang.localized("home.trackerScan"),
+                    color: alert
+                ) { showTrackerDetection = true }
+            }
+
+            // Row 4: Insurance & records
             HStack(spacing: 8) {
                 quickActionButton(
                     icon: "doc.text.magnifyingglass", label: lang.localized("home.claim"),

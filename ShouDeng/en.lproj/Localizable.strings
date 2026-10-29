@@ -368,6 +368,7 @@
 "guardian.alert.trigger.voice.command" = "Voice command SOS";
 "guardian.alert.trigger.voice.wake" = "Voice wake word";
 "guardian.alert.trigger.widget" = "Widget tap SOS";
+"guardian.alert.trigger.deadman" = "Safety timer expired";
 "guardian.alert.triggered.at" = "Triggered at";
 "guardian.alert.unknown" = "Unknown";
 "guardian.billing.180days" = "180 days";
@@ -999,3 +1000,106 @@ your guardians will be automatically notified.";
 "guardian.records.tab.时间线" = "Timeline";
 "guardian.records.tab.排班" = "Schedule";
 "guardian.records.tab.联络人" = "Contacts";
+
+// MARK: - Fake Call
+"fakecall.title" = "Fake Call";
+"fakecall.info.title" = "Emergency Escape Call";
+"fakecall.info.body" = "Simulate an incoming phone call to discreetly exit a dangerous situation. The call looks and sounds real.";
+"fakecall.caller.name" = "Caller Name";
+"fakecall.caller.placeholder" = "Mom, Boss, Doctor...";
+"fakecall.delay" = "Ring Delay";
+"fakecall.autoSOS" = "Auto-SOS After Call";
+"fakecall.autoSOS.desc" = "Silently trigger SOS when the fake call ends";
+"fakecall.trigger" = "Schedule Fake Call";
+"fakecall.how.title" = "How It Works";
+"fakecall.how.step1" = "Set a caller name and delay, then tap Schedule";
+"fakecall.how.step2" = "Your phone will ring like a real incoming call";
+"fakecall.how.step3" = "Answer the call and walk away safely";
+"fakecall.delay.instant" = "Now";
+"fakecall.delay.5s" = "5s";
+"fakecall.delay.15s" = "15s";
+"fakecall.delay.30s" = "30s";
+"fakecall.delay.60s" = "60s";
+
+// MARK: - Dead Man's Switch
+"deadman.title" = "Safety Timer";
+"deadman.info.title" = "Dead Man's Switch";
+"deadman.info.body" = "Start a countdown. If you don't cancel it in time, your guardians are alerted with your location automatically.";
+"deadman.presets" = "Quick Start";
+"deadman.preset.walkingHome" = "Walking Home";
+"deadman.preset.meetingStranger" = "Meeting Someone";
+"deadman.preset.nightRun" = "Night Run";
+"deadman.preset.custom" = "Custom Duration";
+"deadman.custom.duration" = "Set Duration";
+"deadman.start" = "Start Countdown";
+"deadman.remaining" = "remaining";
+"deadman.paused" = "PAUSED";
+"deadman.warning.imminent" = "SOS will trigger in 30 seconds!";
+"deadman.resume" = "Resume";
+"deadman.pause" = "Pause";
+"deadman.imsafe" = "I'm Safe";
+"deadman.extend" = "+%d min";
+
+// MARK: - Tracker Detection
+"tracker.title" = "Tracker Detection";
+"tracker.scanning" = "Scanning for trackers...";
+"tracker.notScanning" = "Scanner inactive";
+"tracker.start" = "Start Scan";
+"tracker.stop" = "Stop";
+"tracker.empty.title" = "No Trackers Detected";
+"tracker.empty.body" = "Start scanning to check for Bluetooth trackers that may be following you.";
+"tracker.section.critical" = "CRITICAL - Possible Stalking";
+"tracker.section.warning" = "Warning - Suspicious";
+"tracker.section.nearby" = "Nearby Devices";
+"tracker.locations" = "%d locations";
+"tracker.sightings" = "%d sightings";
+"tracker.ignore.title" = "Ignore This Device?";
+"tracker.ignore.message" = "This device will no longer trigger alerts. You can undo this in settings.";
+"tracker.ignore.confirm" = "Ignore";
+"tracker.action.ignore" = "Ignore";
+"tracker.action.sos" = "Send SOS";
+"tracker.type.airtag" = "AirTag";
+"tracker.type.smarttag" = "SmartTag";
+"tracker.type.tile" = "Tile";
+"tracker.type.unknown" = "Unknown Tracker";
+
+// MARK: - Route Risk
+"route.risk.safe" = "Safe Route";
+"route.risk.caution" = "Use Caution";
+"route.risk.warning" = "Higher Risk";
+"route.risk.danger" = "Avoid if Possible";
+"route.risk.tip.night" = "It's dark outside. Consider well-lit main roads.";
+"route.risk.tip.isolated" = "Parts of this route have few nearby businesses.";
+"route.risk.tip.police" = "Police station nearby along this route.";
+"route.risk.scoring" = "Safety Score";
+
+// MARK: - Disguise Mode
+"disguise.title" = "Disguise Mode";
+"disguise.info" = "Hide the app behind a normal-looking interface. Secret gestures reveal the real app.";
+"disguise.calculator" = "Calculator";
+"disguise.weather" = "Weather";
+"disguise.notes" = "Notes";
+"disguise.activate" = "Activate Disguise";
+"disguise.deactivate" = "Deactivate";
+"disguise.secret.calculator" = "Type 911= or your duress code + = to reveal";
+"disguise.secret.weather" = "Triple-tap the temperature to reveal";
+"disguise.secret.notes" = "Type your secret phrase in a note to reveal";
+
+// MARK: - Indoor Positioning
+"indoor.title" = "Indoor Location";
+"indoor.source.gps" = "GPS";
+"indoor.source.ble" = "Bluetooth";
+"indoor.source.fusion" = "Fusion";
+"indoor.source.deadReckoning" = "Dead Reckoning";
+
+// MARK: - Settings - New Safety Tools
+"settings.safetyTools.fakeCall" = "Fake Call";
+"settings.safetyTools.deadManSwitch" = "Safety Timer";
+"settings.safetyTools.trackerDetection" = "Tracker Detection";
+"settings.safetyTools.disguiseMode" = "Disguise Mode";
+"settings.safetyTools.routeSafety" = "Route Safety";
+
+// MARK: - Home Quick Actions (new)
+"home.fakeCall" = "Fake Call";
+"home.safetyTimer" = "Safety Timer";
+"home.trackerScan" = "Tracker Scan";

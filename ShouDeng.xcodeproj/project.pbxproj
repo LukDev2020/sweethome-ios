@@ -176,6 +176,21 @@
 		A564FF58AC074932AC628DC6 /* DistanceChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7173B2045F3B489BBE9829FD /* DistanceChip.swift */; };
 		1DF0F898F11E477AB44333D8 /* ProfileHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B42A39FB29524D9EB5A92D30 /* ProfileHeaderView.swift */; };
 		76B5D435EF724E4B9C29D909 /* QuickPillRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0388C3F37466486A86EE7FF1 /* QuickPillRow.swift */; };
+		CC33DD0100002001 /* FakeCallService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD0100001001 /* FakeCallService.swift */; };
+		CC33DD0100002002 /* DeadManSwitchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD0100001002 /* DeadManSwitchService.swift */; };
+		CC33DD0100002003 /* DisguiseModeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD0100001003 /* DisguiseModeService.swift */; };
+		CC33DD0100002004 /* RouteRiskService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD0100001004 /* RouteRiskService.swift */; };
+		CC33DD0100002005 /* VoiceActivityDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD0100001005 /* VoiceActivityDetector.swift */; };
+		CC33DD0100002006 /* TrackerDetectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD0100001006 /* TrackerDetectionService.swift */; };
+		CC33DD0100002007 /* CrowdSourcedBLEService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD0100001007 /* CrowdSourcedBLEService.swift */; };
+		CC33DD0100002008 /* IndoorPositioningService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD0100001008 /* IndoorPositioningService.swift */; };
+		CC33DD0100002009 /* FakeCallSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD0100001009 /* FakeCallSettingsView.swift */; };
+		CC33DD010000200A /* DeadManSwitchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD010000100A /* DeadManSwitchView.swift */; };
+		CC33DD010000200B /* TrackerDetectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD010000100B /* TrackerDetectionView.swift */; };
+		CC33DD010000200C /* DisguiseCalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD010000100C /* DisguiseCalculatorView.swift */; };
+		CC33DD010000200D /* DisguiseWeatherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD010000100D /* DisguiseWeatherView.swift */; };
+		CC33DD010000200E /* DisguiseNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD010000100E /* DisguiseNotesView.swift */; };
+		CC33DD010000200F /* DisguiseModeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD010000100F /* DisguiseModeSettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -380,6 +395,21 @@
 		7173B2045F3B489BBE9829FD /* DistanceChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistanceChip.swift; sourceTree = "<group>"; };
 		B42A39FB29524D9EB5A92D30 /* ProfileHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileHeaderView.swift; sourceTree = "<group>"; };
 		0388C3F37466486A86EE7FF1 /* QuickPillRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickPillRow.swift; sourceTree = "<group>"; };
+		CC33DD0100001001 /* FakeCallService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeCallService.swift; sourceTree = "<group>"; };
+		CC33DD0100001002 /* DeadManSwitchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeadManSwitchService.swift; sourceTree = "<group>"; };
+		CC33DD0100001003 /* DisguiseModeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisguiseModeService.swift; sourceTree = "<group>"; };
+		CC33DD0100001004 /* RouteRiskService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteRiskService.swift; sourceTree = "<group>"; };
+		CC33DD0100001005 /* VoiceActivityDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceActivityDetector.swift; sourceTree = "<group>"; };
+		CC33DD0100001006 /* TrackerDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackerDetectionService.swift; sourceTree = "<group>"; };
+		CC33DD0100001007 /* CrowdSourcedBLEService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrowdSourcedBLEService.swift; sourceTree = "<group>"; };
+		CC33DD0100001008 /* IndoorPositioningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndoorPositioningService.swift; sourceTree = "<group>"; };
+		CC33DD0100001009 /* FakeCallSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeCallSettingsView.swift; sourceTree = "<group>"; };
+		CC33DD010000100A /* DeadManSwitchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeadManSwitchView.swift; sourceTree = "<group>"; };
+		CC33DD010000100B /* TrackerDetectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackerDetectionView.swift; sourceTree = "<group>"; };
+		CC33DD010000100C /* DisguiseCalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisguiseCalculatorView.swift; sourceTree = "<group>"; };
+		CC33DD010000100D /* DisguiseWeatherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisguiseWeatherView.swift; sourceTree = "<group>"; };
+		CC33DD010000100E /* DisguiseNotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisguiseNotesView.swift; sourceTree = "<group>"; };
+		CC33DD010000100F /* DisguiseModeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisguiseModeSettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -578,6 +608,7 @@
 				A1B2C3D4E5F6A7B8C9D0E1F2 /* ReactiveLocationService.swift */,
 				AE1267A17B7842458F45DF8F /* LocationBatchUploader.swift */,
 				BB22CC3300002002 /* TripRecordingService.swift */,
+				CC33DD0100001008 /* IndoorPositioningService.swift */,
 			);
 			path = Location;
 			sourceTree = "<group>";
@@ -592,6 +623,7 @@
 				27B49AFC2D6692EA076043E7 /* Organization */,
 				41D6213A6E5D02328F6A0899 /* Protected */,
 				AA11BB2200003001 /* Settings */,
+				CC33DD0100003001 /* Safety */,
 				77A7B02D23FB0255C4D07867 /* Shared */,
 			);
 			path = Views;
@@ -905,6 +937,7 @@
 				81A8E640688E46F1A5BE45E8 /* VoiceCommandService.swift */,
 				DFF29F4226BF4C368B186B83 /* AudioSessionCoordinator.swift */,
 				331DA921543B4CBF8494F9CB /* VoiceNoteService.swift */,
+				CC33DD0100001005 /* VoiceActivityDetector.swift */,
 			);
 			path = Audio;
 			sourceTree = "<group>";
@@ -940,6 +973,8 @@
 			isa = PBXGroup;
 			children = (
 				AA11BB2200002004 /* BLETrackerService.swift */,
+				CC33DD0100001006 /* TrackerDetectionService.swift */,
+				CC33DD0100001007 /* CrowdSourcedBLEService.swift */,
 			);
 			path = Bluetooth;
 			sourceTree = "<group>";
@@ -948,6 +983,24 @@
 			isa = PBXGroup;
 			children = (
 				AA11BB2200002003 /* SilentAlarmService.swift */,
+				CC33DD0100001001 /* FakeCallService.swift */,
+				CC33DD0100001002 /* DeadManSwitchService.swift */,
+				CC33DD0100001003 /* DisguiseModeService.swift */,
+				CC33DD0100001004 /* RouteRiskService.swift */,
+			);
+			path = Safety;
+			sourceTree = "<group>";
+		};
+		CC33DD0100003001 /* Safety */ = {
+			isa = PBXGroup;
+			children = (
+				CC33DD0100001009 /* FakeCallSettingsView.swift */,
+				CC33DD010000100A /* DeadManSwitchView.swift */,
+				CC33DD010000100B /* TrackerDetectionView.swift */,
+				CC33DD010000100C /* DisguiseCalculatorView.swift */,
+				CC33DD010000100D /* DisguiseWeatherView.swift */,
+				CC33DD010000100E /* DisguiseNotesView.swift */,
+				CC33DD010000100F /* DisguiseModeSettingsView.swift */,
 			);
 			path = Safety;
 			sourceTree = "<group>";
@@ -1190,6 +1243,21 @@
 				35159B7DB49900FACD831968 /* User.swift in Sources */,
 				BB22CC3300001001 /* TripRecord.swift in Sources */,
 				BB22CC3300001002 /* TripRecordingService.swift in Sources */,
+				CC33DD0100002001 /* FakeCallService.swift in Sources */,
+				CC33DD0100002002 /* DeadManSwitchService.swift in Sources */,
+				CC33DD0100002003 /* DisguiseModeService.swift in Sources */,
+				CC33DD0100002004 /* RouteRiskService.swift in Sources */,
+				CC33DD0100002005 /* VoiceActivityDetector.swift in Sources */,
+				CC33DD0100002006 /* TrackerDetectionService.swift in Sources */,
+				CC33DD0100002007 /* CrowdSourcedBLEService.swift in Sources */,
+				CC33DD0100002008 /* IndoorPositioningService.swift in Sources */,
+				CC33DD0100002009 /* FakeCallSettingsView.swift in Sources */,
+				CC33DD010000200A /* DeadManSwitchView.swift in Sources */,
+				CC33DD010000200B /* TrackerDetectionView.swift in Sources */,
+				CC33DD010000200C /* DisguiseCalculatorView.swift in Sources */,
+				CC33DD010000200D /* DisguiseWeatherView.swift in Sources */,
+				CC33DD010000200E /* DisguiseNotesView.swift in Sources */,
+				CC33DD010000200F /* DisguiseModeSettingsView.swift in Sources */,
 				BB22CC3300001003 /* TripHistoryView.swift in Sources */,
 				BB22CC3300001004 /* TripDetailView.swift in Sources */,
 				0B1E36F80D59153D5A93D7BA /* VerticalTabRail.swift in Sources */,

@@ -368,6 +368,7 @@
 "guardian.alert.trigger.voice.command" = "语音指令求助";
 "guardian.alert.trigger.voice.wake" = "语音唤醒";
 "guardian.alert.trigger.widget" = "小组件一键求助";
+"guardian.alert.trigger.deadman" = "安全计时器超时";
 "guardian.alert.triggered.at" = "触发时间";
 "guardian.alert.unknown" = "未知";
 "guardian.billing.180days" = "180天";
@@ -999,3 +1000,106 @@
 "guardian.records.tab.时间线" = "时间线";
 "guardian.records.tab.排班" = "排班";
 "guardian.records.tab.联络人" = "联络人";
+
+// MARK: - Fake Call
+"fakecall.title" = "假来电";
+"fakecall.info.title" = "紧急脱身来电";
+"fakecall.info.body" = "模拟一个真实的来电，帮助你从危险场景中安全撤离。来电看起来和听起来都像真的。";
+"fakecall.caller.name" = "来电人名";
+"fakecall.caller.placeholder" = "妈妈、老板、医生...";
+"fakecall.delay" = "响铃延迟";
+"fakecall.autoSOS" = "挂断后自动报警";
+"fakecall.autoSOS.desc" = "假来电结束后悄悄触发SOS";
+"fakecall.trigger" = "预约假来电";
+"fakecall.how.title" = "使用方法";
+"fakecall.how.step1" = "设置来电人名和延迟，点击预约";
+"fakecall.how.step2" = "手机将像真来电一样响铃";
+"fakecall.how.step3" = "接听电话，安全离开";
+"fakecall.delay.instant" = "立即";
+"fakecall.delay.5s" = "5秒";
+"fakecall.delay.15s" = "15秒";
+"fakecall.delay.30s" = "30秒";
+"fakecall.delay.60s" = "60秒";
+
+// MARK: - Dead Man's Switch
+"deadman.title" = "安全计时器";
+"deadman.info.title" = "出行保护倒计时";
+"deadman.info.body" = "启动倒计时。如果你没有在时间内取消，系统会自动将你的位置发送给守护者。";
+"deadman.presets" = "快速启动";
+"deadman.preset.walkingHome" = "走路回家";
+"deadman.preset.meetingStranger" = "见陌生人";
+"deadman.preset.nightRun" = "夜跑";
+"deadman.preset.custom" = "自定义时长";
+"deadman.custom.duration" = "设置时长";
+"deadman.start" = "开始倒计时";
+"deadman.remaining" = "剩余";
+"deadman.paused" = "已暂停";
+"deadman.warning.imminent" = "30秒后将自动发送SOS！";
+"deadman.resume" = "继续";
+"deadman.pause" = "暂停";
+"deadman.imsafe" = "我安全了";
+"deadman.extend" = "+%d 分钟";
+
+// MARK: - Tracker Detection
+"tracker.title" = "追踪器检测";
+"tracker.scanning" = "正在扫描追踪器...";
+"tracker.notScanning" = "扫描未启动";
+"tracker.start" = "开始扫描";
+"tracker.stop" = "停止";
+"tracker.empty.title" = "未检测到追踪器";
+"tracker.empty.body" = "开始扫描以检测可能跟踪你的蓝牙追踪器。";
+"tracker.section.critical" = "严重 - 疑似跟踪";
+"tracker.section.warning" = "警告 - 可疑设备";
+"tracker.section.nearby" = "附近设备";
+"tracker.locations" = "%d 个位置";
+"tracker.sightings" = "%d 次发现";
+"tracker.ignore.title" = "忽略此设备？";
+"tracker.ignore.message" = "此设备将不再触发警报。你可以在设置中取消忽略。";
+"tracker.ignore.confirm" = "忽略";
+"tracker.action.ignore" = "忽略";
+"tracker.action.sos" = "发送SOS";
+"tracker.type.airtag" = "AirTag";
+"tracker.type.smarttag" = "SmartTag";
+"tracker.type.tile" = "Tile";
+"tracker.type.unknown" = "未知追踪器";
+
+// MARK: - Route Risk
+"route.risk.safe" = "安全路线";
+"route.risk.caution" = "注意安全";
+"route.risk.warning" = "较高风险";
+"route.risk.danger" = "建议避开";
+"route.risk.tip.night" = "天色已暗。建议选择灯光充足的主干道。";
+"route.risk.tip.isolated" = "部分路段附近商户较少。";
+"route.risk.tip.police" = "沿途有警察局。";
+"route.risk.scoring" = "安全评分";
+
+// MARK: - Disguise Mode
+"disguise.title" = "伪装模式";
+"disguise.info" = "将应用隐藏在正常外观的界面后面。使用秘密手势显示真正的应用。";
+"disguise.calculator" = "计算器";
+"disguise.weather" = "天气";
+"disguise.notes" = "备忘录";
+"disguise.activate" = "启用伪装";
+"disguise.deactivate" = "关闭伪装";
+"disguise.secret.calculator" = "输入 911= 或胁迫码+= 解除伪装";
+"disguise.secret.weather" = "三击温度数字解除伪装";
+"disguise.secret.notes" = "在笔记中输入密语解除伪装";
+
+// MARK: - Indoor Positioning
+"indoor.title" = "室内定位";
+"indoor.source.gps" = "GPS";
+"indoor.source.ble" = "蓝牙";
+"indoor.source.fusion" = "融合定位";
+"indoor.source.deadReckoning" = "惯性导航";
+
+// MARK: - Settings - New Safety Tools
+"settings.safetyTools.fakeCall" = "假来电";
+"settings.safetyTools.deadManSwitch" = "安全计时器";
+"settings.safetyTools.trackerDetection" = "追踪器检测";
+"settings.safetyTools.disguiseMode" = "伪装模式";
+"settings.safetyTools.routeSafety" = "路线安全";
+
+// MARK: - Home Quick Actions (new)
+"home.fakeCall" = "假来电";
+"home.safetyTimer" = "安全倒计时";
+"home.trackerScan" = "追踪器扫描";

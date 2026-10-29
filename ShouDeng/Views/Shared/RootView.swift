@@ -29,10 +29,24 @@ private struct AuthenticatedRootView: View {
     @ObservedObject private var biometric = BiometricAuthManager.shared
     @ObservedObject private var fontScale = FontScaleManager.shared
     @ObservedObject private var langManager = LanguageManager.shared
+    @ObservedObject private var disguiseService = DisguiseModeService.shared
     @State private var showBiometricPrompt = false
 
     var body: some View {
         Group {
+            if disguiseService.isDisguiseActive {
+                // Disguise mode — show fake app interface
+                switch disguiseService.currentDisguise {
+                case .calculator:
+                    DisguiseCalculatorView()
+                case .weather:
+                    DisguiseWeatherView()
+                case .notes:
+                    DisguiseNotesView()
+                case .none:
+                    EmptyView()
+                }
+            } else
             if ProcessInfo.processInfo.arguments.contains("-show-onboarding") {
                 OnboardingView(isComplete: $onboardingComplete)
             } else if !onboardingComplete {

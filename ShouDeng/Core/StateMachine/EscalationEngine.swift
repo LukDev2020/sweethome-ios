@@ -397,6 +397,7 @@ final class EscalationEngine {
         case .audioDistress: methodDesc = "异常声音触发"
         case .voiceCommand: methodDesc = "语音指令触发"
         case .widgetTap: methodDesc = "小组件一键触发"
+        case .deadManSwitch: methodDesc = "安全计时器触发"
         }
         parts.append(methodDesc)
 

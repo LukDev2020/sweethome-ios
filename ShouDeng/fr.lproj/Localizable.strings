@@ -368,6 +368,7 @@
 "guardian.alert.trigger.voice.command" = "Commande vocale SOS";
 "guardian.alert.trigger.voice.wake" = "Mot de réveil vocal";
 "guardian.alert.trigger.widget" = "SOS via widget";
+"guardian.alert.trigger.deadman" = "Minuterie de sécurité expirée";
 "guardian.alert.triggered.at" = "Déclenché à";
 "guardian.alert.unknown" = "Inconnu";
 "guardian.billing.180days" = "180 jours";
@@ -999,3 +1000,106 @@ vos gardiens seront automatiquement notifiés.";
 "guardian.records.tab.时间线" = "Chronologie";
 "guardian.records.tab.排班" = "Planning";
 "guardian.records.tab.联络人" = "Personnes-contacts";
+
+// MARK: - Fake Call
+"fakecall.title" = "Faux appel";
+"fakecall.info.title" = "Appel d'urgence simulé";
+"fakecall.info.body" = "Simulez un appel entrant pour quitter discrètement une situation dangereuse. L'appel semble réel.";
+"fakecall.caller.name" = "Nom de l'appelant";
+"fakecall.caller.placeholder" = "Maman, Chef, Docteur...";
+"fakecall.delay" = "Délai de sonnerie";
+"fakecall.autoSOS" = "SOS auto après l'appel";
+"fakecall.autoSOS.desc" = "Déclencher silencieusement le SOS après le faux appel";
+"fakecall.trigger" = "Programmer l'appel";
+"fakecall.how.title" = "Comment ça marche";
+"fakecall.how.step1" = "Choisissez un nom et un délai, puis appuyez sur Programmer";
+"fakecall.how.step2" = "Votre téléphone sonnera comme un vrai appel";
+"fakecall.how.step3" = "Décrochez et partez en sécurité";
+"fakecall.delay.instant" = "Immédiat";
+"fakecall.delay.5s" = "5s";
+"fakecall.delay.15s" = "15s";
+"fakecall.delay.30s" = "30s";
+"fakecall.delay.60s" = "60s";
+
+// MARK: - Dead Man's Switch
+"deadman.title" = "Minuteur de sécurité";
+"deadman.info.title" = "Alarme automatique";
+"deadman.info.body" = "Lancez un compte à rebours. Si vous ne l'annulez pas à temps, vos gardiens seront alertés avec votre position.";
+"deadman.presets" = "Démarrage rapide";
+"deadman.preset.walkingHome" = "Retour à pied";
+"deadman.preset.meetingStranger" = "Rencontre";
+"deadman.preset.nightRun" = "Course nocturne";
+"deadman.preset.custom" = "Durée personnalisée";
+"deadman.custom.duration" = "Définir la durée";
+"deadman.start" = "Démarrer le compte à rebours";
+"deadman.remaining" = "restant";
+"deadman.paused" = "EN PAUSE";
+"deadman.warning.imminent" = "SOS dans 30 secondes !";
+"deadman.resume" = "Reprendre";
+"deadman.pause" = "Pause";
+"deadman.imsafe" = "Je suis en sécurité";
+"deadman.extend" = "+%d min";
+
+// MARK: - Tracker Detection
+"tracker.title" = "Détection de traceurs";
+"tracker.scanning" = "Recherche de traceurs...";
+"tracker.notScanning" = "Scanner inactif";
+"tracker.start" = "Lancer le scan";
+"tracker.stop" = "Arrêter";
+"tracker.empty.title" = "Aucun traceur détecté";
+"tracker.empty.body" = "Lancez le scan pour vérifier si des traceurs Bluetooth vous suivent.";
+"tracker.section.critical" = "CRITIQUE - Pistage possible";
+"tracker.section.warning" = "Attention - Suspect";
+"tracker.section.nearby" = "Appareils à proximité";
+"tracker.locations" = "%d emplacements";
+"tracker.sightings" = "%d détections";
+"tracker.ignore.title" = "Ignorer cet appareil ?";
+"tracker.ignore.message" = "Cet appareil ne déclenchera plus d'alertes. Vous pouvez annuler dans les réglages.";
+"tracker.ignore.confirm" = "Ignorer";
+"tracker.action.ignore" = "Ignorer";
+"tracker.action.sos" = "Envoyer SOS";
+"tracker.type.airtag" = "AirTag";
+"tracker.type.smarttag" = "SmartTag";
+"tracker.type.tile" = "Tile";
+"tracker.type.unknown" = "Traceur inconnu";
+
+// MARK: - Route Risk
+"route.risk.safe" = "Route sûre";
+"route.risk.caution" = "Prudence";
+"route.risk.warning" = "Risque élevé";
+"route.risk.danger" = "À éviter";
+"route.risk.tip.night" = "Il fait nuit. Préférez les routes éclairées.";
+"route.risk.tip.isolated" = "Certaines parties de cette route sont isolées.";
+"route.risk.tip.police" = "Commissariat à proximité sur ce trajet.";
+"route.risk.scoring" = "Score de sécurité";
+
+// MARK: - Disguise Mode
+"disguise.title" = "Mode déguisement";
+"disguise.info" = "Cachez l'application derrière une interface normale. Des gestes secrets révèlent la vraie application.";
+"disguise.calculator" = "Calculatrice";
+"disguise.weather" = "Météo";
+"disguise.notes" = "Notes";
+"disguise.activate" = "Activer le déguisement";
+"disguise.deactivate" = "Désactiver";
+"disguise.secret.calculator" = "Tapez 911= ou votre code de contrainte + = pour révéler";
+"disguise.secret.weather" = "Triple-tap sur la température pour révéler";
+"disguise.secret.notes" = "Tapez votre phrase secrète dans une note pour révéler";
+
+// MARK: - Indoor Positioning
+"indoor.title" = "Localisation intérieure";
+"indoor.source.gps" = "GPS";
+"indoor.source.ble" = "Bluetooth";
+"indoor.source.fusion" = "Fusion";
+"indoor.source.deadReckoning" = "Navigation inertielle";
+
+// MARK: - Settings - New Safety Tools
+"settings.safetyTools.fakeCall" = "Faux appel";
+"settings.safetyTools.deadManSwitch" = "Minuteur de sécurité";
+"settings.safetyTools.trackerDetection" = "Détection de traceurs";
+"settings.safetyTools.disguiseMode" = "Mode déguisement";
+"settings.safetyTools.routeSafety" = "Sécurité du trajet";
+
+// MARK: - Home Quick Actions (new)
+"home.fakeCall" = "Faux appel";
+"home.safetyTimer" = "Minuteur";
+"home.trackerScan" = "Scan traceurs";

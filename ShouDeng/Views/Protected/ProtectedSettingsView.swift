@@ -51,6 +51,10 @@ struct ProtectedSettingsView: View {
     @State private var showDuressCode = false
     @State private var showSilentAlarm = false
     @State private var showBLETracker = false
+    @State private var showFakeCall = false
+    @State private var showDeadManSwitch = false
+    @State private var showTrackerDetection = false
+    @State private var showDisguiseMode = false
 
     var body: some View {
         NavigationStack {
@@ -140,6 +144,18 @@ struct ProtectedSettingsView: View {
             }
             .sheet(isPresented: $showBLETracker) {
                 BLETrackerSettingsView().environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showFakeCall) {
+                FakeCallSettingsView().environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showDeadManSwitch) {
+                DeadManSwitchView().environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showTrackerDetection) {
+                TrackerDetectionView().environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showDisguiseMode) {
+                DisguiseModeSettingsView().environmentObject(coordinator)
             }
             .onChange(of: notifSOS) { coordinator.syncNotificationPrefs() }
             .onChange(of: notifCheckin) { coordinator.syncNotificationPrefs() }
@@ -424,6 +440,28 @@ struct ProtectedSettingsView: View {
 
             Button { showClaimMaterials = true } label: {
                 fixedRow(langManager.localized("settings.safetyTools.claimMaterials"), value: langManager.localized("settings.action.start"), isWarning: false)
+            }
+            .buttonStyle(.plain)
+
+            Divider().padding(.vertical, 4)
+
+            Button { showFakeCall = true } label: {
+                fixedRow(langManager.localized("settings.safetyTools.fakeCall"), value: langManager.localized("settings.action.start"), isWarning: false)
+            }
+            .buttonStyle(.plain)
+
+            Button { showDeadManSwitch = true } label: {
+                fixedRow(langManager.localized("settings.safetyTools.deadManSwitch"), value: langManager.localized("settings.action.start"), isWarning: false)
+            }
+            .buttonStyle(.plain)
+
+            Button { showTrackerDetection = true } label: {
+                fixedRow(langManager.localized("settings.safetyTools.trackerDetection"), value: langManager.localized("settings.action.view"), isWarning: false)
+            }
+            .buttonStyle(.plain)
+
+            Button { showDisguiseMode = true } label: {
+                fixedRow(langManager.localized("settings.safetyTools.disguiseMode"), value: langManager.localized("settings.action.start"), isWarning: false)
             }
             .buttonStyle(.plain)
         }
