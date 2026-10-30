@@ -26,6 +26,14 @@
 				<string>com.googleusercontent.apps.561070924965-7ggg6418ktbb9bndt30oqpm9fireoq2j</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.shoudeng.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>shoudeng</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>31</string>

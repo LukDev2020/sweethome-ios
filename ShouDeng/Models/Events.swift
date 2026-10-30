@@ -3,7 +3,7 @@ import Foundation
 // MARK: - SOS Event
 
 struct SOSEvent: Codable, Identifiable {
-    let id: String
+    var id: String
     let protectedPersonId: String
     let triggeredAt: Date
     let triggerMethod: SOSTriggerMethod

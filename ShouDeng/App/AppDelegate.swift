@@ -33,6 +33,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             #endif
         }
 
+        // Register background tasks (must happen before didFinishLaunching returns)
+        DeadManSwitchService.registerBGTask()
+
         // Install crash reporter immediately
         appCoordinator.crashReporter.install()
         appCoordinator.crashReporter.uploadPendingCrashes(using: appCoordinator.apiClient)

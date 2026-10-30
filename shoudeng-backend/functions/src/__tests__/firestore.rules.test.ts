@@ -88,24 +88,18 @@ describe("Firestore Rules — Guardian Links", () => {
     expect(block).toMatch(/resource\.data\.protectedPersonId\s*==\s*request\.auth\.uid/);
   });
 
-  it("validates status on create", () => {
+  it("denies client-side create (server-only via invite-accept flow)", () => {
     const block = extractBlock(rulesContent, "guardian_links/{linkId}");
-    expect(block).toMatch(
-      /request\.resource\.data\.status\s+in\s+\['pending',\s*'active'\]/
-    );
-  });
-
-  it("validates guardianId and protectedPersonId are strings on create", () => {
-    const block = extractBlock(rulesContent, "guardian_links/{linkId}");
-    expect(block).toMatch(/request\.resource\.data\.guardianId\s+is\s+string/);
-    expect(block).toMatch(/request\.resource\.data\.protectedPersonId\s+is\s+string/);
+    expect(block).toMatch(/allow create:\s*if\s+false/);
   });
 });
 
 describe("Firestore Rules — SOS Events", () => {
-  it("allows read for any authenticated user", () => {
+  it("restricts read to protected person or linked guardian", () => {
     const block = extractBlock(rulesContent, "sos_events/{sosId}");
     expect(block).toMatch(/allow read:\s*if\s+isAuth\(\)/);
+    expect(block).toMatch(/protectedPersonId/);
+    expect(block).toMatch(/isGuardianOf/);
   });
 
   it("denies all client writes (server-only)", () => {

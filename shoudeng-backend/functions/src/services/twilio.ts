@@ -66,6 +66,18 @@ function getTwimlLanguage(countryCode: string): string {
 }
 
 /**
+ * Escape a string for safe interpolation into XML/TwiML.
+ */
+function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+/**
  * Initiate a voice call to a guardian as part of the SOS escalation chain.
  */
 export async function initiateVoiceCall(
@@ -98,17 +110,17 @@ export async function initiateVoiceCall(
 
   const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say language="${lang}" voice="alice">
-    守灯紧急通知。您守护的${protectedPersonName}正在求助。请立即打开守灯应用查看详情。
+  <Say language="${escapeXml(lang)}" voice="alice">
+    守灯紧急通知。您守护的${escapeXml(protectedPersonName)}正在求助。请立即打开守灯应用查看详情。
   </Say>
   <Pause length="2"/>
-  <Say language="${lang}" voice="alice">
+  <Say language="${escapeXml(lang)}" voice="alice">
     按 1 表示已接手处理。按 2 重听此消息。
   </Say>
-  <Gather numDigits="1" action="${callbackUrl}" method="POST">
-    <Say language="${lang}" voice="alice">请按键。</Say>
+  <Gather numDigits="1" action="${escapeXml(callbackUrl)}" method="POST">
+    <Say language="${escapeXml(lang)}" voice="alice">请按键。</Say>
   </Gather>
-  <Say language="${lang}" voice="alice">
+  <Say language="${escapeXml(lang)}" voice="alice">
     未收到回应。系统将在一分钟后再次拨打。
   </Say>
 </Response>`;

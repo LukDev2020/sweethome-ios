@@ -101,7 +101,12 @@ final class AppCoordinator: ObservableObject {
                 try await self.authManager.refreshToken()
                 return true
             } catch {
-                await MainActor.run { self.authManager.logout() }
+                // Only logout on definitive auth failures (e.g. revoked token),
+                // not transient network errors that could discard queued SOS requests.
+                let isNetworkError = (error as? URLError) != nil
+                if !isNetworkError {
+                    await MainActor.run { self.authManager.logout() }
+                }
                 return false
             }
         }
@@ -130,6 +135,13 @@ final class AppCoordinator: ObservableObject {
 
         // Wire trip recording service
         tripRecordingService.configure(apiClient: apiClient)
+
+        // Wire dead man switch
+        DeadManSwitchService.shared.configure(apiClient: apiClient, locationManager: locationManager)
+        DeadManSwitchService.registerNotificationCategories()
+
+        // Wire disguise mode — pass self as SOS trigger target
+        DisguiseModeService.shared.configure(coordinator: self)
 
         wireServices()
         restoreLocalState()
@@ -296,7 +308,14 @@ final class AppCoordinator: ObservableObject {
         locationBatchUploader.stop()
         locationBatchUploader.clearAll()
         localStore.clearAll()
+        // Preserve SOS-critical requests across logout — they must reach the server
+        let sosItems = offlineQueue.peekAll().filter {
+            $0.path.contains("/sos/") || $0.path.contains("/ble-separation")
+        }
         offlineQueue.clearAll()
+        for item in sosItems {
+            offlineQueue.enqueue(item)
+        }
         WidgetDataStore.clear()
         WidgetCenter.shared.reloadAllTimelines()
 
@@ -845,18 +864,36 @@ final class AppCoordinator: ObservableObject {
             self?.addTimelineEntry(type: .sosResolved, description: "[Beta 模拟] SOS 自动确认，未发送真实通知")
         }
         #else
-        // Report to server (with delivery feedback)
+        // Report to server — capture server-generated SOS ID so resolve works.
+        // Use direct POST first to get the server ID; fall back to queued if offline.
         sosDeliveryFailed = false
         let sosLocation = locationManager.lastReportedLocation
-        apiClient.postQueued("/v1/sos/trigger", body: SOSTriggerRequest(
+        let triggerRequest = SOSTriggerRequest(
             protectedPersonId: userId,
             triggerMethod: method,
             latitude: sosLocation?.coordinate.latitude,
             longitude: sosLocation?.coordinate.longitude,
             batteryLevel: Double(UIDevice.current.batteryLevel)
-        )) { [weak self] success in
-            if !success {
-                self?.sosDeliveryFailed = true
+        )
+        let api = apiClient
+        Task { [weak self] in
+            do {
+                let response: SOSTriggerResponse = try await api.post("/v1/sos/trigger", body: triggerRequest)
+                await MainActor.run {
+                    self?.activeSOSEvent?.id = response.sosEventId
+                    if let updated = self?.activeSOSEvent {
+                        self?.localStore.saveActiveSOSEvent(updated)
+                    }
+                }
+            } catch {
+                // Offline — queue for retry; resolve will use local ID as fallback
+                await MainActor.run {
+                    api.postQueued("/v1/sos/trigger", body: triggerRequest) { [weak self] success in
+                        if !success {
+                            self?.sosDeliveryFailed = true
+                        }
+                    }
+                }
             }
         }
         #endif

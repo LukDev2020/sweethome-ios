@@ -118,12 +118,25 @@ router.post("/resolve", createRateLimiter(RATE_LIMITS.general), async (req: Requ
   }
 
   try {
-    const sosRef = db.collection("sos_events").doc(sosEventId);
-    const sosDoc = await sosRef.get();
+    let sosRef = db.collection("sos_events").doc(sosEventId);
+    let sosDoc = await sosRef.get();
 
+    // Fallback: if sosEventId doesn't match a doc (e.g. client used local UUID),
+    // look up the active SOS by the caller's protectedPersonId.
     if (!sosDoc.exists) {
-      res.status(404).json({ error: "SOS event not found" });
-      return;
+      const activeSnapshot = await db
+        .collection("sos_events")
+        .where("protectedPersonId", "==", uid)
+        .where("resolvedAt", "==", null)
+        .limit(1)
+        .get();
+      if (!activeSnapshot.empty) {
+        sosRef = activeSnapshot.docs[0].ref;
+        sosDoc = activeSnapshot.docs[0];
+      } else {
+        res.status(404).json({ error: "SOS event not found" });
+        return;
+      }
     }
 
     const sosData = sosDoc.data()!;
@@ -187,7 +200,7 @@ router.post("/resolve", createRateLimiter(RATE_LIMITS.general), async (req: Requ
  * Request a voice call to a guardian as part of escalation.
  * Delegates to Twilio service.
  */
-router.post("/voice-call", async (req: Request, res: Response) => {
+router.post("/voice-call", createRateLimiter(RATE_LIMITS.sos), async (req: Request, res: Response) => {
   const uid = req.uid!;
   const { guardianId, sosEventId, protectedPersonName } = req.body;
 

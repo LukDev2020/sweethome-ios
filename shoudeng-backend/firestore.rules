@@ -33,12 +33,7 @@ service cloud.firestore {
         resource.data.guardianId == request.auth.uid ||
         resource.data.protectedPersonId == request.auth.uid
       );
-      allow create: if isAuth() && (
-        request.resource.data.guardianId == request.auth.uid ||
-        request.resource.data.protectedPersonId == request.auth.uid
-      ) && request.resource.data.status in ['pending', 'active']
-        && request.resource.data.guardianId is string
-        && request.resource.data.protectedPersonId is string;
+      allow create: if false; // Server-side only via admin SDK (invite-accept flow)
       allow update: if isAuth() && (
         resource.data.guardianId == request.auth.uid ||
         resource.data.protectedPersonId == request.auth.uid
@@ -49,9 +44,12 @@ service cloud.firestore {
       );
     }
 
-    // SOS events — read if authenticated, write via Cloud Functions only
+    // SOS events — read if protected person or linked guardian, write server-side only
     match /sos_events/{sosId} {
-      allow read: if isAuth();
+      allow read: if isAuth() && (
+        resource.data.protectedPersonId == request.auth.uid ||
+        isGuardianOf(resource.data.protectedPersonId)
+      );
       allow write: if false; // Server-side only via admin SDK
     }
 
@@ -62,15 +60,15 @@ service cloud.firestore {
       allow update, delete: if isAuth() && resource.data.userId == request.auth.uid;
     }
 
-    // Duty schedules — read if authenticated, write server-side only
+    // Duty schedules — server-side only (app reads via API)
     match /duty_schedules/{scheduleId} {
-      allow read: if isAuth();
+      allow read: if false;
       allow write: if false; // Server-side only
     }
 
-    // Invites — creator validation, acceptor can update pending invites
+    // Invites — only creator can read their own invites
     match /invites/{inviteId} {
-      allow read: if isAuth();
+      allow read: if isAuth() && resource.data.createdBy == request.auth.uid;
       allow create: if isAuth()
         && request.resource.data.createdBy == request.auth.uid
         && request.resource.data.status == 'pending'
@@ -93,22 +91,32 @@ service cloud.firestore {
       allow write: if false; // Server-side only
     }
 
-    // Family posts — author can edit/delete, family members can read
+    // Family posts — author or linked family members can read
     match /family_posts/{postId} {
-      allow read: if isAuth();
+      allow read: if isAuth() && (
+        resource.data.authorId == request.auth.uid ||
+        isGuardianOf(resource.data.authorId) ||
+        exists(/databases/$(database)/documents/guardian_links/$(resource.data.authorId + '_' + request.auth.uid))
+          && get(/databases/$(database)/documents/guardian_links/$(resource.data.authorId + '_' + request.auth.uid)).data.status == 'active'
+      );
       allow create: if isAuth() && request.resource.data.authorId == request.auth.uid;
       allow update: if isAuth() && resource.data.authorId == request.auth.uid;
       allow delete: if isAuth() && resource.data.authorId == request.auth.uid;
 
       match /comments/{commentId} {
-        allow read: if isAuth();
+        allow read: if isAuth() && (
+          get(/databases/$(database)/documents/family_posts/$(postId)).data.authorId == request.auth.uid ||
+          isGuardianOf(get(/databases/$(database)/documents/family_posts/$(postId)).data.authorId) ||
+          exists(/databases/$(database)/documents/guardian_links/$(get(/databases/$(database)/documents/family_posts/$(postId)).data.authorId + '_' + request.auth.uid))
+            && get(/databases/$(database)/documents/guardian_links/$(get(/databases/$(database)/documents/family_posts/$(postId)).data.authorId + '_' + request.auth.uid)).data.status == 'active'
+        );
         allow create: if isAuth() && request.resource.data.authorId == request.auth.uid;
       }
     }
 
-    // Evidence holds — read if authenticated, write server-side only
+    // Evidence holds — server-side only
     match /evidence_holds/{holdId} {
-      allow read: if isAuth();
+      allow read: if false;
       allow write: if false; // Server-side only
     }
 
@@ -169,7 +177,10 @@ service cloud.firestore {
       allow write: if false; // Server-side only
 
       match /points/{pointId} {
-        allow read: if isAuth();
+        allow read: if isAuth() && (
+          get(/databases/$(database)/documents/trips/$(tripId)).data.userId == request.auth.uid ||
+          isGuardianOf(get(/databases/$(database)/documents/trips/$(tripId)).data.userId)
+        );
         allow write: if false; // Server-side only
       }
     }
