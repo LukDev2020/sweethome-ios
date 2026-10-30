@@ -298,20 +298,20 @@
 "consulate.allCountries" = "Tous les pays";
 "consulate.close" = "Fermer";
 "consulate.currentPinned" = "Épinglé";
-"consulate.emergencyPhone" = "Téléphone d'urgence";
+"consulate.emergencyPhone" = "Urgences : %@";
 "consulate.pinned" = "Épinglé";
 "consulate.search" = "Rechercher pays ou ville";
 "consulate.title" = "Info consulaire";
 
 "emergency.contacts.add" = "Ajouter un contact";
-"emergency.contacts.areaCode" = "Indicatif";
+"emergency.contacts.areaCode" = "Indicatif %@";
 "emergency.contacts.customContacts" = "Contacts d'urgence personnalisés";
 "emergency.contacts.delete" = "Supprimer";
 "emergency.contacts.localNumbers" = "Numéros d'urgence locaux";
 "emergency.contacts.navTitle" = "Contacts d'urgence";
 "emergency.contacts.noContacts" = "Aucun contact";
 "emergency.contacts.noContactsHint" = "Ajouter des contacts d'urgence";
-"emergency.contacts.regionInfo" = "Numéros d'urgence locaux selon votre position";
+"emergency.contacts.regionInfo" = "Numéros d'urgence là où se trouve %@ (%@)";
 "emergency.contacts.tip" = "Composez rapidement ces numéros en cas d'urgence";
 "emergency.contacts.title" = "Contacts d'urgence";
 
@@ -342,7 +342,7 @@
 "guardian.alert.claim.organize" = "Organiser";
 "guardian.alert.claim.prompt" = "Préparer les documents d'assurance ?";
 "guardian.alert.declining" = "en baisse";
-"guardian.alert.elapsed" = "Écoulé";
+"guardian.alert.elapsed" = "%d:%02d écoulées";
 "guardian.alert.escalation" = "Escalade en cours";
 "guardian.alert.i.got.it" = "Je m'en occupe";
 "guardian.alert.last.interaction" = "Dernière interaction";
@@ -352,7 +352,7 @@
 "guardian.alert.notifying" = "Notification des autres gardiens";
 "guardian.alert.protected.person" = "Personne protégée";
 "guardian.alert.scene.info" = "Info sur place";
-"guardian.alert.seeking.help" = "Demande d'aide";
+"guardian.alert.seeking.help" = "%@ demande de l'aide";
 "guardian.alert.step1.title" = "Confirmer la sécurité";
 "guardian.alert.step2.detail" = "Appeler pour confirmer";
 "guardian.alert.step2.title" = "Contacter la personne";
@@ -457,7 +457,7 @@
 "guardian.detail.onDuty" = "En service";
 "guardian.detail.phoneActivity" = "Activité téléphone";
 "guardian.detail.removeGuardian" = "Retirer le gardien";
-"guardian.detail.removeMessage" = "Après retrait, cette personne ne recevra plus vos signaux";
+"guardian.detail.removeMessage" = "%@ ne recevra plus vos signaux de sécurité";
 "guardian.detail.removeTitle" = "Retirer le gardien ?";
 "guardian.detail.requireConfirm" = "Confirmation requise";
 "guardian.detail.safeRevocation" = "Révocation sécurisée";
@@ -480,7 +480,7 @@
 "guardian.duty.view.center.log" = "Voir le journal du centre";
 "guardian.home.add.person" = "Ajouter un protégé";
 "guardian.home.all.normal" = "Tout normal";
-"guardian.home.at.limit" = "Limite atteinte";
+"guardian.home.at.limit" = "%d sur %d — limite de votre offre";
 "guardian.home.checkin.hours" = "Signalement il y a %dh";
 "guardian.home.checkin.minutes" = "Signalement il y a %dm";
 "guardian.home.claim.materials" = "Matériaux";
@@ -520,7 +520,7 @@
 "guardian.member.hours.ago" = "Il y a %d heures";
 "guardian.member.last.checkin" = "Dernier signalement";
 "guardian.member.layers" = "%d couches";
-"guardian.member.local.time" = "Heure locale";
+"guardian.member.local.time" = "Heure locale %@";
 "guardian.member.may.removed" = "Ce membre a peut-être été retiré";
 "guardian.member.minutes.ago" = "Il y a %d min";
 "guardian.member.never" = "Jamais";
@@ -609,7 +609,7 @@
 "homeTimer.remaining" = "Temps restant";
 "homeTimer.routeNotes" = "Notes d'itinéraire (optionnel)";
 "homeTimer.safeArrival" = "Arrivée en sécurité";
-"homeTimer.setEntry" = "Définir l'entrée";
+"homeTimer.setEntry" = "Minuteur de retour réglé : %@";
 "homeTimer.setup" = "Définir l'heure de retour";
 "homeTimer.setupDesc" = "Si vous ne fermez pas le minuteur à temps,
 vos gardiens seront automatiquement notifiés.";
@@ -619,7 +619,7 @@ vos gardiens seront automatiquement notifiés.";
 "invite.codeLabel" = "Code d'invitation";
 "invite.copy" = "Copier";
 "invite.done" = "Terminé";
-"invite.expiryNote" = "Code valide 24 heures";
+"invite.expiryNote" = "Code valable jusqu'au %@";
 "invite.generate" = "Générer un code";
 "invite.howToUse" = "Comment utiliser";
 "invite.me" = "Moi";
@@ -705,7 +705,7 @@ vos gardiens seront automatiquement notifiés.";
 "profile.roleGuardian" = "Gardien";
 "profile.roleProtected" = "Protégé";
 "profile.save" = "Enregistrer";
-"profile.saveFailed" = "Échec de l'enregistrement";
+"profile.saveFailed" = "Échec de l'enregistrement : %@";
 "profile.saved" = "Enregistré";
 "profile.timezone" = "Fuseau horaire";
 "profile.title" = "Modifier le profil";
@@ -908,7 +908,7 @@ vos gardiens seront automatiquement notifiés.";
 "claim.hashValue" = "Valeur de l'empreinte";
 "claim.insurerRequires" = "Votre assureur peut exiger ces documents";
 "claim.networkError" = "Erreur réseau, veuillez réessayer";
-"claim.referenceChecklist" = "Liste de référence";
+"claim.referenceChecklist" = "Liste de référence : %@";
 "claim.sharePDF" = "Partager PDF";
 "claim.velaProvides" = "Vela Care fournit des données de sécurité vérifiées pour les réclamations d'assurance";
 
@@ -1273,3 +1273,8 @@ vos gardiens seront automatiquement notifiés.";
 "guardian.alert.ackHint" = "Prévient la famille que vous vous en occupez et arrête les appels automatiques";
 "guardian.alert.markSafe" = "%@ est en sécurité — clore le SOS";
 "guardian.alert.sosLocation" = "Position lors du SOS";
+
+/* SOS banner (W2-j) */
+"sos.banner.sending" = "Envoi de votre SOS… En danger, appelez aussi le %@.";
+"sos.banner.delivered" = "Votre famille a été alertée. En danger, appelez aussi le %@.";
+"sos.banner.noGuardians" = "Aucun gardien à prévenir — appelez le %@ maintenant.";

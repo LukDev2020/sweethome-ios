@@ -298,20 +298,20 @@
 "consulate.allCountries" = "All Countries";
 "consulate.close" = "Close";
 "consulate.currentPinned" = "Currently Pinned";
-"consulate.emergencyPhone" = "Emergency Phone";
+"consulate.emergencyPhone" = "Emergency: %@";
 "consulate.pinned" = "Pinned";
 "consulate.search" = "Search country or city";
 "consulate.title" = "Consulate Info";
 
 "emergency.contacts.add" = "Add Contact";
-"emergency.contacts.areaCode" = "Area Code";
+"emergency.contacts.areaCode" = "Area code %@";
 "emergency.contacts.customContacts" = "Custom Emergency Contacts";
 "emergency.contacts.delete" = "Delete";
 "emergency.contacts.localNumbers" = "Local Emergency Numbers";
 "emergency.contacts.navTitle" = "Emergency Contacts";
 "emergency.contacts.noContacts" = "No contacts";
 "emergency.contacts.noContactsHint" = "Add emergency contacts for quick access";
-"emergency.contacts.regionInfo" = "Local emergency numbers based on your location";
+"emergency.contacts.regionInfo" = "Emergency numbers where %@ is (%@)";
 "emergency.contacts.tip" = "Quick-dial these numbers in an emergency";
 "emergency.contacts.title" = "Emergency Contacts";
 
@@ -342,7 +342,7 @@
 "guardian.alert.claim.organize" = "Organize Materials";
 "guardian.alert.claim.prompt" = "Need to prepare insurance claim materials?";
 "guardian.alert.declining" = "declining";
-"guardian.alert.elapsed" = "Elapsed";
+"guardian.alert.elapsed" = "%d:%02d elapsed";
 "guardian.alert.escalation" = "Escalating";
 "guardian.alert.i.got.it" = "I've Got It";
 "guardian.alert.last.interaction" = "Last Interaction";
@@ -352,7 +352,7 @@
 "guardian.alert.notifying" = "Notifying other guardians";
 "guardian.alert.protected.person" = "Protected Person";
 "guardian.alert.scene.info" = "Scene Info";
-"guardian.alert.seeking.help" = "Seeking Help";
+"guardian.alert.seeking.help" = "%@ needs help";
 "guardian.alert.step1.title" = "Confirm Safety";
 "guardian.alert.step2.detail" = "Call to confirm the situation";
 "guardian.alert.step2.title" = "Contact Person";
@@ -457,7 +457,7 @@
 "guardian.detail.onDuty" = "On Duty";
 "guardian.detail.phoneActivity" = "Phone activity";
 "guardian.detail.removeGuardian" = "Remove Guardian";
-"guardian.detail.removeMessage" = "After removal, they will no longer receive your safety signals";
+"guardian.detail.removeMessage" = "%@ will no longer receive your safety signals";
 "guardian.detail.removeTitle" = "Remove guardian?";
 "guardian.detail.requireConfirm" = "Needs confirm";
 "guardian.detail.safeRevocation" = "Safe revocation";
@@ -480,7 +480,7 @@
 "guardian.duty.view.center.log" = "View Response Center Log";
 "guardian.home.add.person" = "Add Protected Person";
 "guardian.home.all.normal" = "All Normal";
-"guardian.home.at.limit" = "At limit";
+"guardian.home.at.limit" = "%d of %d — at your plan's limit";
 "guardian.home.checkin.hours" = "Checked in %dh ago";
 "guardian.home.checkin.minutes" = "Checked in %dm ago";
 "guardian.home.claim.materials" = "Claim Materials";
@@ -520,7 +520,7 @@
 "guardian.member.hours.ago" = "%d hours ago";
 "guardian.member.last.checkin" = "Last Check-in";
 "guardian.member.layers" = "%d layers";
-"guardian.member.local.time" = "Local Time";
+"guardian.member.local.time" = "Local time %@";
 "guardian.member.may.removed" = "This member may have been removed";
 "guardian.member.minutes.ago" = "%d min ago";
 "guardian.member.never" = "Never";
@@ -609,7 +609,7 @@
 "homeTimer.remaining" = "Time Remaining";
 "homeTimer.routeNotes" = "Route notes (optional)";
 "homeTimer.safeArrival" = "Safe Arrival";
-"homeTimer.setEntry" = "Set Entry";
+"homeTimer.setEntry" = "Home timer set: %@";
 "homeTimer.setup" = "Set Home Time";
 "homeTimer.setupDesc" = "If you don't close the timer by the set time,
 your guardians will be automatically notified.";
@@ -619,7 +619,7 @@ your guardians will be automatically notified.";
 "invite.codeLabel" = "Invite Code";
 "invite.copy" = "Copy";
 "invite.done" = "Done";
-"invite.expiryNote" = "Code valid for 24 hours";
+"invite.expiryNote" = "Code valid until %@";
 "invite.generate" = "Generate Code";
 "invite.howToUse" = "How to Use";
 "invite.me" = "Me";
@@ -705,7 +705,7 @@ your guardians will be automatically notified.";
 "profile.roleGuardian" = "Guardian";
 "profile.roleProtected" = "Protected";
 "profile.save" = "Save";
-"profile.saveFailed" = "Save Failed";
+"profile.saveFailed" = "Save failed: %@";
 "profile.saved" = "Saved";
 "profile.timezone" = "Timezone";
 "profile.title" = "Edit Profile";
@@ -908,7 +908,7 @@ your guardians will be automatically notified.";
 "claim.hashValue" = "Hash Value";
 "claim.insurerRequires" = "Your insurer may require these documents";
 "claim.networkError" = "Network error, please try again";
-"claim.referenceChecklist" = "Reference Checklist";
+"claim.referenceChecklist" = "Reference checklist: %@";
 "claim.sharePDF" = "Share PDF";
 "claim.velaProvides" = "Vela Care provides verified safety data for insurance claims";
 
@@ -1273,3 +1273,8 @@ your guardians will be automatically notified.";
 "guardian.alert.ackHint" = "Tells the rest of the family you're on it and stops the automatic calls";
 "guardian.alert.markSafe" = "%@ is safe — close SOS";
 "guardian.alert.sosLocation" = "Location at SOS";
+
+/* SOS banner (W2-j) */
+"sos.banner.sending" = "Sending your SOS… If you're in danger, also call %@.";
+"sos.banner.delivered" = "Your family has been alerted. If you're in danger, also call %@.";
+"sos.banner.noGuardians" = "No guardians to notify — call %@ now.";

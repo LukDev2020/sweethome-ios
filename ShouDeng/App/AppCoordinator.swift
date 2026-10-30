@@ -331,6 +331,19 @@ final class AppCoordinator: ObservableObject {
 
         syncWidgetState()
 
+        #if DEBUG
+        // Simulator verification hooks (launch arguments)
+        if let personId = UserDefaults.standard.string(forKey: "debugOpenSOSAlert") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+                self?.pendingAlertPersonId = personId
+                Task { await self?.fetchGuardianSOS(personId: personId) }
+            }
+        }
+        if UserDefaults.standard.bool(forKey: "debugTriggerSOS") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in self?.triggerSOS(method: .longPress) }
+        }
+        #endif
+
         // Apply any pending deep link that arrived before login
         if let pending = pendingDeepLink {
             pendingDeepLink = nil

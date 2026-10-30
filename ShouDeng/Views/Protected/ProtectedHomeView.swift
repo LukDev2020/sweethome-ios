@@ -1278,7 +1278,11 @@ struct SOSActiveView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 // Persistent SOS banner — PDF: "SOS 进行中界面须常驻一行"
-                Text(DisclaimerCopy.SOS.persistentBanner)
+                Text(DisclaimerCopy.SOS.persistentBanner(
+                    delivered: coordinator.ownSOSStatus != nil,
+                    noGuardians: coordinator.ownSOSStatus?.noGuardians == true,
+                    emergencyNumber: coordinator.localEmergencyNumber
+                ))
                     .font(.scaled(size: 12, weight: .medium))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)

@@ -298,20 +298,20 @@
 "consulate.allCountries" = "全部国家";
 "consulate.close" = "关闭";
 "consulate.currentPinned" = "当前置顶";
-"consulate.emergencyPhone" = "紧急电话";
+"consulate.emergencyPhone" = "紧急电话：%@";
 "consulate.pinned" = "置顶";
 "consulate.search" = "搜索国家或城市";
 "consulate.title" = "领事馆信息";
 
 "emergency.contacts.add" = "添加联系人";
-"emergency.contacts.areaCode" = "区号";
+"emergency.contacts.areaCode" = "区号 %@";
 "emergency.contacts.customContacts" = "自定义紧急联系人";
 "emergency.contacts.delete" = "删除";
 "emergency.contacts.localNumbers" = "当地紧急号码";
 "emergency.contacts.navTitle" = "紧急联系人";
 "emergency.contacts.noContacts" = "暂无联系人";
 "emergency.contacts.noContactsHint" = "添加紧急联系人以备不时之需";
-"emergency.contacts.regionInfo" = "根据您当前位置显示当地紧急号码";
+"emergency.contacts.regionInfo" = "%@ 所在地（%@）的紧急号码";
 "emergency.contacts.tip" = "这些号码可在紧急情况下快速拨打";
 "emergency.contacts.title" = "紧急联系人";
 
@@ -342,7 +342,7 @@
 "guardian.alert.claim.organize" = "整理材料";
 "guardian.alert.claim.prompt" = "需要整理保险理赔材料吗？";
 "guardian.alert.declining" = "下降中";
-"guardian.alert.elapsed" = "已持续";
+"guardian.alert.elapsed" = "已持续 %d:%02d";
 "guardian.alert.escalation" = "自动升级中";
 "guardian.alert.i.got.it" = "我来处理";
 "guardian.alert.last.interaction" = "最后一次交互";
@@ -352,7 +352,7 @@
 "guardian.alert.notifying" = "正在通知其他守护者";
 "guardian.alert.protected.person" = "被守护者";
 "guardian.alert.scene.info" = "现场信息";
-"guardian.alert.seeking.help" = "正在求助";
+"guardian.alert.seeking.help" = "%@ 正在求助";
 "guardian.alert.step1.title" = "确认安全";
 "guardian.alert.step2.detail" = "拨打电话确认情况";
 "guardian.alert.step2.title" = "联系本人";
@@ -457,7 +457,7 @@
 "guardian.detail.onDuty" = "值班中";
 "guardian.detail.phoneActivity" = "手机活跃状态";
 "guardian.detail.removeGuardian" = "移除守护者";
-"guardian.detail.removeMessage" = "移除后对方将不再收到您的安全信号";
+"guardian.detail.removeMessage" = "移除后 %@ 将不再收到您的安全信号";
 "guardian.detail.removeTitle" = "确认移除守护者？";
 "guardian.detail.requireConfirm" = "需确认";
 "guardian.detail.safeRevocation" = "安全撤销机制";
@@ -480,7 +480,7 @@
 "guardian.duty.view.center.log" = "查看响应中心记录";
 "guardian.home.add.person" = "添加被守护者";
 "guardian.home.all.normal" = "全部正常";
-"guardian.home.at.limit" = "已达上限";
+"guardian.home.at.limit" = "%d / %d — 已达套餐上限";
 "guardian.home.checkin.hours" = "%d 小时前报平安";
 "guardian.home.checkin.minutes" = "%d 分钟前报平安";
 "guardian.home.claim.materials" = "理赔材料";
@@ -520,7 +520,7 @@
 "guardian.member.hours.ago" = "%d 小时前";
 "guardian.member.last.checkin" = "上次报平安";
 "guardian.member.layers" = "%d 层守护";
-"guardian.member.local.time" = "当地时间";
+"guardian.member.local.time" = "当地时间 %@";
 "guardian.member.may.removed" = "此成员可能已被移除";
 "guardian.member.minutes.ago" = "%d 分钟前";
 "guardian.member.never" = "从未";
@@ -609,7 +609,7 @@
 "homeTimer.remaining" = "剩余时间";
 "homeTimer.routeNotes" = "路线备注（可选）";
 "homeTimer.safeArrival" = "安全到达";
-"homeTimer.setEntry" = "设置入口";
+"homeTimer.setEntry" = "已设置回家计时：%@";
 "homeTimer.setup" = "设置回家时间";
 "homeTimer.setupDesc" = "如果到时间还没有关闭计时器，
 系统会自动通知你的守护者。";
@@ -619,7 +619,7 @@
 "invite.codeLabel" = "邀请码";
 "invite.copy" = "复制";
 "invite.done" = "完成";
-"invite.expiryNote" = "邀请码24小时内有效";
+"invite.expiryNote" = "邀请码有效期至 %@";
 "invite.generate" = "生成邀请码";
 "invite.howToUse" = "如何使用";
 "invite.me" = "我";
@@ -705,7 +705,7 @@
 "profile.roleGuardian" = "守护者";
 "profile.roleProtected" = "被守护者";
 "profile.save" = "保存";
-"profile.saveFailed" = "保存失败";
+"profile.saveFailed" = "保存失败：%@";
 "profile.saved" = "已保存";
 "profile.timezone" = "时区";
 "profile.title" = "编辑资料";
@@ -908,7 +908,7 @@
 "claim.hashValue" = "哈希值";
 "claim.insurerRequires" = "您的保险公司可能需要以下材料";
 "claim.networkError" = "网络错误，请重试";
-"claim.referenceChecklist" = "参考清单";
+"claim.referenceChecklist" = "参考清单：%@";
 "claim.sharePDF" = "分享PDF";
 "claim.velaProvides" = "Vela Care 提供经过验证的安全数据用于保险理赔";
 
@@ -1273,3 +1273,8 @@
 "guardian.alert.ackHint" = "告诉其他家人由你处理，并停止自动呼叫";
 "guardian.alert.markSafe" = "%@ 已安全——结束求助";
 "guardian.alert.sosLocation" = "求助时位置";
+
+/* SOS banner (W2-j) */
+"sos.banner.sending" = "正在发送求助……如情况危急，请同时拨打 %@。";
+"sos.banner.delivered" = "已通知你的家人。如情况危急，请同时拨打 %@。";
+"sos.banner.noGuardians" = "没有可通知的守护者——请立即拨打 %@。";

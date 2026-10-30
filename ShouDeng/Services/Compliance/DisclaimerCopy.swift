@@ -331,7 +331,13 @@ enum DisclaimerCopy {
     // MARK: - SOS In-Progress Banner
 
     enum SOS {
-        static let persistentBanner = "已通知你的家人。如情况危急，请同时拨打 112。"
+        /// The banner must never claim the family was notified before the server
+        /// confirms it, and names the LOCAL emergency number.
+        static func persistentBanner(delivered: Bool, noGuardians: Bool, emergencyNumber: String) -> String {
+            let lm = LanguageManager.shared
+            let key = noGuardians ? "sos.banner.noGuardians" : (delivered ? "sos.banner.delivered" : "sos.banner.sending")
+            return String(format: lm.localized(key), emergencyNumber)
+        }
     }
 
     // MARK: - Banned Words (for development-time checks)

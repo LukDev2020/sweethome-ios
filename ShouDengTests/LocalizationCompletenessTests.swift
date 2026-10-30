@@ -77,6 +77,30 @@ final class LocalizationCompletenessTests: XCTestCase {
         }
     }
 
+    /// `String(format: localized("key"), args…)` with a translation that has no
+    /// placeholder silently drops the arguments ("Seeking Help" instead of
+    /// "Mom needs help").
+    func testFormatCallSitesUseKeysWithPlaceholders() throws {
+        let en = try table("en")
+        let call = try NSRegularExpression(pattern: #"String\(format:\s*\w+(?:\.shared)?\.localized\("([^"]+)"(?:,\s*fallback:\s*"[^"]*")?\)\s*,"#)
+        let spec = try NSRegularExpression(pattern: #"%(?:\d+\$)?[-+ 0#]*\d*(?:\.\d+)?(?:ll|l|h)?[dDiuxXfFeEgGcsS@]"#)
+        var offenders: [String] = []
+        let files = FileManager.default.enumerator(at: repoRoot.appendingPathComponent("ShouDeng"), includingPropertiesForKeys: nil)!
+            .compactMap { $0 as? URL }.filter { $0.pathExtension == "swift" }
+        for file in files {
+            let text = try String(contentsOf: file, encoding: .utf8)
+            for m in call.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
+                let key = String(text[Range(m.range(at: 1), in: text)!])
+                guard let value = en[key] else { continue }
+                let cleaned = value.replacingOccurrences(of: "%%", with: "")
+                if spec.firstMatch(in: cleaned, range: NSRange(cleaned.startIndex..., in: cleaned)) == nil {
+                    offenders.append("\(file.lastPathComponent): \(key) = \"\(value)\"")
+                }
+            }
+        }
+        XCTAssertEqual(offenders, [])
+    }
+
     func testFormattedKeysRenderWithoutRawPlaceholders() {
         let lm = LanguageManager.shared
         let battery = String(format: lm.localized("protected.home.battery"), 82)
