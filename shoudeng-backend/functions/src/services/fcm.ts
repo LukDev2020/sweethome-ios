@@ -6,48 +6,97 @@ const db = admin.firestore();
 const fcmStrings: Record<string, {
   sosTitle: string;
   sosBody: (name: string, loc?: string) => string;
+  sosBattery: (pct: number) => string;
   checkinTitle: string;
   checkinBody: (name: string) => string;
   heartbeatTitle: string;
   heartbeatBody: (name: string, mins: number) => string;
   resolvedTitle: string;
   resolvedBody: (name: string) => string;
+  homeSafeTitle: (name: string) => string;
+  homeSafeBody: (city: string, time: string, note?: string) => string;
+  ackOthersTitle: string;
+  ackOthersBody: (guardian: string, person: string) => string;
+  ackProtectedTitle: string;
+  ackProtectedBody: (guardian: string) => string;
 }> = {
   zh: {
     sosTitle: "紧急求助",
     sosBody: (name, loc) => `${name}正在求助${loc ? "，位于" + loc : ""}`,
+    sosBattery: (pct) => `电量 ${pct}%`,
     checkinTitle: "报平安提醒",
     checkinBody: (name) => `${name}今天还没有报平安`,
     heartbeatTitle: "设备离线提醒",
     heartbeatBody: (name, mins) => `${name}的手机已 ${mins} 分钟未上报信号`,
     resolvedTitle: "守护者已接手",
     resolvedBody: (name) => `${name}已确认并接手处理`,
+    homeSafeTitle: (name) => `${name}已平安到家`,
+    homeSafeBody: (city, time, note) => [city, time].filter(Boolean).join(" · ") + (note ? `\n${note}` : ""),
+    ackOthersTitle: "已有人接手",
+    ackOthersBody: (g, p) => `${g}正在处理${p}的求助，自动呼叫已停止`,
+    ackProtectedTitle: "家人已收到",
+    ackProtectedBody: (g) => `${g}已收到你的求助，正在处理`,
   },
   en: {
     sosTitle: "Emergency SOS",
     sosBody: (name, loc) => `${name} is calling for help${loc ? " near " + loc : ""}`,
+    sosBattery: (pct) => `battery ${pct}%`,
     checkinTitle: "Check-in Reminder",
     checkinBody: (name) => `${name} hasn't checked in today`,
     heartbeatTitle: "Device Offline",
     heartbeatBody: (name, mins) => `${name}'s phone has been offline for ${mins} minutes`,
     resolvedTitle: "Guardian Responded",
     resolvedBody: (name) => `${name} has acknowledged and taken over`,
+    homeSafeTitle: (name) => `${name} is home safe`,
+    homeSafeBody: (city, time, note) => [city, time].filter(Boolean).join(" · ") + (note ? `\n${note}` : ""),
+    ackOthersTitle: "Someone is on it",
+    ackOthersBody: (g, p) => `${g} is handling ${p}'s SOS — automatic calls stopped`,
+    ackProtectedTitle: "Your family has it",
+    ackProtectedBody: (g) => `${g} got your SOS and is responding`,
   },
   fr: {
     sosTitle: "SOS Urgence",
     sosBody: (name, loc) => `${name} demande de l'aide${loc ? " près de " + loc : ""}`,
+    sosBattery: (pct) => `batterie ${pct} %`,
     checkinTitle: "Rappel de signal",
     checkinBody: (name) => `${name} n'a pas donné signe de vie aujourd'hui`,
     heartbeatTitle: "Appareil hors ligne",
     heartbeatBody: (name, mins) => `Le téléphone de ${name} est hors ligne depuis ${mins} minutes`,
     resolvedTitle: "Gardien a répondu",
     resolvedBody: (name) => `${name} a confirmé et pris en charge`,
+    homeSafeTitle: (name) => `${name} est bien rentré(e)`,
+    homeSafeBody: (city, time, note) => [city, time].filter(Boolean).join(" · ") + (note ? `\n${note}` : ""),
+    ackOthersTitle: "Quelqu'un s'en occupe",
+    ackOthersBody: (g, p) => `${g} gère le SOS de ${p} — appels automatiques arrêtés`,
+    ackProtectedTitle: "Votre famille est là",
+    ackProtectedBody: (g) => `${g} a reçu votre SOS et intervient`,
   },
 };
 
 function getStrings(locale: string) {
   const lang = (locale || "zh").substring(0, 2);
   return fcmStrings[lang] || fcmStrings.zh;
+}
+
+/**
+ * Critical alerts need Apple's com.apple.developer.usernotifications.critical-alerts
+ * entitlement. Until Apple grants it, SOS pushes use the time-sensitive
+ * interruption level (entitlement shipped in the app). Flip with the
+ * CRITICAL_ALERTS_ENABLED env var once the entitlement is approved.
+ */
+export function criticalAlertsEnabled(): boolean {
+  return process.env.CRITICAL_ALERTS_ENABLED === "true";
+}
+
+export function sosApsPayload(title: string, body: string): Record<string, unknown> {
+  const critical = criticalAlertsEnabled();
+  return {
+    sound: critical ? { critical: 1, name: "sos_alert.caf", volume: 1.0 } : "sos_alert.caf",
+    "interruption-level": critical ? "critical" : "time-sensitive",
+    "relevance-score": 1.0,
+    category: "SOS_ALERT",
+    alert: { title, body },
+  };
 }
 
 /**
@@ -97,12 +146,26 @@ export interface PushResult {
   allFailed: boolean;
 }
 
+export interface SOSAlertDetails {
+  protectedPersonId?: string;
+  locationDescription?: string | null;
+  batteryLevel?: number | null;
+  latitude?: number | null;
+  longitude?: number | null;
+}
+
 export async function sendSOSAlert(
   guardianId: string,
   protectedPersonName: string,
   sosEventId: string,
-  locationDescription?: string
+  detailsOrLocation?: SOSAlertDetails | string
 ): Promise<PushResult> {
+  const details: SOSAlertDetails =
+    typeof detailsOrLocation === "string"
+      ? { locationDescription: detailsOrLocation }
+      : detailsOrLocation ?? {};
+  // SOS alerts ignore the sosAlerts preference on purpose: a guardian cannot
+  // opt out of being told that someone they protect is calling for help.
   const tokens = await getTokensForUser(guardianId);
   if (tokens.length === 0) {
     console.warn(`[FCM] No tokens for guardian ${guardianId}`);
@@ -111,34 +174,32 @@ export async function sendSOSAlert(
 
   const locale = await getUserLocale(guardianId);
   const s = getStrings(locale);
+  const battery = typeof details.batteryLevel === "number" && details.batteryLevel >= 0
+    ? s.sosBattery(Math.round(details.batteryLevel * 100))
+    : null;
+  const body = [s.sosBody(protectedPersonName, details.locationDescription ?? undefined), battery]
+    .filter(Boolean).join(" · ");
 
   const message: admin.messaging.MulticastMessage = {
     tokens,
-    notification: {
-      title: s.sosTitle,
-      body: s.sosBody(protectedPersonName, locationDescription),
-    },
+    notification: { title: s.sosTitle, body },
     apns: {
       headers: {
         "apns-priority": "10",
         "apns-push-type": "alert",
       },
-      payload: {
-        aps: {
-          sound: "sos_alert.caf",
-          "interruption-level": "critical",
-          "relevance-score": 1.0,
-          alert: {
-            title: s.sosTitle,
-            body: s.sosBody(protectedPersonName),
-          },
-        },
-      },
+      payload: { aps: sosApsPayload(s.sosTitle, body) as admin.messaging.Aps },
     },
     data: {
       action: "sos_alert",
       sos_id: sosEventId,
+      person_id: details.protectedPersonId ?? "",
       protected_person_name: protectedPersonName,
+      ...(typeof details.batteryLevel === "number" && { battery: String(details.batteryLevel) }),
+      ...(typeof details.latitude === "number" && typeof details.longitude === "number" && {
+        lat: String(details.latitude),
+        lng: String(details.longitude),
+      }),
     },
   };
 
@@ -323,4 +384,77 @@ export async function sendSOSResolvedNotification(
   } catch (error) {
     console.error(`[FCM] Failed to send SOS resolved notification:`, error);
   }
+}
+
+async function sendSimple(
+  userId: string,
+  title: string,
+  body: string,
+  data: Record<string, string>,
+  aps: Record<string, unknown> = { sound: "default" }
+): Promise<PushResult> {
+  const tokens = await getTokensForUser(userId);
+  if (tokens.length === 0) return { successCount: 0, failureCount: 0, allFailed: true };
+  try {
+    const r = await admin.messaging().sendEachForMulticast({
+      tokens,
+      notification: { title, body },
+      apns: { payload: { aps: { ...aps, alert: { title, body } } as admin.messaging.Aps } },
+      data,
+    });
+    return { successCount: r.successCount, failureCount: r.failureCount, allFailed: r.successCount === 0 };
+  } catch (error) {
+    console.error(`[FCM] push to ${userId} failed:`, error);
+    return { successCount: 0, failureCount: tokens.length, allFailed: true };
+  }
+}
+
+/**
+ * "Mom is home safe · Chengdu 18:58" to a guardian (Home Safe / check-in).
+ * Respects the guardian's checkinReminder (check-in notifications) preference.
+ */
+export async function sendHomeSafeNotification(
+  guardianId: string,
+  protectedPersonId: string,
+  personName: string,
+  city: string,
+  localTime: string,
+  note?: string
+): Promise<boolean> {
+  if (!(await isNotifEnabled(guardianId, "checkinReminder"))) return false;
+  const s = getStrings(await getUserLocale(guardianId));
+  const r = await sendSimple(guardianId, s.homeSafeTitle(personName), s.homeSafeBody(city, localTime, note), {
+    action: "checkin_safe",
+    person_id: protectedPersonId,
+  });
+  return !r.allFailed;
+}
+
+/** "Sarah is handling Mom's SOS — automatic calls stopped" to the other guardians. */
+export async function sendSOSAcknowledgedToGuardian(
+  guardianId: string,
+  ackGuardianName: string,
+  personName: string,
+  sosEventId: string,
+  protectedPersonId: string
+): Promise<void> {
+  const s = getStrings(await getUserLocale(guardianId));
+  await sendSimple(guardianId, s.ackOthersTitle, s.ackOthersBody(ackGuardianName, personName), {
+    action: "sos_acknowledged",
+    sos_id: sosEventId,
+    person_id: protectedPersonId,
+  }, { sound: "default", "interruption-level": "time-sensitive" });
+}
+
+/** "Sarah got your SOS and is responding" to the person who raised it. */
+export async function sendSOSAcknowledgedToProtected(
+  protectedPersonId: string,
+  ackGuardianName: string,
+  sosEventId: string
+): Promise<void> {
+  const s = getStrings(await getUserLocale(protectedPersonId));
+  await sendSimple(protectedPersonId, s.ackProtectedTitle, s.ackProtectedBody(ackGuardianName), {
+    action: "sos_acknowledged",
+    sos_id: sosEventId,
+  }, { sound: "default", "interruption-level": "time-sensitive" });
 }

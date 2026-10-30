@@ -8,19 +8,23 @@ import {
   insertCheckin,
 } from "../services/bigquery";
 import { v4 as uuidv4 } from "uuid";
+import { sendHomeSafeNotification } from "../services/fcm";
+import { hhmm } from "../services/localTime";
 
 const router = Router();
 const db = admin.firestore();
 
-router.use(authMiddleware);
-router.use(createRateLimiter(RATE_LIMITS.telemetry));
+// This router is mounted at bare /v1: auth and the telemetry limiter are applied
+// PER ROUTE. A router-level router.use() would run for every later /v1 route
+// (Twilio callbacks, public share links, SOS) — 401s and a shared 429 bucket.
+const telemetryLimit = createRateLimiter(RATE_LIMITS.telemetry);
 
 /**
  * POST /v1/heartbeat
  * Record a heartbeat signal from the iOS client.
  * Written to BigQuery for time-series analysis.
  */
-router.post("/heartbeat", async (req: Request, res: Response) => {
+router.post("/heartbeat", authMiddleware, telemetryLimit, async (req: Request, res: Response) => {
   const {
     userId,
     timestamp,
@@ -87,7 +91,7 @@ router.post("/heartbeat", async (req: Request, res: Response) => {
  * Record a location report from the iOS client.
  * Written to BigQuery for time-series and trail reconstruction.
  */
-router.post("/location/report", async (req: Request, res: Response) => {
+router.post("/location/report", authMiddleware, telemetryLimit, async (req: Request, res: Response) => {
   const {
     userId,
     latitude,
@@ -155,7 +159,7 @@ router.post("/location/report", async (req: Request, res: Response) => {
  * Record a check-in ("报平安") from the protected person.
  * Written to both Firestore (for real-time) and BigQuery (for history).
  */
-router.post("/checkin", async (req: Request, res: Response) => {
+router.post("/checkin", authMiddleware, telemetryLimit, async (req: Request, res: Response) => {
   const { userId, latitude, longitude, note } = req.body;
 
   if (!userId) {
@@ -206,9 +210,19 @@ router.post("/checkin", async (req: Request, res: Response) => {
       detail: null,
     });
 
+    // Tell the guardians ("Mom is home safe · Chengdu 18:58"), at most once per
+    // person per 10 minutes so repeated taps / retried requests don't spam.
+    let guardiansNotified = 0;
+    try {
+      guardiansNotified = await notifyGuardiansOfCheckin(userId, now, note);
+    } catch (pushError) {
+      console.error("[Telemetry] check-in push failed (non-fatal):", pushError);
+    }
+
     res.json({
       checkInId,
       timestamp: now.toISOString(),
+      guardiansNotified,
     });
   } catch (error) {
     console.error("[Telemetry] checkin error:", error);
@@ -224,7 +238,7 @@ router.post("/checkin", async (req: Request, res: Response) => {
  */
 export const MAX_PAUSE_MS = 4 * 60 * 60 * 1000;
 
-router.post("/location/pause", async (req: Request, res: Response) => {
+router.post("/location/pause", authMiddleware, telemetryLimit, async (req: Request, res: Response) => {
   const { userId, paused, expiresAt } = req.body;
   if (userId !== req.uid) {
     res.status(403).json({ error: "Cannot pause tracking for another user" });
@@ -268,13 +282,47 @@ router.post("/location/pause", async (req: Request, res: Response) => {
   }
 });
 
+export const CHECKIN_PUSH_DEDUPE_MS = 10 * 60 * 1000;
+
+/** Returns how many guardians were pushed (0 when deduped). */
+export async function notifyGuardiansOfCheckin(userId: string, now: Date, note?: string): Promise<number> {
+  const telRef = db.collection("user_telemetry").doc(userId);
+  const claimed = await db.runTransaction(async (tx) => {
+    const tel = await tx.get(telRef);
+    const last = tel.exists ? tel.data()?.lastCheckinPushAt?.toMillis?.() : undefined;
+    if (last && now.getTime() - last < CHECKIN_PUSH_DEDUPE_MS) return false;
+    tx.set(telRef, { lastCheckinPushAt: admin.firestore.Timestamp.fromDate(now) }, { merge: true });
+    return true;
+  });
+  if (!claimed) return 0;
+
+  const [userDoc, links] = await Promise.all([
+    db.collection("users").doc(userId).get(),
+    db.collection("guardian_links")
+      .where("protectedPersonId", "==", userId)
+      .where("status", "==", "active")
+      .get(),
+  ]);
+  const user = userDoc.data() ?? {};
+  const name = user.displayName || "";
+  const city = user.cityName || "";
+  const time = hhmm(now, user.timeZone);
+  const cleanNote = typeof note === "string" && note.trim() && note.trim() !== "报平安" ? note.trim().slice(0, 80) : undefined;
+
+  let sent = 0;
+  for (const link of links.docs) {
+    if (await sendHomeSafeNotification(link.data().guardianId, userId, name, city, time, cleanNote)) sent++;
+  }
+  return sent;
+}
+
 /**
  * POST /v1/location/batch
  * Accept an array of queued location reports (from offline queue).
  * Reduces round-trips when device comes back online after being
  * in a tunnel, airplane, or poor connectivity area.
  */
-router.post("/location/batch", async (req: Request, res: Response) => {
+router.post("/location/batch", authMiddleware, telemetryLimit, async (req: Request, res: Response) => {
   const { reports } = req.body;
 
   if (!Array.isArray(reports) || reports.length === 0) {

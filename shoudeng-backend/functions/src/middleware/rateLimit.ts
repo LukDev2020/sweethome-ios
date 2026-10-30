@@ -6,30 +6,55 @@ const db = admin.firestore();
 const RATE_LIMIT_COLLECTION = "rate_limits";
 
 interface RateLimitConfig {
+  /** Namespace for the counter — limits never share a bucket. */
+  name: string;
   windowMs: number;     // Time window in milliseconds
   maxRequests: number;  // Max requests per window
+  /**
+   * If the limiter itself fails (Firestore unavailable): reject when true
+   * (brute-force protection on auth/SMS), allow when false (everything else —
+   * a safety app must not drop requests because of its own limiter).
+   */
+  failClosed?: boolean;
 }
 
 // Rate limit presets
 export const RATE_LIMITS = {
   // Auth endpoints: 5 requests per minute (prevent brute force)
-  auth: { windowMs: 60 * 1000, maxRequests: 5 },
+  auth: { name: "auth", windowMs: 60 * 1000, maxRequests: 5, failClosed: true },
+
+  // Account deletion: rare, destructive
+  accountDelete: { name: "accountDelete", windowMs: 60 * 1000, maxRequests: 5 },
 
   // SMS sending: 3 per 10 minutes (prevent SMS bombing)
-  sms: { windowMs: 10 * 60 * 1000, maxRequests: 3 },
+  sms: { name: "sms", windowMs: 10 * 60 * 1000, maxRequests: 3, failClosed: true },
 
   // Evidence share (public): 20 per hour per IP
-  publicShare: { windowMs: 60 * 60 * 1000, maxRequests: 20 },
+  publicShare: { name: "publicShare", windowMs: 60 * 60 * 1000, maxRequests: 20 },
 
   // General API: 100 per minute per user
-  general: { windowMs: 60 * 1000, maxRequests: 100 },
+  general: { name: "general", windowMs: 60 * 1000, maxRequests: 100 },
 
-  // SOS trigger: 3 per hour (prevent spam)
-  sos: { windowMs: 60 * 60 * 1000, maxRequests: 3 },
+  // SOS trigger: its own generous bucket. Trigger is idempotent while an SOS is
+  // active, so this only bounds trigger→resolve→trigger loops (Twilio cost);
+  // a second real emergency in the same hour must still go through.
+  sosTrigger: { name: "sosTrigger", windowMs: 60 * 60 * 1000, maxRequests: 20 },
+
+  // Client-requested voice calls (each one costs money and rings a phone)
+  voiceCall: { name: "voiceCall", windowMs: 60 * 60 * 1000, maxRequests: 10 },
 
   // Telemetry: 120 per minute (heartbeats at 12/hr + location bursts)
-  telemetry: { windowMs: 60 * 1000, maxRequests: 120 },
+  telemetry: { name: "telemetry", windowMs: 60 * 1000, maxRequests: 120 },
+
+  // Public Twilio callbacks, per caller IP
+  webhook: { name: "webhook", windowMs: 60 * 1000, maxRequests: 120 },
 } as const;
+
+export function rateLimitDocId(config: RateLimitConfig, key: string, now = Date.now()): string {
+  // Firestore doc ids cannot contain "/"
+  const safeKey = key.replace(/\//g, "_");
+  return `${config.name}:${safeKey}:${Math.floor(now / config.windowMs)}`;
+}
 
 /**
  * Create a rate limiting middleware for a specific config.
@@ -45,8 +70,7 @@ export function createRateLimiter(
       ? keyFn(req)
       : req.uid || req.ip || req.headers["x-forwarded-for"]?.toString() || "unknown";
 
-    const windowKey = `${key}_${Math.floor(Date.now() / config.windowMs)}`;
-    const docRef = db.collection(RATE_LIMIT_COLLECTION).doc(windowKey);
+    const docRef = db.collection(RATE_LIMIT_COLLECTION).doc(rateLimitDocId(config, key));
 
     try {
       const result = await db.runTransaction(async (tx) => {
@@ -90,8 +114,13 @@ export function createRateLimiter(
 
       next();
     } catch (error) {
-      // If rate limiting fails, allow the request (fail-open for safety-critical app)
-      console.error("[RateLimit] Check failed, allowing request:", error);
+      if (config.failClosed) {
+        console.error(`[RateLimit] ${config.name} check failed, rejecting (fail-closed):`, error);
+        res.status(503).json({ error: "Please try again shortly" });
+        return;
+      }
+      // Fail open everywhere else — a safety app must not drop requests
+      console.error(`[RateLimit] ${config.name} check failed, allowing request:`, error);
       next();
     }
   };

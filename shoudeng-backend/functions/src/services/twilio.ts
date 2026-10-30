@@ -1,16 +1,25 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import * as crypto from "crypto";
+import { Lang, userLang } from "./locale";
 
 const db = admin.firestore();
 
 // Twilio client — initialized lazily from Firebase config
 let twilioClient: ReturnType<typeof createTwilioClient> | null = null;
 
+function twilioConfig(): { account_sid?: string; auth_token?: string; from_number?: string } {
+  try {
+    return functions.config().twilio ?? {};
+  } catch {
+    return {};
+  }
+}
+
 function createTwilioClient() {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const twilio = require("twilio");
-  const accountSid = functions.config().twilio?.account_sid;
-  const authToken = functions.config().twilio?.auth_token;
+  const { account_sid: accountSid, auth_token: authToken } = twilioConfig();
   if (!accountSid || !authToken) {
     console.warn("[Twilio] Missing config — voice calls disabled");
     return null;
@@ -23,6 +32,44 @@ function getClient() {
     twilioClient = createTwilioClient();
   }
   return twilioClient;
+}
+
+/** Test hook. */
+export function __setTwilioClientForTests(client: unknown) {
+  twilioClient = client as ReturnType<typeof createTwilioClient>;
+}
+
+/**
+ * Public base URL of the `api` HTTPS function, e.g.
+ * https://us-central1-<project>.cloudfunctions.net/api — Twilio must call back
+ * through the function name prefix and region, and signatures are computed over
+ * this exact URL. Override with PUBLIC_API_BASE_URL (custom domain / hosting rewrite).
+ */
+export function publicApiBaseUrl(): string {
+  if (process.env.PUBLIC_API_BASE_URL) return process.env.PUBLIC_API_BASE_URL.replace(/\/$/, "");
+  const project = process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || "sweethome-d1edd";
+  const region = process.env.FUNCTION_REGION || "us-central1";
+  return `https://${region}-${project}.cloudfunctions.net/api`;
+}
+
+/**
+ * Verify X-Twilio-Signature: base64(HMAC-SHA1(authToken, url + sorted(key+value))).
+ * `path` is the request path *inside* the api function (req.originalUrl).
+ */
+export function verifyTwilioSignature(
+  signature: string | undefined,
+  path: string,
+  params: Record<string, unknown>,
+  authToken = twilioConfig().auth_token
+): boolean {
+  if (process.env.FUNCTIONS_EMULATOR === "true") return true;
+  if (!authToken || !signature) return false;
+  const url = publicApiBaseUrl() + path;
+  const data = url + Object.keys(params).sort().map((k) => k + String(params[k] ?? "")).join("");
+  const expected = crypto.createHmac("sha1", authToken).update(Buffer.from(data, "utf-8")).digest("base64");
+  const a = Buffer.from(signature, "utf-8");
+  const b = Buffer.from(expected, "utf-8");
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
 /**
@@ -45,30 +92,22 @@ function getEmergencyNumber(countryCode: string): string {
     AU: "000",
     JP: "110",
     KR: "112",
+    FR: "112",
   };
   return map[countryCode] || "112"; // 112 is international emergency
 }
 
 /**
- * Get the TwiML script language based on country code.
+ * Twilio <Say> language for the guardian's app language.
  */
-function getTwimlLanguage(countryCode: string): string {
-  const map: Record<string, string> = {
-    CN: "zh-CN",
-    US: "en-US",
-    CA: "en-US",
-    GB: "en-GB",
-    AU: "en-AU",
-    JP: "ja-JP",
-    KR: "ko-KR",
-  };
-  return map[countryCode] || "zh-CN";
+function getTwimlLanguage(lang: Lang): string {
+  return { en: "en-US", zh: "cmn-CN", fr: "fr-FR" }[lang];
 }
 
 /**
  * Escape a string for safe interpolation into XML/TwiML.
  */
-function escapeXml(str: string): string {
+export function escapeXml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -77,14 +116,85 @@ function escapeXml(str: string): string {
     .replace(/'/g, "&apos;");
 }
 
+const VOICE_COPY: Record<Lang, {
+  intro: (name: string) => string;
+  keys: string;
+  prompt: string;
+  /** What happens if nobody presses 1 — must match the escalation plan. */
+  noAnswer: (isLastRound: boolean) => string;
+  ack: string;
+  invalid: string;
+}> = {
+  en: {
+    intro: (n) => `Lantern Care emergency. ${n}, who you look after, is calling for help. Please open the Lantern Care app now.`,
+    keys: "Press 1 if you are handling it. This stops the automatic calls and tells the rest of the family. Press 2 to hear this again.",
+    prompt: "Please press a key.",
+    noAnswer: (last) => last
+      ? "No response received. Your family has also been sent a link with the latest location."
+      : "No response received. We will call again in about two minutes until someone responds.",
+    ack: "Thank you. The others have been told you are handling it, and the automatic calls have stopped. Please open the app to see the location.",
+    invalid: "Invalid key.",
+  },
+  zh: {
+    intro: (n) => `守灯紧急通知。您守护的${n}正在求助。请立即打开守灯应用查看详情。`,
+    keys: "按 1 表示由您处理，系统将停止自动呼叫并通知其他家人。按 2 重听此消息。",
+    prompt: "请按键。",
+    noAnswer: (last) => last
+      ? "未收到回应。家人已收到包含最新位置的链接短信。"
+      : "未收到回应。约两分钟后系统将再次拨打，直到有人回应。",
+    ack: "谢谢。已通知其他家人由您处理，自动呼叫已停止。请打开应用查看位置。",
+    invalid: "无效按键。",
+  },
+  fr: {
+    intro: (n) => `Urgence Lantern Care. ${n}, que vous protégez, demande de l'aide. Ouvrez l'application Lantern Care maintenant.`,
+    keys: "Appuyez sur 1 si vous vous en occupez. Les appels automatiques s'arrêteront et le reste de la famille sera prévenu. Appuyez sur 2 pour réécouter.",
+    prompt: "Veuillez appuyer sur une touche.",
+    noAnswer: (last) => last
+      ? "Aucune réponse. Votre famille a aussi reçu un lien avec la dernière position."
+      : "Aucune réponse. Nous rappellerons dans environ deux minutes jusqu'à ce que quelqu'un réponde.",
+    ack: "Merci. Les autres ont été prévenus que vous vous en occupez et les appels automatiques sont arrêtés. Ouvrez l'application pour voir la position.",
+    invalid: "Touche invalide.",
+  },
+};
+
+export function buildVoiceTwiml(opts: {
+  lang: Lang;
+  personName: string;
+  isLastRound: boolean;
+  gatherUrl: string;
+}): string {
+  const c = VOICE_COPY[opts.lang];
+  const l = escapeXml(getTwimlLanguage(opts.lang));
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say language="${l}">${escapeXml(c.intro(opts.personName))}</Say>
+  <Pause length="1"/>
+  <Gather numDigits="1" action="${escapeXml(opts.gatherUrl)}" method="POST">
+    <Say language="${l}">${escapeXml(c.keys)}</Say>
+    <Say language="${l}">${escapeXml(c.prompt)}</Say>
+  </Gather>
+  <Say language="${l}">${escapeXml(c.noAnswer(opts.isLastRound))}</Say>
+</Response>`;
+}
+
+export function voiceReplyTwiml(lang: Lang, kind: "ack" | "invalid"): string {
+  const c = VOICE_COPY[lang];
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say language="${escapeXml(getTwimlLanguage(lang))}">${escapeXml(kind === "ack" ? c.ack : c.invalid)}</Say>
+</Response>`;
+}
+
 /**
- * Initiate a voice call to a guardian as part of the SOS escalation chain.
+ * Call a guardian as part of the SOS escalation. The call is recorded in
+ * voice_calls/{CallSid} so the keypad callback can be matched to exactly this
+ * SOS and guardian. Returns the CallSid, or null if the call could not be placed.
  */
 export async function initiateVoiceCall(
   guardianId: string,
   sosEventId: string,
   protectedPersonName: string,
-  callbackUrl: string
+  opts: { round: number; isLastRound: boolean } = { round: 1, isLastRound: false }
 ): Promise<string | null> {
   const client = getClient();
   if (!client) {
@@ -92,47 +202,48 @@ export async function initiateVoiceCall(
     return null;
   }
 
-  const phone = await getUserPhone(guardianId);
+  const [phone, guardianDoc] = await Promise.all([
+    getUserPhone(guardianId),
+    db.collection("users").doc(guardianId).get(),
+  ]);
   if (!phone) {
     console.warn(`[Twilio] No phone number for guardian ${guardianId}`);
     return null;
   }
+  const fromNumber = twilioConfig().from_number;
+  if (!fromNumber) {
+    console.warn("[Twilio] twilio.from_number not configured — skipping voice call");
+    return null;
+  }
 
-  const fromNumber = functions.config().twilio?.from_number || "+10000000000";
-
-  // Load protected person's country for language
-  const sosDoc = await db.collection("sos_events").doc(sosEventId).get();
-  const protectedId = sosDoc.data()?.protectedPersonId;
-  const protectedUser = protectedId
-    ? (await db.collection("users").doc(protectedId).get()).data()
-    : null;
-  const lang = getTwimlLanguage(protectedUser?.countryCode || "CN");
-
-  const twiml = `<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Say language="${escapeXml(lang)}" voice="alice">
-    守灯紧急通知。您守护的${escapeXml(protectedPersonName)}正在求助。请立即打开守灯应用查看详情。
-  </Say>
-  <Pause length="2"/>
-  <Say language="${escapeXml(lang)}" voice="alice">
-    按 1 表示已接手处理。按 2 重听此消息。
-  </Say>
-  <Gather numDigits="1" action="${escapeXml(callbackUrl)}" method="POST">
-    <Say language="${escapeXml(lang)}" voice="alice">请按键。</Say>
-  </Gather>
-  <Say language="${escapeXml(lang)}" voice="alice">
-    未收到回应。系统将在一分钟后再次拨打。
-  </Say>
-</Response>`;
+  const lang = userLang(guardianDoc.data());
+  const base = publicApiBaseUrl();
+  const twiml = buildVoiceTwiml({
+    lang,
+    personName: protectedPersonName,
+    isLastRound: opts.isLastRound,
+    gatherUrl: `${base}/v1/voice-callback`,
+  });
 
   try {
     const call = await client.calls.create({
       twiml,
       to: phone,
       from: fromNumber,
-      statusCallback: callbackUrl,
+      statusCallback: `${base}/v1/webhooks/twilio/call-status`,
+      statusCallbackEvent: ["ringing", "answered", "completed"],
     });
-    console.log(`[Twilio] Call initiated to ${guardianId}: ${call.sid}`);
+    await db.collection("voice_calls").doc(call.sid).set({
+      sosEventId,
+      guardianId,
+      lang,
+      personName: protectedPersonName,
+      round: opts.round,
+      isLastRound: opts.isLastRound,
+      createdAt: admin.firestore.Timestamp.now(),
+      status: "queued",
+    });
+    console.log(`[Twilio] Call ${call.sid} placed to guardian ${guardianId} (round ${opts.round})`);
     return call.sid;
   } catch (error) {
     console.error(`[Twilio] Failed to call ${guardianId}:`, error);

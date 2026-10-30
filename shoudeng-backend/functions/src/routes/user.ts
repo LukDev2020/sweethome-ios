@@ -2,18 +2,20 @@ import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
 import { createRateLimiter, RATE_LIMITS } from "../middleware/rateLimit";
+import { isValidTimeZone } from "../services/localTime";
+import { normalizeLocale } from "../services/locale";
 
 const router = Router();
 const db = admin.firestore();
 
 // All user routes require authentication
-router.use(authMiddleware);
+// Mounted at /v1/user AND bare /v1 (diagnostics): auth is per route, never router.use.
 
 /**
  * GET /v1/user/me
  * Get current user's profile.
  */
-router.get("/me", async (req: Request, res: Response) => {
+router.get("/me", authMiddleware, async (req: Request, res: Response) => {
   const uid = req.uid!;
 
   try {
@@ -46,9 +48,9 @@ router.get("/me", async (req: Request, res: Response) => {
  * PUT /v1/user/me
  * Update current user's profile.
  */
-router.put("/me", async (req: Request, res: Response) => {
+router.put("/me", authMiddleware, async (req: Request, res: Response) => {
   const uid = req.uid!;
-  const { displayName, email, timeZone, cityName, countryCode, publicKey, role } = req.body;
+  const { displayName, email, timeZone, cityName, countryCode, publicKey, role, locale } = req.body;
 
   const updates: Record<string, unknown> = {
     updatedAt: admin.firestore.Timestamp.now(),
@@ -76,7 +78,22 @@ router.put("/me", async (req: Request, res: Response) => {
     }
     updates.email = email;
   }
-  if (timeZone !== undefined) updates.timeZone = timeZone;
+  if (timeZone !== undefined) {
+    if (!isValidTimeZone(timeZone)) {
+      res.status(400).json({ error: "timeZone must be an IANA time zone, e.g. Asia/Shanghai" });
+      return;
+    }
+    updates.timeZone = timeZone;
+  }
+  if (locale !== undefined) {
+    // Language for pushes, SMS and voice calls sent to this user
+    const lang = normalizeLocale(locale);
+    if (!lang) {
+      res.status(400).json({ error: "locale must be one of en, zh, fr" });
+      return;
+    }
+    updates.locale = lang;
+  }
   if (cityName !== undefined) {
     if (typeof cityName !== "string" || cityName.length > 100) {
       res.status(400).json({ error: "cityName must be a string of 100 characters or less" });
@@ -112,7 +129,7 @@ router.put("/me", async (req: Request, res: Response) => {
  * PUT /v1/user/notification-preferences
  * Save notification preferences to server (for push filtering).
  */
-router.put("/notification-preferences", async (req: Request, res: Response) => {
+router.put("/notification-preferences", authMiddleware, async (req: Request, res: Response) => {
   const uid = req.uid!;
   const { sosAlerts, checkinReminder, checkinOverdue, familyFeed } = req.body;
 
@@ -139,7 +156,7 @@ router.put("/notification-preferences", async (req: Request, res: Response) => {
  * Delete user account and all associated data (GDPR right to erasure).
  * This is irreversible.
  */
-router.post("/delete", createRateLimiter(RATE_LIMITS.auth), async (req: Request, res: Response) => {
+router.post("/delete", authMiddleware, createRateLimiter(RATE_LIMITS.accountDelete), async (req: Request, res: Response) => {
   const uid = req.uid!;
 
   try {
@@ -268,7 +285,7 @@ router.post("/delete", createRateLimiter(RATE_LIMITS.auth), async (req: Request,
  * Request a full data export (GDPR data portability).
  * Returns all user data as JSON.
  */
-router.post("/export", async (req: Request, res: Response) => {
+router.post("/export", authMiddleware, async (req: Request, res: Response) => {
   const uid = req.uid!;
 
   try {
@@ -327,7 +344,7 @@ router.post("/export", async (req: Request, res: Response) => {
  * POST /v1/diagnostics/crash
  * Receive crash reports from iOS client.
  */
-router.post("/diagnostics/crash", async (req: Request, res: Response) => {
+router.post("/diagnostics/crash", authMiddleware, async (req: Request, res: Response) => {
   try {
     await db.collection("crash_reports").add({
       ...req.body,

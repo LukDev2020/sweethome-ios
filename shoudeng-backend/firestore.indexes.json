@@ -329,6 +329,34 @@
           "order": "DESCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "sos_events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "resolvedAt",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "escalationNextAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "sos_events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "protectedPersonId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "clientSOSIds",
+          "arrayConfig": "CONTAINS"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

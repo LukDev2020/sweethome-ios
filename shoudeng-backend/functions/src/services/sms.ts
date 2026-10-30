@@ -6,6 +6,8 @@ const db = admin.firestore();
 // Per-locale SMS templates
 const smsStrings: Record<string, {
   sosBody: (name: string, url?: string) => string;
+  /** To an emergency contact who is not an app user (no guardians set up). */
+  contactSosBody: (name: string, url?: string) => string;
   checkinBody: (name: string) => string;
   verifyBody: (code: string) => string;
 }> = {
@@ -13,6 +15,7 @@ const smsStrings: Record<string, {
     sosBody: (name, url) => url
       ? `【守灯紧急通知】${name}正在求助！请立即查看详情：${url}`
       : `【守灯紧急通知】${name}正在求助！请立即打开守灯应用查看。`,
+    contactSosBody: (name, url) => `【守灯紧急通知】${name}将您设为紧急联系人，现在正在求助。${url ? "最新位置：" + url + "。" : ""}如无法联系上本人，请拨打当地紧急电话。`,
     checkinBody: (name) => `【守灯提醒】${name}今天尚未报平安，请关注。`,
     verifyBody: (code) => `【守灯】您的验证码是 ${code}，5 分钟内有效。`,
   },
@@ -20,6 +23,7 @@ const smsStrings: Record<string, {
     sosBody: (name, url) => url
       ? `[Lantern Care Emergency] ${name} is calling for help! View details: ${url}`
       : `[Lantern Care Emergency] ${name} is calling for help! Open the Lantern Care app now.`,
+    contactSosBody: (name, url) => `[Lantern Care Emergency] ${name} listed you as an emergency contact and is calling for help now.${url ? " Latest location: " + url + "." : ""} If you can't reach them, call local emergency services.`,
     checkinBody: (name) => `[Lantern Care] ${name} hasn't checked in today. Please follow up.`,
     verifyBody: (code) => `[Lantern Care] Your verification code is ${code}. Valid for 5 minutes.`,
   },
@@ -27,6 +31,7 @@ const smsStrings: Record<string, {
     sosBody: (name, url) => url
       ? `[Lantern Care Urgence] ${name} demande de l'aide ! Voir les détails : ${url}`
       : `[Lantern Care Urgence] ${name} demande de l'aide ! Ouvrez l'application Lantern Care maintenant.`,
+    contactSosBody: (name, url) => `[Lantern Care Urgence] ${name} vous a désigné(e) comme contact d'urgence et demande de l'aide.${url ? " Dernière position : " + url + "." : ""} Si vous ne pouvez pas le/la joindre, appelez les secours.`,
     checkinBody: (name) => `[Lantern Care] ${name} n'a pas donné signe de vie aujourd'hui.`,
     verifyBody: (code) => `[Lantern Care] Votre code de vérification est ${code}. Valide 5 minutes.`,
   },
@@ -100,6 +105,33 @@ export async function sendSOSSms(
     return true;
   } catch (error) {
     console.error(`[SMS] Failed to send to ${guardianId}:`, error);
+    return false;
+  }
+}
+
+/**
+ * SOS text to an emergency contact (a phone number, not an app user), in the
+ * protected person's language.
+ */
+export async function sendEmergencyContactSms(
+  phone: string,
+  protectedPersonName: string,
+  locale: string,
+  shareUrl?: string
+): Promise<boolean> {
+  const client = getClient();
+  if (!client) return false;
+  const fromNumber = functions.config().twilio?.sms_from || functions.config().twilio?.from_number;
+  if (!fromNumber) return false;
+  try {
+    await client.messages.create({
+      body: getSmsStrings(locale).contactSosBody(protectedPersonName, shareUrl),
+      to: phone,
+      from: fromNumber,
+    });
+    return true;
+  } catch (error) {
+    console.error("[SMS] Emergency contact SMS failed:", error);
     return false;
   }
 }

@@ -105,24 +105,15 @@ describe("Cross-Border — Timezone Chain", () => {
 });
 
 describe("Cross-Border — Twilio Voice for China", () => {
-  it("getTwimlLanguage maps CN to zh-CN", () => {
-    expect(twilioSource).toContain('CN: "zh-CN"');
-  });
-
-  it("getTwimlLanguage defaults to zh-CN for unknown countries", () => {
-    // Default: return map[countryCode] || "zh-CN"
-    expect(twilioSource).toMatch(/\|\|\s*"zh-CN"/);
+  it("TwiML language follows the GUARDIAN's app language (they receive the call)", () => {
+    expect(twilioSource).toContain('zh: "cmn-CN"');
+    expect(twilioSource).toContain('en: "en-US"');
+    expect(twilioSource).toContain('fr: "fr-FR"');
+    expect(twilioSource).toContain("userLang(guardianDoc.data())");
   });
 
   it("TwiML script includes Chinese text for voice call", () => {
     expect(twilioSource).toContain("守灯紧急通知");
-  });
-
-  it("FINDING F-003: TwiML language is based on protected person, not guardian", () => {
-    // The voice call language should ideally be based on the guardian's locale
-    // (they're the one receiving the call), but currently uses protected person's country
-    expect(twilioSource).toContain("protectedId");
-    expect(twilioSource).toContain("protectedUser?.countryCode");
   });
 
   it("emergency numbers include CN (110)", () => {
@@ -183,8 +174,9 @@ describe("Cross-Border — FCM/APNs Pathway", () => {
     expect(fcmSource).toMatch(/locale|getLocale|userLocale/i);
   });
 
-  it("SOS alert uses critical interruption level", () => {
-    expect(fcmSource).toContain('"interruption-level": "critical"');
+  it("SOS alert is critical only behind the entitlement flag, time-sensitive otherwise", () => {
+    expect(fcmSource).toContain('"interruption-level": critical ? "critical" : "time-sensitive"');
+    expect(fcmSource).toContain("CRITICAL_ALERTS_ENABLED");
   });
 });
 

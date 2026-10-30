@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
+import { onDutyGuardians } from "../services/escalation";
 
 const router = Router();
 const db = admin.firestore();
@@ -29,6 +30,7 @@ router.get("/guardians", async (req: Request, res: Response) => {
     }
 
     const guardians = [];
+    const personTimeZone = (await db.collection("users").doc(uid).get()).data()?.timeZone;
 
     for (const linkDoc of linksSnapshot.docs) {
       const link = linkDoc.data();
@@ -40,7 +42,7 @@ router.get("/guardians", async (req: Request, res: Response) => {
       const user = userDoc.data()!;
 
       // Check if guardian is currently on duty
-      const isOnDuty = await checkOnDuty(guardianId, uid);
+      const isOnDuty = await checkOnDuty(guardianId, uid, personTimeZone);
 
       // Get duty schedule
       const scheduleSnapshot = await db
@@ -100,38 +102,12 @@ router.get("/guardians", async (req: Request, res: Response) => {
  */
 async function checkOnDuty(
   guardianId: string,
-  protectedPersonId: string
+  protectedPersonId: string,
+  personTimeZone?: string
 ): Promise<boolean> {
-  const now = new Date();
-  const currentHour = now.getHours();
-  const currentDay = now.getDay() || 7; // Convert 0 (Sunday) to 7
-
-  const snapshot = await admin
-    .firestore()
-    .collection("duty_schedules")
-    .where("guardianId", "==", guardianId)
-    .where("protectedPersonId", "==", protectedPersonId)
-    .where("isActive", "==", true)
-    .where("dayOfWeek", "==", currentDay)
-    .get();
-
-  for (const doc of snapshot.docs) {
-    const schedule = doc.data();
-    if (currentHour >= schedule.startHour && currentHour < schedule.endHour) {
-      return true;
-    }
-  }
-
-  // If no schedule exists, all guardians are considered on duty
-  const anySchedule = await admin
-    .firestore()
-    .collection("duty_schedules")
-    .where("guardianId", "==", guardianId)
-    .where("protectedPersonId", "==", protectedPersonId)
-    .limit(1)
-    .get();
-
-  return anySchedule.empty; // On duty if no schedule configured
+  // Duty hours are the protected person's local hours (the server runs in UTC)
+  const onDuty = await onDutyGuardians(protectedPersonId, [guardianId], personTimeZone, new Date());
+  return onDuty.length > 0;
 }
 
 /**

@@ -66,6 +66,8 @@ describe("Webhook signature verification", () => {
 
     // Ensure we are NOT in emulator mode (emulator bypasses verification)
     delete process.env.FUNCTIONS_EMULATOR;
+    // Twilio signs the PUBLIC url: region host + "/api" function prefix + path
+    process.env.PUBLIC_API_BASE_URL = "https://us-central1-shoudeng.cloudfunctions.net/api";
 
     app = express();
     app.use(express.json());
@@ -112,7 +114,7 @@ describe("Webhook signature verification", () => {
     const protocol = "https";
     const host = "us-central1-shoudeng.cloudfunctions.net";
     const path = "/v1/webhooks/twilio/call-status";
-    const url = `${protocol}://${host}${path}`;
+    const url = `${protocol}://${host}/api${path}`;
 
     const signature = computeTwilioSignature(AUTH_TOKEN, url, params);
 
@@ -138,7 +140,7 @@ describe("Webhook signature verification", () => {
     const protocol = "https";
     const host = "us-central1-shoudeng.cloudfunctions.net";
     const path = "/v1/webhooks/twilio/sms-status";
-    const url = `${protocol}://${host}${path}`;
+    const url = `${protocol}://${host}/api${path}`;
 
     const signature = computeTwilioSignature(AUTH_TOKEN, url, params);
 

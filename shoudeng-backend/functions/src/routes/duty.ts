@@ -51,9 +51,11 @@ router.put("/", requireFeature("duty_schedule"), async (req: Request, res: Respo
     for (const slot of slots) {
       const start = slot.startHour;
       const end = slot.endHour;
-      if (typeof start !== "number" || typeof end !== "number" ||
-          start < 0 || start > 23 || end < 0 || end > 23 || start >= end) {
-        res.status(400).json({ error: "startHour and endHour must be integers 0-23 with startHour < endHour" });
+      // startHour 0-23, endHour 1-24 (24 = midnight). endHour < startHour is an
+      // overnight shift (e.g. 22 → 6) that continues into the next day.
+      if (!Number.isInteger(start) || !Number.isInteger(end) ||
+          start < 0 || start > 23 || end < 1 || end > 24 || start === end) {
+        res.status(400).json({ error: "startHour must be 0-23 and endHour 1-24 (endHour < startHour = overnight); they cannot be equal" });
         return;
       }
       const days: number[] = slot.dayOfWeek || [1, 2, 3, 4, 5, 6, 7];

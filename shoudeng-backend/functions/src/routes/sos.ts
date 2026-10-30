@@ -4,24 +4,45 @@ import { v4 as uuidv4 } from "uuid";
 import { authMiddleware } from "../middleware/auth";
 import { createRateLimiter, RATE_LIMITS } from "../middleware/rateLimit";
 import { sendSOSResolvedNotification } from "../services/fcm";
+import {
+  acknowledgeSOS,
+  activeSOSDoc,
+  initialEscalationFields,
+  RESOLUTIONS,
+  Resolution,
+  sosStatus,
+} from "../services/escalation";
 
+/**
+ * SOS routes. This router is mounted at both /v1/sos and /v1 (for the legacy
+ * /v1/voice-call path), so auth is applied PER ROUTE — a router-level
+ * `router.use(authMiddleware)` would run for every later /v1 route (Twilio
+ * callbacks, public share links) and answer them 401.
+ *
+ * SOS trigger / resolve / acknowledge never share a rate-limit bucket with
+ * anything else.
+ */
 const router = Router();
 const db = admin.firestore();
 
-router.use(authMiddleware);
+const CLIENT_ID_RE = /^[A-Za-z0-9-]{8,64}$/;
 
 /**
  * POST /v1/sos/trigger
  * Trigger an SOS event from the protected person's device.
- * Creates a Firestore document which triggers the onSOSCreated escalation chain.
+ * Creates a Firestore document which triggers the escalation state machine.
+ * Body: { protectedPersonId, triggerMethod?, latitude?, longitude?, batteryLevel?,
+ *         clientSOSId?, clientTriggeredAt? }
  */
-router.post("/trigger", createRateLimiter(RATE_LIMITS.sos), async (req: Request, res: Response) => {
+router.post("/trigger", authMiddleware, createRateLimiter(RATE_LIMITS.sosTrigger), async (req: Request, res: Response) => {
   const {
     protectedPersonId,
     triggerMethod,
     latitude,
     longitude,
     batteryLevel,
+    clientSOSId,
+    clientTriggeredAt,
   } = req.body;
 
   if (!protectedPersonId) {
@@ -35,51 +56,50 @@ router.post("/trigger", createRateLimiter(RATE_LIMITS.sos), async (req: Request,
     return;
   }
 
+  const clientId = typeof clientSOSId === "string" && CLIENT_ID_RE.test(clientSOSId) ? clientSOSId : null;
   const sosId = uuidv4();
   const now = admin.firestore.Timestamp.now();
 
   try {
-    // Use transaction to prevent duplicate SOS events
-    const existingEvent = await db.runTransaction(async (transaction) => {
-      // Check for existing active SOS inside transaction
-      const activeSnapshot = await db
-        .collection("sos_events")
-        .where("protectedPersonId", "==", protectedPersonId)
-        .where("resolvedAt", "==", null)
-        .limit(1)
-        .get();
+    const existingEvent = await db.runTransaction(async (tx) => {
+      const activeSnapshot = await tx.get(
+        db.collection("sos_events")
+          .where("protectedPersonId", "==", protectedPersonId)
+          .where("resolvedAt", "==", null)
+          .limit(1)
+      );
 
       if (!activeSnapshot.empty) {
-        return {
-          sosEventId: activeSnapshot.docs[0].id,
-          escalationState: activeSnapshot.docs[0].data().escalationState,
-        };
+        const doc = activeSnapshot.docs[0];
+        // Remember this device-side id too, so a later resolve sent with it maps here
+        if (clientId) {
+          tx.update(doc.ref, { clientSOSIds: admin.firestore.FieldValue.arrayUnion(clientId) });
+        }
+        return { sosEventId: doc.id, escalationState: doc.data().escalationState };
       }
 
-      const sosDoc = {
+      tx.set(db.collection("sos_events").doc(sosId), {
         protectedPersonId,
         triggeredAt: now,
-        triggerMethod: triggerMethod || "longPress",
-        latitude: latitude || null,
-        longitude: longitude || null,
+        createdAt: now,
+        triggerMethod: typeof triggerMethod === "string" ? triggerMethod.slice(0, 40) : "longPress",
+        latitude: typeof latitude === "number" ? latitude : null,
+        longitude: typeof longitude === "number" ? longitude : null,
         accuracy: null,
-        batteryLevel: batteryLevel || null,
-        escalationState: "initiated",
+        batteryLevel: typeof batteryLevel === "number" && batteryLevel >= 0 ? batteryLevel : null,
         resolvedAt: null,
         resolvedBy: null,
         resolution: null,
-        escalationLog: [],
-      };
-
-      transaction.set(db.collection("sos_events").doc(sosId), sosDoc);
+        acknowledgedBy: null,
+        clientSOSIds: clientId ? [clientId] : [],
+        clientTriggeredAt: typeof clientTriggeredAt === "string" ? clientTriggeredAt.slice(0, 40) : null,
+        ...initialEscalationFields(now),
+      });
       return null;
     });
 
     if (existingEvent) {
-      res.json({
-        ...existingEvent,
-        message: "SOS already active",
-      });
+      res.json({ ...existingEvent, message: "SOS already active" });
       return;
     }
 
@@ -92,10 +112,7 @@ router.post("/trigger", createRateLimiter(RATE_LIMITS.sos), async (req: Request,
       detail: null,
     });
 
-    res.status(201).json({
-      sosEventId: sosId,
-      escalationState: "initiated",
-    });
+    res.status(201).json({ sosEventId: sosId, escalationState: "initiated" });
   } catch (error) {
     console.error("[SOS] trigger error:", error);
     res.status(500).json({ error: "Failed to trigger SOS" });
@@ -103,17 +120,78 @@ router.post("/trigger", createRateLimiter(RATE_LIMITS.sos), async (req: Request,
 });
 
 /**
- * POST /v1/sos/resolve
- * Resolve an active SOS event (guardian "I've taken over" or protected person cancel).
+ * GET /v1/sos/active
+ * The caller's own unresolved SOS with real delivery / escalation state
+ * (drives SOSActiveView), or { active: false }.
  */
-router.post("/resolve", createRateLimiter(RATE_LIMITS.general), async (req: Request, res: Response) => {
+router.get("/active", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const doc = await activeSOSDoc(req.uid!);
+    if (!doc) {
+      res.json({ active: false, sos: null });
+      return;
+    }
+    res.json({ active: true, sos: await sosStatus(doc) });
+  } catch (error) {
+    console.error("[SOS] active error:", error);
+    res.status(500).json({ error: "Failed to load SOS" });
+  }
+});
+
+/**
+ * POST /v1/sos/acknowledge  { sosEventId }
+ * A guardian says "I've got it": freezes the escalation (no more pushes, SMS or
+ * calls), tells the other guardians and the protected person. Idempotent.
+ * Closing the SOS ("Mom is safe") is the separate /resolve.
+ */
+router.post("/acknowledge", authMiddleware, async (req: Request, res: Response) => {
+  const { sosEventId } = req.body;
+  if (typeof sosEventId !== "string" || !sosEventId) {
+    res.status(400).json({ error: "sosEventId is required" });
+    return;
+  }
+  try {
+    const r = await acknowledgeSOS(sosEventId, req.uid!, "app");
+    switch (r.status) {
+      case "acknowledged":
+        res.json({ success: true, acknowledgedBy: r.acknowledgedBy, alreadyAcknowledged: r.alreadyAcknowledged });
+        return;
+      case "not_found":
+        res.status(404).json({ error: "SOS event not found" });
+        return;
+      case "resolved":
+        res.status(409).json({ error: "SOS already resolved" });
+        return;
+      case "forbidden":
+        res.status(403).json({ error: "Only an active guardian can acknowledge this SOS" });
+        return;
+    }
+  } catch (error) {
+    console.error("[SOS] acknowledge error:", error);
+    res.status(500).json({ error: "Failed to acknowledge SOS" });
+  }
+});
+
+/**
+ * POST /v1/sos/resolve
+ * Close an active SOS ("Mom is safe" by a guardian, or the person cancelling).
+ * Body: { sosEventId, resolution, clientTriggeredAt? }
+ *
+ * `sosEventId` may be the device-local id of an SOS created while offline. It
+ * only maps to a server SOS that recorded that same client id — never to
+ * "whatever SOS is active now", so a stale resolve replayed from the offline
+ * queue cannot close a newer, real emergency.
+ */
+router.post("/resolve", authMiddleware, async (req: Request, res: Response) => {
   const uid = req.uid!;
   const { sosEventId, resolution } = req.body;
 
-  if (!sosEventId || !resolution) {
-    res
-      .status(400)
-      .json({ error: "sosEventId and resolution are required" });
+  if (typeof sosEventId !== "string" || !sosEventId || typeof resolution !== "string") {
+    res.status(400).json({ error: "sosEventId and resolution are required" });
+    return;
+  }
+  if (!RESOLUTIONS.includes(resolution as Resolution)) {
+    res.status(400).json({ error: `resolution must be one of ${RESOLUTIONS.join(", ")}` });
     return;
   }
 
@@ -121,22 +199,19 @@ router.post("/resolve", createRateLimiter(RATE_LIMITS.general), async (req: Requ
     let sosRef = db.collection("sos_events").doc(sosEventId);
     let sosDoc = await sosRef.get();
 
-    // Fallback: if sosEventId doesn't match a doc (e.g. client used local UUID),
-    // look up the active SOS by the caller's protectedPersonId.
     if (!sosDoc.exists) {
-      const activeSnapshot = await db
+      const byClientId = await db
         .collection("sos_events")
         .where("protectedPersonId", "==", uid)
-        .where("resolvedAt", "==", null)
+        .where("clientSOSIds", "array-contains", sosEventId)
         .limit(1)
         .get();
-      if (!activeSnapshot.empty) {
-        sosRef = activeSnapshot.docs[0].ref;
-        sosDoc = activeSnapshot.docs[0];
-      } else {
+      if (byClientId.empty) {
         res.status(404).json({ error: "SOS event not found" });
         return;
       }
+      sosRef = byClientId.docs[0].ref;
+      sosDoc = byClientId.docs[0];
     }
 
     const sosData = sosDoc.data()!;
@@ -145,29 +220,32 @@ router.post("/resolve", createRateLimiter(RATE_LIMITS.general), async (req: Requ
       return;
     }
 
-    // C2 fix: verify caller is the protected person or a linked guardian
+    // Caller must be the protected person or an active guardian
     const isProtected = sosData.protectedPersonId === uid;
     let isGuardian = false;
     if (!isProtected) {
-      const linkId = `${uid}_${sosData.protectedPersonId}`;
-      const linkDoc = await db.collection("guardian_links").doc(linkId).get();
+      const linkDoc = await db.collection("guardian_links").doc(`${uid}_${sosData.protectedPersonId}`).get();
       isGuardian = linkDoc.exists && linkDoc.data()?.status === "active";
     }
     if (!isProtected && !isGuardian) {
       res.status(403).json({ error: "Not authorized to resolve this SOS event" });
       return;
     }
+    if (resolution === "protectedCancelled" && !isProtected) {
+      res.status(400).json({ error: "Only the protected person can cancel their SOS" });
+      return;
+    }
 
     const now = admin.firestore.Timestamp.now();
-
     await sosRef.update({
       escalationState: "resolved",
+      escalationNextStep: null,
+      escalationNextAt: null,
       resolvedAt: now,
       resolvedBy: uid,
       resolution,
     });
 
-    // Add timeline entry
     await db.collection("timeline_entries").add({
       userId: sosData.protectedPersonId,
       timestamp: now,
@@ -176,19 +254,16 @@ router.post("/resolve", createRateLimiter(RATE_LIMITS.general), async (req: Requ
       detail: null,
     });
 
-    // Notify the protected person that a guardian has taken over
-    if (resolution === "guardianConfirmedSafe") {
+    // Tell the protected person a guardian closed it
+    if (!isProtected) {
       const resolverDoc = await db.collection("users").doc(uid).get();
-      const resolverName = resolverDoc.exists
-        ? resolverDoc.data()!.displayName
-        : "Guardian";
       await sendSOSResolvedNotification(
         sosData.protectedPersonId,
-        resolverName
+        resolverDoc.exists ? resolverDoc.data()!.displayName : "Guardian"
       );
     }
 
-    res.json({ success: true });
+    res.json({ success: true, sosEventId: sosRef.id });
   } catch (error) {
     console.error("[SOS] resolve error:", error);
     res.status(500).json({ error: "Failed to resolve SOS" });
@@ -197,22 +272,18 @@ router.post("/resolve", createRateLimiter(RATE_LIMITS.general), async (req: Requ
 
 /**
  * POST /v1/voice-call
- * Request a voice call to a guardian as part of escalation.
- * Delegates to Twilio service.
+ * Ask the server to call one of this SOS's guardians now.
  */
-router.post("/voice-call", createRateLimiter(RATE_LIMITS.sos), async (req: Request, res: Response) => {
+router.post("/voice-call", authMiddleware, createRateLimiter(RATE_LIMITS.voiceCall), async (req: Request, res: Response) => {
   const uid = req.uid!;
-  const { guardianId, sosEventId, protectedPersonName } = req.body;
+  const { guardianId, sosEventId } = req.body;
 
   if (!guardianId || !sosEventId) {
-    res
-      .status(400)
-      .json({ error: "guardianId and sosEventId are required" });
+    res.status(400).json({ error: "guardianId and sosEventId are required" });
     return;
   }
 
   try {
-    // C1 fix: verify caller is the SOS's protected person or a linked guardian
     const sosRef = db.collection("sos_events").doc(sosEventId);
     const sosDoc = await sosRef.get();
     if (!sosDoc.exists) {
@@ -220,48 +291,54 @@ router.post("/voice-call", createRateLimiter(RATE_LIMITS.sos), async (req: Reque
       return;
     }
     const sosData = sosDoc.data()!;
-    const isProtected = sosData.protectedPersonId === uid;
-    let isGuardian = false;
-    if (!isProtected) {
-      const linkId = `${uid}_${sosData.protectedPersonId}`;
-      const linkDoc = await db.collection("guardian_links").doc(linkId).get();
-      isGuardian = linkDoc.exists && linkDoc.data()?.status === "active";
-    }
-    if (!isProtected && !isGuardian) {
-      res.status(403).json({ error: "Not authorized for this SOS event" });
+    if (sosData.resolvedAt) {
+      res.status(409).json({ error: "SOS already resolved" });
       return;
     }
-    // Import dynamically to avoid initialization issues
+    const personId = sosData.protectedPersonId;
+
+    // Caller: the protected person or one of their active guardians
+    const isProtected = personId === uid;
+    if (!isProtected) {
+      const callerLink = await db.collection("guardian_links").doc(`${uid}_${personId}`).get();
+      if (!callerLink.exists || callerLink.data()?.status !== "active") {
+        res.status(403).json({ error: "Not authorized for this SOS event" });
+        return;
+      }
+    }
+    // Callee: must be an active guardian of THIS SOS's person — never an arbitrary user
+    const targetLink = await db.collection("guardian_links").doc(`${guardianId}_${personId}`).get();
+    if (!targetLink.exists || targetLink.data()?.status !== "active") {
+      res.status(403).json({ error: "guardianId is not an active guardian of this person" });
+      return;
+    }
+
     const { initiateVoiceCall } = await import("../services/twilio");
+    const personDoc = await db.collection("users").doc(personId).get();
+    const callSid = await initiateVoiceCall(guardianId, sosEventId, personDoc.data()?.displayName || "", {
+      round: 0,
+      isLastRound: false,
+    });
 
-    const callbackUrl = `${req.protocol}://${req.get("host")}/v1/voice-callback`;
-
-    const callSid = await initiateVoiceCall(
-      guardianId,
-      sosEventId,
-      protectedPersonName || "Protected Person",
-      callbackUrl
-    );
-
-    // Update escalation log
     if (callSid) {
-      const sosRef = db.collection("sos_events").doc(sosEventId);
       await sosRef.update({
-        escalationState: "hop3_voiceCalling",
         escalationLog: admin.firestore.FieldValue.arrayUnion({
           hop: 3,
+          round: 0,
           targetId: guardianId,
+          channel: "voice",
           sentAt: admin.firestore.Timestamp.now(),
           deliveredAt: null,
           readAt: null,
           respondedAt: null,
           response: null,
           callSid,
+          requestedBy: uid,
         }),
       });
     }
 
-    res.json({ success: true, callSid });
+    res.json({ success: !!callSid, callSid });
   } catch (error) {
     console.error("[SOS] voice-call error:", error);
     res.status(500).json({ error: "Failed to initiate voice call" });

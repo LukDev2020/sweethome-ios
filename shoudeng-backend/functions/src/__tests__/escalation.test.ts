@@ -1,271 +1,282 @@
 /**
- * Phase 5 — Escalation & Delivery Tests
+ * SOS escalation state machine (services/escalation.ts), run against the
+ * in-memory Firestore with real FCM payloads and mocked SMS / Twilio.
  *
- * Tests the onSOSCreated trigger logic:
- *   - 4-hop escalation chain timing
- *   - Idempotency (resolved SOS stops escalation)
- *   - On-duty guardian selection
- *   - SMS fallback for non-app guardians
- *   - FCM push payload structure
- *   - Push payload PII check
- *   - Free tier enforcement
- *
- * These are unit tests that mock Firebase and external services.
- *
- * Run: cd shoudeng-backend/functions && npm test -- --testPathPattern escalation
+ * Replaces the old regex-on-source checks of onSOSCreated, which would have
+ * passed with the logic broken.
  */
+jest.mock("firebase-admin", () => require("./helpers/fakeAdmin").fakeAdminModule);
+jest.mock("firebase-admin/firestore", () => require("./helpers/fakeAdmin").fakeFirestoreSubmodule);
+jest.mock("@google-cloud/bigquery", () => ({
+  BigQuery: jest.fn().mockImplementation(() => ({
+    query: jest.fn(async () => [[]]),
+    dataset: () => ({ table: () => ({ insert: jest.fn(async () => undefined) }) }),
+  })),
+}));
 
-import * as fs from "fs";
-import * as path from "path";
+const mockSms = {
+  sendSOSSms: jest.fn(async (..._a: unknown[]) => true),
+  sendEmergencyContactSms: jest.fn(async (..._a: unknown[]) => true),
+  hasAppInstalled: jest.fn(async (id: string) => id !== "lucy"),
+};
+jest.mock("../services/sms", () => ({
+  sendSOSSms: (...a: unknown[]) => mockSms.sendSOSSms(...a),
+  sendEmergencyContactSms: (...a: unknown[]) => mockSms.sendEmergencyContactSms(...a),
+  hasAppInstalled: (id: string) => mockSms.hasAppInstalled(id),
+}));
 
-// Read the escalation trigger source for static analysis
-const triggerSource = fs.readFileSync(
-  path.join(__dirname, "..", "triggers", "onSOSCreated.ts"),
-  "utf-8"
-);
+let mockCallCounter = 0;
+const mockCalls: { guardianId: string; sosId: string; round: number; isLastRound: boolean }[] = [];
+jest.mock("../services/twilio", () => ({
+  ...jest.requireActual("../services/twilio"),
+  initiateVoiceCall: jest.fn(async (guardianId: string, sosId: string, _name: string, opts: { round: number; isLastRound: boolean }) => {
+    mockCalls.push({ guardianId, sosId, ...opts });
+    return `CA${++mockCallCounter}`;
+  }),
+}));
 
-// Read FCM service for push payload analysis
-const fcmSource = fs.readFileSync(
-  path.join(__dirname, "..", "services", "fcm.ts"),
-  "utf-8"
-);
+import { resetFakeAdmin, seed, readDoc, sentMessages, ts, listDocs } from "./helpers/fakeAdmin";
+import {
+  advanceEscalation,
+  advanceDueEscalations,
+  acknowledgeSOS,
+  initialEscalationFields,
+  ESCALATION_PLAN,
+} from "../services/escalation";
 
-// Read SMS service
-const smsSource = fs.readFileSync(
-  path.join(__dirname, "..", "services", "sms.ts"),
-  "utf-8"
-);
+// 2026-10-30 03:00 UTC = 11:00 in Chengdu (Asia/Shanghai)
+const T0 = new Date("2026-10-30T03:00:00Z");
+const at = (sec: number) => new Date(T0.getTime() + sec * 1000);
 
-describe("Escalation Chain — Structure", () => {
-  it("implements 4 hops", () => {
-    // 3 hops log to escalationLog, hop 4 creates a share link
-    const hopMatches = triggerSource.match(/hop:\s*\d/g) || [];
-    const hopNumbers = new Set(hopMatches.map((m) => m.match(/\d/)![0]));
-    expect(hopNumbers.size).toBe(3); // hop 1, 2, 3 logged
-    expect(hopNumbers.has("1")).toBe(true);
-    expect(hopNumbers.has("2")).toBe(true);
-    expect(hopNumbers.has("3")).toBe(true);
-    // Hop 4 creates share token instead of logging
-    expect(triggerSource).toContain("createShareToken");
-  });
-
-  it("Hop 1 fires immediately (no delay before first notification)", () => {
-    // The first delay() call should come AFTER hop 1 is sent
-    const firstDelayIdx = triggerSource.indexOf("delay(");
-    const hop1NotifyIdx = triggerSource.indexOf('hop1_notified');
-    expect(hop1NotifyIdx).toBeLessThan(firstDelayIdx);
-  });
-
-  it("Hop 2 has 30 second delay", () => {
-    expect(triggerSource).toContain("delay(30000)");
-  });
-
-  it("Hop 3 voice call delay totals 90s from start (30s + 60s)", () => {
-    // After hop 2's 30s delay, there's another 60s delay
-    expect(triggerSource).toContain("delay(60000)");
-  });
-
-  it("Hop 4 share link delay totals 120s from start (30s + 60s + 30s)", () => {
-    // Three delay calls: 30s, 60s, 30s
-    const delays = (triggerSource.match(/delay\(\d+\)/g) || []).map((d) =>
-      parseInt(d.match(/\d+/)![0])
-    );
-    expect(delays).toEqual(expect.arrayContaining([30000, 60000, 30000]));
-    const totalDelayMs = delays.reduce((sum, d) => sum + d, 0);
-    expect(totalDelayMs).toBe(120000); // 120 seconds total
-  });
-
-  it("uses 300 second timeout and 512MB memory", () => {
-    expect(triggerSource).toMatch(/timeoutSeconds:\s*300/);
-    expect(triggerSource).toMatch(/memory:\s*["']512MB["']/);
-  });
-});
-
-describe("Escalation Chain — Idempotency", () => {
-  it("checks resolution status before Hop 2", () => {
-    // Between hop 1 and hop 2, there should be a re-read and check
-    const hop2Section = triggerSource.substring(
-      triggerSource.indexOf("delay(30000)"),
-      triggerSource.indexOf("delay(60000)")
-    );
-    expect(hop2Section).toMatch(/resolvedAt|frozen/);
-  });
-
-  it("checks resolution status before Hop 3", () => {
-    const hop3Start = triggerSource.indexOf("delay(60000)");
-    const hop3Section = triggerSource.substring(
-      hop3Start,
-      triggerSource.indexOf("delay(30000)", hop3Start + 1)
-    );
-    expect(hop3Section).toMatch(/resolvedAt|frozen/);
-  });
-
-  it("checks resolution status before Hop 4", () => {
-    // Last section of the trigger
-    const lastDelayIdx = triggerSource.lastIndexOf("delay(30000)");
-    const hop4Section = triggerSource.substring(lastDelayIdx);
-    expect(hop4Section).toMatch(/resolvedAt|frozen/);
-  });
-
-  it("re-reads the SOS document from Firestore before each hop", () => {
-    // Should have at least 3 re-reads (snapshot.ref.get())
-    const reReads = (triggerSource.match(/snapshot\.ref\.get\(\)/g) || [])
-      .length;
-    expect(reReads).toBeGreaterThanOrEqual(3);
-  });
-});
-
-describe("Escalation Chain — Guardian Selection", () => {
-  it("queries guardian_links by protectedPersonId and active status", () => {
-    expect(triggerSource).toContain('"protectedPersonId"');
-    expect(triggerSource).toContain('"status"');
-    expect(triggerSource).toContain('"active"');
-  });
-
-  it("checks duty schedules for on-duty guardians", () => {
-    expect(triggerSource).toContain("duty_schedules");
-    expect(triggerSource).toContain("dayOfWeek");
-    expect(triggerSource).toContain("startHour");
-    expect(triggerSource).toContain("endHour");
-  });
-
-  it("falls back to first guardian if no schedules exist", () => {
-    expect(triggerSource).toContain("guardianIds[0]");
-  });
-
-  it("falls back to first guardian when no one is on duty", () => {
-    // onDutyGuardians.length > 0 ? onDutyGuardians : [guardianIds[0]]
-    expect(triggerSource).toMatch(
-      /onDutyGuardians\.length\s*>\s*0\s*\?\s*onDutyGuardians\s*:\s*\[guardianIds\[0\]\]/
-    );
-  });
-});
-
-describe("Escalation Chain — SMS Fallback", () => {
-  it("checks app installation before SMS", () => {
-    expect(triggerSource).toContain("hasAppInstalled");
-  });
-
-  it("sends SMS only to guardians without the app", () => {
-    expect(triggerSource).toContain("!hasApp");
-    expect(triggerSource).toContain("sendSOSSms");
-  });
-
-  it("logs channel type (push vs sms) in escalation log", () => {
-    expect(triggerSource).toContain('channel');
-    // SMS fallback triggers on push failure OR no app installed
-    expect(triggerSource).toContain("sms_fallback");
-  });
-});
-
-describe("Escalation Chain — Voice Call (Hop 3)", () => {
-  it("dynamically imports twilio service", () => {
-    expect(triggerSource).toMatch(/import\(["']\.\.\/services\/twilio["']\)/);
-  });
-
-  it("calls initiateVoiceCall with guardianId, sosId, personName", () => {
-    expect(triggerSource).toContain("initiateVoiceCall");
-  });
-
-  it("handles voice call failure gracefully", () => {
-    expect(triggerSource).toMatch(/catch.*error.*hop3_exhausted/s);
-  });
-});
-
-describe("Escalation Chain — Share Link (Hop 4)", () => {
-  it("dynamically imports evidence service", () => {
-    expect(triggerSource).toMatch(/import\(["']\.\.\/services\/evidence["']\)/);
-  });
-
-  it("creates share token with 48 hour expiry", () => {
-    expect(triggerSource).toContain("expiresInHours: 48");
-  });
-
-  it("sets createdBy to system_escalation", () => {
-    expect(triggerSource).toContain("system_escalation");
-  });
-});
-
-describe("Escalation Chain — State Transitions", () => {
-  const states = [
-    "hop1_notified",
-    "hop2_allNotified",
-    "hop3_voiceCalling",
-    "hop3_exhausted",
-    "frozen",
-  ];
-
-  it("updates escalationState at each hop", () => {
-    for (const state of states) {
-      expect(triggerSource).toContain(state);
+function seedFamily(opts: { guardians?: boolean } = {}) {
+  seed("users/mom", { displayName: "Mom", role: "protected", timeZone: "Asia/Shanghai", locale: "zh", phone: "+8613800000001" });
+  seed("users/sarah", { displayName: "Sarah", role: "guardian", locale: "en", phone: "+14165550101" });
+  seed("users/kevin", { displayName: "Kevin", role: "guardian", locale: "zh", phone: "+8613900000003" });
+  seed("users/lucy", { displayName: "Lucy", role: "guardian", locale: "fr", phone: "+33600000004" });
+  if (opts.guardians !== false) {
+    for (const g of ["sarah", "kevin", "lucy"]) {
+      seed(`guardian_links/${g}_mom`, { guardianId: g, protectedPersonId: "mom", status: "active" });
     }
+    seed("device_tokens/t_sarah", { userId: "sarah", token: "tok-sarah" });
+    seed("device_tokens/t_kevin", { userId: "kevin", token: "tok-kevin" });
+    // Duty in Chengdu local time: Kevin 08-20, Sarah overnight 20→08, Lucy 15-23
+    for (let day = 1; day <= 7; day++) {
+      seed(`duty_schedules/k${day}`, { guardianId: "kevin", protectedPersonId: "mom", dayOfWeek: day, startHour: 8, endHour: 20, isActive: true });
+      seed(`duty_schedules/s${day}`, { guardianId: "sarah", protectedPersonId: "mom", dayOfWeek: day, startHour: 20, endHour: 8, isActive: true });
+      seed(`duty_schedules/l${day}`, { guardianId: "lucy", protectedPersonId: "mom", dayOfWeek: day, startHour: 15, endHour: 23, isActive: true });
+    }
+  }
+  seed("sos_events/sos1", {
+    protectedPersonId: "mom",
+    triggeredAt: ts(T0),
+    resolvedAt: null,
+    acknowledgedBy: null,
+    batteryLevel: 0.23,
+    latitude: 30.6586,
+    longitude: 104.0647,
+    ...initialEscalationFields(ts(T0) as any),
+  });
+}
+
+const pushTargets = () => sentMessages.map((m) => m.tokens).flat();
+const sos = () => readDoc("sos_events/sos1")!;
+
+beforeEach(() => {
+  resetFakeAdmin();
+  jest.clearAllMocks();
+  mockCalls.length = 0;
+  mockCallCounter = 0;
+  process.env.PUBLIC_API_BASE_URL = "https://us-central1-test.cloudfunctions.net/api";
+  delete process.env.CRITICAL_ALERTS_ENABLED;
+});
+
+describe("hop 1 — on-duty guardian in the PROTECTED PERSON's time zone", () => {
+  it("pushes only the guardian on duty at 11:00 Chengdu time, with battery in the alert", async () => {
+    seedFamily();
+    const r = await advanceEscalation("sos1", at(0));
+    expect(r.ran).toBe("hop1");
+    expect(pushTargets()).toEqual(["tok-kevin"]);
+    expect(sentMessages[0].notification.body).toContain("23%");
+    expect(sentMessages[0].data).toMatchObject({ action: "sos_alert", sos_id: "sos1", person_id: "mom" });
+    expect(sos().escalationState).toBe("hop1_notified");
+    expect(sos().escalationNextStep).toBe("hop2");
+    expect(sos().escalationNextAt.toMillis()).toBe(at(30).getTime());
   });
 
-  it("appends to escalationLog array (not replace)", () => {
-    expect(triggerSource).toContain("FieldValue.arrayUnion");
+  it("at 23:00 Chengdu the overnight guardian (Sarah, 20→08) is on duty", async () => {
+    seedFamily();
+    const lateNight = new Date("2026-10-30T15:00:00Z"); // 23:00 Asia/Shanghai
+    seed("sos_events/sos1", { ...readDoc("sos_events/sos1"), triggeredAt: ts(lateNight), escalationNextAt: ts(lateNight) });
+    await advanceEscalation("sos1", lateNight);
+    expect(pushTargets()).toEqual(["tok-sarah"]);
   });
 
-  it("logs sentAt timestamp in each escalation entry", () => {
-    const sentAtCount = (triggerSource.match(/sentAt:/g) || []).length;
-    expect(sentAtCount).toBeGreaterThanOrEqual(3); // At least hop 1, 2, 3
+  it("time-sensitive by default; critical only when the entitlement flag is on", async () => {
+    seedFamily();
+    await advanceEscalation("sos1", at(0));
+    expect(sentMessages[0].apns.payload.aps["interruption-level"]).toBe("time-sensitive");
+    process.env.CRITICAL_ALERTS_ENABLED = "true";
+    resetFakeAdmin();
+    seedFamily();
+    await advanceEscalation("sos1", at(0));
+    expect(sentMessages[0].apns.payload.aps["interruption-level"]).toBe("critical");
+    expect(sentMessages[0].apns.payload.aps.sound).toMatchObject({ critical: 1, name: "sos_alert.caf" });
   });
 });
 
-describe("FCM Push Payload — PII Check", () => {
-  it("does NOT include phone number in push payload", () => {
-    // Push notifications should not contain phone numbers
-    expect(fcmSource).not.toMatch(/phone_number|phoneNumber.*notification/);
+describe("full chain until someone responds", () => {
+  it("runs hop2 → voice1 → share → voice2 → voice3 → exhausted on schedule", async () => {
+    seedFamily();
+    const logSpy = jest.spyOn(console, "log");
+    const steps: (string | null)[] = [];
+    for (const p of ESCALATION_PLAN) {
+      // Not due yet → nothing happens
+      if (p.offsetMs > 0) {
+        const early = await advanceEscalation("sos1", new Date(T0.getTime() + p.offsetMs - 1000));
+        expect(early.ran).toBeNull();
+      }
+      steps.push((await advanceEscalation("sos1", new Date(T0.getTime() + p.offsetMs))).ran);
+    }
+    expect(steps).toEqual(["hop1", "hop2", "voice1", "share", "voice2", "voice3"]);
+    expect(sos().escalationState).toBe("exhausted");
+    expect(sos().escalationNextStep).toBeNull();
+
+    // hop2: every guardian pushed; Lucy has no app → SMS
+    expect(mockSms.sendSOSSms.mock.calls.filter((c) => c[3] === undefined).map((c) => c[0])).toEqual(["lucy"]);
+    // 3 voice rounds × 3 guardians, last round flagged
+    expect(mockCalls.map((c) => `${c.round}:${c.guardianId}`)).toEqual([
+      "1:sarah", "1:kevin", "1:lucy", "2:sarah", "2:kevin", "2:lucy", "3:sarah", "3:kevin", "3:lucy",
+    ]);
+    expect(mockCalls.filter((c) => c.isLastRound).length).toBe(3);
+    // hop 4 actually SENDS the emergency link by SMS to every guardian
+    const linkTexts = mockSms.sendSOSSms.mock.calls.filter((c) => typeof c[3] === "string");
+    expect(linkTexts.map((c) => c[0])).toEqual(["sarah", "kevin", "lucy"]);
+    expect(String(linkTexts[0][3])).toMatch(/^https:\/\/us-central1-test\.cloudfunctions\.net\/api\/v1\/evidence\/share\/[0-9a-f]{64}$/);
+    // …and the token never reaches the logs
+    const token = String(linkTexts[0][3]).split("/").pop()!;
+    expect(JSON.stringify(logSpy.mock.calls)).not.toContain(token);
+    expect(JSON.stringify(sos().escalationLog)).not.toContain(token);
+    expect(sos().shareLinkSentAt).toBeDefined();
+    logSpy.mockRestore();
   });
 
-  it("does NOT include location coordinates in push title/body", () => {
-    // Coordinates should not be in the visible notification text
-    // (they may be in data payload for map display)
-    expect(fcmSource).not.toMatch(/lat.*body|lng.*body|latitude.*body/);
-  });
-
-  it("SOS alert uses critical interruption level", () => {
-    expect(fcmSource).toContain("interruption-level");
-    expect(fcmSource).toContain("critical");
-  });
-
-  it("respects notification preferences for non-critical alerts", () => {
-    // checkin reminder and heartbeat missing should check prefs
-    expect(fcmSource).toMatch(/notif.*[Pp]ref|notification.*preferences/);
+  it("the scheduler picks up a due step after the inline runner died", async () => {
+    seedFamily();
+    await advanceEscalation("sos1", at(0));
+    // Instance crashed: nothing ran hop2. One minute later the scheduler does.
+    const ran = await advanceDueEscalations(at(60));
+    expect(ran).toBe(1);
+    expect(sos().escalationState).toBe("hop2_allNotified");
   });
 });
 
-describe("FCM Push — Locale (FIXED)", () => {
-  it("FIXED: FCM has per-locale notification routing", () => {
-    // F-001 fixed: FCM now has per-recipient locale routing
-    expect(fcmSource).toMatch(/getUserLocale/i);
-    expect(fcmSource).toMatch(/fcmStrings/);
-    // Still has Chinese as one of the supported locales
-    const hasChineseChars = /[\u4e00-\u9fff]/.test(fcmSource);
-    expect(hasChineseChars).toBe(true);
-    // But also has English and French
-    expect(fcmSource).toContain("Emergency SOS");
-    expect(fcmSource).toContain("SOS Urgence");
+describe("idempotency", () => {
+  it("re-running the same due step (re-delivered trigger) does not notify twice", async () => {
+    seedFamily();
+    await advanceEscalation("sos1", at(0));
+    const again = await advanceEscalation("sos1", at(0));
+    expect(again.ran).toBeNull();
+    expect(sentMessages).toHaveLength(1);
+  });
+
+  it("a held lease blocks a concurrent runner", async () => {
+    seedFamily();
+    seed("sos_events/sos1", { ...sos(), escalationLeaseUntil: ts(at(60)) });
+    const r = await advanceEscalation("sos1", at(0));
+    expect(r.ran).toBeNull();
+    expect(sentMessages).toHaveLength(0);
+  });
+
+  it("a retried step skips targets already sent before a crash", async () => {
+    seedFamily();
+    await advanceEscalation("sos1", at(0));
+    await advanceEscalation("sos1", at(30)); // hop2
+    // Simulate a crash mid-voice1: Sarah was called, then the lease expired
+    seed("sos_events/sos1", {
+      ...sos(),
+      escalationNextStep: "voice1",
+      escalationNextAt: ts(at(90)),
+      "escalationSent": { ...sos().escalationSent, "voice1:sarah": true },
+    });
+    await advanceEscalation("sos1", at(90));
+    expect(mockCalls.map((c) => c.guardianId)).toEqual(["kevin", "lucy"]);
   });
 });
 
-describe("SMS Templates — Locale (FIXED)", () => {
-  it("FIXED: SMS has per-locale template routing", () => {
-    // F-002 fixed: SMS now has per-recipient locale routing
-    expect(smsSource).toMatch(/getUserLocale|getSmsStrings/i);
-    expect(smsSource).toContain("Lantern Care Emergency");
-    expect(smsSource).toContain("Lantern Care Urgence");
+describe("acknowledge (\"I've got it\")", () => {
+  it("freezes escalation, tells the other guardians and the protected person", async () => {
+    seedFamily();
+    seed("device_tokens/t_mom", { userId: "mom", token: "tok-mom" });
+    seed("device_tokens/t_lucy", { userId: "lucy", token: "tok-lucy" });
+    await advanceEscalation("sos1", at(0));
+    sentMessages.length = 0;
+
+    const r = await acknowledgeSOS("sos1", "sarah", "app");
+    expect(r).toEqual({ status: "acknowledged", acknowledgedBy: "sarah", alreadyAcknowledged: false });
+    expect(sos().escalationState).toBe("frozen");
+    expect(sos().escalationNextStep).toBeNull();
+    const byToken = Object.fromEntries(sentMessages.map((m) => [m.tokens[0], m]));
+    expect(Object.keys(byToken).sort()).toEqual(["tok-kevin", "tok-lucy", "tok-mom"]);
+    expect(byToken["tok-kevin"].notification.body).toContain("Sarah"); // zh copy names Sarah
+    expect(byToken["tok-lucy"].notification.body).toMatch(/Sarah gère le SOS de Mom/);
+    expect(byToken["tok-mom"].data.action).toBe("sos_acknowledged");
+
+    // Nothing else is sent afterwards
+    sentMessages.length = 0;
+    expect((await advanceEscalation("sos1", at(600))).ran).toBeNull();
+    expect(sentMessages).toHaveLength(0);
+    expect(mockCalls).toHaveLength(0);
+  });
+
+  it("is idempotent and keeps the first responder", async () => {
+    seedFamily();
+    await acknowledgeSOS("sos1", "kevin", "voice");
+    const second = await acknowledgeSOS("sos1", "sarah", "app");
+    expect(second).toEqual({ status: "acknowledged", acknowledgedBy: "kevin", alreadyAcknowledged: true });
+  });
+
+  it("rejects non-guardians and resolved SOS", async () => {
+    seedFamily();
+    expect((await acknowledgeSOS("sos1", "stranger", "app")).status).toBe("forbidden");
+    seed("sos_events/sos1", { ...sos(), resolvedAt: ts(at(10)) });
+    expect((await acknowledgeSOS("sos1", "sarah", "app")).status).toBe("resolved");
+    expect((await acknowledgeSOS("nope", "sarah", "app")).status).toBe("not_found");
+  });
+
+  it("stops voice calls that have not been placed yet in the current round", async () => {
+    seedFamily();
+    for (const sec of [0, 30]) await advanceEscalation("sos1", at(sec));
+    const twilio = require("../services/twilio");
+    twilio.initiateVoiceCall.mockImplementationOnce(async (g: string) => {
+      mockCalls.push({ guardianId: g, sosId: "sos1", round: 1, isLastRound: false });
+      await acknowledgeSOS("sos1", "sarah", "voice"); // Sarah presses 1 during her call
+      return "CA-sarah";
+    });
+    await advanceEscalation("sos1", at(90));
+    expect(mockCalls.map((c) => c.guardianId)).toEqual(["sarah"]);
   });
 });
 
-describe("Escalation Chain — Edge Cases", () => {
-  it("handles no guardians found", () => {
-    expect(triggerSource).toMatch(/linksSnapshot\.empty|guardianIds\.length.*0/);
-    expect(triggerSource).toContain("No guardians found");
+describe("no guardians", () => {
+  it("texts the personal emergency contacts with the link and flags the SOS", async () => {
+    seedFamily({ guardians: false });
+    seed("emergency_contacts/mom", {
+      contacts: [
+        { id: "c1", name: "Aunt Mei", phone: "+8613800000009" },
+        { id: "c2", name: "Neighbor", phone: "+8613800000010" },
+      ],
+    });
+    const r = await advanceEscalation("sos1", at(0));
+    expect(r.nextAt).toBeNull();
+    expect(mockSms.sendEmergencyContactSms.mock.calls.map((c) => c[0])).toEqual(["+8613800000009", "+8613800000010"]);
+    expect(String(mockSms.sendEmergencyContactSms.mock.calls[0][3])).toContain("/v1/evidence/share/");
+    expect(sos()).toMatchObject({ noGuardians: true, emergencyContactsNotified: 2, escalationState: "no_guardians" });
   });
 
-  it("fetches protected person name with fallback", () => {
-    // Should fallback to a default name if user doc doesn't exist
-    expect(triggerSource).toMatch(/userDoc\.exists\s*\?/);
-    expect(triggerSource).toContain("Protected Person");
+  it("still marks the SOS when there are no contacts either (app tells the user to call emergency services)", async () => {
+    seedFamily({ guardians: false });
+    await advanceEscalation("sos1", at(0));
+    expect(sos()).toMatchObject({ noGuardians: true, emergencyContactsNotified: 0, escalationState: "no_guardians" });
+    expect(listDocs("evidence_shares")).toHaveLength(0);
   });
 });

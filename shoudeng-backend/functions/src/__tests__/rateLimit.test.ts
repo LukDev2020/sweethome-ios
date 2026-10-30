@@ -78,7 +78,7 @@ describe("createRateLimiter", () => {
   });
 
   it("allows requests under the limit", async () => {
-    const limiter = createRateLimiter({ windowMs: 60_000, maxRequests: 5 });
+    const limiter = createRateLimiter({ name: "test", windowMs: 60_000, maxRequests: 5 });
     const req = buildReq();
     const res = buildRes();
     const next = jest.fn();
@@ -91,7 +91,7 @@ describe("createRateLimiter", () => {
   });
 
   it("returns 429 when limit is exceeded", async () => {
-    const limiter = createRateLimiter({ windowMs: 60_000, maxRequests: 2 });
+    const limiter = createRateLimiter({ name: "test", windowMs: 60_000, maxRequests: 2 });
 
     // Simulate the transaction returning a count that exceeds maxRequests
     mockTx.get.mockResolvedValueOnce({
@@ -118,7 +118,7 @@ describe("createRateLimiter", () => {
     const firestoreInstance = admin.firestore();
     firestoreInstance.runTransaction.mockRejectedValueOnce(new Error("Firestore unavailable"));
 
-    const limiter = createRateLimiter({ windowMs: 60_000, maxRequests: 5 });
+    const limiter = createRateLimiter({ name: "test", windowMs: 60_000, maxRequests: 5 });
     const req = buildReq();
     const res = buildRes();
     const next = jest.fn();
@@ -131,45 +131,46 @@ describe("createRateLimiter", () => {
 });
 
 describe("RATE_LIMITS presets", () => {
-  it("auth preset allows 5 requests per 60 seconds", () => {
-    expect(RATE_LIMITS.auth).toEqual({
-      windowMs: 60_000,
-      maxRequests: 5,
-    });
+  it("auth preset allows 5 requests per 60 seconds and fails closed", () => {
+    expect(RATE_LIMITS.auth).toMatchObject({ windowMs: 60_000, maxRequests: 5, failClosed: true });
   });
 
-  it("sms preset allows 3 requests per 10 minutes", () => {
-    expect(RATE_LIMITS.sms).toEqual({
-      windowMs: 600_000,
-      maxRequests: 3,
-    });
+  it("sms preset allows 3 requests per 10 minutes and fails closed", () => {
+    expect(RATE_LIMITS.sms).toMatchObject({ windowMs: 600_000, maxRequests: 3, failClosed: true });
   });
 
-  it("sos preset allows 3 requests per hour", () => {
-    expect(RATE_LIMITS.sos).toEqual({
-      windowMs: 3_600_000,
-      maxRequests: 3,
-    });
+  it("SOS trigger has its own bucket that allows a second emergency in the same hour", () => {
+    expect(RATE_LIMITS.sosTrigger.maxRequests).toBeGreaterThanOrEqual(10);
+    expect(RATE_LIMITS.voiceCall.name).not.toBe(RATE_LIMITS.sosTrigger.name);
   });
 
   it("general preset allows 100 requests per minute", () => {
-    expect(RATE_LIMITS.general).toEqual({
-      windowMs: 60_000,
-      maxRequests: 100,
-    });
+    expect(RATE_LIMITS.general).toMatchObject({ windowMs: 60_000, maxRequests: 100 });
   });
 
   it("publicShare preset allows 20 requests per hour", () => {
-    expect(RATE_LIMITS.publicShare).toEqual({
-      windowMs: 3_600_000,
-      maxRequests: 20,
-    });
+    expect(RATE_LIMITS.publicShare).toMatchObject({ windowMs: 3_600_000, maxRequests: 20 });
   });
 
   it("telemetry preset allows 120 requests per minute", () => {
-    expect(RATE_LIMITS.telemetry).toEqual({
-      windowMs: 60_000,
-      maxRequests: 120,
-    });
+    expect(RATE_LIMITS.telemetry).toMatchObject({ windowMs: 60_000, maxRequests: 120 });
+  });
+
+  it("every preset has a unique bucket name", () => {
+    const names = Object.values(RATE_LIMITS).map((c) => c.name);
+    expect(new Set(names).size).toBe(names.length);
+  });
+});
+
+describe("fail-closed limiters", () => {
+  it("reject when the limiter store fails", async () => {
+    const admin = require("firebase-admin");
+    admin.firestore().runTransaction.mockRejectedValueOnce(new Error("firestore down"));
+    const limiter = createRateLimiter(RATE_LIMITS.auth);
+    const res = buildRes();
+    const next = jest.fn();
+    await limiter(buildReq(), res, next);
+    expect(next).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(503);
   });
 });

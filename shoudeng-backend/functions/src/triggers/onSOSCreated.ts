@@ -1,254 +1,33 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import { sendSOSAlert, PushResult } from "../services/fcm";
-import { sendSOSSms, hasAppInstalled } from "../services/sms";
-
-const db = admin.firestore();
+import { initialEscalationFields, runEscalationInline } from "../services/escalation";
 
 /**
- * Firestore trigger: fires when a new SOS event is created.
- * Implements the 4-hop escalation chain:
- *   Hop 1 (0s):  Push to on-duty guardian
- *   Hop 2 (30s): Push to ALL guardians
- *   Hop 3 (90s): Twilio voice call loop
- *   Hop 4 (120s): Generate emergency share link
+ * Firestore trigger: a new SOS event starts the escalation state machine
+ * (see services/escalation.ts). The steps run inline while this instance is
+ * alive; the advanceEscalations scheduler takes over for anything still due
+ * after the budget, after a crash, or when this trigger is re-delivered —
+ * step claims make re-delivery harmless.
  */
 export const onSOSCreated = functions
   .runWith({ timeoutSeconds: 300, memory: "512MB" })
   .firestore.document("sos_events/{sosId}")
   .onCreate(async (snapshot, context) => {
     const sosId = context.params.sosId;
-    const sosData = snapshot.data();
-    const protectedPersonId = sosData.protectedPersonId;
+    const data = snapshot.data();
+    console.log(`[Escalation] SOS ${sosId} created for person ${data.protectedPersonId}`);
 
-    console.log(
-      `[Escalation] SOS ${sosId} created for person ${protectedPersonId}`
-    );
-
-    // Fetch protected person's name
-    const userDoc = await db
-      .collection("users")
-      .doc(protectedPersonId)
-      .get();
-    const personName = userDoc.exists
-      ? userDoc.data()!.displayName
-      : "Protected Person";
-
-    // Find all guardians
-    const linksSnapshot = await db
-      .collection("guardian_links")
-      .where("protectedPersonId", "==", protectedPersonId)
-      .where("status", "==", "active")
-      .get();
-
-    if (linksSnapshot.empty) {
-      console.warn(
-        `[Escalation] No guardians found for person ${protectedPersonId}`
-      );
-      return;
-    }
-
-    const guardianIds = linksSnapshot.docs.map(
-      (doc) => doc.data().guardianId
-    );
-
-    // Find on-duty guardians
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentDay = now.getDay() || 7;
-
-    const onDutyGuardians: string[] = [];
-    for (const gid of guardianIds) {
-      const schedules = await db
-        .collection("duty_schedules")
-        .where("guardianId", "==", gid)
-        .where("protectedPersonId", "==", protectedPersonId)
-        .where("isActive", "==", true)
-        .where("dayOfWeek", "==", currentDay)
-        .get();
-
-      let isOnDuty = false;
-      if (schedules.empty) {
-        // No schedule = always on duty
-        isOnDuty = true;
-      } else {
-        for (const doc of schedules.docs) {
-          const s = doc.data();
-          if (currentHour >= s.startHour && currentHour < s.endHour) {
-            isOnDuty = true;
-            break;
-          }
-        }
-      }
-
-      if (isOnDuty) onDutyGuardians.push(gid);
-    }
-
-    // === HOP 1: Notify on-duty guardian(s) immediately ===
-    console.log(
-      `[Escalation] Hop 1: Notifying ${onDutyGuardians.length} on-duty guardians`
-    );
-
-    const hop1Targets =
-      onDutyGuardians.length > 0 ? onDutyGuardians : [guardianIds[0]];
-
-    for (const guardianId of hop1Targets) {
-      const pushResult = await sendSOSAlert(guardianId, personName, sosId);
-      let channel = "push";
-
-      // SMS fallback: if push completely failed, send SMS immediately
-      if (pushResult.allFailed) {
-        const smsSent = await sendSOSSms(guardianId, personName, sosId);
-        channel = smsSent ? "sms_fallback" : "failed";
-        console.log(`[Escalation] Hop 1: Push failed for ${guardianId}, SMS fallback: ${smsSent}`);
-      }
-
-      // Log to escalation_log
+    // Documents created by older clients/paths may lack the state-machine fields
+    if (data.escalationNextStep === undefined) {
+      const init = initialEscalationFields(data.triggeredAt ?? admin.firestore.Timestamp.now());
       await snapshot.ref.update({
-        escalationState: "hop1_notified",
-        escalationLog: admin.firestore.FieldValue.arrayUnion({
-          hop: 1,
-          targetId: guardianId,
-          sentAt: admin.firestore.Timestamp.now(),
-          deliveredAt: null,
-          readAt: null,
-          respondedAt: null,
-          response: null,
-          channel,
-        }),
+        escalationNextStep: init.escalationNextStep,
+        escalationNextAt: init.escalationNextAt,
+        escalationLeaseUntil: null,
+        escalationSent: data.escalationSent ?? {},
       });
     }
 
-    // === HOP 2: Schedule notification to ALL guardians after 30s ===
-    // Using setTimeout in Cloud Functions (runs in same execution if under 9 min limit)
-    await delay(30000);
-
-    // Re-check if SOS is still active (guardian may have responded)
-    const refreshed = await snapshot.ref.get();
-    const refreshedData = refreshed.data();
-    if (
-      !refreshedData ||
-      refreshedData.resolvedAt ||
-      refreshedData.escalationState === "frozen"
-    ) {
-      console.log("[Escalation] SOS already resolved/frozen before Hop 2");
-      return;
-    }
-
-    console.log(
-      `[Escalation] Hop 2: Notifying ALL ${guardianIds.length} guardians`
-    );
-
-    for (const guardianId of guardianIds) {
-      // Send push notification
-      const pushResult = await sendSOSAlert(guardianId, personName, sosId);
-
-      // SMS fallback: if push failed OR guardian doesn't have the app
-      let channel = "push";
-      const hasApp = await hasAppInstalled(guardianId);
-      if (!hasApp || pushResult.allFailed) {
-        const smsSent = await sendSOSSms(guardianId, personName, sosId);
-        channel = smsSent ? "sms_fallback" : (hasApp ? "push_failed" : "sms");
-        if (!hasApp) {
-          console.log(`[Escalation] SMS fallback sent to ${guardianId} (no app)`);
-        } else {
-          console.log(`[Escalation] SMS fallback sent to ${guardianId} (push failed)`);
-        }
-      }
-
-      await snapshot.ref.update({
-        escalationState: "hop2_allNotified",
-        escalationLog: admin.firestore.FieldValue.arrayUnion({
-          hop: 2,
-          targetId: guardianId,
-          sentAt: admin.firestore.Timestamp.now(),
-          deliveredAt: null,
-          readAt: null,
-          respondedAt: null,
-          response: null,
-          channel,
-        }),
-      });
-    }
-
-    // === HOP 3: Voice call after another 60s ===
-    await delay(60000);
-
-    const refreshed2 = await snapshot.ref.get();
-    const refreshedData2 = refreshed2.data();
-    if (
-      !refreshedData2 ||
-      refreshedData2.resolvedAt ||
-      refreshedData2.escalationState === "frozen"
-    ) {
-      console.log("[Escalation] SOS already resolved/frozen before Hop 3");
-      return;
-    }
-
-    console.log("[Escalation] Hop 3: Initiating voice calls");
-
-    try {
-      const { initiateVoiceCall } = await import("../services/twilio");
-      const callbackUrl = `https://${process.env.GCLOUD_PROJECT}.cloudfunctions.net/api/v1/voice-callback`;
-
-      for (const guardianId of guardianIds) {
-        const callSid = await initiateVoiceCall(
-          guardianId,
-          sosId,
-          personName,
-          callbackUrl
-        );
-        if (callSid) {
-          await snapshot.ref.update({
-            escalationState: "hop3_voiceCalling",
-            escalationLog: admin.firestore.FieldValue.arrayUnion({
-              hop: 3,
-              targetId: guardianId,
-              sentAt: admin.firestore.Timestamp.now(),
-              deliveredAt: null,
-              readAt: null,
-              respondedAt: null,
-              response: null,
-            }),
-          });
-        }
-      }
-    } catch (error) {
-      console.error("[Escalation] Hop 3 voice call failed:", error);
-      await snapshot.ref.update({
-        escalationState: "hop3_exhausted",
-      });
-    }
-
-    // === HOP 4: Generate emergency share link after another 30s ===
-    await delay(30000);
-
-    const refreshed3 = await snapshot.ref.get();
-    const refreshedData3 = refreshed3.data();
-    if (
-      !refreshedData3 ||
-      refreshedData3.resolvedAt ||
-      refreshedData3.escalationState === "frozen"
-    ) {
-      console.log("[Escalation] SOS resolved/frozen before Hop 4");
-      return;
-    }
-
-    console.log("[Escalation] Hop 4: Generating emergency share link");
-
-    try {
-      const { createShareToken } = await import("../services/evidence");
-      const token = await createShareToken({
-        protectedPersonId,
-        createdBy: "system_escalation",
-        expiresInHours: 48,
-      });
-      console.log(`[Escalation] Emergency share token created: ${token}`);
-    } catch (error) {
-      console.error("[Escalation] Hop 4 share link creation failed:", error);
-    }
+    // Leave headroom under the 300 s function timeout
+    await runEscalationInline(sosId, 270_000);
   });
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}

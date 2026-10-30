@@ -1,44 +1,20 @@
 import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
-import * as crypto from "crypto";
+import { verifyTwilioSignature } from "../services/twilio";
 
 const router = Router();
 const db = admin.firestore();
 
 // --- Twilio Signature Verification ---
-
-function verifyTwilioSignature(req: Request): boolean {
-  if (process.env.FUNCTIONS_EMULATOR === "true") return true;
-
-  const authToken = functions.config().twilio?.auth_token;
-  if (!authToken) {
-    console.error("[Webhook] Twilio auth_token not configured");
-    return false;
-  }
-
-  const signature = req.headers["x-twilio-signature"] as string;
-  if (!signature) return false;
-
-  // Build the full URL Twilio used to call us
-  const protocol = req.headers["x-forwarded-proto"] || "https";
-  const url = `${protocol}://${req.headers.host}${req.originalUrl}`;
-
-  // Sort POST params and append key=value
-  const params = req.body || {};
-  const sortedKeys = Object.keys(params).sort();
-  const data = url + sortedKeys.map((k) => k + params[k]).join("");
-
-  const expected = crypto
-    .createHmac("sha1", authToken)
-    .update(Buffer.from(data, "utf-8"))
-    .digest("base64");
-
-  const sigBuf = Buffer.from(signature, "utf-8");
-  const expBuf = Buffer.from(expected, "utf-8");
-
-  if (sigBuf.length !== expBuf.length) return false;
-  return crypto.timingSafeEqual(sigBuf, expBuf);
+// Computed over the public URL (region + /api function prefix), which
+// req.headers.host + req.originalUrl does not reproduce inside Cloud Functions.
+function verifyTwilio(req: Request): boolean {
+  return verifyTwilioSignature(
+    req.headers["x-twilio-signature"] as string | undefined,
+    req.originalUrl,
+    (req.body ?? {}) as Record<string, unknown>
+  );
 }
 
 /**
@@ -48,7 +24,7 @@ function verifyTwilioSignature(req: Request): boolean {
  * Verified via X-Twilio-Signature.
  */
 router.post("/twilio/call-status", async (req: Request, res: Response) => {
-  if (!verifyTwilioSignature(req)) {
+  if (!verifyTwilio(req)) {
     console.error("[Webhook] Invalid Twilio signature for call-status");
     res.status(403).json({ error: "Invalid signature" });
     return;
@@ -65,63 +41,34 @@ router.post("/twilio/call-status", async (req: Request, res: Response) => {
   console.log(`[Webhook] Twilio call status: ${CallSid} → ${CallStatus}`);
 
   try {
-    // Find SOS event with this call SID in escalation log
-    const sosSnapshot = await db
-      .collection("sos_events")
-      .where("resolvedAt", "==", null)
-      .get();
-
-    for (const doc of sosSnapshot.docs) {
-      const data = doc.data();
-      const log = data.escalationLog || [];
-
-      const matchIdx = log.findIndex(
-        (entry: { callSid?: string }) => entry.callSid === CallSid
-      );
-
-      if (matchIdx >= 0) {
-        // Update the escalation log entry
-        const updatedLog = [...log];
-        const now = admin.firestore.Timestamp.now();
-
-        switch (CallStatus) {
-          case "ringing":
-            updatedLog[matchIdx].deliveredAt = now;
-            break;
-          case "in-progress":
-            updatedLog[matchIdx].readAt = now;
-            break;
-          case "completed":
-            updatedLog[matchIdx].respondedAt = now;
-            updatedLog[matchIdx].response = `completed_${CallDuration}s`;
-            break;
-          case "busy":
-          case "failed":
-          case "no-answer":
-            updatedLog[matchIdx].response = CallStatus;
-            break;
-        }
-
-        await doc.ref.update({ escalationLog: updatedLog });
-
-        // If call was not answered, update escalation state
-        if (["busy", "failed", "no-answer"].includes(CallStatus)) {
-          // Check if all voice calls have been exhausted
-          const allExhausted = updatedLog
-            .filter((e: { hop: number }) => e.hop === 3)
-            .every(
-              (e: { response: string | null }) =>
-                e.response && ["busy", "failed", "no-answer"].includes(e.response)
-            );
-
-          if (allExhausted) {
-            await doc.ref.update({ escalationState: "hop3_exhausted" });
-          }
-        }
-
-        break;
-      }
+    const callRef = db.collection("voice_calls").doc(String(CallSid));
+    const call = await callRef.get();
+    if (!call.exists) {
+      res.status(204).send();
+      return;
     }
+    await callRef.update({ status: CallStatus, duration: CallDuration ?? null, to: To ?? null, from: From ?? null });
+
+    // Mirror onto the SOS escalation log entry for this call
+    const sosRef = db.collection("sos_events").doc(call.data()!.sosEventId);
+    await db.runTransaction(async (tx) => {
+      const sos = await tx.get(sosRef);
+      if (!sos.exists) return;
+      const log = [...(sos.data()!.escalationLog || [])];
+      const idx = log.findIndex((e: { callSid?: string }) => e.callSid === CallSid);
+      if (idx < 0) return;
+      const now = admin.firestore.Timestamp.now();
+      const entry = { ...log[idx] };
+      switch (CallStatus) {
+        case "ringing": entry.deliveredAt = now; break;
+        case "in-progress": entry.readAt = now; break;
+        case "completed": entry.respondedAt = now; entry.response = `completed_${CallDuration}s`; break;
+        case "busy": case "failed": case "no-answer": entry.response = CallStatus; break;
+      }
+      log[idx] = entry;
+      // Escalation state is owned by services/escalation.ts — only the log changes here
+      tx.update(sosRef, { escalationLog: log });
+    });
 
     res.status(204).send();
   } catch (error) {
@@ -136,7 +83,7 @@ router.post("/twilio/call-status", async (req: Request, res: Response) => {
  * Verified via X-Twilio-Signature.
  */
 router.post("/twilio/sms-status", async (req: Request, res: Response) => {
-  if (!verifyTwilioSignature(req)) {
+  if (!verifyTwilio(req)) {
     console.error("[Webhook] Invalid Twilio signature for sms-status");
     res.status(403).json({ error: "Invalid signature" });
     return;

@@ -121,6 +121,42 @@ describe("contract: GET /v1/guardian/protected-persons", () => {
     expect(dad.lastCheckIn).toBeNull();
   });
 
+  it("an active SOS turns the person red and carries the SOS details", async () => {
+    seed("sos_events/s1", {
+      protectedPersonId: "mom", triggeredAt: ts("2026-10-30T11:58:00Z"), resolvedAt: null,
+      triggerMethod: "longPress", latitude: 30.6586, longitude: 104.0647, batteryLevel: 0.23,
+      escalationState: "hop2_allNotified", escalationNextStep: "voice1", escalationNextAt: ts("2026-10-30T11:59:30Z"),
+      acknowledgedBy: null,
+      escalationLog: [
+        { hop: 1, targetId: "kevin", channel: "push" },
+        { hop: 2, targetId: "sarah", channel: "push" },
+        { hop: 2, targetId: "kevin", channel: "push" },
+      ],
+    });
+    const res = await request(buildApp())
+      .get("/v1/guardian/protected-persons")
+      .set("Authorization", `Bearer ${tokenFor("sarah")}`);
+    const mom = res.body.find((p: any) => p.personId === "mom");
+    expect(mom.status).toBe("alert");
+    expect(mom.activeSOS).toMatchObject({
+      sosEventId: "s1", escalationState: "hop2_allNotified", nextStep: "voice1",
+      guardiansNotified: 2, batteryLevel: 0.23, elapsedSeconds: 120, noGuardians: false,
+    });
+    expectMatchesFixture("guardian_protected_persons_sos.json", res.body);
+
+    const detail = await request(buildApp())
+      .get("/v1/guardian/sos/active?personId=mom")
+      .set("Authorization", `Bearer ${tokenFor("sarah")}`);
+    expect(detail.body.active).toBe(true);
+    expect(detail.body.sos.personName).toBe("Mom");
+    expectMatchesFixture("guardian_sos_active.json", detail.body);
+
+    const stranger = await request(buildApp())
+      .get("/v1/guardian/sos/active?personId=mom")
+      .set("Authorization", `Bearer ${tokenFor("stranger")}`);
+    expect(stranger.status).toBe(403);
+  });
+
   it("requires auth", async () => {
     const res = await request(buildApp()).get("/v1/guardian/protected-persons");
     expect(res.status).toBe(401);

@@ -3,6 +3,7 @@ import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
 import { getLatestHeartbeat } from "../services/bigquery";
 import { toIso } from "../services/time";
+import { activeSOSDoc, sosStatus, SOSStatus } from "../services/escalation";
 import { reverseGeocode } from "../services/geocoding";
 
 const router = Router();
@@ -93,7 +94,10 @@ async function loadPersonStatus(
     ? null
     : toIso(checkinSnapshot.docs[0].data().timestamp);
 
-  return buildPersonStatus({
+  const sosDoc = await activeSOSDoc(personId);
+  const activeSOS = sosDoc ? await sosStatus(sosDoc) : null;
+
+  const row = await buildPersonStatus({
     personId,
     user,
     permissions: link.permissions,
@@ -103,7 +107,50 @@ async function loadPersonStatus(
     protectionLayers: guardianCount.data().count,
     reverseGeocode,
   });
+  return {
+    ...row,
+    // An active SOS overrides every other status
+    status: activeSOS ? "alert" : row.status,
+    activeSOS,
+  };
 }
+
+/**
+ * GET /v1/guardian/sos/active?personId=
+ * The protected person's unresolved SOS (location, battery, escalation step,
+ * who acknowledged, elapsed time) for GuardianAlertResponseView.
+ * Requires an active guardian link.
+ */
+router.get("/sos/active", async (req: Request, res: Response) => {
+  const uid = req.uid!;
+  const personId = typeof req.query.personId === "string" ? req.query.personId : "";
+  if (!personId) {
+    res.status(400).json({ error: "personId is required" });
+    return;
+  }
+  try {
+    const link = await db.collection("guardian_links").doc(`${uid}_${personId}`).get();
+    if (!link.exists || link.data()?.status !== "active") {
+      res.status(403).json({ error: "No active guardian link for this person" });
+      return;
+    }
+    const doc = await activeSOSDoc(personId);
+    if (!doc) {
+      res.json({ active: false, sos: null });
+      return;
+    }
+    const sos = await sosStatus(doc);
+    // Location is shared during an SOS only if the person allows this guardian to see it
+    if (link.data()?.permissions?.canSeeLocation === false) {
+      sos.latitude = null;
+      sos.longitude = null;
+    }
+    res.json({ active: true, sos });
+  } catch (error) {
+    console.error("[Guardian] active SOS error:", error);
+    res.status(500).json({ error: "Failed to load SOS" });
+  }
+});
 
 /** Shape decoded by iOS `ProtectedPersonStatusResponse` (see ContractFixtures). */
 export interface ProtectedPersonStatus {
@@ -123,6 +170,7 @@ export interface ProtectedPersonStatus {
   timeZoneId: string | null;
   countryCode: string | null;
   cityName: string | null;
+  activeSOS?: SOSStatus | null;
 }
 
 const num = (v: unknown): number | null =>

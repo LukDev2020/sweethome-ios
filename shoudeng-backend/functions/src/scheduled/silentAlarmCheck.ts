@@ -1,6 +1,8 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
+import { localTime } from "../services/localTime";
+
 const db = admin.firestore();
 
 /**
@@ -12,8 +14,6 @@ export const checkSilentAlarms = functions.pubsub
   .schedule("every 5 minutes")
   .onRun(async () => {
     const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
 
     const schedulesSnapshot = await db
       .collection("silent_alarm_schedules")
@@ -28,6 +28,12 @@ export const checkSilentAlarms = functions.pubsub
       const gracePeriodMisses: number = data.gracePeriodMisses || 3;
       const consecutiveMisses: number = data.consecutiveMisses || 0;
 
+      // Scheduled times are the user's wall-clock times; the server runs in UTC.
+      const tz = data.timeZone ?? (await db.collection("users").doc(userId).get()).data()?.timeZone;
+      const lt = localTime(now, tz);
+      const currentHour = lt.hour;
+      const currentMinute = lt.minute;
+
       // Check if any scheduled time has passed within the last window
       for (const t of times) {
         const scheduledMinutes = t.hour * 60 + t.minute;
@@ -38,8 +44,9 @@ export const checkSilentAlarms = functions.pubsub
         if (elapsed >= windowMinutes && elapsed < windowMinutes + 5) {
           // Window just closed — check if user confirmed
           const lastConfirmed = data.lastConfirmedAt?.toDate();
-          const windowStart = new Date(now);
-          windowStart.setHours(t.hour, t.minute, 0, 0);
+          // Scheduled instant = now minus the elapsed local minutes
+          const windowStart = new Date(now.getTime() - elapsed * 60 * 1000);
+          windowStart.setSeconds(0, 0);
 
           const confirmed = lastConfirmed && lastConfirmed >= windowStart;
 

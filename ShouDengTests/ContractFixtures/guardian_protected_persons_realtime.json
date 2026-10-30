@@ -15,7 +15,8 @@
     "protectionLayers": 2,
     "timeZoneId": "Asia/Shanghai",
     "countryCode": "CN",
-    "cityName": "Chengdu"
+    "cityName": "Chengdu",
+    "activeSOS": null
   },
   {
     "personId": "dad",
@@ -33,6 +34,7 @@
     "protectionLayers": 1,
     "timeZoneId": "America/Toronto",
     "countryCode": "CA",
-    "cityName": "Toronto"
+    "cityName": "Toronto",
+    "activeSOS": null
   }
 ]

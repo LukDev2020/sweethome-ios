@@ -1,4 +1,3 @@
-import * as admin from "firebase-admin";
 import express from "express";
 import cors from "cors";
 
@@ -15,6 +14,11 @@ app.use(
   })
 );
 app.use(express.json());
+// Twilio posts application/x-www-form-urlencoded
+app.use(express.urlencoded({ extended: false }));
+// Behind Google's front end: trust exactly one proxy hop so req.ip is the
+// client address Google saw (X-Forwarded-For entries further left are spoofable).
+app.set("trust proxy", 1);
 
 // --- Route Imports ---
 import authRoutes from "./routes/auth";
@@ -47,6 +51,7 @@ import widgetRoutes from "./routes/widget";
 import coverageRoutes from "./routes/coverage";
 import tripRoutes from "./routes/trip";
 import emergencyContactRoutes from "./routes/emergencyContacts";
+import voiceRoutes from "./routes/voice";
 import { createRateLimiter, RATE_LIMITS } from "./middleware/rateLimit";
 
 // --- Mount Routes ---
@@ -64,6 +69,9 @@ app.use("/v1/duty-schedule", dutyRoutes);
 
 // Phase 2.5: Family Feed
 app.use("/v1/family", familyRoutes);
+
+// Twilio voice callbacks (public, Twilio-signed)
+app.use("/v1", voiceRoutes);
 
 // Phase 3: Telemetry
 app.use("/v1", telemetryRoutes);
@@ -122,74 +130,6 @@ app.use("/v1/trip", tripRoutes);
 
 // Personal emergency contacts (SMS fallback when there are no guardians)
 app.use("/v1/emergency-contacts", emergencyContactRoutes);
-
-// --- Voice callback for Twilio ---
-// Multi-language TwiML responses based on query param or default
-const voiceMessages: Record<string, { lang: string; ack: string; invalid: string }> = {
-  zh: { lang: "zh-CN", ack: "已收到。请打开守灯应用查看详情并确认接手。", invalid: "无效按键。" },
-  en: { lang: "en-US", ack: "Acknowledged. Please open the Lantern Care app to view details and take over.", invalid: "Invalid key." },
-  fr: { lang: "fr-FR", ack: "Reçu. Veuillez ouvrir l'application Lantern Care pour voir les détails et prendre en charge.", invalid: "Touche invalide." },
-};
-app.post("/v1/voice-callback", async (req, res) => {
-  const { Digits, CallSid } = req.body;
-  const locale = (req.query.lang as string || "zh").substring(0, 2);
-  const msg = voiceMessages[locale] || voiceMessages.zh;
-
-  if (Digits === "1") {
-    // Guardian pressed 1 — acknowledged, freeze the SOS escalation
-    console.log(`[VoiceCallback] Guardian acknowledged via call ${CallSid}`);
-
-    // Find the active SOS event associated with this call and freeze it
-    try {
-      const db = admin.firestore();
-      const sosQuery = await db
-        .collection("sos_events")
-        .where("resolvedAt", "==", null)
-        .orderBy("createdAt", "desc")
-        .limit(5)
-        .get();
-
-      for (const doc of sosQuery.docs) {
-        const logs = doc.data().escalationLog || [];
-        const hasCallSid = logs.some(
-          (entry: Record<string, unknown>) => entry.hop === 3
-        );
-        if (hasCallSid) {
-          await doc.ref.update({
-            escalationState: "frozen",
-            frozenBy: "voice_callback",
-            frozenAt: admin.firestore.Timestamp.now(),
-          });
-          console.log(`[VoiceCallback] SOS ${doc.id} frozen by voice acknowledgement`);
-          break;
-        }
-      }
-    } catch (err) {
-      console.error("[VoiceCallback] Failed to freeze SOS:", err);
-    }
-
-    res.set("Content-Type", "text/xml");
-    res.send(`<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Say language="${msg.lang}" voice="alice">
-    ${msg.ack}
-  </Say>
-</Response>`);
-  } else if (Digits === "2") {
-    // Replay message
-    res.set("Content-Type", "text/xml");
-    res.send(`<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Redirect>/v1/voice-replay</Redirect>
-</Response>`);
-  } else {
-    res.set("Content-Type", "text/xml");
-    res.send(`<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Say language="${msg.lang}" voice="alice">${msg.invalid}</Say>
-</Response>`);
-  }
-});
 
 // --- Health check ---
 app.get("/health", (_req, res) => {

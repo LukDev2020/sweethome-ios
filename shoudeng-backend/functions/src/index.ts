@@ -20,3 +20,4 @@ export { ttlCleanup } from "./scheduled/ttlCleanup";
 export { computeIntegrityProof } from "./scheduled/integrityProof";
 export { checkHomeTimerExpiry } from "./scheduled/homeTimerCheck";
 export { checkSilentAlarms } from "./scheduled/silentAlarmCheck";
+export { advanceEscalations } from "./scheduled/escalationCheck";
