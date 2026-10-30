@@ -1103,3 +1103,9 @@ your guardians will be automatically notified.";
 "home.fakeCall" = "Fake Call";
 "home.safetyTimer" = "Safety Timer";
 "home.trackerScan" = "Tracker Scan";
+
+/* External SOS confirmation (lock screen / deep link) */
+"common.cancel" = "Cancel";
+"sos.confirmExternal.title" = "Send SOS?";
+"sos.confirmExternal.message" = "Your guardians will be alerted right away with your location.";
+"sos.confirmExternal.send" = "Send SOS";

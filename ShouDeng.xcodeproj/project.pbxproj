@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		25F3BEBCE49F83D028EDDA2A /* AppLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4065FDD0413EBFDA074642D7 /* AppLifecycleTests.swift */; };
+		DD4C82603D4B0B8218838586 /* AppLifecycleRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4C8E04ABB40A07C16C56BC /* AppLifecycleRouter.swift */; };
 		BB22CC3300001001 /* TripRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC3300002001 /* TripRecord.swift */; };
 		BB22CC3300001002 /* TripRecordingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC3300002002 /* TripRecordingService.swift */; };
 		BB22CC3300001003 /* TripHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC3300002003 /* TripHistoryView.swift */; };
@@ -225,6 +227,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4065FDD0413EBFDA074642D7 /* AppLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLifecycleTests.swift; sourceTree = "<group>"; };
+		1E4C8E04ABB40A07C16C56BC /* AppLifecycleRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLifecycleRouter.swift; sourceTree = "<group>"; };
 		00D6D2187E81F7ADD2436B42 /* ProtectedStatusWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtectedStatusWidget.swift; sourceTree = "<group>"; };
 		040C57BD82556A18B68CDDE7 /* DismissTimerIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DismissTimerIntent.swift; sourceTree = "<group>"; };
 		0582D01DD1A66B1A20CA595D /* GuardianRecordsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianRecordsView.swift; sourceTree = "<group>"; };
@@ -780,6 +784,7 @@
 				19BF856E4785D6ABD573F691 /* AdaptiveLocationManagerTests.swift */,
 				C5D6E7F8A9B0C1D2E3F4A5B6 /* ReactiveLocationServiceTests.swift */,
 				B273093A701FBEED8E657124 /* APIClientTests.swift */,
+				4065FDD0413EBFDA074642D7 /* AppLifecycleTests.swift */,
 				3C38041E8CCB6EAE0ECF2D4F /* AuthManagerTests.swift */,
 				A1B2C3D4E5F60001A0000003 /* KeychainHelperTests.swift */,
 				A1B2C3D4E5F60001A0000002 /* ConsentLoggerTests.swift */,
@@ -916,6 +921,7 @@
 			isa = PBXGroup;
 			children = (
 				E9B16BBF77C02115152E9C88 /* AppCoordinator.swift */,
+				1E4C8E04ABB40A07C16C56BC /* AppLifecycleRouter.swift */,
 				BCC9F2C44D93C9435463C4A7 /* AppDelegate.swift */,
 				5465F763A8A338E12D44592E /* ShouDengApp.swift */,
 			);
@@ -1129,6 +1135,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DD4C82603D4B0B8218838586 /* AppLifecycleRouter.swift in Sources */,
 				27B0B7CDEE2B49B18E8FDE32 /* FloatingSOSButton.swift in Sources */,
 				1D0F0A554877406A9B2D7355 /* BatteryIndicatorView.swift in Sources */,
 				862F35BC5650451AB0F25C79 /* HomeSafePill.swift in Sources */,
@@ -1270,6 +1277,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				25F3BEBCE49F83D028EDDA2A /* AppLifecycleTests.swift in Sources */,
 				D36AE3ACFF56A4B4A28DD3AF /* APIClientTests.swift in Sources */,
 				F0FFEA124608CCCA60504A62 /* AdaptiveLocationManagerTests.swift in Sources */,
 				B3C4D5E6F7A8B9C0D1E2F3A4 /* ReactiveLocationServiceTests.swift in Sources */,

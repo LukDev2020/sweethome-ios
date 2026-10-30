@@ -10,6 +10,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
     let appCoordinator = AppCoordinator()
 
+    /// True once `FirebaseApp.configure()` ran — `Auth.auth()` traps before that.
+    private(set) static var firebaseConfigured = false
+
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
@@ -18,6 +21,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // Initialize Firebase (only if GoogleService-Info.plist has real values)
         if Self.hasValidFirebaseConfig() {
             FirebaseApp.configure()
+            Self.firebaseConfigured = true
 
             #if canImport(FirebaseCrashlytics)
             // Enable Crashlytics (disable debug collection in DEBUG to avoid noise)
@@ -77,7 +81,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
         // Forward APNs token to Firebase Auth (required for phone auth on real devices)
-        Auth.auth().setAPNSToken(deviceToken, type: .unknown)
+        if Self.firebaseConfigured {
+            Auth.auth().setAPNSToken(deviceToken, type: .unknown)
+        }
         appCoordinator.registerDeviceToken(deviceToken)
     }
 
@@ -90,30 +96,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         #endif
     }
 
-    // MARK: - URL Handling (Firebase reCAPTCHA callback + deep links)
-
-    func application(
-        _ app: UIApplication,
-        open url: URL,
-        options: [UIApplication.OpenURLOptionsKey: Any] = [:]
-    ) -> Bool {
-        if Auth.auth().canHandle(url) {
-            return true
-        }
-        appCoordinator.handleDeepLink(url)
-        return true
-    }
-
-    // MARK: - Universal Links
-
-    func application(
-        _ application: UIApplication,
-        continue userActivity: NSUserActivity,
-        restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void
-    ) -> Bool {
-        appCoordinator.handleUserActivity(userActivity)
-        return true
-    }
+    // URL, universal-link and activation events are delivered to the SwiftUI scene,
+    // not to this delegate — see ShouDengApp (.onOpenURL / .onContinueUserActivity /
+    // scenePhase → AppLifecycleRouter).
 
     // MARK: - Silent Push (Background Fetch)
 
@@ -123,7 +108,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
     ) {
         // Let Firebase Auth handle silent push for phone verification
-        if Auth.auth().canHandleNotification(userInfo) {
+        if Self.firebaseConfigured, Auth.auth().canHandleNotification(userInfo) {
             completionHandler(.noData)
             return
         }
@@ -143,22 +128,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             }
             completionHandler(.newData)
         }
-    }
-
-    // MARK: - App Lifecycle
-
-    func applicationDidBecomeActive(_ application: UIApplication) {
-        appCoordinator.heartbeatService.appDidBecomeActive()
-        appCoordinator.motionService.startForegroundMonitoring()
-
-        // Flush offline queue when we come back online
-        Task { await appCoordinator.apiClient.flushOfflineQueue() }
-    }
-
-    func applicationWillResignActive(_ application: UIApplication) {
-        appCoordinator.motionService.stopForegroundMonitoring()
-        // Auto-start Live Activity when user leaves the app (if enabled)
-        appCoordinator.startLiveActivityOnBackground()
     }
 
     // MARK: - Firebase Config Check

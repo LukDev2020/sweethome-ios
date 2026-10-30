@@ -35,6 +35,10 @@ final class AppCoordinator: ObservableObject {
     @Published var pendingDeepLink: DeepLinkDestination?
     @Published var showInviteAccept = false
     @Published var pendingInviteCode: String?
+    /// Set when an SOS was requested from outside the app UI (lock-screen Live Activity
+    /// link, `shoudeng://sos`). The user must confirm before anything is sent so that an
+    /// arbitrary web link can never raise an SOS on its own.
+    @Published var pendingSOSConfirmation: SOSTriggerMethod?
 
     // Tracking pause (protected person privacy)
     @Published var isTrackingPaused = false
@@ -343,6 +347,24 @@ final class AppCoordinator: ObservableObject {
         }
     }
 
+    // MARK: - Scene Lifecycle (driven by ShouDengApp scenePhase)
+
+    func sceneDidBecomeActive() {
+        heartbeatService.appDidBecomeActive()
+        guard case .loggedIn = authState else { return }
+        motionService.startForegroundMonitoring()
+        // Flush queued requests (SOS, check-ins, locations) now that we're in front
+        Task { await apiClient.flushOfflineQueue() }
+        // The SOS widget/intent may have fired while we were suspended
+        checkWidgetSOSIntent()
+    }
+
+    func sceneWillResignActive() {
+        motionService.stopForegroundMonitoring()
+        // Auto-start Live Activity when user leaves the app (if enabled)
+        startLiveActivityOnBackground()
+    }
+
     // MARK: - Widget SOS Intent
 
     /// Check if the SOS widget triggered an intent while the app was closed.
@@ -371,7 +393,10 @@ final class AppCoordinator: ObservableObject {
         if url.scheme == "shoudeng" {
             switch url.host {
             case "sos":
-                triggerSOS(method: .longPress)
+                // Never trigger directly from a URL — ask the user first.
+                if case .loggedIn = authState, userRole == .protected_ {
+                    pendingSOSConfirmation = .widgetTap
+                }
                 return
             case "checkin":
                 performCheckIn()
@@ -919,6 +944,12 @@ final class AppCoordinator: ObservableObject {
         #if DEBUG
         print("[AppCoordinator] Duress code triggered — silent SOS activated")
         #endif
+    }
+
+    func confirmPendingSOS() {
+        guard let method = pendingSOSConfirmation else { return }
+        pendingSOSConfirmation = nil
+        triggerSOS(method: method)
     }
 
     func cancelSOS() {

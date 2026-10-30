@@ -91,6 +91,22 @@ private struct AuthenticatedRootView: View {
                                     .environmentObject(coordinator)
                             }
                         }
+                        .alert(
+                            LanguageManager.shared.localized("sos.confirmExternal.title"),
+                            isPresented: Binding(
+                                get: { coordinator.pendingSOSConfirmation != nil },
+                                set: { if !$0 { coordinator.pendingSOSConfirmation = nil } }
+                            )
+                        ) {
+                            Button(LanguageManager.shared.localized("sos.confirmExternal.send"), role: .destructive) {
+                                coordinator.confirmPendingSOS()
+                            }
+                            Button(LanguageManager.shared.localized("common.cancel"), role: .cancel) {
+                                coordinator.pendingSOSConfirmation = nil
+                            }
+                        } message: {
+                            Text(LanguageManager.shared.localized("sos.confirmExternal.message"))
+                        }
                         .sheet(isPresented: $showBiometricPrompt) {
                             BiometricEnablePromptView(isPresented: $showBiometricPrompt)
                         }
