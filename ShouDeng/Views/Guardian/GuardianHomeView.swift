@@ -108,7 +108,7 @@ struct GuardianHomeView: View {
                 }
             }
             .navigationDestination(for: String.self) { personId in
-                if coordinator.activeSOSEvent?.protectedPersonId == personId {
+                if coordinator.guardianSOS[personId] != nil {
                     GuardianAlertResponseView(personId: personId)
                 } else {
                     GuardianMemberDetailView(personId: personId)

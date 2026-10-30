@@ -672,8 +672,7 @@ struct ClaimMaterialsView: View {
             timeline: (timelineItems?.isEmpty ?? true) ? nil : timelineItems,
             medicalSnapshot: includeMedicalCard ? {
                 // Load from local cache instead of hardcoded mock data
-                if let data = UserDefaults.standard.data(forKey: "medical_card_cache"),
-                   let cached = try? JSONDecoder().decode(MedicalCardData.self, from: data) {
+                if let cached = MedicalCardCache.load() {
                     return MedicalSnapshot(
                         bloodType: cached.bloodType, allergies: cached.allergies.isEmpty ? nil : cached.allergies,
                         conditions: cached.conditions.isEmpty ? nil : cached.conditions,

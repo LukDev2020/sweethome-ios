@@ -152,15 +152,17 @@ final class AdaptiveLocationManager: NSObject {
         // Always monitor significant location changes (survives app termination)
         locationManager.startMonitoringSignificantLocationChanges()
 
-        // Start in safe mode
-        switchMode(.safe)
+        // Start in safe mode (an authorization change during an SOS must not downgrade it)
+        if currentMode != .sos {
+            switchMode(.safe)
+        }
     }
 
     func stop() {
         locationManager.stopUpdatingLocation()
         locationManager.stopMonitoringSignificantLocationChanges()
 
-        for region in locationManager.monitoredRegions {
+        for region in locationManager.monitoredRegions where Self.isOwnRegion(region.identifier) {
             locationManager.stopMonitoring(for: region)
         }
     }
@@ -207,10 +209,13 @@ final class AdaptiveLocationManager: NSObject {
         switchMode(.sos)
     }
 
-    /// Exit SOS mode — return to automatic mode selection
+    /// Exit SOS mode — return to automatic mode selection. (autoSelectMode
+    /// refuses to leave .sos, so this must pick the target mode itself —
+    /// otherwise GPS stays at best accuracy forever after an SOS.)
     func exitSOSMode() {
+        guard currentMode == .sos else { return }
         if let lastLocation = lastReportedLocation {
-            autoSelectMode(for: lastLocation)
+            switchMode(preferredMode(for: lastLocation, current: .unknown) ?? .unknown)
         } else {
             switchMode(.unknown)
         }
@@ -221,34 +226,52 @@ final class AdaptiveLocationManager: NSObject {
     private func autoSelectMode(for location: CLLocation) {
         // Don't downgrade during SOS
         if currentMode == .sos { return }
+        if let mode = preferredMode(for: location, current: currentMode), mode != currentMode {
+            switchMode(mode)
+        }
+    }
 
-        // Check low battery first — overrides other modes except SOS
-        let batteryLevel = Double(UIDevice.current.batteryLevel)
-        if batteryLevel >= 0 && batteryLevel <= config.lowBatteryThreshold
-            && UIDevice.current.batteryState != .charging {
-            if currentMode != .lowBattery {
-                switchMode(.lowBattery)
-            }
-            return
+    /// Mode the location suggests (nil = keep the current one). Never returns .sos.
+    func preferredMode(
+        for location: CLLocation,
+        current: LocationMode,
+        batteryLevel: Double = Double(UIDevice.current.batteryLevel),
+        charging: Bool = UIDevice.current.batteryState == .charging
+    ) -> LocationMode? {
+        // Low battery overrides other modes except SOS
+        if batteryLevel >= 0 && batteryLevel <= config.lowBatteryThreshold && !charging {
+            return .lowBattery
         }
 
         let speed = location.speed
         let inSafeZone = isInAnySafeZone(location: location)
 
         if inSafeZone && speed < config.stationarySpeedThreshold {
-            switchMode(.safe)
+            return .safe
         } else if speed > config.movingSpeedThreshold {
-            switchMode(.moving)
+            return .moving
         } else if !inSafeZone {
-            switchMode(.unknown)
+            return .unknown
         }
+        return current == .sos ? .unknown : nil
     }
 
     // MARK: - Safe Zone Management
 
     func updateSafeZones(_ zones: [SafeZone]) {
         self.safeZones = zones
-        rebalanceGeofences(currentLocation: lastReportedLocation)
+        bufferZoneCenter = nil // force a rebalance with the new set
+        // Without a fix yet, rebalanceGeofences returns early; the first location
+        // update registers the regions (see didUpdateLocations).
+        rebalanceGeofences(currentLocation: lastReportedLocation ?? locationManager.location)
+    }
+
+    /// Geofence regions this manager owns. monitoredRegions is shared by every
+    /// CLLocationManager in the app (BLE beacon regions too) — never touch others.
+    static let safeZoneRegionPrefix = "safezone:"
+    static func regionIdentifier(for zone: SafeZone) -> String { safeZoneRegionPrefix + zone.id }
+    static func isOwnRegion(_ identifier: String) -> Bool {
+        identifier.hasPrefix(safeZoneRegionPrefix) || identifier == "buffer_zone"
     }
 
     private func isInAnySafeZone(location: CLLocation) -> Bool {
@@ -301,11 +324,12 @@ final class AdaptiveLocationManager: NSObject {
 
         // Take the closest N zones
         let toMonitor = Array(sorted.prefix(config.maxGeofenceRegions))
-        let targetIds = Set(toMonitor.map { $0.id })
+        let targetIds = Set(toMonitor.map { Self.regionIdentifier(for: $0) })
 
-        // Remove regions no longer needed
+        // Remove our regions that are no longer needed (leave BLE beacon regions alone)
         for region in locationManager.monitoredRegions {
-            if region.identifier != "buffer_zone" && !targetIds.contains(region.identifier) {
+            let id = region.identifier
+            if id.hasPrefix(Self.safeZoneRegionPrefix) && !targetIds.contains(id) {
                 locationManager.stopMonitoring(for: region)
             }
         }
@@ -313,11 +337,11 @@ final class AdaptiveLocationManager: NSObject {
         let currentlyMonitored = Set(locationManager.monitoredRegions.map { $0.identifier })
 
         // Add new regions
-        for zone in toMonitor where !currentlyMonitored.contains(zone.id) {
+        for zone in toMonitor where !currentlyMonitored.contains(Self.regionIdentifier(for: zone)) {
             let region = CLCircularRegion(
                 center: CLLocationCoordinate2D(latitude: zone.latitude, longitude: zone.longitude),
                 radius: zone.radius,
-                identifier: zone.id
+                identifier: Self.regionIdentifier(for: zone)
             )
             region.notifyOnEntry = true
             region.notifyOnExit = true
@@ -435,15 +459,25 @@ extension AdaptiveLocationManager: CLLocationManagerDelegate {
         // Auto mode selection
         autoSelectMode(for: location)
 
+        // Safe zones arrived before the first fix: register their geofences now
+        if !safeZones.isEmpty && monitoredRegionIds.isEmpty {
+            rebalanceGeofences(currentLocation: location)
+        }
+
         // Report with deduplication
         reportIfNeeded(location)
     }
 
+    private func zone(forRegion identifier: String) -> SafeZone? {
+        safeZones.first { Self.regionIdentifier(for: $0) == identifier || $0.id == identifier }
+    }
+
     func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
         guard let circularRegion = region as? CLCircularRegion else { return }
-        if let zone = safeZones.first(where: { $0.id == circularRegion.identifier }) {
+        if let zone = zone(forRegion: circularRegion.identifier) {
             onSafeZoneEnter?(zone)
-            switchMode(.safe)
+            // Never downgrade tracking during an SOS
+            if currentMode != .sos { switchMode(.safe) }
         }
     }
 
@@ -458,11 +492,11 @@ extension AdaptiveLocationManager: CLLocationManagerDelegate {
             return
         }
 
-        if let zone = safeZones.first(where: { $0.id == circularRegion.identifier }) {
+        if let zone = zone(forRegion: circularRegion.identifier) {
             // Use hysteresis — only fire exit if truly outside the buffer
             if let lastLocation = lastReportedLocation, isExitingSafeZone(location: lastLocation) {
                 onSafeZoneExit?(zone)
-                switchMode(.unknown)
+                if currentMode != .sos { switchMode(.unknown) }
             }
         }
     }
@@ -474,8 +508,12 @@ extension AdaptiveLocationManager: CLLocationManagerDelegate {
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        if manager.authorizationStatus == .authorizedAlways {
+        // Start on When-In-Use too (the user may never grant Always)
+        switch manager.authorizationStatus {
+        case .authorizedAlways, .authorizedWhenInUse:
             start()
+        default:
+            break
         }
     }
 }

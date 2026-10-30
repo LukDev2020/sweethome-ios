@@ -27,6 +27,36 @@ struct User: Codable, Identifiable {
     }
 }
 
+extension User {
+    private enum CodingKeys: String, CodingKey {
+        case id, displayName, role, avatarInitial, avatarLocalPath, phone, email
+        case timeZone, countryCode, cityName, createdAt
+    }
+
+    /// The API sends `timeZone` as an IANA string ("Asia/Shanghai"); Foundation's
+    /// TimeZone Codable form (and older LocalStore files) is {"identifier": …}.
+    /// Accept both — and tolerate missing profile fields — so one guardian's
+    /// incomplete profile can't fail the whole guardian list.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        displayName = c.lossy(String.self, .displayName) ?? ""
+        role = c.lossy(UserRole.self, .role) ?? .protected_
+        avatarInitial = c.lossy(String.self, .avatarInitial) ?? String(displayName.prefix(1))
+        avatarLocalPath = c.lossy(String.self, .avatarLocalPath)
+        phone = c.lossy(String.self, .phone)
+        email = c.lossy(String.self, .email)
+        if let identifier = c.lossy(String.self, .timeZone), let tz = TimeZone(identifier: identifier) {
+            timeZone = tz
+        } else {
+            timeZone = c.lossy(TimeZone.self, .timeZone) ?? .current
+        }
+        countryCode = c.lossy(String.self, .countryCode) ?? ""
+        cityName = c.lossy(String.self, .cityName) ?? ""
+        createdAt = c.lossy(Date.self, .createdAt) ?? Date(timeIntervalSince1970: 0)
+    }
+}
+
 // MARK: - Protected Person (extended)
 
 struct ProtectedPerson: Codable, Identifiable {
@@ -40,6 +70,8 @@ struct ProtectedPerson: Codable, Identifiable {
     var batteryState: BatteryState
     var lastPhoneActivity: Date?       // Inferred from app launches / push receipts
     var status: SafetyStatus
+    /// Server state of this person's unresolved SOS (guardian dashboard).
+    var activeSOS: SOSStatus? = nil
 
     var isOverdue: Bool {
         guard let lastCheckIn else { return true }

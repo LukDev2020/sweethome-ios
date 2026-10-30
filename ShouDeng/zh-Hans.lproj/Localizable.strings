@@ -97,8 +97,8 @@
 "settings.delete.account" = "删除账户";
 
 /* SOS Alert */
-"sos.no.guardian.title" = "SOS无法送达";
-"sos.no.guardian.message" = "你还没有添加任何守护者，SOS信号将无人接收。建议先邀请家人成为你的守护者。";
+"sos.no.guardian.title" = "还没有守护者";
+"sos.no.guardian.message" = "应用内没有人会收到通知。若你添加了紧急联系人，我们会短信通知他们——遇到危险请拨打当地紧急电话。";
 "sos.send.anyway" = "仍然发送";
 "sos.invite.first" = "先邀请守护者";
 "sos.active" = "紧急求助中";
@@ -1233,3 +1233,43 @@
 /* Globe accessibility (W1) */
 "globe.a11y.empty" = "家庭守护地球，暂无成员";
 "globe.a11y.members" = "家庭守护地球，显示 %d 位成员：%@";
+
+/* Notifications & SOS state (W2) */
+"push.action.takenOver" = "我已接手";
+"push.action.call" = "立即拨号";
+"push.action.dismiss" = "我知道了";
+"push.action.checkIn" = "我很好，报个平安";
+"silent.alarm.notif.title" = "安全确认";
+"silent.alarm.notif.body" = "请确认您当前安全。点击“我安全”或打开应用。";
+"silent.alarm.action.safe" = "我安全";
+
+/* Widget actions (W2-j) */
+"widget.arrived.note" = "已到达（小组件）";
+
+/* SOS live status (W2-j) */
+"sos.status.sending" = "正在发送…";
+"sos.status.queued" = "无网络——已保存在手机上，恢复联网后立即发送";
+"sos.status.guardiansNotified" = "已通知 %d 位家人";
+"sos.status.linkTitle" = "发送位置短信";
+"sos.status.linkNext" = "若 2 分钟内无人回应将发送";
+"sos.status.linkSent" = "位置链接已发送给家人";
+"sos.status.callsTitle" = "持续拨打电话，直到有人回应";
+"sos.status.callsNext" = "若 90 秒内无人回应将开始拨打";
+"sos.status.calling" = "已拨出 %d 通电话——仍在拨打";
+"sos.status.callsStopped" = "已有人回应——自动呼叫已停止";
+"sos.status.acknowledged" = "%@ 正在处理";
+"sos.status.noGuardians" = "没有可通知的守护者——请拨打 %@";
+"sos.status.contactsTexted" = "已短信通知 %d 位紧急联系人";
+"sos.status.callEmergency" = "拨打 %@";
+
+/* SOS button (W2-b) */
+"sos.button.a11yLabel" = "紧急求助按钮";
+"sos.button.a11yHint" = "长按 3 秒向家人发出求助";
+
+/* Guardian SOS response (W2-d/e) */
+"guardian.alert.noActiveSOS" = "当前没有进行中的求助。";
+"guardian.alert.youAreHandling" = "由你处理——其他家人已知晓，自动呼叫已停止";
+"guardian.alert.acknowledged" = "已接手";
+"guardian.alert.ackHint" = "告诉其他家人由你处理，并停止自动呼叫";
+"guardian.alert.markSafe" = "%@ 已安全——结束求助";
+"guardian.alert.sosLocation" = "求助时位置";

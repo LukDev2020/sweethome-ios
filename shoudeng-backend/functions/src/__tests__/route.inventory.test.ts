@@ -61,6 +61,8 @@ function scrape(): Call[] {
         ?? [...before.matchAll(/\.(get|post|put|delete|postQueued|patch)\s*\(\s*\n?\s*$/g)].pop();
       const method = mm ? (mm[1] === "postQueued" ? "post" : mm[1]) : null;
       const p = stripInterpolation(m[1]).split("?")[0].replace(/\/x(?=\/|$)/g, "/x");
+      // A literal ending in "/" is a prefix used for matching (hasPrefix), not a call
+      if (p.endsWith("/")) continue;
       calls.push({ file: path.relative(path.resolve(__dirname, "../../../.."), file), line: src.slice(0, m.index).split("\n").length, method, path: p });
     }
   }

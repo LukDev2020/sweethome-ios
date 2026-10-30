@@ -60,7 +60,21 @@ final class DisguiseModeService: ObservableObject {
     static let shared = DisguiseModeService()
     private init() {
         loadFromKeychain()
+        // Disguise must come back on every cold launch, not only after the user
+        // toggles it in settings.
+        if disguiseEnabled, configuredDisguise != .none {
+            applyDisguise(configuredDisguise)
+        }
     }
+
+    /// True while saved values are being read back: property observers must not
+    /// write half-loaded state (which overwrote the custom Notes phrase with the
+    /// default on every launch).
+    private var isLoading = false
+
+    /// The user turned disguise mode on (persisted). A secret-gesture reveal is
+    /// temporary; the disguise is re-armed when the app leaves the foreground.
+    private(set) var disguiseEnabled = false
 
     // MARK: - Published State
 
@@ -77,6 +91,7 @@ final class DisguiseModeService: ObservableObject {
         case disguiseType       = "pref_dt"
         case notesSecretPhrase  = "pref_nsp"
         case sosTriggerEnabled  = "pref_ste"
+        case disguiseEnabled    = "pref_de"
     }
 
     // MARK: - Configuration (persisted in Keychain)
@@ -108,12 +123,17 @@ final class DisguiseModeService: ObservableObject {
     // MARK: - Keychain Persistence
 
     private func saveToKeychain() {
+        guard !isLoading else { return }
+        keychainWrite(disguiseEnabled ? "1" : "0", for: PrefKey.disguiseEnabled)
         keychainWrite(configuredDisguise.rawValue, for: PrefKey.disguiseType)
         keychainWrite(notesSecretPhrase,           for: PrefKey.notesSecretPhrase)
         keychainWrite(silentSOSOnReveal ? "1" : "0", for: PrefKey.sosTriggerEnabled)
     }
 
     private func loadFromKeychain() {
+        isLoading = true
+        defer { isLoading = false }
+        disguiseEnabled = keychainRead(PrefKey.disguiseEnabled) == "1"
         if let raw = keychainRead(PrefKey.disguiseType),
            let type = DisguiseType(rawValue: raw) {
             configuredDisguise = type
@@ -193,6 +213,13 @@ final class DisguiseModeService: ObservableObject {
             deactivateDisguise()
             return
         }
+        configuredDisguise = type
+        disguiseEnabled = true
+        saveToKeychain()
+        applyDisguise(type)
+    }
+
+    private func applyDisguise(_ type: DisguiseType) {
         currentDisguise = type
         isDisguiseActive = true
 
@@ -204,11 +231,27 @@ final class DisguiseModeService: ObservableObject {
         }
     }
 
-    /// Reveal the real app. Does NOT fire SOS — use silentSOSTrigger() for that.
+    /// Turn disguise mode off (settings). Does NOT fire SOS — use silentSOSTrigger() for that.
     @MainActor
     func deactivateDisguise() {
+        disguiseEnabled = false
+        saveToKeychain()
+        revealTemporarily()
+    }
+
+    /// Show the real app until it next leaves the foreground (secret gesture).
+    @MainActor
+    func revealTemporarily() {
         isDisguiseActive = false
         currentDisguise = .none
+    }
+
+    /// Called when the app resigns active: put the disguise back if it is enabled.
+    @MainActor
+    func rearmIfEnabled() {
+        if disguiseEnabled, configuredDisguise != .none, !isDisguiseActive {
+            applyDisguise(configuredDisguise)
+        }
     }
 
     // MARK: - Secret Gesture Handling
@@ -218,7 +261,8 @@ final class DisguiseModeService: ObservableObject {
     @MainActor
     func handleSecretGestureDetected() {
         // Reveal the app first — do this synchronously so the UI responds instantly.
-        deactivateDisguise()
+        // Temporary: disguise stays enabled and returns when the app is backgrounded.
+        revealTemporarily()
 
         // Optionally fire silent SOS — dispatched asynchronously so it doesn't
         // block the UI transition.

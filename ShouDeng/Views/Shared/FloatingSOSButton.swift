@@ -8,7 +8,10 @@ struct FloatingSOSButton: View {
     @State private var showConfirm = false
 
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
-    private let holdDuration: Double = 1.5
+    /// Same 3 s hold as the home-screen slider and the copy ("Hold 3s to send
+    /// SOS"); long enough to avoid pocket / accidental SOS.
+    static let holdDuration: Double = 3.0
+    private var holdDuration: Double { Self.holdDuration }
 
     var body: some View {
         ZStack {
@@ -66,8 +69,8 @@ struct FloatingSOSButton: View {
                 pulseScale = 1.15
             }
         }
-        .accessibilityLabel("SOS Emergency Button")
-        .accessibilityHint("Long press for 1.5 seconds to trigger emergency alert")
+        .accessibilityLabel(LanguageManager.shared.localized("sos.button.a11yLabel"))
+        .accessibilityHint(LanguageManager.shared.localized("sos.button.a11yHint"))
     }
 
     private func triggerSOS() {

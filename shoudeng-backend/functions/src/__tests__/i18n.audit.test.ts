@@ -342,12 +342,12 @@ describe("i18n — iOS Push Action Buttons (FINDING)", () => {
     "ShouDeng/Services/Push/PushService.swift"
   );
 
-  it("FINDING F-007: Action buttons are hardcoded in Chinese", () => {
+  it("FIXED F-007: notification action buttons are localized", () => {
     const source = fs.readFileSync(pushServicePath, "utf-8");
-    // These should be NSLocalizedString but are hardcoded
-    expect(source).toContain("我已接手");
-    expect(source).toContain("立即拨号");
-    expect(source).toContain("我知道了");
+    expect(source).not.toContain("我已接手");
+    expect(source).not.toContain("立即拨号");
+    expect(source).not.toContain("我知道了");
+    expect(source).toContain('localized("push.action.takenOver")');
   });
 });
 

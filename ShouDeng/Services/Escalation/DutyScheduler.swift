@@ -80,7 +80,11 @@ final class DutyScheduler {
     ) -> DayCoverage {
 
         let protectedTZ = protectedPerson.user.timeZone
-        let calendar = Calendar.current
+        // Weekday in the PROTECTED PERSON's zone (the guardian's own day may differ)
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = protectedTZ
+        let today = calendar.component(.weekday, from: date)
+        let yesterday = today == 1 ? 7 : today - 1
 
         var slots: [CoverageSlot] = (0..<24).map { CoverageSlot(hour: $0, coveredBy: []) }
 
@@ -90,22 +94,8 @@ final class DutyScheduler {
             // Option A: Guardian has explicit duty slots
             if let schedule = guardian.dutySchedule {
                 for dutySlot in schedule.slots {
-                    // Check if this duty slot applies to today
-                    let dayOfWeek = calendar.component(.weekday, from: date)
-                    if !dutySlot.dayOfWeek.isEmpty && !dutySlot.dayOfWeek.contains(dayOfWeek) {
-                        continue
-                    }
-
-                    let start = dutySlot.startHour
-                    let end = dutySlot.endHour
-
-                    let hours: [Int]
-                    if start < end {
-                        hours = Array(start..<end)
-                    } else {
-                        // Wraps midnight
-                        hours = Array(start..<24) + Array(0..<end)
-                    }
+                    let hours = Self.coveredHours(of: dutySlot, today: today, yesterday: yesterday)
+                    if hours.isEmpty { continue }
 
                     for hour in hours {
                         let guardianLocalHour = convertHour(
@@ -165,6 +155,27 @@ final class DutyScheduler {
             totalCoveredHours: totalCovered,
             totalGapHours: totalGaps
         )
+    }
+
+    /// Hours (0-23, protected person's local time) of `today` covered by a slot.
+    /// endHour may be 24 (= midnight). A slot with endHour < startHour is an
+    /// overnight shift: its evening part belongs to the day it is stored on and
+    /// its early-morning part to the following day — same rule as the server
+    /// (services/localTime.ts onDutyAt), so the coverage screen and the real
+    /// escalation agree.
+    static func coveredHours(of slot: DutySlot, today: Int, yesterday: Int) -> [Int] {
+        let start = max(0, min(23, slot.startHour))
+        let end = max(0, min(24, slot.endHour))
+        let everyDay = slot.dayOfWeek.isEmpty
+        let appliesToday = everyDay || slot.dayOfWeek.contains(today)
+        if start < end {
+            return appliesToday ? Array(start..<end) : []
+        }
+        if start == end { return [] }
+        var hours: [Int] = []
+        if everyDay || slot.dayOfWeek.contains(yesterday) { hours += Array(0..<end) }
+        if appliesToday { hours += Array(start..<24) }
+        return hours
     }
 
     // MARK: - Gap Detection

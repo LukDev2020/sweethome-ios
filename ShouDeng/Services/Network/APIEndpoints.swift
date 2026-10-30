@@ -42,6 +42,50 @@ struct SOSTriggerRequest: Codable {
     let latitude: Double?
     let longitude: Double?
     let batteryLevel: Double?
+    /// Device-local SOS id. Lets a resolve queued while offline map to exactly
+    /// this SOS on the server (never to a newer one).
+    var clientSOSId: String? = nil
+    var clientTriggeredAt: Date? = nil
+}
+
+/// Server read model of an SOS (GET /v1/sos/active, /v1/guardian/sos/active,
+/// activeSOS on the guardian dashboard). See ContractFixtures/guardian_sos_active.json.
+struct SOSStatus: Codable, Equatable {
+    let sosEventId: String
+    let protectedPersonId: String
+    let personName: String
+    let triggeredAt: Date?
+    let triggerMethod: String?
+    let latitude: Double?
+    let longitude: Double?
+    let batteryLevel: Double?
+    let escalationState: EscalationState
+    let nextStep: String?
+    let nextStepAt: Date?
+    let guardiansNotified: Int
+    let callsPlaced: Int
+    let shareLinkSent: Bool
+    let noGuardians: Bool
+    let emergencyContactsNotified: Int
+    let acknowledgedBy: String?
+    let acknowledgedByName: String?
+    let acknowledgedAt: Date?
+    let elapsedSeconds: Int
+}
+
+struct ActiveSOSResponse: Decodable {
+    let active: Bool
+    let sos: SOSStatus?
+}
+
+struct SOSAcknowledgeRequest: Codable {
+    let sosEventId: String
+}
+
+struct SOSAcknowledgeResponse: Codable {
+    let success: Bool
+    let acknowledgedBy: String
+    let alreadyAcknowledged: Bool
 }
 
 struct SOSTriggerResponse: Codable {
@@ -156,11 +200,12 @@ struct ProtectedPersonStatusResponse: Codable {
     var timeZoneId: String?
     var countryCode: String?
     var cityName: String?
+    var activeSOS: SOSStatus?
 
     private enum CodingKeys: String, CodingKey {
         case personId, displayName, status, latitude, longitude, locationTimestamp, locationAddress
         case locationAccuracy, batteryLevel, batteryState, lastCheckIn, lastPhoneActivity
-        case protectionLayers, timeZoneId, countryCode, cityName
+        case protectionLayers, timeZoneId, countryCode, cityName, activeSOS
     }
 
     /// Only `personId` is required. A malformed optional field (e.g. a timestamp the
@@ -183,6 +228,7 @@ struct ProtectedPersonStatusResponse: Codable {
         timeZoneId = c.lossy(String.self, .timeZoneId)
         countryCode = c.lossy(String.self, .countryCode)
         cityName = c.lossy(String.self, .cityName)
+        activeSOS = c.lossy(SOSStatus.self, .activeSOS)
     }
 }
 

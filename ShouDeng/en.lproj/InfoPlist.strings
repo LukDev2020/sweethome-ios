@@ -8,7 +8,7 @@ NSLocationAlwaysAndWhenInUseUsageDescription = "Lantern Care shares your locatio
 NSLocationWhenInUseUsageDescription = "Lantern Care uses your location to show where you are on the map and to send your position to chosen family members during an SOS. Used only after you accept in-app consent.";
 
 /* Motion / Accelerometer */
-NSMotionUsageDescription = "Lantern Care uses the accelerometer to detect possible falls. If a fall is detected, you have 60 seconds to dismiss the alert before your family members are notified. This feature activates only after you turn on fall detection in the app.";
+NSMotionUsageDescription = "Lantern Care uses motion sensors to detect a possible fall while the app is open. If a fall is detected, you have 60 seconds to dismiss the alert before your family is notified.";
 
 /* Face ID */
 NSFaceIDUsageDescription = "Lantern Care uses Face ID to verify your identity and protect access to your family safety data.";

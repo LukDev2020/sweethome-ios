@@ -34,6 +34,8 @@ final class PushService: NSObject {
     var onDeviceTokenReceived: ((String) -> Void)?
     var onSOSTakenOver: ((String) -> Void)?       // SOS event ID
     var onCheckInFromNotification: (() -> Void)?
+    /// Guardian opened an SOS push (tap or "call"): (protectedPersonId, sosEventId)
+    var onOpenSOSAlert: ((String, String?) -> Void)?
     var onSilentPushReceived: (([AnyHashable: Any]) -> Void)?
 
     // MARK: - Registration
@@ -42,9 +44,14 @@ final class PushService: NSObject {
         let center = UNUserNotificationCenter.current()
         center.delegate = self
 
-        // Request normal + critical alert permissions
-        // Critical Alerts require the com.apple.developer.usernotifications.critical-alerts entitlement
+        // Critical Alerts require Apple's com.apple.developer.usernotifications.critical-alerts
+        // entitlement. Until it is granted, SOS uses the time-sensitive level
+        // (entitlement shipped). Build with CRITICAL_ALERTS once Apple approves.
+        #if CRITICAL_ALERTS
         let options: UNAuthorizationOptions = [.alert, .sound, .badge, .criticalAlert, .providesAppNotificationSettings]
+        #else
+        let options: UNAuthorizationOptions = [.alert, .sound, .badge, .providesAppNotificationSettings]
+        #endif
 
         center.requestAuthorization(options: options) { [weak self] granted, error in
             if let error {
@@ -57,7 +64,7 @@ final class PushService: NSObject {
 
             if granted {
                 DispatchQueue.main.async {
-                    self?.registerNotificationCategories()
+                    Self.registerAllCategories()
                 }
             }
         }
@@ -65,16 +72,20 @@ final class PushService: NSObject {
 
     // MARK: - Notification Categories & Actions
 
-    private func registerNotificationCategories() {
+    /// Registers every app notification category in ONE call. Separate
+    /// get-then-set registrations from different services raced and overwrote each
+    /// other, so some action buttons silently disappeared.
+    static func registerAllCategories() {
+        let lm = LanguageManager.shared
         // SOS Alert — shown when a protected person triggers SOS
         let takenOverAction = UNNotificationAction(
             identifier: Self.actionTakenOver,
-            title: "我已接手",
-            options: [.foreground]
+            title: lm.localized("push.action.takenOver"),
+            options: []
         )
         let callAction = UNNotificationAction(
             identifier: Self.actionCall,
-            title: "立即拨号",
+            title: lm.localized("push.action.call"),
             options: [.foreground]
         )
 
@@ -88,7 +99,7 @@ final class PushService: NSObject {
         // Safety Warning — anomaly detected
         let dismissAction = UNNotificationAction(
             identifier: Self.actionDismiss,
-            title: "我知道了",
+            title: lm.localized("push.action.dismiss"),
             options: []
         )
 
@@ -102,7 +113,7 @@ final class PushService: NSObject {
         // Check-in Reminder
         let checkInAction = UNNotificationAction(
             identifier: Self.actionCheckIn,
-            title: "我很好，报个平安",
+            title: lm.localized("push.action.checkIn"),
             options: []
         )
 
@@ -121,11 +132,11 @@ final class PushService: NSObject {
             options: []
         )
 
-        let center = UNUserNotificationCenter.current()
-        let newCategories: Set<UNNotificationCategory> = [sosCategory, warningCategory, checkInCategory, handoffCategory]
-        center.getNotificationCategories { existing in
-            center.setNotificationCategories(existing.union(newCategories))
-        }
+        var all: Set<UNNotificationCategory> = [sosCategory, warningCategory, checkInCategory, handoffCategory]
+        all.formUnion(DeadManSwitchService.notificationCategories())
+        all.formUnion(SilentAlarmService.notificationCategories())
+        all.formUnion(FakeCallService.notificationCategories())
+        UNUserNotificationCenter.current().setNotificationCategories(all)
     }
 
     // MARK: - Schedule Local Notifications
@@ -203,12 +214,17 @@ final class PushService: NSObject {
             "type": "sos_alert"
         ]
 
+        #if CRITICAL_ALERTS
         // Critical alert — bypasses DND, plays at system volume
         content.sound = UNNotificationSound.criticalSoundNamed(
             UNNotificationSoundName("sos_alert.caf"),
             withAudioVolume: 1.0
         )
         content.interruptionLevel = .critical
+        #else
+        content.sound = UNNotificationSound(named: UNNotificationSoundName("sos_alert.caf"))
+        content.interruptionLevel = .timeSensitive
+        #endif
         content.relevanceScore = 1.0
 
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.5, repeats: false)
@@ -265,28 +281,70 @@ extension PushService: UNUserNotificationCenterDelegate {
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         let userInfo = response.notification.request.content.userInfo
+        PushService.route(
+            actionIdentifier: response.actionIdentifier,
+            categoryIdentifier: response.notification.request.content.categoryIdentifier,
+            userInfo: userInfo,
+            handlers: .init(
+                sosTakenOver: { [weak self] in self?.onSOSTakenOver?($0) },
+                checkIn: { [weak self] in self?.onCheckInFromNotification?() },
+                openSOSAlert: { [weak self] in self?.onOpenSOSAlert?($0, $1) },
+                deadManDismiss: { DeadManSwitchService.shared.cancel() },
+                deadManExtend: { DeadManSwitchService.shared.extend(by: .min5) },
+                silentAlarmConfirm: { Task { await SilentAlarmService.shared.confirmCheckIn() } }
+            )
+        )
 
-        switch response.actionIdentifier {
-        case Self.actionTakenOver:
-            if let sosId = userInfo["sos_id"] as? String {
-                onSOSTakenOver?(sosId)
-            }
+        completionHandler()
+    }
+}
 
-        case Self.actionCheckIn:
-            onCheckInFromNotification?()
+// MARK: - Notification response routing (pure, testable)
 
-        case Self.actionCall:
-            // Handle in the app layer — need to know which person to call
-            break
+extension PushService {
+    struct ResponseHandlers {
+        var sosTakenOver: (String) -> Void
+        var checkIn: () -> Void
+        var openSOSAlert: (String, String?) -> Void
+        var deadManDismiss: () -> Void
+        var deadManExtend: () -> Void
+        var silentAlarmConfirm: () -> Void
+    }
 
+    /// Routes a notification response to the right service. Previously only the
+    /// guardian actions were handled — dead-man "I'm safe" / "+5 min" and the
+    /// silent-alarm "I'm safe" went nowhere, so the server escalated false alarms.
+    static func route(
+        actionIdentifier: String,
+        categoryIdentifier: String,
+        userInfo: [AnyHashable: Any],
+        handlers: ResponseHandlers
+    ) {
+        let sosId = (userInfo["sos_id"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+        let personId = (userInfo["person_id"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+        let action = userInfo["action"] as? String ?? userInfo["type"] as? String
+
+        switch actionIdentifier {
+        case actionTakenOver:
+            if let sosId { handlers.sosTakenOver(sosId) }
+        case actionCheckIn:
+            handlers.checkIn()
+        case actionCall:
+            // Open the alert screen; it has the call buttons for this person
+            if let personId { handlers.openSOSAlert(personId, sosId) }
+        case "DMS_DISMISS":
+            handlers.deadManDismiss()
+        case "DMS_EXTEND_5":
+            handlers.deadManExtend()
+        case SilentAlarmService.confirmActionId:
+            handlers.silentAlarmConfirm()
         case UNNotificationDefaultActionIdentifier:
-            // User tapped the notification body — open the relevant screen
-            break
-
+            if (action == "sos_alert" || action == "sos_acknowledged" || categoryIdentifier == categorySOSAlert),
+               let personId {
+                handlers.openSOSAlert(personId, sosId)
+            }
         default:
             break
         }
-
-        completionHandler()
     }
 }

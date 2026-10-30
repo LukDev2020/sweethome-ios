@@ -126,8 +126,8 @@ final class SilentAlarmService: ObservableObject {
 
         // Show local notification
         let content = UNMutableNotificationContent()
-        content.title = "安全确认"
-        content.body = "请确认您当前安全。点击确认或打开应用。"
+        content.title = LanguageManager.shared.localized("silent.alarm.notif.title")
+        content.body = LanguageManager.shared.localized("silent.alarm.notif.body")
         content.sound = .default
         content.categoryIdentifier = "SILENT_ALARM_CHECKIN"
 
@@ -144,36 +144,31 @@ final class SilentAlarmService: ObservableObject {
         consecutiveMisses = 0
 
         guard let apiClient else { return }
-
-        do {
-            let _: SuccessResponse = try await apiClient.post(
-                "/v1/silent-alarm/confirm",
-                body: EmptyBody()
-            )
-        } catch {
-            #if DEBUG
-            print("[SilentAlarm] confirm error: \(error)")
-            #endif
-        }
+        // Queued: a confirmation tapped while offline must still reach the server,
+        // otherwise it escalates a false alarm to the guardians.
+        apiClient.postQueued("/v1/silent-alarm/confirm", body: EmptyBody())
     }
 
     // MARK: - Notification Category Registration
 
-    static func registerNotificationCategory() {
+    static let confirmActionId = "SILENT_ALARM_CONFIRM"
+
+    static func notificationCategories() -> Set<UNNotificationCategory> {
         let confirmAction = UNNotificationAction(
-            identifier: "SILENT_ALARM_CONFIRM",
-            title: "我安全",
-            options: [.foreground]
+            identifier: confirmActionId,
+            title: LanguageManager.shared.localized("silent.alarm.action.safe"),
+            options: []
         )
-        let category = UNNotificationCategory(
+        return [UNNotificationCategory(
             identifier: "SILENT_ALARM_CHECKIN",
             actions: [confirmAction],
             intentIdentifiers: [],
             options: [.customDismissAction]
-        )
-        let center = UNUserNotificationCenter.current()
-        center.getNotificationCategories { existing in
-            center.setNotificationCategories(existing.union([category]))
-        }
+        )]
+    }
+
+    /// Kept for call sites; all categories are registered together by PushService.
+    static func registerNotificationCategory() {
+        PushService.registerAllCategories()
     }
 }

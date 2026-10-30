@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import Combine
 import FirebaseCore
 import FirebaseAuth
@@ -58,9 +59,8 @@ final class AuthManager: ObservableObject {
     // MARK: - Session Restore
 
     private func restoreSession() {
-        if let token = keychain.read(.accessToken),
-           let userId = keychain.read(.userId),
-           !token.isEmpty {
+        switch (keychain.readResult(.accessToken), keychain.readResult(.userId)) {
+        case (.value(let token), .value(let userId)) where !token.isEmpty:
             // Reject dev tokens left over from debug builds
             if token.hasPrefix("dev_token_") {
                 logout()
@@ -69,8 +69,32 @@ final class AuthManager: ObservableObject {
             api.setAccessToken(token)
             state = .loggedIn(userId: userId)
             UserDefaults.standard.set(userId, forKey: "currentUserId")
-        } else {
+        case (.unavailable, _), (_, .unavailable):
+            // Keychain locked (background launch before first unlock). Stay
+            // .unknown — NOT .loggedOut, which would wipe local data — and retry
+            // once protected data becomes available.
+            state = .unknown
+            waitForProtectedData()
+        default:
             state = .loggedOut
+        }
+    }
+
+    private var protectedDataObserver: NSObjectProtocol?
+
+    private func waitForProtectedData() {
+        guard protectedDataObserver == nil else { return }
+        protectedDataObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.protectedDataDidBecomeAvailableNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self else { return }
+            if let observer = self.protectedDataObserver {
+                NotificationCenter.default.removeObserver(observer)
+            }
+            self.protectedDataObserver = nil
+            self.restoreSession()
         }
     }
 
@@ -161,10 +185,10 @@ final class AuthManager: ObservableObject {
 
         do {
             guard let refreshToken = keychain.read(.refreshToken) else {
-                await MainActor.run { state = .loggedOut }
                 throw APIError.unauthorized
             }
-            let response: AuthResponse = try await api.post(
+            // No 401→refresh on the refresh call itself (it would await itself)
+            let response: AuthResponse = try await api.postWithoutRefresh(
                 "/v1/auth/refresh",
                 body: RefreshRequest(refreshToken: refreshToken)
             )
@@ -179,6 +203,17 @@ final class AuthManager: ObservableObject {
             refreshContinuations = []
             waiters.forEach { $0.resume(throwing: error) }
             throw error
+        }
+    }
+
+    /// Only a definitive answer from /refresh ends the session. Timeouts, 5xx and
+    /// 429 must not log the user out (and discard queued SOS) in the middle of an
+    /// emergency.
+    static func refreshFailureIsDefinitive(_ error: Error) -> Bool {
+        guard let api = error as? APIError else { return false }
+        switch api {
+        case .unauthorized, .forbidden: return true
+        default: return false
         }
     }
 

@@ -213,11 +213,7 @@ struct EmergencyTextCardView: View {
     }
 
     private func loadLocalMedicalInfo() -> MedicalCardData? {
-        // Load from UserDefaults for offline access
-        guard let data = UserDefaults.standard.data(forKey: "medical_card_cache"),
-              let card = try? JSONDecoder().decode(MedicalCardData.self, from: data) else {
-            return nil
-        }
-        return card
+        // On-device copy for offline access
+        MedicalCardCache.load()
     }
 }

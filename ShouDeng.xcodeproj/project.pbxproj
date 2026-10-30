@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		600B1357DC7DAF7DA3F3810E /* SOSDeliveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A075B31B4AC087B62A5FDC48 /* SOSDeliveryTests.swift */; };
+		B85E897C516D23FA3207CAE3 /* StubURLProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = D221832EF096E7D1E27553C4 /* StubURLProtocol.swift */; };
+		8FF403BD0A5631F85C44A298 /* sos_alert.caf in Resources */ = {isa = PBXBuildFile; fileRef = AECB90E222B94FFC29DE8CB8 /* sos_alert.caf */; };
+		B6F3D8CDCB5E6CE9C9A0A5D1 /* MedicalCardCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C1A3C9F27C325C2D52BDF9F /* MedicalCardCache.swift */; };
+		02FDCD5227ECBAF427E9684C /* ConnectivityMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85E5EF8C5CE00C0809028032 /* ConnectivityMonitor.swift */; };
 		CC43ECAB20D34828CF0CC677 /* GlobeLabelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A3FBDFE830D15DFC6912B40 /* GlobeLabelTests.swift */; };
 		B30EB6602DA702F7A6D20086 /* LocalizationCompletenessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02875D1C7B137931AD752965 /* LocalizationCompletenessTests.swift */; };
 		D6777B81C2D1BCB346B6C2F3 /* ContractFixtureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAEC4525DF40C4476C125A50 /* ContractFixtureTests.swift */; };
@@ -230,6 +235,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A075B31B4AC087B62A5FDC48 /* SOSDeliveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SOSDeliveryTests.swift; sourceTree = "<group>"; };
+		D221832EF096E7D1E27553C4 /* StubURLProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubURLProtocol.swift; sourceTree = "<group>"; };
+		AECB90E222B94FFC29DE8CB8 /* sos_alert.caf */ = {isa = PBXFileReference; lastKnownFileType = audio.caf; path = sos_alert.caf; sourceTree = "<group>"; };
+		4C1A3C9F27C325C2D52BDF9F /* MedicalCardCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicalCardCache.swift; sourceTree = "<group>"; };
+		85E5EF8C5CE00C0809028032 /* ConnectivityMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectivityMonitor.swift; sourceTree = "<group>"; };
 		1A3FBDFE830D15DFC6912B40 /* GlobeLabelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobeLabelTests.swift; sourceTree = "<group>"; };
 		02875D1C7B137931AD752965 /* LocalizationCompletenessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizationCompletenessTests.swift; sourceTree = "<group>"; };
 		DAEC4525DF40C4476C125A50 /* ContractFixtureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContractFixtureTests.swift; sourceTree = "<group>"; };
@@ -703,6 +713,7 @@
 			isa = PBXGroup;
 			children = (
 				F37B8CD19FA502A941DA6A92 /* LocalStore.swift */,
+				4C1A3C9F27C325C2D52BDF9F /* MedicalCardCache.swift */,
 			);
 			path = Storage;
 			sourceTree = "<group>";
@@ -753,6 +764,7 @@
 				7BC3B8E4A971D9B9EDE21F15 /* APIEndpoints.swift */,
 				574B86ACC989B40A58DC73F7 /* HeartbeatService.swift */,
 				4734D2EF45FF85A775F463A4 /* OfflineQueue.swift */,
+				85E5EF8C5CE00C0809028032 /* ConnectivityMonitor.swift */,
 			);
 			path = Network;
 			sourceTree = "<group>";
@@ -790,6 +802,8 @@
 				19BF856E4785D6ABD573F691 /* AdaptiveLocationManagerTests.swift */,
 				C5D6E7F8A9B0C1D2E3F4A5B6 /* ReactiveLocationServiceTests.swift */,
 				B273093A701FBEED8E657124 /* APIClientTests.swift */,
+				A075B31B4AC087B62A5FDC48 /* SOSDeliveryTests.swift */,
+				D221832EF096E7D1E27553C4 /* StubURLProtocol.swift */,
 				1A3FBDFE830D15DFC6912B40 /* GlobeLabelTests.swift */,
 				02875D1C7B137931AD752965 /* LocalizationCompletenessTests.swift */,
 				DAEC4525DF40C4476C125A50 /* ContractFixtureTests.swift */,
@@ -838,6 +852,7 @@
 				EC9967501D760330EF89D308 /* GoogleService-Info.plist */,
 				CFE03FD74FE0AD57E1A8EE88 /* Info.plist */,
 				E14F7CAC5E00568391DDDD13 /* PrivacyInfo.xcprivacy */,
+				AECB90E222B94FFC29DE8CB8 /* sos_alert.caf */,
 				BFCD3BD31A5FBC796E2E2A49 /* ShouDeng.entitlements */,
 				F85AA194543681ADBA601D82 /* App */,
 				8D25FF997CAAA4597EE8BCF0 /* Core */,
@@ -1129,6 +1144,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8FF403BD0A5631F85C44A298 /* sos_alert.caf in Resources */,
 				0505E7358600028AB24F69D6 /* Assets.xcassets in Resources */,
 				2D5B81A7B06DD6D1E209D431 /* GoogleService-Info.plist in Resources */,
 				7D9761B4731755AF8D1F6F8C /* InfoPlist.strings in Resources */,
@@ -1144,6 +1160,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B6F3D8CDCB5E6CE9C9A0A5D1 /* MedicalCardCache.swift in Sources */,
+				02FDCD5227ECBAF427E9684C /* ConnectivityMonitor.swift in Sources */,
 				DD4C82603D4B0B8218838586 /* AppLifecycleRouter.swift in Sources */,
 				27B0B7CDEE2B49B18E8FDE32 /* FloatingSOSButton.swift in Sources */,
 				1D0F0A554877406A9B2D7355 /* BatteryIndicatorView.swift in Sources */,
@@ -1286,6 +1304,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				600B1357DC7DAF7DA3F3810E /* SOSDeliveryTests.swift in Sources */,
+				B85E897C516D23FA3207CAE3 /* StubURLProtocol.swift in Sources */,
 				CC43ECAB20D34828CF0CC677 /* GlobeLabelTests.swift in Sources */,
 				B30EB6602DA702F7A6D20086 /* LocalizationCompletenessTests.swift in Sources */,
 				D6777B81C2D1BCB346B6C2F3 /* ContractFixtureTests.swift in Sources */,

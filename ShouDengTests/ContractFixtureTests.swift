@@ -84,4 +84,31 @@ final class ContractFixtureTests: XCTestCase {
         XCTAssertEqual(response.entries.map(\.id), ["1"])
         XCTAssertEqual(response.entries.first?.type, .other)
     }
+
+    // MARK: - W2 SOS + guardians
+
+    func testGuardianDashboardCarriesActiveSOS() throws {
+        let list = try decoder.decode([ProtectedPersonStatusResponse].self, from: fixture("guardian_protected_persons_sos.json"))
+        let mom = try XCTUnwrap(list.first { $0.personId == "mom" })
+        XCTAssertEqual(mom.status, .alert)
+        XCTAssertEqual(mom.activeSOS?.sosEventId, "s1")
+        XCTAssertEqual(mom.activeSOS?.escalationState, .hop2_allNotified)
+        XCTAssertEqual(mom.activeSOS?.guardiansNotified, 2)
+    }
+
+    func testGuardianActiveSOSDetail() throws {
+        let r = try decoder.decode(ActiveSOSResponse.self, from: fixture("guardian_sos_active.json"))
+        XCTAssertTrue(r.active)
+        XCTAssertEqual(r.sos?.personName, "Mom")
+        XCTAssertEqual(r.sos?.batteryLevel, 0.23)
+        XCTAssertNotNil(r.sos?.triggeredAt)
+        XCTAssertNil(r.sos?.acknowledgedBy)
+    }
+
+    func testProtectedGuardiansListDecodes() throws {
+        let guardians = try decoder.decode([Guardian].self, from: fixture("protected_guardians.json"))
+        XCTAssertEqual(guardians.map(\.id), ["kevin", "lucy"])
+        XCTAssertEqual(guardians[0].user.timeZone.identifier, "Asia/Shanghai")
+        XCTAssertEqual(guardians[0].dutySchedule?.slots.first?.dayOfWeek, [2])
+    }
 }

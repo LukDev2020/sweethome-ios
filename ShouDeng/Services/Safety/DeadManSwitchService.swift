@@ -126,6 +126,14 @@ final class DeadManSwitchService: ObservableObject {
     private weak var apiClient: APIClient?
     private weak var locationManager: AdaptiveLocationManager?
 
+    /// Raises the SOS through the app's normal path (AppCoordinator.triggerSOS) so
+    /// it gets the same delivery, UI and resolve handling as a button press.
+    var onTriggerSOS: ((SOSTriggerMethod) -> Void)?
+
+    /// Wall-clock end of the running countdown. Remaining time is always derived
+    /// from this — never from counting ticks, which stop while suspended.
+    private var deadline: Date?
+
     func configure(apiClient: APIClient, locationManager: AdaptiveLocationManager) {
         self.apiClient = apiClient
         self.locationManager = locationManager
@@ -161,6 +169,7 @@ final class DeadManSwitchService: ObservableObject {
 
         resetNotificationFlags()
 
+        deadline = now.addingTimeInterval(TimeInterval(seconds))
         persist(startTime: now, totalDuration: seconds, isPaused: false, pausedAt: nil, remainingAtPause: nil)
         scheduleLocalNotifications(from: now, duration: seconds)
         submitBGTask(fireAt: now.addingTimeInterval(TimeInterval(seconds)))
@@ -180,7 +189,9 @@ final class DeadManSwitchService: ObservableObject {
         stopDispatchTimer()
 
         let now = Date()
-        let remaining = remainingSeconds
+        let remaining = deadline.map { max(0, Int(ceil($0.timeIntervalSince(now)))) } ?? remainingSeconds
+        remainingSeconds = remaining
+        deadline = nil
 
         persistUpdate(isPaused: true, pausedAt: now, remainingAtPause: remaining)
         cancelScheduledLocalNotifications()
@@ -201,6 +212,7 @@ final class DeadManSwitchService: ObservableObject {
         //   now + remaining = startTime + totalDuration
         //   => startTime = now - (totalDuration - remaining)
         let newStartTime = now.addingTimeInterval(-TimeInterval(totalSeconds - remaining))
+        deadline = now.addingTimeInterval(TimeInterval(remaining))
 
         persist(startTime: newStartTime, totalDuration: totalSeconds, isPaused: false, pausedAt: nil, remainingAtPause: nil)
         resetNotificationFlags()
@@ -219,8 +231,14 @@ final class DeadManSwitchService: ObservableObject {
     func extend(by increment: Extension) {
         guard isActive else { return }
         let added = increment.rawValue
+        if let deadline, !isPaused {
+            remainingSeconds = max(0, Int(ceil(deadline.timeIntervalSinceNow)))
+        }
         totalSeconds    += added
         remainingSeconds = min(remainingSeconds + added, totalSeconds)
+        if !isPaused {
+            deadline = Date().addingTimeInterval(TimeInterval(remainingSeconds))
+        }
 
         if isPaused {
             persistUpdate(isPaused: true, pausedAt: nil, remainingAtPause: remainingSeconds)
@@ -286,6 +304,7 @@ final class DeadManSwitchService: ObservableObject {
             } else {
                 remainingSeconds = remaining
                 isActive         = true
+                deadline         = startTime.addingTimeInterval(TimeInterval(savedTotal))
                 resetNotificationFlags()
                 // Reschedule notifications relative to remaining, not total.
                 scheduleLocalNotifications(from: Date(), duration: remaining)
@@ -332,9 +351,9 @@ final class DeadManSwitchService: ObservableObject {
     }
 
     private func tick() {
-        guard isActive, !isPaused else { return }
+        guard isActive, !isPaused, let deadline else { return }
 
-        let newRemaining = remainingSeconds - 1
+        let newRemaining = Int(ceil(deadline.timeIntervalSinceNow))
 
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
@@ -344,9 +363,10 @@ final class DeadManSwitchService: ObservableObject {
 
         if newRemaining <= 0 {
             DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
+                guard let self, self.isActive else { return }
                 self.isActive = false
                 self.isPaused = false
+                self.deadline = nil
                 self.clearPersistence()
                 self.stopDispatchTimer()
                 self.endBackgroundTask()
@@ -436,6 +456,7 @@ final class DeadManSwitchService: ObservableObject {
 
         isActive         = false
         isPaused         = false
+        deadline         = nil
         remainingSeconds = 0
         totalSeconds     = 0
         criticalVibrationActive = false
@@ -446,6 +467,10 @@ final class DeadManSwitchService: ObservableObject {
     // MARK: - Private: SOS Trigger
 
     private func fireSOS() {
+        if let onTriggerSOS {
+            DispatchQueue.main.async { onTriggerSOS(.deadManSwitch) }
+            return
+        }
         // Grab location snapshot before going async.
         let location = locationManager?.lastReportedLocation
         let lat = location?.coordinate.latitude
@@ -482,7 +507,11 @@ final class DeadManSwitchService: ObservableObject {
     /// Falls back to an empty string — the server will reject gracefully if the token
     /// carries a different identity, but this prevents a silent no-op.
     private func resolveProtectedPersonId() -> String {
-        UserDefaults.standard.string(forKey: "current_user_id") ?? ""
+        // Written by AuthManager on login (key "currentUserId" — the old
+        // "current_user_id" key was never written, so the SOS went out with "").
+        UserDefaults.standard.string(forKey: "currentUserId")
+            ?? KeychainHelper.shared.read(.userId)
+            ?? ""
     }
 
     // MARK: - Private: Local Notifications
@@ -666,7 +695,8 @@ final class DeadManSwitchService: ObservableObject {
         let url = timerStateURL
         try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         if let data = try? JSONEncoder().encode(state) {
-            try? data.write(to: url, options: [.completeFileProtection])
+            // Readable while locked: the BG task that fires the SOS runs with the screen locked
+            try? data.write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
             var resourceURL = url
             var values = URLResourceValues()
             values.isExcludedFromBackup = true
@@ -687,6 +717,10 @@ final class DeadManSwitchService: ObservableObject {
     /// Register UNNotificationCategory values for actionable warnings.
     /// Call once from AppDelegate or AppCoordinator setup.
     static func registerNotificationCategories() {
+        PushService.registerAllCategories()
+    }
+
+    static func notificationCategories() -> Set<UNNotificationCategory> {
         let dismissAction = UNNotificationAction(
             identifier: "DMS_DISMISS",
             title: NSLocalizedString("dms.action.dismiss", value: "I'm Safe — Cancel", comment: ""),
@@ -711,10 +745,7 @@ final class DeadManSwitchService: ObservableObject {
             options: []
         )
 
-        let center = UNUserNotificationCenter.current()
-        center.getNotificationCategories { existing in
-            center.setNotificationCategories(existing.union([warningCategory, expiredCategory]))
-        }
+        return [warningCategory, expiredCategory]
     }
 
     // MARK: - Notification Response Handling

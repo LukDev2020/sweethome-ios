@@ -474,40 +474,12 @@ struct MedicalCardView: View {
         withAnimation(.easeInOut(duration: 0.3)) { saveResult = nil }
     }
 
-    private static let cacheEncoder = JSONEncoder()
-    private static let cacheDecoder = JSONDecoder()
-
-    private static var medicalCacheURL: URL {
-        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("medical_card_cache.enc")
-    }
-
     private func cacheMedicalCard(_ data: MedicalCardData) {
-        guard let encoded = try? Self.cacheEncoder.encode(data) else { return }
-        let url = Self.medicalCacheURL
-        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try? encoded.write(to: url, options: [.completeFileProtection])
-        // Exclude from backups to prevent PII leakage
-        var resourceURL = url
-        var values = URLResourceValues()
-        values.isExcludedFromBackup = true
-        try? resourceURL.setResourceValues(values)
-        // Remove legacy UserDefaults cache
-        UserDefaults.standard.removeObject(forKey: "medical_card_cache")
+        MedicalCardCache.save(data)
     }
 
     private func loadCachedMedicalCard() -> MedicalCardData? {
-        // Migrate from legacy UserDefaults if present
-        if let legacyData = UserDefaults.standard.data(forKey: "medical_card_cache"),
-           let card = try? Self.cacheDecoder.decode(MedicalCardData.self, from: legacyData) {
-            cacheMedicalCard(card) // migrates to encrypted file
-            return card
-        }
-        guard let data = try? Data(contentsOf: Self.medicalCacheURL),
-              let card = try? Self.cacheDecoder.decode(MedicalCardData.self, from: data) else {
-            return nil
-        }
-        return card
+        MedicalCardCache.load()
     }
 }
 

@@ -97,8 +97,8 @@
 "settings.delete.account" = "Delete Account";
 
 /* SOS Alert */
-"sos.no.guardian.title" = "SOS Cannot Be Delivered";
-"sos.no.guardian.message" = "You haven't added any guardians. SOS signals won't be received. Invite a family member first.";
+"sos.no.guardian.title" = "No guardians yet";
+"sos.no.guardian.message" = "Nobody in the app will be alerted. We'll text your emergency contacts if you've added any — in danger, call local emergency services.";
 "sos.send.anyway" = "Send Anyway";
 "sos.invite.first" = "Invite Guardian First";
 "sos.active" = "SOS Active";
@@ -1233,3 +1233,43 @@ your guardians will be automatically notified.";
 /* Globe accessibility (W1) */
 "globe.a11y.empty" = "Family globe, no members yet";
 "globe.a11y.members" = "Family globe showing %d people: %@";
+
+/* Notifications & SOS state (W2) */
+"push.action.takenOver" = "I've got it";
+"push.action.call" = "Call now";
+"push.action.dismiss" = "Got it";
+"push.action.checkIn" = "I'm fine — check in";
+"silent.alarm.notif.title" = "Safety check";
+"silent.alarm.notif.body" = "Please confirm you're safe. Tap \"I'm safe\" or open the app.";
+"silent.alarm.action.safe" = "I'm safe";
+
+/* Widget actions (W2-j) */
+"widget.arrived.note" = "Arrived (from widget)";
+
+/* SOS live status (W2-j) */
+"sos.status.sending" = "Sending…";
+"sos.status.queued" = "No connection — saved on this phone, sending as soon as you're back online";
+"sos.status.guardiansNotified" = "%d family members alerted";
+"sos.status.linkTitle" = "Text with your location";
+"sos.status.linkNext" = "Sent if nobody responds within 2 minutes";
+"sos.status.linkSent" = "Location link sent to your family";
+"sos.status.callsTitle" = "Phone calls until someone responds";
+"sos.status.callsNext" = "Starts if nobody responds within 90 seconds";
+"sos.status.calling" = "%d calls placed — still calling";
+"sos.status.callsStopped" = "Someone responded — automatic calls stopped";
+"sos.status.acknowledged" = "%@ is handling it";
+"sos.status.noGuardians" = "No guardians to notify — call %@";
+"sos.status.contactsTexted" = "%d emergency contacts were texted";
+"sos.status.callEmergency" = "Call %@";
+
+/* SOS button (W2-b) */
+"sos.button.a11yLabel" = "SOS emergency button";
+"sos.button.a11yHint" = "Touch and hold for 3 seconds to alert your family";
+
+/* Guardian SOS response (W2-d/e) */
+"guardian.alert.noActiveSOS" = "No active SOS right now.";
+"guardian.alert.youAreHandling" = "You're handling it — the others know and automatic calls stopped";
+"guardian.alert.acknowledged" = "Handled";
+"guardian.alert.ackHint" = "Tells the rest of the family you're on it and stops the automatic calls";
+"guardian.alert.markSafe" = "%@ is safe — close SOS";
+"guardian.alert.sosLocation" = "Location at SOS";

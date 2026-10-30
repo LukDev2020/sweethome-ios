@@ -7,6 +7,7 @@ import SwiftUI
 // On Duo inner screen, switches to vertical rail layout.
 
 struct ProtectedTabView: View {
+    @EnvironmentObject var coordinator: AppCoordinator
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     @AppStorage("protected_selected_tab") private var selectedTab = 0
     @ObservedObject private var lang = LanguageManager.shared
@@ -29,5 +30,11 @@ struct ProtectedTabView: View {
             // Persistent SOS button — always accessible, never covers content
             bottomAccessory: AnyView(FloatingSOSButton())
         )
+        // One place presents the SOS screen for every trigger path (floating
+        // button, home slider, widget, lock screen, dead-man switch…)
+        .sheet(isPresented: $coordinator.isSOSScreenPresented) {
+            SOSActiveView()
+                .environmentObject(coordinator)
+        }
     }
 }

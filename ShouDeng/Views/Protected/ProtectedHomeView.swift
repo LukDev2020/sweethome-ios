@@ -16,7 +16,6 @@ struct ProtectedHomeView: View {
     @ObservedObject private var lang = LanguageManager.shared
     @State private var isSOSPressed = false
     @State private var sosProgress: Double = 0
-    @State private var showSOSActive = false
     @State private var sosDisclosureTrigger = false
     @State private var showInviteGuardian = false
     @State private var mapFocusId: String?
@@ -91,13 +90,9 @@ struct ProtectedHomeView: View {
             .navigationDestination(for: String.self) { guardianId in
                 ProtectedGuardianDetailView(guardianId: guardianId)
             }
-            .sheet(isPresented: $showSOSActive) {
-                SOSActiveView()
-            }
             .alert(lang.localized("sos.no.guardian.title"), isPresented: $showNoGuardianSOSWarning) {
                 Button(lang.localized("sos.send.anyway")) {
                     coordinator.triggerSOS(method: .longPress)
-                    showSOSActive = true
                 }
                 Button(lang.localized("sos.invite.first"), role: .cancel) {
                     showInviteGuardian = true
@@ -919,7 +914,6 @@ struct ProtectedHomeView: View {
                         showNoGuardianSOSWarning = true
                     } else {
                         coordinator.triggerSOS(method: .longPress)
-                        showSOSActive = true
                     }
                 }
         )
@@ -1292,7 +1286,7 @@ struct SOSActiveView: View {
                     .background(alert)
 
                 // Network failure warning
-                if coordinator.sosDeliveryFailed {
+                if coordinator.sosDeliveryFailed && coordinator.ownSOSStatus == nil {
                     HStack(spacing: 6) {
                         Image(systemName: "wifi.slash")
                             .font(.scaled(size: 12))
@@ -1313,7 +1307,8 @@ struct SOSActiveView: View {
                                 .fill(alert)
                                 .frame(width: 142, height: 142)
                             VStack(spacing: 2) {
-                                Text(langManager.localized("protected.home.sosSent"))
+                                // "Sent" only once the server has it — never before
+                                Text(langManager.localized(coordinator.ownSOSStatus == nil ? "sos.status.sending" : "protected.home.sosSent"))
                                     .font(.scaled(size: 26, weight: .black, design: .serif))
                                     .foregroundStyle(.white)
                                 Text(sosTimeLocation)
@@ -1323,7 +1318,16 @@ struct SOSActiveView: View {
                         }
                         .padding(.top, 16)
 
-                        // Escalation steps
+                        // Nobody to escalate to: say so, and point at the local emergency number
+                        if coordinator.ownSOSStatus?.noGuardians == true {
+                            noGuardiansPanel
+                        }
+
+                        if let ack = coordinator.ownSOSStatus, ack.acknowledgedBy != nil {
+                            acknowledgedBanner(ack)
+                        }
+
+                        // Escalation steps (real server state)
                         escalationSteps
 
                         // Auto-enabled during SOS
@@ -1345,7 +1349,14 @@ struct SOSActiveView: View {
             }
             .navigationTitle(langManager.localized("protected.home.sosNavTitle"))
             .navigationBarTitleDisplayMode(.inline)
-            .onReceive(timer) { tick = $0 }
+            .onReceive(timer) { now in
+                tick = now
+                // Poll the server's view of my SOS every 5 s while this is open
+                if Int(now.timeIntervalSince1970) % 5 == 0 {
+                    Task { await coordinator.refreshOwnSOSStatus() }
+                }
+            }
+            .task { await coordinator.refreshOwnSOSStatus() }
             .alert(langManager.localized("protected.home.claimPrompt"), isPresented: $showClaimMaterialsPrompt) {
                 Button(langManager.localized("protected.home.claimOrganize")) { showClaimMaterials = true }
                 Button(langManager.localized("protected.home.claimNo"), role: .cancel) { dismiss() }
@@ -1371,26 +1382,75 @@ struct SOSActiveView: View {
         return formatter.string(from: Date())
     }
 
+    private var noGuardiansPanel: some View {
+        let number = coordinator.localEmergencyNumber
+        let contacts = coordinator.ownSOSStatus?.emergencyContactsNotified ?? 0
+        return VStack(alignment: .leading, spacing: 8) {
+            Text(String(format: langManager.localized("sos.status.noGuardians"), number))
+                .font(.scaled(size: 14, weight: .semibold))
+                .foregroundStyle(alert)
+            if contacts > 0 {
+                Text(String(format: langManager.localized("sos.status.contactsTexted"), contacts))
+                    .font(.scaled(size: 12))
+                    .foregroundStyle(.secondary)
+            }
+            if let url = URL(string: "tel://\(number)") {
+                Link(destination: url) {
+                    Label(String(format: langManager.localized("sos.status.callEmergency"), number), systemImage: "phone.fill")
+                        .font(.scaled(size: 14, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(RoundedRectangle(cornerRadius: 10).fill(alert))
+                }
+            }
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 12).fill(alert.opacity(0.08)))
+    }
+
+    private func acknowledgedBanner(_ sos: SOSStatus) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "person.fill.checkmark")
+            Text(String(format: langManager.localized("sos.status.acknowledged"), sos.acknowledgedByName ?? ""))
+                .font(.scaled(size: 13, weight: .medium))
+            Spacer()
+        }
+        .foregroundStyle(.white)
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 12).fill(safe))
+    }
+
     private var escalationSteps: some View {
-        let state = coordinator.activeSOSEvent?.escalationState ?? .initiated
-        let guardianNames = escalationGuardianNames
+        let status = coordinator.ownSOSStatus
+        let acknowledged = status?.acknowledgedBy != nil
 
-        // Determine step states based on escalation
-        let hop1Done: Bool = [.hop1_acknowledged, .hop2_allNotified, .hop3_voiceCalling, .hop3_exhausted, .frozen, .resolved].contains(state)
-        let hop1Started: Bool = state == .hop1_notified || hop1Done
-        let hop2Done: Bool = [.hop3_voiceCalling, .hop3_exhausted, .frozen, .resolved].contains(state)
-        let hop2Started: Bool = state == .hop2_allNotified || hop2Done
-        let hop3Started: Bool = [.hop3_voiceCalling, .hop3_exhausted].contains(state)
-
-        let step1State: StepState = hop1Done ? .done : (hop1Started ? .live : .live)
-        let step2State: StepState = hop2Done ? .done : (hop2Started ? .live : .waiting)
-        let step3State: StepState = hop3Started ? .live : .waiting
+        // Each step reflects what the server actually did — not a timer
+        let notified = status?.guardiansNotified ?? 0
+        let step1State: StepState = notified > 0 ? .done : .live
+        let step2State: StepState = status?.shareLinkSent == true ? .done : (notified > 0 ? .live : .waiting)
+        let calls = status?.callsPlaced ?? 0
+        let step3State: StepState = acknowledged ? .done : (calls > 0 ? .live : .waiting)
 
         let elapsed = coordinator.activeSOSEvent.map {
             Int(tick.timeIntervalSince($0.triggeredAt))
         } ?? 0
         let mins = elapsed / 60
         let secs = elapsed % 60
+
+        let step1Detail: String = {
+            if status == nil {
+                return langManager.localized(coordinator.sosDeliveryFailed ? "sos.status.queued" : "protected.home.sosStep1Pending")
+            }
+            return notified > 0
+                ? String(format: langManager.localized("sos.status.guardiansNotified"), notified)
+                : langManager.localized("protected.home.sosStep1Pending")
+        }()
+        let step3Detail: String = {
+            if acknowledged { return langManager.localized("sos.status.callsStopped") }
+            if calls > 0 { return String(format: langManager.localized("sos.status.calling"), calls) }
+            return langManager.localized("sos.status.callsNext")
+        }()
 
         return VStack(spacing: 0) {
             HStack {
@@ -1403,14 +1463,12 @@ struct SOSActiveView: View {
             .background(alert.opacity(0.09))
 
             stepRow(number: "1", title: langManager.localized("protected.home.sosStep1Title"),
-                    detail: guardianNames.first.map { String(format: langManager.localized("protected.home.sosStep1Done"), $0) } ?? langManager.localized("protected.home.sosStep1Pending"),
-                    state: step1State)
-            stepRow(number: "2", title: langManager.localized("protected.home.sosStep2Title"),
-                    detail: guardianNames.count > 1 ? String(format: langManager.localized("protected.home.sosStep2Done"), guardianNames.dropFirst().joined(separator: "、")) : langManager.localized("protected.home.sosStep2Pending"),
+                    detail: step1Detail, state: step1State)
+            stepRow(number: "2", title: langManager.localized("sos.status.linkTitle"),
+                    detail: langManager.localized(status?.shareLinkSent == true ? "sos.status.linkSent" : "sos.status.linkNext"),
                     state: step2State)
-            stepRow(number: "3", title: langManager.localized("protected.home.sosStep3Title"),
-                    detail: langManager.localized("protected.home.sosStep3Detail"),
-                    state: step3State)
+            stepRow(number: "3", title: langManager.localized("sos.status.callsTitle"),
+                    detail: step3Detail, state: step3State)
         }
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(

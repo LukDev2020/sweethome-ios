@@ -2,6 +2,11 @@ import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
 import { onDutyGuardians } from "../services/escalation";
+import { toIso } from "../services/time";
+
+export function isoToCalendarWeekday(iso: number): number {
+  return (iso % 7) + 1; // Mon 1 → 2 … Sat 6 → 7, Sun 7 → 1
+}
 
 const router = Router();
 const db = admin.firestore();
@@ -60,11 +65,11 @@ router.get("/guardians", async (req: Request, res: Response) => {
           id: guardianId,
           displayName: user.displayName,
           role: "guardian",
-          avatarInitial: user.avatarInitial,
-          timeZone: user.timeZone,
-          countryCode: user.countryCode,
-          cityName: user.cityName,
-          createdAt: user.createdAt.toDate().toISOString(),
+          avatarInitial: user.avatarInitial ?? String(user.displayName ?? "").charAt(0),
+          timeZone: user.timeZone ?? null,
+          countryCode: user.countryCode ?? "",
+          cityName: user.cityName ?? "",
+          createdAt: toIso(user.createdAt),
         },
         permissions: link.permissions || {
           canSeeLocation: true,
@@ -80,13 +85,15 @@ router.get("/guardians", async (req: Request, res: Response) => {
               slots: dutySlots.map((s) => ({
                 startHour: s.startHour,
                 endHour: s.endHour,
-                dayOfWeek: [s.dayOfWeek],
+                // Stored as ISO weekday (1 = Mon … 7 = Sun); iOS DutySlot uses
+                // Calendar weekdays (1 = Sun … 7 = Sat)
+                dayOfWeek: [isoToCalendarWeekday(s.dayOfWeek)],
                 isConfirmed: true,
               })),
             }
           : null,
         averageResponseTime: 120, // Default 2 minutes, would be computed from history
-        linkedSince: link.createdAt.toDate().toISOString(),
+        linkedSince: toIso(link.createdAt) ?? new Date(0).toISOString(),
       });
     }
 

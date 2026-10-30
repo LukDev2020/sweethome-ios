@@ -97,8 +97,8 @@
 "settings.delete.account" = "Supprimer le compte";
 
 /* SOS Alert */
-"sos.no.guardian.title" = "SOS non livrable";
-"sos.no.guardian.message" = "Vous n'avez ajouté aucun gardien. Les signaux SOS ne seront pas reçus.";
+"sos.no.guardian.title" = "Pas encore de gardien";
+"sos.no.guardian.message" = "Personne ne sera alerté dans l'app. Nous prévenons vos contacts d'urgence par SMS si vous en avez — en danger, appelez les secours.";
 "sos.send.anyway" = "Envoyer quand même";
 "sos.invite.first" = "Inviter un gardien d'abord";
 "sos.active" = "SOS actif";
@@ -1233,3 +1233,43 @@ vos gardiens seront automatiquement notifiés.";
 /* Globe accessibility (W1) */
 "globe.a11y.empty" = "Globe familial, aucun membre";
 "globe.a11y.members" = "Globe familial avec %d personnes : %@";
+
+/* Notifications & SOS state (W2) */
+"push.action.takenOver" = "Je m'en occupe";
+"push.action.call" = "Appeler";
+"push.action.dismiss" = "Compris";
+"push.action.checkIn" = "Tout va bien";
+"silent.alarm.notif.title" = "Vérification de sécurité";
+"silent.alarm.notif.body" = "Confirmez que vous êtes en sécurité. Touchez « Je vais bien » ou ouvrez l'app.";
+"silent.alarm.action.safe" = "Je vais bien";
+
+/* Widget actions (W2-j) */
+"widget.arrived.note" = "Arrivé(e) (widget)";
+
+/* SOS live status (W2-j) */
+"sos.status.sending" = "Envoi…";
+"sos.status.queued" = "Pas de connexion — enregistré, envoi dès le retour du réseau";
+"sos.status.guardiansNotified" = "%d proches alertés";
+"sos.status.linkTitle" = "SMS avec votre position";
+"sos.status.linkNext" = "Envoyé si personne ne répond sous 2 minutes";
+"sos.status.linkSent" = "Lien de position envoyé à votre famille";
+"sos.status.callsTitle" = "Appels jusqu'à ce que quelqu'un réponde";
+"sos.status.callsNext" = "Commence si personne ne répond sous 90 secondes";
+"sos.status.calling" = "%d appels passés — appels en cours";
+"sos.status.callsStopped" = "Quelqu'un a répondu — appels automatiques arrêtés";
+"sos.status.acknowledged" = "%@ s'en occupe";
+"sos.status.noGuardians" = "Aucun gardien à prévenir — appelez le %@";
+"sos.status.contactsTexted" = "%d contacts d'urgence prévenus par SMS";
+"sos.status.callEmergency" = "Appeler le %@";
+
+/* SOS button (W2-b) */
+"sos.button.a11yLabel" = "Bouton SOS d'urgence";
+"sos.button.a11yHint" = "Maintenez 3 secondes pour alerter votre famille";
+
+/* Guardian SOS response (W2-d/e) */
+"guardian.alert.noActiveSOS" = "Aucun SOS en cours.";
+"guardian.alert.youAreHandling" = "Vous vous en occupez — les autres sont prévenus, appels automatiques arrêtés";
+"guardian.alert.acknowledged" = "Pris en charge";
+"guardian.alert.ackHint" = "Prévient la famille que vous vous en occupez et arrête les appels automatiques";
+"guardian.alert.markSafe" = "%@ est en sécurité — clore le SOS";
+"guardian.alert.sosLocation" = "Position lors du SOS";

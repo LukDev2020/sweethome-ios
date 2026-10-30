@@ -19,7 +19,17 @@ final class AppCoordinator: ObservableObject {
     @Published var protectedPersons: [ProtectedPerson] = []  // Guardian sees these
     @Published var myGuardians: [Guardian] = []               // Protected person sees these
     @Published var activeSOSEvent: SOSEvent?
+    /// The direct SOS request didn't get through; it is queued and retried on
+    /// reconnect / foreground. Cleared when a flush delivers it.
     @Published var sosDeliveryFailed = false
+    /// Server-side state of MY active SOS (who was notified, calls, who acknowledged).
+    @Published var ownSOSStatus: SOSStatus?
+    /// Guardian side: active SOS per protected person id.
+    @Published var guardianSOS: [String: SOSStatus] = [:]
+    /// Protected side: show SOSActiveView (never for a silent/duress SOS).
+    @Published var isSOSScreenPresented = false
+    /// Guardian side: an SOS push was opened — show its response screen.
+    @Published var pendingAlertPersonId: String?
     @Published var showFallConfirmation = false
     @Published var fallConfirmationDeadline: Date?
     @Published var currentRiskScores: [String: BaselineScorer.RiskScore] = [:]
@@ -54,6 +64,7 @@ final class AppCoordinator: ObservableObject {
 
     // MARK: - Services
 
+    let connectivity = ConnectivityMonitor()
     let locationManager = AdaptiveLocationManager()
     let motionService = MotionService()
     let heartbeatService = HeartbeatService()
@@ -105,15 +116,27 @@ final class AppCoordinator: ObservableObject {
                 try await self.authManager.refreshToken()
                 return true
             } catch {
-                // Only logout on definitive auth failures (e.g. revoked token),
-                // not transient network errors that could discard queued SOS requests.
-                let isNetworkError = (error as? URLError) != nil
-                if !isNetworkError {
+                // Only log out on a definitive 401/403 from /refresh — never on a
+                // timeout / 5xx / 429 (that would discard the session mid-SOS).
+                if AuthManager.refreshFailureIsDefinitive(error) {
                     await MainActor.run { self.authManager.logout() }
                 }
                 return false
             }
         }
+
+        // Queued requests belong to the user who made them
+        apiClient.currentOwnerId = { [weak self] in
+            self?.authManager.currentUserId ?? KeychainHelper.shared.read(.userId)
+        }
+        apiClient.onQueuedItemsDelivered = { [weak self] items in
+            self?.handleQueuedItemsDelivered(items)
+        }
+        connectivity.onBecameReachable = { [weak self] in
+            guard let self, case .loggedIn = self.authState else { return }
+            Task { await self.apiClient.flushOfflineQueue() }
+        }
+        connectivity.start()
 
         // Sync initial auth state before Combine subscription delivers asynchronously
         authState = authManager.state
@@ -140,8 +163,14 @@ final class AppCoordinator: ObservableObject {
         // Wire trip recording service
         tripRecordingService.configure(apiClient: apiClient)
 
-        // Wire dead man switch
+        // Wire dead man switch — expiry raises the SOS through triggerSOS
         DeadManSwitchService.shared.configure(apiClient: apiClient, locationManager: locationManager)
+        DeadManSwitchService.shared.onTriggerSOS = { [weak self] method in
+            self?.triggerSOS(method: method)
+        }
+        FakeCallService.shared.onTriggerSOS = { [weak self] method in
+            self?.triggerSOS(method: method)
+        }
         DeadManSwitchService.registerNotificationCategories()
 
         // Wire disguise mode — pass self as SOS trigger target
@@ -168,6 +197,7 @@ final class AppCoordinator: ObservableObject {
             queue: .main
         ) { [weak self] _ in
             guard let self else { return }
+            self.syncLocaleToServer()
             // Restart Live Activity so it picks up the new language
             self.liveActivityManager.endAllActivities()
             if UserDefaults.standard.bool(forKey: "lockscreen_card_enabled") {
@@ -258,13 +288,23 @@ final class AppCoordinator: ObservableObject {
         // Flush any queued offline requests
         Task { await apiClient.flushOfflineQueue() }
 
+        // Location permission is requested only once someone is signed in
+        if UserDefaults.standard.bool(forKey: "onboardingComplete") {
+            locationManager.start()
+        }
+
+        // Tell the server which language / time zone to use for my pushes,
+        // SMS and voice calls, and when my local "on duty" hours are
+        syncLocaleToServer()
+
         // Configure location batch uploader for offline → batch mode
         if let userId = currentUser?.id {
             locationBatchUploader.configure(apiClient: apiClient, userId: userId)
         }
 
-        // Check for widget-triggered SOS
+        // Check for widget-triggered SOS / check-in
         checkWidgetSOSIntent()
+        processPendingWidgetActions()
 
         // Fetch fresh data from server, then restart Live Activity with real data
         Task {
@@ -273,6 +313,8 @@ final class AppCoordinator: ObservableObject {
                 await fetchProtectedPersons()
             } else {
                 await fetchGuardians()
+                await fetchSafeZones()
+                await refreshOwnSOSStatus()
             }
             await MainActor.run {
                 if UserDefaults.standard.bool(forKey: "lockscreen_card_enabled") {
@@ -318,14 +360,15 @@ final class AppCoordinator: ObservableObject {
         locationBatchUploader.stop()
         locationBatchUploader.clearAll()
         localStore.clearAll()
-        // Preserve SOS-critical requests across logout — they must reach the server
-        let sosItems = offlineQueue.peekAll().filter {
-            $0.path.contains("/sos/") || $0.path.contains("/ble-separation")
-        }
-        offlineQueue.clearAll()
-        for item in sosItems {
-            offlineQueue.enqueue(item)
-        }
+        // The medical card is PII: the next user on this phone must not inherit it
+        MedicalCardCache.clear()
+        // Preserve SOS-critical requests across logout — they must reach the server.
+        // They are tagged with their owner and only replay when that user signs in again.
+        offlineQueue.retainOnly { $0.isSOS && $0.ownerId != nil }
+        guardianSOS = [:]
+        ownSOSStatus = nil
+        pendingAlertPersonId = nil
+        sosDeliveryFailed = false
         WidgetDataStore.clear()
         WidgetCenter.shared.reloadAllTimelines()
 
@@ -358,14 +401,34 @@ final class AppCoordinator: ObservableObject {
     func sceneDidBecomeActive() {
         heartbeatService.appDidBecomeActive()
         guard case .loggedIn = authState else { return }
-        motionService.startForegroundMonitoring()
+        // Fall detection runs while the app is open, for the person being protected
+        // (matches NSMotionUsageDescription)
+        if userRole == .protected_ {
+            motionService.startForegroundMonitoring()
+        }
         // Flush queued requests (SOS, check-ins, locations) now that we're in front
         Task { await apiClient.flushOfflineQueue() }
         // The SOS widget/intent may have fired while we were suspended
         checkWidgetSOSIntent()
+        processPendingWidgetActions()
+    }
+
+    /// Check-in / "I arrived" tapped on a widget or the Live Activity.
+    func processPendingWidgetActions() {
+        guard case .loggedIn = authState else { return }
+        for action in WidgetDataStore.takePendingActions() {
+            switch action {
+            case .checkIn:
+                performCheckIn()
+            case .arrived:
+                apiClient.postQueued("/v1/home-timer/dismiss", body: EmptyBody())
+                performCheckIn(note: LanguageManager.shared.localized("widget.arrived.note"))
+            }
+        }
     }
 
     func sceneWillResignActive() {
+        MainActor.assumeIsolated { DisguiseModeService.shared.rearmIfEnabled() }
         motionService.stopForegroundMonitoring()
         // Auto-start Live Activity when user leaves the app (if enabled)
         startLiveActivityOnBackground()
@@ -480,6 +543,57 @@ final class AppCoordinator: ObservableObject {
         }
     }
 
+    /// Number to call when nobody else can be reached.
+    var localEmergencyNumber: String {
+        if let n = selectedHotline?.emergency, !n.isEmpty { return n }
+        let country = currentUser?.countryCode.isEmpty == false ? currentUser!.countryCode : (Locale.current.region?.identifier ?? "")
+        return RegionalEmergencyInfo.forCountry(country).numbers.first?.number ?? "112"
+    }
+
+    // MARK: - Locale / time zone
+
+    struct LocaleUpdateRequest: Encodable {
+        let locale: String
+        let timeZone: String
+    }
+
+    func syncLocaleToServer() {
+        guard case .loggedIn = authState else { return }
+        let body = LocaleUpdateRequest(
+            locale: LanguageManager.shared.current.rawValue,
+            timeZone: TimeZone.current.identifier
+        )
+        Task {
+            do {
+                let _: SuccessResponse = try await apiClient.put("/v1/user/me", body: body)
+            } catch {
+                #if DEBUG
+                print("[Coordinator] locale sync failed: \(error)")
+                #endif
+            }
+        }
+    }
+
+    // MARK: - Safe Zones
+
+    func fetchSafeZones() async {
+        do {
+            let response: [SafeZoneResponse] = try await apiClient.get("/v1/safe-zones")
+            let zones = response.map {
+                SafeZone(id: $0.id, name: $0.name, latitude: $0.latitude, longitude: $0.longitude,
+                         radius: $0.radius, isAutoSuggested: $0.isAutoSuggested, visitFrequency: 0, typicalHours: nil)
+            }
+            await MainActor.run {
+                self.localStore.saveSafeZones(zones)
+                self.locationManager.updateSafeZones(zones)
+            }
+        } catch {
+            #if DEBUG
+            print("[Coordinator] safe zone fetch failed: \(error)")
+            #endif
+        }
+    }
+
     // MARK: - Switch Role
 
     func switchRole(to newRole: UserRole) async throws {
@@ -535,10 +649,15 @@ final class AppCoordinator: ObservableObject {
                     batteryLevel: p.batteryLevel,
                     batteryState: p.batteryState,
                     lastPhoneActivity: p.lastPhoneActivity,
-                    status: p.status
+                    status: p.status,
+                    activeSOS: p.activeSOS
                 )
             }
             await MainActor.run {
+                self.guardianSOS = Dictionary(
+                    persons.compactMap { p in p.activeSOS.map { (p.personId, $0) } },
+                    uniquingKeysWith: { a, _ in a }
+                )
                 self.protectedPersons = mapped
                 self.localStore.saveProtectedPersons(mapped)
                 self.syncWidgetState()
@@ -739,6 +858,12 @@ final class AppCoordinator: ObservableObject {
             self?.performCheckIn()
         }
 
+        pushService.onOpenSOSAlert = { [weak self] personId, _ in
+            guard let self else { return }
+            self.pendingAlertPersonId = personId
+            Task { await self.fetchGuardianSOS(personId: personId) }
+        }
+
         // Escalation → Notifications
         escalationEngine.onSendNotification = { [weak self] request in
             self?.sendNotification(request)
@@ -784,11 +909,7 @@ final class AppCoordinator: ObservableObject {
                 )
             }
             // Load emergency medical info from cache
-            let cachedCard: MedicalCardData? = {
-                guard let data = UserDefaults.standard.data(forKey: "medical_card_cache"),
-                      let card = try? JSONDecoder().decode(MedicalCardData.self, from: data) else { return nil }
-                return card
-            }()
+            let cachedCard = MedicalCardCache.load()
             let medInfos: [ProtectedActivityAttributes.MedInfo] = (cachedCard?.emergencyMedications ?? []).map {
                 ProtectedActivityAttributes.MedInfo(name: $0.name, location: $0.storageLocation, dosage: $0.dosage)
             }
@@ -851,26 +972,40 @@ final class AppCoordinator: ObservableObject {
     // MARK: - SOS Trigger
 
     func triggerSOS(method: SOSTriggerMethod = .longPress) {
-        guard let userId = currentUser?.id, !userId.isEmpty else {
+        // authManager is the source of truth: currentUser can still be nil after a
+        // locked background relaunch (BLE button, widget, dead-man switch).
+        guard let userId = authManager.currentUserId ?? currentUser?.id, !userId.isEmpty else {
             #if DEBUG
-            print("[AppCoordinator] Cannot trigger SOS: no current user")
+            print("[AppCoordinator] Cannot trigger SOS: not signed in")
             #endif
             return
         }
+        // Already in an SOS: don't create a second local event
+        if let existing = activeSOSEvent, existing.isActive {
+            return
+        }
+        UIDevice.current.isBatteryMonitoringEnabled = true
+        let rawBattery = UIDevice.current.batteryLevel
+        let battery: Double? = rawBattery >= 0 ? Double(rawBattery) : nil
+        let localId = UUID().uuidString
+        let now = Date()
         let sosEvent = SOSEvent(
-            id: UUID().uuidString,
+            id: localId,
             protectedPersonId: userId,
-            triggeredAt: Date(),
+            triggeredAt: now,
             triggerMethod: method,
             location: nil,
-            batteryLevel: Double(UIDevice.current.batteryLevel),
+            batteryLevel: battery,
             escalationState: .initiated,
             resolvedAt: nil,
             resolvedBy: nil,
-            resolution: nil
+            resolution: nil,
+            clientSOSId: localId
         )
 
         activeSOSEvent = sosEvent
+        ownSOSStatus = nil
+        if !method.isSilent { isSOSScreenPresented = true }
         localStore.saveActiveSOSEvent(sosEvent)
         syncWidgetState()
 
@@ -882,10 +1017,12 @@ final class AppCoordinator: ObservableObject {
         // Switch location to SOS mode
         locationManager.enterSOSMode()
 
-        // Update lock screen to SOS mode
-        liveActivityManager.triggerSOS(
-            localEmergencyNumber: selectedHotline?.emergency ?? "911"
-        )
+        // Lock-screen card shows SOS — but a duress / disguise SOS must stay invisible and silent
+        if !method.isSilent {
+            liveActivityManager.triggerSOS(
+                localEmergencyNumber: selectedHotline?.emergency ?? "911"
+            )
+        }
 
         addTimelineEntry(type: .sosTriggered, description: "触发紧急求助（\(method.rawValue)）")
 
@@ -896,8 +1033,8 @@ final class AppCoordinator: ObservableObject {
             self?.addTimelineEntry(type: .sosResolved, description: "[Beta 模拟] SOS 自动确认，未发送真实通知")
         }
         #else
-        // Report to server — capture server-generated SOS ID so resolve works.
-        // Use direct POST first to get the server ID; fall back to queued if offline.
+        // Persist to the offline queue FIRST, then try right away with a short
+        // timeout; if that fails the queue retries on reconnect / foreground.
         sosDeliveryFailed = false
         let sosLocation = locationManager.lastReportedLocation
         let triggerRequest = SOSTriggerRequest(
@@ -905,26 +1042,107 @@ final class AppCoordinator: ObservableObject {
             triggerMethod: method,
             latitude: sosLocation?.coordinate.latitude,
             longitude: sosLocation?.coordinate.longitude,
-            batteryLevel: Double(UIDevice.current.batteryLevel)
+            batteryLevel: battery,
+            clientSOSId: localId,
+            clientTriggeredAt: now
         )
         let api = apiClient
         Task { @MainActor [weak self] in
-            do {
-                let response: SOSTriggerResponse = try await api.post("/v1/sos/trigger", body: triggerRequest)
-                self?.activeSOSEvent?.id = response.sosEventId
-                if let updated = self?.activeSOSEvent {
-                    self?.localStore.saveActiveSOSEvent(updated)
-                }
-            } catch {
-                // Offline — queue for retry; resolve will use local ID as fallback
-                api.postQueued("/v1/sos/trigger", body: triggerRequest) { [weak self] success in
-                    if !success {
-                        self?.sosDeliveryFailed = true
-                    }
-                }
+            let response: SOSTriggerResponse? = await api.postSOS("/v1/sos/trigger", body: triggerRequest)
+            guard let self else { return }
+            if let response {
+                self.applyServerSOSId(response.sosEventId, forClientId: localId)
+                await self.refreshOwnSOSStatus()
+            } else if self.activeSOSEvent?.clientSOSId == localId {
+                self.sosDeliveryFailed = true
             }
         }
         #endif
+    }
+
+    /// The server answered for a queued/direct SOS trigger: adopt its id so
+    /// resolve and status polling address the real event.
+    private func applyServerSOSId(_ serverId: String, forClientId clientId: String?) {
+        guard var event = activeSOSEvent, event.clientSOSId == clientId || clientId == nil else { return }
+        event.id = serverId
+        activeSOSEvent = event
+        localStore.saveActiveSOSEvent(event)
+    }
+
+    private func handleQueuedItemsDelivered(_ items: [OfflineQueue.Item]) {
+        guard items.contains(where: { $0.path == "/v1/sos/trigger" }) else { return }
+        sosDeliveryFailed = false
+        Task { await refreshOwnSOSStatus() }
+    }
+
+    /// Protected person: what the server has actually done for my SOS.
+    func refreshOwnSOSStatus() async {
+        guard activeSOSEvent != nil else { return }
+        do {
+            let response: ActiveSOSResponse = try await apiClient.get("/v1/sos/active")
+            await MainActor.run {
+                self.ownSOSStatus = response.sos
+                if let sos = response.sos {
+                    self.sosDeliveryFailed = false
+                    if self.activeSOSEvent?.id != sos.sosEventId {
+                        self.applyServerSOSId(sos.sosEventId, forClientId: nil)
+                    }
+                    self.activeSOSEvent?.escalationState = sos.escalationState
+                }
+            }
+        } catch {
+            #if DEBUG
+            print("[Coordinator] SOS status fetch failed: \(error)")
+            #endif
+        }
+    }
+
+    // MARK: - Guardian: active SOS of a protected person
+
+    func fetchGuardianSOS(personId: String) async {
+        do {
+            let response: ActiveSOSResponse = try await apiClient.get("/v1/guardian/sos/active?personId=\(personId)")
+            await MainActor.run {
+                if let sos = response.sos {
+                    self.guardianSOS[personId] = sos
+                } else {
+                    self.guardianSOS.removeValue(forKey: personId)
+                }
+            }
+        } catch {
+            #if DEBUG
+            print("[Coordinator] guardian SOS fetch failed: \(error)")
+            #endif
+        }
+    }
+
+    /// "I've got it": stops the automatic pushes / SMS / calls and tells the
+    /// rest of the family. Does NOT close the SOS.
+    @discardableResult
+    func acknowledgeSOS(sosEventId: String) async throws -> SOSAcknowledgeResponse {
+        let response: SOSAcknowledgeResponse = try await apiClient.post(
+            "/v1/sos/acknowledge", body: SOSAcknowledgeRequest(sosEventId: sosEventId)
+        )
+        await MainActor.run { escalationEngine.freeze(by: response.acknowledgedBy) }
+        if let personId = guardianSOS.first(where: { $0.value.sosEventId == sosEventId })?.key {
+            await fetchGuardianSOS(personId: personId)
+        }
+        return response
+    }
+
+    /// "She's safe": closes the SOS for everyone.
+    func resolveSOSAsGuardian(sosEventId: String, personId: String) async throws {
+        let _: SuccessResponse = try await apiClient.post(
+            "/v1/sos/resolve",
+            body: SOSResolveRequest(sosEventId: sosEventId, resolvedBy: currentUser?.id ?? "", resolution: .guardianConfirmedSafe)
+        )
+        await MainActor.run {
+            self.guardianSOS.removeValue(forKey: personId)
+            if let idx = self.protectedPersons.firstIndex(where: { $0.id == personId }) {
+                self.protectedPersons[idx].activeSOS = nil
+                if self.protectedPersons[idx].status == .alert { self.protectedPersons[idx].status = .normal }
+            }
+        }
     }
 
     // MARK: - BLE Tag Separation Alert
@@ -957,9 +1175,11 @@ final class AppCoordinator: ObservableObject {
 
     func cancelSOS() {
         guard let sos = activeSOSEvent else { return }
-        let userId = currentUser?.id ?? "unknown"
+        let userId = authManager.currentUserId ?? currentUser?.id ?? "unknown"
         escalationEngine.resolve(by: userId, resolution: .protectedCancelled)
         activeSOSEvent = nil
+        ownSOSStatus = nil
+        sosDeliveryFailed = false
         localStore.saveActiveSOSEvent(nil)
         syncWidgetState()
         locationManager.exitSOSMode()
@@ -968,6 +1188,16 @@ final class AppCoordinator: ObservableObject {
         liveActivityManager.cancelSOS()
 
         addTimelineEntry(type: .sosResolved, description: "取消了紧急求助")
+
+        // If the trigger never left the phone, drop it instead of sending a
+        // trigger + cancel later (which would alert the family for nothing).
+        if let clientId = sos.clientSOSId {
+            let removed = offlineQueue.removeItems { item in
+                item.path == "/v1/sos/trigger"
+                    && item.body.flatMap { String(data: $0, encoding: .utf8) }?.contains(clientId) == true
+            }
+            if !removed.isEmpty, sos.id == clientId { return }
+        }
 
         apiClient.postQueued("/v1/sos/resolve", body: SOSResolveRequest(
             sosEventId: sos.id,
@@ -1160,8 +1390,22 @@ final class AppCoordinator: ObservableObject {
         }
     }
 
+    /// Guardian tapped "I've got it" on the SOS push: tell the server (which stops
+    /// the calls and notifies the others), not just the local engine.
     private func handleSOSTakenOver(sosId: String) {
-        escalationEngine.freeze(by: "guardian")
+        let bgTask = UIApplication.shared.beginBackgroundTask(withName: "sos-acknowledge")
+        Task {
+            do {
+                try await acknowledgeSOS(sosEventId: sosId)
+            } catch {
+                #if DEBUG
+                print("[Coordinator] acknowledge from push failed: \(error)")
+                #endif
+                // Keep the acknowledgement: replay when back online
+                apiClient.postQueued("/v1/sos/acknowledge", body: SOSAcknowledgeRequest(sosEventId: sosId))
+            }
+            await MainActor.run { UIApplication.shared.endBackgroundTask(bgTask) }
+        }
     }
 
     private func reportHeartbeatToServer(_ signal: HeartbeatSignal) {
@@ -1500,10 +1744,7 @@ final class AppCoordinator: ObservableObject {
             // Move encoding + widget reload to background
             Task.detached(priority: .utility) {
                 let emergencyMeds: [WidgetMedication] = {
-                    guard let data = UserDefaults.standard.data(forKey: "medical_card_cache"),
-                          let card = try? Self.sharedDecoder.decode(MedicalCardData.self, from: data) else {
-                        return []
-                    }
+                    guard let card = MedicalCardCache.load() else { return [] }
                     return card.emergencyMedications.map {
                         WidgetMedication(id: $0.id, name: $0.name, location: $0.storageLocation, dosage: $0.dosage)
                     }

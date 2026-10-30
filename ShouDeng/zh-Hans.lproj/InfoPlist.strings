@@ -8,7 +8,7 @@ NSLocationAlwaysAndWhenInUseUsageDescription = "守灯会将你的位置分享�
 NSLocationWhenInUseUsageDescription = "守灯使用你的位置在地图上显示你所在的位置，并在紧急求助时将位置发送给你选择的家人。仅在你接受应用内同意后使用。";
 
 /* 运动传感器 */
-NSMotionUsageDescription = "守灯使用加速计检测可能的跌倒。检测到后你有 60 秒时间取消警报，之后才会通知你的家人。此功能仅在你在应用中开启跌倒检测后才会启用。";
+NSMotionUsageDescription = "守灯在应用打开时使用运动传感器检测可能的跌倒。检测到后你有 60 秒时间取消警报，之后才会通知你的家人。";
 
 /* 面容 ID */
 NSFaceIDUsageDescription = "守灯使用面容 ID 验证你的身份，保护家庭安全数据的访问。";

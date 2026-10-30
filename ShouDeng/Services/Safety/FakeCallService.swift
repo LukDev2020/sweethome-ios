@@ -335,16 +335,15 @@ final class FakeCallService: NSObject, ObservableObject {
 
     // MARK: - Silent SOS Escalation
 
+    /// Set by AppCoordinator: raises a real (silent) SOS.
+    var onTriggerSOS: ((SOSTriggerMethod) -> Void)?
+
     private func fireSilentSOS() {
-        // Hand off to SilentAlarmService which owns the server escalation path.
-        // We synthesize a missed check-in so the server escalates to guardians.
+        // A real SOS through the coordinator — silent like the duress code (no
+        // sound, no lock-screen change). This used to only post a local
+        // notification, so "auto-SOS" never reached anyone.
         Task { @MainActor in
-            SilentAlarmService.shared.handleCheckInPush()
-            // Do not call confirmCheckIn() — the deliberately missed confirmation
-            // within the window triggers server escalation automatically.
-            #if DEBUG
-            print("[FakeCall] Silent SOS fired — missed check-in injected")
-            #endif
+            self.onTriggerSOS?(.duressPassword)
         }
     }
 
@@ -361,16 +360,27 @@ final class FakeCallService: NSObject, ObservableObject {
             title: NSLocalizedString("fake_call_decline", comment: "Decline"),
             options: [.destructive]
         )
-        let category = UNNotificationCategory(
+        _ = (answerAction, declineAction)
+        PushService.registerAllCategories()
+    }
+
+    static func notificationCategories() -> Set<UNNotificationCategory> {
+        let answerAction = UNNotificationAction(
+            identifier: "FAKE_CALL_ANSWER",
+            title: NSLocalizedString("fake_call_answer", comment: "Answer"),
+            options: [.foreground]
+        )
+        let declineAction = UNNotificationAction(
+            identifier: "FAKE_CALL_DECLINE",
+            title: NSLocalizedString("fake_call_decline", comment: "Decline"),
+            options: [.destructive]
+        )
+        return [UNNotificationCategory(
             identifier: "FAKE_CALL_INCOMING",
             actions: [answerAction, declineAction],
             intentIdentifiers: [],
             options: [.customDismissAction]
-        )
-        let center = UNUserNotificationCenter.current()
-        center.getNotificationCategories { existing in
-            center.setNotificationCategories(existing.union([category]))
-        }
+        )]
     }
 }
 

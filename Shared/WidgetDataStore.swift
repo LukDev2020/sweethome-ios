@@ -34,6 +34,41 @@ enum WidgetDataStore {
         sharedDefaults?.removeObject(forKey: stateKey)
     }
 
+    // MARK: - Pending widget actions
+    //
+    // Widget / Live Activity intents run in the extension, which has no session
+    // token. They record the action here and open the app, which sends it to the
+    // server (check-in → guardians get "home safe"; arrived → timer dismissed).
+
+    enum PendingAction: String, Codable {
+        case checkIn
+        case arrived
+    }
+
+    private struct PendingEntry: Codable {
+        let action: PendingAction
+        let at: Date
+    }
+
+    private static let pendingKey = "widget_pending_actions"
+
+    static func enqueuePendingAction(_ action: PendingAction, at date: Date = Date()) {
+        guard let defaults = sharedDefaults else { return }
+        var entries = (defaults.data(forKey: pendingKey)).flatMap { try? decoder.decode([PendingEntry].self, from: $0) } ?? []
+        entries.append(PendingEntry(action: action, at: date))
+        if let data = try? encoder.encode(Array(entries.suffix(10))) {
+            defaults.set(data, forKey: pendingKey)
+        }
+    }
+
+    /// Returns and clears pending actions newer than `maxAge`.
+    static func takePendingActions(maxAge: TimeInterval = 600, now: Date = Date()) -> [PendingAction] {
+        guard let defaults = sharedDefaults else { return [] }
+        let entries = (defaults.data(forKey: pendingKey)).flatMap { try? decoder.decode([PendingEntry].self, from: $0) } ?? []
+        defaults.removeObject(forKey: pendingKey)
+        return entries.filter { now.timeIntervalSince($0.at) <= maxAge && $0.at <= now.addingTimeInterval(5) }.map(\.action)
+    }
+
     // MARK: - Language Sync
 
     private static let languageKey = "app_language"

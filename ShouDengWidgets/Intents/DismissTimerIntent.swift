@@ -6,6 +6,9 @@ struct DismissTimerIntent: AppIntent {
     static var title: LocalizedStringResource = "我到了"
     static var description: IntentDescription = "告知守护者已安全到达"
 
+    /// Sent to the server by the app (the extension has no session token).
+    static var openAppWhenRun: Bool = true
+
     func perform() async throws -> some IntentResult {
         guard let defaults = UserDefaults(suiteName: WidgetDataStore.appGroupId),
               let data = defaults.data(forKey: "widget_state"),
@@ -14,6 +17,7 @@ struct DismissTimerIntent: AppIntent {
             return .result()
         }
 
+        WidgetDataStore.enqueuePendingAction(.arrived)
         var updated = state
         updated.homeTimerActive = false
         updated.homeTimerDeadline = nil

@@ -84,6 +84,7 @@ final class MotionService {
 
     /// Full 50Hz pipeline — call when app is in foreground
     func startForegroundMonitoring() {
+        guard state != .foreground else { return }
         guard isDeviceMotionAvailable else {
             #if DEBUG
             print("[MotionService] Device motion not available")
@@ -143,6 +144,12 @@ final class MotionService {
     func performBackgroundBurst(completion: @escaping (BackgroundBurstResult) -> Void) {
         guard isDeviceMotionAvailable else {
             completion(.unavailable)
+            return
+        }
+        // The burst shares the device-motion stream with the foreground fall
+        // pipeline; stopping it here would silently switch fall detection off.
+        guard state != .foreground else {
+            completion(.normal)
             return
         }
 

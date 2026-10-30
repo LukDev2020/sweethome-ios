@@ -1,10 +1,13 @@
 import SwiftUI
 import MapKit
+import Combine
 
 // MARK: - Screen B2: Alert Response
 //
-// Shows real SOS event data for the guardian to respond to.
-// Uses coordinator.activeSOSEvent and the associated protected person's data.
+// Shows the protected person's live SOS (GET /v1/guardian/sos/active): location,
+// battery, how far the escalation got, who is handling it, elapsed time.
+//   "I've got it" → POST /v1/sos/acknowledge (stops the automatic calls, tells the others)
+//   "She's safe"  → POST /v1/sos/resolve (closes the SOS)
 
 struct GuardianAlertResponseView: View {
     @EnvironmentObject var coordinator: AppCoordinator
@@ -18,17 +21,26 @@ struct GuardianAlertResponseView: View {
 
     @State private var showClaimMaterialsPrompt = false
     @State private var showClaimMaterials = false
+    @State private var isWorking = false
+    @State private var errorText: String?
+    @State private var tick = Date()
+    nonisolated(unsafe) private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     private var person: ProtectedPerson? {
         coordinator.protectedPersons.first { $0.id == personId }
     }
 
-    private var sosEvent: SOSEvent? {
-        coordinator.activeSOSEvent
+    private var sos: SOSStatus? {
+        coordinator.guardianSOS[personId] ?? person?.activeSOS
+    }
+
+    private var iAcknowledged: Bool {
+        guard let by = sos?.acknowledgedBy else { return false }
+        return by == coordinator.authManager.currentUserId || by == coordinator.currentUser?.id
     }
 
     private var personName: String {
-        person?.user.displayName ?? langManager.localized("guardian.alert.protected.person")
+        person?.user.displayName ?? sos?.personName ?? langManager.localized("guardian.alert.protected.person")
     }
 
     private var personCity: String {
@@ -36,81 +48,147 @@ struct GuardianAlertResponseView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 12) {
-                    // Header — real data
-                    VStack(spacing: 2) {
-                        Text(String(format: langManager.localized("guardian.alert.seeking.help"), personName))
-                            .font(.scaled(size: 20, weight: .bold))
-                            .foregroundStyle(alert)
-                        Text(headerSubtitle)
-                            .font(.scaled(size: 13))
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.top, 8)
-
-                    // Map with real or last-known location
-                    mapSection
-
-                    // Action buttons
-                    HStack(spacing: 8) {
-                        Button {
-                            if let phone = person?.user.phone,
-                               let url = URL(string: "tel://\(phone)") {
-                                UIApplication.shared.open(url)
-                            }
-                        } label: {
-                            Text(langManager.localized("guardian.alert.call.now"))
-                                .font(.scaled(size: 13.5, weight: .medium))
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(alert)
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
-                        }
-
-                        Button {
-                            coordinator.cancelSOS()
-                            showClaimMaterialsPrompt = true
-                        } label: {
-                            Text(langManager.localized("guardian.alert.i.got.it"))
-                                .font(.scaled(size: 13.5, weight: .medium))
-                                .foregroundStyle(ink)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(ink.opacity(0.08))
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
-                        }
-                    }
-
-                    // Escalation chain
-                    escalationChain
-
-                    // Scene info
-                    sceneInfoPanel
-                }
-                .padding(.horizontal, 16)
-            }
-            .background(Color(.systemBackground))
-            .navigationTitle(langManager.localized("guardian.alert.title"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Text(langManager.localized("guardian.alert.title"))
-                        .font(.scaled(size: 12))
+        ScrollView {
+            VStack(spacing: 12) {
+                // Header — real data
+                VStack(spacing: 2) {
+                    Text(String(format: langManager.localized("guardian.alert.seeking.help"), personName))
+                        .font(.scaled(size: 20, weight: .bold))
                         .foregroundStyle(alert)
+                    Text(headerSubtitle)
+                        .font(.scaled(size: 13))
+                        .foregroundStyle(.secondary)
                 }
+                .padding(.top, 8)
+
+                if sos == nil {
+                    Text(langManager.localized("guardian.alert.noActiveSOS"))
+                        .font(.scaled(size: 13))
+                        .foregroundStyle(.secondary)
+                }
+
+                if let sos, let by = sos.acknowledgedByName ?? sos.acknowledgedBy {
+                    HStack(spacing: 8) {
+                        Image(systemName: "person.fill.checkmark")
+                        Text(iAcknowledged
+                             ? langManager.localized("guardian.alert.youAreHandling")
+                             : String(format: langManager.localized("sos.status.acknowledged"), by))
+                            .font(.scaled(size: 13, weight: .medium))
+                        Spacer()
+                    }
+                    .foregroundStyle(.white)
+                    .padding(12)
+                    .background(RoundedRectangle(cornerRadius: 12).fill(safe))
+                }
+
+                // Map with SOS or last-known location
+                mapSection
+
+                // Action buttons
+                HStack(spacing: 8) {
+                    Button {
+                        if let phone = person?.user.phone,
+                           let url = URL(string: "tel://\(phone)") {
+                            UIApplication.shared.open(url)
+                        }
+                    } label: {
+                        Text(langManager.localized("guardian.alert.call.now"))
+                            .font(.scaled(size: 13.5, weight: .medium))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(alert)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
+
+                    Button {
+                        acknowledge()
+                    } label: {
+                        Text(langManager.localized(sos?.acknowledgedBy == nil ? "guardian.alert.i.got.it" : "guardian.alert.acknowledged"))
+                            .font(.scaled(size: 13.5, weight: .medium))
+                            .foregroundStyle(ink)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(ink.opacity(0.08))
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
+                    .disabled(sos == nil || sos?.acknowledgedBy != nil || isWorking)
+                    .accessibilityHint(langManager.localized("guardian.alert.ackHint"))
+                }
+
+                Button {
+                    resolveSafe()
+                } label: {
+                    Label(String(format: langManager.localized("guardian.alert.markSafe"), personName), systemImage: "checkmark.shield")
+                        .font(.scaled(size: 13.5, weight: .medium))
+                        .foregroundStyle(safe)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(RoundedRectangle(cornerRadius: 10).stroke(safe.opacity(0.4)))
+                }
+                .disabled(sos == nil || isWorking)
+
+                if let errorText {
+                    Text(errorText).font(.scaled(size: 12)).foregroundStyle(alert)
+                }
+
+                // Escalation chain
+                escalationChain
+
+                // Scene info
+                sceneInfoPanel
             }
-            .alert(langManager.localized("guardian.alert.claim.prompt"), isPresented: $showClaimMaterialsPrompt) {
-                Button(langManager.localized("guardian.alert.claim.organize")) { showClaimMaterials = true }
-                Button(langManager.localized("guardian.alert.claim.no"), role: .cancel) { dismiss() }
-            } message: {
-                Text(langManager.localized("guardian.alert.claim.description"))
+            .padding(.horizontal, 16)
+        }
+        .background(Color(.systemBackground))
+        .navigationTitle(langManager.localized("guardian.alert.title"))
+        .navigationBarTitleDisplayMode(.inline)
+        .task { await coordinator.fetchGuardianSOS(personId: personId) }
+        .onReceive(timer) { now in
+            tick = now
+            if Int(now.timeIntervalSince1970) % 5 == 0 {
+                Task { await coordinator.fetchGuardianSOS(personId: personId) }
             }
-            .sheet(isPresented: $showClaimMaterials, onDismiss: { dismiss() }) {
-                ClaimMaterialsView().environmentObject(coordinator)
+        }
+        .alert(langManager.localized("guardian.alert.claim.prompt"), isPresented: $showClaimMaterialsPrompt) {
+            Button(langManager.localized("guardian.alert.claim.organize")) { showClaimMaterials = true }
+            Button(langManager.localized("guardian.alert.claim.no"), role: .cancel) { dismiss() }
+        } message: {
+            Text(langManager.localized("guardian.alert.claim.description"))
+        }
+        .sheet(isPresented: $showClaimMaterials, onDismiss: { dismiss() }) {
+            ClaimMaterialsView().environmentObject(coordinator)
+        }
+    }
+
+    // MARK: - Actions
+
+    private func acknowledge() {
+        guard let id = sos?.sosEventId else { return }
+        isWorking = true
+        errorText = nil
+        Task {
+            do {
+                try await coordinator.acknowledgeSOS(sosEventId: id)
+            } catch {
+                await MainActor.run { errorText = error.localizedDescription }
             }
+            await MainActor.run { isWorking = false }
+        }
+    }
+
+    private func resolveSafe() {
+        guard let id = sos?.sosEventId else { return }
+        isWorking = true
+        errorText = nil
+        Task {
+            do {
+                try await coordinator.resolveSOSAsGuardian(sosEventId: id, personId: personId)
+                await MainActor.run { showClaimMaterialsPrompt = true }
+            } catch {
+                await MainActor.run { errorText = error.localizedDescription }
+            }
+            await MainActor.run { isWorking = false }
         }
     }
 
@@ -118,15 +196,12 @@ struct GuardianAlertResponseView: View {
 
     private var headerSubtitle: String {
         var parts: [String] = []
-        // Location description
-        if let loc = sosEvent?.location, let addr = loc.address, !addr.isEmpty {
-            parts.append(addr)
-        } else if !personCity.isEmpty {
+        if !personCity.isEmpty {
             parts.append(personCity)
         }
-        // Elapsed time
-        if let sos = sosEvent {
-            let elapsed = Int(Date().timeIntervalSince(sos.triggeredAt))
+        // Elapsed time (ticks every second)
+        if let triggered = sos?.triggeredAt {
+            let elapsed = max(0, Int(tick.timeIntervalSince(triggered)))
             let mins = elapsed / 60
             let secs = elapsed % 60
             parts.append(String(format: langManager.localized("guardian.alert.elapsed"), mins, secs))
@@ -138,8 +213,8 @@ struct GuardianAlertResponseView: View {
 
     private var mapSection: some View {
         Group {
-            if let loc = sosEvent?.location {
-                let coord = CLLocationCoordinate2D(latitude: loc.latitude, longitude: loc.longitude)
+            if let lat = sos?.latitude, let lng = sos?.longitude {
+                let coord = CLLocationCoordinate2D(latitude: lat, longitude: lng)
                 Map(initialPosition: .region(MKCoordinateRegion(
                     center: coord,
                     span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
@@ -156,16 +231,14 @@ struct GuardianAlertResponseView: View {
                 .frame(height: 180)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .overlay(alignment: .bottomLeading) {
-                    if let accuracy = sosEvent?.location?.accuracy {
-                        Text(String(format: langManager.localized("guardian.alert.accuracy"), Int(accuracy)))
-                            .font(.scaled(size: 12))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(ink.opacity(0.7))
-                            .clipShape(Capsule())
-                            .padding(6)
-                    }
+                    Text(langManager.localized("guardian.alert.sosLocation"))
+                        .font(.scaled(size: 12))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(alert.opacity(0.85))
+                        .clipShape(Capsule())
+                        .padding(6)
                 }
             } else if let loc = person?.lastKnownLocation {
                 let coord = CLLocationCoordinate2D(latitude: loc.latitude, longitude: loc.longitude)
@@ -215,17 +288,13 @@ struct GuardianAlertResponseView: View {
     // MARK: - Escalation Chain
 
     private var escalationChain: some View {
-        let state = sosEvent?.escalationState ?? .initiated
+        let notified = sos?.guardiansNotified ?? 0
+        let acknowledged = sos?.acknowledgedBy != nil
+        let calls = sos?.callsPlaced ?? 0
 
-        let hop1Done: Bool = [.hop1_acknowledged, .hop2_allNotified, .hop3_voiceCalling, .hop3_exhausted, .frozen, .resolved].contains(state)
-        let hop1Started: Bool = state == .hop1_notified || hop1Done
-        let hop2Done: Bool = [.hop3_voiceCalling, .hop3_exhausted, .frozen, .resolved].contains(state)
-        let hop2Started: Bool = state == .hop2_allNotified || hop2Done
-        let hop3Started: Bool = [.hop3_voiceCalling, .hop3_exhausted].contains(state)
-
-        let step1State: StepState = hop1Done ? .done : (hop1Started ? .live : .live)
-        let step2State: StepState = hop2Done ? .done : (hop2Started ? .live : .waiting)
-        let step3State: StepState = hop3Started ? .live : .waiting
+        let step1State: StepState = notified > 0 ? .done : .live
+        let step2State: StepState = sos?.shareLinkSent == true ? .done : (acknowledged ? .waiting : .live)
+        let step3State: StepState = acknowledged ? .done : (calls > 0 ? .live : .waiting)
 
         return VStack(spacing: 0) {
             HStack {
@@ -238,13 +307,17 @@ struct GuardianAlertResponseView: View {
             .background(alert.opacity(0.09))
 
             stepRow(number: "1", title: langManager.localized("guardian.alert.step1.title"),
-                    detail: sosEvent.map { String(format: langManager.localized("guardian.alert.triggered.at"), formatTime($0.triggeredAt)) } ?? langManager.localized("guardian.alert.notifying"),
+                    detail: notified > 0
+                        ? String(format: langManager.localized("sos.status.guardiansNotified"), notified)
+                        : langManager.localized("guardian.alert.notifying"),
                     state: step1State)
-            stepRow(number: "2", title: langManager.localized("guardian.alert.step2.title"),
-                    detail: langManager.localized("guardian.alert.step2.detail"),
+            stepRow(number: "2", title: langManager.localized("sos.status.linkTitle"),
+                    detail: langManager.localized(sos?.shareLinkSent == true ? "sos.status.linkSent" : "sos.status.linkNext"),
                     state: step2State)
-            stepRow(number: "3", title: langManager.localized("guardian.alert.step3.title"),
-                    detail: langManager.localized("guardian.alert.step3.detail"),
+            stepRow(number: "3", title: langManager.localized("sos.status.callsTitle"),
+                    detail: acknowledged
+                        ? langManager.localized("sos.status.callsStopped")
+                        : (calls > 0 ? String(format: langManager.localized("sos.status.calling"), calls) : langManager.localized("sos.status.callsNext")),
                     state: step3State)
         }
         .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -300,7 +373,7 @@ struct GuardianAlertResponseView: View {
             Text(langManager.localized("guardian.alert.scene.info"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            if let battery = person?.batteryLevel ?? sosEvent?.batteryLevel {
+            if let battery = sos?.batteryLevel ?? person?.batteryLevel {
                 let pct = Int(battery * 100)
                 infoRow(langManager.localized("guardian.alert.battery"), value: "\(pct)%\(pct < 20 ? " \(langManager.localized("guardian.alert.declining"))" : "")", isAlert: pct < 20)
             } else {
@@ -310,8 +383,8 @@ struct GuardianAlertResponseView: View {
                 let minutes = Int(Date().timeIntervalSince(lastActivity) / 60)
                 infoRow(langManager.localized("guardian.alert.last.interaction"), value: String(format: langManager.localized("guardian.alert.minutes.ago"), minutes), isAlert: minutes > 10)
             }
-            if let sos = sosEvent {
-                infoRow(langManager.localized("guardian.alert.trigger.method"), value: triggerMethodText(sos.triggerMethod), isAlert: false)
+            if let raw = sos?.triggerMethod, let method = SOSTriggerMethod(rawValue: raw) {
+                infoRow(langManager.localized("guardian.alert.trigger.method"), value: triggerMethodText(method), isAlert: false)
             }
         }
         .padding(12)

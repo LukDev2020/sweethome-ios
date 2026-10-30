@@ -1,0 +1,62 @@
+[
+  {
+    "id": "kevin",
+    "user": {
+      "id": "kevin",
+      "displayName": "Kevin",
+      "role": "guardian",
+      "avatarInitial": "K",
+      "timeZone": "Asia/Shanghai",
+      "countryCode": "CN",
+      "cityName": "Shanghai",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    "permissions": {
+      "canSeeLocation": true,
+      "canSeeBattery": true,
+      "canSeeHealth": false,
+      "canSeePhoneActivity": false,
+      "canHearEmergencyAudio": true
+    },
+    "isOnDuty": false,
+    "dutySchedule": {
+      "guardianId": "kevin",
+      "slots": [
+        {
+          "startHour": 8,
+          "endHour": 20,
+          "dayOfWeek": [
+            2
+          ],
+          "isConfirmed": true
+        }
+      ]
+    },
+    "averageResponseTime": 120,
+    "linkedSince": "2026-02-01T00:00:00.000Z"
+  },
+  {
+    "id": "lucy",
+    "user": {
+      "id": "lucy",
+      "displayName": "Lucy",
+      "role": "guardian",
+      "avatarInitial": "L",
+      "timeZone": null,
+      "countryCode": "",
+      "cityName": "",
+      "createdAt": null
+    },
+    "permissions": {
+      "canSeeLocation": true,
+      "canSeeBattery": true,
+      "canSeeHealth": false,
+      "canSeePhoneActivity": false,
+      "canHearEmergencyAudio": true
+    },
+    "isOnDuty": true,
+    "dutySchedule": null,
+    "averageResponseTime": 120,
+    "linkedSince": "1970-01-01T00:00:00.000Z"
+  }
+]

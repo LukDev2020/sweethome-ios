@@ -39,6 +39,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
         // Register background tasks (must happen before didFinishLaunching returns)
         DeadManSwitchService.registerBGTask()
+        // A running dead-man countdown survives app kill: reconnect it (and fire
+        // the SOS if it expired while the app was dead)
+        DeadManSwitchService.shared.restoreIfNeeded()
 
         // Install crash reporter immediately
         appCoordinator.crashReporter.install()
@@ -70,7 +73,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         appCoordinator.pushService.registerForPushNotifications()
         application.registerForRemoteNotifications()
         appCoordinator.heartbeatService.start()
-        appCoordinator.locationManager.start()
+        // Location (and its permission prompt) starts after login — see
+        // AppCoordinator.onLoginComplete — never on the login screen.
+        if case .loggedIn = appCoordinator.authState {
+            appCoordinator.locationManager.start()
+        }
         appCoordinator.deviceHealthMonitor.beginMonitoring()
     }
 
@@ -115,6 +122,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
         // Silent push received — record heartbeat
         appCoordinator.heartbeatService.silentPushReceived()
+
+        // Silent-alarm check-in window opened on the server: show the "I'm safe" prompt
+        if (userInfo["action"] as? String) == "silent_alarm_checkin" {
+            SilentAlarmService.shared.handleCheckInPush()
+        }
 
         // Perform background sensor burst
         appCoordinator.motionService.performBackgroundBurst { result in

@@ -7,6 +7,7 @@ import SwiftUI
 // On Duo inner screen, switches to vertical rail layout.
 
 struct GuardianTabView: View {
+    @EnvironmentObject var coordinator: AppCoordinator
     @AppStorage("guardian_selected_tab") private var selectedTab = 0
     @State private var showInvite = false
     @ObservedObject private var lang = LanguageManager.shared
@@ -33,6 +34,22 @@ struct GuardianTabView: View {
         )
         .sheet(isPresented: $showInvite) {
             InviteGuardianView()
+        }
+        // An SOS push was opened: straight to that person's response screen
+        .sheet(isPresented: Binding(
+            get: { coordinator.pendingAlertPersonId != nil },
+            set: { if !$0 { coordinator.pendingAlertPersonId = nil } }
+        )) {
+            if let personId = coordinator.pendingAlertPersonId {
+                NavigationStack {
+                    GuardianAlertResponseView(personId: personId)
+                }
+                .environmentObject(coordinator)
+            }
+        }
+        // The guardian's own SOS (floating button)
+        .sheet(isPresented: $coordinator.isSOSScreenPresented) {
+            SOSActiveView().environmentObject(coordinator)
         }
     }
 }

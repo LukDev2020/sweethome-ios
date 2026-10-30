@@ -186,3 +186,33 @@ describe("heartbeat-missing check parses BigQuery timestamps", () => {
     expect(sentMessages).toHaveLength(1);
   });
 });
+
+describe("contract: GET /v1/protected/guardians", () => {
+  beforeEach(() => {
+    resetFakeAdmin();
+    jest.useFakeTimers({ now: NOW, doNotFake: ["nextTick", "setImmediate", "setTimeout", "setInterval", "queueMicrotask"] });
+    seed("users/mom", { displayName: "Mom", role: "protected", timeZone: "Asia/Shanghai" });
+    seed("users/kevin", { displayName: "Kevin", role: "guardian", timeZone: "Asia/Shanghai", countryCode: "CN", cityName: "Shanghai", createdAt: ts("2026-01-01T00:00:00Z") });
+    // Incomplete profile (no timeZone / createdAt) must not break the list
+    seed("users/lucy", { displayName: "Lucy", role: "guardian" });
+    seed("guardian_links/kevin_mom", { guardianId: "kevin", protectedPersonId: "mom", status: "active", createdAt: ts("2026-02-01T00:00:00Z") });
+    seed("guardian_links/lucy_mom", { guardianId: "lucy", protectedPersonId: "mom", status: "active" });
+    // Kevin: Monday (ISO 1) 08-20 Chengdu time
+    seed("duty_schedules/k1", { guardianId: "kevin", protectedPersonId: "mom", dayOfWeek: 1, startHour: 8, endHour: 20, isActive: true });
+  });
+  afterEach(() => jest.useRealTimers());
+
+  it("is decodable by iOS [Guardian] (timeZone string, Calendar weekdays)", async () => {
+    const app = express();
+    app.use(express.json());
+    app.use("/v1/protected", require("../routes/protected").default);
+    const res = await request(app).get("/v1/protected/guardians").set("Authorization", `Bearer ${tokenFor("mom")}`);
+    expect(res.status).toBe(200);
+    const kevin = res.body.find((g: any) => g.id === "kevin");
+    expect(kevin.user.timeZone).toBe("Asia/Shanghai");
+    expect(kevin.dutySchedule.slots[0].dayOfWeek).toEqual([2]); // Monday in Calendar terms
+    // 2026-10-30 12:00Z is Friday 20:00 in Chengdu → Kevin (Mon only) off duty
+    expect(kevin.isOnDuty).toBe(false);
+    expectMatchesFixture("protected_guardians.json", res.body);
+  });
+});

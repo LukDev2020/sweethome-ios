@@ -13,6 +13,8 @@ struct SOSEvent: Codable, Identifiable {
     var resolvedAt: Date?
     var resolvedBy: String?          // Guardian ID who clicked "I've taken over"
     var resolution: SOSResolution?
+    /// Device-local id sent with the trigger; the server maps it to the real event.
+    var clientSOSId: String? = nil
 
     var isActive: Bool { resolvedAt == nil }
 
@@ -33,6 +35,9 @@ enum SOSTriggerMethod: String, Codable {
     case voiceCommand        // On-device speech recognition ("救命", "help")
     case widgetTap           // One-tap SOS from home screen widget (SafeTap)
     case deadManSwitch       // Countdown timer expired without user dismissal
+
+    /// Must not make sound or show anything on this phone (attacker may be watching).
+    var isSilent: Bool { self == .duressPassword }
 }
 
 enum SOSResolution: String, Codable {
@@ -54,6 +59,15 @@ enum EscalationState: String, Codable {
     case hop3_exhausted      // All voice call attempts exhausted, no pickup
     case frozen              // Someone clicked "I've taken over"
     case resolved
+    case hop4_shareSent      // Emergency link texted to guardians
+    case exhausted           // All voice rounds done without a response
+    case no_guardians        // Nobody to escalate to — emergency contacts texted
+    case unknown             // Newer server state this build doesn't know
+
+    init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        self = EscalationState(rawValue: raw) ?? .unknown
+    }
 }
 
 // MARK: - Check-In
