@@ -431,14 +431,19 @@ struct GuardianRecordsView: View {
         case .itineraryAdded: return "airplane"
         case .trackingPaused: return "location.slash"
         case .trackingResumed: return "location.fill"
+        case .bleSeparation: return "sensor.tag.radiowaves.forward"
+        case .silentAlarmConfirmed: return "checkmark.circle.fill"
+        case .silentAlarmMissed, .silentAlarmEscalated: return "bell.badge.fill"
+        case .voiceNote: return "waveform"
+        case .other: return "circle.fill"
         }
     }
 
     private func colorForType(_ type: TimelineEntryType) -> Color {
         switch type {
         case .checkIn, .sosResolved, .enteredSafeZone: return safe
-        case .sosTriggered, .fallDetected: return alert
-        case .missedCheckIn, .batteryLow, .leftSafeZone: return lamp
+        case .sosTriggered, .fallDetected, .silentAlarmEscalated: return alert
+        case .missedCheckIn, .batteryLow, .leftSafeZone, .bleSeparation, .silentAlarmMissed: return lamp
         default: return .secondary
         }
     }

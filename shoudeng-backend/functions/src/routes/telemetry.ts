@@ -42,6 +42,27 @@ router.post("/heartbeat", async (req: Request, res: Response) => {
     return;
   }
 
+  // Real-time state in Firestore first (guardian dashboard, widget) — it must not
+  // depend on BigQuery being reachable.
+  try {
+    await db.collection("user_telemetry").doc(userId).set(
+      {
+        ...(typeof batteryLevel === "number" && { batteryLevel }),
+        ...(batteryState && { batteryState }),
+        ...(typeof latitude === "number" && typeof longitude === "number" && {
+          latitude,
+          longitude,
+          accuracy: typeof accuracy === "number" ? accuracy : null,
+          locationTimestamp: admin.firestore.Timestamp.now(),
+        }),
+        lastHeartbeat: admin.firestore.Timestamp.now(),
+      },
+      { merge: true }
+    );
+  } catch (error) {
+    console.warn("[Telemetry] user_telemetry heartbeat write failed:", error);
+  }
+
   try {
     await insertHeartbeat({
       userId,
@@ -53,19 +74,6 @@ router.post("/heartbeat", async (req: Request, res: Response) => {
       longitude,
       accuracy,
     });
-
-    // Also write battery level to Firestore for real-time access (widget, guardian view)
-    if (batteryLevel !== undefined) {
-      await db.collection("user_telemetry").doc(userId).set(
-        {
-          batteryLevel,
-          batteryState: batteryState || null,
-          lastHeartbeat: admin.firestore.Timestamp.now(),
-        },
-        { merge: true }
-      );
-    }
-
     res.json({ success: true });
   } catch (error) {
     console.error("[Telemetry] heartbeat insert error:", error);
@@ -104,6 +112,20 @@ router.post("/location/report", async (req: Request, res: Response) => {
   if (userId !== req.uid) {
     res.status(403).json({ error: "Cannot submit location for another user" });
     return;
+  }
+
+  try {
+    await db.collection("user_telemetry").doc(userId).set(
+      {
+        latitude,
+        longitude,
+        accuracy: typeof accuracy === "number" ? accuracy : null,
+        locationTimestamp: admin.firestore.Timestamp.now(),
+      },
+      { merge: true }
+    );
+  } catch (error) {
+    console.warn("[Telemetry] user_telemetry location write failed:", error);
   }
 
   try {
@@ -191,6 +213,58 @@ router.post("/checkin", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("[Telemetry] checkin error:", error);
     res.status(500).json({ error: "Failed to record check-in" });
+  }
+});
+
+/**
+ * POST /v1/location/pause
+ * Protected person pauses / resumes location sharing (privacy). Max 4 hours;
+ * an SOS always overrides a pause on the device.
+ * Body: { userId, paused: boolean, expiresAt?: ISO }
+ */
+export const MAX_PAUSE_MS = 4 * 60 * 60 * 1000;
+
+router.post("/location/pause", async (req: Request, res: Response) => {
+  const { userId, paused, expiresAt } = req.body;
+  if (userId !== req.uid) {
+    res.status(403).json({ error: "Cannot pause tracking for another user" });
+    return;
+  }
+  if (typeof paused !== "boolean") {
+    res.status(400).json({ error: "paused (boolean) is required" });
+    return;
+  }
+
+  const now = Date.now();
+  let until: Date | null = null;
+  if (paused) {
+    const requested = expiresAt ? new Date(expiresAt).getTime() : now + MAX_PAUSE_MS;
+    if (isNaN(requested) || requested <= now) {
+      res.status(400).json({ error: "expiresAt must be a future ISO timestamp" });
+      return;
+    }
+    until = new Date(Math.min(requested, now + MAX_PAUSE_MS));
+  }
+
+  try {
+    await db.collection("user_telemetry").doc(userId).set(
+      {
+        trackingPaused: paused,
+        trackingPausedUntil: until ? admin.firestore.Timestamp.fromDate(until) : null,
+      },
+      { merge: true }
+    );
+    await db.collection("timeline_entries").add({
+      userId,
+      timestamp: admin.firestore.Timestamp.now(),
+      type: paused ? "trackingPaused" : "trackingResumed",
+      description: paused ? "暂停了位置共享" : "恢复了位置共享",
+      detail: until ? until.toISOString() : null,
+    });
+    res.json({ success: true, pausedUntil: until ? until.toISOString() : null });
+  } catch (error) {
+    console.error("[Telemetry] location pause error:", error);
+    res.status(500).json({ error: "Failed to update tracking pause" });
   }
 });
 

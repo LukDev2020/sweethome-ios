@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D6777B81C2D1BCB346B6C2F3 /* ContractFixtureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAEC4525DF40C4476C125A50 /* ContractFixtureTests.swift */; };
 		25F3BEBCE49F83D028EDDA2A /* AppLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4065FDD0413EBFDA074642D7 /* AppLifecycleTests.swift */; };
 		DD4C82603D4B0B8218838586 /* AppLifecycleRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4C8E04ABB40A07C16C56BC /* AppLifecycleRouter.swift */; };
 		BB22CC3300001001 /* TripRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC3300002001 /* TripRecord.swift */; };
@@ -227,6 +228,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		DAEC4525DF40C4476C125A50 /* ContractFixtureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContractFixtureTests.swift; sourceTree = "<group>"; };
 		4065FDD0413EBFDA074642D7 /* AppLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLifecycleTests.swift; sourceTree = "<group>"; };
 		1E4C8E04ABB40A07C16C56BC /* AppLifecycleRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLifecycleRouter.swift; sourceTree = "<group>"; };
 		00D6D2187E81F7ADD2436B42 /* ProtectedStatusWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtectedStatusWidget.swift; sourceTree = "<group>"; };
@@ -784,6 +786,7 @@
 				19BF856E4785D6ABD573F691 /* AdaptiveLocationManagerTests.swift */,
 				C5D6E7F8A9B0C1D2E3F4A5B6 /* ReactiveLocationServiceTests.swift */,
 				B273093A701FBEED8E657124 /* APIClientTests.swift */,
+				DAEC4525DF40C4476C125A50 /* ContractFixtureTests.swift */,
 				4065FDD0413EBFDA074642D7 /* AppLifecycleTests.swift */,
 				3C38041E8CCB6EAE0ECF2D4F /* AuthManagerTests.swift */,
 				A1B2C3D4E5F60001A0000003 /* KeychainHelperTests.swift */,
@@ -1277,6 +1280,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D6777B81C2D1BCB346B6C2F3 /* ContractFixtureTests.swift in Sources */,
 				25F3BEBCE49F83D028EDDA2A /* AppLifecycleTests.swift in Sources */,
 				D36AE3ACFF56A4B4A28DD3AF /* APIClientTests.swift in Sources */,
 				F0FFEA124608CCCA60504A62 /* AdaptiveLocationManagerTests.swift in Sources */,

@@ -495,7 +495,8 @@ final class AppCoordinator: ObservableObject {
 
     func fetchProtectedPersons() async {
         do {
-            let persons: [ProtectedPersonStatusResponse] = try await apiClient.get("/v1/guardian/protected-persons")
+            let lossy: LossyArray<ProtectedPersonStatusResponse> = try await apiClient.get("/v1/guardian/protected-persons")
+            let persons = lossy.elements
             let mapped = persons.map { p in
                 ProtectedPerson(
                     id: p.personId,

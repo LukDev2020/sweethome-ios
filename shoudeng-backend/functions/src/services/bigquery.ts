@@ -128,6 +128,42 @@ export async function insertConsentAudit(data: {
 }
 
 /**
+ * BigQuery returns TIMESTAMP / DATETIME / DATE columns as wrapper objects
+ * (`BigQueryTimestamp { value: "2026-10-30T12:00:00.000Z" }`). Serialising one
+ * with `res.json` yields `{"value": ...}` and `String(obj)` yields
+ * "[object Object]", so every row read from BigQuery is normalised to ISO-8601
+ * strings before it reaches route code.
+ */
+export function bqTimestampToIso(v: unknown): string | null {
+  if (v == null) return null;
+  if (v instanceof Date) return isNaN(v.getTime()) ? null : v.toISOString();
+  if (typeof v === "object" && "value" in (v as Record<string, unknown>)) {
+    return bqTimestampToIso((v as { value: unknown }).value);
+  }
+  if (typeof v === "string" || typeof v === "number") {
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d.toISOString();
+  }
+  return null;
+}
+
+const TIMESTAMP_COLUMNS = new Set(["timestamp", "created_at", "updated_at"]);
+
+export function normalizeBigQueryRow(
+  row: Record<string, unknown>
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(row)) {
+    const isWrapper =
+      v != null && typeof v === "object" && !Array.isArray(v) && "value" in (v as object);
+    out[k] = TIMESTAMP_COLUMNS.has(k) || isWrapper || v instanceof Date
+      ? bqTimestampToIso(v)
+      : v;
+  }
+  return out;
+}
+
+/**
  * Query heartbeat signals for a user within a time range.
  */
 export async function queryHeartbeats(
@@ -145,7 +181,7 @@ export async function queryHeartbeats(
     query,
     params: { userId, startTime, endTime },
   });
-  return rows;
+  return rows.map(normalizeBigQueryRow);
 }
 
 /**
@@ -166,7 +202,7 @@ export async function queryLocations(
     query,
     params: { userId, startTime, endTime },
   });
-  return rows;
+  return rows.map(normalizeBigQueryRow);
 }
 
 /**
@@ -182,7 +218,7 @@ export async function getLatestHeartbeat(
     LIMIT 1
   `;
   const [rows] = await bigquery.query({ query, params: { userId } });
-  return rows.length > 0 ? rows[0] : null;
+  return rows.length > 0 ? normalizeBigQueryRow(rows[0]) : null;
 }
 
 /**

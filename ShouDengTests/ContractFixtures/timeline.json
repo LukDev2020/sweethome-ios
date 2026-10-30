@@ -1,0 +1,69 @@
+{
+  "entries": [
+    {
+      "id": "e0",
+      "type": "checkIn",
+      "description": "entry 0",
+      "detail": null,
+      "timestamp": "2026-10-30T12:00:00.000Z"
+    },
+    {
+      "id": "e1",
+      "type": "sosTriggered",
+      "description": "entry 1",
+      "detail": null,
+      "timestamp": "2026-10-30T11:59:00.000Z"
+    },
+    {
+      "id": "e2",
+      "type": "sosResolved",
+      "description": "entry 2",
+      "detail": null,
+      "timestamp": "2026-10-30T11:58:00.000Z"
+    },
+    {
+      "id": "e3",
+      "type": "ble_separation",
+      "description": "entry 3",
+      "detail": null,
+      "timestamp": "2026-10-30T11:57:00.000Z"
+    },
+    {
+      "id": "e4",
+      "type": "silent_alarm_confirmed",
+      "description": "entry 4",
+      "detail": null,
+      "timestamp": "2026-10-30T11:56:00.000Z"
+    },
+    {
+      "id": "e5",
+      "type": "silent_alarm_missed",
+      "description": "entry 5",
+      "detail": null,
+      "timestamp": "2026-10-30T11:55:00.000Z"
+    },
+    {
+      "id": "e6",
+      "type": "silent_alarm_escalated",
+      "description": "entry 6",
+      "detail": null,
+      "timestamp": "2026-10-30T11:54:00.000Z"
+    },
+    {
+      "id": "e7",
+      "type": "voiceNote",
+      "description": "entry 7",
+      "detail": null,
+      "timestamp": "2026-10-30T11:53:00.000Z"
+    },
+    {
+      "id": "e8",
+      "type": "homeTimerSet",
+      "description": "entry 8",
+      "detail": null,
+      "timestamp": "2026-10-30T11:52:00.000Z"
+    }
+  ],
+  "hasMore": false,
+  "nextBefore": null
+}

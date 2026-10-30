@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
+import { toIso } from "../services/time";
 
 const router = Router();
 const db = admin.firestore();
@@ -22,7 +23,7 @@ router.get("/", async (req: Request, res: Response) => {
       .collection("timeline_entries")
       .where("userId", "==", uid)
       .orderBy("timestamp", "desc")
-      .limit(limit);
+      .limit(limit + 1); // one extra row tells us whether there is another page
 
     if (before) {
       const beforeDate = new Date(before);
@@ -36,20 +37,28 @@ router.get("/", async (req: Request, res: Response) => {
     }
 
     const snapshot = await query.get();
+    const hasMore = snapshot.docs.length > limit;
 
-    const entries = snapshot.docs.map((doc) => {
+    const entries = snapshot.docs.slice(0, limit).flatMap((doc) => {
       const data = doc.data();
-      return {
+      const timestamp = toIso(data.timestamp);
+      // iOS TimelineEntry requires a timestamp — skip malformed rows instead of
+      // failing the whole page.
+      if (!timestamp || typeof data.type !== "string") return [];
+      return [{
         id: doc.id,
         type: data.type,
-        description: data.description,
+        description: typeof data.description === "string" ? data.description : "",
         detail: data.detail || null,
-        timestamp:
-          data.timestamp?.toDate?.()?.toISOString() || null,
-      };
+        timestamp,
+      }];
     });
 
-    res.json({ entries });
+    res.json({
+      entries,
+      hasMore,
+      nextBefore: hasMore && entries.length > 0 ? entries[entries.length - 1].timestamp : null,
+    });
   } catch (error) {
     console.error("[Timeline] fetch error:", error);
     res.status(500).json({ error: "Failed to fetch timeline" });

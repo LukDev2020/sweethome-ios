@@ -156,6 +156,66 @@ struct ProtectedPersonStatusResponse: Codable {
     var timeZoneId: String?
     var countryCode: String?
     var cityName: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case personId, displayName, status, latitude, longitude, locationTimestamp, locationAddress
+        case locationAccuracy, batteryLevel, batteryState, lastCheckIn, lastPhoneActivity
+        case protectionLayers, timeZoneId, countryCode, cityName
+    }
+
+    /// Only `personId` is required. A malformed optional field (e.g. a timestamp the
+    /// server failed to normalise) becomes nil instead of failing the whole person.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        personId = try c.decode(String.self, forKey: .personId)
+        displayName = c.lossy(String.self, .displayName) ?? ""
+        status = c.lossy(SafetyStatus.self, .status) ?? .unreachable
+        latitude = c.lossy(Double.self, .latitude)
+        longitude = c.lossy(Double.self, .longitude)
+        locationTimestamp = c.lossy(Date.self, .locationTimestamp)
+        locationAddress = c.lossy(String.self, .locationAddress)
+        locationAccuracy = c.lossy(Double.self, .locationAccuracy)
+        batteryLevel = c.lossy(Double.self, .batteryLevel)
+        batteryState = c.lossy(BatteryState.self, .batteryState) ?? .unknown
+        lastCheckIn = c.lossy(Date.self, .lastCheckIn)
+        lastPhoneActivity = c.lossy(Date.self, .lastPhoneActivity)
+        protectionLayers = c.lossy(Int.self, .protectionLayers) ?? 0
+        timeZoneId = c.lossy(String.self, .timeZoneId)
+        countryCode = c.lossy(String.self, .countryCode)
+        cityName = c.lossy(String.self, .cityName)
+    }
+}
+
+// MARK: - Lossy decoding helpers
+
+extension KeyedDecodingContainer {
+    /// Decodes an optional value, returning nil when it is missing, null or malformed.
+    func lossy<T: Decodable>(_ type: T.Type, _ key: Key) -> T? {
+        (try? decodeIfPresent(type, forKey: key)) ?? nil
+    }
+}
+
+/// Decodes a JSON array element by element, dropping elements that fail to decode
+/// so one bad row can't blank a whole list.
+struct LossyArray<Element: Decodable>: Decodable {
+    let elements: [Element]
+    private(set) var droppedCount = 0
+
+    private struct AnyDecodable: Decodable {}
+
+    init(from decoder: Decoder) throws {
+        var container = try decoder.unkeyedContainer()
+        var items: [Element] = []
+        while !container.isAtEnd {
+            if let item = try? container.decode(Element.self) {
+                items.append(item)
+            } else {
+                _ = try? container.decode(AnyDecodable.self)
+                droppedCount += 1
+            }
+        }
+        elements = items
+    }
 }
 
 // MARK: - Device Token Registration
@@ -193,9 +253,19 @@ struct UpdateDutyScheduleRequest: Codable {
 
 // MARK: - Timeline
 
-struct TimelineResponse: Codable {
+struct TimelineResponse: Decodable {
     let entries: [TimelineEntry]
-    let hasMore: Bool
+    let hasMore: Bool?
+    let nextBefore: Date?
+
+    private enum CodingKeys: String, CodingKey { case entries, hasMore, nextBefore }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        entries = try c.decode(LossyArray<TimelineEntry>.self, forKey: .entries).elements
+        hasMore = c.lossy(Bool.self, .hasMore)
+        nextBefore = c.lossy(Date.self, .nextBefore)
+    }
 }
 
 // MARK: - Subscription

@@ -105,6 +105,20 @@ enum TimelineEntryType: String, Codable {
     case itineraryAdded
     case trackingPaused
     case trackingResumed
+    // Written by the backend (device.ts, silentAlarm*.ts, voiceNote.ts)
+    case bleSeparation = "ble_separation"
+    case silentAlarmConfirmed = "silent_alarm_confirmed"
+    case silentAlarmMissed = "silent_alarm_missed"
+    case silentAlarmEscalated = "silent_alarm_escalated"
+    case voiceNote
+    /// Any type this build doesn't know yet — shown generically instead of
+    /// failing the whole timeline decode.
+    case other
+
+    init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        self = TimelineEntryType(rawValue: raw) ?? .other
+    }
 }
 
 // MARK: - Safe Zone

@@ -100,6 +100,13 @@ enum SafetyStatus: String, Codable {
     case overdue            // Orange — missed check-in, not yet escalated
     case alert              // Red — SOS triggered or escalation in progress
     case unreachable        // Grey — phone off / no signal
+
+    /// Unknown future statuses must not fail the guardian dashboard decode.
+    /// Grey (unknown) is the honest fallback — never "normal".
+    init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        self = SafetyStatus(rawValue: raw) ?? .unreachable
+    }
 }
 
 // MARK: - Location

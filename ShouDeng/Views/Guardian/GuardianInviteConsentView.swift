@@ -45,11 +45,11 @@ struct GuardianInviteConsentView: View {
 
                 // Resend button
                 Button {
+                    // There is no server-side "resend": invites are codes the user
+                    // shares themselves. Issue a fresh code and open the share sheet.
                     Task {
-                        let _: EmptyResponse? = try? await coordinator.apiClient.post(
-                            "/v1/guardian/resend-invite",
-                            body: EmptyBody()
-                        )
+                        guard let invite = try? await coordinator.createInviteCode() else { return }
+                        await MainActor.run { shareInvite(code: invite.code) }
                     }
                 } label: {
                     Text("重新发送邀请")
@@ -75,6 +75,14 @@ struct GuardianInviteConsentView: View {
         .background(Color(.systemBackground))
         .navigationTitle("邀请与授权")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func shareInvite(code: String) {
+        let ac = UIActivityViewController(activityItems: [code], applicationActivities: nil)
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let root = scene.windows.first?.rootViewController {
+            root.present(ac, animated: true)
+        }
     }
 
     // MARK: - Step 1: Permissions

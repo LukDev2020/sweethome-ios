@@ -1,0 +1,38 @@
+[
+  {
+    "personId": "mom",
+    "displayName": "Mom",
+    "status": "normal",
+    "latitude": 30.657,
+    "longitude": 104.066,
+    "locationTimestamp": "2026-10-30T11:55:00.000Z",
+    "locationAddress": "Jinjiang District, Chengdu",
+    "locationAccuracy": 12,
+    "batteryLevel": 0.62,
+    "batteryState": "unplugged",
+    "lastCheckIn": "2026-10-30T10:58:00.000Z",
+    "lastPhoneActivity": "2026-10-30T11:55:00.000Z",
+    "protectionLayers": 2,
+    "timeZoneId": "Asia/Shanghai",
+    "countryCode": "CN",
+    "cityName": "Chengdu"
+  },
+  {
+    "personId": "dad",
+    "displayName": "Dad",
+    "status": "pendingCheckIn",
+    "latitude": null,
+    "longitude": null,
+    "locationTimestamp": null,
+    "locationAddress": null,
+    "locationAccuracy": null,
+    "batteryLevel": 0.62,
+    "batteryState": "unplugged",
+    "lastCheckIn": null,
+    "lastPhoneActivity": "2026-10-30T11:55:00.000Z",
+    "protectionLayers": 1,
+    "timeZoneId": "America/Toronto",
+    "countryCode": "CA",
+    "cityName": "Toronto"
+  }
+]

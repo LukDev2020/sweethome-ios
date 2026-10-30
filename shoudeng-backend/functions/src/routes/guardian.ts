@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
 import { getLatestHeartbeat } from "../services/bigquery";
+import { toIso } from "../services/time";
 import { reverseGeocode } from "../services/geocoding";
 
 const router = Router();
@@ -37,75 +38,13 @@ router.get(
       for (const linkDoc of linksSnapshot.docs) {
         const link = linkDoc.data();
         const personId = link.protectedPersonId;
-
-        // Fetch user profile
-        const userDoc = await db.collection("users").doc(personId).get();
-        if (!userDoc.exists) continue;
-        const user = userDoc.data()!;
-
-        // Count protection layers (number of active guardians)
-        const guardianCount = await db
-          .collection("guardian_links")
-          .where("protectedPersonId", "==", personId)
-          .where("status", "==", "active")
-          .count()
-          .get();
-
-        // Get latest heartbeat from BigQuery
-        const latestHeartbeat = await getLatestHeartbeat(personId);
-
-        // Get latest check-in from Firestore
-        const checkinSnapshot = await db
-          .collection("checkins")
-          .where("userId", "==", personId)
-          .orderBy("timestamp", "desc")
-          .limit(1)
-          .get();
-        const lastCheckIn = checkinSnapshot.empty
-          ? null
-          : checkinSnapshot.docs[0].data().timestamp.toDate().toISOString();
-
-        // Check location permission granted by protected person
-        const canSeeLocation = link.permissions?.canSeeLocation !== false;
-
-        // Get latest location from BigQuery heartbeat
-        const lat = latestHeartbeat?.latitude ?? null;
-        const lng = latestHeartbeat?.longitude ?? null;
-        const locationTimestamp = latestHeartbeat?.timestamp ?? null;
-
-        // Compute safety status
-        const status = computeSafetyStatus(
-          lastCheckIn ? new Date(lastCheckIn) : null,
-          latestHeartbeat?.timestamp
-            ? new Date(String(latestHeartbeat.timestamp))
-            : null
-        );
-
-        result.push({
-          personId,
-          displayName: user.displayName,
-          status,
-          latitude: canSeeLocation ? (lat as number | null) : null,
-          longitude: canSeeLocation ? (lng as number | null) : null,
-          locationTimestamp: canSeeLocation ? locationTimestamp : null,
-          locationAddress:
-            canSeeLocation && lat != null && lng != null
-              ? await reverseGeocode(lat as number, lng as number)
-              : null,
-          locationAccuracy: canSeeLocation
-            ? ((latestHeartbeat?.accuracy as number) ?? null)
-            : null,
-          batteryLevel: (latestHeartbeat?.battery_level as number) ?? null,
-          batteryState: (latestHeartbeat?.battery_state as string) ?? "unknown",
-          lastCheckIn,
-          lastPhoneActivity: latestHeartbeat?.timestamp
-            ? String(latestHeartbeat.timestamp)
-            : null,
-          protectionLayers: guardianCount.data().count,
-          timeZoneId: user.timeZone ?? null,
-          countryCode: user.countryCode ?? null,
-          cityName: user.cityName ?? null,
-        });
+        // One person with bad data must not blank the whole dashboard.
+        try {
+          const row = await loadPersonStatus(personId, link);
+          if (row) result.push(row);
+        } catch (err) {
+          console.error(`[Guardian] status for ${personId} failed:`, err);
+        }
       }
 
       res.json(result);
@@ -116,14 +55,150 @@ router.get(
   }
 );
 
+async function loadPersonStatus(
+  personId: string,
+  link: admin.firestore.DocumentData
+): Promise<ProtectedPersonStatus | null> {
+  const userDoc = await db.collection("users").doc(personId).get();
+  if (!userDoc.exists) return null;
+  const user = userDoc.data()!;
+
+  // Count protection layers (number of active guardians)
+  const guardianCount = await db
+    .collection("guardian_links")
+    .where("protectedPersonId", "==", personId)
+    .where("status", "==", "active")
+    .count()
+    .get();
+
+  // Real-time telemetry (Firestore) first; BigQuery history as fallback.
+  const telemetryDoc = await db.collection("user_telemetry").doc(personId).get();
+  const telemetry = telemetryDoc.exists ? telemetryDoc.data()! : null;
+  let heartbeat: Record<string, unknown> | null = null;
+  if (!telemetry?.lastHeartbeat) {
+    try {
+      heartbeat = await getLatestHeartbeat(personId);
+    } catch (err) {
+      console.warn(`[Guardian] BigQuery heartbeat lookup failed for ${personId}:`, err);
+    }
+  }
+
+  const checkinSnapshot = await db
+    .collection("checkins")
+    .where("userId", "==", personId)
+    .orderBy("timestamp", "desc")
+    .limit(1)
+    .get();
+  const lastCheckIn = checkinSnapshot.empty
+    ? null
+    : toIso(checkinSnapshot.docs[0].data().timestamp);
+
+  return buildPersonStatus({
+    personId,
+    user,
+    permissions: link.permissions,
+    telemetry,
+    heartbeat,
+    lastCheckIn,
+    protectionLayers: guardianCount.data().count,
+    reverseGeocode,
+  });
+}
+
+/** Shape decoded by iOS `ProtectedPersonStatusResponse` (see ContractFixtures). */
+export interface ProtectedPersonStatus {
+  personId: string;
+  displayName: string;
+  status: string;
+  latitude: number | null;
+  longitude: number | null;
+  locationTimestamp: string | null;
+  locationAddress: string | null;
+  locationAccuracy: number | null;
+  batteryLevel: number | null;
+  batteryState: string;
+  lastCheckIn: string | null;
+  lastPhoneActivity: string | null;
+  protectionLayers: number;
+  timeZoneId: string | null;
+  countryCode: string | null;
+  cityName: string | null;
+}
+
+const num = (v: unknown): number | null =>
+  typeof v === "number" && isFinite(v) ? v : null;
+
+export async function buildPersonStatus(input: {
+  personId: string;
+  user: admin.firestore.DocumentData;
+  permissions?: Record<string, unknown>;
+  telemetry: admin.firestore.DocumentData | null;
+  heartbeat: Record<string, unknown> | null;
+  lastCheckIn: string | null;
+  protectionLayers: number;
+  reverseGeocode: (lat: number, lng: number) => Promise<string | null>;
+  now?: Date;
+}): Promise<ProtectedPersonStatus> {
+  const { user, telemetry, heartbeat } = input;
+  const canSeeLocation = input.permissions?.canSeeLocation !== false;
+  const canSeeBattery = input.permissions?.canSeeBattery !== false;
+  const canSeePhoneActivity = input.permissions?.canSeePhoneActivity !== false;
+
+  const lastHeartbeat = toIso(telemetry?.lastHeartbeat) ?? toIso(heartbeat?.timestamp);
+  const lat = num(telemetry?.latitude) ?? num(heartbeat?.latitude);
+  const lng = num(telemetry?.longitude) ?? num(heartbeat?.longitude);
+  const locationTimestamp =
+    toIso(telemetry?.locationTimestamp) ?? (lat != null ? lastHeartbeat : null);
+  const accuracy = num(telemetry?.accuracy) ?? num(heartbeat?.accuracy);
+  const batteryLevel = num(telemetry?.batteryLevel) ?? num(heartbeat?.battery_level);
+  const batteryState =
+    (telemetry?.batteryState as string) ?? (heartbeat?.battery_state as string) ?? "unknown";
+
+  const status = computeSafetyStatus(
+    input.lastCheckIn ? new Date(input.lastCheckIn) : null,
+    lastHeartbeat ? new Date(lastHeartbeat) : null,
+    input.now
+  );
+
+  const showLocation = canSeeLocation && lat != null && lng != null;
+  let address: string | null = null;
+  if (showLocation) {
+    try {
+      address = await input.reverseGeocode(lat!, lng!);
+    } catch {
+      address = null;
+    }
+  }
+
+  return {
+    personId: input.personId,
+    displayName: String(user.displayName ?? ""),
+    status,
+    latitude: showLocation ? lat : null,
+    longitude: showLocation ? lng : null,
+    locationTimestamp: showLocation ? locationTimestamp : null,
+    locationAddress: address,
+    locationAccuracy: showLocation ? accuracy : null,
+    batteryLevel: canSeeBattery ? batteryLevel : null,
+    batteryState: canSeeBattery ? batteryState : "unknown",
+    lastCheckIn: input.lastCheckIn,
+    lastPhoneActivity: canSeePhoneActivity ? lastHeartbeat : null,
+    protectionLayers: input.protectionLayers,
+    timeZoneId: user.timeZone ?? null,
+    countryCode: user.countryCode ?? null,
+    cityName: user.cityName ?? null,
+  };
+}
+
 /**
  * Compute safety status based on check-in and heartbeat recency.
  */
-function computeSafetyStatus(
+export function computeSafetyStatus(
   lastCheckIn: Date | null,
-  lastHeartbeat: Date | null
+  lastHeartbeat: Date | null,
+  nowDate?: Date
 ): string {
-  const now = Date.now();
+  const now = (nowDate ?? new Date()).getTime();
 
   // No data at all
   if (!lastCheckIn && !lastHeartbeat) return "unreachable";
