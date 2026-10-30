@@ -167,6 +167,9 @@ export async function createShareToken(params: {
   createdBy: string;
   expiresInHours: number;
 }): Promise<string> {
+  // Never longer than 48 h, whoever asks (privacy policy)
+  const hours = Math.min(Math.max(params.expiresInHours, 0), 48);
+  params = { ...params, expiresInHours: hours };
   const token = crypto.randomBytes(32).toString("hex");
 
   await db.collection("evidence_shares").doc(token).set({
@@ -180,14 +183,14 @@ export async function createShareToken(params: {
     maxAccess: 10,
   });
 
-  // Log in consent audit
+  // Log in consent audit (best effort — BigQuery may be unavailable)
   await insertConsentAudit({
     userId: params.protectedPersonId,
     consentType: "data_export",
     action: "accessed",
     grantedTo: "public_share",
     detail: `Share token created by ${params.createdBy}, expires in ${params.expiresInHours}h`,
-  });
+  }).catch((err) => console.warn("[Evidence] consent audit insert failed:", err));
 
   return token;
 }

@@ -18,13 +18,17 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/guardian_links/$(request.auth.uid + '_' + protectedPersonId)).data.status == 'active';
     }
 
-    // Users — read/write own profile only, with field validation
+    // Users — read own profile; clients may only edit profile fields.
+    // Accounts are created by the server (signup); phone, role, locale-independent
+    // security fields and subscriptions are server-managed.
     match /users/{userId} {
       allow read: if isOwner(userId);
-      allow write: if isOwner(userId)
-        && request.resource.data.displayName is string
-        && request.resource.data.role in ['protected', 'guardian']
-        && request.resource.data.phone is string;
+      allow create, delete: if false;
+      allow update: if isOwner(userId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+             'displayName', 'avatarInitial', 'email', 'cityName', 'countryCode',
+             'timeZone', 'locale', 'notificationPrefs', 'publicKey', 'updatedAt'])
+        && (!('displayName' in request.resource.data) || request.resource.data.displayName is string);
     }
 
     // Guardian links — read if you are either side, create only if you are one party
@@ -34,10 +38,25 @@ service cloud.firestore {
         resource.data.protectedPersonId == request.auth.uid
       );
       allow create: if false; // Server-side only via admin SDK (invite-accept flow)
-      allow update: if isAuth() && (
-        resource.data.guardianId == request.auth.uid ||
-        resource.data.protectedPersonId == request.auth.uid
-      );
+      // Allowed transitions only:
+      //  - the protected person may change what a guardian can see, or revoke;
+      //  - the guardian may only step down (revoke).
+      // Nobody can re-activate a revoked link or move a link to other people.
+      allow update: if isAuth()
+        && request.resource.data.guardianId == resource.data.guardianId
+        && request.resource.data.protectedPersonId == resource.data.protectedPersonId
+        && (
+          (resource.data.protectedPersonId == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['permissions', 'permissionsUpdatedAt', 'status', 'revokedAt', 'updatedAt'])
+            && (request.resource.data.status == resource.data.status
+                || request.resource.data.status == 'revoked'))
+          ||
+          (resource.data.guardianId == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['status', 'revokedAt', 'updatedAt'])
+            && request.resource.data.status == 'revoked')
+        );
       allow delete: if isAuth() && (
         resource.data.guardianId == request.auth.uid ||
         resource.data.protectedPersonId == request.auth.uid
@@ -66,7 +85,8 @@ service cloud.firestore {
       allow write: if false; // Server-side only
     }
 
-    // Invites — only creator can read their own invites
+    // Invites — only creator can read their own invites; accepting goes through
+    // the server (any signed-in user could otherwise rewrite a pending invite)
     match /invites/{inviteId} {
       allow read: if isAuth() && resource.data.createdBy == request.auth.uid;
       allow create: if isAuth()
@@ -74,7 +94,9 @@ service cloud.firestore {
         && request.resource.data.status == 'pending'
         && request.resource.data.code is string;
       allow update: if isAuth()
-        && (resource.data.createdBy == request.auth.uid || resource.data.status == 'pending');
+        && resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.status in ['pending', 'cancelled'];
     }
 
     // Device tokens — own tokens only (fixed: was allowing any auth user)
@@ -110,7 +132,15 @@ service cloud.firestore {
           exists(/databases/$(database)/documents/guardian_links/$(get(/databases/$(database)/documents/family_posts/$(postId)).data.authorId + '_' + request.auth.uid))
             && get(/databases/$(database)/documents/guardian_links/$(get(/databases/$(database)/documents/family_posts/$(postId)).data.authorId + '_' + request.auth.uid)).data.status == 'active'
         );
-        allow create: if isAuth() && request.resource.data.authorId == request.auth.uid;
+        // Only people who can read the post may comment on it
+        allow create: if isAuth()
+          && request.resource.data.authorId == request.auth.uid
+          && (
+            get(/databases/$(database)/documents/family_posts/$(postId)).data.authorId == request.auth.uid ||
+            isGuardianOf(get(/databases/$(database)/documents/family_posts/$(postId)).data.authorId) ||
+            exists(/databases/$(database)/documents/guardian_links/$(get(/databases/$(database)/documents/family_posts/$(postId)).data.authorId + '_' + request.auth.uid))
+              && get(/databases/$(database)/documents/guardian_links/$(get(/databases/$(database)/documents/family_posts/$(postId)).data.authorId + '_' + request.auth.uid)).data.status == 'active'
+          );
       }
     }
 
@@ -144,10 +174,15 @@ service cloud.firestore {
       allow write: if isOwner(userId);
     }
 
-    // Medical card shares — public read by token, create by owner
+    // Medical card shares — fetch ONE share by its (secret) token while it is
+    // valid; never list them. Created only for your own card.
     match /medical_card_shares/{tokenId} {
-      allow read: if true; // Public access by share token
-      allow create: if isAuth();
+      allow get: if resource.data.expiresAt > request.time;
+      allow list: if false;
+      allow create: if isAuth()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.expiresAt is timestamp;
+      allow update: if false;
       allow delete: if isAuth() && resource.data.userId == request.auth.uid;
     }
 
