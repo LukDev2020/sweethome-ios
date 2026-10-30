@@ -66,6 +66,15 @@ struct LoginView: View {
         .onAppear {
             checkLockout()
             applyLanguageForCountry(selectedCountry)
+            #if DEBUG
+            // Simulator verification: launch with `-devLoginRole guardian|protected`
+            if let role = UserDefaults.standard.string(forKey: "devLoginRole") {
+                phone = "6479283746"
+                codeSent = true
+                code = role == "guardian" ? "928374" : "928375"
+                Task { await handleAction() }
+            }
+            #endif
         }
         .onChange(of: selectedCountry) { _, newCountry in
             applyLanguageForCountry(newCountry)

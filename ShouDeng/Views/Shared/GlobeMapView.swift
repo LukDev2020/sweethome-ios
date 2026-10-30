@@ -25,6 +25,9 @@ struct GlobeMapView: View {
     let pins: [Pin]
     var links: [Link] = []
     var initialLongitude: Double = -40
+    /// Bands at the top/bottom covered by overlay text (card header, legend);
+    /// labels are never drawn there.
+    var labelInsets: EdgeInsets = EdgeInsets()
 
     private let tilt: Double = 20
     private let speed: Double = 6
@@ -40,9 +43,67 @@ struct GlobeMapView: View {
     }
 
     private var globeAccessibilityLabel: String {
-        if pins.isEmpty { return "家庭守护地球，暂无成员" }
-        let names = pins.map { $0.label }.joined(separator: "、")
-        return "家庭守护地球，显示\(pins.count)位成员：\(names)"
+        let lm = LanguageManager.shared
+        if pins.isEmpty { return lm.localized("globe.a11y.empty") }
+        let names = Self.labelGroups(pins).map(\.label).joined(separator: "; ")
+        return String(format: lm.localized("globe.a11y.members"), pins.count, names)
+    }
+
+    // MARK: - Label grouping
+
+    /// One label per place: people closer than `mergeKm` share a single dot label
+    /// ("Xiulan Chen, Jianguo Chen · Chengdu") instead of drawing overlapping text.
+    struct LabelGroup: Equatable {
+        let label: String
+        let latitude: Double
+        let longitude: Double
+        let pinIndices: [Int]
+    }
+
+    static let mergeKm: Double = 40
+
+    static func labelGroups(_ pins: [Pin]) -> [LabelGroup] {
+        var groups: [[Int]] = []
+        for (i, pin) in pins.enumerated() {
+            if let g = groups.firstIndex(where: { group in
+                group.contains { distanceKm(pins[$0], pin) < mergeKm }
+            }) {
+                groups[g].append(i)
+            } else {
+                groups.append([i])
+            }
+        }
+        return groups.map { idx in
+            let members = idx.map { pins[$0] }
+            return LabelGroup(
+                label: mergedLabel(members.map(\.label)),
+                latitude: members[0].latitude,
+                longitude: members[0].longitude,
+                pinIndices: idx
+            )
+        }
+    }
+
+    /// "A · City" + "B · City" → "A, B · City"; 3+ names → "A +2 · City".
+    static func mergedLabel(_ labels: [String]) -> String {
+        guard labels.count > 1 else { return labels.first ?? "" }
+        let parts = labels.map { $0.components(separatedBy: " · ") }
+        let names = parts.map { $0[0] }
+        let suffixes = Set(parts.map { $0.count > 1 ? $0.dropFirst().joined(separator: " · ") : "" })
+        let who = names.count > 2 ? "\(names[0]) +\(names.count - 1)" : names.joined(separator: ", ")
+        if suffixes.count == 1, let suffix = suffixes.first, !suffix.isEmpty {
+            return "\(who) · \(suffix)"
+        }
+        return who
+    }
+
+    private static func distanceKm(_ a: Pin, _ b: Pin) -> Double {
+        let rad = Double.pi / 180
+        let dLat = (b.latitude - a.latitude) * rad
+        let dLon = (b.longitude - a.longitude) * rad
+        let h = sin(dLat / 2) * sin(dLat / 2)
+            + cos(a.latitude * rad) * cos(b.latitude * rad) * sin(dLon / 2) * sin(dLon / 2)
+        return 6371 * 2 * atan2(sqrt(h), sqrt(1 - h))
     }
 
     // MARK: - Rendering
@@ -154,15 +215,44 @@ struct GlobeMapView: View {
                 with: .color(pin.color.opacity(alpha))
             )
 
+        }
+
+        // --- Labels: one per place, nudged apart if they still collide on screen ---
+        var placed: [CGRect] = []
+        for group in Self.labelGroups(pins) {
+            let pt = proj(group.longitude, group.latitude)
             // City label (only when facing forward enough)
-            if pt.z > 0.2 {
-                let resolved = ctx.resolve(
-                    Text(pin.label)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.9 * alpha))
-                )
-                ctx.draw(resolved, at: CGPoint(x: pt.x, y: pt.y - glowR - 6), anchor: .bottom)
+            guard pt.z > 0.2 else { continue }
+            let alpha = min(1.0, 0.4 + pt.z)
+            let isMe = group.pinIndices.contains { pins[$0].isMe }
+            let glowR: CGFloat = isMe ? 14 : 10
+            let resolved = ctx.resolve(
+                Text(group.label)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.9 * alpha))
+            )
+            let textSize = resolved.measure(in: CGSize(width: size.width, height: 40))
+            // Prefer above the dot; then below; then further up.
+            let candidates: [CGFloat] = [
+                pt.y - glowR - 6 - textSize.height,
+                pt.y + glowR + 4,
+                pt.y - glowR - 8 - textSize.height * 2,
+            ]
+            let allowed = CGRect(x: 0, y: labelInsets.top, width: size.width,
+                                 height: size.height - labelInsets.top - labelInsets.bottom)
+            var chosen: CGRect?
+            for top in candidates {
+                let r = CGRect(x: pt.x - textSize.width / 2, y: top, width: textSize.width, height: textSize.height)
+                if allowed.contains(CGRect(x: allowed.minX, y: r.minY, width: 1, height: r.height)),
+                   !placed.contains(where: { $0.insetBy(dx: -2, dy: -1).intersects(r) }) {
+                    chosen = r
+                    break
+                }
             }
+            // No free spot this frame (e.g. dot under the header): skip the label rather than overlap
+            guard let rect = chosen else { continue }
+            placed.append(rect)
+            ctx.draw(resolved, at: CGPoint(x: rect.midX, y: rect.minY), anchor: .top)
         }
     }
 }

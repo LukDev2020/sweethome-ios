@@ -432,7 +432,8 @@ struct GuardianHomeView: View {
             GlobeMapView(
                 pins: dynamicPins,
                 links: dynamicLinks,
-                initialLongitude: 60
+                initialLongitude: 60,
+                labelInsets: EdgeInsets(top: 46, leading: 0, bottom: 26, trailing: 0)
             )
 
             VStack {

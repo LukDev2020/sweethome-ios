@@ -22,17 +22,12 @@ struct ProtectedTabView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            DuoAdaptiveTabContainer(
-                selectedTab: $selectedTab,
-                tabs: tabs,
-                tintColor: safe
-            )
-
-            // Persistent floating SOS button — always accessible
-            FloatingSOSButton()
-                .padding(.trailing, 20)
-                .padding(.bottom, 96)
-        }
+        DuoAdaptiveTabContainer(
+            selectedTab: $selectedTab,
+            tabs: tabs,
+            tintColor: safe,
+            // Persistent SOS button — always accessible, never covers content
+            bottomAccessory: AnyView(FloatingSOSButton())
+        )
     }
 }

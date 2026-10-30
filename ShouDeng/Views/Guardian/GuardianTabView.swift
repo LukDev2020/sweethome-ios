@@ -22,22 +22,17 @@ struct GuardianTabView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            DuoAdaptiveTabContainer(
-                selectedTab: $selectedTab,
-                tabs: tabs,
-                tintColor: pro,
-                showInviteButton: true,
-                onInvite: { showInvite = true }
-            )
-            .sheet(isPresented: $showInvite) {
-                InviteGuardianView()
-            }
-
-            // Persistent floating SOS button — always accessible
-            FloatingSOSButton()
-                .padding(.trailing, 20)
-                .padding(.bottom, 96)
+        DuoAdaptiveTabContainer(
+            selectedTab: $selectedTab,
+            tabs: tabs,
+            tintColor: pro,
+            showInviteButton: true,
+            onInvite: { showInvite = true },
+            // Persistent SOS button — always accessible, never covers content
+            bottomAccessory: AnyView(FloatingSOSButton())
+        )
+        .sheet(isPresented: $showInvite) {
+            InviteGuardianView()
         }
     }
 }

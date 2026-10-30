@@ -344,9 +344,9 @@ struct ProtectedHomeView: View {
     private var toolbarBattery: String {
         let level = UIDevice.current.batteryLevel
         if level >= 0 {
-            return String(format: "%@ %d%%", lang.localized("protected.home.battery"), Int(level * 100))
+            return String(format: lang.localized("protected.home.battery"), Int(level * 100))
         }
-        return lang.localized("protected.home.battery") + " --%"
+        return lang.localized("protected.home.batteryUnknown")
     }
 
     // MARK: - Globe Section
@@ -393,7 +393,7 @@ struct ProtectedHomeView: View {
             var cities = [String]()
             if let c = coordinator.currentUser?.cityName, !c.isEmpty { cities.append(c) }
             for g in coordinator.myGuardians { if !g.user.cityName.isEmpty && !cities.contains(g.user.cityName) { cities.append(g.user.cityName) } }
-            layersText = String(format: "%d %@", coordinator.myGuardians.count, lang.localized("protected.home.guardianCount"))
+            layersText = String(format: lang.localized("protected.home.guardianCount"), coordinator.myGuardians.count)
             subtitleText = cities.isEmpty
                 ? lang.localized("protected.home.guarding")
                 : cities.prefix(3).joined(separator: " · ")
@@ -432,7 +432,8 @@ struct ProtectedHomeView: View {
             GlobeMapView(
                 pins: dynamicPins,
                 links: dynamicLinks,
-                initialLongitude: -30
+                initialLongitude: -30,
+                labelInsets: EdgeInsets(top: 46, leading: 0, bottom: 26, trailing: 0)
             )
 
             // Overlay: header + legend

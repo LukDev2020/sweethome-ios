@@ -186,9 +186,9 @@ struct GuardianMemberDetailView: View {
                 .foregroundStyle(.secondary)
             statusRow(langManager.localized("guardian.member.status"), value: statusText(person.status), isOk: person.status == .normal)
             if let battery = person.batteryLevel {
-                statusRow(langManager.localized("guardian.member.battery"), value: "\(Int(battery * 100))%", isOk: battery > 0.2)
+                statusRow(langManager.localized("guardian.member.batteryLabel"), value: "\(Int(battery * 100))%", isOk: battery > 0.2)
             } else {
-                statusRow(langManager.localized("guardian.member.battery"), value: langManager.localized("guardian.member.unknown"), isOk: false)
+                statusRow(langManager.localized("guardian.member.batteryLabel"), value: langManager.localized("guardian.member.unknown"), isOk: false)
             }
             if let lastActivity = person.lastPhoneActivity {
                 let minutes = Int(Date().timeIntervalSince(lastActivity) / 60)

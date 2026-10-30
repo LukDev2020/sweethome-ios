@@ -198,8 +198,9 @@ struct ProtectedGuardianDetailView: View {
 
     private func linkedSinceText(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = langManager.localized("guardian.detail.dateFormat")
-        return formatter.string(from: date)
+        formatter.locale = Locale(identifier: langManager.current.rawValue)
+        formatter.dateStyle = .medium
+        return String(format: langManager.localized("guardian.detail.dateFormat"), formatter.string(from: date))
     }
 
     // MARK: - Daily Visible Panel

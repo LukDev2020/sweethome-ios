@@ -72,17 +72,17 @@ private struct AuthenticatedRootView: View {
                         })
                         .environmentObject(coordinator)
                     } else {
-                        ZStack(alignment: .top) {
+                        // Banners take their own space above the screens instead of
+                        // floating over the navigation bar title.
+                        VStack(spacing: 0) {
+                            betaBanner
+                            DegradationBannerView()
+                                .environmentObject(coordinator)
                             switch coordinator.userRole {
                             case .protected_:
                                 ProtectedTabView()
                             case .guardian:
                                 GuardianTabView()
-                            }
-                            VStack(spacing: 0) {
-                                betaBanner
-                                DegradationBannerView()
-                                    .environmentObject(coordinator)
                             }
                         }
                         .overlay {

@@ -182,6 +182,12 @@ final class AppCoordinator: ObservableObject {
         if let override = Bundle.main.infoDictionary?["API_BASE_URL"] as? String, !override.isEmpty {
             return override
         }
+        #if DEBUG
+        // Local verification against a stub: launch with `-apiBaseURL http://127.0.0.1:PORT/api`
+        if let override = UserDefaults.standard.string(forKey: "apiBaseURL"), !override.isEmpty {
+            return override
+        }
+        #endif
         #if QA_HARNESS
         // QA harness: point to emulator with seed project ID
         return "http://127.0.0.1:5001/sweethome-d1edd/us-central1/api"

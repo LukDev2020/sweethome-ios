@@ -14,6 +14,10 @@ struct DuoAdaptiveTabContainer: View {
     let tintColor: Color
     var showInviteButton: Bool = false
     var onInvite: (() -> Void)? = nil
+    /// Persistent control pinned above the tab bar (the SOS button). It is laid
+    /// out in each tab's bottom safe-area inset so scroll content can always be
+    /// scrolled clear of it instead of sitting underneath it.
+    var bottomAccessory: AnyView? = nil
 
     var body: some View {
         if sizeClass == .regular {
@@ -22,6 +26,7 @@ struct DuoAdaptiveTabContainer: View {
                 if let tab = tabs.first(where: { $0.id == selectedTab }) {
                     tab.view
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .safeAreaInset(edge: .bottom, spacing: 0) { accessoryBar }
                 }
 
                 VerticalTabRail(
@@ -36,6 +41,7 @@ struct DuoAdaptiveTabContainer: View {
             TabView(selection: $selectedTab) {
                 ForEach(tabs) { tab in
                     tab.view
+                        .safeAreaInset(edge: .bottom, spacing: 0) { accessoryBar }
                         .tabItem {
                             Image(systemName: tab.icon)
                             Text(tab.title)
@@ -44,6 +50,31 @@ struct DuoAdaptiveTabContainer: View {
                 }
             }
             .tint(tintColor)
+        }
+    }
+
+    @ViewBuilder
+    private var accessoryBar: some View {
+        if let bottomAccessory {
+            HStack {
+                Spacer()
+                bottomAccessory
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 2)
+            .background {
+                // Opaque strip (soft top edge): content scrolls *behind* it like a
+                // bar, so a card is never half-covered by the button at rest.
+                VStack(spacing: 0) {
+                    LinearGradient(
+                        colors: [Color(.systemBackground).opacity(0), Color(.systemBackground)],
+                        startPoint: .top, endPoint: .bottom
+                    )
+                    .frame(height: 14)
+                    Color(.systemBackground)
+                }
+                .allowsHitTesting(false)
+            }
         }
     }
 }

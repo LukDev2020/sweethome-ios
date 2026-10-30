@@ -7,6 +7,9 @@ import SwiftUI
 //   Tab 1 "紧急联系人": regional emergency numbers + custom contact cards
 
 struct ProtectedRecordsView: View {
+    /// Free-tier check-in retention (ttlCleanup.ts `checkins.free`).
+    static let retentionDays = 30
+
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var langManager = LanguageManager.shared
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -80,7 +83,7 @@ struct ProtectedRecordsView: View {
                     VStack(spacing: 2) {
                         Text(langManager.localized("protected.records.title"))
                             .font(.scaled(size: 20, weight: .bold))
-                        Text(langManager.localized("protected.records.retention"))
+                        Text(String(format: langManager.localized("protected.records.retention"), Self.retentionDays))
                             .font(.scaled(size: 13))
                             .foregroundStyle(.secondary)
                     }
@@ -142,7 +145,7 @@ struct ProtectedRecordsView: View {
                 VStack(spacing: 2) {
                     Text(langManager.localized("protected.records.title"))
                         .font(.scaled(size: 20, weight: .bold))
-                    Text(langManager.localized("protected.records.retention"))
+                    Text(String(format: langManager.localized("protected.records.retention"), Self.retentionDays))
                         .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                 }

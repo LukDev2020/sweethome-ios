@@ -351,6 +351,27 @@ describe("i18n — iOS Push Action Buttons (FINDING)", () => {
   });
 });
 
+/**
+ * Values that are legitimately identical across languages: brand / product names,
+ * phone numbers, format-only strings and French cognates. Anything else that is
+ * identical is probably an untranslated string.
+ */
+const SAME_IN_ZH = new Set([
+  "protected.coverage.rescuePartnerValue", "protected.coverage.localNumberValue",
+  "protected.coverage.embassyLineValue", "protected.settings.sos.watch",
+  "tracker.type.smarttag", "tracker.type.tile", "tracker.type.airtag",
+]);
+const SAME_IN_FR = new Set([
+  ...SAME_IN_ZH,
+  "protected.coverage.responseLanguageValue", "map.route.duration.m", "map.route.duration.hm",
+  "trip.points.count", "deadman.extend", "silent.alarm.minutes", "silent.alarm.15min",
+  "silent.alarm.30min", "silent.alarm.60min", "medical.preview.allergies", "la.allergy",
+  "itinerary.type.train", "itinerary.type", "org.orgType", "disguise.notes", "claim.notes",
+  "org.severityInfo", "map.search.police", "consulate.police", "consulate.ambulance",
+  "indoor.source.ble", "indoor.source.fusion", "la.normal", "guardian.member.status.normal",
+  "org.statusNormal", "familyFeed.messageActions", "deadman.pause",
+]);
+
 describe("i18n — Quality Checks", () => {
   it("no untranslated EN text left in zh-Hans", () => {
     // Check if any zh-Hans value is identical to EN (possible missed translation)
@@ -364,9 +385,7 @@ describe("i18n — Quality Checks", () => {
         }
       }
     }
-    // Allow some identical values (brand names, etc.)
-    // Flag if there are many
-    expect(identical.length).toBeLessThan(5);
+    expect(identical.filter((k) => !SAME_IN_ZH.has(k))).toEqual([]);
   });
 
   it("no untranslated EN text left in FR", () => {
@@ -379,16 +398,15 @@ describe("i18n — Quality Checks", () => {
         }
       }
     }
-    // Many short words are legitimately identical in EN/FR (Normal, Train, Type, Allergies, etc.)
-    expect(identical.length).toBeLessThan(20);
+    // Short words legitimately identical in EN/FR are listed in SAME_IN_FR
+    expect(identical.filter((k) => !SAME_IN_FR.has(k))).toEqual([]);
   });
 
   it("zh-Hans values contain Chinese characters", () => {
     const withoutChinese = zhStrings.filter(
-      (e) => !/[\u4e00-\u9fff]/.test(e.value) && e.value.length > 3
+      (e) => !/[\u4e00-\u9fff]/.test(e.value) && e.value.length > 3 && !SAME_IN_ZH.has(e.key)
     );
-    // Some keys may legitimately have no Chinese (e.g., "%ds", "Vela")
-    expect(withoutChinese.length).toBeLessThan(5);
+    expect(withoutChinese.map((e) => e.key)).toEqual([]);
   });
 
   it("FR values contain French characters or common French words", () => {
@@ -398,6 +416,7 @@ describe("i18n — Quality Checks", () => {
     );
     // Many valid French phrases lack diacritics or articles (e.g., "Recommencer", "Actions rapides")
     // With 900+ keys, ~200 valid French strings naturally lack these narrow markers
-    expect(nonFrench.length).toBeLessThan(250);
+    // Heuristic scales with table size: flag if more than a quarter look non-French
+    expect(nonFrench.length / frStrings.length).toBeLessThan(0.25);
   });
 });
