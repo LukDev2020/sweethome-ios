@@ -46,8 +46,12 @@ final class VoiceActivityDetector: ObservableObject {
         #if targetEnvironment(simulator)
         // Simulator has no real mic — simulate periodic voice detection for testing
         isRunning = true
-        return
+        #else
+        startEngine()
         #endif
+    }
+
+    private func startEngine() {
 
         let engine = AVAudioEngine()
         let inputNode = engine.inputNode

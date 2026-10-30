@@ -82,13 +82,11 @@ final class VoiceNoteService: NSObject, ObservableObject {
     func startRecording() {
         #if targetEnvironment(simulator)
         state = .error("Recording not available in simulator")
-        return
-        #endif
-
+        #else
         guard audioRecorder == nil else { return }
 
         // Request mic permission
-        AVAudioSession.sharedInstance().requestRecordPermission { [weak self] granted in
+        AVAudioApplication.requestRecordPermission { [weak self] granted in
             DispatchQueue.main.async {
                 guard granted else {
                     self?.state = .error("Microphone access denied")
@@ -97,6 +95,7 @@ final class VoiceNoteService: NSObject, ObservableObject {
                 self?.beginRecording()
             }
         }
+        #endif
     }
 
     func stopRecording() {

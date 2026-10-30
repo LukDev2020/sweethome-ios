@@ -75,7 +75,6 @@ final class ScreenshotCapture: ObservableObject {
                 .font: UIFont.systemFont(ofSize: 22, weight: .medium),
                 .foregroundColor: UIColor.white
             ]
-            let textRect = CGRect(x: 20, y: pageHeight + 10, width: pageWidth - 40, height: labelHeight - 20)
 
             UIGraphicsPushContext(context)
             // Flip for text drawing

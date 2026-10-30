@@ -194,7 +194,7 @@ struct TripDetailView: View {
                 isLoading = false
 
                 // Fit map to route
-                if let first = coordinates.first {
+                if !coordinates.isEmpty {
                     let region = regionForCoordinates(coordinates)
                     position = .region(region)
                 }

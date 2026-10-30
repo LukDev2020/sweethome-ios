@@ -902,22 +902,18 @@ final class AppCoordinator: ObservableObject {
             batteryLevel: Double(UIDevice.current.batteryLevel)
         )
         let api = apiClient
-        Task { [weak self] in
+        Task { @MainActor [weak self] in
             do {
                 let response: SOSTriggerResponse = try await api.post("/v1/sos/trigger", body: triggerRequest)
-                await MainActor.run {
-                    self?.activeSOSEvent?.id = response.sosEventId
-                    if let updated = self?.activeSOSEvent {
-                        self?.localStore.saveActiveSOSEvent(updated)
-                    }
+                self?.activeSOSEvent?.id = response.sosEventId
+                if let updated = self?.activeSOSEvent {
+                    self?.localStore.saveActiveSOSEvent(updated)
                 }
             } catch {
                 // Offline — queue for retry; resolve will use local ID as fallback
-                await MainActor.run {
-                    api.postQueued("/v1/sos/trigger", body: triggerRequest) { [weak self] success in
-                        if !success {
-                            self?.sosDeliveryFailed = true
-                        }
+                api.postQueued("/v1/sos/trigger", body: triggerRequest) { [weak self] success in
+                    if !success {
+                        self?.sosDeliveryFailed = true
                     }
                 }
             }
@@ -928,7 +924,7 @@ final class AppCoordinator: ObservableObject {
     // MARK: - BLE Tag Separation Alert
 
     private func notifyGuardiansOfSeparation(tagName: String) {
-        guard let userId = currentUser?.id else { return }
+        guard currentUser != nil else { return }
         let location = locationManager.lastReportedLocation
         apiClient.postQueued("/v1/device/ble-separation", body: BLESeparationRequest(
             tagName: tagName,

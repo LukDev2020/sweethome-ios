@@ -19,7 +19,8 @@ import CryptoKit
 // Privacy: location is encrypted with the tag owner's public key before upload.
 // Sighting reporters never know whose tag they saw or where they are.
 
-final class CrowdSourcedBLEService: NSObject, ObservableObject {
+/// State is confined to `queue` / the main actor by hand.
+final class CrowdSourcedBLEService: NSObject, ObservableObject, @unchecked Sendable {
     static let shared = CrowdSourcedBLEService()
 
     @Published var isParticipating = false
@@ -115,9 +116,11 @@ final class CrowdSourcedBLEService: NSObject, ObservableObject {
                     keys[tag.uuid.uppercased()] = keyData
                 }
             }
+            let knownUUIDs = uuids
+            let ownerKeys = keys
             await MainActor.run {
-                self.knownTagUUIDs = uuids
-                self.tagOwnerPublicKeys = keys
+                self.knownTagUUIDs = knownUUIDs
+                self.tagOwnerPublicKeys = ownerKeys
             }
         } catch {
             #if DEBUG
@@ -191,8 +194,8 @@ final class CrowdSourcedBLEService: NSObject, ObservableObject {
                     self.sightingsReportedCount += batch.count
                 }
             } catch {
-                queue.async { [weak self] in
-                    self?.pendingSightings.append(contentsOf: batch)
+                self.queue.async {
+                    self.pendingSightings.append(contentsOf: batch)
                 }
             }
         }

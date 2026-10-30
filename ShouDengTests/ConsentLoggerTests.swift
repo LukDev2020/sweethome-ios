@@ -118,6 +118,6 @@ final class ConsentLoggerTests: XCTestCase {
         let records = ConsentLogger.shared.allRecords()
         // May or may not be empty depending on prior test runs,
         // but should not crash
-        XCTAssertTrue(records is [ConsentLogger.ConsentRecord])
+        XCTAssertGreaterThanOrEqual(records.count, 0)
     }
 }

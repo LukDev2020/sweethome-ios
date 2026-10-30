@@ -287,16 +287,16 @@ struct ProfileEditView: View {
         }
     }
 
-    private static var avatarDirectory: URL {
+    nonisolated private static var avatarDirectory: URL {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let dir = docs.appendingPathComponent("avatars", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir
     }
 
-    private func saveAvatarToDisk(_ image: UIImage) -> String? {
+    nonisolated private static func saveAvatarToDisk(_ image: UIImage, userId: String) -> String? {
         guard let data = image.jpegData(compressionQuality: 0.8) else { return nil }
-        let filename = "avatar_\(coordinator.currentUser?.id ?? "local").jpg"
+        let filename = "avatar_\(userId).jpg"
         let url = Self.avatarDirectory.appendingPathComponent(filename)
         do {
             try data.write(to: url, options: [.atomic])
@@ -317,8 +317,9 @@ struct ProfileEditView: View {
         // Save avatar to disk on background thread if changed
         var avatarPath = coordinator.currentUser?.avatarLocalPath
         if let avatarImage {
+            let userId = coordinator.currentUser?.id ?? "local"
             let saved: String? = await Task.detached(priority: .utility) {
-                return self.saveAvatarToDisk(avatarImage)
+                return Self.saveAvatarToDisk(avatarImage, userId: userId)
             }.value
             if let saved { avatarPath = saved }
         }

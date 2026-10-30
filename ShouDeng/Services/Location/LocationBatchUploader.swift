@@ -12,7 +12,8 @@ import CoreLocation
 // fire-and-forget requests). This specifically batches location reports
 // for the /v1/location/batch endpoint.
 
-final class LocationBatchUploader {
+/// State is confined to `queue` by hand.
+final class LocationBatchUploader: @unchecked Sendable {
 
     // MARK: - Configuration
 
@@ -123,7 +124,7 @@ final class LocationBatchUploader {
     /// Upload queued reports in batches. Called periodically and on connectivity restore.
     func flush() {
         queue.async { [weak self] in
-            guard let self, let apiClient = self.apiClient, let userId = self.userId else { return }
+            guard let self, let apiClient = self.apiClient, self.userId != nil else { return }
 
             var reports = self.loadQueue()
             guard !reports.isEmpty else { return }

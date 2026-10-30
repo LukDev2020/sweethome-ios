@@ -1134,7 +1134,7 @@ struct FullScreenMapView: View {
 
     private func calculateRoute() {
         guard let item = selectedSearchItem,
-              let destCoord = item.placemark.location?.coordinate,
+              item.placemark.location?.coordinate != nil,
               let myCoord = locationService.currentLocation else { return }
 
         isCalculatingRoute = true
@@ -1159,7 +1159,6 @@ struct FullScreenMapView: View {
                 routeSteps = route.steps
                 // Fit map to show entire route
                 let rect = route.polyline.boundingMapRect
-                let padding = UIEdgeInsets(top: 80, left: 40, bottom: 200, right: 40)
                 position = .rect(rect)
             }
         }
