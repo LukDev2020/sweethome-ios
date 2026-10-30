@@ -264,7 +264,7 @@ struct EmergencyContactsView: View {
     private func callNumber(_ number: String) {
         let cleaned = number.replacingOccurrences(of: " ", with: "")
         if let url = URL(string: "tel://\(cleaned)") {
-            UIApplication.shared.open(url)
+            ExternalURL.open(url)
         }
     }
 

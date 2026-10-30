@@ -84,6 +84,7 @@ final class MotionService {
 
     /// Full 50Hz pipeline — call when app is in foreground
     func startForegroundMonitoring() {
+        guard !ExploreMode.blocks("motion") else { return }
         guard state != .foreground else { return }
         guard isDeviceMotionAvailable else {
             #if DEBUG

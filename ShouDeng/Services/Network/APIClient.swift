@@ -269,10 +269,14 @@ final class APIClient {
         return request
     }
 
+    /// Test hook: sees every request any APIClient builds (Explore Mode isolation tests).
+    nonisolated(unsafe) static var requestObserver: ((URLRequest) -> Void)?
+
     private func buildRawRequest(path: String, method: String) throws -> URLRequest {
         guard let url = URL(string: config.baseURL + path) else {
             throw APIError.invalidURL
         }
+        defer { if let observer = Self.requestObserver { observer(URLRequest(url: url)) } }
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")

@@ -70,8 +70,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("-screenshot") { return }
         #endif
-        appCoordinator.pushService.registerForPushNotifications()
-        application.registerForRemoteNotifications()
+        // Push permission is requested after login (AppCoordinator.onLoginComplete),
+        // not on the login screen or over Explore Mode.
         appCoordinator.heartbeatService.start()
         // Location (and its permission prompt) starts after login — see
         // AppCoordinator.onLoginComplete — never on the login screen.

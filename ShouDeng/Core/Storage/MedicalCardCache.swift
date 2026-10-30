@@ -25,6 +25,24 @@ enum MedicalCardCache {
 
     private static var memoryCopy: MedicalCardData?
     private static let lock = NSLock()
+    private static var savedFileURL: URL??
+
+    /// Explore Mode: switch to an in-memory copy; the real file is untouched.
+    static func beginOverlay() {
+        lock.withLock {
+            savedFileURL = .some(fileURL)
+            fileURL = nil
+            memoryCopy = nil
+        }
+    }
+
+    static func endOverlay() {
+        lock.withLock {
+            if case .some(let url) = savedFileURL { fileURL = url }
+            savedFileURL = nil
+            memoryCopy = nil
+        }
+    }
 
     static func save(_ card: MedicalCardData) {
         lock.withLock {

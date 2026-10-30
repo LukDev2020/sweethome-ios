@@ -57,9 +57,12 @@ final class StoreKitManager: ObservableObject {
     private let apiClient: APIClient
     private var transactionListener: Task<Void, Error>?
 
-    init(apiClient: APIClient) {
+    /// - Parameter observeTransactions: false for Explore Mode (no StoreKit side effects)
+    init(apiClient: APIClient, observeTransactions: Bool = true) {
         self.apiClient = apiClient
-        transactionListener = listenForTransactions()
+        if observeTransactions {
+            transactionListener = listenForTransactions()
+        }
     }
 
     deinit {

@@ -17,6 +17,7 @@ struct LoginView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     // Lighthouse palette
+    @State private var showDemoPicker = false
     private let navy = Color(red: 1/255, green: 69/255, blue: 129/255)
     private let blue = Color(red: 61/255, green: 154/255, blue: 192/255)
     private let cream = Color(red: 252/255, green: 242/255, blue: 218/255)
@@ -67,6 +68,27 @@ struct LoginView: View {
             checkLockout()
             applyLanguageForCountry(selectedCountry)
             #if DEBUG
+            // Simulator verification: `-exploreRole mom|sarah` starts Explore Mode
+            if let raw = UserDefaults.standard.string(forKey: "exploreRole"), let role = DemoRole(rawValue: raw),
+               !ExploreModeController.shared.isActive {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    ExploreModeController.shared.start(role: role)
+                    let step = UserDefaults.standard.string(forKey: "exploreStep")
+                    if step == "handoff" {
+                        ExploreModeController.shared.sosArrives()
+                        ExploreModeController.shared.showHandoff = true
+                        ExploreModeController.shared.isTourVisible = false
+                    } else if step == "checklist" {
+                        ExploreModeController.shared.isTourVisible = false
+                        ExploreModeController.shared.showChecklist = true
+                    } else if step == "respond" {
+                        ExploreModeController.shared.continueToGuardian()
+                    } else if step == "ack" {
+                        ExploreModeController.shared.continueToGuardian()
+                        ExploreModeController.shared.performPrimary()
+                    }
+                }
+            }
             // Simulator verification: launch with `-devLoginRole guardian|protected`
             if let role = UserDefaults.standard.string(forKey: "devLoginRole") {
                 phone = "6479283746"
@@ -434,8 +456,42 @@ struct LoginView: View {
             .padding(.horizontal, 32)
             .padding(.top, 16)
 
+            demoEntry
+                .padding(.horizontal, 32)
+                .padding(.top, 14)
+
             // D-06: No separate signup link — backend auto-creates on new phone
             // (LoginView already redirects to signup on .userNotFound)
+        }
+    }
+
+    // MARK: - Explore Mode entry
+
+    /// "Try a demo first" — no account needed, nothing is sent.
+    private var demoEntry: some View {
+        VStack(spacing: 8) {
+            HStack {
+                Rectangle().fill(line).frame(height: 1)
+                Text(lang.localized("explore.entry.or")).font(.scaled(size: 12)).foregroundStyle(ink3)
+                Rectangle().fill(line).frame(height: 1)
+            }
+            Button {
+                showDemoPicker = true
+            } label: {
+                Label(lang.localized("explore.entry.button"), systemImage: "sparkles")
+                    .font(.scaled(size: 15.5, weight: .medium))
+                    .foregroundStyle(navy)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(RoundedRectangle(cornerRadius: 13, style: .continuous).stroke(navy, lineWidth: 1.5))
+            }
+            Text(lang.localized("explore.entry.note"))
+                .font(.scaled(size: 12))
+                .foregroundStyle(ink3)
+                .multilineTextAlignment(.center)
+        }
+        .sheet(isPresented: $showDemoPicker) {
+            DemoRolePickerView()
         }
     }
 
@@ -597,7 +653,7 @@ struct LoginView: View {
 
     private func openSupport() {
         if let url = URL(string: "mailto:support@velarcare.com?subject=Account%20Locked") {
-            UIApplication.shared.open(url)
+            ExternalURL.open(url)
         }
     }
 

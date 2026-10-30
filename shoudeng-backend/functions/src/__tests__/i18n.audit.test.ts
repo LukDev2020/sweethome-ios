@@ -369,7 +369,7 @@ const SAME_IN_FR = new Set([
   "itinerary.type.train", "itinerary.type", "org.orgType", "disguise.notes", "claim.notes",
   "org.severityInfo", "map.search.police", "consulate.police", "consulate.ambulance",
   "indoor.source.ble", "indoor.source.fusion", "la.normal", "guardian.member.status.normal",
-  "org.statusNormal", "familyFeed.messageActions", "deadman.pause",
+  "org.statusNormal", "familyFeed.messageActions", "deadman.pause", "explore.feature.biometrics",
 ]);
 
 describe("i18n — Quality Checks", () => {

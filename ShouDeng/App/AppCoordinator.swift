@@ -57,8 +57,13 @@ final class AppCoordinator: ObservableObject {
 
     // MARK: - Infrastructure
 
-    let offlineQueue = OfflineQueue()
+    let offlineQueue: OfflineQueue
     let apiClient: APIClient
+    /// Explore Mode coordinator: on-device demo data, no real side effects.
+    let isDemo: Bool
+    /// Preferences store. The demo coordinator gets a throw-away suite so the
+    /// real UserDefaults are never touched.
+    let defaults: UserDefaults
     let authManager: AuthManager
     let localStore = LocalStore.shared
 
@@ -93,19 +98,41 @@ final class AppCoordinator: ObservableObject {
 
     // MARK: - Init
 
-    init() {
+    /// Everything that differs between the real app and Explore Mode.
+    struct Environment {
+        var isDemo: Bool
+        var baseURL: String
+        var sessionConfiguration: URLSessionConfiguration
+        var offlineQueue: OfflineQueue
+        var defaults: UserDefaults
+
+        static func live() -> Environment {
+            Environment(isDemo: false, baseURL: AppCoordinator.resolveBaseURL(),
+                        sessionConfiguration: .default, offlineQueue: OfflineQueue(), defaults: .standard)
+        }
+    }
+
+    convenience init() {
+        self.init(environment: .live())
+    }
+
+    init(environment: Environment) {
+        isDemo = environment.isDemo
+        defaults = environment.defaults
+        offlineQueue = environment.offlineQueue
+
         // Register default: lock screen card enabled by default
-        UserDefaults.standard.register(defaults: ["lockscreen_card_enabled": true])
+        defaults.register(defaults: ["lockscreen_card_enabled": !environment.isDemo])
 
         let config = APIClient.Config(
-            baseURL: Self.resolveBaseURL()
+            baseURL: environment.baseURL
         )
-        apiClient = APIClient(config: config, offlineQueue: offlineQueue)
+        apiClient = APIClient(config: config, offlineQueue: offlineQueue, sessionConfiguration: environment.sessionConfiguration)
         #if DEBUG
         print("[AppCoordinator] API base URL: \(config.baseURL)")
         #endif
-        authManager = AuthManager(api: apiClient)
-        storeKitManager = StoreKitManager(apiClient: apiClient)
+        authManager = AuthManager(api: apiClient, defaults: environment.defaults, restore: !environment.isDemo)
+        storeKitManager = StoreKitManager(apiClient: apiClient, observeTransactions: !environment.isDemo)
         paymentMethodManager = PaymentMethodManager(apiClient: apiClient)
 
         // Wire 401 auto-refresh: when server returns 401, attempt token refresh.
@@ -136,45 +163,18 @@ final class AppCoordinator: ObservableObject {
             guard let self, case .loggedIn = self.authState else { return }
             Task { await self.apiClient.flushOfflineQueue() }
         }
-        connectivity.start()
+        if !environment.isDemo {
+            connectivity.start()
+        }
 
         // Sync initial auth state before Combine subscription delivers asynchronously
         authState = authManager.state
 
-        // Wire silent alarm service
-        SilentAlarmService.shared.configure(apiClient: apiClient)
-        SilentAlarmService.registerNotificationCategory()
-
-        // Wire BLE tracker service
-        bleTrackerService.configure(
-            apiClient: apiClient,
-            onSOSTrigger: { [weak self] in
-                self?.triggerSOS(method: .bluetoothButton)
-            },
-            onSeparationAlert: { [weak self] tag in
-                self?.addTimelineEntry(type: .guardianAlert, description: "蓝牙标签「\(tag.name)」超出范围")
-                self?.notifyGuardiansOfSeparation(tagName: tag.name)
-            },
-            onReunion: { [weak self] tag in
-                self?.addTimelineEntry(type: .enteredSafeZone, description: "蓝牙标签「\(tag.name)」重新进入范围")
-            }
-        )
-
-        // Wire trip recording service
-        tripRecordingService.configure(apiClient: apiClient)
-
-        // Wire dead man switch — expiry raises the SOS through triggerSOS
-        DeadManSwitchService.shared.configure(apiClient: apiClient, locationManager: locationManager)
-        DeadManSwitchService.shared.onTriggerSOS = { [weak self] method in
-            self?.triggerSOS(method: method)
+        // Explore Mode must not rebind the app-wide safety singletons (dead-man
+        // switch, BLE, disguise…) to the demo coordinator, nor watch the network.
+        if !environment.isDemo {
+            configureSingletons()
         }
-        FakeCallService.shared.onTriggerSOS = { [weak self] method in
-            self?.triggerSOS(method: method)
-        }
-        DeadManSwitchService.registerNotificationCategories()
-
-        // Wire disguise mode — pass self as SOS trigger target
-        DisguiseModeService.shared.configure(coordinator: self)
 
         wireServices()
         restoreLocalState()
@@ -182,10 +182,47 @@ final class AppCoordinator: ObservableObject {
         observeLanguageChange()
         // Start Live Activity after restoring local state (so we have cached user/guardian data)
         if case .loggedIn = authState,
-           UserDefaults.standard.bool(forKey: "lockscreen_card_enabled"),
+           defaults.bool(forKey: "lockscreen_card_enabled"),
            currentUser != nil {
             startLiveActivityIfNeeded()
         }
+    }
+
+    private func configureSingletons() {
+        // Wire silent alarm service
+            SilentAlarmService.shared.configure(apiClient: apiClient)
+            SilentAlarmService.registerNotificationCategory()
+
+            // Wire BLE tracker service
+            bleTrackerService.configure(
+                apiClient: apiClient,
+                onSOSTrigger: { [weak self] in
+                    self?.triggerSOS(method: .bluetoothButton)
+                },
+                onSeparationAlert: { [weak self] tag in
+                    self?.addTimelineEntry(type: .guardianAlert, description: "蓝牙标签「\(tag.name)」超出范围")
+                    self?.notifyGuardiansOfSeparation(tagName: tag.name)
+                },
+                onReunion: { [weak self] tag in
+                    self?.addTimelineEntry(type: .enteredSafeZone, description: "蓝牙标签「\(tag.name)」重新进入范围")
+                }
+            )
+
+            // Wire trip recording service
+            tripRecordingService.configure(apiClient: apiClient)
+
+            // Wire dead man switch — expiry raises the SOS through triggerSOS
+            DeadManSwitchService.shared.configure(apiClient: apiClient, locationManager: locationManager)
+            DeadManSwitchService.shared.onTriggerSOS = { [weak self] method in
+                self?.triggerSOS(method: method)
+            }
+            FakeCallService.shared.onTriggerSOS = { [weak self] method in
+                self?.triggerSOS(method: method)
+            }
+            DeadManSwitchService.registerNotificationCategories()
+
+            // Wire disguise mode — pass self as SOS trigger target
+            DisguiseModeService.shared.configure(coordinator: self)
     }
 
     // MARK: - Language Change Observer
@@ -196,11 +233,11 @@ final class AppCoordinator: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            guard let self else { return }
+            guard let self, !self.isDemo else { return }
             self.syncLocaleToServer()
             // Restart Live Activity so it picks up the new language
             self.liveActivityManager.endAllActivities()
-            if UserDefaults.standard.bool(forKey: "lockscreen_card_enabled") {
+            if defaults.bool(forKey: "lockscreen_card_enabled") {
                 self.startLiveActivityIfNeeded()
             }
         }
@@ -208,7 +245,7 @@ final class AppCoordinator: ObservableObject {
 
     // MARK: - Base URL
 
-    private static func resolveBaseURL() -> String {
+    static func resolveBaseURL() -> String {
         if let override = Bundle.main.infoDictionary?["API_BASE_URL"] as? String, !override.isEmpty {
             return override
         }
@@ -263,7 +300,7 @@ final class AppCoordinator: ObservableObject {
                 self.authState = state
                 switch state {
                 case .loggedIn(let userId):
-                    UserDefaults.standard.set(userId, forKey: "currentUserId")
+                    defaults.set(userId, forKey: "currentUserId")
                     self.heartbeatService.userId = userId
                     #if canImport(FirebaseCrashlytics)
                     Crashlytics.crashlytics().setUserID(userId)
@@ -288,9 +325,11 @@ final class AppCoordinator: ObservableObject {
         // Flush any queued offline requests
         Task { await apiClient.flushOfflineQueue() }
 
-        // Location permission is requested only once someone is signed in
-        if UserDefaults.standard.bool(forKey: "onboardingComplete") {
+        // Location + notification permissions are requested only once someone is signed in
+        if !isDemo, UserDefaults.standard.bool(forKey: "onboardingComplete") {
             locationManager.start()
+            pushService.registerForPushNotifications()
+            UIApplication.shared.registerForRemoteNotifications()
         }
 
         // Tell the server which language / time zone to use for my pushes,
@@ -317,14 +356,16 @@ final class AppCoordinator: ObservableObject {
                 await refreshOwnSOSStatus()
             }
             await MainActor.run {
-                if UserDefaults.standard.bool(forKey: "lockscreen_card_enabled") {
+                if defaults.bool(forKey: "lockscreen_card_enabled") {
                     startLiveActivityIfNeeded()
                 }
             }
         }
 
         // Sync subscription status from StoreKit (catches overnight expirations/renewals)
-        Task { await storeKitManager.refreshSubscriptionStatus() }
+        if !isDemo {
+            Task { await storeKitManager.refreshSubscriptionStatus() }
+        }
 
         // Sync local notification preferences to server
         syncNotificationPrefs()
@@ -333,13 +374,13 @@ final class AppCoordinator: ObservableObject {
 
         #if DEBUG
         // Simulator verification hooks (launch arguments)
-        if let personId = UserDefaults.standard.string(forKey: "debugOpenSOSAlert") {
+        if let personId = defaults.string(forKey: "debugOpenSOSAlert") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
                 self?.pendingAlertPersonId = personId
                 Task { await self?.fetchGuardianSOS(personId: personId) }
             }
         }
-        if UserDefaults.standard.bool(forKey: "debugTriggerSOS") {
+        if defaults.bool(forKey: "debugTriggerSOS") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in self?.triggerSOS(method: .longPress) }
         }
         #endif
@@ -352,7 +393,7 @@ final class AppCoordinator: ObservableObject {
     }
 
     private func onLogout() {
-        liveActivityManager.endAllActivities()
+        if !isDemo { liveActivityManager.endAllActivities() }
         currentUser = nil
         protectedPersons = []
         myGuardians = []
@@ -382,8 +423,10 @@ final class AppCoordinator: ObservableObject {
         ownSOSStatus = nil
         pendingAlertPersonId = nil
         sosDeliveryFailed = false
-        WidgetDataStore.clear()
-        WidgetCenter.shared.reloadAllTimelines()
+        if !isDemo {
+            WidgetDataStore.clear()
+            WidgetCenter.shared.reloadAllTimelines()
+        }
 
         // Clear all user-specific UserDefaults
         let userKeys = [
@@ -405,7 +448,7 @@ final class AppCoordinator: ObservableObject {
             "voice_command_enabled",
         ]
         for key in userKeys {
-            UserDefaults.standard.removeObject(forKey: key)
+            defaults.removeObject(forKey: key)
         }
     }
 
@@ -428,6 +471,7 @@ final class AppCoordinator: ObservableObject {
 
     /// Check-in / "I arrived" tapped on a widget or the Live Activity.
     func processPendingWidgetActions() {
+        guard !isDemo else { return }
         guard case .loggedIn = authState else { return }
         for action in WidgetDataStore.takePendingActions() {
             switch action {
@@ -451,6 +495,7 @@ final class AppCoordinator: ObservableObject {
 
     /// Check if the SOS widget triggered an intent while the app was closed.
     private func checkWidgetSOSIntent() {
+        guard !isDemo else { return }
         guard let defaults = UserDefaults(suiteName: WidgetDataStore.appGroupId) else { return }
         guard defaults.bool(forKey: "widget_sos_pending") else { return }
 
@@ -561,6 +606,39 @@ final class AppCoordinator: ObservableObject {
         if let n = selectedHotline?.emergency, !n.isEmpty { return n }
         let country = currentUser?.countryCode.isEmpty == false ? currentUser!.countryCode : (Locale.current.region?.identifier ?? "")
         return RegionalEmergencyInfo.forCountry(country).numbers.first?.number ?? "112"
+    }
+
+    // MARK: - Explore Mode personas
+
+    /// Become a member of the demo family (no token, nothing stored for real).
+    /// Fetches go through DemoURLProtocol like a normal login.
+    func beginDemoPersona(userId: String, role: UserRole, location: CLLocationCoordinate2D? = nil) {
+        guard isDemo else { return }
+        // The demo never reads the real GPS: show the persona where they live
+        locationService.currentLocation = location
+        locationService.lastUpdateTime = location == nil ? nil : Date()
+        isSOSScreenPresented = false
+        pendingAlertPersonId = nil
+        activeSOSEvent = nil
+        ownSOSStatus = nil
+        guardianSOS = [:]
+        protectedPersons = []
+        myGuardians = []
+        timeline = []
+        familyPosts = []
+        userRole = role
+        authManager.startDemoSession(userId: userId, role: role.rawValue)
+    }
+
+    /// Demo: show the persona's own SOS again when switching back to their phone.
+    func adoptDemoOwnSOS(_ status: SOSStatus) {
+        guard isDemo, activeSOSEvent == nil else { return }
+        activeSOSEvent = SOSEvent(
+            id: status.sosEventId, protectedPersonId: status.protectedPersonId,
+            triggeredAt: status.triggeredAt ?? Date(), triggerMethod: .longPress, location: nil,
+            batteryLevel: status.batteryLevel, escalationState: status.escalationState,
+            resolvedAt: nil, resolvedBy: nil, resolution: nil, clientSOSId: nil)
+        ownSOSStatus = status
     }
 
     // MARK: - Locale / time zone
@@ -701,7 +779,7 @@ final class AppCoordinator: ObservableObject {
 
     func loadSelectedHotline() {
         // Try local cache first
-        if let data = UserDefaults.standard.data(forKey: "selected_hotline"),
+        if let data = defaults.data(forKey: "selected_hotline"),
            let hotline = try? JSONDecoder().decode(SelectedHotline.self, from: data) {
             selectedHotline = hotline
         }
@@ -750,7 +828,7 @@ final class AppCoordinator: ObservableObject {
 
     func removeSelectedHotline() {
         selectedHotline = nil
-        UserDefaults.standard.removeObject(forKey: "selected_hotline")
+        defaults.removeObject(forKey: "selected_hotline")
         Task {
             do {
                 let _: SuccessResponse = try await apiClient.delete("/v1/consulate/selected")
@@ -764,7 +842,7 @@ final class AppCoordinator: ObservableObject {
 
     private func cacheSelectedHotline(_ hotline: SelectedHotline) {
         if let data = try? JSONEncoder().encode(hotline) {
-            UserDefaults.standard.set(data, forKey: "selected_hotline")
+            defaults.set(data, forKey: "selected_hotline")
         }
     }
 
@@ -854,8 +932,8 @@ final class AppCoordinator: ObservableObject {
         }
 
         // Restore audio service preferences
-        audioCoordinator.distressDetectionEnabled = UserDefaults.standard.bool(forKey: "distress_detection_enabled")
-        audioCoordinator.voiceCommandEnabled = UserDefaults.standard.bool(forKey: "voice_command_enabled")
+        audioCoordinator.distressDetectionEnabled = defaults.bool(forKey: "distress_detection_enabled")
+        audioCoordinator.voiceCommandEnabled = defaults.bool(forKey: "voice_command_enabled")
 
         // Heartbeat → Server reporting
         heartbeatService.onHeartbeat = { [weak self] signal in
@@ -901,14 +979,16 @@ final class AppCoordinator: ObservableObject {
 
     /// Called when app goes to background — starts Live Activity if user has it enabled.
     func startLiveActivityOnBackground() {
+        guard !isDemo else { return }
         guard case .loggedIn = authState else { return }
-        guard UserDefaults.standard.bool(forKey: "lockscreen_card_enabled") else { return }
+        guard defaults.bool(forKey: "lockscreen_card_enabled") else { return }
         if !liveActivityManager.isRunning {
             startLiveActivityIfNeeded()
         }
     }
 
     func startLiveActivityIfNeeded() {
+        guard !isDemo else { return }
         let emergencyPhone = selectedHotline?.emergency ?? "911"
 
         if userRole == .protected_ {
@@ -1028,10 +1108,10 @@ final class AppCoordinator: ObservableObject {
         }
 
         // Switch location to SOS mode
-        locationManager.enterSOSMode()
+        if !isDemo { locationManager.enterSOSMode() }
 
         // Lock-screen card shows SOS — but a duress / disguise SOS must stay invisible and silent
-        if !method.isSilent {
+        if !method.isSilent && !isDemo {
             liveActivityManager.triggerSOS(
                 localEmergencyNumber: selectedHotline?.emergency ?? "911"
             )
@@ -1195,10 +1275,11 @@ final class AppCoordinator: ObservableObject {
         sosDeliveryFailed = false
         localStore.saveActiveSOSEvent(nil)
         syncWidgetState()
-        locationManager.exitSOSMode()
-
-        // Restore lock screen to normal
-        liveActivityManager.cancelSOS()
+        if !isDemo {
+            locationManager.exitSOSMode()
+            // Restore lock screen to normal
+            liveActivityManager.cancelSOS()
+        }
 
         addTimelineEntry(type: .sosResolved, description: "取消了紧急求助")
 
@@ -1611,10 +1692,10 @@ final class AppCoordinator: ObservableObject {
 
     func syncNotificationPrefs() {
         let prefs = NotificationPrefsRequest(
-            sosAlerts: UserDefaults.standard.object(forKey: "notif_sos_alerts") as? Bool ?? true,
-            checkinReminder: UserDefaults.standard.object(forKey: "notif_checkin_reminder") as? Bool ?? true,
-            checkinOverdue: UserDefaults.standard.object(forKey: "notif_checkin_overdue") as? Bool ?? true,
-            familyFeed: UserDefaults.standard.object(forKey: "notif_family_feed") as? Bool ?? true
+            sosAlerts: defaults.object(forKey: "notif_sos_alerts") as? Bool ?? true,
+            checkinReminder: defaults.object(forKey: "notif_checkin_reminder") as? Bool ?? true,
+            checkinOverdue: defaults.object(forKey: "notif_checkin_overdue") as? Bool ?? true,
+            familyFeed: defaults.object(forKey: "notif_family_feed") as? Bool ?? true
         )
         Task {
             do {
@@ -1727,6 +1808,7 @@ final class AppCoordinator: ObservableObject {
     private var widgetSyncTask: Task<Void, Never>?
 
     func syncWidgetState() {
+        guard !isDemo else { return }
         // Debounce: cancel any pending sync and schedule a new one after 0.3s
         widgetSyncTask?.cancel()
         widgetSyncTask = Task { @MainActor in

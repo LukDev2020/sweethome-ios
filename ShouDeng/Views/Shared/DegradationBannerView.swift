@@ -139,7 +139,7 @@ struct DegradationBannerView: View {
         switch action.type {
         case .openSettings:
             if let url = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.open(url)
+                ExternalURL.open(url)
             }
             selectedWarning = nil
         case .dismiss:

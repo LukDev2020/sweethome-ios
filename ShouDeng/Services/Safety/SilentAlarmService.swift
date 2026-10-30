@@ -95,7 +95,7 @@ final class SilentAlarmService: ObservableObject {
     }
 
     func syncScheduleToServer() async {
-        guard let apiClient else { return }
+        guard !ExploreMode.blocks("silentAlarm"), let apiClient else { return }
 
         let request = SilentAlarmScheduleRequest(
             enabled: isEnabled,

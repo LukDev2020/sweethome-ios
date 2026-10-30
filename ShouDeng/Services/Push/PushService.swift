@@ -41,6 +41,7 @@ final class PushService: NSObject {
     // MARK: - Registration
 
     func registerForPushNotifications() {
+        guard !ExploreMode.isActive else { return }
         let center = UNUserNotificationCenter.current()
         center.delegate = self
 

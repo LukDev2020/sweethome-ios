@@ -9,6 +9,7 @@ import SwiftUI
 //   - Each tap logs consent with copy version
 
 struct OnboardingView: View {
+    @State private var showDemoPicker = false
     @Binding var isComplete: Bool
     @ObservedObject private var lang = LanguageManager.shared
     @AppStorage("hasCompletedOnboardingOnce") private var hasCompletedOnce = false
@@ -198,6 +199,26 @@ struct OnboardingView: View {
     // MARK: - Action Button
 
     private func actionButton(_ screen: DisclaimerCopy.Onboarding.Screen) -> some View {
+        VStack(spacing: 10) {
+            primaryButton(screen)
+            // Last page: Explore Mode without an account (disclaimers still apply
+            // before any real sign-up — the demo sends nothing)
+            if currentPage == screens.count - 1 {
+                Button {
+                    showDemoPicker = true
+                } label: {
+                    Label(LanguageManager.shared.localized("explore.entry.button"), systemImage: "sparkles")
+                        .font(.scaled(size: 14, weight: .medium))
+                        .foregroundStyle(lamp)
+                }
+                .sheet(isPresented: $showDemoPicker) {
+                    DemoRolePickerView()
+                }
+            }
+        }
+    }
+
+    private func primaryButton(_ screen: DisclaimerCopy.Onboarding.Screen) -> some View {
         Button {
             // Log consent
             ConsentLogger.shared.logOnboardingScreen(screen.id)

@@ -11,6 +11,31 @@ final class KeychainHelper {
     static let shared = KeychainHelper()
     private init() {}
 
+    // MARK: - Explore Mode overlay
+    //
+    // While a demo session runs, every read/write goes to this in-memory map and
+    // the real keychain is never touched; ending the overlay discards it.
+
+    private let overlayLock = NSLock()
+    private var overlay: [String: String]?
+
+    func beginOverlay() { overlayLock.withLock { overlay = [:] } }
+    func endOverlay() { overlayLock.withLock { overlay = nil } }
+    var isOverlayActive: Bool { overlayLock.withLock { overlay != nil } }
+
+    /// nil = no overlay active (use the real keychain)
+    private func overlayRead(_ account: String) -> String?? {
+        overlayLock.withLock { overlay.map { $0[account] } }
+    }
+
+    private func overlayWrite(_ account: String, _ value: String?) -> Bool {
+        overlayLock.withLock {
+            guard overlay != nil else { return false }
+            overlay?[account] = value
+            return true
+        }
+    }
+
     private let service = "com.shoudeng.auth"
 
     // MARK: - Keys
@@ -36,6 +61,7 @@ final class KeychainHelper {
 
     @discardableResult
     func save(_ value: String, for key: Key) -> Bool {
+        if overlayWrite("auth." + key.rawValue, value) { return true }
         guard let data = value.data(using: .utf8) else { return false }
         let match: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -64,6 +90,9 @@ final class KeychainHelper {
     }
 
     func readResult(_ key: Key) -> ReadResult {
+        if let overlaid = overlayRead("auth." + key.rawValue) {
+            return overlaid.map { .value($0) } ?? .notFound
+        }
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -86,6 +115,7 @@ final class KeychainHelper {
     }
 
     func delete(_ key: Key) {
+        if overlayWrite("auth." + key.rawValue, nil) { return }
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -109,6 +139,7 @@ final class KeychainHelper {
     private let safetyService = "com.shoudeng.prefs"
 
     func save(_ account: String, value: String) {
+        if overlayWrite("prefs." + account, value) { return }
         guard let data = value.data(using: .utf8) else { return }
         let deleteQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -133,6 +164,7 @@ final class KeychainHelper {
     }
 
     func read(_ account: String) -> String? {
+        if let overlaid = overlayRead("prefs." + account) { return overlaid }
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: safetyService,

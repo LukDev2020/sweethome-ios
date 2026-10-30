@@ -157,6 +157,7 @@ struct GuardianHomeView: View {
             VStack(spacing: 0) {
                 globeSection
                 worldClocks
+                    .coachMark(CoachAnchor.clocks)
                     .padding(.top, 4)
                 locationCard
                     .padding(.top, 10)
@@ -604,6 +605,7 @@ struct GuardianHomeView: View {
                                 avatarPath: person.user.avatarLocalPath
                             )
                         }
+                        .coachMark(person.id == warningPersons.first(where: { $0.status == .alert })?.id ? CoachAnchor.alertPerson : "guardian.person.\(person.id)")
                         .buttonStyle(.plain)
                         .contextMenu {
                             Button {
@@ -635,6 +637,7 @@ struct GuardianHomeView: View {
             HStack(spacing: 8) {
                 gQuickButton(icon: "building.2.fill", label: lang.localized("guardian.home.org.dashboard"), color: safe) { showOrgDashboard = true }
                 gQuickButton(icon: "doc.text.magnifyingglass", label: lang.localized("guardian.home.claim.materials"), color: safe) { showInsuranceReport = true }
+                    .coachMark(CoachAnchor.claims)
                 Color.clear.frame(maxWidth: .infinity, maxHeight: 1) // spacer
             }
         }
@@ -682,6 +685,7 @@ struct GuardianHomeView: View {
                                 avatarPath: person.user.avatarLocalPath
                             )
                         }
+                        .coachMark(person.id == normalPersons.first?.id ? CoachAnchor.firstPerson : "guardian.person.\(person.id)")
                         .buttonStyle(.plain)
                         .contextMenu {
                             Button {

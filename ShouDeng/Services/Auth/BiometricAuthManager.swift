@@ -86,6 +86,7 @@ final class BiometricAuthManager: ObservableObject {
     // MARK: - Enable / Disable
 
     func enable() throws {
+        if ExploreMode.blocks("biometrics") { return }
         var cfError: Unmanaged<CFError>?
         guard let accessControl = SecAccessControlCreateWithFlags(
             kCFAllocatorDefault,

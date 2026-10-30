@@ -136,6 +136,7 @@ final class BLETrackerService: NSObject, ObservableObject {
     // MARK: - Scanning for New Devices
 
     func startDiscovery() {
+        guard !ExploreMode.blocks("bluetooth") else { return }
         guard let central = centralManager, central.state == .poweredOn else { return }
         discoveredDevices.removeAll()
         isScanning = true
@@ -208,6 +209,7 @@ final class BLETrackerService: NSObject, ObservableObject {
     // MARK: - Background Scanning for Paired Panic Buttons
 
     func startBackgroundScanning() {
+        guard !ExploreMode.blocks("bluetooth") else { return }
         guard let central = centralManager, central.state == .poweredOn else { return }
 
         let serviceUUIDs = pairedTags

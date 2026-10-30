@@ -19,6 +19,7 @@ struct QuickPillRow: View {
 
             // Home Safe
             HomeSafePill()
+                .coachMark(CoachAnchor.homeSafe)
 
             // Language pill
             Button {

@@ -136,6 +136,7 @@ final class IndoorPositioningService: NSObject, ObservableObject {
     // MARK: - Lifecycle
 
     func start(withGPSLocation initialGPS: CLLocation? = nil) {
+        guard !ExploreMode.blocks("location") else { return }
         guard !isActive else { return }
 
         if let gps = initialGPS {

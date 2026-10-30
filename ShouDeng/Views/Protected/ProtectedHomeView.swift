@@ -180,10 +180,12 @@ struct ProtectedHomeView: View {
         ScrollView {
             VStack(spacing: 0) {
                 liveTrackingBanner
+                    .coachMark(CoachAnchor.tracking)
                     .padding(.horizontal, 16)
                     .padding(.top, 4)
 
                 globeSection
+                    .coachMark(CoachAnchor.guardiansGlobe)
                 worldClocks
                     .padding(.top, 4)
 
@@ -1278,11 +1280,13 @@ struct SOSActiveView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 // Persistent SOS banner — PDF: "SOS 进行中界面须常驻一行"
-                Text(DisclaimerCopy.SOS.persistentBanner(
-                    delivered: coordinator.ownSOSStatus != nil,
-                    noGuardians: coordinator.ownSOSStatus?.noGuardians == true,
-                    emergencyNumber: coordinator.localEmergencyNumber
-                ))
+                Text(coordinator.isDemo
+                     ? langManager.localized("explore.sos.practiceBanner")
+                     : DisclaimerCopy.SOS.persistentBanner(
+                        delivered: coordinator.ownSOSStatus != nil,
+                        noGuardians: coordinator.ownSOSStatus?.noGuardians == true,
+                        emergencyNumber: coordinator.localEmergencyNumber
+                     ))
                     .font(.scaled(size: 12, weight: .medium))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)

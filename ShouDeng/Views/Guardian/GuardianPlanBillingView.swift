@@ -438,7 +438,7 @@ struct GuardianPlanBillingView: View {
                 .multilineTextAlignment(.center)
             Button {
                 if let url = URL(string: "mailto:support@shoudeng.app?subject=定制方案咨询") {
-                    UIApplication.shared.open(url)
+                    ExternalURL.open(url)
                 }
             } label: {
                 Text(langManager.localized("guardian.billing.contact.us"))
@@ -474,7 +474,7 @@ struct GuardianPlanBillingView: View {
             if coordinator.storeKitManager.subscriptionStatus?.isActive == true {
                 Button {
                     if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
-                        UIApplication.shared.open(url)
+                        ExternalURL.open(url)
                     }
                 } label: {
                     HStack(spacing: 4) {

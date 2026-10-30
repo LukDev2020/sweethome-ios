@@ -122,6 +122,7 @@ final class FakeCallService: NSObject, ObservableObject {
 
     /// Schedule a fake incoming call with the currently configured delay.
     func scheduleCall() {
+        guard !ExploreMode.blocks("fakeCall") else { return }
         cancelScheduledCall()
 
         let delay = selectedDelay.timeInterval

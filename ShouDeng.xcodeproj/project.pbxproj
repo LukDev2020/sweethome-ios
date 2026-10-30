@@ -7,6 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		86888C2702D39D17F8B69BB2 /* ExploreModeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F5BF90CA6138F02A40F58E3 /* ExploreModeTests.swift */; };
+		111B99E32356DA32B8CFB7BB /* DemoRolePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE47F7C000647E159B1CCE16 /* DemoRolePickerView.swift */; };
+		17ECF3A6FC58B3A276C95C92 /* DemoRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9305BFD75950E5EF0503BBE /* DemoRootView.swift */; };
+		20FAC7ED25D49535DDFDDC8B /* DemoOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC88907315AE4325D456BDF0 /* DemoOverlayView.swift */; };
+		7B5C5ECEE97787F50A6FE3A0 /* CoachMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52B4FFFA94FB10A87D810AEC /* CoachMark.swift */; };
+		57751E65320E1E419A71D91A /* DemoTour.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B41826B4852652FD44A068C /* DemoTour.swift */; };
+		C9E5F56F75A833C33C8E26F6 /* ExploreModeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B78EE84BB9C7DA50C7D1BFAA /* ExploreModeController.swift */; };
+		5B12446347424F3CEB49562F /* DemoURLProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9274CF934236E48FCA92CA03 /* DemoURLProtocol.swift */; };
+		9670FF61047FD433AFD35013 /* DemoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43FD6EE4E7A713241060E95B /* DemoStore.swift */; };
+		633BDFF56AC58527728857BF /* DemoDataset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AA2EAD305D36F38AFE9E637 /* DemoDataset.swift */; };
+		173A73EC5CC36DD6F1E3B100 /* ExploreModeIsolation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E819FB3457DDCEF8058290 /* ExploreModeIsolation.swift */; };
 		600B1357DC7DAF7DA3F3810E /* SOSDeliveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A075B31B4AC087B62A5FDC48 /* SOSDeliveryTests.swift */; };
 		B85E897C516D23FA3207CAE3 /* StubURLProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = D221832EF096E7D1E27553C4 /* StubURLProtocol.swift */; };
 		8FF403BD0A5631F85C44A298 /* sos_alert.caf in Resources */ = {isa = PBXBuildFile; fileRef = AECB90E222B94FFC29DE8CB8 /* sos_alert.caf */; };
@@ -235,6 +246,17 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		5F5BF90CA6138F02A40F58E3 /* ExploreModeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreModeTests.swift; sourceTree = "<group>"; };
+		DE47F7C000647E159B1CCE16 /* DemoRolePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoRolePickerView.swift; sourceTree = "<group>"; };
+		B9305BFD75950E5EF0503BBE /* DemoRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoRootView.swift; sourceTree = "<group>"; };
+		FC88907315AE4325D456BDF0 /* DemoOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoOverlayView.swift; sourceTree = "<group>"; };
+		52B4FFFA94FB10A87D810AEC /* CoachMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachMark.swift; sourceTree = "<group>"; };
+		5B41826B4852652FD44A068C /* DemoTour.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoTour.swift; sourceTree = "<group>"; };
+		B78EE84BB9C7DA50C7D1BFAA /* ExploreModeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreModeController.swift; sourceTree = "<group>"; };
+		9274CF934236E48FCA92CA03 /* DemoURLProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoURLProtocol.swift; sourceTree = "<group>"; };
+		43FD6EE4E7A713241060E95B /* DemoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoStore.swift; sourceTree = "<group>"; };
+		6AA2EAD305D36F38AFE9E637 /* DemoDataset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoDataset.swift; sourceTree = "<group>"; };
+		F3E819FB3457DDCEF8058290 /* ExploreModeIsolation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreModeIsolation.swift; sourceTree = "<group>"; };
 		A075B31B4AC087B62A5FDC48 /* SOSDeliveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SOSDeliveryTests.swift; sourceTree = "<group>"; };
 		D221832EF096E7D1E27553C4 /* StubURLProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubURLProtocol.swift; sourceTree = "<group>"; };
 		AECB90E222B94FFC29DE8CB8 /* sos_alert.caf */ = {isa = PBXFileReference; lastKnownFileType = audio.caf; path = sos_alert.caf; sourceTree = "<group>"; };
@@ -445,6 +467,30 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B30F564173FDBCA8CE26D0F5 /* ExploreMode */ = {
+			isa = PBXGroup;
+			children = (
+				DE47F7C000647E159B1CCE16 /* DemoRolePickerView.swift */,
+				B9305BFD75950E5EF0503BBE /* DemoRootView.swift */,
+				FC88907315AE4325D456BDF0 /* DemoOverlayView.swift */,
+				52B4FFFA94FB10A87D810AEC /* CoachMark.swift */,
+			);
+			path = ExploreMode;
+			sourceTree = "<group>";
+		};
+		BCA906FAC80C6E7E2EFE8F64 /* ExploreMode */ = {
+			isa = PBXGroup;
+			children = (
+				5B41826B4852652FD44A068C /* DemoTour.swift */,
+				B78EE84BB9C7DA50C7D1BFAA /* ExploreModeController.swift */,
+				9274CF934236E48FCA92CA03 /* DemoURLProtocol.swift */,
+				43FD6EE4E7A713241060E95B /* DemoStore.swift */,
+				6AA2EAD305D36F38AFE9E637 /* DemoDataset.swift */,
+				F3E819FB3457DDCEF8058290 /* ExploreModeIsolation.swift */,
+			);
+			path = ExploreMode;
+			sourceTree = "<group>";
+		};
 		02824A70A93F7EFA69ABCE4E /* Shared */ = {
 			isa = PBXGroup;
 			children = (
@@ -550,6 +596,7 @@
 				8F486E6F44264208B0B50CDB /* Crypto */,
 				AA11BB2200003003 /* Bluetooth */,
 				AA11BB2200003002 /* Safety */,
+				BCA906FAC80C6E7E2EFE8F64 /* ExploreMode */,
 				A3C5016F1B235855CB5700B4 /* Network */,
 				D61FBDB5A20879AC289D362A /* Payment */,
 				BACCB2B26041901276283922 /* Push */,
@@ -644,6 +691,7 @@
 				41D6213A6E5D02328F6A0899 /* Protected */,
 				AA11BB2200003001 /* Settings */,
 				CC33DD0100003001 /* Safety */,
+				B30F564173FDBCA8CE26D0F5 /* ExploreMode */,
 				77A7B02D23FB0255C4D07867 /* Shared */,
 			);
 			path = Views;
@@ -802,6 +850,7 @@
 				19BF856E4785D6ABD573F691 /* AdaptiveLocationManagerTests.swift */,
 				C5D6E7F8A9B0C1D2E3F4A5B6 /* ReactiveLocationServiceTests.swift */,
 				B273093A701FBEED8E657124 /* APIClientTests.swift */,
+				5F5BF90CA6138F02A40F58E3 /* ExploreModeTests.swift */,
 				A075B31B4AC087B62A5FDC48 /* SOSDeliveryTests.swift */,
 				D221832EF096E7D1E27553C4 /* StubURLProtocol.swift */,
 				1A3FBDFE830D15DFC6912B40 /* GlobeLabelTests.swift */,
@@ -1160,6 +1209,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				111B99E32356DA32B8CFB7BB /* DemoRolePickerView.swift in Sources */,
+				17ECF3A6FC58B3A276C95C92 /* DemoRootView.swift in Sources */,
+				20FAC7ED25D49535DDFDDC8B /* DemoOverlayView.swift in Sources */,
+				7B5C5ECEE97787F50A6FE3A0 /* CoachMark.swift in Sources */,
+				57751E65320E1E419A71D91A /* DemoTour.swift in Sources */,
+				C9E5F56F75A833C33C8E26F6 /* ExploreModeController.swift in Sources */,
+				5B12446347424F3CEB49562F /* DemoURLProtocol.swift in Sources */,
+				9670FF61047FD433AFD35013 /* DemoStore.swift in Sources */,
+				633BDFF56AC58527728857BF /* DemoDataset.swift in Sources */,
+				173A73EC5CC36DD6F1E3B100 /* ExploreModeIsolation.swift in Sources */,
 				B6F3D8CDCB5E6CE9C9A0A5D1 /* MedicalCardCache.swift in Sources */,
 				02FDCD5227ECBAF427E9684C /* ConnectivityMonitor.swift in Sources */,
 				DD4C82603D4B0B8218838586 /* AppLifecycleRouter.swift in Sources */,
@@ -1304,6 +1363,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				86888C2702D39D17F8B69BB2 /* ExploreModeTests.swift in Sources */,
 				600B1357DC7DAF7DA3F3810E /* SOSDeliveryTests.swift in Sources */,
 				B85E897C516D23FA3207CAE3 /* StubURLProtocol.swift in Sources */,
 				CC43ECAB20D34828CF0CC677 /* GlobeLabelTests.swift in Sources */,

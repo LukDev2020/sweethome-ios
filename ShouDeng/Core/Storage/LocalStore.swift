@@ -19,6 +19,13 @@ final class LocalStore {
     private let decoder: JSONDecoder
     private let queue = DispatchQueue(label: "com.shoudeng.localstore", qos: .utility)
 
+    /// Explore Mode: in-memory files while a demo runs; the real store on disk
+    /// is neither read nor written. Accessed on `queue` only.
+    private var overlay: [String: Data]?
+
+    func beginOverlay() { queue.sync { overlay = [:] } }
+    func endOverlay() { queue.sync { overlay = nil } }
+
     private init() {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         storeDir = docs.appendingPathComponent("store", isDirectory: true)
@@ -40,12 +47,20 @@ final class LocalStore {
             guard let self else { return }
             let url = self.storeDir.appendingPathComponent(filename)
             guard let data = try? self.encoder.encode(value) else { return }
-            try? data.write(to: url, options: [.atomic, .completeFileProtection])
+            if self.overlay != nil {
+                self.overlay?[filename] = data
+                return
+            }
+            // Readable while locked: a lock-screen / BLE SOS saves the active event
+            try? data.write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
         }
     }
 
     private func load<T: Decodable>(filename: String) -> T? {
         queue.sync {
+            if let overlay {
+                return overlay[filename].flatMap { try? decoder.decode(T.self, from: $0) }
+            }
             let url = storeDir.appendingPathComponent(filename)
             guard let data = try? Data(contentsOf: url) else { return nil }
             return try? decoder.decode(T.self, from: data)
@@ -55,6 +70,10 @@ final class LocalStore {
     private func remove(filename: String) {
         queue.async { [weak self] in
             guard let self else { return }
+            if self.overlay != nil {
+                self.overlay?[filename] = nil
+                return
+            }
             let url = self.storeDir.appendingPathComponent(filename)
             try? FileManager.default.removeItem(at: url)
         }
@@ -149,6 +168,10 @@ final class LocalStore {
     func clearAll() {
         queue.async { [weak self] in
             guard let self else { return }
+            if self.overlay != nil {
+                self.overlay = [:]
+                return
+            }
             let files = (try? FileManager.default.contentsOfDirectory(at: self.storeDir, includingPropertiesForKeys: nil)) ?? []
             for file in files {
                 try? FileManager.default.removeItem(at: file)

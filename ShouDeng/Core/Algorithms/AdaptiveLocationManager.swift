@@ -105,6 +105,7 @@ final class AdaptiveLocationManager: NSObject {
 
     /// Request a single fresh location fix (e.g. when home view appears)
     func requestSingleLocation() {
+        guard !ExploreMode.isActive else { return }
         locationManager.requestLocation()
     }
 
@@ -130,6 +131,7 @@ final class AdaptiveLocationManager: NSObject {
     // MARK: - Start / Stop
 
     func start() {
+        guard !ExploreMode.isActive else { return }
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("-screenshot") { return }
         #endif
@@ -170,6 +172,7 @@ final class AdaptiveLocationManager: NSObject {
     // MARK: - Mode Switching
 
     func switchMode(_ newMode: LocationMode) {
+        guard !ExploreMode.isActive else { return }
         let oldMode = currentMode
         guard newMode != oldMode else { return }
 

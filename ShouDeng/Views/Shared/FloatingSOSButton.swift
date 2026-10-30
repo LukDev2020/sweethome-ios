@@ -69,6 +69,7 @@ struct FloatingSOSButton: View {
                 pulseScale = 1.15
             }
         }
+        .coachMark(CoachAnchor.sosButton)
         .accessibilityLabel(LanguageManager.shared.localized("sos.button.a11yLabel"))
         .accessibilityHint(LanguageManager.shared.localized("sos.button.a11yHint"))
     }

@@ -41,6 +41,7 @@ final class VoiceActivityDetector: ObservableObject {
     // MARK: - Public API
 
     func start() {
+        guard !ExploreMode.blocks("microphone") else { return }
         guard !isRunning else { return }
 
         #if targetEnvironment(simulator)

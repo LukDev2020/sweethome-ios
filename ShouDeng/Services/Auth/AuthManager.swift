@@ -50,10 +50,27 @@ final class AuthManager: ObservableObject {
     private var isRefreshing = false
     private var refreshContinuations: [CheckedContinuation<Void, Error>] = []
 
-    init(api: APIClient, phoneAuth: PhoneAuthProviding = FirebasePhoneAuthProvider()) {
+    private let defaults: UserDefaults
+
+    /// - Parameters:
+    ///   - defaults: where `currentUserId` is mirrored (Explore Mode passes a throw-away suite)
+    ///   - restore: read the saved session from the keychain (false for Explore Mode)
+    init(api: APIClient, phoneAuth: PhoneAuthProviding = FirebasePhoneAuthProvider(),
+         defaults: UserDefaults = .standard, restore: Bool = true) {
         self.api = api
         self.phoneAuth = phoneAuth
-        restoreSession()
+        self.defaults = defaults
+        if restore {
+            restoreSession()
+        } else {
+            state = .loggedOut
+        }
+    }
+
+    /// Explore Mode: become a sample family member. No token, no keychain write.
+    func startDemoSession(userId: String, role: String) {
+        lastLoginRole = role
+        state = .loggedIn(userId: userId)
     }
 
     // MARK: - Session Restore
@@ -68,7 +85,7 @@ final class AuthManager: ObservableObject {
             }
             api.setAccessToken(token)
             state = .loggedIn(userId: userId)
-            UserDefaults.standard.set(userId, forKey: "currentUserId")
+            defaults.set(userId, forKey: "currentUserId")
         case (.unavailable, _), (_, .unavailable):
             // Keychain locked (background launch before first unlock). Stay
             // .unknown — NOT .loggedOut, which would wipe local data — and retry
@@ -238,7 +255,7 @@ final class AuthManager: ObservableObject {
         api.setAccessToken(nil)
         verificationID = nil
         verifiedIdToken = nil
-        UserDefaults.standard.removeObject(forKey: "currentUserId")
+        defaults.removeObject(forKey: "currentUserId")
         state = .loggedOut
 
         // Reset biometric unlock state so gate re-appears on next login
@@ -255,7 +272,7 @@ final class AuthManager: ObservableObject {
         keychain.save(response.refreshToken, for: .refreshToken)
         keychain.save(response.userId, for: .userId)
         api.setAccessToken(response.accessToken)
-        UserDefaults.standard.set(response.userId, forKey: "currentUserId")
+        defaults.set(response.userId, forKey: "currentUserId")
         DispatchQueue.main.async {
             self.lastLoginRole = response.role
             self.state = .loggedIn(userId: response.userId)

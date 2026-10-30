@@ -65,6 +65,7 @@ final class VoiceCommandService: ObservableObject {
     // MARK: - Start / Stop
 
     func start() {
+        guard !ExploreMode.blocks("microphone") else { return }
         guard state == .stopped else { return }
 
         #if targetEnvironment(simulator)

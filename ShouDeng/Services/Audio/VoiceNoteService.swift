@@ -80,6 +80,7 @@ final class VoiceNoteService: NSObject, ObservableObject {
     // MARK: - Recording
 
     func startRecording() {
+        guard !ExploreMode.blocks("microphone") else { return }
         #if targetEnvironment(simulator)
         state = .error("Recording not available in simulator")
         #else

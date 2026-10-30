@@ -158,6 +158,7 @@ final class DeadManSwitchService: ObservableObject {
     /// Start a new countdown from the given duration in seconds.
     /// Any existing active timer is cancelled first.
     func start(seconds: Int) {
+        guard !ExploreMode.blocks("deadManSwitch") else { return }
         guard seconds > 0 else { return }
         cancel(suppressNotifications: true)
 

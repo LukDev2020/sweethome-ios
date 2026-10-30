@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct RootView: View {
+    @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var explore = ExploreModeController.shared
     #if DEBUG
     private var isScreenshotMode: Bool { ScreenshotCapture.isEnabled }
     #else
@@ -12,8 +14,16 @@ struct RootView: View {
             #if DEBUG
             ScreenshotGalleryView()
             #endif
+        } else if explore.isActive, let demo = explore.coordinator {
+            // Explore Mode: real screens, demo coordinator, nothing leaves the phone
+            DemoRootView(explore: explore, coordinator: demo)
         } else {
             AuthenticatedRootView()
+                .onAppear {
+                    // The real coordinator lives for the whole app
+                    let real = coordinator
+                    explore.onSetUpRealFamily = { real.showSignup = true }
+                }
         }
     }
 }

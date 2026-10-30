@@ -65,6 +65,7 @@ final class CrowdSourcedBLEService: NSObject, ObservableObject, @unchecked Senda
     // MARK: - Public API
 
     func startParticipating() {
+        guard !ExploreMode.blocks("bluetooth") else { return }
         guard !isParticipating else { return }
 
         centralManager = CBCentralManager(

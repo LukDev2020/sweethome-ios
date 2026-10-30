@@ -14,8 +14,11 @@ enum WidgetDataStore {
     private static let encoder = JSONEncoder()
     private static let decoder = JSONDecoder()
 
+    /// Explore Mode: no writes to the shared App Group (widgets, Live Activity)
+    nonisolated(unsafe) static var writesSuspended = false
+
     static func write(_ state: WidgetState) {
-        guard let defaults = sharedDefaults else { return }
+        guard !writesSuspended, let defaults = sharedDefaults else { return }
         if let data = try? encoder.encode(state) {
             defaults.set(data, forKey: stateKey)
         }
@@ -31,6 +34,7 @@ enum WidgetDataStore {
     }
 
     static func clear() {
+        guard !writesSuspended else { return }
         sharedDefaults?.removeObject(forKey: stateKey)
     }
 
@@ -53,7 +57,7 @@ enum WidgetDataStore {
     private static let pendingKey = "widget_pending_actions"
 
     static func enqueuePendingAction(_ action: PendingAction, at date: Date = Date()) {
-        guard let defaults = sharedDefaults else { return }
+        guard !writesSuspended, let defaults = sharedDefaults else { return }
         var entries = (defaults.data(forKey: pendingKey)).flatMap { try? decoder.decode([PendingEntry].self, from: $0) } ?? []
         entries.append(PendingEntry(action: action, at: date))
         if let data = try? encoder.encode(Array(entries.suffix(10))) {
@@ -63,7 +67,7 @@ enum WidgetDataStore {
 
     /// Returns and clears pending actions newer than `maxAge`.
     static func takePendingActions(maxAge: TimeInterval = 600, now: Date = Date()) -> [PendingAction] {
-        guard let defaults = sharedDefaults else { return [] }
+        guard !writesSuspended, let defaults = sharedDefaults else { return [] }
         let entries = (defaults.data(forKey: pendingKey)).flatMap { try? decoder.decode([PendingEntry].self, from: $0) } ?? []
         defaults.removeObject(forKey: pendingKey)
         return entries.filter { now.timeIntervalSince($0.at) <= maxAge && $0.at <= now.addingTimeInterval(5) }.map(\.action)
@@ -74,6 +78,7 @@ enum WidgetDataStore {
     private static let languageKey = "app_language"
 
     static func writeLanguage(_ lang: String) {
+        guard !writesSuspended else { return }
         sharedDefaults?.set(lang, forKey: languageKey)
     }
 

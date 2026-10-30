@@ -57,6 +57,7 @@ final class DeviceHealthMonitor: ObservableObject {
 
     /// Call after onboarding completes to begin health monitoring.
     func beginMonitoring() {
+        guard !ExploreMode.blocks("deviceHealth") else { return }
         startMonitoring()
     }
 

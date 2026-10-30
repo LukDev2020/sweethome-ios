@@ -37,6 +37,7 @@ final class TripRecordingService: ObservableObject {
 
     @MainActor
     func startRecording() async throws {
+        guard !ExploreMode.blocks("location") else { return }
         guard let api = apiClient else { return }
         guard !isRecording else { return }
 

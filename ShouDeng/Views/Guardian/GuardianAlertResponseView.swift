@@ -89,7 +89,7 @@ struct GuardianAlertResponseView: View {
                     Button {
                         if let phone = person?.user.phone,
                            let url = URL(string: "tel://\(phone)") {
-                            UIApplication.shared.open(url)
+                            ExternalURL.open(url)
                         }
                     } label: {
                         Text(langManager.localized("guardian.alert.call.now"))
@@ -113,6 +113,7 @@ struct GuardianAlertResponseView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
                     .disabled(sos == nil || sos?.acknowledgedBy != nil || isWorking)
+                    .coachMark(CoachAnchor.acknowledge)
                     .accessibilityHint(langManager.localized("guardian.alert.ackHint"))
                 }
 

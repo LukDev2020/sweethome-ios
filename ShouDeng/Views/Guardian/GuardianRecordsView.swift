@@ -890,7 +890,7 @@ struct GuardianRecordsView: View {
                 Button {
                     let cleaned = contact.phone.replacingOccurrences(of: " ", with: "")
                     if let url = URL(string: "tel://\(cleaned)") {
-                        UIApplication.shared.open(url)
+                        ExternalURL.open(url)
                     }
                 } label: {
                     Image(systemName: "phone.fill")
@@ -1215,7 +1215,7 @@ struct InviteGuardianSheet: View {
             case .sms:
                 let encoded = inviteLink.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? inviteLink
                 if let url = URL(string: "sms:&body=\(encoded)") {
-                    await UIApplication.shared.open(url)
+                    ExternalURL.open(url)
                 }
                 dismiss()
             case .wechat:

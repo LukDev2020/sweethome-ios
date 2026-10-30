@@ -176,6 +176,7 @@ final class TrackerDetectionService: NSObject, ObservableObject {
 
     /// Start the detection service. Safe to call multiple times.
     func start() {
+        guard !ExploreMode.blocks("bluetooth") else { return }
         #if !targetEnvironment(simulator)
         if centralManager == nil {
             centralManager = CBCentralManager(

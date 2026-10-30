@@ -123,7 +123,7 @@ final class DisguiseModeService: ObservableObject {
     // MARK: - Keychain Persistence
 
     private func saveToKeychain() {
-        guard !isLoading else { return }
+        guard !isLoading, !ExploreMode.isActive else { return }
         keychainWrite(disguiseEnabled ? "1" : "0", for: PrefKey.disguiseEnabled)
         keychainWrite(configuredDisguise.rawValue, for: PrefKey.disguiseType)
         keychainWrite(notesSecretPhrase,           for: PrefKey.notesSecretPhrase)
@@ -209,6 +209,7 @@ final class DisguiseModeService: ObservableObject {
     /// explicitly enables disguise mode from settings.
     @MainActor
     func activateDisguise(type: DisguiseType) {
+        guard !ExploreMode.blocks("disguise") else { return }
         guard type != .none else {
             deactivateDisguise()
             return
@@ -249,6 +250,7 @@ final class DisguiseModeService: ObservableObject {
     /// Called when the app resigns active: put the disguise back if it is enabled.
     @MainActor
     func rearmIfEnabled() {
+        guard !ExploreMode.isActive else { return }
         if disguiseEnabled, configuredDisguise != .none, !isDisguiseActive {
             applyDisguise(configuredDisguise)
         }

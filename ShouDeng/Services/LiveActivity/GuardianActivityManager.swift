@@ -23,6 +23,7 @@ final class GuardianActivityManager {
         emergencyNote: String? = nil,
         emergencyMedications: [ProtectedActivityAttributes.MedInfo] = []
     ) {
+        guard !ExploreMode.isActive else { return }
         let authInfo = ActivityAuthorizationInfo()
         NSLog("[LiveActivity] Protected — areActivitiesEnabled: \(authInfo.areActivitiesEnabled)")
 
@@ -72,6 +73,7 @@ final class GuardianActivityManager {
         priorityPersonName: String,
         priorityPersonPhone: String
     ) {
+        guard !ExploreMode.isActive else { return }
         let authInfo = ActivityAuthorizationInfo()
         NSLog("[LiveActivity] Guardian — areActivitiesEnabled: \(authInfo.areActivitiesEnabled)")
 
@@ -176,6 +178,7 @@ final class GuardianActivityManager {
     // MARK: - SOS (both roles)
 
     func triggerSOS(localEmergencyNumber: String) {
+        guard !ExploreMode.isActive else { return }
         if let activity = protectedActivity {
             Task {
                 var state = activity.content.state

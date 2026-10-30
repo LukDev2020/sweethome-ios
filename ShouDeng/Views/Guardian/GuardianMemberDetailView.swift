@@ -79,13 +79,13 @@ struct GuardianMemberDetailView: View {
                         actionButton(langManager.localized("guardian.member.send.message"), icon: "message.fill") {
                             if let phone = person.user.phone,
                                let url = URL(string: "sms:\(phone)") {
-                                UIApplication.shared.open(url)
+                                ExternalURL.open(url)
                             }
                         }
                         actionButton(langManager.localized("guardian.member.call"), icon: "phone.fill") {
                             if let phone = person.user.phone,
                                let url = URL(string: "tel://\(phone)") {
-                                UIApplication.shared.open(url)
+                                ExternalURL.open(url)
                             }
                         }
                     }
