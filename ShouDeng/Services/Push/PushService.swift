@@ -18,12 +18,15 @@ final class PushService: NSObject {
     static let categorySafetyWarning = "SAFETY_WARNING"
     static let categoryCheckInReminder = "CHECKIN_REMINDER"
     static let categoryHandoff = "DUTY_HANDOFF"
+    static let categorySOSPending = "SOS_PENDING"
+    static let pendingSOSNoticeId = "sos_pending_notice"
 
     // Actions
     static let actionTakenOver = "ACTION_TAKEN_OVER"
     static let actionCall = "ACTION_CALL"
     static let actionCheckIn = "ACTION_CHECKIN"
     static let actionDismiss = "ACTION_DISMISS"
+    static let actionCancelSOS = "ACTION_CANCEL_SOS"
 
     // MARK: - Properties
 
@@ -35,6 +38,7 @@ final class PushService: NSObject {
     var onSOSTakenOver: ((String) -> Void)?       // SOS event ID
     var onCheckInFromNotification: (() -> Void)?
     var onSilentPushReceived: (([AnyHashable: Any]) -> Void)?
+    var onCancelPendingSOS: (() -> Void)?
 
     // MARK: - Registration
 
@@ -42,9 +46,9 @@ final class PushService: NSObject {
         let center = UNUserNotificationCenter.current()
         center.delegate = self
 
-        // Request normal + critical alert permissions
-        // Critical Alerts require the com.apple.developer.usernotifications.critical-alerts entitlement
-        let options: UNAuthorizationOptions = [.alert, .sound, .badge, .criticalAlert, .providesAppNotificationSettings]
+        // Normal permissions only. Critical Alerts are requested separately,
+        // after a guardian opts in (requestCriticalAlertPermission).
+        let options: UNAuthorizationOptions = [.alert, .sound, .badge, .providesAppNotificationSettings]
 
         center.requestAuthorization(options: options) { [weak self] granted, error in
             if let error {
@@ -53,13 +57,30 @@ final class PushService: NSObject {
                 #endif
             }
 
-            self?.hasCriticalAlertPermission = granted
-
             if granted {
                 DispatchQueue.main.async {
                     self?.registerNotificationCategories()
                 }
             }
+            self?.refreshCriticalAlertPermission()
+        }
+    }
+
+    /// Asks iOS for Critical Alerts permission (separate system prompt). Only
+    /// call after the guardian has opted in to SOS critical alerts in the app.
+    /// Requires the com.apple.developer.usernotifications.critical-alerts entitlement.
+    func requestCriticalAlertPermission(completion: ((Bool) -> Void)? = nil) {
+        let options: UNAuthorizationOptions = [.alert, .sound, .badge, .criticalAlert, .providesAppNotificationSettings]
+        UNUserNotificationCenter.current().requestAuthorization(options: options) { [weak self] _, _ in
+            self?.refreshCriticalAlertPermission(completion: completion)
+        }
+    }
+
+    private func refreshCriticalAlertPermission(completion: ((Bool) -> Void)? = nil) {
+        UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
+            let enabled = settings.criticalAlertSetting == .enabled
+            self?.hasCriticalAlertPermission = enabled
+            DispatchQueue.main.async { completion?(enabled) }
         }
     }
 
@@ -113,6 +134,19 @@ final class PushService: NSObject {
             options: []
         )
 
+        // Pending SOS — countdown running while the app is in the background
+        let cancelSOSAction = UNNotificationAction(
+            identifier: Self.actionCancelSOS,
+            title: LanguageManager.shared.localized("sos.pending.cancel"),
+            options: [.destructive]
+        )
+        let sosPendingCategory = UNNotificationCategory(
+            identifier: Self.categorySOSPending,
+            actions: [cancelSOSAction],
+            intentIdentifiers: [],
+            options: []
+        )
+
         // Handoff Reminder
         let handoffCategory = UNNotificationCategory(
             identifier: Self.categoryHandoff,
@@ -122,7 +156,7 @@ final class PushService: NSObject {
         )
 
         let center = UNUserNotificationCenter.current()
-        let newCategories: Set<UNNotificationCategory> = [sosCategory, warningCategory, checkInCategory, handoffCategory]
+        let newCategories: Set<UNNotificationCategory> = [sosCategory, warningCategory, checkInCategory, handoffCategory, sosPendingCategory]
         center.getNotificationCategories { existing in
             center.setNotificationCategories(existing.union(newCategories))
         }
@@ -184,6 +218,33 @@ final class PushService: NSObject {
         )
 
         UNUserNotificationCenter.current().add(request)
+    }
+
+    // MARK: - Pending SOS notice
+
+    /// Shown when an SOS countdown starts while the app isn't in the foreground,
+    /// so the user can still cancel an accidental trigger.
+    func firePendingSOSNotice(seconds: Int) {
+        let lang = LanguageManager.shared
+        let content = UNMutableNotificationContent()
+        content.title = lang.localized("sos.pending.notice.title")
+        content.body = String(format: lang.localized("sos.pending.notice.body"), seconds)
+        content.categoryIdentifier = Self.categorySOSPending
+        content.sound = .default
+        content.interruptionLevel = .timeSensitive
+
+        let request = UNNotificationRequest(
+            identifier: Self.pendingSOSNoticeId,
+            content: content,
+            trigger: nil
+        )
+        UNUserNotificationCenter.current().add(request)
+    }
+
+    func removePendingSOSNotice() {
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: [Self.pendingSOSNoticeId])
+        center.removeDeliveredNotifications(withIdentifiers: [Self.pendingSOSNoticeId])
     }
 
     // MARK: - Build Critical Alert Payload (for SOS)
@@ -274,6 +335,11 @@ extension PushService: UNUserNotificationCenterDelegate {
 
         case Self.actionCheckIn:
             onCheckInFromNotification?()
+
+        case Self.actionCancelSOS:
+            DispatchQueue.main.async { [weak self] in
+                self?.onCancelPendingSOS?()
+            }
 
         case Self.actionCall:
             // Handle in the app layer — need to know which person to call

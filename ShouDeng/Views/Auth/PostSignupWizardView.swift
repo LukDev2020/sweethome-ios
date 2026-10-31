@@ -418,6 +418,8 @@ struct PostSignupWizardView: View {
     @State private var inviteCode = ""
     @State private var inviteError = ""
     @State private var inviteSuccess = false
+    /// Guardian's explicit choice to receive SOS alerts as Critical Alerts.
+    @State private var criticalAlertConsent = true
 
     private var inviteCodeInput: some View {
         VStack(spacing: 12) {
@@ -446,6 +448,8 @@ struct PostSignupWizardView: View {
                     .foregroundStyle(.red)
             }
 
+            criticalAlertConsentCard
+
             Button {
                 Task { await acceptInvite() }
             } label: {
@@ -462,6 +466,28 @@ struct PostSignupWizardView: View {
             .disabled(inviteCode.count < 6 || isLoading)
             .padding(.horizontal, 8)
         }
+    }
+
+    /// Explains Critical Alerts before the guardian joins; their choice is
+    /// stored with the guardian link and can be changed later in Settings.
+    private var criticalAlertConsentCard: some View {
+        let lang = LanguageManager.shared
+        return VStack(alignment: .leading, spacing: 8) {
+            Toggle(isOn: $criticalAlertConsent) {
+                Label(lang.localized("consent.criticalAlerts.title"), systemImage: "bell.badge.fill")
+                    .font(.scaled(size: 15, weight: .semibold))
+                    .foregroundStyle(ink)
+            }
+            .tint(navy)
+            Text(lang.localized("consent.criticalAlerts.body"))
+                .font(.scaled(size: 12))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(14)
+        .background(Color(.systemGray6))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal, 8)
     }
 
     @State private var generatedCode: String?
@@ -623,9 +649,13 @@ struct PostSignupWizardView: View {
         do {
             let _: AcceptInviteResponse = try await coordinator.apiClient.post(
                 "/v1/invite/accept",
-                body: AcceptInviteRequest(code: inviteCode.trimmingCharacters(in: .whitespaces))
+                body: AcceptInviteRequest(
+                    code: inviteCode.trimmingCharacters(in: .whitespaces),
+                    criticalAlertConsent: criticalAlertConsent
+                )
             )
             inviteSuccess = true
+            coordinator.setSOSCriticalAlerts(enabled: criticalAlertConsent)
             await coordinator.fetchProtectedPersons()
         } catch {
             inviteError = "邀请码无效或已过期"

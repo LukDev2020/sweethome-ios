@@ -1103,3 +1103,16 @@ your guardians will be automatically notified.";
 "home.fakeCall" = "Fake Call";
 "home.safetyTimer" = "Safety Timer";
 "home.trackerScan" = "Tracker Scan";
+
+// MARK: - SOS cancel window & Critical Alerts consent
+"sos.pending.title" = "Sending SOS";
+"sos.pending.subtitle" = "Your guardians will be alerted when the countdown ends. Tap Cancel if this was a mistake.";
+"sos.pending.cancel" = "Cancel SOS";
+"sos.pending.sendNow" = "Send now";
+"sos.pending.a11y.countdown" = "SOS will be sent in %d seconds";
+"sos.pending.notice.title" = "SOS will be sent";
+"sos.pending.notice.body" = "Your guardians will be alerted in %d seconds. Tap Cancel SOS if this was a mistake.";
+"consent.criticalAlerts.title" = "Receive SOS as Critical Alerts";
+"consent.criticalAlerts.body" = "If the person you protect sends an SOS, your phone will ring even when it is muted or in a Focus mode. Only real SOS alerts use this. iOS will ask for permission, and you can turn it off anytime in Settings.";
+"settings.notification.sosCritical" = "SOS as Critical Alert";
+"settings.notification.sosCritical.footnote" = "Rings even when your phone is muted or in a Focus mode. Only used for SOS alerts. When off, SOS arrives as a Time Sensitive notification.";

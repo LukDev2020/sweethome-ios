@@ -22,6 +22,8 @@ final class AppCoordinator: ObservableObject {
     @Published var sosDeliveryFailed = false
     @Published var showFallConfirmation = false
     @Published var fallConfirmationDeadline: Date?
+    /// Manual SOS waiting out its cancel window (see requestSOS).
+    @Published var pendingSOS: PendingSOS?
     @Published var currentRiskScores: [String: BaselineScorer.RiskScore] = [:]
     @Published var currentCoverage: DutyScheduler.DayCoverage?
     @Published var authState: AuthManager.AuthState = .unknown
@@ -122,7 +124,7 @@ final class AppCoordinator: ObservableObject {
         bleTrackerService.configure(
             apiClient: apiClient,
             onSOSTrigger: { [weak self] in
-                self?.triggerSOS(method: .bluetoothButton)
+                self?.requestSOS(method: .bluetoothButton)
             },
             onSeparationAlert: { [weak self] tag in
                 self?.addTimelineEntry(type: .guardianAlert, description: "蓝牙标签「\(tag.name)」超出范围")
@@ -277,6 +279,12 @@ final class AppCoordinator: ObservableObject {
         // Sync local notification preferences to server
         syncNotificationPrefs()
 
+        // Guardians who opted in to SOS Critical Alerts get the iOS permission
+        // prompt (shown once; later calls just read the current setting).
+        if userRole == .guardian && Self.sosCriticalAlertsEnabled {
+            pushService.requestCriticalAlertPermission()
+        }
+
         syncWidgetState()
 
         // Apply any pending deep link that arrived before login
@@ -359,9 +367,9 @@ final class AppCoordinator: ObservableObject {
         guard age < 60, age > 0 else { return }
 
         #if DEBUG
-        print("[AppCoordinator] Widget SOS intent detected — triggering SOS")
+        print("[AppCoordinator] Widget SOS intent detected — starting SOS countdown")
         #endif
-        triggerSOS(method: .widgetTap)
+        requestSOS(method: .widgetTap)
     }
 
     // MARK: - Deep Link Handling
@@ -371,7 +379,7 @@ final class AppCoordinator: ObservableObject {
         if url.scheme == "shoudeng" {
             switch url.host {
             case "sos":
-                triggerSOS(method: .longPress)
+                requestSOS(method: .longPress)
                 return
             case "checkin":
                 performCheckIn()
@@ -707,6 +715,10 @@ final class AppCoordinator: ObservableObject {
             self?.performCheckIn()
         }
 
+        pushService.onCancelPendingSOS = { [weak self] in
+            self?.cancelPendingSOS()
+        }
+
         // Escalation → Notifications
         escalationEngine.onSendNotification = { [weak self] request in
             self?.sendNotification(request)
@@ -816,8 +828,87 @@ final class AppCoordinator: ObservableObject {
         }
     }
 
+    // MARK: - SOS Cancel Window
+
+    struct PendingSOS: Equatable {
+        let method: SOSTriggerMethod
+        let deadline: Date
+        let duration: Int
+    }
+
+    private var pendingSOSWork: DispatchWorkItem?
+    private var pendingSOSBackgroundTask: UIBackgroundTaskIdentifier = .invalid
+
+    /// Seconds the user gets to cancel before guardians are alerted.
+    /// 0 = send immediately: a duress SOS must stay silent and instant, and
+    /// fall / voice / distress-sound / safety-timer SOS already had their own
+    /// confirmation countdown before reaching here.
+    static func sosCancelWindow(for method: SOSTriggerMethod) -> Int {
+        switch method {
+        case .longPress, .widgetTap, .bluetoothButton, .watchQuickAction:
+            return 5
+        case .duressPassword, .fallDetection, .voiceWakeWord, .audioDistress, .voiceCommand, .deadManSwitch:
+            return 0
+        }
+    }
+
+    /// Entry point for user-initiated SOS. Starts a short cancel countdown
+    /// (accidental presses, pocket triggers) and sends the SOS when it ends.
+    func requestSOS(method: SOSTriggerMethod = .longPress) {
+        guard activeSOSEvent == nil, pendingSOS == nil else { return }
+        let seconds = Self.sosCancelWindow(for: method)
+        guard seconds > 0 else {
+            triggerSOS(method: method)
+            return
+        }
+
+        pendingSOS = PendingSOS(method: method, deadline: Date().addingTimeInterval(TimeInterval(seconds)), duration: seconds)
+        UINotificationFeedbackGenerator().notificationOccurred(.warning)
+
+        // Keep the countdown alive if the app is backgrounded (BLE button, widget).
+        pendingSOSBackgroundTask = UIApplication.shared.beginBackgroundTask { [weak self] in
+            // Out of background time: send now rather than lose the SOS.
+            self?.sendPendingSOSNow()
+        }
+        if UIApplication.shared.applicationState != .active {
+            pushService.firePendingSOSNotice(seconds: seconds)
+        }
+
+        let work = DispatchWorkItem { [weak self] in self?.sendPendingSOSNow() }
+        pendingSOSWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(seconds), execute: work)
+    }
+
+    /// Countdown finished, or the user tapped "Send now".
+    func sendPendingSOSNow() {
+        guard let pending = pendingSOS else { return }
+        clearPendingSOS()
+        triggerSOS(method: pending.method)
+    }
+
+    /// User cancelled within the window: nothing is sent to guardians.
+    func cancelPendingSOS() {
+        guard pendingSOS != nil else { return }
+        clearPendingSOS()
+        addTimelineEntry(type: .sosResolved, description: "在倒计时内取消了紧急求助（未通知守护者）")
+    }
+
+    private func clearPendingSOS() {
+        pendingSOSWork?.cancel()
+        pendingSOSWork = nil
+        pendingSOS = nil
+        pushService.removePendingSOSNotice()
+        if pendingSOSBackgroundTask != .invalid {
+            UIApplication.shared.endBackgroundTask(pendingSOSBackgroundTask)
+            pendingSOSBackgroundTask = .invalid
+        }
+    }
+
     // MARK: - SOS Trigger
 
+    /// Sends the SOS immediately. User-facing triggers should call requestSOS
+    /// so they get the cancel window; only duress and already-confirmed
+    /// automatic triggers come here directly.
     func triggerSOS(method: SOSTriggerMethod = .longPress) {
         guard let userId = currentUser?.id, !userId.isEmpty else {
             #if DEBUG
@@ -1318,9 +1409,29 @@ final class AppCoordinator: ObservableObject {
 
     // MARK: - Notification Preferences
 
+    static let sosCriticalAlertsKey = "notif_sos_critical"
+
+    /// Guardian's in-app choice for SOS Critical Alerts (default on, matching
+    /// the server default for guardians linked before this setting existed).
+    static var sosCriticalAlertsEnabled: Bool {
+        UserDefaults.standard.object(forKey: sosCriticalAlertsKey) as? Bool ?? true
+    }
+
+    /// Records the guardian's choice, syncs it to the server (which decides
+    /// critical vs time-sensitive for SOS pushes) and, when enabled, asks iOS
+    /// for Critical Alerts permission.
+    func setSOSCriticalAlerts(enabled: Bool) {
+        UserDefaults.standard.set(enabled, forKey: Self.sosCriticalAlertsKey)
+        syncNotificationPrefs()
+        if enabled {
+            pushService.requestCriticalAlertPermission()
+        }
+    }
+
     func syncNotificationPrefs() {
         let prefs = NotificationPrefsRequest(
             sosAlerts: UserDefaults.standard.object(forKey: "notif_sos_alerts") as? Bool ?? true,
+            sosCriticalAlerts: Self.sosCriticalAlertsEnabled,
             checkinReminder: UserDefaults.standard.object(forKey: "notif_checkin_reminder") as? Bool ?? true,
             checkinOverdue: UserDefaults.standard.object(forKey: "notif_checkin_overdue") as? Bool ?? true,
             familyFeed: UserDefaults.standard.object(forKey: "notif_family_feed") as? Bool ?? true

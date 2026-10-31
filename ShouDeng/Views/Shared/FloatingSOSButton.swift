@@ -73,7 +73,7 @@ struct FloatingSOSButton: View {
     private func triggerSOS() {
         let impact = UIImpactFeedbackGenerator(style: .heavy)
         impact.impactOccurred()
-        coordinator.triggerSOS(method: .longPress)
+        coordinator.requestSOS(method: .longPress)
         withAnimation(.easeOut(duration: 0.3)) {
             progress = 0
         }

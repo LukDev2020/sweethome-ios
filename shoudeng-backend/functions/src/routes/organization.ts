@@ -309,13 +309,12 @@ router.post("/alert", async (req: Request, res: Response) => {
               },
               payload: {
                 aps: {
-                  sound:
-                    severity === "critical"
-                      ? "sos_alert.caf"
-                      : "default",
+                  sound: "default",
+                  // Critical Alerts are reserved for personal SOS alerts;
+                  // urgent organization broadcasts are Time Sensitive.
                   "interruption-level":
                     severity === "critical"
-                      ? "critical"
+                      ? "time-sensitive"
                       : "active",
                 },
               },

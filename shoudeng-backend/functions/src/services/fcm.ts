@@ -111,6 +111,9 @@ export async function sendSOSAlert(
 
   const locale = await getUserLocale(guardianId);
   const s = getStrings(locale);
+  // Guardians opt in to Critical Alerts when they join a circle and can turn
+  // them off in the app; without consent the SOS is sent as Time Sensitive.
+  const critical = await isNotifEnabled(guardianId, "sosCriticalAlerts");
 
   const message: admin.messaging.MulticastMessage = {
     tokens,
@@ -125,8 +128,11 @@ export async function sendSOSAlert(
       },
       payload: {
         aps: {
-          sound: "sos_alert.caf",
-          "interruption-level": "critical",
+          // A critical alert needs the sound dictionary (critical: 1 in the APNs payload).
+          sound: critical
+            ? { critical: true, name: "sos_alert.caf", volume: 1.0 }
+            : "sos_alert.caf",
+          "interruption-level": critical ? "critical" : "time-sensitive",
           "relevance-score": 1.0,
           alert: {
             title: s.sosTitle,

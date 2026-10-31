@@ -183,8 +183,10 @@ describe("Cross-Border — FCM/APNs Pathway", () => {
     expect(fcmSource).toMatch(/locale|getLocale|userLocale/i);
   });
 
-  it("SOS alert uses critical interruption level", () => {
-    expect(fcmSource).toContain('"interruption-level": "critical"');
+  it("SOS alert uses critical interruption level when the guardian opted in", () => {
+    expect(fcmSource).toContain('isNotifEnabled(guardianId, "sosCriticalAlerts")');
+    expect(fcmSource).toContain('"interruption-level": critical ? "critical" : "time-sensitive"');
+    expect(fcmSource).toContain("{ critical: true, name: \"sos_alert.caf\", volume: 1.0 }");
   });
 });
 

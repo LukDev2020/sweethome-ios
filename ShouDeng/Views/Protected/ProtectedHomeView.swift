@@ -96,7 +96,7 @@ struct ProtectedHomeView: View {
             }
             .alert(lang.localized("sos.no.guardian.title"), isPresented: $showNoGuardianSOSWarning) {
                 Button(lang.localized("sos.send.anyway")) {
-                    coordinator.triggerSOS(method: .longPress)
+                    coordinator.requestSOS(method: .longPress)
                     showSOSActive = true
                 }
                 Button(lang.localized("sos.invite.first"), role: .cancel) {
@@ -917,7 +917,7 @@ struct ProtectedHomeView: View {
                     if coordinator.myGuardians.isEmpty {
                         showNoGuardianSOSWarning = true
                     } else {
-                        coordinator.triggerSOS(method: .longPress)
+                        coordinator.requestSOS(method: .longPress)
                         showSOSActive = true
                     }
                 }

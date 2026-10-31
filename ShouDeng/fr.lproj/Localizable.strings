@@ -1103,3 +1103,16 @@ vos gardiens seront automatiquement notifiés.";
 "home.fakeCall" = "Faux appel";
 "home.safetyTimer" = "Minuteur";
 "home.trackerScan" = "Scan traceurs";
+
+// MARK: - SOS cancel window & Critical Alerts consent
+"sos.pending.title" = "Envoi du SOS";
+"sos.pending.subtitle" = "Vos protecteurs seront alertés à la fin du compte à rebours. Touchez Annuler s'il s'agit d'une erreur.";
+"sos.pending.cancel" = "Annuler le SOS";
+"sos.pending.sendNow" = "Envoyer maintenant";
+"sos.pending.a11y.countdown" = "Le SOS sera envoyé dans %d secondes";
+"sos.pending.notice.title" = "Le SOS va être envoyé";
+"sos.pending.notice.body" = "Vos protecteurs seront alertés dans %d secondes. Touchez Annuler le SOS s'il s'agit d'une erreur.";
+"consent.criticalAlerts.title" = "Recevoir les SOS en alertes critiques";
+"consent.criticalAlerts.body" = "Si la personne que vous protégez envoie un SOS, votre téléphone sonnera même en mode silencieux ou en mode Concentration. Utilisé uniquement pour les vrais SOS. iOS vous demandera l'autorisation et vous pourrez la désactiver à tout moment dans Réglages.";
+"settings.notification.sosCritical" = "SOS en alerte critique";
+"settings.notification.sosCritical.footnote" = "Sonne même en mode silencieux ou Concentration. Uniquement pour les SOS. Désactivé, le SOS arrive en notification urgente (Time Sensitive).";

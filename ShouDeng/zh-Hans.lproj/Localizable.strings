@@ -1103,3 +1103,16 @@
 "home.fakeCall" = "假来电";
 "home.safetyTimer" = "安全倒计时";
 "home.trackerScan" = "追踪器扫描";
+
+// MARK: - SOS cancel window & Critical Alerts consent
+"sos.pending.title" = "即将发送紧急求助";
+"sos.pending.subtitle" = "倒计时结束后将通知你的守护者。如果是误触，请点击取消。";
+"sos.pending.cancel" = "取消求助";
+"sos.pending.sendNow" = "立即发送";
+"sos.pending.a11y.countdown" = "%d 秒后发送紧急求助";
+"sos.pending.notice.title" = "即将发送紧急求助";
+"sos.pending.notice.body" = "%d 秒后将通知你的守护者。如果是误触，请点「取消求助」。";
+"consent.criticalAlerts.title" = "以「关键警报」接收 SOS";
+"consent.criticalAlerts.body" = "被守护者发起 SOS 时，即使你的手机静音或处于专注模式也会响铃。仅用于真实的 SOS 求助。iOS 会请求你的授权，你可以随时在设置中关闭。";
+"settings.notification.sosCritical" = "SOS 关键警报";
+"settings.notification.sosCritical.footnote" = "即使手机静音或处于专注模式也会响铃，仅用于 SOS 求助。关闭后，SOS 将以「时效性通知」送达。";
