@@ -400,11 +400,25 @@ export const fakeAdminModule = {
   firestore: firestoreFn,
   messaging: () => messaging,
   auth: () => auth,
-  storage: () => ({ bucket: () => ({ file: () => ({ save: async () => undefined, getSignedUrl: async () => ["https://signed"], delete: async () => undefined }) }) }),
+  storage: () => ({
+    bucket: () => ({
+      name: "test-bucket",
+      file: (name: string) => ({
+        save: async (data: Buffer) => { savedFiles.set(name, data); },
+        makePublic: async () => undefined,
+        getSignedUrl: async () => ["https://signed"],
+        delete: async () => undefined,
+      }),
+    }),
+  }),
 };
+
+/** Files written through admin.storage().bucket().file(name).save(). */
+export const savedFiles = new Map<string, Buffer>();
 
 export function resetFakeAdmin() {
   store.clear();
+  savedFiles.clear();
   sentMessages.length = 0;
   failingTokens.clear();
   validTokens.clear();
