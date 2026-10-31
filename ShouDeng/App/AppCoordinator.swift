@@ -48,6 +48,12 @@ final class AppCoordinator: ObservableObject {
     @Published var signupPhoneVerified = false
     @Published var timeline: [TimelineEntry] = []
     @Published var familyPosts: [FamilyPost] = []
+    /// The last family-circle refresh failed (the feed shows cached posts or an error).
+    @Published var familyFeedRefreshFailed = false
+    private var familyFetchTask: Task<Bool, Never>?
+    private var familyDeliveriesInFlight = Set<String>()
+    /// Posts the server confirmed, and when (kept through a fetch that started earlier).
+    private var familyConfirmedAt: [String: Date] = [:]
     @Published var selectedHotline: SelectedHotline?
     @Published var pendingDeepLink: DeepLinkDestination?
     @Published var showInviteAccept = false
@@ -294,13 +300,33 @@ final class AppCoordinator: ObservableObject {
         protectedPersons = localStore.loadProtectedPersons()
         activeSOSEvent = localStore.loadActiveSOSEvent()
         timeline = localStore.loadTimeline()
-        familyPosts = localStore.loadFamilyPosts()
+        familyPosts = restoredFamilyPosts()
 
         // Load safe zones into location manager
         let zones = localStore.loadSafeZones()
         if !zones.isEmpty {
             locationManager.updateSafeZones(zones)
         }
+    }
+
+    /// Cached family posts; sends cut short become "not sent", and failed sends
+    /// kept by older builds become unsent posts with Retry (once per install).
+    private func restoredFamilyPosts() -> [FamilyPost] {
+        var posts = FamilyFeedSync.interruptedSendsFailed(localStore.loadFamilyPosts())
+        let migratedKey = "familyFeed.legacyUnsentMigrated"
+        if !isDemo && !defaults.bool(forKey: migratedKey) {
+            let store = localStore
+            posts = FamilyFeedSync.legacyFailedSends(posts, myId: currentUser?.id) { fileURL in
+                guard let data = try? Data(contentsOf: fileURL),
+                      let jpeg = FamilyMediaEncoder.jpegForUpload(data) else { return nil }
+                let name = "\(UUID().uuidString)_0.jpg"
+                store.saveFamilyMedia(jpeg, name: name)
+                return name
+            }
+            defaults.set(true, forKey: migratedKey)
+            localStore.saveFamilyPosts(posts)
+        }
+        return posts
     }
 
     // MARK: - Auth State Observer
@@ -424,6 +450,7 @@ final class AppCoordinator: ObservableObject {
         activeSOSEvent = nil
         timeline = []
         familyPosts = []
+        familyFeedRefreshFailed = false
         selectedHotline = nil
         showSignup = false
         signupPhone = nil
@@ -1750,63 +1777,210 @@ final class AppCoordinator: ObservableObject {
 
     // MARK: - Family Feed
 
-    func fetchFamilyPosts() async {
+    /// Refreshes the family circle. Concurrent calls share one request. Returns
+    /// whether it reached the server; `familyFeedRefreshFailed` mirrors the last result.
+    @MainActor
+    @discardableResult
+    func fetchFamilyPosts() async -> Bool {
+        if let running = familyFetchTask { return await running.value }
+        let task = Task { @MainActor [weak self] () -> Bool in
+            guard let self else { return false }
+            return await self.performFamilyFetch()
+        }
+        familyFetchTask = task
+        let ok = await task.value
+        familyFetchTask = nil
+        return ok
+    }
+
+    @MainActor
+    private func performFamilyFetch() async -> Bool {
+        let startedAt = Date()
         do {
-            let serverPosts: [FamilyPost] = try await apiClient.get("/v1/family/posts")
-            await MainActor.run {
-                // Merge: keep local-only posts, add/update server posts
-                let serverIds = Set(serverPosts.map(\.id))
-                let localOnly = familyPosts.filter { !serverIds.contains($0.id) }
-                var merged = serverPosts
-                merged.append(contentsOf: localOnly)
-                merged.sort { $0.createdAt > $1.createdAt }
-                self.familyPosts = merged
-                persistFamilyPosts()
-            }
+            let lossy: LossyArray<FamilyPost> = try await apiClient.get("/v1/family/posts")
+            #if DEBUG
+            if lossy.droppedCount > 0 { print("[Coordinator] Skipped \(lossy.droppedCount) unreadable family posts") }
+            #endif
+            let keep = Set(familyConfirmedAt.filter { $0.value >= startedAt }.keys)
+            familyConfirmedAt = familyConfirmedAt.filter { $0.value >= startedAt }
+            familyPosts = FamilyFeedSync.merge(server: lossy.elements, local: familyPosts, keep: keep)
+            familyFeedRefreshFailed = false
+            persistFamilyPosts()
+            // The server is reachable: try the posts that didn't go out earlier
+            Task { @MainActor [weak self] in await self?.retryUnsentFamilyPosts(automatic: true) }
+            return true
         } catch {
             #if DEBUG
             print("[Coordinator] Failed to fetch family posts: \(error)")
             #endif
-            // On failure, keep existing local posts — do NOT clear
+            // Keep what we have; the feed says it couldn't refresh
+            familyFeedRefreshFailed = true
+            return false
         }
     }
 
-    func createFamilyPost(text: String, mediaURLs: [String], latitude: Double? = nil, longitude: Double? = nil, locationName: String? = nil) async throws {
-        let response: CreatePostResponse = try await apiClient.post(
-            "/v1/family/posts",
-            body: CreatePostRequest(text: text, mediaURLs: mediaURLs)
-        )
-        // Add to local state immediately
+    /// Adds a post to the feed as "sending" and returns its id (nil if there is
+    /// nothing to send). Photos are downsized and kept on this phone until uploaded.
+    /// Then `sendFamilyPost(id:)`; if that fails the post stays here as "not sent"
+    /// with Retry, and is retried after the next successful refresh.
+    @MainActor
+    func queueFamilyPost(text: String, images: [Data]) async -> String? {
+        let id = UUID().uuidString
+        let store = localStore
+        let names: [String] = await Task.detached(priority: .userInitiated) {
+            images.enumerated().compactMap { index, data in
+                guard let jpeg = FamilyMediaEncoder.jpegForUpload(data) else { return nil }
+                let name = "\(id)_\(index).jpg"
+                store.saveFamilyMedia(jpeg, name: name)
+                return name
+            }
+        }.value
+        guard !text.isEmpty || !names.isEmpty else { return nil }
+
+        let location = locationManager.bestAvailableLocation
         let post = FamilyPost(
-            id: response.postId,
+            id: id,
             authorId: currentUser?.id ?? "",
             authorName: currentUser?.displayName ?? "",
             authorInitial: currentUser?.avatarInitial ?? "?",
             authorAvatarPath: currentUser?.avatarLocalPath,
             text: text,
-            mediaURLs: mediaURLs,
+            mediaURLs: [],
             createdAt: Date(),
             comments: [],
             commentCount: 0,
-            latitude: latitude,
-            longitude: longitude,
-            locationName: locationName
+            latitude: location?.coordinate.latitude,
+            longitude: location?.coordinate.longitude,
+            locationName: currentUser?.cityName,
+            delivery: FamilyPostDelivery(state: .sending, attempts: 0, pendingImages: names)
         )
-        await MainActor.run {
-            familyPosts.insert(post, at: 0)
-            persistFamilyPosts()
+        familyPosts.insert(post, at: 0)
+        persistFamilyPosts()
+        return id
+    }
+
+    /// Sends a queued post (also Retry from the "not sent" row), then refreshes.
+    @MainActor
+    func sendFamilyPost(id: String) async {
+        if await deliverFamilyPost(id: id) {
+            await fetchFamilyPosts()
         }
     }
 
-    func addComment(postId: String, text: String) async {
+    /// Deletes a post that never reached the server (nothing to tell the server).
+    @MainActor
+    func deleteUnsentFamilyPost(id: String) {
+        guard !familyDeliveriesInFlight.contains(id) else { return }
+        removeUnsentFamilyPost(id: id)
+    }
+
+    @MainActor
+    private func removeUnsentFamilyPost(id: String) {
+        guard let index = familyPosts.firstIndex(where: { $0.id == id }),
+              let delivery = familyPosts[index].delivery else { return }
+        delivery.pendingImages.forEach { localStore.deleteFamilyMedia(name: $0) }
+        familyPosts.remove(at: index)
+        persistFamilyPosts()
+    }
+
+    @MainActor
+    func retryUnsentFamilyPosts(automatic: Bool) async {
+        let due = familyPosts.filter { post in
+            guard let d = post.delivery, d.state == .failed else { return false }
+            return !automatic || d.attempts < FamilyFeedSync.maxAutomaticAttempts
+        }
+        // Oldest first, so they keep their order on the server
+        for post in due.reversed() {
+            guard await deliverFamilyPost(id: post.id) else { break }
+        }
+    }
+
+    /// Uploads the post's remaining photos, then creates it under its own id (so a
+    /// retry after a lost response can't duplicate it). Returns true once it's on the server.
+    @MainActor
+    @discardableResult
+    func deliverFamilyPost(id: String) async -> Bool {
+        guard !familyDeliveriesInFlight.contains(id),
+              let start = familyPosts.firstIndex(where: { $0.id == id }),
+              familyPosts[start].delivery != nil else { return false }
+        familyDeliveriesInFlight.insert(id)
+        defer { familyDeliveriesInFlight.remove(id) }
+
+        func update(_ change: (inout FamilyPost) -> Void) {
+            guard let i = familyPosts.firstIndex(where: { $0.id == id }) else { return }
+            change(&familyPosts[i])
+            persistFamilyPosts()
+        }
+        func fail() -> Bool {
+            update { $0.delivery?.state = .failed }
+            return false
+        }
+
+        update {
+            $0.delivery?.state = .sending
+            $0.delivery?.attempts += 1
+        }
+
+        // Photos first; each one uploaded is moved from the phone to the post
+        for name in familyPosts[start].delivery?.pendingImages ?? [] {
+            guard let data = localStore.loadFamilyMedia(name: name) else {
+                update { $0.delivery?.pendingImages.removeAll { $0 == name } }
+                continue
+            }
+            do {
+                let url = try await uploadMedia(data: data, mimeType: "image/jpeg")
+                update {
+                    $0.mediaURLs.append(url)
+                    $0.delivery?.pendingImages.removeAll { $0 == name }
+                }
+                localStore.deleteFamilyMedia(name: name)
+            } catch {
+                #if DEBUG
+                print("[Coordinator] Family photo upload failed: \(error)")
+                #endif
+                return fail()
+            }
+        }
+
+        guard let post = familyPosts.first(where: { $0.id == id }), post.delivery != nil else { return false }
+        let media = FamilyFeedSync.remoteMediaURLs(post.mediaURLs)
+        guard !post.text.isEmpty || !media.isEmpty else {
+            // Nothing left to send (photos gone from the phone and no text)
+            removeUnsentFamilyPost(id: id)
+            return false
+        }
         do {
-            let _: AddCommentResponse = try await apiClient.post(
+            let response: CreatePostResponse = try await apiClient.post(
+                "/v1/family/posts",
+                body: CreatePostRequest(text: post.text, mediaURLs: media, latitude: post.latitude,
+                                        longitude: post.longitude, locationName: post.locationName,
+                                        clientPostId: post.id)
+            )
+            update {
+                $0.id = response.postId
+                $0.mediaURLs = media
+                $0.delivery = nil
+            }
+            familyConfirmedAt[response.postId] = Date()
+            return true
+        } catch {
+            #if DEBUG
+            print("[Coordinator] Family post not sent: \(error)")
+            #endif
+            return fail()
+        }
+    }
+
+    /// Returns false when the reply didn't reach the server (the caller keeps the text).
+    @MainActor
+    func addComment(postId: String, text: String) async -> Bool {
+        do {
+            let response: AddCommentResponse = try await apiClient.post(
                 "/v1/family/posts/\(postId)/comments",
                 body: AddCommentRequest(text: text)
             )
-            // Add comment locally
             let comment = FamilyComment(
-                id: UUID().uuidString,
+                id: response.commentId,
                 authorId: currentUser?.id ?? "",
                 authorName: currentUser?.displayName ?? "",
                 authorInitial: currentUser?.avatarInitial ?? "?",
@@ -1814,17 +1988,17 @@ final class AppCoordinator: ObservableObject {
                 text: text,
                 createdAt: Date()
             )
-            await MainActor.run {
-                if let idx = familyPosts.firstIndex(where: { $0.id == postId }) {
-                    familyPosts[idx].comments.append(comment)
-                    familyPosts[idx].commentCount += 1
-                }
-                persistFamilyPosts()
+            if let idx = familyPosts.firstIndex(where: { $0.id == postId }) {
+                familyPosts[idx].comments.append(comment)
+                familyPosts[idx].commentCount += 1
             }
+            persistFamilyPosts()
+            return true
         } catch {
             #if DEBUG
             print("[Coordinator] Failed to add comment: \(error)")
             #endif
+            return false
         }
     }
 
@@ -1832,15 +2006,17 @@ final class AppCoordinator: ObservableObject {
         localStore.saveFamilyPosts(familyPosts)
     }
 
+    /// Uploads one (already downsized) photo; returns its https URL.
     func uploadMedia(data: Data, mimeType: String) async throws -> String {
-        // For now, use a simple base64 upload endpoint.
-        // In production, this would upload to Firebase Storage directly.
         let base64 = data.base64EncodedString()
         let response: MediaUploadResponse = try await apiClient.post(
             "/v1/family/upload",
             body: ["data": base64, "mimeType": mimeType]
         )
-        return response.url
+        guard let url = FamilyFeedSync.remoteMediaURLs([response.url]).first else {
+            throw APIError.validation("upload returned no usable URL")
+        }
+        return url
     }
 
     // MARK: - Notification Preferences

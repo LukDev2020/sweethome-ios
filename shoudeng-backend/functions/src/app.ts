@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import { UPLOAD_JSON_LIMIT } from "./routes/family";
 
 // The Express API, separate from index.ts so tests can mount the full app
 // (exact production middleware order) without the Cloud Functions wrappers.
@@ -13,6 +14,16 @@ app.use(
     origin: process.env.FUNCTIONS_EMULATOR === "true" ? true : false,
   })
 );
+// Family photo uploads are base64 JSON (~0.5–1 MB): give that one route a bigger
+// limit. It parses first, so the global 100 kB parser below skips the body.
+app.use("/v1/family/upload", express.json({ limit: UPLOAD_JSON_LIMIT }));
+app.use("/v1/family/upload", (err: any, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (err?.type === "entity.too.large") {
+    res.status(413).json({ error: "File too large", code: "UPLOAD_TOO_LARGE" });
+    return;
+  }
+  next(err);
+});
 app.use(express.json());
 // Twilio posts application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: false }));

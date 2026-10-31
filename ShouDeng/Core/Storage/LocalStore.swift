@@ -173,6 +173,37 @@ final class LocalStore {
         load(filename: "family_posts.json") ?? []
     }
 
+    // MARK: - Family photos waiting to be uploaded
+
+    /// Raw file for a photo of an unsent family post (name from `FamilyPostDelivery`).
+    /// Written synchronously so it exists before the post that refers to it.
+    func saveFamilyMedia(_ data: Data, name: String) {
+        queue.sync {
+            if overlay != nil {
+                overlay?[Self.familyMediaFile(name)] = data
+                return
+            }
+            let url = storeDir.appendingPathComponent(Self.familyMediaFile(name))
+            try? data.write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        }
+    }
+
+    func loadFamilyMedia(name: String) -> Data? {
+        queue.sync {
+            if let overlay { return overlay[Self.familyMediaFile(name)] }
+            return try? Data(contentsOf: storeDir.appendingPathComponent(Self.familyMediaFile(name)))
+        }
+    }
+
+    func deleteFamilyMedia(name: String) {
+        remove(filename: Self.familyMediaFile(name))
+    }
+
+    /// Flat, sanitized file name (a name can never point outside the store).
+    private static func familyMediaFile(_ name: String) -> String {
+        "family_media_" + name.filter { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" || $0 == "." }
+    }
+
     // MARK: - Clear All
 
     func clearAll() {

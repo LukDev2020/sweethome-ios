@@ -8,36 +8,70 @@ const db = admin.firestore();
 
 router.use(authMiddleware);
 
+/** Largest decoded upload accepted. The app sends ~1600 px JPEGs (~0.3–0.8 MB). */
+export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+/** JSON body limit for POST /v1/family/upload only (base64 adds ~33 %, so > MAX_UPLOAD_BYTES). Mounted in app.ts. */
+export const UPLOAD_JSON_LIMIT = "8mb";
+
+/** Newest comments returned per post in the feed. */
+const COMMENTS_PER_POST = 10;
+
+/** App-generated id for a post (lets a retried send land on the same document). */
+const CLIENT_POST_ID = /^[A-Za-z0-9_-]{8,64}$/;
+
+async function activeLinks(field: "guardianId" | "protectedPersonId", uid: string) {
+  const snap = await db
+    .collection("guardian_links")
+    .where(field, "==", uid)
+    .where("status", "==", "active")
+    .get();
+  return snap.docs.map((d) => d.data());
+}
+
 /**
- * Helper: get all user IDs in the caller's family group.
- * Family = all users linked via guardian_links (both directions).
+ * Everyone whose posts the caller sees (and may comment on) in the family circle.
+ *
+ * The circle is built around protected persons ("anchors"):
+ *   - anchors = the people I look out for, plus me if anyone looks out for me;
+ *   - circle  = me + every anchor + every active guardian of every anchor.
+ *
+ * So a protected person sees their guardians; a guardian sees the people they look
+ * out for and every other guardian of those people (siblings looking out for the
+ * same parent see each other). It is symmetric: A sees B exactly when B sees A.
+ *
+ * Deliberately NOT included: other people my guardian looks out for (a guardian may
+ * be a carer for unrelated people), or anyone further away (no transitive closure).
  */
-async function getFamilyGroup(uid: string): Promise<string[]> {
-  const familyIds = new Set<string>();
-  familyIds.add(uid);
+export async function getFamilyGroup(uid: string): Promise<string[]> {
+  const [asGuardian, asProtected] = await Promise.all([
+    activeLinks("guardianId", uid),
+    activeLinks("protectedPersonId", uid),
+  ]);
 
-  // Links where user is guardian
-  const asGuardian = await db
-    .collection("guardian_links")
-    .where("guardianId", "==", uid)
-    .where("status", "==", "active")
-    .get();
-  asGuardian.docs.forEach((d) => familyIds.add(d.data().protectedPersonId));
+  const anchors = new Set<string>(asGuardian.map((l) => l.protectedPersonId).filter(Boolean));
+  if (asProtected.length > 0) anchors.add(uid);
 
-  // Links where user is protected person
-  const asProtected = await db
-    .collection("guardian_links")
-    .where("protectedPersonId", "==", uid)
-    .where("status", "==", "active")
-    .get();
-  asProtected.docs.forEach((d) => familyIds.add(d.data().guardianId));
+  const familyIds = new Set<string>([uid, ...anchors]);
+  // My own guardians are already known; the other anchors need a lookup each.
+  asProtected.forEach((l) => l.guardianId && familyIds.add(l.guardianId));
+  const others = [...anchors].filter((a) => a !== uid);
+  const guardiansOfOthers = await Promise.all(others.map((a) => activeLinks("protectedPersonId", a)));
+  guardiansOfOthers.flat().forEach((l) => l.guardianId && familyIds.add(l.guardianId));
 
   return Array.from(familyIds);
 }
 
+function isoOrNow(value: any): string {
+  return value?.toDate?.()?.toISOString() || new Date().toISOString();
+}
+
+function finiteOrNull(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
 /**
  * GET /v1/family/posts
- * Get the family feed (posts from all linked family members).
+ * Get the family feed (posts from everyone in the caller's family circle).
  */
 router.get("/posts", async (req: Request, res: Response) => {
   const uid = req.uid!;
@@ -70,39 +104,45 @@ router.get("/posts", async (req: Request, res: Response) => {
       return bTime.getTime() - aTime.getTime();
     });
 
-    // Fetch comments for each post (last 10)
+    // The newest comments of each post, oldest first (chat order)
     const result = await Promise.all(
       allPosts.slice(0, 50).map(async (post) => {
         const commentsSnap = await db
           .collection("family_posts")
           .doc(post.id)
           .collection("comments")
-          .orderBy("createdAt", "asc")
-          .limit(10)
+          .orderBy("createdAt", "desc")
+          .limit(COMMENTS_PER_POST)
           .get();
 
-        const comments = commentsSnap.docs.map((c) => {
+        const comments = commentsSnap.docs.reverse().map((c) => {
           const cd = c.data();
           return {
             id: c.id,
             authorId: cd.authorId,
-            authorName: cd.authorName,
-            authorInitial: cd.authorInitial,
-            text: cd.text,
-            createdAt: cd.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+            authorName: cd.authorName || "",
+            authorInitial: cd.authorInitial || "?",
+            text: cd.text || "",
+            createdAt: isoOrNow(cd.createdAt),
           };
         });
 
+        const latitude = finiteOrNull(post.latitude);
+        const longitude = finiteOrNull(post.longitude);
         return {
           id: post.id,
           authorId: post.authorId,
-          authorName: post.authorName,
-          authorInitial: post.authorInitial,
+          authorName: post.authorName || "",
+          authorInitial: post.authorInitial || "?",
           text: post.text || "",
-          mediaURLs: post.mediaURLs || [],
-          createdAt: post.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+          mediaURLs: Array.isArray(post.mediaURLs) ? post.mediaURLs : [],
+          createdAt: isoOrNow(post.createdAt),
           comments,
-          commentCount: post.commentCount || comments.length,
+          // The stored count covers every comment, not just the ones returned
+          commentCount: typeof post.commentCount === "number" ? Math.max(post.commentCount, comments.length) : comments.length,
+          latitude: latitude !== null && longitude !== null ? latitude : null,
+          longitude: latitude !== null && longitude !== null ? longitude : null,
+          locationName: typeof post.locationName === "string" && post.locationName ? post.locationName : null,
         };
       })
     );
@@ -117,22 +157,64 @@ router.get("/posts", async (req: Request, res: Response) => {
 /**
  * POST /v1/family/posts
  * Create a new post in the family feed.
+ *
+ * Body: { text, mediaURLs, latitude?, longitude?, locationName?, clientPostId? }
+ * `clientPostId` makes a retried send idempotent: the post is stored under that id,
+ * and sending it again returns the same post instead of a duplicate.
  */
 router.post("/posts", createRateLimiter(RATE_LIMITS.general), async (req: Request, res: Response) => {
   const uid = req.uid!;
-  const { text, mediaURLs } = req.body;
+  const { text, mediaURLs, latitude, longitude, locationName, clientPostId } = req.body;
 
-  if (!text && (!mediaURLs || mediaURLs.length === 0)) {
+  if (mediaURLs !== undefined && (!Array.isArray(mediaURLs) || mediaURLs.some((u: unknown) => typeof u !== "string"))) {
+    res.status(400).json({ error: "mediaURLs must be an array of URLs" });
+    return;
+  }
+  // Only links everyone in the family can open (a phone's file:// path is not one)
+  const media: string[] = (mediaURLs || []).filter((u: string) => /^https:\/\//i.test(u));
+  if (media.length > 9) {
+    res.status(400).json({ error: "At most 9 photos per post" });
+    return;
+  }
+
+  if (!text && media.length === 0) {
     res.status(400).json({ error: "Post must have text or media" });
     return;
   }
 
-  if (text && text.length > 5000) {
+  if (text && (typeof text !== "string" || text.length > 5000)) {
     res.status(400).json({ error: "Post text must be 5000 characters or less" });
     return;
   }
 
+  if (clientPostId !== undefined && (typeof clientPostId !== "string" || !CLIENT_POST_ID.test(clientPostId))) {
+    res.status(400).json({ error: "Invalid clientPostId" });
+    return;
+  }
+
+  // Location is optional; a pair of valid coordinates or nothing
+  const lat = finiteOrNull(latitude);
+  const lng = finiteOrNull(longitude);
+  const hasLocation = lat !== null && lng !== null && Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
+  const place = typeof locationName === "string" ? locationName.trim().slice(0, 200) : "";
+
   try {
+    const postRef = clientPostId
+      ? db.collection("family_posts").doc(clientPostId)
+      : db.collection("family_posts").doc();
+
+    if (clientPostId) {
+      const existing = await postRef.get();
+      if (existing.exists) {
+        if (existing.data()!.authorId === uid) {
+          res.status(200).json({ postId: postRef.id });
+        } else {
+          res.status(409).json({ error: "Post id already used", code: "POST_ID_TAKEN" });
+        }
+        return;
+      }
+    }
+
     // Get author info
     const userDoc = await db.collection("users").doc(uid).get();
     if (!userDoc.exists) {
@@ -141,20 +223,30 @@ router.post("/posts", createRateLimiter(RATE_LIMITS.general), async (req: Reques
     }
     const user = userDoc.data()!;
 
-    const postDoc = {
+    const postDoc: Record<string, unknown> = {
       authorId: uid,
-      authorName: user.displayName,
+      authorName: user.displayName || "",
       authorInitial: user.avatarInitial || user.displayName?.charAt(0) || "?",
       text: text || "",
-      mediaURLs: mediaURLs || [],
+      mediaURLs: media,
       commentCount: 0,
       createdAt: admin.firestore.Timestamp.now(),
     };
+    if (hasLocation) {
+      postDoc.latitude = lat;
+      postDoc.longitude = lng;
+    }
+    if (place) postDoc.locationName = place;
 
-    const ref = await db.collection("family_posts").add(postDoc);
+    await postRef.create(postDoc);
 
-    res.status(201).json({ postId: ref.id });
-  } catch (error) {
+    res.status(201).json({ postId: postRef.id });
+  } catch (error: any) {
+    // Two sends of the same clientPostId raced; the other one created it
+    if (clientPostId && error?.code === 6) {
+      res.status(200).json({ postId: clientPostId });
+      return;
+    }
     console.error("[Family] create post error:", error);
     res.status(500).json({ error: "Failed to create post" });
   }
@@ -300,30 +392,37 @@ router.delete("/posts/:postId", async (req: Request, res: Response) => {
 
 /**
  * POST /v1/family/upload
- * Upload media (base64 encoded) and return the download URL.
- * In production, clients should upload directly to Firebase Storage.
+ * Upload a photo (base64 JPEG in JSON) and return its URL.
+ *
+ * The app downsizes photos to ~1600 px before sending, so bodies are well under the
+ * route's own JSON limit (UPLOAD_JSON_LIMIT, mounted in app.ts ahead of the global
+ * 100 kB parser). Anything bigger gets 413 with code UPLOAD_TOO_LARGE.
  */
 router.post("/upload", async (req: Request, res: Response) => {
   const uid = req.uid!;
   const { data, mimeType } = req.body;
 
-  if (!data) {
+  if (!data || typeof data !== "string") {
     res.status(400).json({ error: "Missing data" });
     return;
   }
 
   try {
+    const buffer = Buffer.from(data, "base64");
+    if (buffer.length === 0) {
+      res.status(400).json({ error: "Missing data" });
+      return;
+    }
+    if (buffer.length > MAX_UPLOAD_BYTES) {
+      res.status(413).json({ error: "File too large", code: "UPLOAD_TOO_LARGE", maxBytes: MAX_UPLOAD_BYTES });
+      return;
+    }
+
     const bucket = admin.storage().bucket();
     const extension_ = mimeType === "image/jpeg" ? ".jpg" : mimeType === "video/mp4" ? ".mp4" : ".bin";
     const fileName = `family/${uid}/${Date.now()}${extension_}`;
     const file = bucket.file(fileName);
 
-    const buffer = Buffer.from(data, "base64");
-    const MAX_UPLOAD_SIZE = 50 * 1024 * 1024; // 50 MB
-    if (buffer.length > MAX_UPLOAD_SIZE) {
-      res.status(413).json({ error: "File too large (max 50 MB)" });
-      return;
-    }
     await file.save(buffer, {
       metadata: {
         contentType: mimeType || "image/jpeg",
