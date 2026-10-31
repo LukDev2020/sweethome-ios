@@ -840,6 +840,30 @@ struct ProtectedSettingsView: View {
             }
             .padding(.vertical, 2)
 
+            // Join family: enter an invite code (any role; the invite decides the direction)
+            Button { coordinator.presentInviteAccept() } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "key.fill")
+                        .font(.scaled(size: 13))
+                        .foregroundStyle(safe)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(langManager.localized("settings.joinFamily"))
+                            .font(.scaled(size: 13))
+                        Text(langManager.localized("settings.joinFamily.desc"))
+                            .font(.scaled(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.scaled(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.vertical, 2)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("settings.joinFamily")
+
             Button { showRoleSwitchInfo = true } label: {
                 HStack {
                     Text(langManager.localized("protected.settings.role.switchToGuardian"))

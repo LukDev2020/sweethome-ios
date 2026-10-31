@@ -26,12 +26,12 @@ struct PostSignupWizardView: View {
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
 
     private var totalSteps: Int {
-        coordinator.userRole == .guardian ? 5 : 4
+        wizardRole == .guardian ? 5 : 4
     }
 
     private var stepTitles: [String] {
         var titles = [lang.localized("wizard.step.email"), lang.localized("wizard.step.city"), lang.localized("wizard.step.security"), lang.localized("wizard.step.invite")]
-        if coordinator.userRole == .guardian {
+        if wizardRole == .guardian {
             titles.insert(lang.localized("wizard.step.plan"), at: 3)
         }
         return titles
@@ -50,7 +50,7 @@ struct PostSignupWizardView: View {
                 case 0: emailStep
                 case 1: cityStep
                 case 2: biometricStep
-                case 3 where coordinator.userRole == .guardian: paymentStep
+                case 3 where wizardRole == .guardian: paymentStep
                 case 3: inviteStep
                 case 4: inviteStep
                 default: EmptyView()
@@ -377,63 +377,30 @@ struct PostSignupWizardView: View {
     }
 
     // MARK: - Step 5: Invite Guidance
+    //
+    // Both roles get both options: create a code (the invite carries my side)
+    // or enter someone else's code (the shared InviteAcceptSheet decides).
 
     private var inviteStep: some View {
         VStack(spacing: 16) {
             Spacer()
 
-            Image(systemName: coordinator.userRole == .guardian ? "person.badge.plus" : "person.2.wave.2")
+            Image(systemName: wizardRole == .guardian ? "person.badge.plus" : "person.2.wave.2")
                 .font(.scaled(size: 48))
                 .foregroundStyle(navy.opacity(0.7))
 
-            if coordinator.userRole == .guardian {
-                Text(lang.localized("wizard.invite.guardian.title"))
-                    .font(.scaled(size: 22, weight: .bold))
-                    .foregroundStyle(ink)
-
-                Text(lang.localized("wizard.invite.guardian.subtitle"))
-                    .font(.scaled(size: 14))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(3)
-
-                inviteCodeInput
-            } else {
-                Text(lang.localized("wizard.invite.protected.title"))
-                    .font(.scaled(size: 22, weight: .bold))
-                    .foregroundStyle(ink)
-
-                Text(lang.localized("wizard.invite.protected.subtitle"))
-                    .font(.scaled(size: 14))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(3)
-
-                generateInviteButton
-            }
-
-            Spacer()
-        }
-    }
-
-    @State private var inviteCode = ""
-    @State private var inviteError = ""
-    @State private var inviteSuccess = false
-    /// Guardian's explicit choice to receive SOS alerts as Critical Alerts.
-    @State private var criticalAlertConsent = true
-
-    private var inviteCodeInput: some View {
-        VStack(spacing: 12) {
-            TextField(lang.localized("wizard.invite.codePlaceholder"), text: $inviteCode)
-                .font(.scaled(size: 18, weight: .medium, design: .monospaced))
+            Text(lang.localized(wizardRole == .guardian ? "wizard.invite.guardian.title" : "wizard.invite.protected.title"))
+                .font(.scaled(size: 22, weight: .bold))
+                .foregroundStyle(ink)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
-                .background(Color(.systemGray6))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .padding(.horizontal, 8)
 
-            if inviteSuccess {
+            Text(lang.localized(wizardRole == .guardian ? "wizard.invite.guardian.subtitle" : "wizard.invite.protected.subtitle"))
+                .font(.scaled(size: 14))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .lineSpacing(3)
+
+            if isLinked {
                 HStack(spacing: 6) {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(safe)
@@ -443,51 +410,50 @@ struct PostSignupWizardView: View {
                 }
             }
 
-            if !inviteError.isEmpty {
-                Text(inviteError)
-                    .font(.scaled(size: 13))
-                    .foregroundStyle(.red)
+            if wizardRole == .guardian {
+                enterCodeButton(prominent: true)
+                generateInviteButton
+            } else {
+                generateInviteButton
+                enterCodeButton(prominent: false)
             }
 
-            criticalAlertConsentCard
-
-            Button {
-                Task { await acceptInvite() }
-            } label: {
-                Text(lang.localized("wizard.invite.confirm"))
-                    .font(.scaled(size: 15, weight: .medium))
-                    .foregroundStyle(cream)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(inviteCode.count >= 6 ? navy : Color(.systemGray4))
-                    )
-            }
-            .disabled(inviteCode.count < 6 || isLoading)
-            .padding(.horizontal, 8)
+            Spacer()
         }
     }
 
-    /// Explains Critical Alerts before the guardian joins; their choice is
-    /// stored with the guardian link and can be changed later in Settings.
-    private var criticalAlertConsentCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Toggle(isOn: $criticalAlertConsent) {
-                Label(lang.localized("consent.criticalAlerts.title"), systemImage: "bell.badge.fill")
-                    .font(.scaled(size: 15, weight: .semibold))
-                    .foregroundStyle(ink)
+    /// The role the last steps were laid out for. Accepting an invite in the
+    /// wizard can change my role; the step list must not shift under me.
+    @State private var lockedRole: UserRole?
+    private var wizardRole: UserRole { lockedRole ?? coordinator.userRole }
+
+    private var isLinked: Bool {
+        !coordinator.myGuardians.isEmpty || !coordinator.protectedPersons.isEmpty
+    }
+
+    private func enterCodeButton(prominent: Bool) -> some View {
+        Button {
+            coordinator.presentInviteAccept()
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "key.fill")
+                Text(lang.localized(prominent ? "wizard.invite.enterCode" : "wizard.invite.haveCode"))
             }
-            .tint(navy)
-            Text(lang.localized("consent.criticalAlerts.body"))
-                .font(.scaled(size: 12))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            .font(.scaled(size: 15, weight: .medium))
+            .foregroundStyle(prominent ? cream : navy)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(prominent ? navy : Color.clear)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(navy.opacity(prominent ? 0 : 0.35), lineWidth: 1)
+            )
         }
-        .padding(14)
-        .background(Color(.systemGray6))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
         .padding(.horizontal, 8)
+        .accessibilityIdentifier("wizard.invite.enterCode")
     }
 
     @State private var generatedCode: String?
@@ -529,23 +495,28 @@ struct PostSignupWizardView: View {
                 }
                 .padding(.horizontal, 8)
             } else {
+                let prominent = wizardRole != .guardian
                 Button {
                     Task { await generateCode() }
                 } label: {
                     HStack(spacing: 6) {
                         if isLoading {
                             ProgressView()
-                                .tint(cream)
+                                .tint(prominent ? cream : navy)
                         }
                         Text(lang.localized("wizard.invite.generate"))
                     }
                     .font(.scaled(size: 15, weight: .medium))
-                    .foregroundStyle(cream)
+                    .foregroundStyle(prominent ? cream : navy)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(navy)
+                            .fill(prominent ? navy : Color.clear)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(navy.opacity(prominent ? 0 : 0.35), lineWidth: 1)
                     )
                 }
                 .disabled(isLoading)
@@ -579,7 +550,7 @@ struct PostSignupWizardView: View {
             if currentStep == 2 {
                 // Biometric step has its own buttons
                 EmptyView()
-            } else if currentStep == 3 && coordinator.userRole == .guardian {
+            } else if currentStep == 3 && wizardRole == .guardian {
                 // Payment step — skip option (Apple requires non-gated)
                 if !purchaseSuccess {
                     Button(lang.localized("wizard.nav.later")) {
@@ -640,27 +611,10 @@ struct PostSignupWizardView: View {
     // MARK: - Actions
 
     private func advanceStep() {
-        withAnimation { currentStep += 1 }
-    }
-
-    private func acceptInvite() async {
-        isLoading = true
-        inviteError = ""
-        do {
-            let _: AcceptInviteResponse = try await coordinator.apiClient.post(
-                "/v1/invite/accept",
-                body: AcceptInviteRequest(
-                    code: inviteCode.trimmingCharacters(in: .whitespaces),
-                    criticalAlertConsent: criticalAlertConsent
-                )
-            )
-            inviteSuccess = true
-            coordinator.setSOSCriticalAlerts(enabled: criticalAlertConsent)
-            await coordinator.fetchProtectedPersons()
-        } catch {
-            inviteError = lang.localized("wizard.invite.error.invalid")
+        if currentStep + 1 >= 3, lockedRole == nil {
+            lockedRole = coordinator.userRole
         }
-        isLoading = false
+        withAnimation { currentStep += 1 }
     }
 
     private func generateCode() async {
@@ -669,7 +623,9 @@ struct PostSignupWizardView: View {
         do {
             let response: CreateInviteResponse = try await coordinator.apiClient.post(
                 "/v1/invite/create",
-                body: CreateInviteRequest(role: "protected")
+                // The invite carries my side: a guardian's code asks the other
+                // person to be protected, a protected person's asks for a guardian.
+                body: CreateInviteRequest(inviterRole: wizardRole)
             )
             generatedCode = response.code
         } catch {

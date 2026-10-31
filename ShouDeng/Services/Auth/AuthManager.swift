@@ -46,6 +46,10 @@ final class AuthManager: ObservableObject {
     /// Stored idToken from verified OTP, used by signup flow.
     private var verifiedIdToken: String?
 
+    /// The phone number was verified (by signup, or by a login that found no
+    /// account) and signup can go straight to the profile step.
+    var hasVerifiedPhone: Bool { verifiedIdToken != nil }
+
     /// M5 fix: prevent concurrent token refresh calls
     private var isRefreshing = false
     private var refreshContinuations: [CheckedContinuation<Void, Error>] = []
@@ -155,11 +159,13 @@ final class AuthManager: ObservableObject {
             #if DEBUG
             print("[AuthManager] login backend error: \(type(of: error)) — \(error)")
             #endif
-            // 404 from backend means user not registered
+            // 404 from backend means user not registered. The phone number is
+            // verified already: keep the idToken so signup needs no second SMS.
             if let apiError = error as? APIError, case .notFound = apiError {
                 #if DEBUG
                 print("[AuthManager] → user not found, redirecting to signup")
                 #endif
+                verifiedIdToken = idToken
                 throw AuthError.userNotFound
             }
             throw error
@@ -276,6 +282,9 @@ final class AuthManager: ObservableObject {
         api.setAccessToken(response.accessToken)
         defaults.set(response.userId, forKey: "currentUserId")
         DispatchQueue.main.async {
+            // A token refresh for the signed-in user is not a new login: publishing
+            // `.loggedIn` again would re-run the whole login flow (onLoginComplete).
+            if self.state == .loggedIn(userId: response.userId) { return }
             self.lastLoginRole = response.role
             self.state = .loggedIn(userId: response.userId)
         }

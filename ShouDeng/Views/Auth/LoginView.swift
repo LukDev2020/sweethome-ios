@@ -600,10 +600,12 @@ struct LoginView: View {
             print("[LoginView] error: \(error)")
             #endif
 
-            // Redirect to signup if user doesn't exist
+            // Redirect to signup if user doesn't exist. The code was correct, so
+            // signup reuses this verification and opens at the profile step.
             if codeSent, let authError = error as? AuthError, case .userNotFound = authError {
                 coordinator.signupPhone = phone
                 coordinator.signupCountry = selectedCountry
+                coordinator.signupPhoneVerified = true
                 coordinator.showSignup = true
                 return
             }

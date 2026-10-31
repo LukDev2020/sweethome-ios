@@ -44,6 +44,16 @@ struct FamilyFeedView: View {
             .navigationTitle(langManager.localized("familyFeed.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(sizeClass == .regular ? .hidden : .visible, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        coordinator.presentInviteAccept()
+                    } label: {
+                        Label(langManager.localized("familyFeed.enterInviteCode"), systemImage: "key")
+                    }
+                    .accessibilityIdentifier("familyFeed.enterInviteCode")
+                }
+            }
             .task {
                 guard !hasFetched else { return }
                 hasFetched = true
@@ -97,6 +107,8 @@ struct FamilyFeedView: View {
                         .padding(.top, 12)
 
                     familyMembersPanel
+
+                    enterInviteCodeButton
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 24)
@@ -104,6 +116,28 @@ struct FamilyFeedView: View {
             .frame(maxWidth: .infinity)
             .background(offWhiteBg)
         }
+    }
+
+    // MARK: - Enter Invite Code (Duo right pane; compact uses the toolbar)
+
+    private var enterInviteCodeButton: some View {
+        Button {
+            coordinator.presentInviteAccept()
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "key")
+                Text(langManager.localized("familyFeed.enterInviteCode"))
+                    .font(.scaled(size: 14, weight: .medium))
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.scaled(size: 11))
+                    .foregroundStyle(.secondary)
+            }
+            .foregroundStyle(ink)
+            .padding(12)
+            .background(RoundedRectangle(cornerRadius: 12).stroke(paneBorder, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Family Members Panel (Duo right pane)

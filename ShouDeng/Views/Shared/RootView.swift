@@ -73,75 +73,98 @@ private struct AuthenticatedRootView: View {
                             SignupView()
                         }
                 case .loggedIn:
-                    if biometric.isEnabled && !biometric.isUnlocked {
-                        BiometricGateView()
-                    } else if !setupWizardComplete && coordinator.showSetupWizard {
-                        PostSignupWizardView(onComplete: {
-                            setupWizardComplete = true
-                            coordinator.showSetupWizard = false
-                        })
-                        .environmentObject(coordinator)
-                    } else {
-                        // Banners take their own space above the screens instead of
-                        // floating over the navigation bar title.
-                        VStack(spacing: 0) {
-                            betaBanner
-                            DegradationBannerView()
-                                .environmentObject(coordinator)
-                            SatelliteModeBanner()
-                                .environmentObject(coordinator)
-                            switch coordinator.userRole {
-                            case .protected_:
-                                ProtectedTabView()
-                            case .guardian:
-                                GuardianTabView()
-                            }
-                        }
-                        .overlay {
-                            if coordinator.showFallConfirmation {
-                                FallConfirmationOverlay()
+                    Group {
+                        if biometric.isEnabled && !biometric.isUnlocked {
+                            BiometricGateView()
+                        } else if !setupWizardComplete && coordinator.showSetupWizard {
+                            PostSignupWizardView(onComplete: {
+                                setupWizardComplete = true
+                                coordinator.showSetupWizard = false
+                            })
+                            .environmentObject(coordinator)
+                        } else {
+                            // Banners take their own space above the screens instead of
+                            // floating over the navigation bar title.
+                            VStack(spacing: 0) {
+                                betaBanner
+                                DegradationBannerView()
                                     .environmentObject(coordinator)
-                            } else if let pending = coordinator.pendingSOS {
-                                SOSCountdownOverlay(pending: pending)
+                                SatelliteModeBanner()
                                     .environmentObject(coordinator)
+                                switch coordinator.userRole {
+                                case .protected_:
+                                    ProtectedTabView()
+                                case .guardian:
+                                    GuardianTabView()
+                                }
                             }
-                        }
-                        .alert(
-                            LanguageManager.shared.localized("sos.confirmExternal.title"),
-                            isPresented: Binding(
-                                get: { coordinator.pendingSOSConfirmation != nil },
-                                set: { if !$0 { coordinator.pendingSOSConfirmation = nil } }
-                            )
-                        ) {
-                            Button(LanguageManager.shared.localized("sos.confirmExternal.send"), role: .destructive) {
-                                coordinator.confirmPendingSOS()
+                            .overlay {
+                                if coordinator.showFallConfirmation {
+                                    FallConfirmationOverlay()
+                                        .environmentObject(coordinator)
+                                } else if let pending = coordinator.pendingSOS {
+                                    SOSCountdownOverlay(pending: pending)
+                                        .environmentObject(coordinator)
+                                }
                             }
-                            Button(LanguageManager.shared.localized("common.cancel"), role: .cancel) {
-                                coordinator.pendingSOSConfirmation = nil
+                            .alert(
+                                LanguageManager.shared.localized("sos.confirmExternal.title"),
+                                isPresented: Binding(
+                                    get: { coordinator.pendingSOSConfirmation != nil },
+                                    set: { if !$0 { coordinator.pendingSOSConfirmation = nil } }
+                                )
+                            ) {
+                                Button(LanguageManager.shared.localized("sos.confirmExternal.send"), role: .destructive) {
+                                    coordinator.confirmPendingSOS()
+                                }
+                                Button(LanguageManager.shared.localized("common.cancel"), role: .cancel) {
+                                    coordinator.pendingSOSConfirmation = nil
+                                }
+                            } message: {
+                                Text(LanguageManager.shared.localized("sos.confirmExternal.message"))
                             }
-                        } message: {
-                            Text(LanguageManager.shared.localized("sos.confirmExternal.message"))
-                        }
-                        .sheet(isPresented: $showBiometricPrompt) {
-                            BiometricEnablePromptView(isPresented: $showBiometricPrompt)
-                        }
-                        .sheet(isPresented: $coordinator.needsDataTransferConsent) {
-                            DataTransferConsentSheet().environmentObject(coordinator)
-                        }
-                        .onAppear {
-                            // After login, offer biometric setup if available (skip if wizard already handled it)
-                            if biometric.isAvailable && !biometric.hasShownPrompt && !biometric.isEnabled && setupWizardComplete {
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                                    showBiometricPrompt = true
+                            .sheet(isPresented: $showBiometricPrompt) {
+                                BiometricEnablePromptView(isPresented: $showBiometricPrompt)
+                            }
+                            .sheet(isPresented: $coordinator.needsDataTransferConsent) {
+                                DataTransferConsentSheet().environmentObject(coordinator)
+                            }
+                            .onAppear {
+                                // After login, offer biometric setup if available (skip if wizard already handled it)
+                                if biometric.isAvailable && !biometric.hasShownPrompt && !biometric.isEnabled && setupWizardComplete {
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                        showBiometricPrompt = true
+                                    }
                                 }
                             }
                         }
+                    }
+                    // Invite links, family circle, Settings, the setup wizard and the
+                    // sign-up invite path all open the same confirmation sheet.
+                    .sheet(isPresented: inviteSheetBinding, onDismiss: {
+                        coordinator.pendingInviteCode = nil
+                    }) {
+                        InviteAcceptSheet(initialCode: coordinator.pendingInviteCode)
+                            .environmentObject(coordinator)
                     }
                 }
             }
         }
         .preferredColorScheme(darkModeEnabled ? .dark : .light)
         .id("\(fontScale.level.rawValue)-\(langManager.current.rawValue)")
+    }
+
+    private var inviteSheetBinding: Binding<Bool> {
+        Binding(
+            get: {
+                InviteSheetGate.isPresented(
+                    requested: coordinator.showInviteAccept,
+                    authState: coordinator.authState,
+                    biometricLocked: biometric.isEnabled && !biometric.isUnlocked
+                )
+            },
+            set: { if !$0 { coordinator.showInviteAccept = false } }
+        )
     }
 
     // MARK: - Beta Banner

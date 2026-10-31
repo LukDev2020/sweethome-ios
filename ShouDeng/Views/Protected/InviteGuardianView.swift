@@ -2,14 +2,22 @@ import SwiftUI
 
 // MARK: - Invite Guardian View
 //
-// Protected person generates an invite code, then shares it with
-// a guardian via system share sheet. Guardian enters the code in
-// their app to establish the link.
+// Generates an invite code and shares it via the system share sheet; the other
+// person enters it in their app to establish the link. The invite carries its
+// direction:
+//  - protected person: "be my guardian" (inviterRole "protected")
+//  - guardian: "let me look out for you" (inviterRole "guardian")
 
 struct InviteGuardianView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var langManager = LanguageManager.shared
     @Environment(\.dismiss) var dismiss
+
+    /// What I become once the invite is accepted. nil: my current role.
+    var inviterRole: UserRole? = nil
+
+    private var direction: UserRole { inviterRole ?? coordinator.userRole }
+    private var invitesGuardian: Bool { direction == .protected_ }
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
@@ -28,9 +36,9 @@ struct InviteGuardianView: View {
                         Image(systemName: "person.badge.plus")
                             .font(.scaled(size: 36))
                             .foregroundStyle(safe)
-                        Text(langManager.localized("invite.title"))
+                        Text(langManager.localized(invitesGuardian ? "invite.title" : "invite.protect.title"))
                             .font(.scaled(size: 20, weight: .bold))
-                        Text(langManager.localized("invite.subtitle"))
+                        Text(langManager.localized(invitesGuardian ? "invite.subtitle" : "invite.protect.subtitle"))
                             .font(.scaled(size: 13))
                             .foregroundStyle(.secondary)
                     }
@@ -99,7 +107,7 @@ struct InviteGuardianView: View {
                 .padding(.horizontal, 16)
             }
             .background(Color(.systemBackground))
-            .navigationTitle(langManager.localized("invite.title"))
+            .navigationTitle(langManager.localized(invitesGuardian ? "invite.title" : "invite.protect.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -154,9 +162,9 @@ struct InviteGuardianView: View {
             Text(langManager.localized("invite.howToUse"))
                 .font(.scaled(size: 11))
                 .foregroundStyle(.secondary)
-            instructionRow("1", text: langManager.localized("invite.step1"))
+            instructionRow("1", text: langManager.localized(invitesGuardian ? "invite.step1" : "invite.protect.step1"))
             instructionRow("2", text: langManager.localized("invite.step2"))
-            instructionRow("3", text: langManager.localized("invite.step3"))
+            instructionRow("3", text: langManager.localized(invitesGuardian ? "invite.step3" : "invite.protect.step3"))
         }
         .padding(12)
         .background(
@@ -187,7 +195,7 @@ struct InviteGuardianView: View {
         isLoading = true
         errorMessage = nil
         do {
-            let response = try await coordinator.createInviteCode()
+            let response = try await coordinator.createInviteCode(inviterRole: direction)
             await MainActor.run {
                 inviteCode = response.code
                 expiresAt = response.expiresAt
@@ -203,7 +211,7 @@ struct InviteGuardianView: View {
 
     private func shareText(code: String) -> String {
         let name = coordinator.currentUser?.displayName ?? langManager.localized("invite.me")
-        return String(format: langManager.localized("invite.shareText"), name, code)
+        return String(format: langManager.localized(invitesGuardian ? "invite.shareText" : "invite.protect.shareText"), name, code)
     }
 
     private func formatExpiry(_ isoString: String) -> String {

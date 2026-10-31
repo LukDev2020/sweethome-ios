@@ -43,6 +43,9 @@ final class AppCoordinator: ObservableObject {
     @Published var needsDataTransferConsent = false
     @Published var signupPhone: String?
     @Published var signupCountry: CountryCode?
+    /// Login verified this number but found no account: signup opens at the
+    /// profile step and reuses that verification (no second SMS).
+    @Published var signupPhoneVerified = false
     @Published var timeline: [TimelineEntry] = []
     @Published var familyPosts: [FamilyPost] = []
     @Published var selectedHotline: SelectedHotline?
@@ -425,6 +428,9 @@ final class AppCoordinator: ObservableObject {
         showSignup = false
         signupPhone = nil
         signupCountry = nil
+        signupPhoneVerified = false
+        showInviteAccept = false
+        pendingInviteCode = nil
         isTrackingPaused = false
         trackingPauseExpiresAt = nil
         trackingPauseTimer?.invalidate()
@@ -578,8 +584,7 @@ final class AppCoordinator: ObservableObject {
     private func applyDeepLink(_ destination: DeepLinkDestination) {
         switch destination {
         case .invite(let code):
-            pendingInviteCode = code
-            showInviteAccept = true
+            presentInviteAccept(code: code)
         case .evidence:
             // Evidence links are handled by the web view; no in-app routing needed
             break
@@ -1866,11 +1871,50 @@ final class AppCoordinator: ObservableObject {
 
     // MARK: - Guardian Management
 
-    func createInviteCode() async throws -> CreateInviteResponse {
+    // MARK: - Invites
+
+    /// Open the invite confirmation sheet (RootView presents it). Used by invite
+    /// links, the family circle, Settings and the setup wizard.
+    func presentInviteAccept(code: String? = nil) {
+        pendingInviteCode = code.flatMap(DeepLinkRouter.normalizedInviteCode)
+        showInviteAccept = true
+    }
+
+    /// - Parameter inviterRole: what I become once the invite is accepted
+    ///   (`.protected_`: the other person guards me; `.guardian`: I guard them).
+    func createInviteCode(inviterRole: UserRole) async throws -> CreateInviteResponse {
         let response: CreateInviteResponse = try await apiClient.post(
             "/v1/invite/create",
-            body: CreateInviteRequest(role: userRole.rawValue)
+            body: CreateInviteRequest(inviterRole: inviterRole)
         )
+        return response
+    }
+
+    func previewInvite(code: String) async throws -> InvitePreviewResponse {
+        let encoded = code.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? code
+        return try await apiClient.getReportingCode("/v1/invite/preview?code=\(encoded)")
+    }
+
+    /// Accept an invite; the invite decides who guards whom. Afterwards the
+    /// profile (the server may have moved my home view) and family are refreshed.
+    func acceptInvite(code: String, criticalAlertConsent: Bool?) async throws -> AcceptInviteResponse {
+        let response: AcceptInviteResponse = try await apiClient.postReportingCode(
+            "/v1/invite/accept",
+            body: AcceptInviteRequest(code: code, criticalAlertConsent: criticalAlertConsent)
+        )
+        let iAmGuardian = response.acceptorRole.map { $0 == UserRole.guardian.rawValue }
+            ?? (response.guardianId == authManager.currentUserId)
+        await MainActor.run {
+            if iAmGuardian, let consent = criticalAlertConsent {
+                setSOSCriticalAlerts(enabled: consent)
+            }
+        }
+        await fetchUserProfile()
+        if iAmGuardian {
+            await fetchProtectedPersons()
+        } else {
+            await fetchGuardians()
+        }
         return response
     }
 
