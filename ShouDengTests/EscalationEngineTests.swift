@@ -96,3 +96,88 @@ final class EscalationEngineTests: XCTestCase {
         )
     }
 }
+
+// MARK: - Critical Alerts entitlement claims
+
+/// Verifies the behaviour promised in the Critical Alerts entitlement request:
+/// manual SOS has a cancel window, duress / pre-confirmed SOS skip it, a
+/// cancelled countdown never sends, and the guardian's consent is sent to the
+/// server.
+@MainActor
+final class CriticalAlertClaimsTests: XCTestCase {
+
+    func testManualTriggersHaveFiveSecondCancelWindow() {
+        for method in [SOSTriggerMethod.longPress, .widgetTap, .bluetoothButton, .watchQuickAction] {
+            XCTAssertEqual(AppCoordinator.sosCancelWindow(for: method), 5, "\(method)")
+        }
+    }
+
+    func testDuressAndAlreadyConfirmedTriggersSkipTheWindow() {
+        // Duress must stay instant and silent; fall / voice / distress sound /
+        // safety timer already had their own countdown before reaching here.
+        for method in [SOSTriggerMethod.duressPassword, .fallDetection, .voiceWakeWord, .audioDistress, .voiceCommand, .deadManSwitch] {
+            XCTAssertEqual(AppCoordinator.sosCancelWindow(for: method), 0, "\(method)")
+        }
+    }
+
+    func testManualSOSStartsCountdownInsteadOfSending() {
+        let coordinator = AppCoordinator()
+        coordinator.requestSOS(method: .longPress)
+        XCTAssertNotNil(coordinator.pendingSOS)
+        XCTAssertEqual(coordinator.pendingSOS?.duration, 5)
+        XCTAssertNil(coordinator.activeSOSEvent, "Nothing may be sent during the cancel window")
+        coordinator.cancelPendingSOS()
+    }
+
+    func testDuressSOSDoesNotShowACountdown() {
+        let coordinator = AppCoordinator()
+        coordinator.requestSOS(method: .duressPassword)
+        XCTAssertNil(coordinator.pendingSOS, "Duress SOS must not show an on-screen countdown")
+    }
+
+    func testCancelledCountdownNeverSends() async throws {
+        let coordinator = AppCoordinator()
+        coordinator.requestSOS(method: .widgetTap)
+        coordinator.cancelPendingSOS()
+        XCTAssertNil(coordinator.pendingSOS)
+
+        try await Task.sleep(nanoseconds: 6_000_000_000) // past the 5 s window
+        XCTAssertNil(coordinator.activeSOSEvent, "A cancelled SOS must never be sent")
+        XCTAssertNil(coordinator.pendingSOS)
+    }
+
+    func testCountdownHandsOffToSendWhenItEnds() async throws {
+        // No signed-in user, so triggerSOS stops before any network call; this
+        // checks the countdown completes and clears itself after 5 s.
+        let coordinator = AppCoordinator()
+        coordinator.requestSOS(method: .bluetoothButton)
+        XCTAssertNotNil(coordinator.pendingSOS)
+
+        try await Task.sleep(nanoseconds: 4_000_000_000)
+        XCTAssertNotNil(coordinator.pendingSOS, "Still counting down at 4 s")
+        try await Task.sleep(nanoseconds: 2_000_000_000)
+        XCTAssertNil(coordinator.pendingSOS)
+    }
+
+    func testSecondTriggerDuringCountdownIsIgnored() {
+        let coordinator = AppCoordinator()
+        coordinator.requestSOS(method: .longPress)
+        let first = coordinator.pendingSOS
+        coordinator.requestSOS(method: .widgetTap)
+        XCTAssertEqual(coordinator.pendingSOS, first)
+        coordinator.cancelPendingSOS()
+    }
+
+    func testInviteAcceptSendsGuardianConsent() throws {
+        let data = try JSONEncoder().encode(AcceptInviteRequest(code: "ABC123", criticalAlertConsent: true))
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        XCTAssertEqual(json["criticalAlertConsent"] as? Bool, true)
+    }
+
+    func testNotificationPrefsSendCriticalAlertChoice() throws {
+        let prefs = NotificationPrefsRequest(sosAlerts: true, sosCriticalAlerts: false,
+                                             checkinReminder: true, checkinOverdue: true, familyFeed: true)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(prefs)) as? [String: Any])
+        XCTAssertEqual(json["sosCriticalAlerts"] as? Bool, false)
+    }
+}

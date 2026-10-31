@@ -105,6 +105,12 @@ final class AdaptiveLocationManager: NSObject {
 
     /// Request a single fresh location fix (e.g. when home view appears)
     func requestSingleLocation() {
+        // The delegate is normally set in start(); the home screen can call
+        // this first (e.g. right after login), and requestLocation() throws
+        // without a delegate.
+        if locationManager.delegate == nil {
+            locationManager.delegate = self
+        }
         locationManager.requestLocation()
     }
 
