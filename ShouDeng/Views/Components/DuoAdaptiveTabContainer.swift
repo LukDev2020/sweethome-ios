@@ -24,9 +24,8 @@ struct DuoAdaptiveTabContainer: View {
             // Duo inner screen: content + vertical rail on right
             HStack(spacing: 0) {
                 if let tab = tabs.first(where: { $0.id == selectedTab }) {
-                    tab.view
+                    withAccessory(tab)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .safeAreaInset(edge: .bottom, spacing: 0) { accessoryBar }
                 }
 
                 VerticalTabRail(
@@ -40,8 +39,7 @@ struct DuoAdaptiveTabContainer: View {
             // Standard phone: native bottom TabView
             TabView(selection: $selectedTab) {
                 ForEach(tabs) { tab in
-                    tab.view
-                        .safeAreaInset(edge: .bottom, spacing: 0) { accessoryBar }
+                    withAccessory(tab)
                         .tabItem {
                             Image(systemName: tab.icon)
                             Text(tab.title)
@@ -50,6 +48,15 @@ struct DuoAdaptiveTabContainer: View {
                 }
             }
             .tint(tintColor)
+        }
+    }
+
+    @ViewBuilder
+    private func withAccessory(_ tab: DuoTabItem) -> some View {
+        if tab.placesOwnAccessory {
+            tab.view.environment(\.tabBottomAccessory, bottomAccessory)
+        } else {
+            tab.view.safeAreaInset(edge: .bottom, spacing: 0) { accessoryBar }
         }
     }
 

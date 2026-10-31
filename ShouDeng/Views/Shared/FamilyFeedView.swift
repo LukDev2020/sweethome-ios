@@ -34,12 +34,14 @@ struct FamilyFeedView: View {
     @State private var selectedImageData: [Data] = []
     @State private var isSending = false
     @FocusState private var isInputFocused: Bool
+    /// The SOS button, handed over by the tab container (see DuoTabItem.placesOwnAccessory)
+    @Environment(\.tabBottomAccessory) private var sosAccessory
 
     var body: some View {
         NavigationStack {
             Group {
                 if sizeClass == .regular {
-                    feedDuoPane
+                    feedDuoPane.safeAreaInset(edge: .bottom, spacing: 0) { sosRow }
                 } else {
                     feedCompact
                 }
@@ -99,11 +101,28 @@ struct FamilyFeedView: View {
     // MARK: - Compact Layout
 
     private var feedCompact: some View {
-        VStack(spacing: 0) {
-            feedContent
-            chatInputBar
+        feedContent
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                VStack(spacing: 0) {
+                    sosRow
+                    chatInputBar
+                }
+            }
+            .background(Color(.systemGroupedBackground))
+    }
+
+    /// SOS stays one tap away, just above the composer (never on top of it).
+    @ViewBuilder
+    private var sosRow: some View {
+        if let sosAccessory {
+            HStack {
+                Spacer()
+                sosAccessory
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 2)
         }
-        .background(Color(.systemGroupedBackground))
     }
 
     // MARK: - Duo Pane Layout

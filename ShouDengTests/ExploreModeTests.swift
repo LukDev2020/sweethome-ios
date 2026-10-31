@@ -126,7 +126,7 @@ final class ExploreModeTests: XCTestCase {
         var files: [String: Data] = [:]
         let docs = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let store = docs.appendingPathComponent("store")
-        for name in (try? fm.contentsOfDirectory(atPath: store.path)) ?? [] {
+        for name in (try? fm.contentsOfDirectory(atPath: store.path)) ?? [] where !name.contains(".sb-") {
             files["store/\(name)"] = try? Data(contentsOf: store.appendingPathComponent(name))
         }
         files["offline_queue.jsonl"] = try? Data(contentsOf: OfflineQueue.defaultFileURL)
@@ -165,7 +165,13 @@ final class ExploreModeTests: XCTestCase {
         LocalStore.shared.saveTimeline([TimelineEntry(id: "real-1", timestamp: Date(timeIntervalSince1970: 1_800_000_000),
                                                       type: .checkIn, description: "real entry", detail: nil)])
         KeychainHelper.shared.save("sa_win", value: "45")
-        try? await Task.sleep(nanoseconds: 300_000_000) // LocalStore writes are async
+        // LocalStore writes are async (atomic: temp file, then rename) — wait for the
+        // real entry to land instead of a fixed sleep, which raced the write.
+        await waitUntil {
+            let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                .appendingPathComponent("store/timeline.json")
+            return (try? String(contentsOf: url, encoding: .utf8))?.contains("real-1") == true
+        }
         let before = snapshot()
 
         let explore = ExploreModeController.shared
