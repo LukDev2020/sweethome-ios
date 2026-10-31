@@ -128,17 +128,14 @@ struct FamilyFeedView: View {
     // MARK: - Duo Pane Layout
 
     private var feedDuoPane: some View {
-        HStack(spacing: 0) {
+        FoldSplitView(dividerColor: paneBorder) {
             // Left: messages + input
             VStack(spacing: 0) {
                 feedContent
                 chatInputBar
             }
-            .frame(width: 445)
             .background(creamBg)
-
-            Rectangle().fill(paneBorder).frame(width: 1)
-
+        } trailing: {
             // Right: family members panel
             ScrollView {
                 VStack(spacing: 12) {
@@ -154,7 +151,6 @@ struct FamilyFeedView: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 24)
             }
-            .frame(maxWidth: .infinity)
             .background(offWhiteBg)
         }
     }

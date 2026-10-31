@@ -129,7 +129,7 @@ struct ProfileEditView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(langManager.localized("profile.cancel")) { dismiss() }
+                    Button { dismiss() } label: { Label(langManager.localized("profile.cancel"), systemImage: "xmark") }
                 }
             }
             .onAppear { loadCurrentProfile() }

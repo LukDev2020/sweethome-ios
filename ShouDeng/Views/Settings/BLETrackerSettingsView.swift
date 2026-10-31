@@ -134,7 +134,7 @@ struct BLETrackerSettingsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(langManager.localized("ble.close")) { dismiss() }
+                    Button { dismiss() } label: { Label(langManager.localized("ble.close"), systemImage: "xmark") }
                 }
             }
             .sheet(isPresented: $showPairSheet) {
@@ -279,9 +279,11 @@ struct BLETrackerSettingsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(langManager.localized("ble.cancel")) {
+                    Button {
                         service.stopDiscovery()
                         showPairSheet = false
+                    } label: {
+                        Label(langManager.localized("ble.cancel"), systemImage: "xmark")
                     }
                 }
             }

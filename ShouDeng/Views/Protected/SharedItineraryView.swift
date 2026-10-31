@@ -34,11 +34,11 @@ struct SharedItineraryView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(langManager.localized("itinerary.close")) { dismiss() }
+                    Button { dismiss() } label: { Label(langManager.localized("itinerary.close"), systemImage: "xmark") }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showAdd = true } label: {
-                        Image(systemName: "plus")
+                        Label(langManager.localized("itinerary.add"), systemImage: "plus")
                     }
                 }
             }
@@ -236,7 +236,7 @@ struct AddItinerarySheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(langManager.localized("itinerary.cancel")) { dismiss() }
+                    Button { dismiss() } label: { Label(langManager.localized("itinerary.cancel"), systemImage: "xmark") }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -245,7 +245,7 @@ struct AddItinerarySheet: View {
                         if isSaving {
                             ProgressView()
                         } else {
-                            Text(langManager.localized("itinerary.save")).bold()
+                            Label(langManager.localized("itinerary.save"), systemImage: "checkmark")
                         }
                     }
                     .disabled(departureCity.isEmpty || arrivalCity.isEmpty || isSaving)

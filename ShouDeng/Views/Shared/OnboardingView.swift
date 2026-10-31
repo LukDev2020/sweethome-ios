@@ -59,7 +59,7 @@ struct OnboardingView: View {
     // MARK: - Duo Layout (Inner Screen)
 
     private var duoOnboardingLayout: some View {
-        HStack(spacing: 0) {
+        FoldSplitView(dividerColor: .white.opacity(0.08)) {
             // LEFT: Icon + Title
             VStack(spacing: 0) {
                 onboardingTopBar
@@ -82,12 +82,7 @@ struct OnboardingView: View {
                 Spacer()
                 Spacer()
             }
-            .frame(width: 445)
-
-            Rectangle()
-                .fill(.white.opacity(0.08))
-                .frame(width: 1)
-
+        } trailing: {
             // RIGHT: Body + Button
             VStack(spacing: 0) {
                 Spacer()
@@ -103,7 +98,6 @@ struct OnboardingView: View {
                     .padding(.horizontal, 36)
                     .padding(.bottom, 48)
             }
-            .frame(maxWidth: .infinity)
         }
     }
 

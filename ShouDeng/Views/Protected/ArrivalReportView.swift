@@ -43,7 +43,7 @@ struct ArrivalReportView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(lang.localized("arrival.close")) { dismiss() }
+                    Button { dismiss() } label: { Label(lang.localized("arrival.close"), systemImage: "xmark") }
                 }
             }
         }

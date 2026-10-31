@@ -15,65 +15,68 @@ struct FallConfirmationOverlay: View {
             Color.black.opacity(0.85)
                 .ignoresSafeArea()
 
-            VStack(spacing: 24) {
-                Spacer()
+            // Kept clear of the iPhone Duo fold (right half when unfolded)
+            FoldAvoidingColumn {
+                VStack(spacing: 24) {
+                    Spacer()
 
-                // Warning icon
-                Image(systemName: "figure.fall")
-                    .font(.system(size: 64))
-                    .foregroundColor(.red)
-                    .symbolEffect(.pulse, options: .repeating)
+                    // Warning icon
+                    Image(systemName: "figure.fall")
+                        .font(.system(size: 64))
+                        .foregroundColor(.red)
+                        .symbolEffect(.pulse, options: .repeating)
 
-                Text(lang.localized("fall.detected.title"))
-                    .font(.scaled(size: 28, weight: .bold))
-                    .foregroundColor(.white)
-                    .multilineTextAlignment(.center)
-
-                Text(lang.localized("fall.detected.subtitle"))
-                    .font(.scaled(size: 16))
-                    .foregroundColor(.white.opacity(0.8))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-
-                // Countdown circle
-                ZStack {
-                    Circle()
-                        .stroke(Color.red.opacity(0.3), lineWidth: 8)
-                        .frame(width: 120, height: 120)
-
-                    Circle()
-                        .trim(from: 0, to: CGFloat(countdownTimer.timeRemaining) / 60.0)
-                        .stroke(Color.red, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                        .frame(width: 120, height: 120)
-                        .rotationEffect(.degrees(-90))
-                        .animation(.linear(duration: 1), value: countdownTimer.timeRemaining)
-
-                    Text("\(countdownTimer.timeRemaining)")
-                        .font(.system(size: 48, weight: .bold, design: .rounded))
+                    Text(lang.localized("fall.detected.title"))
+                        .font(.scaled(size: 28, weight: .bold))
                         .foregroundColor(.white)
+                        .multilineTextAlignment(.center)
+
+                    Text(lang.localized("fall.detected.subtitle"))
+                        .font(.scaled(size: 16))
+                        .foregroundColor(.white.opacity(0.8))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+
+                    // Countdown circle
+                    ZStack {
+                        Circle()
+                            .stroke(Color.red.opacity(0.3), lineWidth: 8)
+                            .frame(width: 120, height: 120)
+
+                        Circle()
+                            .trim(from: 0, to: CGFloat(countdownTimer.timeRemaining) / 60.0)
+                            .stroke(Color.red, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                            .frame(width: 120, height: 120)
+                            .rotationEffect(.degrees(-90))
+                            .animation(.linear(duration: 1), value: countdownTimer.timeRemaining)
+
+                        Text("\(countdownTimer.timeRemaining)")
+                            .font(.system(size: 48, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                    }
+
+                    Text(lang.localized("fall.sos.countdown"))
+                        .font(.scaled(size: 14))
+                        .foregroundColor(.white.opacity(0.6))
+
+                    Spacer()
+
+                    // "I'm Fine" button
+                    Button {
+                        countdownTimer.stop()
+                        coordinator.dismissFallConfirmation()
+                    } label: {
+                        Text(lang.localized("fall.im.fine"))
+                            .font(.scaled(size: 20, weight: .semibold))
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(Color.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                    }
+                    .padding(.horizontal, 32)
+                    .padding(.bottom, 48)
                 }
-
-                Text(lang.localized("fall.sos.countdown"))
-                    .font(.scaled(size: 14))
-                    .foregroundColor(.white.opacity(0.6))
-
-                Spacer()
-
-                // "I'm Fine" button
-                Button {
-                    countdownTimer.stop()
-                    coordinator.dismissFallConfirmation()
-                } label: {
-                    Text(lang.localized("fall.im.fine"))
-                        .font(.scaled(size: 20, weight: .semibold))
-                        .foregroundColor(.black)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(Color.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                }
-                .padding(.horizontal, 32)
-                .padding(.bottom, 48)
             }
         }
         .onAppear {
@@ -102,76 +105,79 @@ struct SOSCountdownOverlay: View {
             Color.black.opacity(0.88)
                 .ignoresSafeArea()
 
-            VStack(spacing: 24) {
-                Spacer()
+            // Kept clear of the iPhone Duo fold (right half when unfolded)
+            FoldAvoidingColumn {
+                VStack(spacing: 24) {
+                    Spacer()
 
-                Image(systemName: "sos.circle.fill")
-                    .font(.system(size: 64))
-                    .foregroundColor(.red)
-                    .symbolEffect(.pulse, options: .repeating)
-                    .accessibilityHidden(true)
+                    Image(systemName: "sos.circle.fill")
+                        .font(.system(size: 64))
+                        .foregroundColor(.red)
+                        .symbolEffect(.pulse, options: .repeating)
+                        .accessibilityHidden(true)
 
-                Text(lang.localized("sos.pending.title"))
-                    .font(.scaled(size: 28, weight: .bold))
-                    .foregroundColor(.white)
-                    .multilineTextAlignment(.center)
-
-                Text(lang.localized("sos.pending.subtitle"))
-                    .font(.scaled(size: 16))
-                    .foregroundColor(.white.opacity(0.8))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-
-                ZStack {
-                    Circle()
-                        .stroke(Color.red.opacity(0.3), lineWidth: 8)
-                        .frame(width: 120, height: 120)
-
-                    Circle()
-                        .trim(from: 0, to: CGFloat(countdownTimer.timeRemaining) / CGFloat(max(1, pending.duration)))
-                        .stroke(Color.red, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                        .frame(width: 120, height: 120)
-                        .rotationEffect(.degrees(-90))
-                        .animation(.linear(duration: 1), value: countdownTimer.timeRemaining)
-
-                    Text("\(countdownTimer.timeRemaining)")
-                        .font(.system(size: 48, weight: .bold, design: .rounded))
+                    Text(lang.localized("sos.pending.title"))
+                        .font(.scaled(size: 28, weight: .bold))
                         .foregroundColor(.white)
-                }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(String(format: lang.localized("sos.pending.a11y.countdown"), countdownTimer.timeRemaining))
+                        .multilineTextAlignment(.center)
 
-                Spacer()
+                    Text(lang.localized("sos.pending.subtitle"))
+                        .font(.scaled(size: 16))
+                        .foregroundColor(.white.opacity(0.8))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
 
-                VStack(spacing: 12) {
-                    Button {
-                        countdownTimer.stop()
-                        coordinator.cancelPendingSOS()
-                    } label: {
-                        Text(lang.localized("sos.pending.cancel"))
-                            .font(.scaled(size: 20, weight: .semibold))
-                            .foregroundColor(.black)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Color.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
-                    }
+                    ZStack {
+                        Circle()
+                            .stroke(Color.red.opacity(0.3), lineWidth: 8)
+                            .frame(width: 120, height: 120)
 
-                    Button {
-                        countdownTimer.stop()
-                        coordinator.sendPendingSOSNow()
-                    } label: {
-                        Text(lang.localized("sos.pending.sendNow"))
-                            .font(.scaled(size: 17, weight: .semibold))
+                        Circle()
+                            .trim(from: 0, to: CGFloat(countdownTimer.timeRemaining) / CGFloat(max(1, pending.duration)))
+                            .stroke(Color.red, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                            .frame(width: 120, height: 120)
+                            .rotationEffect(.degrees(-90))
+                            .animation(.linear(duration: 1), value: countdownTimer.timeRemaining)
+
+                        Text("\(countdownTimer.timeRemaining)")
+                            .font(.system(size: 48, weight: .bold, design: .rounded))
                             .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(Color.red)
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
                     }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(String(format: lang.localized("sos.pending.a11y.countdown"), countdownTimer.timeRemaining))
+
+                    Spacer()
+
+                    VStack(spacing: 12) {
+                        Button {
+                            countdownTimer.stop()
+                            coordinator.cancelPendingSOS()
+                        } label: {
+                            Text(lang.localized("sos.pending.cancel"))
+                                .font(.scaled(size: 20, weight: .semibold))
+                                .foregroundColor(.black)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(Color.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                        }
+
+                        Button {
+                            countdownTimer.stop()
+                            coordinator.sendPendingSOSNow()
+                        } label: {
+                            Text(lang.localized("sos.pending.sendNow"))
+                                .font(.scaled(size: 17, weight: .semibold))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(Color.red)
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                        }
+                    }
+                    .padding(.horizontal, 32)
+                    .padding(.bottom, 48)
                 }
-                .padding(.horizontal, 32)
-                .padding(.bottom, 48)
             }
         }
         .onAppear { countdownTimer.start(deadline: pending.deadline) }

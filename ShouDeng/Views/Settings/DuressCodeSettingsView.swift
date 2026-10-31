@@ -85,7 +85,7 @@ struct DuressCodeSettingsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(langManager.localized("duress.close")) { dismiss() }
+                    Button { dismiss() } label: { Label(langManager.localized("duress.close"), systemImage: "xmark") }
                 }
             }
             .alert("duress.remove.title", isPresented: $showRemoveConfirm) {

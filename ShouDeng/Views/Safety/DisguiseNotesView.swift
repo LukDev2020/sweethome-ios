@@ -85,7 +85,7 @@ struct DisguiseNotesView: View {
                     editingText = ""
                     isEditing = true
                 } label: {
-                    Image(systemName: "square.and.pencil")
+                    Label("New Note", systemImage: "square.and.pencil")
                 }
             }
         }
@@ -121,17 +121,15 @@ struct DisguiseNotesView: View {
                     isEditing = false
                     selectedNote = nil
                 } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                        Text("Notes")
-                    }
+                    Label("Notes", systemImage: "chevron.left")
+                        .labelStyle(.titleAndIcon)
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     // Share (does nothing, just looks real)
                 } label: {
-                    Image(systemName: "square.and.arrow.up")
+                    Label("Share", systemImage: "square.and.arrow.up")
                 }
             }
         }

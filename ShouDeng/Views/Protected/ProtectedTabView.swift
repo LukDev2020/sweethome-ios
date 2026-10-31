@@ -4,7 +4,7 @@ import SwiftUI
 //
 // Wraps all Protected Person screens in a TabView.
 // Home is the default tab.
-// On Duo inner screen, switches to vertical rail layout.
+// The system places the tab bar (side on iPhone Duo, top/sidebar on iPad).
 
 struct ProtectedTabView: View {
     @EnvironmentObject var coordinator: AppCoordinator

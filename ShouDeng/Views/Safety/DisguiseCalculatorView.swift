@@ -39,10 +39,17 @@ struct DisguiseCalculatorView: View {
     // MARK: - Layout Constants
 
     private let buttonSpacing: CGFloat = 12
-    private let buttonSize: CGFloat = {
-        let screen = UIScreen.main.bounds.width
-        return (screen - 5 * 12) / 4
-    }()
+    /// The space this view has (not the screen: on an iPhone Duo, in Split View or on
+    /// iPad the window is not the device width).
+    @State private var containerSize: CGSize = .zero
+
+    private var buttonSize: CGFloat {
+        guard containerSize.width > 0 else { return 80 }
+        // Four buttons and five gaps across; five rows, display and padding down.
+        let byWidth = (containerSize.width - 5 * buttonSpacing) / 4
+        let byHeight = (containerSize.height - 128 - 20 - 4 * buttonSpacing) / 5
+        return max(44, min(byWidth, byHeight, 110))
+    }
 
     // MARK: - Colors (iOS calculator palette)
 
@@ -79,6 +86,7 @@ struct DisguiseCalculatorView: View {
                     .padding(.bottom, 20)
             }
         }
+        .onGeometryChange(for: CGSize.self) { $0.size } action: { containerSize = $0 }
         .opacity(isRevealing ? 0 : 1)
         .animation(.easeIn(duration: 0.25), value: isRevealing)
         // Hide the navigation bar so there's no title to reveal the app.

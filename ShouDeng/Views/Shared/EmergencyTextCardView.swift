@@ -152,7 +152,7 @@ struct EmergencyTextCardView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(langManager.localized("emergencyCard.close")) { dismiss() }
+                    Button { dismiss() } label: { Label(langManager.localized("emergencyCard.close"), systemImage: "xmark") }
                 }
             }
             .fullScreenCover(isPresented: $showFullScreen) {

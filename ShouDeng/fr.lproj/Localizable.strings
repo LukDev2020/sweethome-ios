@@ -1106,6 +1106,7 @@ vos gardiens seront automatiquement notifiés.";
 
 /* External SOS confirmation (lock screen / deep link) */
 "common.cancel" = "Annuler";
+"common.close" = "Fermer";
 "sos.confirmExternal.title" = "Envoyer un SOS ?";
 "sos.confirmExternal.message" = "Vos gardiens seront alertés immédiatement avec votre position.";
 "sos.confirmExternal.send" = "Envoyer le SOS";
@@ -1369,7 +1370,6 @@ vos gardiens seront automatiquement notifiés.";
 "explore.feature.deadManSwitch" = "le minuteur de sécurité";
 "explore.feature.fakeCall" = "les faux appels";
 "explore.feature.disguise" = "le mode camouflage";
-"explore.feature.biometrics" = "Face ID";
 "explore.feature.silentAlarm" = "l'alarme silencieuse";
 "explore.feature.deviceHealth" = "les vérifications de l'appareil";
 "explore.feature.feature" = "cette fonction";

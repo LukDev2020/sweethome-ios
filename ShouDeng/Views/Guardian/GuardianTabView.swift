@@ -4,12 +4,11 @@ import SwiftUI
 //
 // Wraps all Guardian screens in a TabView.
 // Tabs: Home, Family Feed, Records (timeline + schedule), Settings
-// On Duo inner screen, switches to vertical rail layout.
+// The system places the tab bar (side on iPhone Duo, top/sidebar on iPad).
 
 struct GuardianTabView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @AppStorage("guardian_selected_tab") private var selectedTab = 0
-    @State private var showInvite = false
     @ObservedObject private var lang = LanguageManager.shared
     private let pro = Color(red: 107/255, green: 92/255, blue: 165/255)
 
@@ -27,14 +26,9 @@ struct GuardianTabView: View {
             selectedTab: $selectedTab,
             tabs: tabs,
             tintColor: pro,
-            showInviteButton: true,
-            onInvite: { showInvite = true },
             // Persistent SOS button — always accessible, never covers content
             bottomAccessory: AnyView(FloatingSOSButton())
         )
-        .sheet(isPresented: $showInvite) {
-            InviteGuardianView()
-        }
         // An SOS push was opened: straight to that person's response screen
         .sheet(isPresented: Binding(
             get: { coordinator.pendingAlertPersonId != nil },

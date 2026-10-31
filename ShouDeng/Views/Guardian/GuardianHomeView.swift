@@ -182,7 +182,7 @@ struct GuardianHomeView: View {
     // MARK: - Duo Pane Layout (Inner Screen)
 
     private var duoPaneLayout: some View {
-        HStack(spacing: 0) {
+        FoldSplitView(dividerColor: paneBorder) {
             // LEFT PANE: Overview
             ScrollView {
                 VStack(spacing: 0) {
@@ -233,13 +233,8 @@ struct GuardianHomeView: View {
                     Spacer(minLength: 16)
                 }
             }
-            .frame(width: 445)
             .background(creamBg)
-
-            Rectangle()
-                .fill(paneBorder)
-                .frame(width: 1)
-
+        } trailing: {
             // RIGHT PANE: Status & Actions
             ScrollView {
                 VStack(spacing: 0) {
@@ -260,7 +255,6 @@ struct GuardianHomeView: View {
                         .padding(.bottom, 24)
                 }
             }
-            .frame(maxWidth: .infinity)
             .background(offWhiteBg)
         }
     }

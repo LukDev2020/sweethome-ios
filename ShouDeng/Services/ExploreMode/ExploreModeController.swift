@@ -64,7 +64,7 @@ final class ExploreModeController: ObservableObject {
     private(set) var coordinator: AppCoordinator?
     private(set) var store: DemoStore?
     private var defaultsSuiteName: String?
-    private var overlayWindow: UIWindow?
+    private(set) var overlayWindow: UIWindow?
     private var cancellables = Set<AnyCancellable>()
     private var blockedObserver: NSObjectProtocol?
 

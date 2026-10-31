@@ -65,7 +65,7 @@ struct MedicalCardView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(langManager.localized("medical.close")) { dismiss() }
+                    Button { dismiss() } label: { Label(langManager.localized("medical.close"), systemImage: "xmark") }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -74,7 +74,7 @@ struct MedicalCardView: View {
                         if isSaving {
                             ProgressView()
                         } else {
-                            Text(langManager.localized("medical.save")).bold()
+                            Label(langManager.localized("medical.save"), systemImage: "checkmark")
                         }
                     }
                     .disabled(isSaving)
@@ -644,7 +644,7 @@ struct MedicalCardPreview: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(LanguageManager.shared.localized("medical.close")) { dismiss() }
+                    Button { dismiss() } label: { Label(LanguageManager.shared.localized("medical.close"), systemImage: "xmark") }
                 }
             }
         }

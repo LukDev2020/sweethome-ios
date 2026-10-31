@@ -1106,6 +1106,7 @@
 
 /* External SOS confirmation (lock screen / deep link) */
 "common.cancel" = "取消";
+"common.close" = "關閉";
 "sos.confirmExternal.title" = "傳送緊急求助？";
 "sos.confirmExternal.message" = "將立即通知你的守護者併傳送你的位置。";
 "sos.confirmExternal.send" = "傳送求助";
@@ -1369,7 +1370,6 @@
 "explore.feature.deadManSwitch" = "安全計時器";
 "explore.feature.fakeCall" = "假來電";
 "explore.feature.disguise" = "偽裝模式";
-"explore.feature.biometrics" = "面容 ID";
 "explore.feature.silentAlarm" = "沉默報警";
 "explore.feature.deviceHealth" = "裝置檢查";
 "explore.feature.feature" = "此功能";

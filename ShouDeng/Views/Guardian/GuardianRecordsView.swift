@@ -110,7 +110,7 @@ struct GuardianRecordsView: View {
     // MARK: - Duo Pane Layout
 
     private var recordsDuoPane: some View {
-        HStack(spacing: 0) {
+        FoldSplitView(dividerColor: paneBorder) {
             // Left: header + picker + stats
             ScrollView {
                 VStack(spacing: 12) {
@@ -143,11 +143,8 @@ struct GuardianRecordsView: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 24)
             }
-            .frame(width: 445)
             .background(creamBg)
-
-            Rectangle().fill(paneBorder).frame(width: 1)
-
+        } trailing: {
             // Right: content for selected tab
             ScrollView {
                 switch selectedTab {
@@ -172,7 +169,6 @@ struct GuardianRecordsView: View {
                     .padding(.bottom, 24)
                 }
             }
-            .frame(maxWidth: .infinity)
             .background(offWhiteBg)
         }
     }
@@ -1150,7 +1146,7 @@ struct InviteGuardianSheet: View {
             }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(LanguageManager.shared.localized("invite.sheet.cancel")) { dismiss() }
+                    Button { dismiss() } label: { Label(LanguageManager.shared.localized("invite.sheet.cancel"), systemImage: "xmark") }
                 }
             }
         }
@@ -1271,10 +1267,10 @@ struct EditGuardianMemberSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(LanguageManager.shared.localized("invite.sheet.cancel")) { dismiss() }
+                    Button { dismiss() } label: { Label(LanguageManager.shared.localized("invite.sheet.cancel"), systemImage: "xmark") }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(LanguageManager.shared.localized("member.edit.save")) {
+                    Button {
                         if let idx = members.firstIndex(where: { $0.id == member.id }) {
                             members[idx].role = selectedRole
                         }
@@ -1291,6 +1287,8 @@ struct EditGuardianMemberSheet: View {
                             }
                         }
                         dismiss()
+                    } label: {
+                        Label(LanguageManager.shared.localized("member.edit.save"), systemImage: "checkmark")
                     }
                     .font(.scaled(size: 14, weight: .medium))
                     .foregroundStyle(safe)

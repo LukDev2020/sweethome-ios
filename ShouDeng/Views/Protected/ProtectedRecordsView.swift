@@ -76,7 +76,7 @@ struct ProtectedRecordsView: View {
     // MARK: - Duo Pane Layout (both tabs visible)
 
     private var recordsDuoPane: some View {
-        HStack(spacing: 0) {
+        FoldSplitView(dividerColor: paneBorder) {
             // Left: timeline
             ScrollView {
                 VStack(spacing: 12) {
@@ -96,11 +96,8 @@ struct ProtectedRecordsView: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 24)
             }
-            .frame(width: 445)
             .background(creamBg)
-
-            Rectangle().fill(paneBorder).frame(width: 1)
-
+        } trailing: {
             // Right: emergency contacts
             ScrollView {
                 VStack(spacing: 14) {
@@ -132,7 +129,6 @@ struct ProtectedRecordsView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
             }
-            .frame(maxWidth: .infinity)
             .background(offWhiteBg)
         }
     }
