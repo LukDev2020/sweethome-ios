@@ -372,6 +372,7 @@ struct SignupView: View {
                                 .font(.scaled(size: 18, weight: .semibold, design: .monospaced))
                                 .multilineTextAlignment(.center)
                                 .textInputAutocapitalization(.characters)
+                                .keyboardType(.asciiCapable) // pinyin/kana keyboards hold letters as marked text
                                 .autocorrectionDisabled()
                                 .focused($focusedField, equals: .invite)
                                 .padding(12)

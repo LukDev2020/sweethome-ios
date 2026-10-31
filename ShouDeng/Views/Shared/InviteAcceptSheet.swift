@@ -196,6 +196,7 @@ struct InviteAcceptSheet: View {
                 .font(.scaled(size: 22, weight: .semibold, design: .monospaced))
                 .multilineTextAlignment(.center)
                 .textInputAutocapitalization(.characters)
+                .keyboardType(.asciiCapable) // pinyin/kana keyboards hold letters as marked text
                 .autocorrectionDisabled()
                 .focused($codeFocused)
                 .padding(.vertical, 14)
