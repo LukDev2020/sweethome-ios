@@ -87,6 +87,9 @@ struct LoginView: View {
                     } else if step == "ack" {
                         ExploreModeController.shared.continueToGuardian()
                         ExploreModeController.shared.performPrimary()
+                    } else if step == "none" {
+                        // Screens without the tip card (layout screenshots)
+                        ExploreModeController.shared.isTourVisible = false
                     }
                 }
             }
@@ -172,18 +175,13 @@ struct LoginView: View {
     // MARK: - Duo Login View (Inner Screen)
 
     private var duoLoginView: some View {
-        HStack(spacing: 0) {
+        FoldSplitView(dividerColor: line) {
             VStack {
                 Spacer()
                 brandArea
                 Spacer()
             }
-            .frame(width: 445)
-
-            Rectangle()
-                .fill(line)
-                .frame(width: 1)
-
+        } trailing: {
             VStack(spacing: 0) {
                 loginTopBar
                 Spacer()
@@ -191,7 +189,6 @@ struct LoginView: View {
                 Spacer()
                 Spacer()
             }
-            .frame(maxWidth: .infinity)
         }
     }
 

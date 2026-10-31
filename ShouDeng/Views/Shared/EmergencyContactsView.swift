@@ -62,7 +62,7 @@ struct EmergencyContactsView: View {
                 Button {
                     showAddContact = true
                 } label: {
-                    Image(systemName: "plus")
+                    Label(LanguageManager.shared.localized("emergency.contacts.add"), systemImage: "plus")
                 }
             }
         }
@@ -353,10 +353,10 @@ struct AddEmergencyContactView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(LanguageManager.shared.localized("emergency.contacts.cancel")) { dismiss() }
+                    Button { dismiss() } label: { Label(LanguageManager.shared.localized("emergency.contacts.cancel"), systemImage: "xmark") }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(LanguageManager.shared.localized("emergency.contacts.save")) {
+                    Button {
                         let contact = LocalEmergencyContact(
                             id: UUID().uuidString,
                             name: name,
@@ -368,6 +368,8 @@ struct AddEmergencyContactView: View {
                         )
                         contacts.append(contact)
                         dismiss()
+                    } label: {
+                        Label(LanguageManager.shared.localized("emergency.contacts.save"), systemImage: "checkmark")
                     }
                     .disabled(name.isEmpty || phone.isEmpty)
                     .font(.scaled(size: 14, weight: .medium))

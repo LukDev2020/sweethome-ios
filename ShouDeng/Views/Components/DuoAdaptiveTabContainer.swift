@@ -2,48 +2,40 @@ import SwiftUI
 
 // MARK: - Duo Adaptive Tab Container
 //
-// Switches between native bottom TabView (compact) and
-// vertical rail layout (regular) based on horizontal size class.
-// compact = all standard iPhones + Duo outer screen
-// regular = Duo inner screen (unfolded)
+// The system TabView at every width. iOS places the bar: bottom on an iPhone, at the
+// side on the iPhone Duo outer screen and on the inner screen in landscape, top or
+// sidebar on iPad. A custom bar would not move with it.
+//
+// The same view tree is used for compact and regular widths: folding or unfolding an
+// iPhone Duo changes the size class on the same scene, and switching between two
+// different containers rebuilt every tab — losing typed text, the selected person and
+// scroll positions. The screens themselves pick their one- or two-pane layout.
 
 struct DuoAdaptiveTabContainer: View {
-    @Environment(\.horizontalSizeClass) private var sizeClass
     @Binding var selectedTab: Int
     let tabs: [DuoTabItem]
     let tintColor: Color
-    var showInviteButton: Bool = false
-    var onInvite: (() -> Void)? = nil
     /// Persistent control pinned above the tab bar (the SOS button). It is laid
     /// out in each tab's bottom safe-area inset so scroll content can always be
     /// scrolled clear of it instead of sitting underneath it.
     var bottomAccessory: AnyView? = nil
 
     var body: some View {
-        if sizeClass == .regular {
-            // Duo inner screen: content + vertical rail on right
-            HStack(spacing: 0) {
-                if let tab = tabs.first(where: { $0.id == selectedTab }) {
-                    withAccessory(tab)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        if #available(iOS 18.0, *) {
+            TabView(selection: $selectedTab) {
+                ForEach(tabs) { tab in
+                    Tab(tab.title, systemImage: tab.icon, value: tab.id) {
+                        withAccessory(tab)
+                    }
                 }
-
-                VerticalTabRail(
-                    selectedTab: $selectedTab,
-                    tabs: tabs,
-                    showInviteButton: showInviteButton,
-                    onInvite: onInvite
-                )
             }
+            .tabViewStyle(.sidebarAdaptable)
+            .tint(tintColor)
         } else {
-            // Standard phone: native bottom TabView
             TabView(selection: $selectedTab) {
                 ForEach(tabs) { tab in
                     withAccessory(tab)
-                        .tabItem {
-                            Image(systemName: tab.icon)
-                            Text(tab.title)
-                        }
+                        .tabItem { Label(tab.title, systemImage: tab.icon) }
                         .tag(tab.id)
                 }
             }

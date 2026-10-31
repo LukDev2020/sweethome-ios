@@ -118,7 +118,7 @@ struct ConsulateView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(langManager.localized("consulate.close")) { dismiss() }
+                    Button { dismiss() } label: { Label(langManager.localized("consulate.close"), systemImage: "xmark") }
                 }
             }
             .sheet(item: $selectedCountry) { country in
@@ -242,7 +242,7 @@ struct ConsulateDetailSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(LanguageManager.shared.localized("consulate.close")) { dismiss() }
+                    Button { dismiss() } label: { Label(LanguageManager.shared.localized("consulate.close"), systemImage: "xmark") }
                 }
             }
         }

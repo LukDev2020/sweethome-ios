@@ -122,7 +122,7 @@ struct SignupView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(lang.localized("signup.back")) { dismiss() }
+                    Button { dismiss() } label: { Label(lang.localized("signup.back"), systemImage: "chevron.backward") }
                 }
             }
             .sheet(isPresented: $showCountryPicker) {

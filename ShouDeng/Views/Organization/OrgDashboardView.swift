@@ -39,7 +39,7 @@ struct OrgDashboardView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(langManager.localized("org.close")) { dismiss() }
+                    Button { dismiss() } label: { Label(langManager.localized("org.close"), systemImage: "xmark") }
                 }
             }
             .sheet(isPresented: $showCreateOrg) {
@@ -321,13 +321,13 @@ struct CreateOrgSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(LanguageManager.shared.localized("org.cancel")) { dismiss() }
+                    Button { dismiss() } label: { Label(LanguageManager.shared.localized("org.cancel"), systemImage: "xmark") }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         Task { await create() }
                     } label: {
-                        if isSaving { ProgressView() } else { Text(LanguageManager.shared.localized("org.create")).bold() }
+                        if isSaving { ProgressView() } else { Label(LanguageManager.shared.localized("org.create"), systemImage: "checkmark") }
                     }
                     .disabled(name.isEmpty || isSaving)
                 }
@@ -408,13 +408,13 @@ struct SendAlertSheet: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
-                        Button(LanguageManager.shared.localized("org.cancel")) { dismiss() }
+                        Button { dismiss() } label: { Label(LanguageManager.shared.localized("org.cancel"), systemImage: "xmark") }
                     }
                     ToolbarItem(placement: .topBarTrailing) {
                         Button {
                             Task { await send() }
                         } label: {
-                            if isSending { ProgressView() } else { Text(LanguageManager.shared.localized("org.send")).bold().foregroundStyle(alert) }
+                            if isSending { ProgressView() } else { Label(LanguageManager.shared.localized("org.send"), systemImage: "paperplane").foregroundStyle(alert) }
                         }
                         .disabled(title.isEmpty || body_.isEmpty || isSending)
                     }

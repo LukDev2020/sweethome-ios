@@ -51,9 +51,7 @@ struct TripHistoryView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button { dismiss() } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 22))
-                            .foregroundStyle(.secondary)
+                        Label(lang.localized("common.close"), systemImage: "xmark")
                     }
                 }
             }

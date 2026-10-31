@@ -34,7 +34,7 @@ struct PrivacyPolicyView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(lang.localized("legal.done")) { dismiss() }
+                    Button { dismiss() } label: { Label(lang.localized("legal.done"), systemImage: "checkmark") }
                 }
             }
         }
@@ -137,7 +137,7 @@ struct AboutView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(LanguageManager.shared.localized("legal.done")) { dismiss() }
+                    Button { dismiss() } label: { Label(LanguageManager.shared.localized("legal.done"), systemImage: "checkmark") }
                 }
             }
             .sheet(isPresented: $showPrivacy) {

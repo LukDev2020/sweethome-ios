@@ -111,7 +111,7 @@ struct InviteGuardianView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(langManager.localized("invite.done")) { dismiss() }
+                    Button { dismiss() } label: { Label(langManager.localized("invite.done"), systemImage: "checkmark") }
                 }
             }
         }

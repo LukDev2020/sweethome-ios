@@ -109,7 +109,7 @@ struct ProtectedCoverageView: View {
     }
 
     private var duoPaneLayout: some View {
-        HStack(spacing: 0) {
+        FoldSplitView(dividerColor: paneBorder) {
             ScrollView {
                 VStack(spacing: 12) {
                     VStack(spacing: 2) {
@@ -125,11 +125,8 @@ struct ProtectedCoverageView: View {
                 }
                 .padding(.horizontal, 16)
             }
-            .frame(width: 445)
             .background(creamBg)
-
-            Rectangle().fill(paneBorder).frame(width: 1)
-
+        } trailing: {
             ScrollView {
                 VStack(spacing: 12) {
                     offlinePackPanel
@@ -143,7 +140,6 @@ struct ProtectedCoverageView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
             }
-            .frame(maxWidth: .infinity)
             .background(offWhiteBg)
         }
     }

@@ -177,7 +177,7 @@ struct GuardianSettingsView: View {
     }
 
     private var settingsDuoPane: some View {
-        HStack(spacing: 0) {
+        FoldSplitView(dividerColor: paneBorder) {
             ScrollView {
                 VStack(spacing: 12) {
                     Text(langManager.localized("settings.section.account"))
@@ -192,11 +192,8 @@ struct GuardianSettingsView: View {
                 }
                 .padding(.horizontal, 16)
             }
-            .frame(width: 445)
             .background(creamBg)
-
-            Rectangle().fill(paneBorder).frame(width: 1)
-
+        } trailing: {
             ScrollView {
                 VStack(spacing: 12) {
                     Text(langManager.localized("settings.section.toolsAndSecurity"))
@@ -218,7 +215,6 @@ struct GuardianSettingsView: View {
                 }
                 .padding(.horizontal, 16)
             }
-            .frame(maxWidth: .infinity)
             .background(offWhiteBg)
         }
     }

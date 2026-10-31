@@ -23,8 +23,8 @@ struct DemoOverlayView: View {
                         .overlayRegion("checklist")
                         .transition(.move(edge: .bottom))
                 } else if explore.isTourVisible, let step = explore.currentStep {
-                    DemoTipLayer(step: step, screen: geo.size, safeTop: geo.safeAreaInsets.top,
-                                 safeBottom: geo.safeAreaInsets.bottom)
+                    DemoTipLayer(step: step, screen: geo.size, column: Self.cardColumn(in: geo, window: explore.overlayWindow),
+                                 safeTop: geo.safeAreaInsets.top, safeBottom: geo.safeAreaInsets.bottom)
                 }
 
                 VStack(spacing: 8) {
@@ -35,7 +35,7 @@ struct DemoOverlayView: View {
                     }
                     if let feature = explore.blockedFeature {
                         Text(String(format: LanguageManager.shared.localized("explore.blocked"),
-                                    LanguageManager.shared.localized("explore.feature.\(feature)")))
+                                    Self.featureName(feature)))
                             .font(.footnote)
                             .foregroundStyle(.white)
                             .padding(.horizontal, 14).padding(.vertical, 9)
@@ -44,7 +44,8 @@ struct DemoOverlayView: View {
                     }
                 }
                 .padding(.top, geo.safeAreaInsets.top + 52)
-                .padding(.horizontal, 12)
+                .padding(.leading, (explore.overlayWindow?.safeAreaInsets.left ?? 0) + 12)
+                .padding(.trailing, (explore.overlayWindow?.safeAreaInsets.right ?? 0) + 12)
             }
             .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: explore.notification)
@@ -54,12 +55,39 @@ struct DemoOverlayView: View {
     }
 }
 
+extension DemoOverlayView {
+    /// Where the tip card may go: inside the side safe areas (the iPhone Duo puts the
+    /// status bar and tab bar at the side), and past the fold when the screen is unfolded.
+    /// The overlay ignores the safe area, so its GeometryProxy reports no insets: the
+    /// side ones come from the overlay window.
+    static func cardColumn(in geo: GeometryProxy, window: UIWindow?) -> ClosedRange<CGFloat> {
+        let insets = window?.safeAreaInsets ?? .zero
+        let start = insets.left
+        let end = max(start, geo.size.width - insets.right)
+        let split = FoldSplitLayout.resolve(width: geo.size.width, division: FoldSplitLayout.division(in: geo))
+        if split.followsFold, split.leading + split.gap < end {
+            return max(start, split.leading + split.gap)...end
+        }
+        return start...end
+    }
+
+    /// Biometrics is named after this device's kind (Face ID, Touch ID — iPhone Duo has
+    /// no Face ID — or Optic ID).
+    static func featureName(_ feature: String) -> String {
+        feature == "biometrics"
+            ? BiometricAuthManager.shared.biometricName
+            : LanguageManager.shared.localized("explore.feature.\(feature)")
+    }
+}
+
 // MARK: - Spotlight + tip card
 
 private struct DemoTipLayer: View {
     @EnvironmentObject var explore: ExploreModeController
     let step: DemoTourStep
     let screen: CGSize
+    /// Horizontal range the card stays within (see DemoOverlayView.cardColumn).
+    let column: ClosedRange<CGFloat>
     let safeTop: CGFloat
     let safeBottom: CGFloat
     @State private var collapsed = false
@@ -112,13 +140,13 @@ private struct DemoTipLayer: View {
                             .foregroundStyle(.black)
                     }
                     .overlayRegion("tipShow")
-                    .position(x: screen.width - 70, y: screen.height - safeBottom - 150)
+                    .position(x: column.upperBound - 70, y: screen.height - safeBottom - 150)
                 }
             } else {
                 card
-                    .frame(width: min(screen.width - 32, 520))
+                    .frame(width: max(0, min(column.upperBound - column.lowerBound - 32, 520)))
                     .overlayRegion("tipCard")
-                    .position(x: screen.width / 2, y: cardCenterY)
+                    .position(x: (column.lowerBound + column.upperBound) / 2, y: cardCenterY)
             }
         }
         .frame(width: screen.width, height: screen.height)

@@ -62,7 +62,7 @@ struct CountryCodePicker: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(lang.localized("picker.cancel")) { dismiss() }
+                    Button { dismiss() } label: { Label(lang.localized("picker.cancel"), systemImage: "xmark") }
                 }
             }
         }

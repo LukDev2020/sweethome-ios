@@ -132,7 +132,7 @@ struct DisguiseModeSettingsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(lang.localized("duress.close")) { dismiss() }
+                    Button { dismiss() } label: { Label(lang.localized("duress.close"), systemImage: "xmark") }
                 }
             }
             .onAppear {

@@ -206,7 +206,7 @@ struct ProtectedSettingsView: View {
     }
 
     private var settingsDuoPane: some View {
-        HStack(spacing: 0) {
+        FoldSplitView(dividerColor: paneBorder) {
             ScrollView {
                 VStack(spacing: 12) {
                     Text(langManager.localized("protected.settings.section.accountAndSos"))
@@ -223,11 +223,8 @@ struct ProtectedSettingsView: View {
                 }
                 .padding(.horizontal, 16)
             }
-            .frame(width: 445)
             .background(creamBg)
-
-            Rectangle().fill(paneBorder).frame(width: 1)
-
+        } trailing: {
             ScrollView {
                 VStack(spacing: 12) {
                     Text(langManager.localized("settings.section.toolsAndSecurity"))
@@ -248,7 +245,6 @@ struct ProtectedSettingsView: View {
                 }
                 .padding(.horizontal, 16)
             }
-            .frame(maxWidth: .infinity)
             .background(offWhiteBg)
         }
     }

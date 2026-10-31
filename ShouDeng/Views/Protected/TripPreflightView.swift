@@ -60,7 +60,7 @@ struct TripPreflightView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(lang.localized("settings.action.cancel")) { dismiss() }
+                    Button { dismiss() } label: { Label(lang.localized("settings.action.cancel"), systemImage: "xmark") }
                 }
             }
             .safeAreaInset(edge: .bottom) {

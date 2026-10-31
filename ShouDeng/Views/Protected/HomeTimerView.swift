@@ -42,7 +42,7 @@ struct HomeTimerView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(langManager.localized("homeTimer.close")) { dismiss() }
+                    Button { dismiss() } label: { Label(langManager.localized("homeTimer.close"), systemImage: "xmark") }
                 }
             }
             .onReceive(timer) { newTick in

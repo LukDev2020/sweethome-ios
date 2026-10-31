@@ -158,10 +158,10 @@ struct SilentAlarmSettingsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(langManager.localized("silent.alarm.close")) { dismiss() }
+                    Button { dismiss() } label: { Label(langManager.localized("silent.alarm.close"), systemImage: "xmark") }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(langManager.localized("silent.alarm.save")) {
+                    Button {
                         Task {
                             await service.syncScheduleToServer()
                             ConsentLogger.shared.log(
@@ -172,6 +172,8 @@ struct SilentAlarmSettingsView: View {
                             )
                             dismiss()
                         }
+                    } label: {
+                        Label(langManager.localized("silent.alarm.save"), systemImage: "checkmark")
                     }
                     .font(.scaled(size: 14, weight: .semibold))
                 }
@@ -233,7 +235,7 @@ struct SilentAlarmSettingsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(langManager.localized("silent.alarm.cancel")) { showAddTime = false }
+                    Button { showAddTime = false } label: { Label(langManager.localized("silent.alarm.cancel"), systemImage: "xmark") }
                 }
             }
         }

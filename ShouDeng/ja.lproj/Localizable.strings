@@ -1105,6 +1105,7 @@
 
 /* External SOS confirmation (lock screen / deep link) */
 "common.cancel" = "キャンセル";
+"common.close" = "閉じる";
 "sos.confirmExternal.title" = "SOSを送信しますか？";
 "sos.confirmExternal.message" = "見守る人たちに、あなたの位置情報とともにすぐに通知されます。";
 "sos.confirmExternal.send" = "SOSを送信";
@@ -1368,7 +1369,6 @@
 "explore.feature.deadManSwitch" = "見守りタイマー";
 "explore.feature.fakeCall" = "偽の着信";
 "explore.feature.disguise" = "偽装モード";
-"explore.feature.biometrics" = "Face ID";
 "explore.feature.silentAlarm" = "サイレントアラーム";
 "explore.feature.deviceHealth" = "端末のチェック";
 "explore.feature.feature" = "この機能";
