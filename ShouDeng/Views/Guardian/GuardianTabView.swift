@@ -15,10 +15,10 @@ struct GuardianTabView: View {
 
     private var tabs: [DuoTabItem] {
         [
-            DuoTabItem(id: 0, title: lang.localized("tab.home"),     icon: "eye.fill",                       view: AnyView(GuardianHomeView())),
-            DuoTabItem(id: 1, title: lang.localized("tab.family"),   icon: "bubble.left.and.bubble.right",    view: AnyView(FamilyFeedView())),
-            DuoTabItem(id: 2, title: lang.localized("tab.records"),  icon: "clock.arrow.circlepath",          view: AnyView(GuardianRecordsView())),
-            DuoTabItem(id: 3, title: lang.localized("tab.settings"), icon: "gearshape",                       view: AnyView(GuardianSettingsView())),
+            DuoTabItem(id: 0, title: lang.localized("tab.home"),     icon: "eye.fill",                       view: AnyView(GuardianHomeView().floatingSOSClearance())),
+            DuoTabItem(id: 1, title: lang.localized("tab.family"),   icon: "bubble.left.and.bubble.right",    view: AnyView(FamilyFeedView().floatingSOSClearance())),
+            DuoTabItem(id: 2, title: lang.localized("tab.records"),  icon: "clock.arrow.circlepath",          view: AnyView(GuardianRecordsView().floatingSOSClearance())),
+            DuoTabItem(id: 3, title: lang.localized("tab.settings"), icon: "gearshape",                       view: AnyView(GuardianSettingsView().floatingSOSClearance())),
         ]
     }
 

@@ -137,6 +137,8 @@ struct CreateInviteResponse: Codable {
 
 struct AcceptInviteRequest: Codable {
     let code: String
+    /// Guardian's opt-in to receive SOS alerts as iOS Critical Alerts.
+    var criticalAlertConsent: Bool? = nil
 }
 
 struct AcceptInviteResponse: Codable {
@@ -357,6 +359,8 @@ struct MediaUploadResponse: Codable {
 
 struct NotificationPrefsRequest: Codable {
     let sosAlerts: Bool
+    /// Guardian receives SOS as a Critical Alert (sounds even when muted).
+    let sosCriticalAlerts: Bool
     let checkinReminder: Bool
     let checkinOverdue: Bool
     let familyFeed: Bool

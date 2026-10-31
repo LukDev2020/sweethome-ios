@@ -101,6 +101,9 @@ private struct AuthenticatedRootView: View {
                             if coordinator.showFallConfirmation {
                                 FallConfirmationOverlay()
                                     .environmentObject(coordinator)
+                            } else if let pending = coordinator.pendingSOS {
+                                SOSCountdownOverlay(pending: pending)
+                                    .environmentObject(coordinator)
                             }
                         }
                         .alert(

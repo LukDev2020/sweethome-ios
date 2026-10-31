@@ -121,8 +121,10 @@ final class DistressDetectionService: ObservableObject {
         analyzer = nil
         resultsObserver = nil
 
-        DispatchQueue.main.async {
-            self.state = .stopped
+        // Weak: stop() also runs from deinit, and capturing self strongly
+        // there crashes ("deallocated with non-zero retain count").
+        DispatchQueue.main.async { [weak self] in
+            self?.state = .stopped
         }
     }
 

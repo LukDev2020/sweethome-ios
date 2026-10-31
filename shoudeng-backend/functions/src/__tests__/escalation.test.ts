@@ -120,7 +120,7 @@ describe("hop 1 — on-duty guardian in the PROTECTED PERSON's time zone", () =>
     seedFamily();
     await advanceEscalation("sos1", at(0));
     expect(sentMessages[0].apns.payload.aps["interruption-level"]).toBe("critical");
-    expect(sentMessages[0].apns.payload.aps.sound).toMatchObject({ critical: 1, name: "sos_alert.caf" });
+    expect(sentMessages[0].apns.payload.aps.sound).toMatchObject({ critical: true, name: "sos_alert.caf" });
   });
 });
 

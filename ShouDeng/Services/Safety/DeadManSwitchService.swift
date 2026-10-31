@@ -549,9 +549,12 @@ final class DeadManSwitchService: ObservableObject {
             let content = UNMutableNotificationContent()
             content.title = milestone.title
             content.body  = milestone.body
-            content.sound = milestone.seconds == 0 ? .defaultCritical : .default
+            // Critical Alerts are reserved for guardians' SOS alerts; the user's
+            // own timer notices are Time Sensitive (and never blare on a phone
+            // that may be near someone threatening them).
+            content.sound = .default
             content.categoryIdentifier = milestone.seconds == 0 ? "DMS_EXPIRED" : "DMS_WARNING"
-            content.interruptionLevel  = milestone.seconds == 0 ? .critical : .timeSensitive
+            content.interruptionLevel  = .timeSensitive
 
             let trigger = UNTimeIntervalNotificationTrigger(
                 timeInterval: TimeInterval(fireInSeconds),
@@ -585,9 +588,9 @@ final class DeadManSwitchService: ObservableObject {
         let content = UNMutableNotificationContent()
         content.title = title
         content.body  = body
-        content.sound = categoryIdentifier == "DMS_EXPIRED" ? .defaultCritical : .default
+        content.sound = .default
         content.categoryIdentifier = categoryIdentifier
-        content.interruptionLevel  = categoryIdentifier == "DMS_EXPIRED" ? .critical : .timeSensitive
+        content.interruptionLevel  = .timeSensitive
 
         let request = UNNotificationRequest(identifier: identifier, content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request)

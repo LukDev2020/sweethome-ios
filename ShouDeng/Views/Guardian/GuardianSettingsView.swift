@@ -38,6 +38,7 @@ struct GuardianSettingsView: View {
 
     @AppStorage("app_dark_mode") private var darkModeEnabled = false
     @AppStorage("notif_sos_alerts") private var notifSOS = true
+    @AppStorage(AppCoordinator.sosCriticalAlertsKey) private var notifSOSCritical = true
     @AppStorage("notif_checkin_overdue") private var notifCheckinOverdue = true
     @AppStorage("notif_family_feed") private var notifFamilyFeed = true
     @AppStorage("lockscreen_card_enabled") private var lockscreenCardEnabled = true
@@ -132,6 +133,7 @@ struct GuardianSettingsView: View {
                 BLETrackerSettingsView().environmentObject(coordinator)
             }
             .onChange(of: notifSOS) { coordinator.syncNotificationPrefs() }
+            .onChange(of: notifSOSCritical) { coordinator.setSOSCriticalAlerts(enabled: notifSOSCritical) }
             .onChange(of: notifCheckinOverdue) { coordinator.syncNotificationPrefs() }
             .onChange(of: notifFamilyFeed) { coordinator.syncNotificationPrefs() }
         }
@@ -679,6 +681,12 @@ struct GuardianSettingsView: View {
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             toggleRow(langManager.localized("settings.notification.sos"), isOn: $notifSOS)
+            toggleRow(langManager.localized("settings.notification.sosCritical"), isOn: $notifSOSCritical)
+                .disabled(!notifSOS)
+            Text(langManager.localized("settings.notification.sosCritical.footnote"))
+                .font(.scaled(size: 11))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
             toggleRow(langManager.localized("guardian.settings.notification.checkInOverdue"), isOn: $notifCheckinOverdue)
             toggleRow(langManager.localized("settings.notification.familyFeed"), isOn: $notifFamilyFeed)
         }

@@ -88,10 +88,17 @@ export function criticalAlertsEnabled(): boolean {
   return process.env.CRITICAL_ALERTS_ENABLED === "true";
 }
 
-export function sosApsPayload(title: string, body: string): Record<string, unknown> {
-  const critical = criticalAlertsEnabled();
+/**
+ * SOS APNs payload. Critical only when Apple has granted the entitlement
+ * (CRITICAL_ALERTS_ENABLED) AND the guardian opted in to SOS critical alerts;
+ * otherwise Time Sensitive.
+ */
+export function sosApsPayload(title: string, body: string, guardianOptedIn = true): Record<string, unknown> {
+  const critical = criticalAlertsEnabled() && guardianOptedIn;
   return {
-    sound: critical ? { critical: 1, name: "sos_alert.caf", volume: 1.0 } : "sos_alert.caf",
+    // A critical alert needs the sound dictionary (critical: 1 in the APNs payload;
+    // firebase-admin converts `true` to 1).
+    sound: critical ? { critical: true, name: "sos_alert.caf", volume: 1.0 } : "sos_alert.caf",
     "interruption-level": critical ? "critical" : "time-sensitive",
     "relevance-score": 1.0,
     category: "SOS_ALERT",
@@ -179,6 +186,9 @@ export async function sendSOSAlert(
     : null;
   const body = [s.sosBody(protectedPersonName, details.locationDescription ?? undefined), battery]
     .filter(Boolean).join(" · ");
+  // Guardians opt in to Critical Alerts when they join a circle and can turn
+  // them off in the app; without consent the SOS is sent as Time Sensitive.
+  const critical = await isNotifEnabled(guardianId, "sosCriticalAlerts");
 
   const message: admin.messaging.MulticastMessage = {
     tokens,
@@ -188,7 +198,7 @@ export async function sendSOSAlert(
         "apns-priority": "10",
         "apns-push-type": "alert",
       },
-      payload: { aps: sosApsPayload(s.sosTitle, body) as admin.messaging.Aps },
+      payload: { aps: sosApsPayload(s.sosTitle, body, critical) as admin.messaging.Aps },
     },
     data: {
       action: "sos_alert",

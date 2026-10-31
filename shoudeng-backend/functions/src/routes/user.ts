@@ -131,17 +131,17 @@ router.put("/me", authMiddleware, async (req: Request, res: Response) => {
  */
 router.put("/notification-preferences", authMiddleware, async (req: Request, res: Response) => {
   const uid = req.uid!;
-  const { sosAlerts, checkinReminder, checkinOverdue, familyFeed } = req.body;
-
-  const prefs: Record<string, boolean> = {};
-  if (sosAlerts !== undefined) prefs.sosAlerts = sosAlerts;
-  if (checkinReminder !== undefined) prefs.checkinReminder = checkinReminder;
-  if (checkinOverdue !== undefined) prefs.checkinOverdue = checkinOverdue;
-  if (familyFeed !== undefined) prefs.familyFeed = familyFeed;
+  // Only boolean fields that were sent are updated (field paths), so an older
+  // client that doesn't know a preference can't wipe it.
+  const keys = ["sosAlerts", "sosCriticalAlerts", "checkinReminder", "checkinOverdue", "familyFeed"];
+  const updates: Record<string, unknown> = {};
+  for (const key of keys) {
+    if (typeof req.body?.[key] === "boolean") updates[`notificationPrefs.${key}`] = req.body[key];
+  }
 
   try {
     await db.collection("users").doc(uid).update({
-      notificationPrefs: prefs,
+      ...updates,
       updatedAt: admin.firestore.Timestamp.now(),
     });
     res.json({ success: true });

@@ -174,9 +174,12 @@ describe("Cross-Border — FCM/APNs Pathway", () => {
     expect(fcmSource).toMatch(/locale|getLocale|userLocale/i);
   });
 
-  it("SOS alert is critical only behind the entitlement flag, time-sensitive otherwise", () => {
-    expect(fcmSource).toContain('"interruption-level": critical ? "critical" : "time-sensitive"');
+  it("SOS alert is critical only behind the entitlement flag AND the guardian's opt-in", () => {
     expect(fcmSource).toContain("CRITICAL_ALERTS_ENABLED");
+    expect(fcmSource).toContain('isNotifEnabled(guardianId, "sosCriticalAlerts")');
+    expect(fcmSource).toContain("criticalAlertsEnabled() && guardianOptedIn");
+    expect(fcmSource).toContain('"interruption-level": critical ? "critical" : "time-sensitive"');
+    expect(fcmSource).toContain("{ critical: true, name: \"sos_alert.caf\", volume: 1.0 }");
   });
 });
 

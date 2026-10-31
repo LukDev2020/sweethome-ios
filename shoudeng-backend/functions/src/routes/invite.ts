@@ -59,6 +59,9 @@ router.post("/create", async (req: Request, res: Response) => {
 router.post("/accept", createRateLimiter(RATE_LIMITS.general), async (req: Request, res: Response) => {
   const uid = req.uid!;
   const { inviteId, code, publicKey } = req.body;
+  // The guardian app shows an explicit consent screen for SOS critical
+  // alerts before accepting; record that choice.
+  const criticalAlertConsent = req.body?.criticalAlertConsent === true;
 
   try {
     // Find invite by ID or code (outside transaction for query support)
@@ -190,6 +193,21 @@ router.post("/accept", createRateLimiter(RATE_LIMITS.general), async (req: Reque
       grantedTo: result.guardianId,
       detail: `Guardian link established via invite ${inviteRef.id}`,
     });
+
+    // The guardian's own opt-in to receive SOS alerts as iOS Critical Alerts.
+    if (uid === result.guardianId) {
+      await db.collection("users").doc(uid).set(
+        { notificationPrefs: { sosCriticalAlerts: criticalAlertConsent } },
+        { merge: true }
+      );
+      await insertConsentAudit({
+        userId: uid,
+        consentType: "sos_critical_alerts",
+        action: criticalAlertConsent ? "granted" : "declined",
+        grantedTo: result.protectedPersonId,
+        detail: `SOS critical alert consent at guardian link ${result.linkId}`,
+      });
+    }
 
     res.json({
       success: true,

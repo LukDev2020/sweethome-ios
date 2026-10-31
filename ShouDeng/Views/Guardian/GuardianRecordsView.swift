@@ -1074,6 +1074,7 @@ struct InviteGuardianSheet: View {
     @State private var inviteRole: GuardianMember.Role = .backup
     @State private var inviteMethod: InviteMethod = .sms
     @State private var showCopied = false
+    @State private var inviteError: String?
 
     enum InviteMethod: String, CaseIterable {
         case sms = "短信"
@@ -1153,6 +1154,14 @@ struct InviteGuardianSheet: View {
             }
             .navigationTitle("邀请守护者")
             .navigationBarTitleDisplayMode(.inline)
+            .alert("无法发送邀请", isPresented: Binding(
+                get: { inviteError != nil },
+                set: { if !$0 { inviteError = nil } }
+            )) {
+                Button("好", role: .cancel) {}
+            } message: {
+                Text(inviteError ?? "")
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("取消") { dismiss() }
@@ -1179,7 +1188,8 @@ struct InviteGuardianSheet: View {
 
     private func sendInvite(via method: InviteMethod) {
         Task {
-            // Create invite on server
+            // Create invite on server. A code that only exists locally can never
+            // be accepted, so on failure tell the user instead of sharing it.
             let inviteCode: String
             do {
                 let response: CreateInviteResponse = try await coordinator.apiClient.post(
@@ -1188,7 +1198,8 @@ struct InviteGuardianSheet: View {
                 )
                 inviteCode = response.code
             } catch {
-                inviteCode = String(format: "%06d", Int.random(in: 100000...999999))
+                inviteError = "邀请创建失败，请检查网络连接后重试。"
+                return
             }
 
             let newMember = GuardianMember(

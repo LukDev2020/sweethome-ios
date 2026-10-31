@@ -87,6 +87,98 @@ struct FallConfirmationOverlay: View {
     }
 }
 
+/// Full-screen cancel window shown after a manual SOS trigger (button, widget,
+/// Bluetooth button, watch). Guardians are alerted when the countdown ends,
+/// unless the user cancels; "Send now" skips the wait.
+struct SOSCountdownOverlay: View {
+    @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var lang = LanguageManager.shared
+
+    let pending: AppCoordinator.PendingSOS
+    @StateObject private var countdownTimer = FallCountdownTimer()
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.88)
+                .ignoresSafeArea()
+
+            VStack(spacing: 24) {
+                Spacer()
+
+                Image(systemName: "sos.circle.fill")
+                    .font(.system(size: 64))
+                    .foregroundColor(.red)
+                    .symbolEffect(.pulse, options: .repeating)
+                    .accessibilityHidden(true)
+
+                Text(lang.localized("sos.pending.title"))
+                    .font(.scaled(size: 28, weight: .bold))
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+
+                Text(lang.localized("sos.pending.subtitle"))
+                    .font(.scaled(size: 16))
+                    .foregroundColor(.white.opacity(0.8))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+
+                ZStack {
+                    Circle()
+                        .stroke(Color.red.opacity(0.3), lineWidth: 8)
+                        .frame(width: 120, height: 120)
+
+                    Circle()
+                        .trim(from: 0, to: CGFloat(countdownTimer.timeRemaining) / CGFloat(max(1, pending.duration)))
+                        .stroke(Color.red, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                        .frame(width: 120, height: 120)
+                        .rotationEffect(.degrees(-90))
+                        .animation(.linear(duration: 1), value: countdownTimer.timeRemaining)
+
+                    Text("\(countdownTimer.timeRemaining)")
+                        .font(.system(size: 48, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(String(format: lang.localized("sos.pending.a11y.countdown"), countdownTimer.timeRemaining))
+
+                Spacer()
+
+                VStack(spacing: 12) {
+                    Button {
+                        countdownTimer.stop()
+                        coordinator.cancelPendingSOS()
+                    } label: {
+                        Text(lang.localized("sos.pending.cancel"))
+                            .font(.scaled(size: 20, weight: .semibold))
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(Color.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                    }
+
+                    Button {
+                        countdownTimer.stop()
+                        coordinator.sendPendingSOSNow()
+                    } label: {
+                        Text(lang.localized("sos.pending.sendNow"))
+                            .font(.scaled(size: 17, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(Color.red)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                    }
+                }
+                .padding(.horizontal, 32)
+                .padding(.bottom, 48)
+            }
+        }
+        .onAppear { countdownTimer.start(deadline: pending.deadline) }
+        .onDisappear { countdownTimer.stop() }
+    }
+}
+
 /// Background-safe countdown timer using DispatchSourceTimer + UIBackgroundTask.
 /// Keeps ticking even when the app is backgrounded (within iOS background execution limits).
 final class FallCountdownTimer: ObservableObject {

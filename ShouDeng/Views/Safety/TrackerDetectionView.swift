@@ -204,7 +204,7 @@ struct TrackerDetectionView: View {
 
                 if tracker.threatScore >= 40 {
                     Button {
-                        coordinator.triggerSOS(method: .longPress)
+                        coordinator.requestSOS(method: .longPress)
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "sos")

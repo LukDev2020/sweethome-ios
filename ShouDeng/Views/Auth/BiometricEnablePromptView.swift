@@ -8,6 +8,7 @@ import SwiftUI
 struct BiometricEnablePromptView: View {
     @Binding var isPresented: Bool
     @ObservedObject private var biometric = BiometricAuthManager.shared
+    @ObservedObject private var lang = LanguageManager.shared
 
     private let navy = Color(red: 1/255, green: 69/255, blue: 129/255)
     private let cream = Color(red: 252/255, green: 242/255, blue: 218/255)
@@ -21,11 +22,11 @@ struct BiometricEnablePromptView: View {
                 .font(.scaled(size: 56))
                 .foregroundStyle(navy.opacity(0.8))
 
-            Text("启用\(biometric.biometricName)登录？")
+            Text(String(format: lang.localized("wizard.biometric.title"), biometric.biometricName))
                 .font(.scaled(size: 20, weight: .bold))
                 .foregroundStyle(navy)
 
-            Text("下次打开守灯时，无需输入验证码即可快速登录。\n您可以随时在设置中关闭此功能。")
+            Text(lang.localized("wizard.biometric.subtitle"))
                 .font(.scaled(size: 14))
                 .foregroundStyle(ink2)
                 .multilineTextAlignment(.center)
@@ -38,7 +39,7 @@ struct BiometricEnablePromptView: View {
                     biometric.hasShownPrompt = true
                     isPresented = false
                 } label: {
-                    Text("启用\(biometric.biometricName)")
+                    Text(String(format: lang.localized("wizard.biometric.enable"), biometric.biometricName))
                         .font(.scaled(size: 15.5, weight: .medium))
                         .foregroundStyle(cream)
                         .frame(maxWidth: .infinity)
@@ -53,7 +54,7 @@ struct BiometricEnablePromptView: View {
                     biometric.hasShownPrompt = true
                     isPresented = false
                 } label: {
-                    Text("暂不开启")
+                    Text(lang.localized("wizard.biometric.skip"))
                         .font(.scaled(size: 14))
                         .foregroundStyle(.secondary)
                 }
