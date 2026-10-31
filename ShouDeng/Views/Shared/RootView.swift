@@ -88,6 +88,8 @@ private struct AuthenticatedRootView: View {
                             betaBanner
                             DegradationBannerView()
                                 .environmentObject(coordinator)
+                            SatelliteModeBanner()
+                                .environmentObject(coordinator)
                             switch coordinator.userRole {
                             case .protected_:
                                 ProtectedTabView()

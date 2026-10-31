@@ -147,7 +147,8 @@ struct GuardianMemberDetailView: View {
                 .mapStyle(.standard(pointsOfInterest: .excludingAll))
                 .frame(height: 160)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                .overlay(alignment: .bottomLeading) {
+                // Top-leading: the Apple Maps logo and Legal link sit bottom-leading and must stay visible.
+                .overlay(alignment: .topLeading) {
                     if let addr = loc.address, !addr.isEmpty {
                         Text(addr)
                             .font(.scaled(size: 12))
@@ -159,6 +160,7 @@ struct GuardianMemberDetailView: View {
                             .padding(6)
                     }
                 }
+                OpenInAppleMapsButton(coordinate: coord, name: person.user.displayName)
             } else {
                 ZStack {
                     RoundedRectangle(cornerRadius: 12)

@@ -93,6 +93,10 @@ struct TripDetailView: View {
             Spacer()
 
             VStack(spacing: 10) {
+                if let last = coordinates.last {
+                    OpenInAppleMapsButton(coordinate: last, name: lang.localized("trip.detail.end"))
+                }
+
                 // Scrubber
                 if points.count > 1 {
                     VStack(spacing: 4) {

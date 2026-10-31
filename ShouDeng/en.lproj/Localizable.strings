@@ -1368,3 +1368,27 @@ your guardians will be automatically notified.";
 "explore.feature.feature" = "this feature";
 "explore.sos.practiceBanner" = "Practice SOS · nobody is alerted. This is what a real one looks like.";
 "explore.timeline.checkIn" = "Checked in · I'm safe";
+
+
+/* Outdoor: preflight checklist, Apple Maps link, satellite mode */
+"satellite.banner.title" = "Satellite connection";
+"satellite.banner.detail" = "Only SOS, check-ins and your location (about every 10 min) are sent.";
+"maps.open.apple" = "Open in Apple Maps";
+"maps.open.directions" = "Walking directions in Apple Maps";
+"maps.open.hint" = "Opens the Apple Maps app, which can use maps you downloaded for offline use.";
+"preflight.title" = "Before you go";
+"preflight.subtitle" = "Out of signal, your iPhone can still help. Take a minute to set these up.";
+"preflight.battery.level" = "Battery %d%%";
+"preflight.battery.unknown" = "Battery level unavailable";
+"preflight.battery.low" = "Charge to at least 50% or bring a power bank — GPS and searching for signal drain the battery fast.";
+"preflight.offlineMaps.title" = "Download offline maps";
+"preflight.offlineMaps.detail" = "In Apple Maps, tap your profile → Offline Maps → Download New Map and select the area of this trip. Without signal, use \"Open in Apple Maps\" to see where you or your family are.";
+"preflight.offlineMaps.action" = "Open Apple Maps";
+"preflight.findMy.title" = "Share your location in Find My";
+"preflight.findMy.detail" = "In Find My → Me, turn on Share My Location and share it with your guardians. Where supported, iPhone 14 or later can send your location via satellite in Find My when there's no signal.";
+"preflight.satelliteSOS.title" = "Know how to use Emergency SOS via satellite";
+"preflight.satelliteSOS.detail" = "On iPhone 14 or later in supported countries, call your local emergency number (911, 112…) with no signal and follow the prompts to text emergency services via satellite. Practise first in Settings → Emergency SOS → Try Demo.";
+"preflight.carrierSatellite.title" = "Carrier satellite data";
+"preflight.carrierSatellite.detail" = "If your carrier offers satellite data (for example T-Mobile T-Satellite), this app keeps sending SOS, check-ins and your location (about every 10 minutes) over satellite when there's no signal.";
+"preflight.skip" = "Don't show this checklist again";
+"preflight.start" = "Start recording trip";

@@ -231,7 +231,8 @@ struct GuardianAlertResponseView: View {
                 .mapStyle(.standard(pointsOfInterest: .excludingAll))
                 .frame(height: 180)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                .overlay(alignment: .bottomLeading) {
+                // Top-leading: the Apple Maps logo and Legal link sit bottom-leading and must stay visible.
+                .overlay(alignment: .topLeading) {
                     Text(langManager.localized("guardian.alert.sosLocation"))
                         .font(.scaled(size: 12))
                         .foregroundStyle(.white)
@@ -241,6 +242,7 @@ struct GuardianAlertResponseView: View {
                         .clipShape(Capsule())
                         .padding(6)
                 }
+                OpenInAppleMapsButton(coordinate: coord, name: personName)
             } else if let loc = person?.lastKnownLocation {
                 let coord = CLLocationCoordinate2D(latitude: loc.latitude, longitude: loc.longitude)
                 Map(initialPosition: .region(MKCoordinateRegion(
@@ -258,7 +260,7 @@ struct GuardianAlertResponseView: View {
                 .mapStyle(.standard(pointsOfInterest: .excludingAll))
                 .frame(height: 180)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                .overlay(alignment: .bottomLeading) {
+                .overlay(alignment: .topLeading) {
                     Text(langManager.localized("guardian.alert.last.known"))
                         .font(.scaled(size: 12))
                         .foregroundStyle(.white)
@@ -268,6 +270,7 @@ struct GuardianAlertResponseView: View {
                         .clipShape(Capsule())
                         .padding(6)
                 }
+                OpenInAppleMapsButton(coordinate: coord, name: personName)
             } else {
                 ZStack {
                     RoundedRectangle(cornerRadius: 12)

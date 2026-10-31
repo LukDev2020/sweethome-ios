@@ -1368,3 +1368,27 @@ vos gardiens seront automatiquement notifiés.";
 "explore.feature.feature" = "cette fonction";
 "explore.sos.practiceBanner" = "SOS d'entraînement · personne n'est alerté. Voici à quoi ressemble un vrai.";
 "explore.timeline.checkIn" = "Nouvelles données";
+
+
+/* Outdoor: preflight checklist, Apple Maps link, satellite mode */
+"satellite.banner.title" = "Connexion satellite";
+"satellite.banner.detail" = "Seuls les SOS, les signalements et votre position (environ toutes les 10 min) sont envoyés.";
+"maps.open.apple" = "Ouvrir dans Plans";
+"maps.open.directions" = "Itinéraire à pied dans Plans";
+"maps.open.hint" = "Ouvre l'app Plans, qui peut utiliser les cartes téléchargées hors ligne.";
+"preflight.title" = "Avant de partir";
+"preflight.subtitle" = "Sans réseau, votre iPhone peut encore vous aider. Prenez une minute pour préparer ceci.";
+"preflight.battery.level" = "Batterie %d %%";
+"preflight.battery.unknown" = "Niveau de batterie indisponible";
+"preflight.battery.low" = "Chargez au moins à 50 % ou prenez une batterie externe : le GPS et la recherche de réseau vident vite la batterie.";
+"preflight.offlineMaps.title" = "Télécharger des cartes hors ligne";
+"preflight.offlineMaps.detail" = "Dans Plans, touchez votre profil → Cartes hors ligne → Télécharger une carte et sélectionnez la zone du trajet. Sans réseau, utilisez « Ouvrir dans Plans » pour voir où vous ou vos proches êtes.";
+"preflight.offlineMaps.action" = "Ouvrir Plans";
+"preflight.findMy.title" = "Partager votre position dans Localiser";
+"preflight.findMy.detail" = "Dans Localiser → Moi, activez Partager ma position et partagez-la avec vos protecteurs. Là où c'est pris en charge, un iPhone 14 ou ultérieur peut envoyer votre position par satellite dans Localiser sans réseau.";
+"preflight.satelliteSOS.title" = "Savoir utiliser Appel d'urgence par satellite";
+"preflight.satelliteSOS.detail" = "Sur iPhone 14 ou ultérieur, dans les pays pris en charge, appelez le numéro d'urgence local (112, 911…) sans réseau et suivez les instructions pour écrire aux secours par satellite. Entraînez-vous dans Réglages → Appel d'urgence → Essayer la démo.";
+"preflight.carrierSatellite.title" = "Données satellite de l'opérateur";
+"preflight.carrierSatellite.detail" = "Si votre opérateur propose des données par satellite (par exemple T-Mobile T-Satellite), l'app continue d'envoyer les SOS, les signalements et votre position (environ toutes les 10 minutes) par satellite sans réseau.";
+"preflight.skip" = "Ne plus afficher cette liste";
+"preflight.start" = "Démarrer l'enregistrement";

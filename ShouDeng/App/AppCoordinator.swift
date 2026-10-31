@@ -52,6 +52,9 @@ final class AppCoordinator: ObservableObject {
 
     // Tracking pause (protected person privacy)
     @Published var isTrackingPaused = false
+    /// True while the only connection is carrier satellite data (iOS 26.1+):
+    /// only SOS, check-ins and thinned location/heartbeat go out.
+    @Published var isOnSatellite = false
     @Published var trackingPauseExpiresAt: Date?
     private var trackingPauseTimer: Timer?
 
@@ -162,6 +165,11 @@ final class AppCoordinator: ObservableObject {
         connectivity.onBecameReachable = { [weak self] in
             guard let self, case .loggedIn = self.authState else { return }
             Task { await self.apiClient.flushOfflineQueue() }
+        }
+        connectivity.onSatelliteChanged = { [weak self] onSatellite in
+            guard let self else { return }
+            self.apiClient.satellitePolicy.isOnSatellite = onSatellite
+            self.isOnSatellite = onSatellite
         }
         if !environment.isDemo {
             connectivity.start()

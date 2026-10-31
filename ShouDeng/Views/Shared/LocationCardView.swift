@@ -234,8 +234,9 @@ struct LocationCardView: View {
                 .accessibilityLabel(LanguageManager.shared.localized("location.expandMap"))
                 .padding(8)
             }
-            // Recenter button (appears after user drags the map)
-            .overlay(alignment: .bottomLeading) {
+            // Recenter button (appears after user drags the map). Bottom-trailing keeps the
+            // Apple Maps logo and Legal link (bottom-leading) visible, as MapKit requires.
+            .overlay(alignment: .bottomTrailing) {
                 if mapDragged {
                     Button {
                         recenterMap()

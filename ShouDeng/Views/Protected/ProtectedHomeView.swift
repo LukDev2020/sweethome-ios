@@ -30,6 +30,7 @@ struct ProtectedHomeView: View {
     @State private var showNoGuardianSOSWarning = false
     @State private var showTripHistory = false
     @State private var showTripStartConfirm = false
+    @State private var showTripPreflight = false
     @State private var showTripEndConfirm = false
     @State private var showFakeCall = false
     @State private var showDeadManSwitch = false
@@ -147,6 +148,11 @@ struct ProtectedHomeView: View {
             .sheet(isPresented: $showTrackerDetection) {
                 TrackerDetectionView()
                     .environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showTripPreflight) {
+                TripPreflightView {
+                    Task { try? await coordinator.tripRecordingService.startRecording() }
+                }
             }
             .alert(lang.localized("trip.record.start"), isPresented: $showTripStartConfirm) {
                 Button(lang.localized("settings.action.confirm")) {
@@ -618,7 +624,13 @@ struct ProtectedHomeView: View {
             // Start recording + view history
             HStack(spacing: 8) {
                 Button {
-                    showTripStartConfirm = true
+                    // Preflight checklist (offline maps, Find My, satellite SOS) unless
+                    // the person chose to skip it; then the plain confirmation.
+                    if UserDefaults.standard.bool(forKey: TripPreflightView.skipKey) {
+                        showTripStartConfirm = true
+                    } else {
+                        showTripPreflight = true
+                    }
                 } label: {
                     HStack(spacing: 5) {
                         Image(systemName: "record.circle")

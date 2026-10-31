@@ -1368,3 +1368,27 @@
 "explore.feature.feature" = "此功能";
 "explore.sos.practiceBanner" = "练习求助 · 不会通知任何人。真实求助就是这样。";
 "explore.timeline.checkIn" = "报平安";
+
+
+/* Outdoor: preflight checklist, Apple Maps link, satellite mode */
+"satellite.banner.title" = "卫星连接中";
+"satellite.banner.detail" = "仅发送 SOS、报平安和你的位置（约每 10 分钟一次）。";
+"maps.open.apple" = "在 Apple 地图中打开";
+"maps.open.directions" = "在 Apple 地图中步行导航";
+"maps.open.hint" = "打开 Apple 地图 App，可使用你下载的离线地图。";
+"preflight.title" = "出发前检查";
+"preflight.subtitle" = "没有信号时，iPhone 仍能帮上忙。花一分钟把这些准备好。";
+"preflight.battery.level" = "电量 %d%%";
+"preflight.battery.unknown" = "无法读取电量";
+"preflight.battery.low" = "建议充到 50% 以上或带上充电宝——GPS 和搜索信号会很快耗电。";
+"preflight.offlineMaps.title" = "下载离线地图";
+"preflight.offlineMaps.detail" = "在 Apple 地图中点头像 → 离线地图 → 下载新地图，框选这次要去的区域。没有信号时，用「在 Apple 地图中打开」查看你或家人的位置。";
+"preflight.offlineMaps.action" = "打开 Apple 地图";
+"preflight.findMy.title" = "在「查找」中共享位置";
+"preflight.findMy.detail" = "打开「查找」→「我」→ 开启「共享我的位置」，并与守护者共享。在支持的国家/地区，iPhone 14 及以上没有信号时可在「查找」中通过卫星发送位置。";
+"preflight.satelliteSOS.title" = "了解卫星紧急求救";
+"preflight.satelliteSOS.detail" = "在支持的国家/地区，iPhone 14 及以上没有信号时拨打当地急救电话（911、112 等），按提示通过卫星向急救机构发送短信。出发前可在 设置 → 紧急 SOS → 试用演示 练习。";
+"preflight.carrierSatellite.title" = "运营商卫星数据";
+"preflight.carrierSatellite.detail" = "如果你的运营商提供卫星数据（如 T-Mobile T-Satellite），没有信号时本 App 仍会通过卫星发送 SOS、报平安和你的位置（约每 10 分钟一次）。";
+"preflight.skip" = "下次不再显示此清单";
+"preflight.start" = "开始记录行程";

@@ -15,11 +15,20 @@ final class ConnectivityMonitor {
     /// Called on the main queue whenever the path goes from unsatisfied to satisfied.
     var onBecameReachable: (() -> Void)?
 
+    /// Called on the main queue when the path switches to or from carrier satellite
+    /// data ("ultra-constrained", iOS 26+).
+    var onSatelliteChanged: ((Bool) -> Void)?
+
     private(set) var isReachable = true
+    private(set) var isOnSatellite = false
 
     func start() {
         monitor.pathUpdateHandler = { [weak self] path in
-            self?.handle(satisfied: path.status == .satisfied)
+            var ultraConstrained = false
+            if #available(iOS 26.0, *) {
+                ultraConstrained = path.isUltraConstrained
+            }
+            self?.handle(satisfied: path.status == .satisfied, ultraConstrained: ultraConstrained)
         }
         monitor.start(queue: queue)
     }
@@ -29,12 +38,17 @@ final class ConnectivityMonitor {
     }
 
     /// Exposed for tests.
-    func handle(satisfied: Bool) {
+    func handle(satisfied: Bool, ultraConstrained: Bool = false) {
         let previous = wasSatisfied
         wasSatisfied = satisfied
         isReachable = satisfied
         if satisfied, previous == false {
             DispatchQueue.main.async { [weak self] in self?.onBecameReachable?() }
+        }
+        let onSatellite = satisfied && ultraConstrained
+        if onSatellite != isOnSatellite {
+            isOnSatellite = onSatellite
+            DispatchQueue.main.async { [weak self] in self?.onSatelliteChanged?(onSatellite) }
         }
     }
 }

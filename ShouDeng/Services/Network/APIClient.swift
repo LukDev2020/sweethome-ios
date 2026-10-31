@@ -48,6 +48,9 @@ final class APIClient {
     private let flushLock = NSLock()
     private var isFlushing = false
 
+    /// Which requests may use carrier satellite data, and how often periodic ones go.
+    let satellitePolicy = SatelliteDataPolicy()
+
     /// - Parameter sessionConfiguration: inject a configuration with custom
     ///   `protocolClasses` (Explore Mode's DemoURLProtocol, tests).
     init(config: Config, offlineQueue: OfflineQueue, sessionConfiguration: URLSessionConfiguration = .default) {
@@ -56,6 +59,10 @@ final class APIClient {
 
         let sessionConfig = sessionConfiguration
         sessionConfig.timeoutIntervalForRequest = config.timeoutInterval
+        if #available(iOS 26.1, *) {
+            // Each request opts in or out below (SatelliteDataPolicy); the session must allow it.
+            sessionConfig.allowsUltraConstrainedNetworkAccess = true
+        }
         self.session = URLSession(configuration: sessionConfig)
 
         self.encoder = JSONEncoder()
@@ -126,6 +133,12 @@ final class APIClient {
     /// The item is enqueued to disk FIRST so it survives app termination, then sent
     /// immediately if possible.
     func postQueued<B: Encodable>(_ path: String, body: B, onResult: ((Bool) -> Void)?) {
+        // On satellite, periodic heartbeats / location reports are thinned: a skipped
+        // one is neither sent nor queued (a stale heartbeat has no value later).
+        if satellitePolicy.shouldSkip(path: path) {
+            onResult?(false)
+            return
+        }
         guard let bodyData = try? encoder.encode(body) else {
             onResult?(false)
             return
@@ -272,7 +285,7 @@ final class APIClient {
     /// Test hook: sees every request any APIClient builds (Explore Mode isolation tests).
     nonisolated(unsafe) static var requestObserver: ((URLRequest) -> Void)?
 
-    private func buildRawRequest(path: String, method: String) throws -> URLRequest {
+    func buildRawRequest(path: String, method: String) throws -> URLRequest {
         guard let url = URL(string: config.baseURL + path) else {
             throw APIError.invalidURL
         }
@@ -283,6 +296,9 @@ final class APIClient {
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         if let token = accessToken {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        if #available(iOS 26.1, *) {
+            request.allowsUltraConstrainedNetworkAccess = SatelliteDataPolicy.allowsSatellite(path: path)
         }
         return request
     }
