@@ -11,7 +11,7 @@ import Foundation
 //   - everything else (feed, media, trips upload, profile…): not allowed — it waits
 //     for a normal connection
 // Requires the `com.apple.developer.networking.carrier-constrained.appcategory`
-// entitlement (category `hiking-adventure-8003`).
+// entitlement (categories `emergency-8007`, `hiking-adventure-8003`).
 
 final class SatelliteDataPolicy {
 

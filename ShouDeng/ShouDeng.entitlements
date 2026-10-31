@@ -11,6 +11,7 @@
 	</array>
 	<key>com.apple.developer.networking.carrier-constrained.appcategory</key>
 	<array>
+		<string>emergency-8007</string>
 		<string>hiking-adventure-8003</string>
 	</array>
 	<key>com.apple.developer.usernotifications.time-sensitive</key>
