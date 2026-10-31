@@ -15,6 +15,7 @@ import SwiftUI
 
 struct FeatureDisclosureView: View {
     let feature: DisclaimerCopy.FeatureDisclosure
+    var emergencyNumber: String = "112"
     let onAcknowledge: (Bool) -> Void  // true = granted, false = denied
 
     // Design system
@@ -44,7 +45,7 @@ struct FeatureDisclosureView: View {
                 .padding(.bottom, 14)
 
             // Body
-            Text(feature.body)
+            Text(feature.body(emergencyNumber: emergencyNumber))
                 .font(.scaled(size: 14))
                 .foregroundStyle(ink.opacity(0.72))
                 .lineSpacing(6)
@@ -62,7 +63,7 @@ struct FeatureDisclosureView: View {
                         ConsentLogger.shared.logFeatureDisclosure(feature, granted: false)
                         onAcknowledge(false)
                     } label: {
-                        Text("暂不开启")
+                        Text(LanguageManager.shared.localized("disclosure.button.notNow"))
                             .font(.scaled(size: 15, weight: .medium))
                             .foregroundStyle(ink.opacity(0.6))
                             .frame(maxWidth: .infinity)
@@ -75,7 +76,7 @@ struct FeatureDisclosureView: View {
                         ConsentLogger.shared.logFeatureDisclosure(feature, granted: true)
                         onAcknowledge(true)
                     } label: {
-                        Text("开启")
+                        Text(LanguageManager.shared.localized("disclosure.button.enable"))
                             .font(.scaled(size: 15, weight: .medium))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
@@ -86,7 +87,7 @@ struct FeatureDisclosureView: View {
                 }
             } else {
                 // Single button
-                let buttonText = feature == .sos ? "我明白，发出求助" : "我明白了"
+                let buttonText = LanguageManager.shared.localized(feature == .sos ? "disclosure.button.sendSOS" : "disclosure.button.understood")
                 Button {
                     ConsentLogger.shared.logFeatureDisclosure(feature, granted: true)
                     onAcknowledge(true)
@@ -118,10 +119,12 @@ struct FeatureDisclosureModifier: ViewModifier {
 
     @AppStorage private var acknowledged: Bool
     @State private var showSheet = false
+    let emergencyNumber: String
 
-    init(feature: DisclaimerCopy.FeatureDisclosure, trigger: Binding<Bool>) {
+    init(feature: DisclaimerCopy.FeatureDisclosure, trigger: Binding<Bool>, emergencyNumber: String) {
         self.feature = feature
         self.trigger = trigger
+        self.emergencyNumber = emergencyNumber
         self._acknowledged = AppStorage(wrappedValue: false, feature.storageKey)
     }
 
@@ -133,7 +136,7 @@ struct FeatureDisclosureModifier: ViewModifier {
                 }
             }
             .sheet(isPresented: $showSheet) {
-                FeatureDisclosureView(feature: feature) { granted in
+                FeatureDisclosureView(feature: feature, emergencyNumber: emergencyNumber) { granted in
                     acknowledged = true
                     showSheet = false
                     if !granted {
@@ -148,8 +151,9 @@ extension View {
     /// Attach a feature disclosure sheet that shows on first trigger.
     func featureDisclosure(
         _ feature: DisclaimerCopy.FeatureDisclosure,
-        trigger: Binding<Bool>
+        trigger: Binding<Bool>,
+        emergencyNumber: String = "112"
     ) -> some View {
-        modifier(FeatureDisclosureModifier(feature: feature, trigger: trigger))
+        modifier(FeatureDisclosureModifier(feature: feature, trigger: trigger, emergencyNumber: emergencyNumber))
     }
 }

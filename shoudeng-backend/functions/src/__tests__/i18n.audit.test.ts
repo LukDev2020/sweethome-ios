@@ -370,6 +370,8 @@ const SAME_IN_FR = new Set([
   "org.severityInfo", "map.search.police", "consulate.police", "consulate.ambulance",
   "indoor.source.ble", "indoor.source.fusion", "la.normal", "guardian.member.status.normal",
   "org.statusNormal", "familyFeed.messageActions", "deadman.pause", "explore.feature.biometrics",
+  "biometric.name.faceID", "biometric.name.touchID",
+  "emergency.svc.ambulance", "emergency.svc.police",
 ]);
 
 describe("i18n — Quality Checks", () => {

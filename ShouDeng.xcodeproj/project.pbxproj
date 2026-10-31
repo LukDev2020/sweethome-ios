@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		86888C2702D39D17F8B69BB2 /* ExploreModeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F5BF90CA6138F02A40F58E3 /* ExploreModeTests.swift */; };
+		64F29A9239D7FEBD1E5E4B41 /* EmergencyNumbersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38DDE6B29CE9A8D22A44916 /* EmergencyNumbersTests.swift */; };
+		8C6C2B5E24A918CFB87CF5F0 /* ExploreModeFixesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC581DC301E315BCC23B2430 /* ExploreModeFixesTests.swift */; };
 		111B99E32356DA32B8CFB7BB /* DemoRolePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE47F7C000647E159B1CCE16 /* DemoRolePickerView.swift */; };
 		17ECF3A6FC58B3A276C95C92 /* DemoRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9305BFD75950E5EF0503BBE /* DemoRootView.swift */; };
 		20FAC7ED25D49535DDFDDC8B /* DemoOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC88907315AE4325D456BDF0 /* DemoOverlayView.swift */; };
@@ -251,6 +253,8 @@
 
 /* Begin PBXFileReference section */
 		5F5BF90CA6138F02A40F58E3 /* ExploreModeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreModeTests.swift; sourceTree = "<group>"; };
+		D38DDE6B29CE9A8D22A44916 /* EmergencyNumbersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyNumbersTests.swift; sourceTree = "<group>"; };
+		EC581DC301E315BCC23B2430 /* ExploreModeFixesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreModeFixesTests.swift; sourceTree = "<group>"; };
 		DE47F7C000647E159B1CCE16 /* DemoRolePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoRolePickerView.swift; sourceTree = "<group>"; };
 		B9305BFD75950E5EF0503BBE /* DemoRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoRootView.swift; sourceTree = "<group>"; };
 		FC88907315AE4325D456BDF0 /* DemoOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoOverlayView.swift; sourceTree = "<group>"; };
@@ -863,6 +867,8 @@
 				B273093A701FBEED8E657124 /* APIClientTests.swift */,
 				4E7E845F98EC7CE44B31E699 /* OutdoorSatelliteTests.swift */,
 				5F5BF90CA6138F02A40F58E3 /* ExploreModeTests.swift */,
+				D38DDE6B29CE9A8D22A44916 /* EmergencyNumbersTests.swift */,
+				EC581DC301E315BCC23B2430 /* ExploreModeFixesTests.swift */,
 				A075B31B4AC087B62A5FDC48 /* SOSDeliveryTests.swift */,
 				D221832EF096E7D1E27553C4 /* StubURLProtocol.swift */,
 				1A3FBDFE830D15DFC6912B40 /* GlobeLabelTests.swift */,
@@ -1371,6 +1377,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				86888C2702D39D17F8B69BB2 /* ExploreModeTests.swift in Sources */,
+				64F29A9239D7FEBD1E5E4B41 /* EmergencyNumbersTests.swift in Sources */,
+				8C6C2B5E24A918CFB87CF5F0 /* ExploreModeFixesTests.swift in Sources */,
 				600B1357DC7DAF7DA3F3810E /* SOSDeliveryTests.swift in Sources */,
 				B85E897C516D23FA3207CAE3 /* StubURLProtocol.swift in Sources */,
 				CC43ECAB20D34828CF0CC677 /* GlobeLabelTests.swift in Sources */,

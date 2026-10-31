@@ -733,7 +733,7 @@
 "protected.coverage.weakNetwork" = "弱网环境";
 "protected.home.afternoon" = "下午";
 "protected.home.appName" = "守灯";
-"protected.home.battery" = "电量";
+"protected.home.battery" = "电量 %d%%";
 "protected.home.cancelSOS" = "取消求助";
 "protected.home.checkIn" = "报平安";
 "protected.home.checkInHint" = "告诉守护者你现在很安全";
@@ -1458,3 +1458,40 @@
 "biometric.gate.otp" = "使用验证码登录";
 "biometric.error.accessControl" = "无法创建生物识别访问控制";
 "biometric.error.keychain" = "钥匙串保存失败 (%d)";
+
+/* Feature disclosures (first use) */
+"disclosure.sos.title" = "发出求助前请确认";
+"disclosure.sos.body" = "求助将通知你指定的联系人。\n\n如果情况危急，请同时拨打 %@。守灯不会代你拨打急救电话。";
+"disclosure.location.title" = "共享你的位置";
+"disclosure.location.body" = "开启后，你选择的家人可以看到你最近一次上报的位置。\n\n位置每次上报都带有时间，他们看到的是「几分钟前你在哪」，不是持续的跟随。";
+"disclosure.trajectory.title" = "轨迹记录";
+"disclosure.trajectory.body" = "开启后，守灯会保存你最近 7 天走过的路线，用于在紧急情况下帮助家人判断你可能去了哪里。\n\n日常情况下家人只能看到你最近的位置，看不到路线。只有在你触发求助时，最近两小时的轨迹才会对他们可见。";
+"disclosure.fallDetection.title" = "跌倒检测";
+"disclosure.fallDetection.body" = "跌倒检测基于手机传感器估算，不是医疗设备，未经任何监管机构认证。\n\n它可能漏掉真实的跌倒，也可能被日常动作误触发。请不要将其作为唯一的安全手段。";
+"disclosure.emergencyAudio.title" = "求助时的环境录音";
+"disclosure.emergencyAudio.body" = "部分国家和地区要求录音需经所有在场者同意。请了解你所在地的法律后再开启。\n\n录音仅在求助期间进行，结束后自动停止。";
+"disclosure.autoVoiceCall.title" = "自动语音外呼";
+"disclosure.autoVoiceCall.body" = "如果推送和短信都没人回应，系统会依次拨打你的联系人电话，直到有人接听并按键确认。\n\n这是为了应对深夜——电话比推送更容易叫醒人。";
+"disclosure.button.notNow" = "暂不开启";
+"disclosure.button.enable" = "开启";
+"disclosure.button.sendSOS" = "我明白，发出求助";
+"disclosure.button.understood" = "我明白了";
+"home.arrivalReport" = "到达报告";
+
+/* Emergency numbers by region */
+"emergency.svc.all" = "报警 · 消防 · 急救";
+"emergency.svc.ambulance" = "急救";
+"emergency.svc.ambulanceFire" = "急救、消防";
+"emergency.svc.ambulancePolice" = "报警、急救";
+"emergency.svc.police" = "报警";
+"emergency.svc.fire" = "消防";
+"emergency.svc.poison" = "中毒急救";
+"emergency.svc.policeNonEmergency" = "警察（非紧急）";
+"emergency.svc.healthLine" = "健康咨询（非紧急）";
+"emergency.svc.touristPolice" = "旅游警察";
+"emergency.svc.coastGuard" = "海上救援";
+"emergency.svc.traffic" = "交通事故";
+"emergency.svc.mobile112" = "手机均可拨打";
+"emergency.svc.european" = "欧洲通用紧急号码";
+"emergency.svc.international" = "紧急求助（多数手机可拨）";
+"yp.directory.title" = "%@ · 紧急电话簿";

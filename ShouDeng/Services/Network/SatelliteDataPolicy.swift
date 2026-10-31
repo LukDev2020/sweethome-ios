@@ -21,7 +21,7 @@ final class SatelliteDataPolicy {
         "/v1/checkin",
         "/v1/home-timer",
         "/v1/arrival-report",
-        "/v1/ble-separation",
+        "/v1/device/ble-separation",
         "/v1/heartbeat",
         "/v1/location/report",
     ]

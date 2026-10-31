@@ -450,133 +450,64 @@ struct EmergencyNumber {
 struct RegionalEmergencyInfo {
     let regionName: String
     let areaCode: String
+    /// The first number is the one the app tells people to call in an SOS
+    /// (ambulance first where ambulance and police differ).
     let numbers: [EmergencyNumber]
 
+    /// Markets the app is offered in (App Store availability) plus places family
+    /// members often are. Unknown regions fall back to 112 (works from most mobiles).
+    static let supportedRegions = ["US", "CA", "HK", "MO", "TW", "SG", "AU", "NZ", "MY", "TH", "PH", "JP",
+                                   "CN", "GB", "FR", "DE", "KR", "UA"]
+
+    private static func n(_ key: String, _ number: String, _ icon: String, _ color: Color) -> EmergencyNumber {
+        EmergencyNumber(label: LanguageManager.shared.localized("emergency.svc.\(key)"), number: number,
+                        icon: icon, color: color, note: nil)
+    }
+    private static let all = "staroflife.fill", amb = "cross.case.fill", pol = "shield.fill",
+                       fire = "flame.fill", line = "phone.fill"
+
+    /// Country name in the app's language (e.g. 香港 / Hong Kong / Hong Kong).
+    static func regionName(_ code: String) -> String {
+        Locale(identifier: LanguageManager.shared.current.rawValue).localizedString(forRegionCode: code) ?? code
+    }
+
     static func forCountry(_ code: String) -> RegionalEmergencyInfo {
-        switch code.uppercased() {
-        case "CN":
-            return RegionalEmergencyInfo(
-                regionName: "中国",
-                areaCode: "+86",
-                numbers: [
-                    EmergencyNumber(label: "急救中心", number: "120", icon: "cross.case.fill", color: .red, note: "急救/医疗"),
-                    EmergencyNumber(label: "报警", number: "110", icon: "shield.fill", color: .blue, note: "公安"),
-                    EmergencyNumber(label: "火警", number: "119", icon: "flame.fill", color: .orange, note: "消防"),
-                    EmergencyNumber(label: "交通事故", number: "122", icon: "car.fill", color: .gray, note: "交警"),
-                ]
-            )
-        case "US":
-            return RegionalEmergencyInfo(
-                regionName: "美国",
-                areaCode: "+1",
-                numbers: [
-                    EmergencyNumber(label: "Emergency", number: "911", icon: "staroflife.fill", color: .red, note: "Police / Fire / Ambulance"),
-                    EmergencyNumber(label: "Poison Control", number: "1-800-222-1222", icon: "cross.vial.fill", color: .purple, note: nil),
-                ]
-            )
-        case "CA":
-            return RegionalEmergencyInfo(
-                regionName: "加拿大",
-                areaCode: "+1",
-                numbers: [
-                    EmergencyNumber(label: "Emergency", number: "911", icon: "staroflife.fill", color: .red, note: "Police / Fire / Ambulance"),
-                    EmergencyNumber(label: "Poison Control", number: "1-844-764-7669", icon: "cross.vial.fill", color: .purple, note: nil),
-                ]
-            )
-        case "GB", "UK":
-            return RegionalEmergencyInfo(
-                regionName: "英国",
-                areaCode: "+44",
-                numbers: [
-                    EmergencyNumber(label: "Emergency", number: "999", icon: "staroflife.fill", color: .red, note: "Police / Fire / Ambulance"),
-                    EmergencyNumber(label: "Non-emergency", number: "111", icon: "phone.fill", color: .blue, note: "NHS helpline"),
-                ]
-            )
-        case "UA":
-            return RegionalEmergencyInfo(
-                regionName: "乌克兰",
-                areaCode: "+380",
-                numbers: [
-                    EmergencyNumber(label: "Emergency", number: "112", icon: "staroflife.fill", color: .red, note: "通用紧急号码"),
-                    EmergencyNumber(label: "Ambulance", number: "103", icon: "cross.case.fill", color: .red, note: "急救"),
-                    EmergencyNumber(label: "Police", number: "102", icon: "shield.fill", color: .blue, note: "警察"),
-                    EmergencyNumber(label: "Fire", number: "101", icon: "flame.fill", color: .orange, note: "消防"),
-                ]
-            )
-        case "AU":
-            return RegionalEmergencyInfo(
-                regionName: "澳大利亚",
-                areaCode: "+61",
-                numbers: [
-                    EmergencyNumber(label: "Emergency", number: "000", icon: "staroflife.fill", color: .red, note: "Police / Fire / Ambulance"),
-                    EmergencyNumber(label: "Police Assistance", number: "131 444", icon: "shield.fill", color: .blue, note: "非紧急"),
-                ]
-            )
-        case "JP":
-            return RegionalEmergencyInfo(
-                regionName: "日本",
-                areaCode: "+81",
-                numbers: [
-                    EmergencyNumber(label: "救急", number: "119", icon: "cross.case.fill", color: .red, note: "急救/消防"),
-                    EmergencyNumber(label: "警察", number: "110", icon: "shield.fill", color: .blue, note: "警察"),
-                ]
-            )
-        case "KR":
-            return RegionalEmergencyInfo(
-                regionName: "韩国",
-                areaCode: "+82",
-                numbers: [
-                    EmergencyNumber(label: "Emergency", number: "119", icon: "cross.case.fill", color: .red, note: "急救/消防"),
-                    EmergencyNumber(label: "Police", number: "112", icon: "shield.fill", color: .blue, note: "警察"),
-                ]
-            )
-        case "TW":
-            return RegionalEmergencyInfo(
-                regionName: "台湾",
-                areaCode: "+886",
-                numbers: [
-                    EmergencyNumber(label: "急救/消防", number: "119", icon: "cross.case.fill", color: .red, note: nil),
-                    EmergencyNumber(label: "报警", number: "110", icon: "shield.fill", color: .blue, note: nil),
-                ]
-            )
-        case "SG":
-            return RegionalEmergencyInfo(
-                regionName: "新加坡",
-                areaCode: "+65",
-                numbers: [
-                    EmergencyNumber(label: "Police", number: "999", icon: "shield.fill", color: .blue, note: nil),
-                    EmergencyNumber(label: "Ambulance/Fire", number: "995", icon: "cross.case.fill", color: .red, note: nil),
-                ]
-            )
-        case "FR":
-            return RegionalEmergencyInfo(
-                regionName: "法国",
-                areaCode: "+33",
-                numbers: [
-                    EmergencyNumber(label: "SAMU", number: "15", icon: "cross.case.fill", color: .red, note: "急救"),
-                    EmergencyNumber(label: "Police", number: "17", icon: "shield.fill", color: .blue, note: nil),
-                    EmergencyNumber(label: "Pompiers", number: "18", icon: "flame.fill", color: .orange, note: "消防"),
-                    EmergencyNumber(label: "European", number: "112", icon: "staroflife.fill", color: .red, note: "通用"),
-                ]
-            )
-        case "DE":
-            return RegionalEmergencyInfo(
-                regionName: "德国",
-                areaCode: "+49",
-                numbers: [
-                    EmergencyNumber(label: "Notruf", number: "112", icon: "staroflife.fill", color: .red, note: "急救/消防"),
-                    EmergencyNumber(label: "Polizei", number: "110", icon: "shield.fill", color: .blue, note: "警察"),
-                ]
-            )
+        let c = code.uppercased() == "UK" ? "GB" : code.uppercased()
+        func info(_ dial: String, _ numbers: [EmergencyNumber]) -> RegionalEmergencyInfo {
+            RegionalEmergencyInfo(regionName: regionName(c), areaCode: dial, numbers: numbers)
+        }
+        switch c {
+        // App Store markets
+        case "US": return info("+1", [n("all", "911", all, .red), n("poison", "1-800-222-1222", "cross.vial.fill", .purple)])
+        case "CA": return info("+1", [n("all", "911", all, .red), n("poison", "1-844-764-7669", "cross.vial.fill", .purple)])
+        case "HK": return info("+852", [n("all", "999", all, .red), n("mobile112", "112", line, .gray)])
+        case "MO": return info("+853", [n("all", "999", all, .red), n("mobile112", "112", line, .gray)])
+        case "TW": return info("+886", [n("ambulanceFire", "119", amb, .red), n("police", "110", pol, .blue),
+                                        n("mobile112", "112", line, .gray)])
+        case "SG": return info("+65", [n("ambulanceFire", "995", amb, .red), n("police", "999", pol, .blue)])
+        case "AU": return info("+61", [n("all", "000", all, .red), n("mobile112", "112", line, .gray),
+                                       n("policeNonEmergency", "131 444", pol, .blue)])
+        case "NZ": return info("+64", [n("all", "111", all, .red), n("policeNonEmergency", "105", pol, .blue)])
+        case "MY": return info("+60", [n("ambulancePolice", "999", all, .red), n("fire", "994", fire, .orange),
+                                       n("mobile112", "112", line, .gray)])
+        case "TH": return info("+66", [n("ambulance", "1669", amb, .red), n("police", "191", pol, .blue),
+                                       n("fire", "199", fire, .orange), n("touristPolice", "1155", pol, .teal)])
+        case "PH": return info("+63", [n("all", "911", all, .red)])
+        case "JP": return info("+81", [n("ambulanceFire", "119", amb, .red), n("police", "110", pol, .blue),
+                                       n("coastGuard", "118", line, .teal)])
+        // Where family members often are
+        case "CN": return info("+86", [n("ambulance", "120", amb, .red), n("police", "110", pol, .blue),
+                                       n("fire", "119", fire, .orange), n("traffic", "122", "car.fill", .gray)])
+        case "GB": return info("+44", [n("all", "999", all, .red), n("healthLine", "111", line, .blue)])
+        case "FR": return info("+33", [n("ambulance", "15", amb, .red), n("police", "17", pol, .blue),
+                                       n("fire", "18", fire, .orange), n("european", "112", all, .red)])
+        case "DE": return info("+49", [n("ambulanceFire", "112", amb, .red), n("police", "110", pol, .blue)])
+        case "KR": return info("+82", [n("ambulanceFire", "119", amb, .red), n("police", "112", pol, .blue)])
+        case "UA": return info("+380", [n("all", "112", all, .red), n("ambulance", "103", amb, .red),
+                                        n("police", "102", pol, .blue), n("fire", "101", fire, .orange)])
         default:
-            // EU default or unknown
-            return RegionalEmergencyInfo(
-                regionName: code.uppercased(),
-                areaCode: "+\(code)",
-                numbers: [
-                    EmergencyNumber(label: "Emergency", number: "112", icon: "staroflife.fill", color: .red, note: "International emergency number"),
-                ]
-            )
+            return RegionalEmergencyInfo(regionName: regionName(c), areaCode: "",
+                                         numbers: [n("international", "112", all, .red)])
         }
     }
 }

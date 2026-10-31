@@ -53,6 +53,13 @@ final class ExploreModeController: ObservableObject {
     @Published var anchorFrames: [String: CGRect] = [:]
     @Published var blockedFeature: String?
     @Published var presentedSheet: DemoSheet?
+    /// True while the app (under the overlay) shows a sheet or alert — tips step aside.
+    @Published private(set) var isAppPresentingModal = false
+
+    /// On-screen frames of the overlay's tappable parts (tip card, banner, …).
+    /// The overlay window only takes touches inside these; everything else passes through.
+    private(set) var overlayRegions: [String: CGRect] = [:]
+    private var modalPoll: Timer?
 
     private(set) var coordinator: AppCoordinator?
     private(set) var store: DemoStore?
@@ -128,6 +135,10 @@ final class ExploreModeController: ObservableObject {
         isActive = false
         overlayWindow?.isHidden = true
         overlayWindow = nil
+        modalPoll?.invalidate()
+        modalPoll = nil
+        overlayRegions = [:]
+        isAppPresentingModal = false
         if let blockedObserver { NotificationCenter.default.removeObserver(blockedObserver) }
         blockedObserver = nil
         cancellables.removeAll()
@@ -380,6 +391,27 @@ final class ExploreModeController: ObservableObject {
         }
     }
 
+    // MARK: Overlay regions & modal detection
+
+    func setOverlayRegion(_ id: String, _ frame: CGRect?) {
+        overlayRegions[id] = frame.flatMap { $0.isEmpty ? nil : $0 }
+    }
+
+    /// SwiftUI sheets/alerts don't announce themselves; poll the app window's
+    /// presentation chain while the demo runs (cheap, 2.5×/s).
+    private func startModalPolling(in scene: UIWindowScene) {
+        modalPoll?.invalidate()
+        modalPoll = Timer.scheduledTimer(withTimeInterval: 0.4, repeats: true) { [weak self, weak scene] _ in
+            MainActor.assumeIsolated {
+                guard let self, let scene else { return }
+                let appWindow = scene.windows.first { !($0 is PassthroughWindow) && $0.isKeyWindow }
+                    ?? scene.windows.first { !($0 is PassthroughWindow) }
+                let presenting = appWindow?.rootViewController?.presentedViewController != nil
+                if presenting != self.isAppPresentingModal { self.isAppPresentingModal = presenting }
+            }
+        }
+    }
+
     // MARK: Overlay window (tips stay above sheets)
 
     private func installOverlayWindow() {
@@ -390,18 +422,28 @@ final class ExploreModeController: ObservableObject {
         else { return }
         let window = PassthroughWindow(windowScene: scene)
         window.windowLevel = .normal + 1
+        window.interactiveRegions = { [weak self] in
+            MainActor.assumeIsolated { self.map { Array($0.overlayRegions.values) } ?? [] }
+        }
         let host = UIHostingController(rootView: DemoOverlayView().environmentObject(self))
         host.view.backgroundColor = .clear
         window.rootViewController = host
         window.isHidden = false
         overlayWindow = window
+        startModalPolling(in: scene)
     }
 }
 
 /// Lets touches through everywhere the overlay draws nothing interactive.
 final class PassthroughWindow: UIWindow {
+    var interactiveRegions: () -> [CGRect] = { [] }
+
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
-        let hit = super.hitTest(point, with: event)
-        return hit === rootViewController?.view ? nil : hit
+        guard let hit = super.hitTest(point, with: event) else { return nil }
+        if hit !== rootViewController?.view { return hit }
+        // SwiftUI buttons have no UIView of their own: the hosting view is hit for a
+        // button and for empty space alike. Only keep touches inside the regions the
+        // overlay reported (tip card, banner, hand-off, checklist).
+        return interactiveRegions().contains { $0.contains(point) } ? hit : nil
     }
 }

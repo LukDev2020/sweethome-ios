@@ -22,6 +22,7 @@ struct EmergencyTextCardView: View {
     private let phrases: [(code: String, language: String, flag: String, helpText: String, emergencyNumber: String)] = [
         ("en", "English", "🇺🇸", "I need help. Please call emergency services.", "911"),
         ("zh", "中文", "🇨🇳", "我需要帮助，请拨打急救电话。", "120"),
+        ("zh-Hant", "繁體中文", "🇭🇰", "我需要幫助，請撥打緊急求助電話。", "999"),
         ("ja", "日本語", "🇯🇵", "助けてください。救急車を呼んでください。", "119"),
         ("ko", "한국어", "🇰🇷", "도움이 필요합니다. 응급 서비스에 전화해 주세요.", "119"),
         ("fr", "Français", "🇫🇷", "J'ai besoin d'aide. Appelez les secours s'il vous plaît.", "15"),
@@ -36,12 +37,15 @@ struct EmergencyTextCardView: View {
         ("uk", "Українська", "🇺🇦", "Мені потрібна допомога. Будь ласка, викличте швидку.", "103"),
         ("tr", "Türkçe", "🇹🇷", "Yardıma ihtiyacım var. Lütfen acil servisi arayın.", "112"),
         ("hi", "हिन्दी", "🇮🇳", "मुझे मदद चाहिए। कृपया आपातकालीन सेवाओं को बुलाएं।", "112"),
+        ("fil", "Filipino", "🇵🇭", "Kailangan ko ng tulong. Pakitawagan ang emergency services.", "911"),
         ("ms", "Bahasa Melayu", "🇲🇾", "Saya perlukan bantuan. Sila hubungi perkhidmatan kecemasan.", "999"),
         ("pl", "Polski", "🇵🇱", "Potrzebuję pomocy. Proszę zadzwonić po pogotowie.", "112"),
         ("nl", "Nederlands", "🇳🇱", "Ik heb hulp nodig. Bel alstublieft de hulpdiensten.", "112"),
         ("sv", "Svenska", "🇸🇪", "Jag behöver hjälp. Ring ambulansen tack.", "112"),
     ]
 
+    // The number shown is always the local one for where the person is
+    // (coordinator.localEmergencyNumber), not the one tied to a language.
     private var currentPhrase: (code: String, language: String, flag: String, helpText: String, emergencyNumber: String) {
         phrases.first { $0.code == selectedLang } ?? phrases[0]
     }
@@ -103,7 +107,7 @@ struct EmergencyTextCardView: View {
                         HStack(spacing: 8) {
                             Image(systemName: "phone.fill")
                                 .foregroundStyle(alert)
-                            Text(currentPhrase.emergencyNumber)
+                            Text(coordinator.localEmergencyNumber)
                                 .font(.scaled(size: 36, weight: .bold, design: .monospaced))
                                 .foregroundStyle(alert)
                         }
@@ -180,7 +184,7 @@ struct EmergencyTextCardView: View {
                     Image(systemName: "phone.fill")
                         .foregroundStyle(alert)
                         .font(.scaled(size: 28))
-                    Text(currentPhrase.emergencyNumber)
+                    Text(coordinator.localEmergencyNumber)
                         .font(.scaled(size: 56, weight: .bold, design: .monospaced))
                         .foregroundStyle(alert)
                 }

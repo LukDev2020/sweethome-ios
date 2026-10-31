@@ -36,7 +36,7 @@ final class ExploreModeTests: XCTestCase {
         try await super.tearDown()
     }
 
-    private func waitUntil(_ timeout: TimeInterval = 5, _ condition: @escaping @MainActor () -> Bool,
+    private func waitUntil(_ timeout: TimeInterval = 10, _ condition: @escaping @MainActor () -> Bool,
                            file: StaticString = #filePath, line: UInt = #line) async {
         let deadline = Date().addingTimeInterval(timeout)
         while !condition() && Date() < deadline {

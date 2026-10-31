@@ -88,7 +88,15 @@ final class AdaptiveLocationManager: NSObject {
     private let bufferZoneRadius: CLLocationDistance = 2000  // 2km radius
 
     // Reporting
-    private(set) var lastReportedLocation: CLLocation?
+    private var storedLastReportedLocation: CLLocation?
+    private(set) var lastReportedLocation: CLLocation? {
+        get { ExploreMode.isActive ? demoLocation : storedLastReportedLocation }
+        set { storedLastReportedLocation = newValue }
+    }
+
+    /// Explore Mode: the persona's fixed position (Chengdu / Toronto). The demo
+    /// never shows this phone's real location.
+    var demoLocation: CLLocation?
     private var lastReportTime: Date?
 
     // Tracking pause — suppresses location reports (SOS overrides)
@@ -96,6 +104,8 @@ final class AdaptiveLocationManager: NSObject {
 
     /// Best available location: last reported, or iOS cached location
     var bestAvailableLocation: CLLocation? {
+        // Explore Mode must never fall back to the device's real (cached) GPS fix.
+        if ExploreMode.isActive { return demoLocation }
         // Prefer the fresher of lastReportedLocation and CLLocationManager's cache
         if let reported = lastReportedLocation, let cached = locationManager.location {
             return reported.timestamp > cached.timestamp ? reported : cached

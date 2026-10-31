@@ -84,17 +84,13 @@ async function getUserPhone(userId: string): Promise<string | null> {
  * Get the emergency number based on country code.
  */
 function getEmergencyNumber(countryCode: string): string {
+  // Same table as the iOS app (RegionalEmergencyInfo): ambulance first.
   const map: Record<string, string> = {
-    CN: "110",
-    US: "911",
-    CA: "911",
-    GB: "999",
-    AU: "000",
-    JP: "110",
-    KR: "112",
-    FR: "112",
+    US: "911", CA: "911", HK: "999", MO: "999", TW: "119", SG: "995", AU: "000", NZ: "111",
+    MY: "999", TH: "1669", PH: "911", JP: "119",
+    CN: "120", GB: "999", FR: "15", DE: "112", KR: "119", UA: "112",
   };
-  return map[countryCode] || "112"; // 112 is international emergency
+  return map[countryCode.toUpperCase()] || "112"; // 112 works from most mobile phones
 }
 
 /**

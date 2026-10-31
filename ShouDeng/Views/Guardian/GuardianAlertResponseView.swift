@@ -220,7 +220,8 @@ struct GuardianAlertResponseView: View {
                     center: coord,
                     span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
                 ))) {
-                    UserAnnotation()
+                    // Explore Mode: MapKit draws the device's real position — hide it in the demo.
+                    if !ExploreMode.isActive { UserAnnotation() }
                     Annotation(personName, coordinate: coord) {
                         ZStack {
                             Circle().fill(alert.opacity(0.3)).frame(width: 32, height: 32)
@@ -249,7 +250,8 @@ struct GuardianAlertResponseView: View {
                     center: coord,
                     span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
                 ))) {
-                    UserAnnotation()
+                    // Explore Mode: MapKit draws the device's real position — hide it in the demo.
+                    if !ExploreMode.isActive { UserAnnotation() }
                     Annotation(personName, coordinate: coord) {
                         ZStack {
                             Circle().fill(alert.opacity(0.3)).frame(width: 32, height: 32)

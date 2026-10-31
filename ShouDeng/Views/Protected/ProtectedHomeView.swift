@@ -170,7 +170,7 @@ struct ProtectedHomeView: View {
             } message: {
                 Text(lang.localized("trip.record.confirm.end"))
             }
-            .featureDisclosure(.sos, trigger: $sosDisclosureTrigger)
+            .featureDisclosure(.sos, trigger: $sosDisclosureTrigger, emergencyNumber: coordinator.localEmergencyNumber)
             .task {
                 coordinator.locationManager.requestSingleLocation()
                 await coordinator.fetchGuardians()
@@ -997,7 +997,7 @@ struct ProtectedHomeView: View {
                 ) { showHomeTimer = true }
 
                 quickActionButton(
-                    icon: "mappin.circle.fill", label: lang.localized("home.itinerary"),
+                    icon: "mappin.circle.fill", label: lang.localized("home.arrivalReport"),
                     color: safe
                 ) { showArrivalReport = true }
 

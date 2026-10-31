@@ -16,9 +16,11 @@ struct DemoOverlayView: View {
             ZStack(alignment: .top) {
                 if explore.showHandoff {
                     DemoHandoffView()
+                        .overlayRegion("handoff")
                         .transition(.opacity)
                 } else if explore.showChecklist {
                     DemoChecklistView()
+                        .overlayRegion("checklist")
                         .transition(.move(edge: .bottom))
                 } else if explore.isTourVisible, let step = explore.currentStep {
                     DemoTipLayer(step: step, screen: geo.size, safeTop: geo.safeAreaInsets.top,
@@ -28,6 +30,7 @@ struct DemoOverlayView: View {
                 VStack(spacing: 8) {
                     if let n = explore.notification {
                         DemoNotificationBanner(notification: n)
+                            .overlayRegion("banner")
                             .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
                     }
                     if let feature = explore.blockedFeature {
@@ -60,6 +63,8 @@ private struct DemoTipLayer: View {
     let safeTop: CGFloat
     let safeBottom: CGFloat
     @State private var collapsed = false
+    /// Collapsed because the app showed a sheet/alert (re-expands when it closes).
+    @State private var autoCollapsed = false
     @AccessibilityFocusState private var titleFocused: Bool
 
     private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
@@ -91,26 +96,43 @@ private struct DemoTipLayer: View {
             }
 
             if collapsed {
-                Button {
-                    collapsed = false
-                } label: {
-                    Label(LanguageManager.shared.localized("explore.tip.show"), systemImage: "lightbulb")
-                        .font(.footnote.weight(.semibold))
-                        .padding(.horizontal, 12).padding(.vertical, 8)
-                        .background(Capsule().fill(lamp))
-                        .foregroundStyle(.black)
+                // Hidden while a sheet/alert is up so it never covers the app's own UI.
+                if !explore.isAppPresentingModal {
+                    Button {
+                        collapsed = false
+                        autoCollapsed = false
+                    } label: {
+                        Label(LanguageManager.shared.localized("explore.tip.show"), systemImage: "lightbulb")
+                            .font(.footnote.weight(.semibold))
+                            .padding(.horizontal, 12).padding(.vertical, 8)
+                            .background(Capsule().fill(lamp))
+                            .foregroundStyle(.black)
+                    }
+                    .overlayRegion("tipShow")
+                    .position(x: screen.width - 70, y: screen.height - safeBottom - 150)
                 }
-                .position(x: screen.width - 70, y: screen.height - safeBottom - 150)
             } else {
                 card
                     .frame(width: min(screen.width - 32, 520))
+                    .overlayRegion("tipCard")
                     .position(x: screen.width / 2, y: cardCenterY)
             }
         }
         .frame(width: screen.width, height: screen.height)
         .onChange(of: step.id) { _, _ in
-            collapsed = false
+            collapsed = explore.isAppPresentingModal
+            autoCollapsed = collapsed
             titleFocused = true
+        }
+        .onChange(of: explore.isAppPresentingModal) { _, presenting in
+            // A sheet or alert (e.g. the SOS disclosure) appeared: step aside, come back after.
+            if presenting, !collapsed {
+                collapsed = true
+                autoCollapsed = true
+            } else if !presenting, autoCollapsed {
+                collapsed = false
+                autoCollapsed = false
+            }
         }
         .onAppear { titleFocused = true }
     }
@@ -172,7 +194,9 @@ private struct DemoTipLayer: View {
                 }
             }
             Button(lm.localized("explore.tip.hide")) {
-                explore.isTourVisible = false
+                // Collapse to the "Show tips" button so tips can come back.
+                collapsed = true
+                autoCollapsed = false
             }
             .font(.caption)
             .foregroundStyle(.secondary)
@@ -353,6 +377,24 @@ private struct DemoChecklistView: View {
             .padding(20)
             .padding(.bottom, 10)
             .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Color(.systemBackground)))
+        }
+    }
+}
+
+// MARK: - Tappable regions
+
+private extension View {
+    /// Reports this view's on-screen frame so the pass-through overlay window
+    /// accepts touches here (and only here).
+    func overlayRegion(_ id: String) -> some View {
+        background {
+            GeometryReader { geo in
+                let frame = geo.frame(in: .global)
+                Color.clear
+                    .onAppear { ExploreModeController.shared.setOverlayRegion(id, frame) }
+                    .onChange(of: frame) { _, new in ExploreModeController.shared.setOverlayRegion(id, new) }
+                    .onDisappear { ExploreModeController.shared.setOverlayRegion(id, nil) }
+            }
         }
     }
 }

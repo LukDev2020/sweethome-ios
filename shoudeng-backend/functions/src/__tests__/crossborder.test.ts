@@ -116,14 +116,14 @@ describe("Cross-Border — Twilio Voice for China", () => {
     expect(twilioSource).toContain("守灯紧急通知");
   });
 
-  it("emergency numbers include CN (110)", () => {
-    expect(twilioSource).toContain('CN: "110"');
+  it("emergency numbers include CN (120, ambulance first — same as the iOS table)", () => {
+    expect(twilioSource).toContain('CN: "120"');
   });
 
-  it("emergency numbers include US (911), GB (999), JP (110)", () => {
+  it("emergency numbers include US (911), GB (999), JP (119)", () => {
     expect(twilioSource).toContain('US: "911"');
     expect(twilioSource).toContain('GB: "999"');
-    expect(twilioSource).toContain('JP: "110"');
+    expect(twilioSource).toContain('JP: "119"');
   });
 
   it("international emergency fallback is 112", () => {

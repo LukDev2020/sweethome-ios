@@ -15,7 +15,8 @@ final class OutdoorSatelliteTests: XCTestCase {
 
     func testSafetyRequestsMayUseSatellite() {
         for path in ["/v1/sos/trigger", "/v1/sos/resolve", "/v1/sos/acknowledge", "/v1/checkin",
-                     "/v1/home-timer/dismiss", "/v1/arrival-report", "/v1/heartbeat", "/v1/location/report"] {
+                     "/v1/home-timer/dismiss", "/v1/arrival-report", "/v1/device/ble-separation",
+                     "/v1/heartbeat", "/v1/location/report"] {
             XCTAssertTrue(SatelliteDataPolicy.allowsSatellite(path: path), path)
         }
     }

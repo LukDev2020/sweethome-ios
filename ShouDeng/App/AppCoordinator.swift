@@ -70,7 +70,8 @@ final class AppCoordinator: ObservableObject {
     /// real UserDefaults are never touched.
     let defaults: UserDefaults
     let authManager: AuthManager
-    let localStore = LocalStore.shared
+    /// The demo coordinator gets its own in-memory store (never the real one).
+    let localStore: LocalStore
 
     // MARK: - Services
 
@@ -122,6 +123,7 @@ final class AppCoordinator: ObservableObject {
 
     init(environment: Environment) {
         isDemo = environment.isDemo
+        localStore = environment.isDemo ? .inMemory() : .shared
         defaults = environment.defaults
         offlineQueue = environment.offlineQueue
 
@@ -619,9 +621,12 @@ final class AppCoordinator: ObservableObject {
     }
 
     /// Number to call when nobody else can be reached.
+    /// One source of truth: RegionalEmergencyInfo (ambulance first). The region is the
+    /// one picked in the consulate screen, else the profile country, else the device region.
     var localEmergencyNumber: String {
-        if let n = selectedHotline?.emergency, !n.isEmpty { return n }
-        let country = currentUser?.countryCode.isEmpty == false ? currentUser!.countryCode : (Locale.current.region?.identifier ?? "")
+        let picked = selectedHotline?.countryCode ?? ""
+        let profile = currentUser?.countryCode ?? ""
+        let country = !picked.isEmpty ? picked : (!profile.isEmpty ? profile : (Locale.current.region?.identifier ?? ""))
         return RegionalEmergencyInfo.forCountry(country).numbers.first?.number ?? "112"
     }
 
@@ -634,6 +639,7 @@ final class AppCoordinator: ObservableObject {
         // The demo never reads the real GPS: show the persona where they live
         locationService.currentLocation = location
         locationService.lastUpdateTime = location == nil ? nil : Date()
+        locationManager.demoLocation = location.map { CLLocation(latitude: $0.latitude, longitude: $0.longitude) }
         isSOSScreenPresented = false
         pendingAlertPersonId = nil
         activeSOSEvent = nil

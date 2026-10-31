@@ -2,7 +2,10 @@ import SwiftUI
 
 struct EmergencyYellowPagesView: View {
     @ObservedObject private var lang = LanguageManager.shared
-    @State private var selectedCountry = "ca"
+    @State private var selectedCountry: String = {
+        let region = Locale.current.region?.identifier ?? "CA"
+        return RegionalEmergencyInfo.supportedRegions.contains(region) ? region : "CA"
+    }()
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
@@ -21,64 +24,56 @@ struct EmergencyYellowPagesView: View {
         let number: String
     }
 
-    private let countries: [(code: String, flag: String, name: String)] = [
-        ("ca", "\u{1F1E8}\u{1F1E6}", "Canada"),
-        ("cn", "\u{1F1E8}\u{1F1F3}", "China"),
-        ("jp", "\u{1F1EF}\u{1F1F5}", "Japan"),
-        ("us", "\u{1F1FA}\u{1F1F8}", "United States"),
-        ("uk", "\u{1F1EC}\u{1F1E7}", "United Kingdom"),
-        ("au", "\u{1F1E6}\u{1F1FA}", "Australia"),
-        ("fr", "\u{1F1EB}\u{1F1F7}", "France"),
-        ("de", "\u{1F1E9}\u{1F1EA}", "Germany")
-    ]
+    /// App Store markets first, then places family members often are.
+    private var countries: [(code: String, flag: String, name: String)] {
+        RegionalEmergencyInfo.supportedRegions.filter { $0 != "UA" && $0 != "KR" }.map { code in
+            (code, Self.flag(code), RegionalEmergencyInfo.regionName(code))
+        }
+    }
 
+    private static func flag(_ code: String) -> String {
+        code.unicodeScalars.compactMap { UnicodeScalar(127397 + $0.value) }.map(String.init).joined()
+    }
+
+    /// Emergency numbers come from the single table in RegionalEmergencyInfo (the
+    /// same numbers the SOS screens use); extra directory rows follow.
     private var entries: [YPEntry] {
+        let emergency = RegionalEmergencyInfo.forCountry(selectedCountry).numbers.map {
+            YPEntry(icon: $0.icon, iconColor: $0.color == .red ? alert : cobalt, title: $0.label, subtitle: "", number: $0.number)
+        }
+        return emergency + extras
+    }
+
+    private var extras: [YPEntry] {
         switch selectedCountry {
-        case "ca": return [
-            YPEntry(icon: "phone.fill", iconColor: alert, title: "Police / Fire / Ambulance", subtitle: "All emergencies", number: "911"),
+        case "CA": return [
             YPEntry(icon: "building.columns.fill", iconColor: cobalt, title: "Chinese Consulate \u{2014} Toronto", subtitle: "240 St George St", number: "+1-416-964-7260"),
-            YPEntry(icon: "cross.case.fill", iconColor: safe, title: "Poison Control", subtitle: "24/7 hotline", number: "1-800-268-9017"),
             YPEntry(icon: "heart.fill", iconColor: pro, title: "Crisis Helpline", subtitle: "Mental health support", number: "988"),
             YPEntry(icon: "phone.fill", iconColor: lamp, title: "Non-Emergency Police", subtitle: "Toronto Police", number: "+1-416-808-2222")
         ]
-        case "cn": return [
-            YPEntry(icon: "phone.fill", iconColor: alert, title: "Police", subtitle: "Public security", number: "110"),
-            YPEntry(icon: "flame.fill", iconColor: alert, title: "Fire Department", subtitle: "Fire emergencies", number: "119"),
-            YPEntry(icon: "cross.case.fill", iconColor: safe, title: "Ambulance", subtitle: "Medical emergency", number: "120"),
+        case "CN": return [
             YPEntry(icon: "globe", iconColor: cobalt, title: "MFA Consular Protection", subtitle: "Overseas citizens 24h", number: "12308"),
             YPEntry(icon: "heart.fill", iconColor: pro, title: "Mental Health Hotline", subtitle: "Beijing Psychological Crisis", number: "010-82951332")
         ]
-        case "jp": return [
-            YPEntry(icon: "phone.fill", iconColor: alert, title: "Police", subtitle: "Keisatsu", number: "110"),
-            YPEntry(icon: "cross.case.fill", iconColor: safe, title: "Fire / Ambulance", subtitle: "Shoubousha / Kyuukyuusha", number: "119"),
+        case "JP": return [
             YPEntry(icon: "building.columns.fill", iconColor: cobalt, title: "Chinese Embassy \u{2014} Tokyo", subtitle: "3-4-33 Moto-Azabu, Minato", number: "+81-3-3403-3388"),
             YPEntry(icon: "globe", iconColor: lamp, title: "JNTO Tourist Helpline", subtitle: "English support 24h", number: "050-3816-2787")
         ]
-        case "us": return [
-            YPEntry(icon: "phone.fill", iconColor: alert, title: "Police / Fire / Ambulance", subtitle: "All emergencies", number: "911"),
+        case "US": return [
             YPEntry(icon: "building.columns.fill", iconColor: cobalt, title: "Chinese Embassy \u{2014} D.C.", subtitle: "3505 International Pl NW", number: "+1-202-495-2266"),
-            YPEntry(icon: "cross.case.fill", iconColor: safe, title: "Poison Control", subtitle: "24/7 hotline", number: "1-800-222-1222"),
             YPEntry(icon: "heart.fill", iconColor: pro, title: "Suicide & Crisis Lifeline", subtitle: "24/7 support", number: "988")
         ]
-        case "uk": return [
-            YPEntry(icon: "phone.fill", iconColor: alert, title: "Police / Fire / Ambulance", subtitle: "All emergencies", number: "999"),
-            YPEntry(icon: "building.columns.fill", iconColor: cobalt, title: "Chinese Embassy \u{2014} London", subtitle: "49 Portland Pl", number: "+44-20-7299-4049"),
-            YPEntry(icon: "cross.case.fill", iconColor: safe, title: "NHS Non-Emergency", subtitle: "Health advice 24h", number: "111")
+        case "GB": return [
+            YPEntry(icon: "building.columns.fill", iconColor: cobalt, title: "Chinese Embassy \u{2014} London", subtitle: "49 Portland Pl", number: "+44-20-7299-4049")
         ]
-        case "au": return [
-            YPEntry(icon: "phone.fill", iconColor: alert, title: "Police / Fire / Ambulance", subtitle: "All emergencies", number: "000"),
+        case "AU": return [
             YPEntry(icon: "building.columns.fill", iconColor: cobalt, title: "Chinese Embassy \u{2014} Canberra", subtitle: "15 Coronation Dr, Yarralumla", number: "+61-2-6228-3999"),
-            YPEntry(icon: "cross.case.fill", iconColor: safe, title: "Poisons Information", subtitle: "24h hotline", number: "13 11 26")
+            YPEntry(icon: "cross.vial.fill", iconColor: safe, title: "Poisons Information", subtitle: "24h hotline", number: "13 11 26")
         ]
-        case "fr": return [
-            YPEntry(icon: "cross.case.fill", iconColor: alert, title: "SAMU (Medical)", subtitle: "Urgences medicales", number: "15"),
-            YPEntry(icon: "phone.fill", iconColor: alert, title: "Police", subtitle: "Gendarmerie", number: "17"),
-            YPEntry(icon: "flame.fill", iconColor: alert, title: "Fire / Pompiers", subtitle: "Sapeurs-pompiers", number: "18"),
+        case "FR": return [
             YPEntry(icon: "building.columns.fill", iconColor: cobalt, title: "Chinese Embassy \u{2014} Paris", subtitle: "11 Avenue George V", number: "+33-1-4952-1950")
         ]
-        case "de": return [
-            YPEntry(icon: "phone.fill", iconColor: alert, title: "Police", subtitle: "Polizei", number: "110"),
-            YPEntry(icon: "cross.case.fill", iconColor: safe, title: "Fire / Ambulance", subtitle: "Feuerwehr / Rettungsdienst", number: "112"),
+        case "DE": return [
             YPEntry(icon: "building.columns.fill", iconColor: cobalt, title: "Chinese Embassy \u{2014} Berlin", subtitle: "Markisches Ufer 54", number: "+49-30-27588-0")
         ]
         default: return []
@@ -104,7 +99,7 @@ struct EmergencyYellowPagesView: View {
             // Directory card
             let country = countries.first(where: { $0.code == selectedCountry })
             VStack(alignment: .leading, spacing: 0) {
-                Text("\(country?.flag ?? "") \(country?.name ?? "") Emergency Directory")
+                Text(String(format: lang.localized("yp.directory.title"), "\(country?.flag ?? "") \(country?.name ?? "")"))
                     .font(.system(size: 13, weight: .bold))
                     .foregroundColor(ink)
                     .padding(.bottom, 8)

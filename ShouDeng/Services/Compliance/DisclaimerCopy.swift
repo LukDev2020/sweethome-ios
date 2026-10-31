@@ -132,32 +132,17 @@ enum DisclaimerCopy {
             }
         }
 
+        /// Localized (en / zh-Hans / fr) — these sheets used to be Chinese-only.
         var title: String {
-            switch self {
-            case .sos:            return "发出求助前请确认"
-            case .location:       return "共享你的位置"
-            case .trajectory:     return "轨迹记录"
-            case .fallDetection:  return "跌倒检测"
-            case .emergencyAudio: return "求助时的环境录音"
-            case .autoVoiceCall:  return "自动语音外呼"
-            }
+            LanguageManager.shared.localized("disclosure.\(rawValue).title")
         }
 
-        var body: String {
-            switch self {
-            case .sos:
-                return "求助将通知你指定的联系人。\n\n如果情况危急，请同时拨打 112。守灯不会代你拨打急救电话。"
-            case .location:
-                return "开启后，你选择的家人可以看到你最近一次上报的位置。\n\n位置每次上报都带有时间，他们看到的是「几分钟前你在哪」，不是持续的跟随。"
-            case .trajectory:
-                return "开启后，守灯会保存你最近 7 天走过的路线，用于在紧急情况下帮助家人判断你可能去了哪里。\n\n日常情况下家人只能看到你最近的位置，看不到路线。只有在你触发求助时，最近两小时的轨迹才会对他们可见。"
-            case .fallDetection:
-                return "跌倒检测基于手机传感器估算，不是医疗设备，未经任何监管机构认证。\n\n它可能漏掉真实的跌倒，也可能被日常动作误触发。请不要将其作为唯一的安全手段。"
-            case .emergencyAudio:
-                return "部分国家和地区要求录音需经所有在场者同意。请了解你所在地的法律后再开启。\n\n录音仅在求助期间进行，结束后自动停止。"
-            case .autoVoiceCall:
-                return "如果推送和短信都没人回应，系统会依次拨打你的联系人电话，直到有人接听并按键确认。\n\n这是为了应对深夜——电话比推送更容易叫醒人。"
-            }
+        var body: String { body(emergencyNumber: "112") }
+
+        /// The SOS text names the local emergency number (911, 112, 110…).
+        func body(emergencyNumber: String) -> String {
+            let text = LanguageManager.shared.localized("disclosure.\(rawValue).body")
+            return self == .sos ? String(format: text, emergencyNumber) : text
         }
 
         /// Whether this disclosure uses "开启 | 暂不开启" buttons instead of single acknowledge

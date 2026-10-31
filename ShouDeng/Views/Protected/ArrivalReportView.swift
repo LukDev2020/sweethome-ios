@@ -34,7 +34,7 @@ struct ArrivalReportView: View {
             }
             .padding(.horizontal, 16)
             .background(Color(.systemBackground))
-            .navigationTitle("到达报告")
+            .navigationTitle(LanguageManager.shared.localized("home.arrivalReport"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

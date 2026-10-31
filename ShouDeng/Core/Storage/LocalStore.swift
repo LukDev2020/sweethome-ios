@@ -23,14 +23,24 @@ final class LocalStore {
     /// is neither read nor written. Accessed on `queue` only.
     private var overlay: [String: Data]?
 
-    func beginOverlay() { queue.sync { overlay = [:] } }
-    func endOverlay() { queue.sync { overlay = nil } }
+    /// A store that is always in memory (Explore Mode's own coordinator) — late
+    /// writes after a demo ends can never reach the real store on disk.
+    private let alwaysInMemory: Bool
 
-    private init() {
+    func beginOverlay() { queue.sync { overlay = [:] } }
+    func endOverlay() { queue.sync { if !alwaysInMemory { overlay = nil } } }
+
+    static func inMemory() -> LocalStore { LocalStore(inMemory: true) }
+
+    private init(inMemory: Bool = false) {
+        alwaysInMemory = inMemory
+        overlay = inMemory ? [:] : nil
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         storeDir = docs.appendingPathComponent("store", isDirectory: true)
 
-        try? FileManager.default.createDirectory(at: storeDir, withIntermediateDirectories: true)
+        if !inMemory {
+            try? FileManager.default.createDirectory(at: storeDir, withIntermediateDirectories: true)
+        }
 
         encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
