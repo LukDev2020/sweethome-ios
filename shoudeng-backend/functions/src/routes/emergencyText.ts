@@ -1,6 +1,9 @@
 import { Router, Request, Response } from "express";
 import { authMiddleware } from "../middleware/auth";
 
+import { CONSULATE_DATA } from "./consulate";
+import { getEmergencyNumber } from "../services/twilio";
+
 const router = Router();
 
 /**
@@ -116,113 +119,19 @@ const EMERGENCY_PHRASES: Record<
 };
 
 // Consulate & emergency contacts by country code
-const CONSULATE_DATA: Record<
-  string,
-  {
-    countryName: string;
-    emergencyNumber: string;
-    policeNumber: string;
-    ambulanceNumber: string;
-    chineseEmbassy?: string;
-    chineseConsulate?: string[];
-    trustedHospitals?: string[];
-  }
-> = {
-  US: {
-    countryName: "美国",
-    emergencyNumber: "911",
-    policeNumber: "911",
-    ambulanceNumber: "911",
-    chineseEmbassy: "+1-202-495-2266",
-    chineseConsulate: ["+1-212-244-9392", "+1-312-453-0210", "+1-415-852-5900", "+1-713-520-1462", "+1-213-807-8088"],
-  },
-  CA: {
-    countryName: "加拿大",
-    emergencyNumber: "911",
-    policeNumber: "911",
-    ambulanceNumber: "911",
-    chineseEmbassy: "+1-613-789-3434",
-    chineseConsulate: ["+1-416-964-7260", "+1-604-734-0704", "+1-514-419-6748"],
-  },
-  GB: {
-    countryName: "英国",
-    emergencyNumber: "999",
-    policeNumber: "999",
-    ambulanceNumber: "999",
-    chineseEmbassy: "+44-20-7299-4049",
-  },
-  AU: {
-    countryName: "澳大利亚",
-    emergencyNumber: "000",
-    policeNumber: "000",
-    ambulanceNumber: "000",
-    chineseEmbassy: "+61-2-6228-3999",
-    chineseConsulate: ["+61-3-9822-0604", "+61-2-8595-8002"],
-  },
-  JP: {
-    countryName: "日本",
-    emergencyNumber: "110",
-    policeNumber: "110",
-    ambulanceNumber: "119",
-    chineseEmbassy: "+81-3-3403-3388",
-  },
-  KR: {
-    countryName: "韩国",
-    emergencyNumber: "112",
-    policeNumber: "112",
-    ambulanceNumber: "119",
-    chineseEmbassy: "+82-2-738-1038",
-  },
-  DE: {
-    countryName: "德国",
-    emergencyNumber: "112",
-    policeNumber: "110",
-    ambulanceNumber: "112",
-    chineseEmbassy: "+49-30-27588-0",
-  },
-  FR: {
-    countryName: "法国",
-    emergencyNumber: "112",
-    policeNumber: "17",
-    ambulanceNumber: "15",
-    chineseEmbassy: "+33-1-4936-2790",
-  },
-  NZ: {
-    countryName: "新西兰",
-    emergencyNumber: "111",
-    policeNumber: "111",
-    ambulanceNumber: "111",
-    chineseEmbassy: "+64-4-474-9631",
-  },
-  SG: {
-    countryName: "新加坡",
-    emergencyNumber: "999",
-    policeNumber: "999",
-    ambulanceNumber: "995",
-    chineseEmbassy: "+65-6471-2117",
-  },
-  TH: {
-    countryName: "泰国",
-    emergencyNumber: "191",
-    policeNumber: "191",
-    ambulanceNumber: "1669",
-    chineseEmbassy: "+66-2-245-7044",
-  },
-  MY: {
-    countryName: "马来西亚",
-    emergencyNumber: "999",
-    policeNumber: "999",
-    ambulanceNumber: "999",
-    chineseEmbassy: "+60-3-2163-6815",
-  },
-  UA: {
-    countryName: "乌克兰",
-    emergencyNumber: "112",
-    policeNumber: "102",
-    ambulanceNumber: "103",
-    chineseEmbassy: "+380-44-253-1354",
-  },
-};
+/** Consulate view of the single source in routes/consulate.ts (kept for API compatibility). */
+function consulateEntry(code: string) {
+  const d = CONSULATE_DATA[code];
+  if (!d) return null;
+  return {
+    countryName: d.name,
+    emergencyNumber: getEmergencyNumber(code),
+    policeNumber: d.police,
+    ambulanceNumber: d.ambulance,
+    chineseEmbassy: d.embassy,
+    chineseConsulate: d.consulates.map((c) => c.phone),
+  };
+}
 
 /**
  * GET /v1/emergency-text/:lang
@@ -252,7 +161,7 @@ router.get(
   authMiddleware,
   (req: Request, res: Response) => {
     const { countryCode } = req.params;
-    const data = CONSULATE_DATA[countryCode.toUpperCase()];
+    const data = consulateEntry(countryCode.toUpperCase());
     if (!data) {
       res.status(404).json({ error: "Country not found" });
       return;
@@ -266,10 +175,10 @@ router.get(
  * Get all available consulate data.
  */
 router.get("/consulate", authMiddleware, (_req: Request, res: Response) => {
-  const countries = Object.entries(CONSULATE_DATA).map(([code, data]) => ({
+  const countries = Object.keys(CONSULATE_DATA).map((code) => ({
     countryCode: code,
-    countryName: data.countryName,
-    emergencyNumber: data.emergencyNumber,
+    countryName: CONSULATE_DATA[code].name,
+    emergencyNumber: getEmergencyNumber(code),
   }));
   res.json(countries);
 });

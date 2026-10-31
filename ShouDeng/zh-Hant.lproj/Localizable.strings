@@ -845,11 +845,11 @@
 "settings.action.deletePermanently" = "永久刪除";
 "settings.action.edit" = "編輯";
 "settings.action.ok" = "好的";
-"settings.action.requestExport" = "請求匯出 →";
+"settings.action.requestExport" = "匯出 →";
 "settings.action.start" = "開始";
 "settings.action.understood" = "我已瞭解";
 "settings.action.view" = "檢視 →";
-"settings.alert.dataExport.message" = "我們將在48小時內透過郵件傳送您的全部資料。";
+"settings.alert.dataExport.message" = "我們會把賬號的全部資料整理成一個檔案（JSON），你可以存到「檔案」App 或分享。";
 "settings.alert.dataExport.title" = "資料匯出";
 "settings.alert.deleteAccount.message" = "刪除賬戶後，所有資料將永久清除且無法恢復。";
 "settings.alert.deleteAccount.title" = "確認刪除賬戶？";
@@ -1644,3 +1644,15 @@
 "claim.pdf.dataNotes" = "資料說明";
 "claim.pdf.footer" = "守燈 App 匯出 · 僅供參考";
 "claim.pdf.listSeparator" = "、";
+
+/* Data location consent (2026-10-31) */
+"consent.transfer.checkbox" = "我同意我的資料儲存在美國並在美國處理（Google Cloud、Twilio）。";
+"consent.transfer.readPolicy" = "檢視隱私政策";
+"consent.transfer.title" = "你的資料儲存在美國";
+"consent.transfer.body" = "為了傳送求助、與家人共享位置並儲存記錄，守燈把你的資料儲存在美國的 Google Cloud（us-central1）。緊急簡訊和電話透過同樣位於美國的 Twilio 傳送。美國的隱私法律與你所在地不同。你是否同意？";
+"consent.transfer.agree" = "同意";
+"consent.transfer.decline" = "不同意";
+"consent.transfer.failed" = "儲存失敗，請檢查網路後重試。";
+"consent.transfer.declined.title" = "求助功能暫時保持開啟";
+"consent.transfer.declined.body" = "我們不會在沒有提醒的情況下關閉你的保護。如果不希望資料儲存在美國，請在「設定 → 資料」中登出賬號。下次開啟 App 時我們會再次詢問。";
+"consent.transfer.declined.later" = "好";

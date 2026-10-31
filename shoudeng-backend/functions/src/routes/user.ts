@@ -4,6 +4,8 @@ import { authMiddleware } from "../middleware/auth";
 import { createRateLimiter, RATE_LIMITS } from "../middleware/rateLimit";
 import { isValidTimeZone } from "../services/localTime";
 import { normalizeLocale } from "../services/locale";
+import { eraseAccount, exportAccount } from "../services/accountData";
+import { recordDataTransferConsent } from "../services/consent";
 
 const router = Router();
 const db = admin.firestore();
@@ -37,6 +39,7 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
       cityName: data.cityName,
       createdAt: data.createdAt.toDate().toISOString(),
       publicKey: data.publicKey || null,
+      dataTransferConsentVersion: data.dataTransferConsentVersion || null,
     });
   } catch (error) {
     console.error("[User] get profile error:", error);
@@ -89,7 +92,7 @@ router.put("/me", authMiddleware, async (req: Request, res: Response) => {
     // Language for pushes, SMS and voice calls sent to this user
     const lang = normalizeLocale(locale);
     if (!lang) {
-      res.status(400).json({ error: "locale must be one of en, zh, fr" });
+      res.status(400).json({ error: "locale must be one of en, zh, zh-Hant, fr, ja" });
       return;
     }
     updates.locale = lang;
@@ -152,6 +155,30 @@ router.put("/notification-preferences", authMiddleware, async (req: Request, res
 });
 
 /**
+ * POST /v1/user/consent
+ * Record consent shown in the app. Currently: { type: "cross_border_transfer", version }.
+ */
+router.post("/consent", authMiddleware, async (req: Request, res: Response) => {
+  const uid = req.uid!;
+  const { type, version } = req.body ?? {};
+  if (type !== "cross_border_transfer" || typeof version !== "string" || version.length === 0 || version.length > 20) {
+    res.status(400).json({ error: "type must be cross_border_transfer and version a short string" });
+    return;
+  }
+  try {
+    await db.collection("users").doc(uid).set({
+      dataTransferConsentVersion: version,
+      dataTransferConsentAt: admin.firestore.Timestamp.now(),
+    }, { merge: true });
+    await recordDataTransferConsent(uid, version, "prompt");
+    res.json({ success: true });
+  } catch (error) {
+    console.error("[User] consent error:", error);
+    res.status(500).json({ error: "Failed to record consent" });
+  }
+});
+
+/**
  * POST /v1/user/delete
  * Delete user account and all associated data (GDPR right to erasure).
  * This is irreversible.
@@ -160,110 +187,8 @@ router.post("/delete", authMiddleware, createRateLimiter(RATE_LIMITS.accountDele
   const uid = req.uid!;
 
   try {
-    // Helper: delete all docs from a query, respecting Firestore batch limit (500)
-    async function deleteQueryResults(
-      query: FirebaseFirestore.Query
-    ): Promise<number> {
-      const snap = await query.get();
-      if (snap.empty) return 0;
-      const chunks: FirebaseFirestore.QueryDocumentSnapshot[][] = [];
-      for (let i = 0; i < snap.docs.length; i += 450) {
-        chunks.push(snap.docs.slice(i, i + 450));
-      }
-      for (const chunk of chunks) {
-        const batch = db.batch();
-        chunk.forEach((doc) => batch.delete(doc.ref));
-        await batch.commit();
-      }
-      return snap.size;
-    }
-
-    // Helper: delete subcollections of matching docs (e.g. family_posts/{id}/comments)
-    async function deleteDocsWithSubcollection(
-      query: FirebaseFirestore.Query,
-      subcollectionName: string
-    ): Promise<number> {
-      const snap = await query.get();
-      if (snap.empty) return 0;
-      for (const doc of snap.docs) {
-        const subSnap = await doc.ref.collection(subcollectionName).get();
-        if (!subSnap.empty) {
-          const batch = db.batch();
-          subSnap.docs.forEach((sub) => batch.delete(sub.ref));
-          await batch.commit();
-        }
-      }
-      const batch = db.batch();
-      snap.docs.forEach((doc) => batch.delete(doc.ref));
-      await batch.commit();
-      return snap.size;
-    }
-
-    // Delete documents by uid-keyed ID (no query needed)
-    const directDeleteBatch = db.batch();
-    directDeleteBatch.delete(db.collection("users").doc(uid));
-    directDeleteBatch.delete(db.collection("subscriptions").doc(uid));
-    directDeleteBatch.delete(db.collection("home_timers").doc(uid));
-    directDeleteBatch.delete(db.collection("medical_cards").doc(uid));
-    directDeleteBatch.delete(db.collection("selected_hotlines").doc(uid));
-    await directDeleteBatch.commit();
-
-    // Delete query-based collections in parallel where possible
-    await Promise.all([
-      deleteQueryResults(
-        db.collection("device_tokens").where("userId", "==", uid)
-      ),
-      deleteQueryResults(
-        db.collection("guardian_links").where("guardianId", "==", uid)
-      ),
-      deleteQueryResults(
-        db.collection("guardian_links").where("protectedPersonId", "==", uid)
-      ),
-      deleteQueryResults(
-        db.collection("duty_schedules").where("guardianId", "==", uid)
-      ),
-      deleteQueryResults(
-        db.collection("duty_schedules").where("protectedPersonId", "==", uid)
-      ),
-      deleteQueryResults(
-        db.collection("checkins").where("userId", "==", uid)
-      ),
-      deleteQueryResults(
-        db.collection("timeline_entries").where("userId", "==", uid)
-      ),
-      deleteQueryResults(
-        db.collection("safe_zones").where("userId", "==", uid)
-      ),
-      deleteQueryResults(
-        db.collection("arrival_reports").where("userId", "==", uid)
-      ),
-      deleteQueryResults(
-        db.collection("itineraries").where("userId", "==", uid)
-      ),
-      deleteQueryResults(
-        db.collection("invites").where("createdBy", "==", uid)
-      ),
-      deleteQueryResults(
-        db.collection("crash_reports").where("userId", "==", uid)
-      ),
-      deleteQueryResults(
-        db.collection("evidence_shares").where("createdBy", "==", uid)
-      ),
-      deleteQueryResults(
-        db.collection("medical_card_shares").where("userId", "==", uid)
-      ),
-      deleteQueryResults(
-        db.collection("sos_events").where("protectedPersonId", "==", uid)
-      ),
-      // Family posts have a comments subcollection
-      deleteDocsWithSubcollection(
-        db.collection("family_posts").where("authorId", "==", uid),
-        "comments"
-      ),
-    ]);
-
-    // Note: consent_audit in BigQuery is intentionally retained for legal compliance.
-    // evidence_holds are retained for audit trail integrity.
+    // Everything except consent_audit and evidence_holds (see services/accountData.ts)
+    const { bigQueryComplete } = await eraseAccount(uid);
 
     // Delete Firebase Auth account
     try {
@@ -272,6 +197,9 @@ router.post("/delete", authMiddleware, createRateLimiter(RATE_LIMITS.accountDele
       console.warn(`[User] Failed to delete auth account for ${uid}:`, authError);
     }
 
+    if (!bigQueryComplete) {
+      console.log(`[User] BigQuery history for ${uid} queued for deletion (streaming buffer)`);
+    }
     console.log(`[User] Account deleted: ${uid}`);
     res.json({ success: true });
   } catch (error) {
@@ -282,57 +210,14 @@ router.post("/delete", authMiddleware, createRateLimiter(RATE_LIMITS.accountDele
 
 /**
  * POST /v1/user/export
- * Request a full data export (GDPR data portability).
- * Returns all user data as JSON.
+ * Full data export (data portability). Returns all user data as JSON;
+ * the app saves it as a file the user can keep or share.
  */
 router.post("/export", authMiddleware, async (req: Request, res: Response) => {
   const uid = req.uid!;
 
   try {
-    const userDoc = await db.collection("users").doc(uid).get();
-    const userData = userDoc.exists ? userDoc.data() : null;
-    const medicalDoc = await db.collection("medical_cards").doc(uid).get();
-    const medicalData = medicalDoc.exists ? medicalDoc.data() : null;
-
-    const [
-      linksSnap, schedulesSnap, checkinsSnap, timelineSnap, tokensSnap,
-      safeZonesSnap, sosSnap, familyPostsSnap, itinerariesSnap,
-    ] = await Promise.all([
-      db.collection("guardian_links").where("guardianId", "==", uid).get(),
-      db.collection("duty_schedules").where("guardianId", "==", uid).get(),
-      db.collection("checkins").where("userId", "==", uid).get(),
-      db
-        .collection("timeline_entries")
-        .where("userId", "==", uid)
-        .orderBy("timestamp", "desc")
-        .limit(1000)
-        .get(),
-      db.collection("device_tokens").where("userId", "==", uid).get(),
-      db.collection("safe_zones").where("userId", "==", uid).get(),
-      db.collection("sos_events").where("protectedPersonId", "==", uid).get(),
-      db.collection("family_posts").where("authorId", "==", uid).get(),
-      db.collection("itineraries").where("userId", "==", uid).get(),
-    ]);
-
-    const exportData = {
-      exportedAt: new Date().toISOString(),
-      userId: uid,
-      profile: userData,
-      medicalCard: medicalData,
-      guardianLinks: linksSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
-      dutySchedules: schedulesSnap.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
-      })),
-      checkins: checkinsSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
-      timeline: timelineSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
-      safeZones: safeZonesSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
-      sosEvents: sosSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
-      familyPosts: familyPostsSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
-      itineraries: itinerariesSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
-      deviceTokenCount: tokensSnap.size,
-    };
-
+    const exportData = await exportAccount(uid);
     res.json(exportData);
   } catch (error) {
     console.error("[User] export error:", error);

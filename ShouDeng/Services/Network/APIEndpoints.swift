@@ -180,6 +180,7 @@ struct UserProfileResponse: Codable {
     let countryCode: String
     let cityName: String
     let createdAt: Date
+    var dataTransferConsentVersion: String? = nil
 }
 
 // MARK: - Protected Person Status (guardian polls this)
@@ -660,20 +661,7 @@ struct OrgReportSummary: Codable {
     let avgCheckInsPerMember: Int
 }
 
-// MARK: - Insurance (legacy — kept for InsuranceReportView compatibility)
-
-struct InsuranceClaimRequest: Codable {
-    let incidentDate: Date
-    let description: String?
-    let protectedPersonId: String?
-}
-
-struct InsuranceClaimReport: Codable {
-    let reportId: String
-    let personName: String
-    let incidentDate: Date
-    let generatedAt: Date
-}
+// MARK: - Insurance
 
 // New claim material models are in ClaimMaterialModels.swift
 

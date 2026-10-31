@@ -31,6 +31,7 @@ struct SignupView: View {
     @State private var code = ""
     @State private var displayName = ""
     @State private var selectedRole: UserRole = .protected_
+    @State private var agreedToDataTransfer = false
     @State private var step: Step = .phone
     @State private var isLoading = false
     @State private var errorMessage: String?
@@ -184,6 +185,8 @@ struct SignupView: View {
             target = country.isoCode == "CN" ? .chinese : .traditionalChinese
         } else if country.isoCode == "FR" {
             target = .french
+        } else if country.isoCode == "JP" {
+            target = .japanese
         } else {
             target = .english
         }
@@ -315,6 +318,8 @@ struct SignupView: View {
                                title: lang.localized("signup.role.guardian"),
                                desc: lang.localized("signup.role.guardian.desc"))
                 }
+
+                DataTransferConsentToggle(isOn: $agreedToDataTransfer)
             }
             .padding(.horizontal, 32)
         }
@@ -365,7 +370,7 @@ struct SignupView: View {
         switch step {
         case .phone: return phone.count < 4 || countdown > 0
         case .code: return code.count < 4
-        case .profile: return displayName.trimmingCharacters(in: .whitespaces).isEmpty
+        case .profile: return displayName.trimmingCharacters(in: .whitespaces).isEmpty || !agreedToDataTransfer
         }
     }
 
@@ -403,7 +408,8 @@ struct SignupView: View {
                 try await coordinator.authManager.signup(
                     displayName: displayName,
                     role: selectedRole.rawValue,
-                    countryCode: selectedCountry.isoCode
+                    countryCode: selectedCountry.isoCode,
+                    dataTransferConsent: DataTransferConsent.version
                 )
                 coordinator.userRole = selectedRole
                 coordinator.showSetupWizard = true

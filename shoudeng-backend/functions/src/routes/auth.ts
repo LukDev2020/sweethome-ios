@@ -1,4 +1,5 @@
 import { Router, Request, Response } from "express";
+import { recordDataTransferConsent } from "../services/consent";
 import * as admin from "firebase-admin";
 import { Timestamp } from "firebase-admin/firestore";
 import jwt from "jsonwebtoken";
@@ -275,7 +276,7 @@ router.post("/login", async (req: Request, res: Response) => {
  * Accepts optional countryCode from client for accurate geo assignment.
  */
 router.post("/signup", async (req: Request, res: Response) => {
-  const { idToken, displayName, role, countryCode: clientCountryCode, email } =
+  const { idToken, displayName, role, countryCode: clientCountryCode, email, dataTransferConsent } =
     req.body;
 
   if (!idToken || !displayName || !role) {
@@ -319,8 +320,18 @@ router.post("/signup", async (req: Request, res: Response) => {
     if (email && typeof email === "string" && email.includes("@")) {
       userDoc.email = email;
     }
+    // Explicit consent to storage and processing in the United States (shown at sign-up)
+    const consentVersion = typeof dataTransferConsent === "string" ? dataTransferConsent.slice(0, 20) : null;
+    if (consentVersion) {
+      userDoc.dataTransferConsentVersion = consentVersion;
+      userDoc.dataTransferConsentAt = now;
+    }
 
     await db.collection("users").doc(uid).set(userDoc);
+
+    if (consentVersion) {
+      await recordDataTransferConsent(uid, consentVersion, "signup");
+    }
 
     const tokens = generateTokens(uid);
 

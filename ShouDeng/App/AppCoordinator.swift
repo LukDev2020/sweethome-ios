@@ -39,6 +39,8 @@ final class AppCoordinator: ObservableObject {
     @Published var authState: AuthManager.AuthState = .unknown
     @Published var showSignup = false
     @Published var showSetupWizard = false
+    /// Signed-in user hasn't agreed to the current "data stored in the US" wording yet
+    @Published var needsDataTransferConsent = false
     @Published var signupPhone: String?
     @Published var signupCountry: CountryCode?
     @Published var timeline: [TimelineEntry] = []
@@ -608,6 +610,8 @@ final class AppCoordinator: ObservableObject {
                 self.userRole = user.role
                 self.localStore.saveCurrentUser(user)
                 self.localStore.saveUserRole(user.role)
+                self.needsDataTransferConsent = !self.isDemo
+                    && profile.dataTransferConsentVersion != DataTransferConsent.version
             }
         } catch {
             #if DEBUG
@@ -706,6 +710,28 @@ final class AppCoordinator: ObservableObject {
             print("[Coordinator] safe zone fetch failed: \(error)")
             #endif
         }
+    }
+
+    // MARK: - Data Transfer Consent
+
+    func recordDataTransferConsent() async throws {
+        let _: SuccessResponse = try await apiClient.post(
+            "/v1/user/consent",
+            body: ["type": "cross_border_transfer", "version": DataTransferConsent.version]
+        )
+        await MainActor.run { needsDataTransferConsent = false }
+    }
+
+    // MARK: - Data Export
+
+    /// Everything the server holds about this account, saved as a JSON file to keep or share.
+    func exportMyData() async throws -> URL {
+        let raw: RawResponse = try await apiClient.post("/v1/user/export", body: EmptyBody())
+        let day = ISO8601DateFormatter.string(from: Date(), timeZone: .current, formatOptions: [.withFullDate])
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("LanternCare-data-\(day).json")
+        try raw.data.write(to: url, options: [.atomic, .completeFileProtection])
+        return url
     }
 
     // MARK: - Switch Role
@@ -1015,7 +1041,7 @@ final class AppCoordinator: ObservableObject {
 
     func startLiveActivityIfNeeded() {
         guard !isDemo else { return }
-        let emergencyPhone = selectedHotline?.emergency ?? "911"
+        let emergencyPhone = localEmergencyNumber
 
         if userRole == .protected_ {
             // Protected Person: show who is guarding you
@@ -1038,7 +1064,7 @@ final class AppCoordinator: ObservableObject {
                 guardians: guardianInfos,
                 lastCheckIn: nil,
                 emergencyPhone: emergencyPhone,
-                emergencyLabel: selectedHotline?.selectedLabel ?? "911",
+                emergencyLabel: localEmergencyNumber,
                 bloodType: cachedCard?.bloodType,
                 allergies: cachedCard?.allergies ?? [],
                 conditions: cachedCard?.conditions ?? [],
@@ -1961,7 +1987,7 @@ final class AppCoordinator: ObservableObject {
             let lastCheckIn = timeline.first(where: { $0.type == .checkIn })?.timestamp
             let sosActive = activeSOSEvent != nil
             let sosTriggeredAt = activeSOSEvent?.triggeredAt
-            let emergencyPhone = selectedHotline?.emergency
+            let emergencyPhone: String? = localEmergencyNumber
 
             // Move encoding + widget reload to background
             Task.detached(priority: .utility) {

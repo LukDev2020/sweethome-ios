@@ -32,6 +32,7 @@ enum DisclaimerCopy {
                                               body: lm.zh($0.body), buttonTitle: lm.zh($0.buttonTitle)) }
             case .english: return screensEn
             case .french: return screensFr
+            case .japanese: return screensJa
             }
         }
 
@@ -80,6 +81,30 @@ enum DisclaimerCopy {
                 title: "You Are in Control",
                 body: "You can turn off any sharing at any time.\n\nChanges take effect after a 6-hour delay — this prevents someone from forcing you to disable sharing on the spot. If you are safe, sharing will fully stop after 6 hours.",
                 buttonTitle: "Get Started"
+            ),
+        ]
+
+        private static let screensJa: [Screen] = [
+            Screen(
+                id: "onboard.not_emergency",
+                icon: "exclamationmark.triangle",
+                title: "Lantern Care は緊急通報サービスではありません",
+                body: "危険なときは、まず現地の緊急番号（日本では救急・消防 119、警察 110）に電話してください。\n\nLantern Care はご家族や連絡先に知らせるためのアプリで、警察・消防・救急の代わりにはなりません。通知が届くよう最善を尽くしますが、通信環境や端末、相手がすぐに対応できることは保証できません。",
+                buttonTitle: "わかりました"
+            ),
+            Screen(
+                id: "onboard.scope",
+                icon: "eye.slash",
+                title: "見えるのは安全に必要な情報だけ",
+                body: "ご家族に見えるのは、あなたの位置、バッテリー残量、オンライン状態です。\n\nメッセージ、写真、通話履歴、その他のアプリの内容は見えません。\n\n私たちもそれらの情報は収集しません。",
+                buttonTitle: "次へ"
+            ),
+            Screen(
+                id: "onboard.control",
+                icon: "hand.raised",
+                title: "決めるのはあなたです",
+                body: "共有はいつでもオフにできます。\n\n変更は 6 時間後に反映されます。その場で誰かに共有をやめさせられることを防ぐためです。安全であれば、6 時間後に共有は完全に停止します。",
+                buttonTitle: "はじめる"
             ),
         ]
 

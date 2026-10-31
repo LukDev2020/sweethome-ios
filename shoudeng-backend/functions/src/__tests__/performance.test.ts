@@ -42,6 +42,9 @@ function readiOS(relativePath: string): string {
 const indexSource = readSource("index.ts");
 const triggerSource = readSource("triggers/onSOSCreated.ts");
 const ttlSource = readSource("scheduled/ttlCleanup.ts");
+// Per-plan retention and erasure queries live here (called by ttlCleanup)
+const retentionSource = readSource("services/accountData.ts");
+const planSource = readSource("services/payment.ts");
 const heartbeatCheckSource = readSource("scheduled/heartbeatCheck.ts");
 const checkinOverdueSource = readSource("scheduled/checkinOverdue.ts");
 const homeTimerSource = readSource("scheduled/homeTimerCheck.ts");
@@ -164,24 +167,29 @@ describe("Performance — Telemetry Input Validation", () => {
 });
 
 describe("Performance — BigQuery Cost Controls", () => {
-  it("TTL cleanup uses parameterized queries (no SQL injection)", () => {
-    expect(ttlSource).toContain("@cutoff");
-    expect(ttlSource).toContain("params");
-    expect(ttlSource).not.toMatch(/\$\{.*\}.*WHERE/); // No template literals in SQL WHERE
+  it("TTL cleanup runs the per-plan retention", () => {
+    expect(ttlSource).toContain("applyBigQueryRetention");
+    expect(ttlSource).toContain("applyFirestoreRetention");
   });
 
-  it("TTL cleanup uses DELETE (not SELECT then delete)", () => {
-    expect(ttlSource).toContain("DELETE FROM");
+  it("retention uses parameterized queries (no SQL injection)", () => {
+    expect(retentionSource).toContain("@cutoff");
+    expect(retentionSource).toContain("params");
+    expect(retentionSource).not.toMatch(/\$\{.*\}.*WHERE/); // No template literals in SQL WHERE
   });
 
-  it("TTL differentiates free (7d) and paid (90d) retention", () => {
-    expect(ttlSource).toMatch(/free:\s*7/);
-    expect(ttlSource).toMatch(/paid:\s*90/);
+  it("retention uses DELETE (not SELECT then delete)", () => {
+    expect(retentionSource).toContain("DELETE FROM");
   });
 
-  it("TTL skips tables with -1 retention (never delete)", () => {
-    expect(ttlSource).toContain("-1");
-    expect(ttlSource).toContain("no TTL");
+  it("free plan keeps 7d location/heartbeat and 30d check-ins; paid keeps 90d+", () => {
+    expect(planSource).toMatch(/ttlDays:\s*\{\s*heartbeat:\s*7,\s*location:\s*7,\s*checkin:\s*30\s*\}/);
+    expect(planSource).toMatch(/ttlDays:\s*\{\s*heartbeat:\s*90,\s*location:\s*90,\s*checkin:\s*-1\s*\}/);
+    expect(retentionSource).toContain("PLANS.free.ttlDays");
+  });
+
+  it("retention skips -1 (never delete)", () => {
+    expect(retentionSource).toContain("!== -1");
   });
 });
 
@@ -262,9 +270,9 @@ describe("Performance — Evidence Hold Protection", () => {
     expect(ttlSource).toContain("expiresAt");
   });
 
-  it("TTL cleanup builds hold exclusion clauses", () => {
-    expect(ttlSource).toContain("holdClauses");
-    expect(ttlSource).toContain("NOT (user_id =");
+  it("retention builds hold exclusion clauses", () => {
+    expect(ttlSource).toContain("applyBigQueryRetention(holds)");
+    expect(retentionSource).toContain("NOT (user_id =");
   });
 
   it("TTL cleanup cleans up expired evidence holds", () => {

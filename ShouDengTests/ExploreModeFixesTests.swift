@@ -59,7 +59,7 @@ final class ExploreModeFixesTests: XCTestCase {
             ["disclosure.\($0.rawValue).title", "disclosure.\($0.rawValue).body"]
         } + ["disclosure.button.notNow", "disclosure.button.enable",
              "disclosure.button.sendSOS", "disclosure.button.understood", "home.arrivalReport"]
-        for language in ["en", "zh-Hans", "zh-Hant", "fr"] {
+        for language in ["en", "zh-Hans", "zh-Hant", "fr", "ja"] {
             let path = try XCTUnwrap(Bundle.main.path(forResource: "Localizable", ofType: "strings",
                                                       inDirectory: nil, forLocalization: language), language)
             let table = try XCTUnwrap(NSDictionary(contentsOfFile: path) as? [String: String], language)
@@ -73,7 +73,7 @@ final class ExploreModeFixesTests: XCTestCase {
     // MARK: 5. Two home tiles were both labelled "Share Itinerary"
 
     func testArrivalReportTileHasItsOwnLabel() throws {
-        for language in ["en", "zh-Hans", "zh-Hant", "fr"] {
+        for language in ["en", "zh-Hans", "zh-Hant", "fr", "ja"] {
             let path = try XCTUnwrap(Bundle.main.path(forResource: "Localizable", ofType: "strings",
                                                       inDirectory: nil, forLocalization: language))
             let table = try XCTUnwrap(NSDictionary(contentsOfFile: path) as? [String: String])

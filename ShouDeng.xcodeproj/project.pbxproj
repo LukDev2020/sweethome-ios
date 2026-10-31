@@ -167,7 +167,6 @@
 		D8451768FAA8839B90AA37DE /* ProtectedActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CD6466B4BA2EA1E57F4AEBC /* ProtectedActivityAttributes.swift */; };
 		DAD240DC7772316181B2FB9E /* GuardianWidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = C692A2A20BB4BDC4C0CEC2E9 /* GuardianWidgetViews.swift */; };
 		DD16C5FC22EDFB93E09F94F1 /* DisclaimerCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67C305CFAAFD54663F090DC3 /* DisclaimerCopy.swift */; };
-		DFA762487F1BEF905EB3E10E /* GuardianInviteConsentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C39F3E4C79A188D9324AFF /* GuardianInviteConsentView.swift */; };
 		E0B50EFCF0CD8FBB2F740008 /* HeartbeatService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574B86ACC989B40A58DC73F7 /* HeartbeatService.swift */; };
 		E0C9BC98A1A4AAC92553E211 /* MedicalCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0879BC98D0B4991130725412 /* MedicalCardView.swift */; };
 		E23A96E601198D9CB1EFE020 /* EmergencyContactsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52F330C107DBD7227EB0831B /* EmergencyContactsView.swift */; };
@@ -176,7 +175,6 @@
 		ED58D0933C87B251E8F7BD1D /* FallDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D922CFCBCCE8F87BD686AD8 /* FallDetector.swift */; };
 		F0FFEA124608CCCA60504A62 /* AdaptiveLocationManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19BF856E4785D6ABD573F691 /* AdaptiveLocationManagerTests.swift */; };
 		B3C4D5E6F7A8B9C0D1E2F3A4 /* ReactiveLocationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5D6E7F8A9B0C1D2E3F4A5B6 /* ReactiveLocationServiceTests.swift */; };
-		F32E28DB01881C1D11BF9BE9 /* InsuranceReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06AF7B7B67988ED0F7472A93 /* InsuranceReportView.swift */; };
 		F3ECFE963F1129AB9DCD91B0 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E138FA50B18713B668BAA89 /* AuthManager.swift */; };
 		F4098E23D57249FA9DBC132D /* AdaptiveLocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2FC646F35FAFF4899339BE7 /* AdaptiveLocationManager.swift */; };
 		F2E1D0C9B8A7F6E5D4C3B2A1 /* ReactiveLocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* ReactiveLocationService.swift */; };
@@ -280,7 +278,6 @@
 		0582D01DD1A66B1A20CA595D /* GuardianRecordsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianRecordsView.swift; sourceTree = "<group>"; };
 		06711676C420190B6BF2FB41 /* ProtectedHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtectedHomeView.swift; sourceTree = "<group>"; };
 		78733745F4A30EAE16699215 /* TripPreflightView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripPreflightView.swift; sourceTree = "<group>"; };
-		06AF7B7B67988ED0F7472A93 /* InsuranceReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsuranceReportView.swift; sourceTree = "<group>"; };
 		07B3F7BF74A7768DF6C5697C /* ClaimMaterialModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimMaterialModels.swift; sourceTree = "<group>"; };
 		0879BC98D0B4991130725412 /* MedicalCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicalCardView.swift; sourceTree = "<group>"; };
 		090ED02D65906AB2947D49C5 /* Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Events.swift; sourceTree = "<group>"; };
@@ -360,6 +357,7 @@
 		9BEAFFBD653265D29795FC10 /* ProtectedSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtectedSettingsView.swift; sourceTree = "<group>"; };
 		A2CBED579613C2FC6F68B5B6 /* ProtectedCoverageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtectedCoverageView.swift; sourceTree = "<group>"; };
 		A63AC48DEFD6B9454B37F0CF /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		4BD2BCFAB6A34D15A75E9388 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		C39DCCBAE1FC15F455ACC0B9 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		A6CF262FFD6B5FBF8B10D4F7 /* WidgetPreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPreviews.swift; sourceTree = "<group>"; };
 		ABAA69ADBB6EF5CD2EE9C115 /* CheckInIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInIntent.swift; sourceTree = "<group>"; };
@@ -388,7 +386,6 @@
 		CB44F8E91D1F8F00BFF6F99F /* SatelliteDataPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatelliteDataPolicy.swift; sourceTree = "<group>"; };
 		CEF25946B046DF1BA3754FAD /* ClaimMaterialsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimMaterialsView.swift; sourceTree = "<group>"; };
 		CFE03FD74FE0AD57E1A8EE88 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		D0C39F3E4C79A188D9324AFF /* GuardianInviteConsentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianInviteConsentView.swift; sourceTree = "<group>"; };
 		D199DA3C341478E8441C8FED /* ProtectedRecordsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtectedRecordsView.swift; sourceTree = "<group>"; };
 		D3AAC199D8ECB3D24D78FCB1 /* GuardianMemberDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianMemberDetailView.swift; sourceTree = "<group>"; };
 		D9AB9C9ECACF9A543D385A38 /* DeviceHealthMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceHealthMonitor.swift; sourceTree = "<group>"; };
@@ -403,6 +400,7 @@
 		E9B16BBF77C02115152E9C88 /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
 		EC9967501D760330EF89D308 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		EE01C7E451FF10AFE25F1C12 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		4741144445244397B9894FC4 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C616DFF1384FEC99A832D85D /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		EE810FC84014C69B9D77A58F /* EscalationEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscalationEngineTests.swift; sourceTree = "<group>"; };
 		F19D2204A1EC532BE980B3A4 /* ShouDeng.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ShouDeng.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -566,7 +564,6 @@
 		27B49AFC2D6692EA076043E7 /* Organization */ = {
 			isa = PBXGroup;
 			children = (
-				06AF7B7B67988ED0F7472A93 /* InsuranceReportView.swift */,
 				120577EAE73536443543BF82 /* OrgDashboardView.swift */,
 			);
 			path = Organization;
@@ -763,7 +760,6 @@
 				43D8A8B0CD131E9E09E02BF6 /* GuardianAlertResponseView.swift */,
 				BAA9F22E2D872D3B7AE014A1 /* GuardianDutyScheduleView.swift */,
 				323C5F3CDB46FE9F3750B9AA /* GuardianHomeView.swift */,
-				D0C39F3E4C79A188D9324AFF /* GuardianInviteConsentView.swift */,
 				D3AAC199D8ECB3D24D78FCB1 /* GuardianMemberDetailView.swift */,
 				2045C1ED8DC5B6CCC03AC6C3 /* GuardianPlanBillingView.swift */,
 				0582D01DD1A66B1A20CA595D /* GuardianRecordsView.swift */,
@@ -1183,6 +1179,7 @@
 				fr,
 				"zh-Hans",
 				"zh-Hant",
+				ja,
 			);
 			mainGroup = A63BA50CE96DE9D9C137552F;
 			minimizedProjectReferenceProxies = 1;
@@ -1291,7 +1288,6 @@
 				61586C8E3D663CC027C5804E /* GuardianAlertResponseView.swift in Sources */,
 				C59757EA88DF0C1DF1A90CB4 /* GuardianDutyScheduleView.swift in Sources */,
 				445FC9E110BFEAD1DAB39BAB /* GuardianHomeView.swift in Sources */,
-				DFA762487F1BEF905EB3E10E /* GuardianInviteConsentView.swift in Sources */,
 				41A00CCAAED5F20C14441CDC /* GuardianMemberDetailView.swift in Sources */,
 				A406EE8717C42C064E08EA50 /* GuardianPlanBillingView.swift in Sources */,
 				95ECC029485F8F4C3BBB96DD /* GuardianRecordsView.swift in Sources */,
@@ -1300,7 +1296,6 @@
 				E0B50EFCF0CD8FBB2F740008 /* HeartbeatService.swift in Sources */,
 				A58C7804D02B22DF2ADD2838 /* HomeTimerView.swift in Sources */,
 				06386B2FC24D4DFE3C69F2CB /* HotlineCardView.swift in Sources */,
-				F32E28DB01881C1D11BF9BE9 /* InsuranceReportView.swift in Sources */,
 				C2956C1ABB45EAD50DA58FD9 /* InviteGuardianView.swift in Sources */,
 				28B38BF21CF13BC8E8879F8B /* KeychainHelper.swift in Sources */,
 				9CB0FF8A248F056D774B567D /* LanguageManager.swift in Sources */,
@@ -1463,6 +1458,7 @@
 				469769F9EBCDCFC54433843A /* fr */,
 				EE01C7E451FF10AFE25F1C12 /* zh-Hans */,
 				C616DFF1384FEC99A832D85D /* zh-Hant */,
+				4741144445244397B9894FC4 /* ja */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";
@@ -1474,6 +1470,7 @@
 				56F65E186B666AA398748A9F /* fr */,
 				A63AC48DEFD6B9454B37F0CF /* zh-Hans */,
 				C39DCCBAE1FC15F455ACC0B9 /* zh-Hant */,
+				4BD2BCFAB6A34D15A75E9388 /* ja */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";

@@ -364,7 +364,7 @@ const SAME_IN_ZH = new Set([
 const SAME_IN_FR = new Set([
   ...SAME_IN_ZH,
   "protected.coverage.responseLanguageValue", "map.route.duration.m", "map.route.duration.hm",
-  "sos.method.watchQuickAction", "sos.method.widgetTap", "legal.version",
+  "sos.method.watchQuickAction", "sos.method.widgetTap", "legal.version", "consent.transfer.declined.later",
   "trip.points.count", "deadman.extend", "silent.alarm.minutes", "silent.alarm.15min",
   "silent.alarm.30min", "silent.alarm.60min", "medical.preview.allergies", "la.allergy",
   "itinerary.type.train", "itinerary.type", "org.orgType", "disguise.notes", "claim.notes",

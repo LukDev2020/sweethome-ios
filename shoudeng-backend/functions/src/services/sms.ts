@@ -1,4 +1,4 @@
-import { normalizeLocale } from "./locale";
+import { localeFromPhone, normalizeLocale } from "./locale";
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
@@ -43,6 +43,14 @@ const smsStrings: Record<string, {
     contactSosBody: (name, url) => `[Lantern Care Urgence] ${name} vous a désigné(e) comme contact d'urgence et demande de l'aide.${url ? " Dernière position : " + url + "." : ""} Si vous ne pouvez pas le/la joindre, appelez les secours.`,
     checkinBody: (name) => `[Lantern Care] ${name} n'a pas donné signe de vie aujourd'hui.`,
     verifyBody: (code) => `[Lantern Care] Votre code de vérification est ${code}. Valide 5 minutes.`,
+  },
+  ja: {
+    sosBody: (name, url) => url
+      ? `【Lantern Care 緊急通知】${name}さんが助けを求めています。詳細をすぐにご確認ください：${url}`
+      : `【Lantern Care 緊急通知】${name}さんが助けを求めています。今すぐLantern Careアプリを開いてご確認ください。`,
+    contactSosBody: (name, url) => `【Lantern Care 緊急通知】${name}さんがあなたを緊急連絡先に登録しており、現在助けを求めています。${url ? "最新の位置情報：" + url + " " : ""}ご本人と連絡が取れない場合は、現地の緊急通報番号（日本国内は救急119・警察110）に連絡してください。`,
+    checkinBody: (name) => `【Lantern Care】${name}さんから今日の無事報告がまだありません。ご確認をお願いします。`,
+    verifyBody: (code) => `【Lantern Care】認証コードは ${code} です。有効期限は5分間です。`,
   },
 };
 
@@ -192,7 +200,7 @@ export async function sendVerificationSms(
   if (!fromNumber) return false;
 
   // Verification SMS uses phone's country to guess locale (no userId available)
-  const locale = phone.startsWith("+33") ? "fr" : phone.startsWith("+1") || phone.startsWith("+44") || phone.startsWith("+61") ? "en" : "zh";
+  const locale = localeFromPhone(phone);
   const s = getSmsStrings(locale);
 
   try {

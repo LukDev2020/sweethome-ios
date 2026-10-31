@@ -104,8 +104,22 @@ enum WidgetDataStore {
         return text.applyingTransform(StringTransform("Hans-Hant"), reverse: false) ?? text
     }
 
+    private static let japanese: [String: String] = [
+        "la.normal": "通常", "la.on.duty": "見守り中", "la.guardians": "人が見守り中",
+        "la.online": "人がオンライン", "la.sos.button": "SOS", "la.checkin.button": "無事",
+        "la.location.button": "位置", "la.home.countdown": "帰宅まで", "la.last.checkin": "前回の無事報告",
+        "la.allergy": "アレルギー：", "la.home.timer": "タイマー作動中", "la.sos.active": "SOS 発信中",
+        "la.sos.title": "緊急 SOS", "la.sos.body": "Lantern Care の SOS が発信されました",
+        "la.persons.count": "人の家族", "la.all.safe": "全員無事", "la.needs.attention": "要確認",
+        "la.emergency": "緊急", "la.call": "電話 ", "la.safe": "無事", "la.overdue": "報告なし",
+        "la.alert": "緊急 SOS", "la.offline": "オフライン", "la.people.safe": "人が無事",
+        "widget.sos.title": "緊急 SOS", "widget.sos.description": "ワンタップで SOS",
+        "widget.sos.tap": "タップで SOS", "widget.login.required": "ログインしてください",
+    ]
+
     private static func baseLocalized(_ key: String) -> String {
         let lang = currentLanguage
+        if lang.hasPrefix("ja"), let text = japanese[key] { return text }
         let isZh = lang.hasPrefix("zh")
         let isFr = lang.hasPrefix("fr")
 

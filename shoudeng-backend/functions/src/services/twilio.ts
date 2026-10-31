@@ -97,7 +97,7 @@ function getEmergencyNumber(countryCode: string): string {
  * Twilio <Say> language for the guardian's app language.
  */
 function getTwimlLanguage(lang: Lang): string {
-  return { en: "en-US", zh: "cmn-CN", "zh-Hant": "cmn-TW", fr: "fr-FR" }[lang];
+  return { en: "en-US", zh: "cmn-CN", "zh-Hant": "cmn-TW", fr: "fr-FR", ja: "ja-JP" }[lang];
 }
 
 /**
@@ -160,6 +160,16 @@ const VOICE_COPY: Record<Lang, {
       : "Aucune réponse. Nous rappellerons dans environ deux minutes jusqu'à ce que quelqu'un réponde.",
     ack: "Merci. Les autres ont été prévenus que vous vous en occupez et les appels automatiques sont arrêtés. Ouvrez l'application pour voir la position.",
     invalid: "Touche invalide.",
+  },
+  ja: {
+    intro: (n) => `Lantern Care緊急通知です。あなたが見守っている${n}さんが助けを求めています。今すぐLantern Careアプリを開いてください。`,
+    keys: "対応できる場合は1を押してください。自動発信が停止し、ほかのご家族にお知らせします。もう一度聞く場合は2を押してください。",
+    prompt: "番号を押してください。",
+    noAnswer: (last) => last
+      ? "応答がありませんでした。ご家族には最新の位置情報へのリンクも送信済みです。"
+      : "応答がありませんでした。どなたかが応答するまで、約2分後に再度おかけします。",
+    ack: "ありがとうございます。あなたが対応することをほかのご家族にお知らせし、自動発信を停止しました。アプリを開いて位置情報をご確認ください。",
+    invalid: "無効な番号です。",
   },
 };
 

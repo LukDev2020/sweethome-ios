@@ -1,0 +1,25 @@
+CFBundleDisplayName = "Lantern Care";
+CFBundleName = "Lantern Care";
+
+/* Location — Always */
+NSLocationAlwaysAndWhenInUseUsageDescription = "Lantern Careは、緊急時にご家族があなたに駆けつけられるよう、あなたが選んだご家族と位置情報を共有します。位置情報は安全エリアの通知にも使用されます。共有はアプリ内の同意画面で同意した後にのみ開始されます。";
+
+/* Location — When In Use */
+NSLocationWhenInUseUsageDescription = "Lantern Careは、地図上に現在地を表示するため、またSOSの発信中にあなたが選んだご家族へ現在地を送信するために位置情報を使用します。アプリ内で同意した後にのみ使用されます。";
+
+/* Motion / Accelerometer */
+NSMotionUsageDescription = "Lantern Careは、アプリの使用中にモーションセンサーを使って転倒の可能性を検知します。転倒が検知された場合、ご家族に通知される前に60秒以内であればアラートを解除できます。";
+
+/* Face ID */
+NSFaceIDUsageDescription = "Lantern Careは、本人確認を行い、ご家族の安全に関するデータへのアクセスを保護するためにFace IDを使用します。";
+
+/* Microphone */
+NSMicrophoneUsageDescription = "SOSの発信中、あなたが選んだご家族が状況を把握できるよう、マイクで周囲の音声を録音することがあります。録音は、この機能をオンにしていて、かつ現地の法律で認められている場合にのみ開始されます。";
+
+/* Photo Library */
+NSPhotoLibraryUsageDescription = "見守りグループのご家族と写真を共有できます。写真は見守り関係にある人だけが閲覧できます。";
+
+/* Contacts */
+NSContactsUsageDescription = "連絡先にアクセスして、緊急連絡先をすばやく追加できます。連絡先のデータがサーバーにアップロードされることはありません。";
+NSBluetoothAlwaysUsageDescription = "Lantern Careは、Bluetooth対応の緊急ボタンや追跡タグに接続し、SOSアラートの発信や離れたことの検知を行います。Bluetoothは「設定」でデバイスをペアリングした後にのみ使用されます。";
+NSSpeechRecognitionUsageDescription = "音声コマンドを使うと、「help」や「救命」と言うだけで、手を使わずにSOSを発信できます。音声認識はすべてデバイス上で処理されます。";

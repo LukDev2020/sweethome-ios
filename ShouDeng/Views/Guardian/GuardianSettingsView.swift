@@ -28,6 +28,7 @@ struct GuardianSettingsView: View {
     @State private var showRoleSwitchInfo = false
     @State private var showDeleteError = false
     @State private var showExportSent = false
+    @State private var exportFile: ExportFile?
     @State private var showMedicalCard = false
     @State private var showEmergencyText = false
     @State private var showConsulate = false
@@ -84,6 +85,9 @@ struct GuardianSettingsView: View {
                 Button(langManager.localized("settings.action.cancel"), role: .cancel) {}
             } message: {
                 Text(langManager.localized("settings.alert.dataExport.message"))
+            }
+            .sheet(item: $exportFile) { file in
+                ShareSheet(items: [file.url])
             }
             .alert(langManager.localized("settings.alert.exportSent.title"), isPresented: $showExportSent) {
                 Button(langManager.localized("settings.action.ok")) {}
@@ -862,11 +866,7 @@ struct GuardianSettingsView: View {
 
     private func requestDataExport() async {
         do {
-            let _: EmptyResponse = try await coordinator.apiClient.post(
-                "/v1/user/export",
-                body: EmptyBody()
-            )
-            showExportSent = true
+            exportFile = ExportFile(url: try await coordinator.exportMyData())
         } catch {
             showDeleteError = true
         }

@@ -155,10 +155,27 @@ struct DemoText {
     private var zh: Bool { language.isChinese }
     private var fr: Bool { language == .french }
     private func pick(_ en: String, _ zh: String, _ fr: String) -> String {
+        if language == .japanese { return Self.japanese[en] ?? en }
         guard self.zh else { return self.fr ? fr : en }
         return language == .traditionalChinese
             ? (zh.applyingTransform(StringTransform("Hans-Hant"), reverse: false) ?? zh) : zh
     }
+
+    /// Japanese copy keyed by the English text (names stay in English, as in French).
+    private static let japanese: [String: String] = [
+        "Chengdu": "成都", "Toronto": "トロント", "Shanghai": "上海", "Paris": "パリ", "Home": "自宅",
+        "Jinjiang District, Chengdu": "成都市 錦江区", "People's Park, Chengdu": "成都 人民公園",
+        "Chengdu East Station": "成都東駅",
+        "Morning tai chi done ☀️ The plum blossoms by the river are out.": "朝の太極拳おわり ☀️ 川沿いの梅が咲いていたよ。",
+        "So pretty! Don't forget your jacket, Mom.": "きれい！お母さん、上着を忘れないでね。",
+        "Miss you Grandma 💛": "おばあちゃん、会いたいな 💛",
+        "Exam week in Paris 📚 Video call this Sunday?": "パリは試験週間 📚 日曜にビデオ通話しない？",
+        "Booked the train to Chengdu for the holiday — home on the 1st!": "連休の成都行きの列車を予約したよ。1日に帰るね！",
+        "Mom arrived home": "お母さんが帰宅しました", "Mom checked in · I'm safe": "お母さんから無事の報告",
+        "Dad's battery is at 17%": "お父さんのバッテリー残量 17%", "Dad checked in": "お父さんから無事の報告",
+        "Arrived home": "帰宅しました", "Checked in · I'm safe": "無事を報告しました",
+        "Home timer completed": "帰宅タイマー完了", "Arrival reported": "到着を報告しました",
+    ]
 
     var momName: String { pick("Xiulan Chen", "陈秀兰", "Xiulan Chen") }
     var dadName: String { pick("Jianguo Chen", "陈建国", "Jianguo Chen") }

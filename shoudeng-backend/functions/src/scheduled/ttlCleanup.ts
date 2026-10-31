@@ -1,22 +1,10 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import { BigQuery } from "@google-cloud/bigquery";
-import { getSubscription } from "../services/payment";
 import { cleanupRateLimits } from "../middleware/rateLimit";
 import { cleanupExpiredEvidence } from "../services/storage";
+import { applyBigQueryRetention, applyFirestoreRetention, processPendingDeletions } from "../services/accountData";
 
 const db = admin.firestore();
-const bigquery = new BigQuery();
-const DATASET = "shoudeng";
-
-// TTL rules (days)
-const TTL = {
-  heartbeat_signals: { free: 7, paid: 90 },
-  location_reports: { free: 7, paid: 90 },
-  checkins: { free: 30, paid: -1 }, // -1 = never delete
-  // consent_audit: never deleted
-  // sos_events: never deleted
-};
 
 /**
  * Scheduled function: runs daily at 3 AM UTC.
@@ -43,54 +31,11 @@ export const ttlCleanup = functions.pubsub
 
       console.log(`[TTL] Active evidence holds: ${holds.length}`);
 
-      for (const [table, ttl] of Object.entries(TTL)) {
-        // Use paid TTL if any user has an active subscription
-        // In production, would run per-user with their specific plan
-        const retentionDays = ttl.free;
-
-        if (retentionDays === -1) {
-          console.log(`[TTL] Skipping ${table} — no TTL`);
-          continue;
-        }
-
-        const cutoffDate = new Date(
-          Date.now() - retentionDays * 24 * 60 * 60 * 1000
-        );
-
-        // Build hold exclusion clauses using parameterized queries
-        let holdClauses = "";
-        const params: Record<string, string> = { cutoff: cutoffDate.toISOString() };
-        if (holds.length > 0) {
-          const exclusions = holds
-            .map((h, i) => {
-              params[`hold_uid_${i}`] = h.protectedPersonId;
-              params[`hold_start_${i}`] = h.start.toISOString();
-              params[`hold_end_${i}`] = h.end.toISOString();
-              return `NOT (user_id = @hold_uid_${i} AND timestamp BETWEEN @hold_start_${i} AND @hold_end_${i})`;
-            })
-            .join(" AND ");
-          holdClauses = `AND ${exclusions}`;
-        }
-
-        const query = `
-          DELETE FROM \`${DATASET}.${table}\`
-          WHERE timestamp < @cutoff
-          ${holdClauses}
-        `;
-
-        try {
-          const [job] = await bigquery.createQueryJob({
-            query,
-            params,
-          });
-          const [rows] = await job.getQueryResults();
-          console.log(
-            `[TTL] Cleaned ${table}: cutoff ${cutoffDate.toISOString()}`
-          );
-        } catch (error) {
-          console.error(`[TTL] Failed to clean ${table}:`, error);
-        }
-      }
+      // Per-plan retention (free 7/30 days; paid plans longer — see PLANS.ttlDays)
+      await applyBigQueryRetention(holds);
+      await applyFirestoreRetention();
+      const erased = await processPendingDeletions();
+      console.log(`[TTL] Completed ${erased} queued account erasures`);
 
       // Clean up expired evidence holds
       const expiredHolds = await db

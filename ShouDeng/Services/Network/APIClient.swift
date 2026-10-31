@@ -330,6 +330,9 @@ final class APIClient {
             if T.self == EmptyResponse.self {
                 return EmptyResponse() as! T
             }
+            if T.self == RawResponse.self {
+                return RawResponse(data: data) as! T
+            }
             do {
                 return try decoder.decode(T.self, from: data)
             } catch {
@@ -422,4 +425,13 @@ enum APIError: LocalizedError {
 
 struct ValidationError: Codable {
     let message: String
+}
+
+/// The response body as-is (e.g. the account data export, saved to a file).
+struct RawResponse: Decodable {
+    let data: Data
+    init(data: Data) { self.data = data }
+    init(from decoder: Decoder) throws {
+        throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "RawResponse is not decoded"))
+    }
 }

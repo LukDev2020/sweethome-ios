@@ -6,6 +6,7 @@ enum AppLanguage: String, CaseIterable {
     case chinese = "zh-Hans"
     case traditionalChinese = "zh-Hant"   // Hong Kong, Macao, Taiwan
     case french = "fr"
+    case japanese = "ja"
 
     var displayName: String {
         switch self {
@@ -13,6 +14,7 @@ enum AppLanguage: String, CaseIterable {
         case .chinese: return "简"
         case .traditionalChinese: return "繁"
         case .french:  return "FR"
+        case .japanese: return "日"
         }
     }
 
@@ -22,6 +24,7 @@ enum AppLanguage: String, CaseIterable {
         case .chinese: return "简体中文"
         case .traditionalChinese: return "繁體中文"
         case .french:  return "法语 (Français)"
+        case .japanese: return "日本語"
         }
     }
 
@@ -32,7 +35,7 @@ enum AppLanguage: String, CaseIterable {
         switch self {
         case .chinese: return "守灯"
         case .traditionalChinese: return "守燈"
-        case .english, .french: return "Lantern Care"
+        case .english, .french, .japanese: return "Lantern Care"
         }
     }
 
@@ -112,6 +115,7 @@ final class LanguageManager: ObservableObject {
             return traditional ? .traditionalChinese : .chinese
         }
         if preferred.hasPrefix("fr") { return .french }
+        if preferred.hasPrefix("ja") { return .japanese }
         return .english
     }
 

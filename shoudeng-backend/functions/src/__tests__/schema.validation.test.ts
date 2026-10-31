@@ -118,7 +118,8 @@ describe("Schema Validation — Country-to-Timezone Mapping", () => {
 });
 
 describe("Data Lifecycle — GDPR Delete Cascade", () => {
-  const userSource = readSource("routes/user.ts");
+  // routes/user.ts calls eraseAccount() in services/accountData.ts
+  const userSource = readSource("routes/user.ts") + readSource("services/accountData.ts");
 
   it("delete route exists", () => {
     expect(userSource).toMatch(/delete|DELETE/i);

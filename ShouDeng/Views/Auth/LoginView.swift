@@ -507,6 +507,8 @@ struct LoginView: View {
             target = country.isoCode == "CN" ? .chinese : .traditionalChinese
         } else if country.isoCode == "FR" {
             target = .french
+        } else if country.isoCode == "JP" {
+            target = .japanese
         } else {
             target = .english
         }

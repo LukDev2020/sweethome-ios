@@ -89,6 +89,23 @@ const fcmStrings: Record<string, {
     ackProtectedTitle: "Votre famille est là",
     ackProtectedBody: (g) => `${g} a reçu votre SOS et intervient`,
   },
+  ja: {
+    sosTitle: "緊急SOS",
+    sosBody: (name, loc) => `${name}さんが助けを求めています${loc ? "（" + loc + "付近）" : ""}`,
+    sosBattery: (pct) => `バッテリー残量 ${pct}%`,
+    checkinTitle: "無事報告のお知らせ",
+    checkinBody: (name) => `${name}さんから今日の無事報告がまだありません`,
+    heartbeatTitle: "端末がオフラインです",
+    heartbeatBody: (name, mins) => `${name}さんのスマートフォンが${mins}分間オフラインです`,
+    resolvedTitle: "見守る人が対応しました",
+    resolvedBody: (name) => `${name}さんが確認し、対応を引き継ぎました`,
+    homeSafeTitle: (name) => `${name}さんが無事に帰宅しました`,
+    homeSafeBody: (city, time, note) => [city, time].filter(Boolean).join(" · ") + (note ? `\n${note}` : ""),
+    ackOthersTitle: "対応中の人がいます",
+    ackOthersBody: (g, p) => `${g}さんが${p}さんのSOSに対応しています。自動発信は停止しました`,
+    ackProtectedTitle: "家族に届きました",
+    ackProtectedBody: (g) => `${g}さんがあなたのSOSを受け取り、対応しています`,
+  },
 };
 
 function getStrings(locale: string) {

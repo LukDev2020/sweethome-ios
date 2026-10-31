@@ -168,7 +168,8 @@ final class AuthManager: ObservableObject {
 
     // MARK: - Signup (verify code + create account on backend)
 
-    func signup(displayName: String, role: String, countryCode: String) async throws {
+    func signup(displayName: String, role: String, countryCode: String,
+                dataTransferConsent: String? = nil) async throws {
         guard let idToken = verifiedIdToken else {
             throw AuthError.noVerificationID
         }
@@ -180,7 +181,8 @@ final class AuthManager: ObservableObject {
                 idToken: idToken,
                 displayName: displayName,
                 role: role,
-                countryCode: countryCode
+                countryCode: countryCode,
+                dataTransferConsent: dataTransferConsent
             )
         )
         handleAuthResponse(response)
@@ -411,6 +413,8 @@ struct SignupWithTokenRequest: Codable {
     let displayName: String
     let role: String
     let countryCode: String
+    /// Version of the "your data is stored in the US" consent the user ticked
+    var dataTransferConsent: String? = nil
 }
 
 struct RefreshRequest: Codable {

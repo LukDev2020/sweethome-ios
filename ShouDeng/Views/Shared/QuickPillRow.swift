@@ -8,7 +8,7 @@ struct QuickPillRow: View {
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
     private let offWhiteBg = Color(red: 251/255, green: 248/255, blue: 241/255)
 
-    private let languages: [AppLanguage] = [.english, .chinese, .traditionalChinese, .french]
+    private let languages: [AppLanguage] = [.english, .chinese, .traditionalChinese, .french, .japanese]
     private let langLabels = ["EN", "\u{4E2D}\u{6587}", "FR"]
     private let fontLevels: [FontScaleLevel] = [.standard, .large, .extraLarge, .huge]
     private let fontLabels = ["S", "M", "L", "XL"]

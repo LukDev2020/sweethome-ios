@@ -23,6 +23,16 @@ final class VoiceCommandService: ObservableObject {
     // Callback when a trigger phrase is recognized
     var onSOSCommand: ((String) -> Void)?
 
+    static func recognitionLocale(for language: AppLanguage) -> Locale {
+        switch language {
+        case .english: return Locale(identifier: "en-US")
+        case .chinese: return Locale(identifier: "zh-CN")
+        case .traditionalChinese: return Locale(identifier: "zh-TW")
+        case .french: return Locale(identifier: "fr-FR")
+        case .japanese: return Locale(identifier: "ja-JP")
+        }
+    }
+
     // MARK: - Configuration
 
     struct Config {
@@ -31,6 +41,7 @@ final class VoiceCommandService: ObservableObject {
             "救命", "帮帮我", "救我", "紧急求助",
             "幫幫我", "緊急求助", // Traditional, in case a zh-Hant / zh-HK recognizer is used
             "au secours", "aidez-moi",
+            "助けて", "たすけて", "助けてください",
         ]
         var confidenceThreshold: Double = 0.5
     }
@@ -82,11 +93,10 @@ final class VoiceCommandService: ObservableObject {
             return
         }
 
-        // Use device locale for recognition
-        let locale = Locale(identifier: "zh-Hans")
-        recognizer = SFSpeechRecognizer(locale: locale)
+        // Recognize in the app's language (trigger phrases cover all of them)
+        recognizer = SFSpeechRecognizer(locale: Self.recognitionLocale(for: LanguageManager.shared.current))
 
-        // Fall back to English if Chinese not available
+        // Fall back to English if that recognizer isn't available
         if recognizer?.isAvailable != true {
             recognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
         }

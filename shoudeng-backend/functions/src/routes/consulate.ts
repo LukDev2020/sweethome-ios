@@ -5,9 +5,10 @@ import { authMiddleware } from "../middleware/auth";
 const router = Router();
 const db = admin.firestore();
 
-// Consulate data — verified from Chinese MFA official websites
-// Numbers are consular protection hotlines (领事保护电话)
-const CONSULATE_DATA: Record<
+// Consulate data — verified from Chinese MFA official websites (re-checked 2026-10-31)
+// Numbers are consular protection hotlines (领事保护电话); `emergency` is the
+// ambulance-first number, same as getEmergencyNumber() and the iOS table.
+export const CONSULATE_DATA: Record<
   string,
   {
     name: string;
@@ -65,23 +66,23 @@ const CONSULATE_DATA: Record<
     ambulance: "000",
     embassy: "+61-2-6228-3948",
     consulates: [
-      { city: "悉尼", phone: "+61-2-8595-8029" },
-      { city: "墨尔本", phone: "+61-3-9804-3271" },
+      { city: "悉尼", phone: "+61-2-9550-5519" },
+      { city: "墨尔本", phone: "+61-3-9824-8810" },
     ],
   },
   JP: {
     name: "日本",
     flag: "🇯🇵",
-    emergency: "110",
+    emergency: "119",
     police: "110",
     ambulance: "119",
-    embassy: "+81-3-3403-3065",
+    embassy: "+81-3-6450-2195",
     consulates: [],
   },
   KR: {
     name: "韩国",
     flag: "🇰🇷",
-    emergency: "112",
+    emergency: "119",
     police: "112",
     ambulance: "119",
     embassy: "+82-2-755-0572",
@@ -102,7 +103,7 @@ const CONSULATE_DATA: Record<
   FR: {
     name: "法国",
     flag: "🇫🇷",
-    emergency: "112",
+    emergency: "15",
     police: "17",
     ambulance: "15",
     embassy: "+33-1-5375-8921",
@@ -120,20 +121,29 @@ const CONSULATE_DATA: Record<
   SG: {
     name: "新加坡",
     flag: "🇸🇬",
-    emergency: "999",
+    emergency: "995",
     police: "999",
     ambulance: "995",
-    embassy: "+65-6471-2117",
+    embassy: "+65-6475-0165",
     consulates: [],
   },
   TH: {
     name: "泰国",
     flag: "🇹🇭",
-    emergency: "191",
+    emergency: "1669",
     police: "191",
     ambulance: "1669",
     embassy: "+66-2-245-7010",
-    consulates: [{ city: "清迈", phone: "+66-53-280618" }],
+    consulates: [{ city: "清迈", phone: "+66-81-882-3283" }],
+  },
+  PH: {
+    name: "菲律宾",
+    flag: "🇵🇭",
+    emergency: "911",
+    police: "911",
+    ambulance: "911",
+    embassy: "+63-2-8231-1033",
+    consulates: [],
   },
   MY: {
     name: "马来西亚",

@@ -60,7 +60,7 @@ struct EmergencyYellowPagesView: View {
             YPEntry(icon: "globe", iconColor: lamp, title: "JNTO Tourist Helpline", subtitle: "English support 24h", number: "050-3816-2787")
         ]
         case "US": return [
-            YPEntry(icon: "building.columns.fill", iconColor: cobalt, title: "Chinese Embassy \u{2014} D.C.", subtitle: "3505 International Pl NW", number: "+1-202-495-2266"),
+            YPEntry(icon: "building.columns.fill", iconColor: cobalt, title: "Chinese Embassy \u{2014} D.C.", subtitle: "Consular protection · office hours (after hours: 12308)", number: "+1-202-495-2216"),
             YPEntry(icon: "heart.fill", iconColor: pro, title: "Suicide & Crisis Lifeline", subtitle: "24/7 support", number: "988")
         ]
         case "GB": return [

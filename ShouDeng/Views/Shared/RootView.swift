@@ -125,6 +125,9 @@ private struct AuthenticatedRootView: View {
                         .sheet(isPresented: $showBiometricPrompt) {
                             BiometricEnablePromptView(isPresented: $showBiometricPrompt)
                         }
+                        .sheet(isPresented: $coordinator.needsDataTransferConsent) {
+                            DataTransferConsentSheet().environmentObject(coordinator)
+                        }
                         .onAppear {
                             // After login, offer biometric setup if available (skip if wizard already handled it)
                             if biometric.isAvailable && !biometric.hasShownPrompt && !biometric.isEnabled && setupWizardComplete {

@@ -5,7 +5,7 @@ import XCTest
 /// otherwise users see raw keys like `location.justUpdated` on screen.
 final class LocalizationCompletenessTests: XCTestCase {
 
-    private static let languages = ["en", "zh-Hans", "zh-Hant", "fr"]
+    private static let languages = ["en", "zh-Hans", "zh-Hant", "fr", "ja"]
 
     private var repoRoot: URL {
         URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
@@ -51,7 +51,7 @@ final class LocalizationCompletenessTests: XCTestCase {
 
     func testTablesHaveTheSameKeys() throws {
         let en = Set(try table("en").keys)
-        for lang in ["zh-Hans", "zh-Hant", "fr"] {
+        for lang in ["zh-Hans", "zh-Hant", "fr", "ja"] {
             let other = Set(try table(lang).keys)
             XCTAssertEqual(en.subtracting(other).sorted(), [], "\(lang) lacks keys present in en")
             XCTAssertEqual(other.subtracting(en).sorted(), [], "\(lang) has keys missing from en")
@@ -68,7 +68,7 @@ final class LocalizationCompletenessTests: XCTestCase {
                 .map { String(cleaned[Range($0.range(at: 1), in: cleaned)!]) }.sorted()
         }
         let en = try table("en")
-        for lang in ["zh-Hans", "zh-Hant", "fr"] {
+        for lang in ["zh-Hans", "zh-Hant", "fr", "ja"] {
             let t = try table(lang)
             for (key, value) in en {
                 guard let other = t[key] else { continue }
@@ -160,5 +160,38 @@ final class LanguageChoiceTests: XCTestCase {
         lm.choose(.traditionalChinese)        // person taps 繁
         lm.suggest(.english)                  // screen rebuilt / country re-applied
         XCTAssertEqual(lm.current, .traditionalChinese)
+    }
+}
+
+/// Japanese for the Japan market.
+final class JapaneseTests: XCTestCase {
+
+    func testJapaneseIsDetectedFromSystemLanguage() {
+        for preferred in ["ja", "ja-JP", "ja-Jpan-JP"] {
+            XCTAssertEqual(LanguageManager.detectLanguage(preferred: preferred), .japanese, preferred)
+        }
+    }
+
+    func testJapaneseTableIsMostlyJapanese() throws {
+        let path = try XCTUnwrap(Bundle.main.path(forResource: "Localizable", ofType: "strings",
+                                                  inDirectory: nil, forLocalization: "ja"))
+        let table = try XCTUnwrap(NSDictionary(contentsOfFile: path) as? [String: String])
+        // Kana or kanji; the rest are brand names, "OK", "SOS", numbers
+        let japanese = table.values.filter {
+            $0.unicodeScalars.contains { (0x3040...0x30FF).contains($0.value) || (0x4E00...0x9FFF).contains($0.value) }
+        }
+        XCTAssertGreaterThan(Double(japanese.count) / Double(table.count), 0.95)
+    }
+
+    func testVoiceSOSListensInTheAppLanguage() {
+        XCTAssertEqual(VoiceCommandService.recognitionLocale(for: .japanese).identifier, "ja-JP")
+        XCTAssertEqual(VoiceCommandService.recognitionLocale(for: .english).identifier, "en-US")
+        XCTAssertEqual(VoiceCommandService.recognitionLocale(for: .traditionalChinese).identifier, "zh-TW")
+    }
+
+    func testOnboardingDisclaimerNamesJapaneseNumbers() {
+        let screens = DisclaimerCopy.Onboarding.screens(for: .japanese)
+        XCTAssertEqual(screens.count, 3)
+        XCTAssertTrue(screens[0].body.contains("119"))
     }
 }

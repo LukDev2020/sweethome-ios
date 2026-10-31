@@ -18,20 +18,22 @@ struct ConsulateView: View {
     @State private var selectedCountry: ConsulateEntry?
 
     // Embedded consulate data — works offline
-    // Source: Chinese MFA official websites (cs.mfa.gov.cn, embassy/consulate sites)
+    // Source: Chinese MFA official websites (cs.mfa.gov.cn, embassy/consulate sites), re-checked 2026-10-31.
+    // Same data as backend routes/consulate.ts.
     // Numbers are consular protection hotlines (领事保护电话), not general switchboards
     private let countries: [ConsulateEntry] = [
         ConsulateEntry(code: "US", flag: "🇺🇸", embassy: "+1-202-495-2216", consulates: ["+1-212-695-3125", "+1-415-929-6998", "+1-213-807-8052", "+1-312-397-3015"]),
         ConsulateEntry(code: "CA", flag: "🇨🇦", embassy: "+1-613-562-1616", consulates: ["+1-416-594-2308", "+1-604-336-9926"]),
         ConsulateEntry(code: "GB", flag: "🇬🇧", embassy: "+44-20-7299-8439", consulates: ["+44-161-224-8986", "+44-131-337-4449"]),
-        ConsulateEntry(code: "AU", flag: "🇦🇺", embassy: "+61-2-6228-3948", consulates: ["+61-2-8595-8029", "+61-3-9804-3271"]),
-        ConsulateEntry(code: "JP", flag: "🇯🇵", embassy: "+81-3-3403-3065", consulates: []),
+        ConsulateEntry(code: "AU", flag: "🇦🇺", embassy: "+61-2-6228-3948", consulates: ["+61-2-9550-5519", "+61-3-9824-8810"]),
+        ConsulateEntry(code: "JP", flag: "🇯🇵", embassy: "+81-3-6450-2195", consulates: []),
         ConsulateEntry(code: "KR", flag: "🇰🇷", embassy: "+82-2-755-0572", consulates: []),
         ConsulateEntry(code: "DE", flag: "🇩🇪", embassy: "+49-30-27588-551", consulates: ["+49-69-6953-8633", "+49-89-7244-98146"]),
         ConsulateEntry(code: "FR", flag: "🇫🇷", embassy: "+33-1-5375-8921", consulates: ["+33-7-8562-0931"]),
         ConsulateEntry(code: "NZ", flag: "🇳🇿", embassy: "+64-4-499-5022", consulates: ["+64-9-525-1200"]),
-        ConsulateEntry(code: "SG", flag: "🇸🇬", embassy: "+65-6471-2117", consulates: []),
-        ConsulateEntry(code: "TH", flag: "🇹🇭", embassy: "+66-2-245-7010", consulates: ["+66-53-280618"]),
+        ConsulateEntry(code: "SG", flag: "🇸🇬", embassy: "+65-6475-0165", consulates: []),
+        ConsulateEntry(code: "TH", flag: "🇹🇭", embassy: "+66-2-245-7010", consulates: ["+66-81-882-3283"]),
+        ConsulateEntry(code: "PH", flag: "🇵🇭", embassy: "+63-2-8231-1033", consulates: []),
         ConsulateEntry(code: "MY", flag: "🇲🇾", embassy: "+60-3-2164-5301", consulates: []),
         ConsulateEntry(code: "UA", flag: "🇺🇦", embassy: "+380-50-355-0734", consulates: []),
     ]
