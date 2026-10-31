@@ -1719,3 +1719,10 @@
 "invite.error.network" = "網路不穩定，請稍後重試";
 "invite.error.tooMany" = "嘗試次數過多，請幾分鐘後再試";
 "invite.error.other" = "出了點問題，請稍後重試";
+
+/* Store errors */
+"store.error.loadPlans" = "無法載入訂閱方案，請檢查網路連線";
+"store.error.pending" = "購買正在等待審批（家長控制等）";
+"store.error.purchase" = "購買失敗：%@";
+"store.error.nothingToRestore" = "未找到可恢復的訂閱";
+"store.error.restore" = "恢復購買失敗：%@";

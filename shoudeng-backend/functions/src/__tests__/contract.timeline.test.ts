@@ -49,4 +49,28 @@ describe("contract: GET /v1/timeline", () => {
     expect(page3.body.entries.map((e: any) => e.id)).toEqual(["e8"]);
     expect(page3.body.hasMore).toBe(false);
   });
+
+  describe("?personId= (guardian viewing someone they protect)", () => {
+    const get = (uid: string, path: string) =>
+      request(buildApp()).get(path).set("Authorization", `Bearer ${tokenFor(uid)}`);
+
+    it("an active guardian sees only that person's entries", async () => {
+      seed("guardian_links/sarah_dad", { guardianId: "sarah", protectedPersonId: "dad", status: "active" });
+      const res = await get("sarah", "/v1/timeline?personId=dad");
+      expect(res.status).toBe(200);
+      expect(res.body.entries.map((e: { id: string }) => e.id)).toEqual(["other"]);
+    });
+
+    it("anyone else is refused", async () => {
+      expect((await get("stranger", "/v1/timeline?personId=mom")).status).toBe(403);
+      seed("guardian_links/sarah_mom", { guardianId: "sarah", protectedPersonId: "mom", status: "revoked" });
+      expect((await get("sarah", "/v1/timeline?personId=mom")).status).toBe(403);
+    });
+
+    it("personId = yourself is the normal timeline", async () => {
+      const res = await get("mom", "/v1/timeline?personId=mom&limit=50");
+      expect(res.status).toBe(200);
+      expect(res.body.entries).toHaveLength(9);
+    });
+  });
 });

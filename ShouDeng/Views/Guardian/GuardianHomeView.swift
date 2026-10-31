@@ -398,7 +398,7 @@ struct GuardianHomeView: View {
             if let c = coordinator.currentUser?.cityName, !c.isEmpty { cities.append(c) }
             for person in coordinator.protectedPersons { if !person.user.cityName.isEmpty && !cities.contains(person.user.cityName) { cities.append(person.user.cityName) } }
             let totalFamily = coordinator.protectedPersons.count
-            familyText = "\(totalFamily) \(lang.localized("home.persons"))"
+            familyText = String(format: lang.localized("guardian.home.guarding.count"), totalFamily)
             subtitleText = cities.isEmpty
                 ? lang.localized("guardian.home.guarding")
                 : cities.prefix(3).joined(separator: " · ")
@@ -794,12 +794,10 @@ struct GuardianHomeView: View {
 
             // Protection layers
             VStack(spacing: 1) {
+                // One line: "3 layers of protection" already says it
                 Text(String(format: lang.localized("guardian.home.layers.count"), layers))
                     .font(.scaled(size: 13, weight: .semibold, design: .serif))
                     .foregroundStyle(ink)
-                Text(lang.localized("guardian.home.protection"))
-                    .font(.scaled(size: 12))
-                    .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
             }
         }
         .padding(.horizontal, 11)

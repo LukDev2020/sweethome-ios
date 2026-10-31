@@ -1719,3 +1719,10 @@ vos gardiens seront automatiquement notifiés.";
 "invite.error.network" = "Connexion instable. Réessayez dans un instant.";
 "invite.error.tooMany" = "Trop de tentatives. Patientez quelques minutes puis réessayez.";
 "invite.error.other" = "Une erreur s'est produite. Réessayez.";
+
+/* Store errors */
+"store.error.loadPlans" = "Impossible de charger les formules. Vérifiez votre connexion.";
+"store.error.pending" = "Achat en attente d'approbation (contrôle parental, etc.).";
+"store.error.purchase" = "Échec de l'achat : %@";
+"store.error.nothingToRestore" = "Aucun abonnement à restaurer.";
+"store.error.restore" = "Impossible de restaurer les achats : %@";

@@ -1719,3 +1719,10 @@
 "invite.error.network" = "网络不稳定，请稍后重试";
 "invite.error.tooMany" = "尝试次数过多，请几分钟后再试";
 "invite.error.other" = "出了点问题，请稍后重试";
+
+/* Store errors */
+"store.error.loadPlans" = "无法加载订阅方案，请检查网络连接";
+"store.error.pending" = "购买正在等待审批（家长控制等）";
+"store.error.purchase" = "购买失败：%@";
+"store.error.nothingToRestore" = "未找到可恢复的订阅";
+"store.error.restore" = "恢复购买失败：%@";

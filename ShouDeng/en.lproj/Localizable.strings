@@ -1719,3 +1719,10 @@ your guardians will be automatically notified.";
 "invite.error.network" = "Connection is unstable. Please try again shortly.";
 "invite.error.tooMany" = "Too many attempts. Please wait a few minutes and try again.";
 "invite.error.other" = "Something went wrong. Please try again.";
+
+/* Store errors */
+"store.error.loadPlans" = "Couldn't load plans. Check your connection.";
+"store.error.pending" = "Purchase is waiting for approval (e.g. Ask to Buy).";
+"store.error.purchase" = "Purchase failed: %@";
+"store.error.nothingToRestore" = "No subscription found to restore.";
+"store.error.restore" = "Couldn't restore purchases: %@";

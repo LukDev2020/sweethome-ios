@@ -137,6 +137,10 @@ struct DemoDataset {
                 entry(60 * 5, .homeTimerDismissed, t.tlTimerDone),
                 entry(60 * 26, .arrivalReport, t.tlArrival, t.station),
             ],
+            dad.id: [
+                entry(60 * 2, .batteryLow, t.tlDadBattery),
+                entry(60 * 3.5, .checkIn, t.tlDadCheckedIn),
+            ],
         ]
 
         let safeZones = [SafeZone(id: "demo-z1", name: t.home, latitude: 30.6586, longitude: 104.0647, radius: 150,

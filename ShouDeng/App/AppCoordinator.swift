@@ -649,6 +649,10 @@ final class AppCoordinator: ObservableObject {
         locationService.currentLocation = location
         locationService.lastUpdateTime = location == nil ? nil : Date()
         locationManager.demoLocation = location.map { CLLocation(latitude: $0.latitude, longitude: $0.longitude) }
+        // The sample family (Sarah guards Mom and Dad) is on the Family plan; on the
+        // free plan the guardian home showed "2 / 1 — plan limit reached".
+        let storeKit = storeKitManager
+        Task { @MainActor in storeKit.purchasedPlanId = "family" }
         isSOSScreenPresented = false
         pendingAlertPersonId = nil
         activeSOSEvent = nil
@@ -725,6 +729,19 @@ final class AppCoordinator: ObservableObject {
             body: ["type": "cross_border_transfer", "version": DataTransferConsent.version]
         )
         await MainActor.run { needsDataTransferConsent = false }
+    }
+
+    // MARK: - Member Timeline
+
+    /// Recent events of someone I guard (their own timeline, not mine).
+    func fetchTimeline(of personId: String, limit: Int = 10) async -> [TimelineEntry] {
+        let id = personId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? personId
+        do {
+            let response: TimelineResponse = try await apiClient.get("/v1/timeline?personId=\(id)&limit=\(limit)")
+            return response.entries
+        } catch {
+            return []
+        }
     }
 
     // MARK: - Data Export

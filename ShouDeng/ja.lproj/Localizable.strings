@@ -1718,3 +1718,10 @@
 "invite.error.network" = "接続が不安定です。しばらくしてからもう一度お試しください。";
 "invite.error.tooMany" = "試行回数が多すぎます。数分待ってからもう一度お試しください。";
 "invite.error.other" = "問題が発生しました。もう一度お試しください。";
+
+/* Store errors */
+"store.error.loadPlans" = "プランを読み込めませんでした。接続を確認してください。";
+"store.error.pending" = "購入は承認待ちです（「承認と購入のリクエスト」など）。";
+"store.error.purchase" = "購入できませんでした：%@";
+"store.error.nothingToRestore" = "復元できるサブスクリプションが見つかりません。";
+"store.error.restore" = "購入を復元できませんでした：%@";

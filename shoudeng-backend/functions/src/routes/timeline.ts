@@ -10,11 +10,22 @@ router.use(authMiddleware);
 
 /**
  * GET /v1/timeline
- * Retrieve timeline entries for the authenticated user.
+ * Retrieve timeline entries for the authenticated user, or — with ?personId= —
+ * for someone they actively guard (member detail screen).
  * Supports pagination via ?limit=N&before=ISO_DATE
  */
 router.get("/", async (req: Request, res: Response) => {
-  const uid = req.uid!;
+  const caller = req.uid!;
+  const personId = typeof req.query.personId === "string" ? req.query.personId : "";
+  let uid = caller;
+  if (personId && personId !== caller) {
+    const link = await db.collection("guardian_links").doc(`${caller}_${personId}`).get();
+    if (!link.exists || link.data()?.status !== "active") {
+      res.status(403).json({ error: "Not authorized to view this person's timeline" });
+      return;
+    }
+    uid = personId;
+  }
   const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
   const before = req.query.before as string | undefined;
 

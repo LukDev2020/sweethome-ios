@@ -56,10 +56,13 @@ final class StoreKitManager: ObservableObject {
 
     private let apiClient: APIClient
     private var transactionListener: Task<Void, Error>?
+    /// false in Explore Mode: the sample family's plan is set directly, never read from StoreKit
+    private let usesStoreKit: Bool
 
     /// - Parameter observeTransactions: false for Explore Mode (no StoreKit side effects)
     init(apiClient: APIClient, observeTransactions: Bool = true) {
         self.apiClient = apiClient
+        self.usesStoreKit = observeTransactions
         if observeTransactions {
             transactionListener = listenForTransactions()
         }
@@ -80,7 +83,7 @@ final class StoreKitManager: ObservableObject {
             let storeProducts = try await Product.products(for: Self.productIds)
             products = storeProducts.sorted { $0.price < $1.price }
         } catch {
-            errorMessage = "无法加载订阅方案，请检查网络连接"
+            errorMessage = LanguageManager.shared.localized("store.error.loadPlans")
             #if DEBUG
             print("[StoreKit] Failed to fetch products: \(error)")
             #endif
@@ -121,7 +124,7 @@ final class StoreKitManager: ObservableObject {
                 return false
 
             case .pending:
-                errorMessage = "购买正在等待审批（家长控制等）"
+                errorMessage = LanguageManager.shared.localized("store.error.pending")
                 isLoading = false
                 return false
 
@@ -130,7 +133,7 @@ final class StoreKitManager: ObservableObject {
                 return false
             }
         } catch {
-            errorMessage = "购买失败：\(error.localizedDescription)"
+            errorMessage = String(format: LanguageManager.shared.localized("store.error.purchase"), error.localizedDescription)
             #if DEBUG
             print("[StoreKit] Purchase failed: \(error)")
             #endif
@@ -151,10 +154,10 @@ final class StoreKitManager: ObservableObject {
             await refreshSubscriptionStatus()
 
             if purchasedPlanId == nil {
-                errorMessage = "未找到可恢复的订阅"
+                errorMessage = LanguageManager.shared.localized("store.error.nothingToRestore")
             }
         } catch {
-            errorMessage = "恢复购买失败：\(error.localizedDescription)"
+            errorMessage = String(format: LanguageManager.shared.localized("store.error.restore"), error.localizedDescription)
         }
 
         isLoading = false
@@ -164,6 +167,7 @@ final class StoreKitManager: ObservableObject {
 
     @MainActor
     func refreshSubscriptionStatus() async {
+        guard usesStoreKit else { return }
         var latestTransaction: Transaction?
         var latestExpiry: Date?
 
@@ -328,10 +332,8 @@ final class StoreKitManager: ObservableObject {
 
     func planDisplayName(for planId: String) -> String {
         switch planId {
-        case "single": return "单人关注版"
-        case "family": return "家庭版"
-        case "ultimate": return "企业版"
-        default: return "免费版"
+        case "single", "family", "ultimate": return LanguageManager.shared.localized("guardian.billing.plan.\(planId)")
+        default: return LanguageManager.shared.localized("guardian.billing.free")
         }
     }
 }

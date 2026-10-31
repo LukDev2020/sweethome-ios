@@ -317,6 +317,7 @@ struct LocationCardView: View {
                             }
                         }
                 }
+                .annotationTitles(.hidden) // pinView draws the name; MapKit's title doubled it ("我 / 我")
             }
         }
         .mapStyle(style)
@@ -429,9 +430,11 @@ struct LocationCardView: View {
                                 .font(.system(size: 10, weight: .semibold))
                                 .foregroundStyle(.white)
                                 .lineLimit(1)
-                            Text(memberRoleLabel(pin))
-                                .font(.system(size: 8))
-                                .foregroundStyle(.white.opacity(0.6))
+                            if !pin.isMe { // "我" under "我" said nothing
+                                Text(memberRoleLabel(pin))
+                                    .font(.system(size: 8))
+                                    .foregroundStyle(.white.opacity(0.6))
+                            }
                         }
                     }
                     .padding(.horizontal, 6)
@@ -660,6 +663,7 @@ struct FullScreenMapView: View {
                                 Task { await reverseGeocode(pin.coordinate) }
                             }
                     }
+                    .annotationTitles(.hidden) // fullPinView draws its own name
                 }
 
                 // Trail polylines

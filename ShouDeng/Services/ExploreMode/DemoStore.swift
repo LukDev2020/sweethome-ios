@@ -167,7 +167,8 @@ final class DemoStore {
             return (200, encode(lock.withLock { dataset.posts }))
 
         case ("GET", "/v1/timeline"):
-            let entries = lock.withLock { (extraTimeline[me] ?? []) + (dataset.timelines[me] ?? []) }
+            let who = query["personId"] ?? me
+            let entries = lock.withLock { (extraTimeline[who] ?? []) + (dataset.timelines[who] ?? []) }
             return (200, json(["entries": (try? JSONSerialization.jsonObject(with: encode(entries))) ?? [], "hasMore": false]))
 
         case ("GET", "/v1/sos/active"):

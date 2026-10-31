@@ -65,6 +65,8 @@ private struct DemoTipLayer: View {
     @State private var collapsed = false
     /// Collapsed because the app showed a sheet/alert (re-expands when it closes).
     @State private var autoCollapsed = false
+    /// The person chose "Hide tips": drop the highlight ring too (it stays for "Try it").
+    @State private var hiddenByUser = false
     @AccessibilityFocusState private var titleFocused: Bool
 
     private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
@@ -86,7 +88,7 @@ private struct DemoTipLayer: View {
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
             }
-            if let anchor {
+            if let anchor, !hiddenByUser {
                 RoundedRectangle(cornerRadius: 14)
                     .stroke(lamp, lineWidth: 3)
                     .frame(width: anchor.width + 12, height: anchor.height + 12)
@@ -101,6 +103,7 @@ private struct DemoTipLayer: View {
                     Button {
                         collapsed = false
                         autoCollapsed = false
+                        hiddenByUser = false
                     } label: {
                         Label(LanguageManager.shared.localized("explore.tip.show"), systemImage: "lightbulb")
                             .font(.footnote.weight(.semibold))
@@ -197,6 +200,7 @@ private struct DemoTipLayer: View {
                 // Collapse to the "Show tips" button so tips can come back.
                 collapsed = true
                 autoCollapsed = false
+                hiddenByUser = true
             }
             .font(.caption)
             .foregroundStyle(.secondary)

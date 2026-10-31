@@ -10,6 +10,7 @@ struct GuardianMemberDetailView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var langManager = LanguageManager.shared
     let personId: String
+    @State private var personTimeline: [TimelineEntry] = []
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
@@ -42,6 +43,7 @@ struct GuardianMemberDetailView: View {
 
                     // Timeline
                     timelineSection
+                        .task(id: personId) { personTimeline = await coordinator.fetchTimeline(of: personId) }
 
                     // Emergency contacts
                     NavigationLink {
@@ -238,14 +240,12 @@ struct GuardianMemberDetailView: View {
     // MARK: - Timeline
 
     private var timelineSection: some View {
-        // NOTE: TimelineEntry has no relatedPersonId field, so we cannot filter
-        // by person yet. Once the model gains that field, filter here:
-        //   coordinator.timeline.filter { $0.relatedPersonId == personId }.prefix(10)
-        let personEntries = coordinator.timeline.prefix(10)
+        // This person's own timeline — the guardian's local timeline mixes everyone
+        let personEntries = personTimeline.prefix(10)
 
         return Group {
             if personEntries.isEmpty {
-                EmptyView()
+                Color.clear.frame(height: 0) // not EmptyView: .task must still run
             } else {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(Array(personEntries)) { entry in
