@@ -63,11 +63,11 @@ final class BiometricAuthManager: ObservableObject {
 
     var biometricName: String {
         switch biometricType {
-        case .faceID: return "面容ID"
-        case .touchID: return "触控ID"
+        case .faceID: return LanguageManager.shared.localized("biometric.name.faceID")
+        case .touchID: return LanguageManager.shared.localized("biometric.name.touchID")
         case .opticID: return "Optic ID"
-        case .none: return "生物识别"
-        @unknown default: return "生物识别"
+        case .none: return LanguageManager.shared.localized("biometric.name.generic")
+        @unknown default: return LanguageManager.shared.localized("biometric.name.generic")
         }
     }
 
@@ -145,8 +145,8 @@ final class BiometricAuthManager: ObservableObject {
         }
 
         let context = LAContext()
-        context.localizedCancelTitle = "使用验证码"
-        context.localizedFallbackTitle = "输入设备密码"
+        context.localizedCancelTitle = LanguageManager.shared.localized("biometric.cancel")
+        context.localizedFallbackTitle = LanguageManager.shared.localized("biometric.fallback")
 
         // Read the biometric-protected Keychain item.
         // iOS auto-presents Face ID / Touch ID for this read.
@@ -206,9 +206,9 @@ enum BiometricError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .accessControlFailed:
-            return "无法创建生物识别访问控制"
+            return LanguageManager.shared.localized("biometric.error.accessControl")
         case .keychainSaveFailed(let status):
-            return "钥匙串保存失败 (\(status))"
+            return String(format: LanguageManager.shared.localized("biometric.error.keychain"), Int(status))
         }
     }
 }

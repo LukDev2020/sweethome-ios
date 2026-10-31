@@ -9,6 +9,7 @@ import SwiftUI
 struct BiometricGateView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var biometric = BiometricAuthManager.shared
+    @ObservedObject private var lang = LanguageManager.shared
 
     private let navy = Color(red: 1/255, green: 69/255, blue: 129/255)
     private let blue = Color(red: 61/255, green: 154/255, blue: 192/255)
@@ -58,7 +59,7 @@ struct BiometricGateView: View {
                             .font(.scaled(size: 44))
                             .foregroundStyle(navy.opacity(0.7))
 
-                        Text("轻触以\(biometric.biometricName)解锁")
+                        Text(String(format: lang.localized("biometric.gate.unlock"), biometric.biometricName))
                             .font(.scaled(size: 14))
                             .foregroundStyle(ink2)
                     }
@@ -75,7 +76,7 @@ struct BiometricGateView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "arrow.right.square")
                             .font(.scaled(size: 14))
-                        Text("使用验证码登录")
+                        Text(lang.localized("biometric.gate.otp"))
                             .font(.scaled(size: 14, weight: .medium))
                     }
                     .foregroundStyle(navy.opacity(0.6))

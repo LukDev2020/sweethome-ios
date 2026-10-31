@@ -79,3 +79,13 @@ struct FloatingSOSButton: View {
         }
     }
 }
+
+extension View {
+    /// Extra bottom margin for every scroll view inside, so content can scroll
+    /// clear of the floating SOS button (it sits ~116 pt above the tab bar)
+    /// instead of staying hidden under it. contentMargins reaches scroll views
+    /// nested in a NavigationStack, unlike safeAreaInset.
+    func floatingSOSClearance() -> some View {
+        contentMargins(.bottom, 120, for: .scrollContent)
+    }
+}

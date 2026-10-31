@@ -12,6 +12,7 @@ import StoreKit
 
 struct PostSignupWizardView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var lang = LanguageManager.shared
     let onComplete: () -> Void
 
     @State private var currentStep = 0
@@ -29,9 +30,9 @@ struct PostSignupWizardView: View {
     }
 
     private var stepTitles: [String] {
-        var titles = ["邮箱", "城市", "安全登录", "邀请"]
+        var titles = [lang.localized("wizard.step.email"), lang.localized("wizard.step.city"), lang.localized("wizard.step.security"), lang.localized("wizard.step.invite")]
         if coordinator.userRole == .guardian {
-            titles.insert("方案", at: 3)
+            titles.insert(lang.localized("wizard.step.plan"), at: 3)
         }
         return titles
     }
@@ -98,11 +99,11 @@ struct PostSignupWizardView: View {
                 .font(.scaled(size: 48))
                 .foregroundStyle(navy.opacity(0.7))
 
-            Text("添加邮箱")
+            Text(lang.localized("wizard.email.title"))
                 .font(.scaled(size: 22, weight: .bold))
                 .foregroundStyle(ink)
 
-            Text("用于账号找回和重要安全通知。\n我们不会向您发送营销邮件。")
+            Text(lang.localized("wizard.email.subtitle"))
                 .font(.scaled(size: 14))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -134,16 +135,16 @@ struct PostSignupWizardView: View {
                 .font(.scaled(size: 48))
                 .foregroundStyle(navy.opacity(0.7))
 
-            Text("确认您的城市")
+            Text(lang.localized("wizard.city.title"))
                 .font(.scaled(size: 22, weight: .bold))
                 .foregroundStyle(ink)
 
-            Text("用于显示本地时间和紧急服务信息。")
+            Text(lang.localized("wizard.city.subtitle"))
                 .font(.scaled(size: 14))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
-            TextField("例：上海、Toronto", text: $cityName)
+            TextField(lang.localized("wizard.city.placeholder"), text: $cityName)
                 .font(.scaled(size: 16))
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
@@ -167,11 +168,11 @@ struct PostSignupWizardView: View {
                 .font(.scaled(size: 56))
                 .foregroundStyle(navy.opacity(0.7))
 
-            Text("启用\(biometric.biometricName)登录？")
+            Text(String(format: lang.localized("wizard.biometric.title"), biometric.biometricName))
                 .font(.scaled(size: 22, weight: .bold))
                 .foregroundStyle(ink)
 
-            Text("下次打开守灯时，无需输入验证码即可快速登录。\n您可以随时在设置中关闭此功能。")
+            Text(lang.localized("wizard.biometric.subtitle"))
                 .font(.scaled(size: 14))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -183,7 +184,7 @@ struct PostSignupWizardView: View {
                     biometric.hasShownPrompt = true
                     advanceStep()
                 } label: {
-                    Text("启用\(biometric.biometricName)")
+                    Text(String(format: lang.localized("wizard.biometric.enable"), biometric.biometricName))
                         .font(.scaled(size: 15.5, weight: .medium))
                         .foregroundStyle(cream)
                         .frame(maxWidth: .infinity)
@@ -198,7 +199,7 @@ struct PostSignupWizardView: View {
                     biometric.hasShownPrompt = true
                     advanceStep()
                 } label: {
-                    Text("暂不开启")
+                    Text(lang.localized("wizard.biometric.skip"))
                         .font(.scaled(size: 14))
                         .foregroundStyle(.secondary)
                 }
@@ -225,11 +226,11 @@ struct PostSignupWizardView: View {
                 .font(.scaled(size: 48))
                 .foregroundStyle(safe.opacity(0.8))
 
-            Text("选择守护方案")
+            Text(lang.localized("wizard.plan.title"))
                 .font(.scaled(size: 22, weight: .bold))
                 .foregroundStyle(ink)
 
-            Text("守灯提供7天免费试用，试用期间享受完整功能。\n试用结束后可继续使用基础版。")
+            Text(lang.localized("wizard.plan.subtitle"))
                 .font(.scaled(size: 14))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -239,7 +240,7 @@ struct PostSignupWizardView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(safe)
-                    Text("订阅成功")
+                    Text(lang.localized("wizard.plan.subscribed"))
                         .font(.scaled(size: 15, weight: .medium))
                         .foregroundStyle(safe)
                 }
@@ -247,8 +248,8 @@ struct PostSignupWizardView: View {
             } else if store.products.isEmpty {
                 // Products not loaded yet — show static fallback
                 VStack(spacing: 10) {
-                    planCard(title: "单人关注版", price: "¥10/月", description: "守护1位家人", highlight: true)
-                    planCard(title: "家庭版", price: "¥30/月", description: "守护多位家人", highlight: false)
+                    planCard(title: lang.localized("wizard.plan.single.title"), price: lang.localized("wizard.plan.single.price"), description: lang.localized("wizard.plan.single.desc"), highlight: true)
+                    planCard(title: lang.localized("wizard.plan.family.title"), price: lang.localized("wizard.plan.family.price"), description: lang.localized("wizard.plan.family.desc"), highlight: false)
                 }
                 .padding(.horizontal, 8)
             } else {
@@ -302,7 +303,7 @@ struct PostSignupWizardView: View {
                                 ProgressView()
                                     .tint(.white)
                             }
-                            Text("开始免费试用")
+                            Text(lang.localized("wizard.plan.startTrial"))
                                 .font(.scaled(size: 15, weight: .medium))
                                 .foregroundStyle(cream)
                         }
@@ -324,7 +325,7 @@ struct PostSignupWizardView: View {
                     .foregroundStyle(.red)
             }
 
-            Text("免费试用7天，随时取消")
+            Text(lang.localized("wizard.plan.trialNote"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.tertiary)
 
@@ -386,11 +387,11 @@ struct PostSignupWizardView: View {
                 .foregroundStyle(navy.opacity(0.7))
 
             if coordinator.userRole == .guardian {
-                Text("添加守护对象")
+                Text(lang.localized("wizard.invite.guardian.title"))
                     .font(.scaled(size: 22, weight: .bold))
                     .foregroundStyle(ink)
 
-                Text("请被守护者在守灯APP中生成邀请码，\n然后在这里输入邀请码来建立守护关系。")
+                Text(lang.localized("wizard.invite.guardian.subtitle"))
                     .font(.scaled(size: 14))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -398,11 +399,11 @@ struct PostSignupWizardView: View {
 
                 inviteCodeInput
             } else {
-                Text("邀请守护者")
+                Text(lang.localized("wizard.invite.protected.title"))
                     .font(.scaled(size: 22, weight: .bold))
                     .foregroundStyle(ink)
 
-                Text("生成邀请码并分享给您的家人，\n他们可以用守灯APP扫码加入守护。")
+                Text(lang.localized("wizard.invite.protected.subtitle"))
                     .font(.scaled(size: 14))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -423,7 +424,7 @@ struct PostSignupWizardView: View {
 
     private var inviteCodeInput: some View {
         VStack(spacing: 12) {
-            TextField("输入邀请码", text: $inviteCode)
+            TextField(lang.localized("wizard.invite.codePlaceholder"), text: $inviteCode)
                 .font(.scaled(size: 18, weight: .medium, design: .monospaced))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 16)
@@ -436,7 +437,7 @@ struct PostSignupWizardView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(safe)
-                    Text("守护关系已建立")
+                    Text(lang.localized("wizard.invite.linked"))
                         .font(.scaled(size: 14, weight: .medium))
                         .foregroundStyle(safe)
                 }
@@ -453,7 +454,7 @@ struct PostSignupWizardView: View {
             Button {
                 Task { await acceptInvite() }
             } label: {
-                Text("确认邀请码")
+                Text(lang.localized("wizard.invite.confirm"))
                     .font(.scaled(size: 15, weight: .medium))
                     .foregroundStyle(cream)
                     .frame(maxWidth: .infinity)
@@ -471,8 +472,7 @@ struct PostSignupWizardView: View {
     /// Explains Critical Alerts before the guardian joins; their choice is
     /// stored with the guardian link and can be changed later in Settings.
     private var criticalAlertConsentCard: some View {
-        let lang = LanguageManager.shared
-        return VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 8) {
             Toggle(isOn: $criticalAlertConsent) {
                 Label(lang.localized("consent.criticalAlerts.title"), systemImage: "bell.badge.fill")
                     .font(.scaled(size: 15, weight: .semibold))
@@ -501,13 +501,13 @@ struct PostSignupWizardView: View {
                     .foregroundStyle(navy)
                     .padding(.vertical, 8)
 
-                Text("24小时内有效")
+                Text(lang.localized("wizard.invite.validFor"))
                     .font(.scaled(size: 12))
                     .foregroundStyle(.tertiary)
 
                 Button {
                     let av = UIActivityViewController(activityItems: [
-                        "我在用守灯(Lantern Care)守护家人安全，请输入邀请码加入：\(code)"
+                        String(format: lang.localized("wizard.invite.shareMessage"), code)
                     ], applicationActivities: nil)
                     if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                        let root = scene.windows.first?.rootViewController {
@@ -516,7 +516,7 @@ struct PostSignupWizardView: View {
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "square.and.arrow.up")
-                        Text("分享邀请码")
+                        Text(lang.localized("wizard.invite.share"))
                     }
                     .font(.scaled(size: 15, weight: .medium))
                     .foregroundStyle(cream)
@@ -537,7 +537,7 @@ struct PostSignupWizardView: View {
                             ProgressView()
                                 .tint(cream)
                         }
-                        Text("生成邀请码")
+                        Text(lang.localized("wizard.invite.generate"))
                     }
                     .font(.scaled(size: 15, weight: .medium))
                     .foregroundStyle(cream)
@@ -566,7 +566,7 @@ struct PostSignupWizardView: View {
         HStack {
             // Skip / Back
             if currentStep > 0 && currentStep != 2 {
-                Button("上一步") {
+                Button(lang.localized("wizard.nav.back")) {
                     withAnimation { currentStep -= 1 }
                 }
                 .font(.scaled(size: 14))
@@ -582,7 +582,7 @@ struct PostSignupWizardView: View {
             } else if currentStep == 3 && coordinator.userRole == .guardian {
                 // Payment step — skip option (Apple requires non-gated)
                 if !purchaseSuccess {
-                    Button("稍后再说") {
+                    Button(lang.localized("wizard.nav.later")) {
                         advanceStep()
                     }
                     .font(.scaled(size: 14))
@@ -593,7 +593,7 @@ struct PostSignupWizardView: View {
                     Task { await finishWizard() }
                 } label: {
                     HStack(spacing: 4) {
-                        Text("开始使用")
+                        Text(lang.localized("wizard.nav.start"))
                         Image(systemName: "arrow.right")
                     }
                     .font(.scaled(size: 15, weight: .medium))
@@ -609,7 +609,7 @@ struct PostSignupWizardView: View {
             } else {
                 HStack(spacing: 16) {
                     if currentStep == 0 && email.isEmpty {
-                        Button("稍后") {
+                        Button(lang.localized("wizard.nav.skip")) {
                             advanceStep()
                         }
                         .font(.scaled(size: 14))
@@ -620,7 +620,7 @@ struct PostSignupWizardView: View {
                         advanceStep()
                     } label: {
                         HStack(spacing: 4) {
-                            Text("下一步")
+                            Text(lang.localized("wizard.nav.next"))
                             Image(systemName: "arrow.right")
                         }
                         .font(.scaled(size: 15, weight: .medium))
@@ -658,7 +658,7 @@ struct PostSignupWizardView: View {
             coordinator.setSOSCriticalAlerts(enabled: criticalAlertConsent)
             await coordinator.fetchProtectedPersons()
         } catch {
-            inviteError = "邀请码无效或已过期"
+            inviteError = lang.localized("wizard.invite.error.invalid")
         }
         isLoading = false
     }
@@ -673,7 +673,7 @@ struct PostSignupWizardView: View {
             )
             generatedCode = response.code
         } catch {
-            generateError = "生成失败，请检查网络连接后重试"
+            generateError = lang.localized("wizard.invite.error.generate")
             #if DEBUG
             print("[Wizard] Failed to generate invite: \(error)")
             #endif
