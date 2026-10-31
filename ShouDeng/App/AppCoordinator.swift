@@ -211,11 +211,11 @@ final class AppCoordinator: ObservableObject {
                     self?.requestSOS(method: .bluetoothButton)
                 },
                 onSeparationAlert: { [weak self] tag in
-                    self?.addTimelineEntry(type: .guardianAlert, description: "蓝牙标签「\(tag.name)」超出范围")
+                    self?.addTimelineEntry(type: .guardianAlert, description: String(format: LanguageManager.shared.localized("timeline.bleOut"), tag.name))
                     self?.notifyGuardiansOfSeparation(tagName: tag.name)
                 },
                 onReunion: { [weak self] tag in
-                    self?.addTimelineEntry(type: .enteredSafeZone, description: "蓝牙标签「\(tag.name)」重新进入范围")
+                    self?.addTimelineEntry(type: .enteredSafeZone, description: String(format: LanguageManager.shared.localized("timeline.bleBack"), tag.name))
                 }
             )
 
@@ -627,7 +627,7 @@ final class AppCoordinator: ObservableObject {
         let picked = selectedHotline?.countryCode ?? ""
         let profile = currentUser?.countryCode ?? ""
         let country = !picked.isEmpty ? picked : (!profile.isEmpty ? profile : (Locale.current.region?.identifier ?? ""))
-        return RegionalEmergencyInfo.forCountry(country).numbers.first?.number ?? "112"
+        return RegionalEmergencyInfo.forCountry(country).primaryNumber
     }
 
     // MARK: - Explore Mode personas
@@ -899,11 +899,11 @@ final class AppCoordinator: ObservableObject {
 
         // Location → Safe zone events
         locationManager.onSafeZoneEnter = { [weak self] zone in
-            self?.addTimelineEntry(type: .enteredSafeZone, description: "进入安全区「\(zone.name)」")
+            self?.addTimelineEntry(type: .enteredSafeZone, description: String(format: LanguageManager.shared.localized("timeline.zoneEnter"), zone.name))
         }
 
         locationManager.onSafeZoneExit = { [weak self] zone in
-            self?.addTimelineEntry(type: .leftSafeZone, description: "离开安全区「\(zone.name)」")
+            self?.addTimelineEntry(type: .leftSafeZone, description: String(format: LanguageManager.shared.localized("timeline.zoneLeave"), zone.name))
         }
 
         // Location → Auto-discover safe zones
@@ -989,7 +989,7 @@ final class AppCoordinator: ObservableObject {
         escalationEngine.onEscalationFrozen = { [weak self] session, guardianId in
             self?.addTimelineEntry(
                 type: .sosResolved,
-                description: "守护者已接手处理"
+                description: LanguageManager.shared.localized("timeline.guardianTookOver")
             )
             _ = session
             _ = guardianId
@@ -1150,7 +1150,7 @@ final class AppCoordinator: ObservableObject {
     func cancelPendingSOS() {
         guard pendingSOS != nil else { return }
         clearPendingSOS()
-        addTimelineEntry(type: .sosResolved, description: "在倒计时内取消了紧急求助（未通知守护者）")
+        addTimelineEntry(type: .sosResolved, description: LanguageManager.shared.localized("timeline.sosCancelledInWindow"))
     }
 
     private func clearPendingSOS() {
@@ -1218,17 +1218,18 @@ final class AppCoordinator: ObservableObject {
         // Lock-screen card shows SOS — but a duress / disguise SOS must stay invisible and silent
         if !method.isSilent && !isDemo {
             liveActivityManager.triggerSOS(
-                localEmergencyNumber: selectedHotline?.emergency ?? "911"
+                localEmergencyNumber: localEmergencyNumber
             )
         }
 
-        addTimelineEntry(type: .sosTriggered, description: "触发紧急求助（\(method.rawValue)）")
+        addTimelineEntry(type: .sosTriggered, description: String(format: LanguageManager.shared.localized("timeline.sosTriggered"),
+                                                                         LanguageManager.shared.localized("sos.method.\(method.rawValue)")))
 
         #if BETA
         // Beta: simulate escalation — skip real API call and immediately acknowledge
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
             self?.activeSOSEvent?.escalationState = .acknowledged
-            self?.addTimelineEntry(type: .sosResolved, description: "[Beta 模拟] SOS 自动确认，未发送真实通知")
+            self?.addTimelineEntry(type: .sosResolved, description: LanguageManager.shared.localized("timeline.sosBetaSim"))
         }
         #else
         // Persist to the offline queue FIRST, then try right away with a short
@@ -1386,7 +1387,7 @@ final class AppCoordinator: ObservableObject {
             liveActivityManager.cancelSOS()
         }
 
-        addTimelineEntry(type: .sosResolved, description: "取消了紧急求助")
+        addTimelineEntry(type: .sosResolved, description: LanguageManager.shared.localized("timeline.sosCancelled"))
 
         // If the trigger never left the phone, drop it instead of sending a
         // trigger + cancel later (which would alert the family for nothing).
@@ -1412,8 +1413,9 @@ final class AppCoordinator: ObservableObject {
         guard let loc = locationManager.bestAvailableLocation else { return }
         let lat = loc.coordinate.latitude
         let lng = loc.coordinate.longitude
-        let name = currentUser?.displayName ?? "我的位置"
-        let mapURL = "https://maps.apple.com/?ll=\(lat),\(lng)&q=\(name)"
+        let name = currentUser?.displayName ?? LanguageManager.shared.localized("share.myLocation")
+        let query = name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let mapURL = "https://maps.apple.com/?ll=\(lat),\(lng)&q=\(query)"
         let items: [Any] = [mapURL]
         let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)
         if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
@@ -1427,7 +1429,7 @@ final class AppCoordinator: ObservableObject {
 
         let checkIn = CheckInEvent.create(userId: userId, location: nil)
 
-        addTimelineEntry(type: .checkIn, description: note ?? "报平安")
+        addTimelineEntry(type: .checkIn, description: note ?? LanguageManager.shared.localized("timeline.checkIn"))
         syncWidgetState()
 
         let checkinLocation = locationManager.lastReportedLocation
@@ -1456,7 +1458,7 @@ final class AppCoordinator: ObservableObject {
         trackingPauseExpiresAt = expiry
         locationManager.isTrackingPaused = true
 
-        addTimelineEntry(type: .trackingPaused, description: "暂停了位置共享")
+        addTimelineEntry(type: .trackingPaused, description: LanguageManager.shared.localized("timeline.paused"))
 
         // Notify server so guardians see paused status
         if let userId = currentUser?.id {
@@ -1479,7 +1481,7 @@ final class AppCoordinator: ObservableObject {
         trackingPauseTimer?.invalidate()
         trackingPauseTimer = nil
 
-        addTimelineEntry(type: .trackingResumed, description: "恢复了位置共享")
+        addTimelineEntry(type: .trackingResumed, description: LanguageManager.shared.localized("timeline.resumed"))
 
         // Notify server
         if let userId = currentUser?.id {
@@ -1624,7 +1626,7 @@ final class AppCoordinator: ObservableObject {
         apiClient.postQueued("/v1/voice-call", body: VoiceCallRequest(
             guardianId: guardianId,
             sosEventId: sosEventId,
-            protectedPersonName: currentUser?.displayName ?? "被守护者",
+            protectedPersonName: currentUser?.displayName ?? LanguageManager.shared.localized("push.protectedFallback"),
             locationDescription: nil
         ))
     }
@@ -1632,7 +1634,7 @@ final class AppCoordinator: ObservableObject {
     private func sendNotification(_ request: NotificationRequest) {
         if request.priority == .critical {
             pushService.fireCriticalSOSAlert(
-                protectedPersonName: currentUser?.displayName ?? "被守护者",
+                protectedPersonName: currentUser?.displayName ?? LanguageManager.shared.localized("push.protectedFallback"),
                 locationDescription: request.body,
                 sosEventId: request.data["sos_id"] ?? ""
             )

@@ -64,10 +64,10 @@ struct GuardianSettingsView: View {
                     .environmentObject(coordinator)
             }
             .sheet(isPresented: $showPrivacy) {
-                PrivacyPolicyView()
+                PrivacyPolicyView().environmentObject(coordinator)
             }
             .sheet(isPresented: $showAbout) {
-                AboutView()
+                AboutView().environmentObject(coordinator)
             }
             .alert(langManager.localized("settings.alert.deleteAccount.title"), isPresented: $showDeleteConfirm) {
                 Button(langManager.localized("settings.action.cancel"), role: .cancel) {}
@@ -586,7 +586,7 @@ struct GuardianSettingsView: View {
             HStack {
                 Text(langManager.localized("settings.language")).font(.scaled(size: 13))
                 Spacer()
-                Picker("", selection: $langManager.current) {
+                Picker("", selection: Binding(get: { langManager.current }, set: { langManager.choose($0) })) {
                     ForEach(AppLanguage.allCases, id: \.self) { lang in
                         Text(lang.fullName).tag(lang)
                     }

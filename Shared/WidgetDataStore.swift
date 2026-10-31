@@ -86,6 +86,7 @@ enum WidgetDataStore {
     /// Chinese → "守灯", English/French/other → "Lantern Care"
     static var appName: String {
         let lang = sharedDefaults?.string(forKey: languageKey) ?? "zh-Hans"
+        if lang == "zh-Hant" { return "守燈" }
         return lang.hasPrefix("zh") ? "守灯" : "Lantern Care"
     }
 
@@ -94,8 +95,16 @@ enum WidgetDataStore {
         sharedDefaults?.string(forKey: languageKey) ?? "zh-Hans"
     }
 
-    /// Localized string lookup for widget extension (no .lproj access)
+    /// Localized string lookup for widget extension (no .lproj access).
+    /// Traditional Chinese (Hong Kong, Macao, Taiwan) reuses the Chinese copy in
+    /// Traditional characters.
     static func localized(_ key: String) -> String {
+        let text = baseLocalized(key)
+        guard currentLanguage == "zh-Hant" else { return text }
+        return text.applyingTransform(StringTransform("Hans-Hant"), reverse: false) ?? text
+    }
+
+    private static func baseLocalized(_ key: String) -> String {
         let lang = currentLanguage
         let isZh = lang.hasPrefix("zh")
         let isFr = lang.hasPrefix("fr")

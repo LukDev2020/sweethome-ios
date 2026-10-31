@@ -8,7 +8,7 @@ struct QuickPillRow: View {
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
     private let offWhiteBg = Color(red: 251/255, green: 248/255, blue: 241/255)
 
-    private let languages: [AppLanguage] = [.english, .chinese, .french]
+    private let languages: [AppLanguage] = [.english, .chinese, .traditionalChinese, .french]
     private let langLabels = ["EN", "\u{4E2D}\u{6587}", "FR"]
     private let fontLevels: [FontScaleLevel] = [.standard, .large, .extraLarge, .huge]
     private let fontLabels = ["S", "M", "L", "XL"]
@@ -25,7 +25,7 @@ struct QuickPillRow: View {
             Button {
                 let currentIdx = languages.firstIndex(of: lang.current) ?? 0
                 let nextIdx = (currentIdx + 1) % languages.count
-                lang.current = languages[nextIdx]
+                lang.choose(languages[nextIdx])
             } label: {
                 let idx = languages.firstIndex(of: lang.current) ?? 0
                 HStack(spacing: 5) {

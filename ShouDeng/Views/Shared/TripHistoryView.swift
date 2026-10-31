@@ -124,7 +124,7 @@ struct TripHistoryView: View {
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         guard let date = formatter.date(from: isoString) ?? ISO8601DateFormatter().date(from: isoString) else { return isoString }
         let df = DateFormatter()
-        df.dateFormat = lang.current == .chinese ? "M月d日 HH:mm" : "MMM d, HH:mm"
+        df.dateFormat = lang.current.isChinese ? "M月d日 HH:mm" : "MMM d, HH:mm"
         return df.string(from: date)
     }
 

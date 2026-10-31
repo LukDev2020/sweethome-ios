@@ -454,6 +454,9 @@ struct RegionalEmergencyInfo {
     /// (ambulance first where ambulance and police differ).
     let numbers: [EmergencyNumber]
 
+    /// The number shown on SOS screens and the hotline card.
+    var primaryNumber: String { numbers.first?.number ?? "112" }
+
     /// Markets the app is offered in (App Store availability) plus places family
     /// members often are. Unknown regions fall back to 112 (works from most mobiles).
     static let supportedRegions = ["US", "CA", "HK", "MO", "TW", "SG", "AU", "NZ", "MY", "TH", "PH", "JP",

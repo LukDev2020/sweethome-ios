@@ -10,6 +10,13 @@ struct HotlineCardView: View {
     let hotline: SelectedHotline
     var onTapChange: (() -> Void)?
     var onRemove: (() -> Void)?
+    @ObservedObject private var lang = LanguageManager.shared
+
+    /// Read live from the single number table: hotlines saved by older builds
+    /// stored the police number (e.g. Japan 110) as "emergency".
+    private var emergencyNumber: String {
+        RegionalEmergencyInfo.forCountry(hotline.countryCode).primaryNumber
+    }
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
@@ -23,10 +30,10 @@ struct HotlineCardView: View {
                     .font(.scaled(size: 22))
 
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(hotline.countryName)
+                    Text(RegionalEmergencyInfo.regionName(hotline.countryCode))
                         .font(.scaled(size: 12, weight: .semibold))
                         .foregroundStyle(ink)
-                    Text("紧急号码")
+                    Text(lang.localized("hotline.emergency"))
                         .font(.scaled(size: 11))
                         .foregroundStyle(.secondary)
                 }
@@ -34,11 +41,11 @@ struct HotlineCardView: View {
                 Spacer()
 
                 // Emergency call button
-                Link(destination: URL(string: "tel:\(hotline.emergency)")!) {
+                Link(destination: URL(string: "tel:\(emergencyNumber.filter(\.isNumber))")!) {
                     HStack(spacing: 4) {
                         Image(systemName: "phone.fill")
                             .font(.scaled(size: 11))
-                        Text(hotline.emergency)
+                        Text(emergencyNumber)
                             .font(.scaled(size: 14, weight: .bold, design: .monospaced))
                     }
                     .foregroundStyle(.white)
@@ -54,7 +61,7 @@ struct HotlineCardView: View {
                 Image(systemName: "building.columns.fill")
                     .font(.scaled(size: 9))
                     .foregroundStyle(safe)
-                Text("使馆领保")
+                Text(lang.localized("hotline.embassy"))
                     .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
 
@@ -88,7 +95,7 @@ struct HotlineCardView: View {
                 Image(systemName: "globe")
                     .font(.scaled(size: 9))
                     .foregroundStyle(.blue)
-                Text("12308热线")
+                Text(lang.localized("hotline.12308"))
                     .font(.scaled(size: 12))
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -107,7 +114,7 @@ struct HotlineCardView: View {
                     Button {
                         onTapChange()
                     } label: {
-                        Text("更换")
+                        Text(lang.localized("hotline.change"))
                             .font(.scaled(size: 12))
                             .foregroundStyle(.secondary)
                     }
@@ -116,7 +123,7 @@ struct HotlineCardView: View {
                     Button {
                         onRemove()
                     } label: {
-                        Text("移除")
+                        Text(lang.localized("hotline.remove"))
                             .font(.scaled(size: 12))
                             .foregroundStyle(.secondary)
                     }

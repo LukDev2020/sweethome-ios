@@ -17,16 +17,7 @@ enum InsuranceType: String, CaseIterable, Identifiable, Codable {
 
     var id: String { rawValue }
 
-    var displayName: String {
-        switch self {
-        case .overseasMedical: return "境外医疗"
-        case .accidentalInjury: return "意外伤残"
-        case .theft: return "盗抢"
-        case .flightDelay: return "航班延误"
-        case .lostLuggage: return "行李丢失"
-        case .trafficAccident: return "交通事故"
-        }
-    }
+    var displayName: String { LanguageManager.shared.localized("claim.type.\(rawValue)") }
 
     var icon: String {
         switch self {
@@ -40,39 +31,13 @@ enum InsuranceType: String, CaseIterable, Identifiable, Codable {
     }
 
     /// What the insurer typically requires (third-party documents)
-    var insurerRequires: [String] {
-        switch self {
-        case .overseasMedical:
-            return ["医疗机构病历", "诊断证明", "费用原始凭证"]
-        case .accidentalInjury:
-            return ["意外事故证明", "认可机构伤残鉴定书"]
-        case .theft:
-            return ["警方报案证明"]
-        case .flightDelay:
-            return ["航空公司盖章的延误书面证明"]
-        case .lostLuggage:
-            return ["航空公司行李异常报告 (PIR)", "物品清单与票据"]
-        case .trafficAccident:
-            return ["使领馆或当地政府机构的事故证明"]
-        }
-    }
+    var insurerRequires: [String] { lines("claim.requires.\(rawValue)") }
 
     /// What Vela device records may contain
-    var velaCanProvide: [String] {
-        switch self {
-        case .overseasMedical:
-            return ["事发时间地点记录", "跌倒或 SOS 记录", "就医前后轨迹"]
-        case .accidentalInjury:
-            return ["事故时刻与位置的独立记录"]
-        case .theft:
-            return ["事发时间线", "现场照片及拍摄时间"]
-        case .flightDelay:
-            return ["共享行程中的航班号与实际起落时间"]
-        case .lostLuggage:
-            return ["行程记录", "附件拍照时间"]
-        case .trafficAccident:
-            return ["使领馆联系记录", "事发位置"]
-        }
+    var velaCanProvide: [String] { lines("claim.provides.\(rawValue)") }
+
+    private func lines(_ key: String) -> [String] {
+        LanguageManager.shared.localized(key).components(separatedBy: "\n")
     }
 }
 
@@ -156,16 +121,13 @@ struct ClaimExportSummary: Codable, Identifiable {
 // MARK: - Disclaimer
 
 enum ClaimDisclaimer {
-    static let full = "本导出内容来源于用户设备记录与守灯服务器日志，仅供用户自行参考使用。守灯不对记录的准确性、完整性或适用性作任何明示或暗示的保证，不对使用本内容产生的任何后果承担责任。"
+    private static func l(_ key: String) -> String { LanguageManager.shared.localized("claim.disclaimer.\(key)") }
 
-    static let pdfHeader = "本文件由守灯 App 自动导出，内容为用户设备记录，仅供参考，不构成任何证明或法律文件。"
+    static var full: String { l("full") }
 
-    static let checklistNote = "此清单仅供参考，具体要求以您的保险合同为准。"
+    static var pdfHeader: String { l("pdfHeader") }
 
-    static let limitations: [String] = [
-        "定位精度受设备硬件与环境影响，坐标可能存在偏差",
-        "记录时间基于设备时钟，未经第三方时间戳机构认证",
-        "本内容不能替代医疗机构、警方、航空公司等出具的正式文件",
-        "用户可在导出前选择包含或排除特定记录",
-    ]
+    static var checklistNote: String { l("checklistNote") }
+
+    static var limitations: [String] { l("limitations").components(separatedBy: "\n") }
 }

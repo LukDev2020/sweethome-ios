@@ -115,7 +115,7 @@ struct OnboardingView: View {
                 Button {
                     skipToHome()
                 } label: {
-                    Text(lang.current == .chinese ? "跳过" : "Skip")
+                    Text(lang.current.isChinese ? lang.zh("跳过") : "Skip")
                         .font(.scaled(size: 14, weight: .medium))
                         .foregroundStyle(.white.opacity(0.6))
                         .padding(.horizontal, 16)
@@ -129,7 +129,7 @@ struct OnboardingView: View {
             HStack(spacing: 2) {
                 ForEach(AppLanguage.allCases, id: \.self) { language in
                     Button {
-                        lang.current = language
+                        lang.choose(language)
                     } label: {
                         Text(language.displayName)
                             .font(.scaled(size: 12))

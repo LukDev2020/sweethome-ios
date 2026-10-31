@@ -97,7 +97,7 @@ function getEmergencyNumber(countryCode: string): string {
  * Twilio <Say> language for the guardian's app language.
  */
 function getTwimlLanguage(lang: Lang): string {
-  return { en: "en-US", zh: "cmn-CN", fr: "fr-FR" }[lang];
+  return { en: "en-US", zh: "cmn-CN", "zh-Hant": "cmn-TW", fr: "fr-FR" }[lang];
 }
 
 /**
@@ -140,6 +140,16 @@ const VOICE_COPY: Record<Lang, {
       : "未收到回应。约两分钟后系统将再次拨打，直到有人回应。",
     ack: "谢谢。已通知其他家人由您处理，自动呼叫已停止。请打开应用查看位置。",
     invalid: "无效按键。",
+  },
+  "zh-Hant": {
+    intro: (n) => `守燈緊急通知。您守護的${n}正在求助。請立即開啟守燈應用檢視詳情。`,
+    keys: "按 1 表示由您處理，系統將停止自動呼叫並通知其他家人。按 2 重聽此訊息。",
+    prompt: "請按鍵。",
+    noAnswer: (last) => last
+      ? "未收到回應。家人已收到包含最新位置的連結簡訊。"
+      : "未收到回應。約兩分鐘後系統將再次撥打，直到有人回應。",
+    ack: "謝謝。已通知其他家人由您處理，自動呼叫已停止。請開啟應用檢視位置。",
+    invalid: "無效按鍵。",
   },
   fr: {
     intro: (n) => `Urgence Lantern Care. ${n}, que vous protégez, demande de l'aide. Ouvrez l'application Lantern Care maintenant.`,

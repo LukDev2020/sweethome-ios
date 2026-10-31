@@ -646,8 +646,8 @@ struct ClaimMaterialsView: View {
 
         let sosItems: [SOSRecordItem]? = includeSOS ? coordinator.timeline
             .filter { $0.timestamp >= windowStart && $0.timestamp <= windowEnd }
-            .filter { $0.description.contains("SOS") || $0.description.contains("求助") }
-            .map { SOSRecordItem(triggeredAt: $0.timestamp.ISO8601Format(), triggerMethod: "长按", resolution: nil, latitude: nil, longitude: nil) }
+            .filter { $0.type == .sosTriggered }
+            .map { SOSRecordItem(triggeredAt: $0.timestamp.ISO8601Format(), triggerMethod: nil, resolution: nil, latitude: nil, longitude: nil) }
             : nil
 
         let timelineItems: [TimelineRecordItem]? = includeTimeline ? coordinator.timeline

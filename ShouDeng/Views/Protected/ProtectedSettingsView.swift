@@ -77,10 +77,10 @@ struct ProtectedSettingsView: View {
                     .environmentObject(coordinator)
             }
             .sheet(isPresented: $showPrivacy) {
-                PrivacyPolicyView()
+                PrivacyPolicyView().environmentObject(coordinator)
             }
             .sheet(isPresented: $showAbout) {
-                AboutView()
+                AboutView().environmentObject(coordinator)
             }
             .alert(langManager.localized("settings.alert.deleteAccount.title"), isPresented: $showDeleteConfirm) {
                 Button(langManager.localized("settings.action.cancel"), role: .cancel) {}

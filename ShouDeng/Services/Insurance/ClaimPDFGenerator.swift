@@ -8,6 +8,8 @@ import CryptoKit
 
 enum ClaimPDFGenerator {
 
+    private static func L(_ key: String) -> String { LanguageManager.shared.localized(key) }
+
     static func generate(
         export: ClaimMaterialExport,
         insuranceType: InsuranceType?,
@@ -57,34 +59,34 @@ enum ClaimPDFGenerator {
             yOffset = margin
 
             // Title
-            _ = drawText("理赔材料参考", font: .boldSystemFont(ofSize: 22))
+            _ = drawText(L("claim.pdf.title"), font: .boldSystemFont(ofSize: 22))
             yOffset += 4
             _ = drawText(ClaimDisclaimer.pdfHeader, font: .systemFont(ofSize: 9), color: .gray)
             yOffset += 16
 
             // Basic info
-            _ = drawText("基本信息", font: .boldSystemFont(ofSize: 14))
+            _ = drawText(L("claim.pdf.basicInfo"), font: .boldSystemFont(ofSize: 14))
             yOffset += 6
-            _ = drawText("导出编号: \(export.exportId)", font: .systemFont(ofSize: 10))
+            _ = drawText(String(format: L("claim.pdf.exportId"), export.exportId), font: .systemFont(ofSize: 10))
             yOffset += 2
-            _ = drawText("当事人: \(export.personName)", font: .systemFont(ofSize: 10))
+            _ = drawText(String(format: L("claim.pdf.person"), export.personName), font: .systemFont(ofSize: 10))
             yOffset += 2
 
             let df = DateFormatter()
             df.dateFormat = "yyyy-MM-dd HH:mm"
-            _ = drawText("事件日期: \(df.string(from: export.incidentDate))", font: .systemFont(ofSize: 10))
+            _ = drawText(String(format: L("claim.pdf.incidentDate"), df.string(from: export.incidentDate)), font: .systemFont(ofSize: 10))
             yOffset += 2
-            _ = drawText("导出时间: \(df.string(from: export.exportedAt))", font: .systemFont(ofSize: 10))
+            _ = drawText(String(format: L("claim.pdf.exportedAt"), df.string(from: export.exportedAt)), font: .systemFont(ofSize: 10))
             yOffset += 2
-            _ = drawText("时间范围: \(df.string(from: export.window.start)) ~ \(df.string(from: export.window.end))", font: .systemFont(ofSize: 10))
+            _ = drawText(String(format: L("claim.pdf.window"), df.string(from: export.window.start), df.string(from: export.window.end)), font: .systemFont(ofSize: 10))
             yOffset += 2
 
             if let policy = policyNumber, !policy.isEmpty {
-                _ = drawText("保单号: \(policy)", font: .systemFont(ofSize: 10))
+                _ = drawText(String(format: L("claim.pdf.policy"), policy), font: .systemFont(ofSize: 10))
                 yOffset += 2
             }
             if let desc = userDescription, !desc.isEmpty {
-                _ = drawText("备注: \(desc)", font: .systemFont(ofSize: 10))
+                _ = drawText(String(format: L("claim.pdf.note"), desc), font: .systemFont(ofSize: 10))
                 yOffset += 2
             }
             yOffset += 12
@@ -92,15 +94,15 @@ enum ClaimPDFGenerator {
             // SOS Events
             if let sos = export.sosEvents, !sos.isEmpty {
                 beginPageIfNeeded()
-                _ = drawText("SOS 求助记录 (\(sos.count) 条)", font: .boldSystemFont(ofSize: 14))
+                _ = drawText(String(format: L("claim.pdf.sos"), sos.count), font: .boldSystemFont(ofSize: 14))
                 yOffset += 6
                 for event in sos {
                     beginPageIfNeeded(need: 20)
                     var line = event.triggeredAt
-                    if let method = event.triggerMethod { line += "  触发方式: \(method)" }
-                    if let res = event.resolution { line += "  处理: \(res)" }
+                    if let method = event.triggerMethod { line += String(format: L("claim.pdf.method"), method) }
+                    if let res = event.resolution { line += String(format: L("claim.pdf.resolution"), res) }
                     if let lat = event.latitude, let lng = event.longitude {
-                        line += String(format: "  位置: %.4f, %.4f", lat, lng)
+                        line += String(format: L("claim.pdf.location"), lat, lng)
                     }
                     _ = drawText(line, font: .monospacedSystemFont(ofSize: 9, weight: .regular))
                     yOffset += 2
@@ -111,15 +113,15 @@ enum ClaimPDFGenerator {
             // Check-ins
             if let checkIns = export.checkIns, !checkIns.isEmpty {
                 beginPageIfNeeded()
-                _ = drawText("签到记录 (\(checkIns.count) 条)", font: .boldSystemFont(ofSize: 14))
+                _ = drawText(String(format: L("claim.pdf.checkIns"), checkIns.count), font: .boldSystemFont(ofSize: 14))
                 yOffset += 6
                 for ci in checkIns {
                     beginPageIfNeeded(need: 20)
                     var line = ci.timestamp
                     if let lat = ci.latitude, let lng = ci.longitude {
-                        line += String(format: "  位置: %.4f, %.4f", lat, lng)
+                        line += String(format: L("claim.pdf.location"), lat, lng)
                     }
-                    if let note = ci.note, !note.isEmpty { line += "  备注: \(note)" }
+                    if let note = ci.note, !note.isEmpty { line += "  " + String(format: L("claim.pdf.note"), note) }
                     _ = drawText(line, font: .monospacedSystemFont(ofSize: 9, weight: .regular))
                     yOffset += 2
                 }
@@ -129,11 +131,11 @@ enum ClaimPDFGenerator {
             // Timeline
             if let timeline = export.timeline, !timeline.isEmpty {
                 beginPageIfNeeded()
-                _ = drawText("时间线事件 (\(timeline.count) 条)", font: .boldSystemFont(ofSize: 14))
+                _ = drawText(String(format: L("claim.pdf.timeline"), timeline.count), font: .boldSystemFont(ofSize: 14))
                 yOffset += 6
                 for entry in timeline {
                     beginPageIfNeeded(need: 20)
-                    let desc = entry.description ?? entry.type ?? "事件"
+                    let desc = entry.description ?? entry.type ?? L("claim.pdf.event")
                     _ = drawText("\(entry.timestamp)  \(desc)", font: .monospacedSystemFont(ofSize: 9, weight: .regular))
                     yOffset += 2
                 }
@@ -143,26 +145,26 @@ enum ClaimPDFGenerator {
             // Medical snapshot
             if let med = export.medicalSnapshot {
                 beginPageIfNeeded()
-                _ = drawText("医疗卡快照", font: .boldSystemFont(ofSize: 14))
+                _ = drawText(L("claim.pdf.medical"), font: .boldSystemFont(ofSize: 14))
                 yOffset += 6
                 if let bt = med.bloodType, !bt.isEmpty {
-                    _ = drawText("血型: \(bt)", font: .systemFont(ofSize: 10))
+                    _ = drawText(String(format: L("claim.pdf.bloodType"), bt), font: .systemFont(ofSize: 10))
                     yOffset += 2
                 }
                 if let a = med.allergies, !a.isEmpty {
-                    _ = drawText("过敏: \(a.joined(separator: "、"))", font: .systemFont(ofSize: 10))
+                    _ = drawText(String(format: L("claim.pdf.allergies"), a.joined(separator: L("claim.pdf.listSeparator"))), font: .systemFont(ofSize: 10))
                     yOffset += 2
                 }
                 if let c = med.conditions, !c.isEmpty {
-                    _ = drawText("病史: \(c.joined(separator: "、"))", font: .systemFont(ofSize: 10))
+                    _ = drawText(String(format: L("claim.pdf.conditions"), c.joined(separator: L("claim.pdf.listSeparator"))), font: .systemFont(ofSize: 10))
                     yOffset += 2
                 }
                 if let p = med.insuranceProvider, !p.isEmpty {
-                    _ = drawText("保险公司: \(p)", font: .systemFont(ofSize: 10))
+                    _ = drawText(String(format: L("claim.pdf.insurer"), p), font: .systemFont(ofSize: 10))
                     yOffset += 2
                 }
                 if let pn = med.policyNumber, !pn.isEmpty {
-                    _ = drawText("保单号: \(pn)", font: .systemFont(ofSize: 10))
+                    _ = drawText(String(format: L("claim.pdf.policy"), pn), font: .systemFont(ofSize: 10))
                     yOffset += 2
                 }
                 yOffset += 10
@@ -171,9 +173,9 @@ enum ClaimPDFGenerator {
             // Reference checklist
             if let type = insuranceType {
                 beginPageIfNeeded(need: 100)
-                _ = drawText("材料参考清单 · \(type.displayName)", font: .boldSystemFont(ofSize: 14))
+                _ = drawText(String(format: L("claim.pdf.checklist"), type.displayName), font: .boldSystemFont(ofSize: 14))
                 yOffset += 6
-                _ = drawText("保险公司通常要求 (需您自行获取):", font: .boldSystemFont(ofSize: 10))
+                _ = drawText(L("claim.pdf.insurerRequires"), font: .boldSystemFont(ofSize: 10))
                 yOffset += 4
                 for item in type.insurerRequires {
                     beginPageIfNeeded(need: 16)
@@ -181,7 +183,7 @@ enum ClaimPDFGenerator {
                     yOffset += 2
                 }
                 yOffset += 6
-                _ = drawText("您的设备记录中包含:", font: .boldSystemFont(ofSize: 10))
+                _ = drawText(L("claim.pdf.deviceHas"), font: .boldSystemFont(ofSize: 10))
                 yOffset += 4
                 for item in type.velaCanProvide {
                     beginPageIfNeeded(need: 16)
@@ -195,7 +197,7 @@ enum ClaimPDFGenerator {
 
             // Disclaimer block
             beginPageIfNeeded(need: 100)
-            _ = drawText("数据说明", font: .boldSystemFont(ofSize: 14))
+            _ = drawText(L("claim.pdf.dataNotes"), font: .boldSystemFont(ofSize: 14))
             yOffset += 6
             for line in ClaimDisclaimer.limitations {
                 beginPageIfNeeded(need: 16)
@@ -224,7 +226,7 @@ enum ClaimPDFGenerator {
             .font: UIFont.monospacedSystemFont(ofSize: 7, weight: .regular),
             .foregroundColor: UIColor.lightGray
         ]
-        let text = "SHA-256: \(hash)  |  守灯 App 导出 · 仅供参考"
+        let text = "SHA-256: \(hash)  |  " + L("claim.pdf.footer")
         (text as NSString).draw(at: CGPoint(x: margin, y: footerY), withAttributes: attrs)
     }
 }

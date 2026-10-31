@@ -17,7 +17,12 @@ struct ArrivalReportView: View {
     @State private var isSending = false
     @State private var didSend = false
 
-    private let quickPlaces = ["宿舍", "学校", "公司", "医院", "机场", "酒店", "朋友家"]
+    @ObservedObject private var lang = LanguageManager.shared
+
+    private var quickPlaces: [String] {
+        ["dorm", "school", "work", "hospital", "airport", "hotel", "friend"]
+            .map { lang.localized("arrival.place.\($0)") }
+    }
 
     var body: some View {
         NavigationStack {
@@ -38,7 +43,7 @@ struct ArrivalReportView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("关闭") { dismiss() }
+                    Button(lang.localized("arrival.close")) { dismiss() }
                 }
             }
         }
@@ -52,11 +57,11 @@ struct ArrivalReportView: View {
                 .font(.scaled(size: 48))
                 .foregroundStyle(safe)
 
-            Text("报告到达")
+            Text(lang.localized("arrival.heading"))
                 .font(.scaled(size: 20, weight: .semibold))
                 .foregroundStyle(ink)
 
-            Text("一键告知守护者你已安全到达")
+            Text(lang.localized("arrival.subtitle"))
                 .font(.scaled(size: 14))
                 .foregroundStyle(.secondary)
 
@@ -82,7 +87,7 @@ struct ArrivalReportView: View {
                 .padding(.horizontal, 4)
             }
 
-            TextField("或输入地点名称", text: $placeName)
+            TextField(lang.localized("arrival.placeholder"), text: $placeName)
                 .textFieldStyle(.roundedBorder)
                 .frame(maxWidth: .infinity)
 
@@ -95,7 +100,7 @@ struct ArrivalReportView: View {
                     } else {
                         Image(systemName: "checkmark.circle.fill")
                     }
-                    Text("我到了")
+                    Text(lang.localized("arrival.send"))
                         .font(.scaled(size: 16, weight: .semibold))
                 }
                 .foregroundStyle(.white)
@@ -117,17 +122,17 @@ struct ArrivalReportView: View {
                 .font(.scaled(size: 56))
                 .foregroundStyle(safe)
 
-            Text("已通知守护者")
+            Text(lang.localized("arrival.sent"))
                 .font(.scaled(size: 20, weight: .semibold))
                 .foregroundStyle(ink)
 
             if !placeName.isEmpty {
-                Text("你已安全到达「\(placeName)」")
+                Text(String(format: lang.localized("arrival.sentAt"), placeName))
                     .font(.scaled(size: 14))
                     .foregroundStyle(.secondary)
             }
 
-            Button("完成") { dismiss() }
+            Button(lang.localized("arrival.done")) { dismiss() }
                 .font(.scaled(size: 15, weight: .medium))
                 .foregroundStyle(safe)
                 .padding(.top, 8)
@@ -158,7 +163,8 @@ struct ArrivalReportView: View {
         // Always confirm locally so the UI responds even without backend
         coordinator.addTimelineEntry(
             type: .arrivalReport,
-            description: "已安全到达\(placeName.isEmpty ? "" : "「\(placeName)」")"
+            description: placeName.isEmpty ? lang.localized("arrival.timeline")
+                : String(format: lang.localized("arrival.timelineAt"), placeName)
         )
         await MainActor.run { didSend = true }
     }

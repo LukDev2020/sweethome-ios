@@ -571,7 +571,7 @@ private struct CustomContactsPanel: View {
             Text(LanguageManager.shared.localized("protected.records.customContacts"))
                 .font(.scaled(size: 13, weight: .semibold))
             Spacer()
-            Text("\(contacts.count) 人")
+            Text(String(format: LanguageManager.shared.localized("records.peopleCount"), contacts.count))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
         }

@@ -242,7 +242,7 @@ struct BLETrackerSettingsView: View {
                                         Text(device.name ?? langManager.localized("ble.unknownDevice"))
                                             .font(.scaled(size: 13, weight: .medium))
                                             .foregroundStyle(ink)
-                                        Text("信号: \(device.rssi) dBm")
+                                        Text(String(format: langManager.localized("ble.signal"), device.rssi))
                                             .font(.scaled(size: 10))
                                             .foregroundStyle(.secondary)
                                     }

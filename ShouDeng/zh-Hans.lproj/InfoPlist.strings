@@ -21,3 +21,5 @@ NSPhotoLibraryUsageDescription = "与守护圈内的家人分享照片。照片�
 
 /* 通讯录 */
 NSContactsUsageDescription = "访问通讯录以快速添加紧急联络人信息。联系人数据不会上传到我们的服务器。";
+NSBluetoothAlwaysUsageDescription = "守灯会连接你的蓝牙紧急按钮和防丢标签，用于发出 SOS 和提醒物品遗落。只有在设置中配对设备后才会使用蓝牙。";
+NSSpeechRecognitionUsageDescription = "语音指令让你无需动手即可发出 SOS，说出「救命」或 “help” 即可。所有识别都在你的设备上完成。";

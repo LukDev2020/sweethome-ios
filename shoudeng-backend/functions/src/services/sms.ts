@@ -1,3 +1,4 @@
+import { normalizeLocale } from "./locale";
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
@@ -19,6 +20,14 @@ const smsStrings: Record<string, {
     checkinBody: (name) => `【守灯提醒】${name}今天尚未报平安，请关注。`,
     verifyBody: (code) => `【守灯】您的验证码是 ${code}，5 分钟内有效。`,
   },
+  "zh-Hant": {
+    sosBody: (name, url) => url
+      ? `【守燈緊急通知】${name}正在求助！請立即檢視詳情：${url}`
+      : `【守燈緊急通知】${name}正在求助！請立即開啟守燈應用檢視。`,
+    contactSosBody: (name, url) => `【守燈緊急通知】${name}將您設為緊急聯絡人，現在正在求助。${url ? "最新位置：" + url + "。" : ""}如無法聯絡上本人，請撥打當地緊急電話。`,
+    checkinBody: (name) => `【守燈提醒】${name}今天尚未報平安，請關注。`,
+    verifyBody: (code) => `【守燈】您的驗證碼是 ${code}，5 分鐘內有效。`,
+  },
   en: {
     sosBody: (name, url) => url
       ? `[Lantern Care Emergency] ${name} is calling for help! View details: ${url}`
@@ -38,7 +47,8 @@ const smsStrings: Record<string, {
 };
 
 function getSmsStrings(locale: string) {
-  const lang = (locale || "zh").substring(0, 2);
+  // normalizeLocale keeps "zh-Hant" (Hong Kong, Macao, Taiwan) apart from "zh".
+  const lang = normalizeLocale(locale) ?? "zh";
   return smsStrings[lang] || smsStrings.zh;
 }
 

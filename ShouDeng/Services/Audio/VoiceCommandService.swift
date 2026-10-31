@@ -29,6 +29,7 @@ final class VoiceCommandService: ObservableObject {
         var triggerPhrases: Set<String> = [
             "help", "help me", "sos",
             "救命", "帮帮我", "救我", "紧急求助",
+            "幫幫我", "緊急求助", // Traditional, in case a zh-Hant / zh-HK recognizer is used
             "au secours", "aidez-moi",
         ]
         var confidenceThreshold: Double = 0.5

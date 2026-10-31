@@ -1,3 +1,4 @@
+import { normalizeLocale } from "./locale";
 import * as admin from "firebase-admin";
 
 const db = admin.firestore();
@@ -37,6 +38,23 @@ const fcmStrings: Record<string, {
     ackProtectedTitle: "家人已收到",
     ackProtectedBody: (g) => `${g}已收到你的求助，正在处理`,
   },
+  "zh-Hant": {
+    sosTitle: "緊急求助",
+    sosBody: (name, loc) => `${name}正在求助${loc ? "，位於" + loc : ""}`,
+    sosBattery: (pct) => `電量 ${pct}%`,
+    checkinTitle: "報平安提醒",
+    checkinBody: (name) => `${name}今天還沒有報平安`,
+    heartbeatTitle: "裝置離線提醒",
+    heartbeatBody: (name, mins) => `${name}的手機已 ${mins} 分鐘未上報訊號`,
+    resolvedTitle: "守護者已接手",
+    resolvedBody: (name) => `${name}已確認並接手處理`,
+    homeSafeTitle: (name) => `${name}已平安到家`,
+    homeSafeBody: (city, time, note) => [city, time].filter(Boolean).join(" · ") + (note ? `\n${note}` : ""),
+    ackOthersTitle: "已有人接手",
+    ackOthersBody: (g, p) => `${g}正在處理${p}的求助，自動呼叫已停止`,
+    ackProtectedTitle: "家人已收到",
+    ackProtectedBody: (g) => `${g}已收到你的求助，正在處理`,
+  },
   en: {
     sosTitle: "Emergency SOS",
     sosBody: (name, loc) => `${name} is calling for help${loc ? " near " + loc : ""}`,
@@ -74,7 +92,8 @@ const fcmStrings: Record<string, {
 };
 
 function getStrings(locale: string) {
-  const lang = (locale || "zh").substring(0, 2);
+  // normalizeLocale keeps "zh-Hant" (Hong Kong, Macao, Taiwan) apart from "zh".
+  const lang = normalizeLocale(locale) ?? "zh";
   return fcmStrings[lang] || fcmStrings.zh;
 }
 

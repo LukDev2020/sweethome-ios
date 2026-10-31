@@ -1,0 +1,25 @@
+CFBundleDisplayName = "守燈";
+CFBundleName = "守燈";
+
+/* 位置 — 始終 */
+NSLocationAlwaysAndWhenInUseUsageDescription = "守燈會將你的位置分享給你選擇的家人，以便在緊急情況下聯絡你。位置資訊也用於安全區進出通知。僅在你接受應用內同意提示後才開始共享。";
+
+/* 位置 — 使用時 */
+NSLocationWhenInUseUsageDescription = "守燈使用你的位置在地圖上顯示你所在的位置，並在緊急求助時將位置傳送給你選擇的家人。僅在你接受應用內同意後使用。";
+
+/* 運動感測器 */
+NSMotionUsageDescription = "守燈在應用開啟時使用運動感測器檢測可能的跌倒。檢測到後你有 60 秒時間取消警報，之後才會通知你的家人。";
+
+/* 面容 ID */
+NSFaceIDUsageDescription = "守燈使用面容 ID 驗證你的身份，保護家庭安全資料的訪問。";
+
+/* 麥克風 */
+NSMicrophoneUsageDescription = "在緊急求助期間，麥克風可能會錄製環境音以幫助你選擇的家人判斷現場情況。僅在你開啟此選項且當地法律允許時才會錄製。";
+
+/* 照片相簿 */
+NSPhotoLibraryUsageDescription = "與守護圈內的家人分享照片。照片僅對你的守護關係內的人可見。";
+
+/* 通訊錄 */
+NSContactsUsageDescription = "訪問通訊錄以快速新增緊急聯絡人資訊。聯絡人資料不會上傳到我們的伺服器。";
+NSBluetoothAlwaysUsageDescription = "守燈會連線你的藍芽緊急按鈕和防丟標籤，用於發出 SOS 和提醒物品遺落。只有在設定中配對裝置後才會使用藍芽。";
+NSSpeechRecognitionUsageDescription = "語音指令讓你無需動手即可發出 SOS，說出「救命」或 “help” 即可。所有識別都在你的裝置上完成。";

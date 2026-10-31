@@ -127,7 +127,7 @@ final class OutdoorSatelliteTests: XCTestCase {
         let keys = TripPreflightView.Item.allCases.flatMap { ["preflight.\($0.rawValue).title", "preflight.\($0.rawValue).detail"] }
             + ["preflight.offlineMaps.action", "satellite.banner.title", "satellite.banner.detail",
                "maps.open.apple", "maps.open.directions", "maps.open.hint"]
-        for language in ["en", "zh-Hans", "fr"] {
+        for language in ["en", "zh-Hans", "zh-Hant", "fr"] {
             let path = try XCTUnwrap(Bundle.main.path(forResource: "Localizable", ofType: "strings",
                                                       inDirectory: nil, forLocalization: language), language)
             let table = try XCTUnwrap(NSDictionary(contentsOfFile: path) as? [String: String], language)

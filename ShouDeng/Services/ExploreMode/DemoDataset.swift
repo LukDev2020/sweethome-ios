@@ -152,9 +152,13 @@ struct DemoDataset {
 /// Localized demo copy (names stay recognisable across languages).
 struct DemoText {
     let language: AppLanguage
-    private var zh: Bool { language == .chinese }
+    private var zh: Bool { language.isChinese }
     private var fr: Bool { language == .french }
-    private func pick(_ en: String, _ zh: String, _ fr: String) -> String { self.zh ? zh : self.fr ? fr : en }
+    private func pick(_ en: String, _ zh: String, _ fr: String) -> String {
+        guard self.zh else { return self.fr ? fr : en }
+        return language == .traditionalChinese
+            ? (zh.applyingTransform(StringTransform("Hans-Hant"), reverse: false) ?? zh) : zh
+    }
 
     var momName: String { pick("Xiulan Chen", "陈秀兰", "Xiulan Chen") }
     var dadName: String { pick("Jianguo Chen", "陈建国", "Jianguo Chen") }

@@ -21,19 +21,19 @@ struct ConsulateView: View {
     // Source: Chinese MFA official websites (cs.mfa.gov.cn, embassy/consulate sites)
     // Numbers are consular protection hotlines (领事保护电话), not general switchboards
     private let countries: [ConsulateEntry] = [
-        ConsulateEntry(code: "US", name: "美国", flag: "🇺🇸", emergency: "911", police: "911", ambulance: "911", embassy: "+1-202-495-2216", consulates: ["+1-212-695-3125", "+1-415-929-6998", "+1-213-807-8052", "+1-312-397-3015"]),
-        ConsulateEntry(code: "CA", name: "加拿大", flag: "🇨🇦", emergency: "911", police: "911", ambulance: "911", embassy: "+1-613-562-1616", consulates: ["+1-416-594-2308", "+1-604-336-9926"]),
-        ConsulateEntry(code: "GB", name: "英国", flag: "🇬🇧", emergency: "999", police: "999", ambulance: "999", embassy: "+44-20-7299-8439", consulates: ["+44-161-224-8986", "+44-131-337-4449"]),
-        ConsulateEntry(code: "AU", name: "澳大利亚", flag: "🇦🇺", emergency: "000", police: "000", ambulance: "000", embassy: "+61-2-6228-3948", consulates: ["+61-2-8595-8029", "+61-3-9804-3271"]),
-        ConsulateEntry(code: "JP", name: "日本", flag: "🇯🇵", emergency: "110", police: "110", ambulance: "119", embassy: "+81-3-3403-3065", consulates: []),
-        ConsulateEntry(code: "KR", name: "韩国", flag: "🇰🇷", emergency: "112", police: "112", ambulance: "119", embassy: "+82-2-755-0572", consulates: []),
-        ConsulateEntry(code: "DE", name: "德国", flag: "🇩🇪", emergency: "112", police: "110", ambulance: "112", embassy: "+49-30-27588-551", consulates: ["+49-69-6953-8633", "+49-89-7244-98146"]),
-        ConsulateEntry(code: "FR", name: "法国", flag: "🇫🇷", emergency: "112", police: "17", ambulance: "15", embassy: "+33-1-5375-8921", consulates: ["+33-7-8562-0931"]),
-        ConsulateEntry(code: "NZ", name: "新西兰", flag: "🇳🇿", emergency: "111", police: "111", ambulance: "111", embassy: "+64-4-499-5022", consulates: ["+64-9-525-1200"]),
-        ConsulateEntry(code: "SG", name: "新加坡", flag: "🇸🇬", emergency: "999", police: "999", ambulance: "995", embassy: "+65-6471-2117", consulates: []),
-        ConsulateEntry(code: "TH", name: "泰国", flag: "🇹🇭", emergency: "191", police: "191", ambulance: "1669", embassy: "+66-2-245-7010", consulates: ["+66-53-280618"]),
-        ConsulateEntry(code: "MY", name: "马来西亚", flag: "🇲🇾", emergency: "999", police: "999", ambulance: "999", embassy: "+60-3-2164-5301", consulates: []),
-        ConsulateEntry(code: "UA", name: "乌克兰", flag: "🇺🇦", emergency: "112", police: "102", ambulance: "103", embassy: "+380-50-355-0734", consulates: []),
+        ConsulateEntry(code: "US", flag: "🇺🇸", embassy: "+1-202-495-2216", consulates: ["+1-212-695-3125", "+1-415-929-6998", "+1-213-807-8052", "+1-312-397-3015"]),
+        ConsulateEntry(code: "CA", flag: "🇨🇦", embassy: "+1-613-562-1616", consulates: ["+1-416-594-2308", "+1-604-336-9926"]),
+        ConsulateEntry(code: "GB", flag: "🇬🇧", embassy: "+44-20-7299-8439", consulates: ["+44-161-224-8986", "+44-131-337-4449"]),
+        ConsulateEntry(code: "AU", flag: "🇦🇺", embassy: "+61-2-6228-3948", consulates: ["+61-2-8595-8029", "+61-3-9804-3271"]),
+        ConsulateEntry(code: "JP", flag: "🇯🇵", embassy: "+81-3-3403-3065", consulates: []),
+        ConsulateEntry(code: "KR", flag: "🇰🇷", embassy: "+82-2-755-0572", consulates: []),
+        ConsulateEntry(code: "DE", flag: "🇩🇪", embassy: "+49-30-27588-551", consulates: ["+49-69-6953-8633", "+49-89-7244-98146"]),
+        ConsulateEntry(code: "FR", flag: "🇫🇷", embassy: "+33-1-5375-8921", consulates: ["+33-7-8562-0931"]),
+        ConsulateEntry(code: "NZ", flag: "🇳🇿", embassy: "+64-4-499-5022", consulates: ["+64-9-525-1200"]),
+        ConsulateEntry(code: "SG", flag: "🇸🇬", embassy: "+65-6471-2117", consulates: []),
+        ConsulateEntry(code: "TH", flag: "🇹🇭", embassy: "+66-2-245-7010", consulates: ["+66-53-280618"]),
+        ConsulateEntry(code: "MY", flag: "🇲🇾", embassy: "+60-3-2164-5301", consulates: []),
+        ConsulateEntry(code: "UA", flag: "🇺🇦", embassy: "+380-50-355-0734", consulates: []),
     ]
 
     private var filteredCountries: [ConsulateEntry] {
@@ -145,13 +145,15 @@ struct ConsulateView: View {
 struct ConsulateEntry: Identifiable {
     var id: String { code }
     let code: String
-    let name: String
     let flag: String
-    let emergency: String
-    let police: String
-    let ambulance: String
     let embassy: String
     let consulates: [String]
+
+    /// Emergency numbers and country name come from the single source so the
+    /// pinned hotline card never shows a police-only number as "emergency".
+    var name: String { RegionalEmergencyInfo.regionName(code) }
+    var emergencyNumbers: [EmergencyNumber] { RegionalEmergencyInfo.forCountry(code).numbers }
+    var emergency: String { RegionalEmergencyInfo.forCountry(code).primaryNumber }
 }
 
 // MARK: - Detail Sheet
@@ -207,12 +209,8 @@ struct ConsulateDetailSheet: View {
 
                     // Emergency numbers
                     sectionCard(title: LanguageManager.shared.localized("consulate.emergencyNumbers"), icon: "phone.fill", color: alert) {
-                        phoneRow(LanguageManager.shared.localized("consulate.generalEmergency"), number: country.emergency)
-                        if country.police != country.emergency {
-                            phoneRow(LanguageManager.shared.localized("consulate.police"), number: country.police)
-                        }
-                        if country.ambulance != country.emergency {
-                            phoneRow(LanguageManager.shared.localized("consulate.ambulance"), number: country.ambulance)
+                        ForEach(country.emergencyNumbers, id: \.number) { number in
+                            phoneRow(number.label, number: number.number)
                         }
                     }
 

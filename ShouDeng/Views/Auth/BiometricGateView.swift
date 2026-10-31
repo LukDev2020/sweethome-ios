@@ -43,7 +43,7 @@ struct BiometricGateView: View {
                             .frame(width: 80, height: 80)
                             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
-                        Text(LanguageManager.shared.current == .chinese ? "守灯" : "Lantern Care")
+                        Text(LanguageManager.shared.current.brandName)
                             .font(.scaled(size: 29, weight: .black, design: .serif))
                             .foregroundStyle(navy)
                             .tracking(1.5)

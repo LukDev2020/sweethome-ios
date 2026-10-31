@@ -16,12 +16,7 @@ enum FontScaleLevel: String, CaseIterable {
     }
 
     var label: String {
-        switch self {
-        case .standard:  return "标准"
-        case .large:     return "大字"
-        case .extraLarge: return "特大"
-        case .huge:      return "超大"
-        }
+        LanguageManager.shared.localized("fontScale.\(rawValue)")
     }
 
     var icon: String {

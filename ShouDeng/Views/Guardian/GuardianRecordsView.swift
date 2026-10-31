@@ -1040,7 +1040,8 @@ struct GuardianMember: Identifiable {
         case backup = "备用守护者"
         case observer = "观察者"
 
-        var label: String { rawValue }
+        /// rawValue is what the backend stores; label is for display.
+        var label: String { LanguageManager.shared.localized("member.role.\(self)") }
     }
 
     enum Status: String {
@@ -1048,7 +1049,7 @@ struct GuardianMember: Identifiable {
         case pending = "待接受"
         case declined = "已拒绝"
 
-        var label: String { rawValue }
+        var label: String { LanguageManager.shared.localized("member.status.\(self)") }
     }
 
     static let demoData: [GuardianMember] = [
@@ -1081,6 +1082,8 @@ struct InviteGuardianSheet: View {
         case wechat = "微信"
         case link = "复制链接"
 
+        var label: String { LanguageManager.shared.localized("invite.method.\(self)") }
+
         var icon: String {
             switch self {
             case .sms: return "message.fill"
@@ -1093,14 +1096,14 @@ struct InviteGuardianSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("被邀请人") {
-                    TextField("姓名", text: $inviteName)
-                    TextField("手机号 (含区号)", text: $invitePhone)
+                Section(LanguageManager.shared.localized("invite.sheet.invitee")) {
+                    TextField(LanguageManager.shared.localized("invite.sheet.name"), text: $inviteName)
+                    TextField(LanguageManager.shared.localized("invite.sheet.phone"), text: $invitePhone)
                         .keyboardType(.phonePad)
                 }
 
-                Section("角色") {
-                    Picker("分配角色", selection: $inviteRole) {
+                Section(LanguageManager.shared.localized("invite.sheet.role")) {
+                    Picker(LanguageManager.shared.localized("invite.sheet.assignRole"), selection: $inviteRole) {
                         ForEach(GuardianMember.Role.allCases, id: \.self) { role in
                             Text(role.label).tag(role)
                         }
@@ -1109,14 +1112,14 @@ struct InviteGuardianSheet: View {
 
                     // Role descriptions
                     VStack(alignment: .leading, spacing: 6) {
-                        roleDescription("主要守护者", desc: "可查看位置、接收 SOS、参与值班")
-                        roleDescription("备用守护者", desc: "在主要守护者无法响应时接替")
-                        roleDescription("观察者", desc: "仅接收通知，不参与值班排班")
+                        roleDescription(GuardianMember.Role.primary.label, desc: LanguageManager.shared.localized("member.role.primary.desc"))
+                        roleDescription(GuardianMember.Role.backup.label, desc: LanguageManager.shared.localized("member.role.backup.desc"))
+                        roleDescription(GuardianMember.Role.observer.label, desc: LanguageManager.shared.localized("member.role.observer.desc"))
                     }
                     .padding(.vertical, 4)
                 }
 
-                Section("发送方式") {
+                Section(LanguageManager.shared.localized("invite.sheet.method")) {
                     ForEach(InviteMethod.allCases, id: \.self) { method in
                         Button {
                             inviteMethod = method
@@ -1127,12 +1130,12 @@ struct InviteGuardianSheet: View {
                                     .font(.scaled(size: 15))
                                     .foregroundStyle(safe)
                                     .frame(width: 24)
-                                Text(method.rawValue)
+                                Text(method.label)
                                     .font(.scaled(size: 14))
                                     .foregroundStyle(ink)
                                 Spacer()
                                 if method == .link && showCopied {
-                                    Text("已复制")
+                                    Text(LanguageManager.shared.localized("invite.sheet.copied"))
                                         .font(.scaled(size: 12))
                                         .foregroundStyle(safe)
                                 } else {
@@ -1147,24 +1150,24 @@ struct InviteGuardianSheet: View {
                 }
 
                 Section {
-                    Text("邀请链接 24 小时内有效。对方接受后将自动加入守护圈。")
+                    Text(LanguageManager.shared.localized("invite.sheet.footer"))
                         .font(.scaled(size: 12))
                         .foregroundStyle(.tertiary)
                 }
             }
-            .navigationTitle("邀请守护者")
+            .navigationTitle(LanguageManager.shared.localized("invite.sheet.title"))
             .navigationBarTitleDisplayMode(.inline)
-            .alert("无法发送邀请", isPresented: Binding(
+            .alert(LanguageManager.shared.localized("invite.sheet.errorTitle"), isPresented: Binding(
                 get: { inviteError != nil },
                 set: { if !$0 { inviteError = nil } }
             )) {
-                Button("好", role: .cancel) {}
+                Button(LanguageManager.shared.localized("invite.sheet.ok"), role: .cancel) {}
             } message: {
                 Text(inviteError ?? "")
             }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("取消") { dismiss() }
+                    Button(LanguageManager.shared.localized("invite.sheet.cancel")) { dismiss() }
                 }
             }
         }
@@ -1198,7 +1201,7 @@ struct InviteGuardianSheet: View {
                 )
                 inviteCode = response.code
             } catch {
-                inviteError = "邀请创建失败，请检查网络连接后重试。"
+                inviteError = LanguageManager.shared.localized("invite.sheet.errorBody")
                 return
             }
 
@@ -1232,7 +1235,7 @@ struct InviteGuardianSheet: View {
             case .wechat:
                 // Use system share sheet as fallback
                 let activityVC = UIActivityViewController(
-                    activityItems: ["加入守灯(Lantern Care)守护圈：\(inviteLink)"],
+                    activityItems: [String(format: LanguageManager.shared.localized("invite.sheet.shareText"), inviteLink)],
                     applicationActivities: nil
                 )
                 if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
@@ -1260,35 +1263,35 @@ struct EditGuardianMemberSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("成员信息") {
+                Section(LanguageManager.shared.localized("member.edit.info")) {
                     HStack {
-                        Text("姓名")
+                        Text(LanguageManager.shared.localized("invite.sheet.name"))
                         Spacer()
                         Text(member.name)
                             .foregroundStyle(.secondary)
                     }
                     HStack {
-                        Text("城市")
+                        Text(LanguageManager.shared.localized("member.edit.city"))
                         Spacer()
-                        Text(member.city.isEmpty ? "未知" : member.city)
+                        Text(member.city.isEmpty ? LanguageManager.shared.localized("member.edit.unknown") : member.city)
                             .foregroundStyle(.secondary)
                     }
                     HStack {
-                        Text("电话")
+                        Text(LanguageManager.shared.localized("member.edit.phone"))
                         Spacer()
                         Text(member.phone)
                             .foregroundStyle(.secondary)
                     }
                     HStack {
-                        Text("状态")
+                        Text(LanguageManager.shared.localized("member.edit.status"))
                         Spacer()
                         Text(member.status.label)
                             .foregroundStyle(.secondary)
                     }
                 }
 
-                Section("角色设置") {
-                    Picker("角色", selection: $selectedRole) {
+                Section(LanguageManager.shared.localized("member.edit.roleSection")) {
+                    Picker(LanguageManager.shared.localized("invite.sheet.role"), selection: $selectedRole) {
                         ForEach(GuardianMember.Role.allCases, id: \.self) { role in
                             Text(role.label).tag(role)
                         }
@@ -1297,9 +1300,9 @@ struct EditGuardianMemberSheet: View {
                 }
 
                 if member.status == .active {
-                    Section("加入时间") {
+                    Section(LanguageManager.shared.localized("member.edit.joinedSection")) {
                         HStack {
-                            Text("加入于")
+                            Text(LanguageManager.shared.localized("member.edit.joinedOn"))
                             Spacer()
                             Text(member.joinedAt, style: .date)
                                 .foregroundStyle(.secondary)
@@ -1307,14 +1310,14 @@ struct EditGuardianMemberSheet: View {
                     }
                 }
             }
-            .navigationTitle("编辑成员")
+            .navigationTitle(LanguageManager.shared.localized("member.edit.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("取消") { dismiss() }
+                    Button(LanguageManager.shared.localized("invite.sheet.cancel")) { dismiss() }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("保存") {
+                    Button(LanguageManager.shared.localized("member.edit.save")) {
                         if let idx = members.firstIndex(where: { $0.id == member.id }) {
                             members[idx].role = selectedRole
                         }

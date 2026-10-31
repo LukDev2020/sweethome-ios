@@ -21,3 +21,5 @@ NSPhotoLibraryUsageDescription = "Partagez des photos avec les membres de votre 
 
 /* Contacts */
 NSContactsUsageDescription = "Accedez a vos contacts pour ajouter rapidement des coordonnees d'urgence. Les donnees de contact ne sont pas envoyees a nos serveurs.";
+NSBluetoothAlwaysUsageDescription = "Lantern Care se connecte à votre bouton d'alerte et à vos balises Bluetooth pour déclencher un SOS et détecter un objet oublié. Le Bluetooth n'est utilisé qu'après l'appairage d'un appareil dans Réglages.";
+NSSpeechRecognitionUsageDescription = "Les commandes vocales vous permettent de déclencher un SOS sans les mains en disant « help » ou « 救命 ». La reconnaissance se fait entièrement sur votre appareil.";

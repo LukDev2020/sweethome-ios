@@ -5,7 +5,7 @@ import XCTest
 /// otherwise users see raw keys like `location.justUpdated` on screen.
 final class LocalizationCompletenessTests: XCTestCase {
 
-    private static let languages = ["en", "zh-Hans", "fr"]
+    private static let languages = ["en", "zh-Hans", "zh-Hant", "fr"]
 
     private var repoRoot: URL {
         URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
@@ -51,7 +51,7 @@ final class LocalizationCompletenessTests: XCTestCase {
 
     func testTablesHaveTheSameKeys() throws {
         let en = Set(try table("en").keys)
-        for lang in ["zh-Hans", "fr"] {
+        for lang in ["zh-Hans", "zh-Hant", "fr"] {
             let other = Set(try table(lang).keys)
             XCTAssertEqual(en.subtracting(other).sorted(), [], "\(lang) lacks keys present in en")
             XCTAssertEqual(other.subtracting(en).sorted(), [], "\(lang) has keys missing from en")
@@ -68,7 +68,7 @@ final class LocalizationCompletenessTests: XCTestCase {
                 .map { String(cleaned[Range($0.range(at: 1), in: cleaned)!]) }.sorted()
         }
         let en = try table("en")
-        for lang in ["zh-Hans", "fr"] {
+        for lang in ["zh-Hans", "zh-Hant", "fr"] {
             let t = try table(lang)
             for (key, value) in en {
                 guard let other = t[key] else { continue }
@@ -111,5 +111,54 @@ final class LocalizationCompletenessTests: XCTestCase {
         XCTAssertFalse(guardians.contains("%d"))
         XCTAssertNotEqual(lm.localized("location.justUpdated"), "location.justUpdated")
         XCTAssertNotEqual(lm.localized("guardian.member.batteryLabel"), "guardian.member.batteryLabel")
+    }
+}
+
+/// Hong Kong, Macao and Taiwan use Traditional Chinese.
+final class TraditionalChineseTests: XCTestCase {
+
+    func testTraditionalChineseIsDetectedFromSystemLanguage() {
+        for preferred in ["zh-Hant-TW", "zh-Hant-HK", "zh-HK", "zh-TW", "zh-Hant-MO"] {
+            XCTAssertEqual(LanguageManager.detectLanguage(preferred: preferred), .traditionalChinese, preferred)
+        }
+        XCTAssertEqual(LanguageManager.detectLanguage(preferred: "zh-Hans-CN"), .chinese)
+        XCTAssertEqual(LanguageManager.detectLanguage(preferred: "fr-CA"), .french)
+        XCTAssertEqual(LanguageManager.detectLanguage(preferred: "en-SG"), .english)
+    }
+
+    func testTraditionalTableIsInTraditionalCharacters() throws {
+        let path = try XCTUnwrap(Bundle.main.path(forResource: "Localizable", ofType: "strings",
+                                                  inDirectory: nil, forLocalization: "zh-Hant"))
+        let table = try XCTUnwrap(NSDictionary(contentsOfFile: path) as? [String: String])
+        XCTAssertEqual(table["app.name"], "守燈")
+        // A few characters that only exist in Simplified must not appear.
+        let simplifiedOnly = CharacterSet(charactersIn: "灯这说们设边过还")
+        let offenders = table.filter { $0.value.rangeOfCharacter(from: simplifiedOnly) != nil }.map(\.key)
+        XCTAssertEqual(offenders, [], "Simplified characters in zh-Hant")
+    }
+
+    func testBrandNamePerLanguage() {
+        XCTAssertEqual(AppLanguage.chinese.brandName, "守灯")
+        XCTAssertEqual(AppLanguage.traditionalChinese.brandName, "守燈")
+        XCTAssertEqual(AppLanguage.english.brandName, "Lantern Care")
+    }
+}
+
+final class LanguageChoiceTests: XCTestCase {
+    func testExplicitChoiceIsNotOverriddenByPhoneCountry() {
+        let lm = LanguageManager.shared
+        let key = "app_language_user_chosen"
+        let original = lm.current
+        let hadChoice = UserDefaults.standard.object(forKey: key)
+        defer {
+            if let hadChoice { UserDefaults.standard.set(hadChoice, forKey: key) } else { UserDefaults.standard.removeObject(forKey: key) }
+            lm.current = original
+        }
+        UserDefaults.standard.removeObject(forKey: key)
+        lm.suggest(.english)                  // +1 number, no choice yet → follows the country
+        XCTAssertEqual(lm.current, .english)
+        lm.choose(.traditionalChinese)        // person taps 繁
+        lm.suggest(.english)                  // screen rebuilt / country re-applied
+        XCTAssertEqual(lm.current, .traditionalChinese)
     }
 }

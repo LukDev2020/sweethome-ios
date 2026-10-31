@@ -3,6 +3,28 @@ import XCTest
 
 final class ClaimMaterialTests: XCTestCase {
 
+    // The phrase checks below are written against the Simplified Chinese source copy.
+    private var savedLanguage: AppLanguage!
+
+    override func setUp() {
+        super.setUp()
+        savedLanguage = LanguageManager.shared.current
+        LanguageManager.shared.current = .chinese
+    }
+
+    override func tearDown() {
+        LanguageManager.shared.current = savedLanguage
+        super.tearDown()
+    }
+
+    func testClaimCopyFollowsTheAppLanguage() {
+        LanguageManager.shared.current = .english
+        XCTAssertEqual(InsuranceType.theft.displayName, "Theft or robbery")
+        XCTAssertTrue(ClaimDisclaimer.pdfHeader.contains("reference only"))
+        XCTAssertEqual(ClaimDisclaimer.limitations.count, 4)
+        XCTAssertEqual(InsuranceType.lostLuggage.insurerRequires.count, 2)
+    }
+
     // MARK: - InsuranceType
 
     func testAllInsuranceTypesExist() {

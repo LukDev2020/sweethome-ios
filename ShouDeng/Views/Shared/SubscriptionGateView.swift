@@ -32,7 +32,7 @@ struct SubscriptionGateView: View {
                     .font(.scaled(size: 20, weight: .bold))
                     .foregroundStyle(ink)
 
-                Text("此功能需要\(planLabel)或更高方案")
+                Text(String(format: LanguageManager.shared.localized("subscription.requires"), planLabel))
                     .font(.scaled(size: 15))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -41,7 +41,7 @@ struct SubscriptionGateView: View {
                     GuardianPlanBillingView()
                         .environmentObject(coordinator)
                 } label: {
-                    Text("查看方案")
+                    Text(LanguageManager.shared.localized("subscription.viewPlans"))
                         .font(.scaled(size: 16, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)

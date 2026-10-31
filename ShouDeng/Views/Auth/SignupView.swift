@@ -181,14 +181,14 @@ struct SignupView: View {
         let chineseRegions: Set<String> = ["CN", "HK", "MO", "TW"]
         let target: AppLanguage
         if chineseRegions.contains(country.isoCode) {
-            target = .chinese
+            target = country.isoCode == "CN" ? .chinese : .traditionalChinese
         } else if country.isoCode == "FR" {
             target = .french
         } else {
             target = .english
         }
         if lang.current != target {
-            lang.current = target
+            lang.suggest(target)
         }
     }
 

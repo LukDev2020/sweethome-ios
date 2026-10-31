@@ -66,7 +66,8 @@ struct LoginView: View {
         }
         .onAppear {
             checkLockout()
-            applyLanguageForCountry(selectedCountry)
+            // No language switch here: it ran again every time the screen was rebuilt
+            // (e.g. right after tapping a language) and overrode the person's choice.
             #if DEBUG
             // Simulator verification: `-exploreRole mom|sarah` starts Explore Mode
             if let raw = UserDefaults.standard.string(forKey: "exploreRole"), let role = DemoRole(rawValue: raw),
@@ -246,7 +247,7 @@ struct LoginView: View {
                     HStack(spacing: 2) {
                         ForEach(AppLanguage.allCases, id: \.self) { language in
                             Button {
-                                lang.current = language
+                                lang.choose(language)
                             } label: {
                                 Text(language.displayName)
                                     .font(.scaled(size: 12))
@@ -274,7 +275,7 @@ struct LoginView: View {
                             fontScale.level = level
                         } label: {
                             VStack(spacing: 2) {
-                                Text("字")
+                                Text(lang.localized("login.fontSample"))
                                     .font(.system(size: 10 * level.scale, weight: .medium))
                                     .foregroundStyle(fontScale.level == level ? .white : ink)
                                 Text(level.label)
@@ -323,7 +324,7 @@ struct LoginView: View {
                     .tracking(1.5)
                     .padding(.top, 10)
 
-                Text(lang.current == .chinese ? "Lantern Care" : "守灯")
+                Text(lang.current.isChinese ? "Lantern Care" : "守灯")
                     .font(.scaled(size: 12, weight: .medium))
                     .foregroundStyle(Color(red: 26/255, green: 106/255, blue: 138/255))
                     .tracking(3.5)
@@ -503,15 +504,13 @@ struct LoginView: View {
         let chineseRegions: Set<String> = ["CN", "HK", "MO", "TW"]
         let target: AppLanguage
         if chineseRegions.contains(country.isoCode) {
-            target = .chinese
+            target = country.isoCode == "CN" ? .chinese : .traditionalChinese
         } else if country.isoCode == "FR" {
             target = .french
         } else {
             target = .english
         }
-        if lang.current != target {
-            lang.current = target
-        }
+        lang.suggest(target)
     }
 
     private var fullPhoneNumber: String {

@@ -26,6 +26,10 @@ enum DisclaimerCopy {
         static func screens(for language: AppLanguage) -> [Screen] {
             switch language {
             case .chinese: return screensZh
+            case .traditionalChinese:
+                let lm = LanguageManager.shared
+                return screensZh.map { Screen(id: $0.id, icon: $0.icon, title: lm.zh($0.title),
+                                              body: lm.zh($0.body), buttonTitle: lm.zh($0.buttonTitle)) }
             case .english: return screensEn
             case .french: return screensFr
             }
