@@ -8,11 +8,17 @@ import PhotosUI
 //   - Edit/delete their own messages
 //   - Reply with inline comments
 //   - Pull to refresh
+//
+// Refreshes when shown, when the app comes back to the foreground, after sending,
+// and every 30 s while visible. A failed refresh says so (error with Retry when
+// nothing is cached, a banner over cached posts). Unsent posts show "Not sent"
+// with Retry / Delete.
 
 struct FamilyFeedView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var langManager = LanguageManager.shared
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.scenePhase) private var scenePhase
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
@@ -22,10 +28,10 @@ struct FamilyFeedView: View {
     private let paneBorder = Color(red: 1/255, green: 69/255, blue: 129/255).opacity(0.13)
 
     @State private var isLoading = false
-    @State private var hasFetched = false
     @State private var messageText = ""
     @State private var selectedItems: [PhotosPickerItem] = []
     @State private var selectedImages: [UIImage] = []
+    @State private var selectedImageData: [Data] = []
     @State private var isSending = false
     @FocusState private var isInputFocused: Bool
 
@@ -55,9 +61,37 @@ struct FamilyFeedView: View {
                 }
             }
             .task {
-                guard !hasFetched else { return }
-                hasFetched = true
+                // Runs while the feed is on screen (cancelled when it goes away)
                 await loadPosts()
+                while !Task.isCancelled {
+                    try? await Task.sleep(nanoseconds: Self.refreshInterval)
+                    guard !Task.isCancelled else { break }
+                    if scenePhase == .active { await loadPosts() }
+                }
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { Task { await loadPosts() } }
+            }
+        }
+    }
+
+    private static let refreshInterval: UInt64 = 30_000_000_000
+
+    /// Messages, a load error, or the empty state.
+    @ViewBuilder
+    private var feedContent: some View {
+        if coordinator.familyPosts.isEmpty && !isLoading {
+            if coordinator.familyFeedRefreshFailed {
+                loadErrorState
+            } else {
+                emptyState
+            }
+        } else {
+            VStack(spacing: 0) {
+                if coordinator.familyFeedRefreshFailed && !coordinator.familyPosts.isEmpty {
+                    refreshFailedBanner
+                }
+                messageList
             }
         }
     }
@@ -66,13 +100,7 @@ struct FamilyFeedView: View {
 
     private var feedCompact: some View {
         VStack(spacing: 0) {
-            Group {
-                if coordinator.familyPosts.isEmpty && !isLoading {
-                    emptyState
-                } else {
-                    messageList
-                }
-            }
+            feedContent
             chatInputBar
         }
         .background(Color(.systemGroupedBackground))
@@ -84,13 +112,7 @@ struct FamilyFeedView: View {
         HStack(spacing: 0) {
             // Left: messages + input
             VStack(spacing: 0) {
-                Group {
-                    if coordinator.familyPosts.isEmpty && !isLoading {
-                        emptyState
-                    } else {
-                        messageList
-                    }
-                }
+                feedContent
                 chatInputBar
             }
             .frame(width: 445)
@@ -263,6 +285,59 @@ struct FamilyFeedView: View {
         .frame(maxWidth: .infinity)
     }
 
+    // MARK: - Load Errors
+
+    private var loadErrorState: some View {
+        VStack(spacing: 14) {
+            Spacer()
+            Image(systemName: "wifi.exclamationmark")
+                .font(.scaled(size: 40))
+                .foregroundStyle(lamp)
+            Text(langManager.localized("familyFeed.loadFailed"))
+                .font(.scaled(size: 16, weight: .medium))
+                .foregroundStyle(ink)
+            Text(langManager.localized("familyFeed.loadFailedHint"))
+                .font(.scaled(size: 13))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+            Button {
+                Task { await loadPosts() }
+            } label: {
+                Text(langManager.localized("familyFeed.retry"))
+                    .font(.scaled(size: 15, weight: .semibold))
+                    .padding(.horizontal, 20)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(safe)
+            .accessibilityIdentifier("familyFeed.retry")
+            Spacer()
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var refreshFailedBanner: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.scaled(size: 12))
+                .foregroundStyle(lamp)
+            Text(langManager.localized("familyFeed.refreshFailed"))
+                .font(.scaled(size: 12))
+                .foregroundStyle(ink)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Button(langManager.localized("familyFeed.retry")) {
+                Task { await loadPosts() }
+            }
+            .font(.scaled(size: 12, weight: .semibold))
+            .foregroundStyle(safe)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(lamp.opacity(0.12))
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("familyFeed.refreshFailed")
+    }
+
     // MARK: - Message List
 
     private var messageList: some View {
@@ -356,6 +431,9 @@ struct FamilyFeedView: View {
                                     .clipShape(RoundedRectangle(cornerRadius: 8))
                                 Button {
                                     selectedImages.remove(at: index)
+                                    if index < selectedImageData.count {
+                                        selectedImageData.remove(at: index)
+                                    }
                                     if index < selectedItems.count {
                                         selectedItems.remove(at: index)
                                     }
@@ -381,7 +459,7 @@ struct FamilyFeedView: View {
                 PhotosPicker(
                     selection: $selectedItems,
                     maxSelectionCount: 9,
-                    matching: .any(of: [.images, .videos])
+                    matching: .images
                 ) {
                     Image(systemName: "photo")
                         .font(.scaled(size: 20))
@@ -432,115 +510,46 @@ struct FamilyFeedView: View {
 
     // MARK: - Actions
 
+    /// Refreshes the feed. The spinner only shows while there is nothing to show yet;
+    /// the request's own timeout ends it (an error then replaces it, never "empty").
     private func loadPosts() async {
-        isLoading = true
-        let timeoutTask = Task {
-            try? await Task.sleep(nanoseconds: 5_000_000_000)
-            if isLoading {
-                await MainActor.run { isLoading = false }
-            }
-        }
-        defer {
-            timeoutTask.cancel()
-            isLoading = false
-        }
+        let showSpinner = coordinator.familyPosts.isEmpty
+        if showSpinner { isLoading = true }
         await coordinator.fetchFamilyPosts()
+        if showSpinner { isLoading = false }
     }
 
     private func loadImages(from items: [PhotosPickerItem]) async {
         var images: [UIImage] = []
+        var datas: [Data] = []
         for item in items {
             if let data = try? await item.loadTransferable(type: Data.self),
                let image = UIImage(data: data) {
                 images.append(image)
+                datas.append(data)
             }
         }
-        await MainActor.run { selectedImages = images }
+        await MainActor.run {
+            selectedImages = images
+            selectedImageData = datas
+        }
     }
 
     private func sendMessage() async {
-        guard canSend else { return }
+        guard canSend, !isSending else { return }
         isSending = true
         let text = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let images = selectedImageData
 
-        // Save images to temp files before clearing, so they persist through the send flow
-        let imagesToUpload = selectedImages
-        var localFileURLs: [String] = []
-        for (i, image) in imagesToUpload.enumerated() {
-            if let data = image.jpegData(compressionQuality: 0.85) {
-                let filename = "chat_\(UUID().uuidString)_\(i).jpg"
-                let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
-                try? data.write(to: fileURL)
-                localFileURLs.append(fileURL.absoluteString)
-            }
-        }
+        // Clear input immediately; the post shows as "sending" right away
+        messageText = ""
+        selectedImages = []
+        selectedImageData = []
+        selectedItems = []
 
-        // Clear input immediately for responsive feel
-        await MainActor.run {
-            messageText = ""
-            selectedImages = []
-            selectedItems = []
-        }
-
-        // Upload images to server
-        var remoteURLs: [String] = []
-        for image in imagesToUpload {
-            if let data = image.jpegData(compressionQuality: 0.7) {
-                do {
-                    let url = try await coordinator.uploadMedia(data: data, mimeType: "image/jpeg")
-                    remoteURLs.append(url)
-                } catch {
-                    #if DEBUG
-                    print("[FamilyFeed] Upload failed: \(error)")
-                    #endif
-                }
-            }
-        }
-
-        // Use remote URLs if upload succeeded, otherwise fall back to local file URLs
-        let finalMediaURLs = remoteURLs.isEmpty ? localFileURLs : remoteURLs
-
-        // Don't create an empty post (no text and no images)
-        guard !text.isEmpty || !finalMediaURLs.isEmpty else {
-            isSending = false
-            return
-        }
-
-        // Capture current location for the message
-        let loc = coordinator.locationManager.bestAvailableLocation
-        let lat = loc?.coordinate.latitude
-        let lng = loc?.coordinate.longitude
-        let locName = coordinator.currentUser?.cityName
-
-        // Create post — if API fails, add locally so chat still works
-        do {
-            try await coordinator.createFamilyPost(text: text, mediaURLs: finalMediaURLs, latitude: lat, longitude: lng, locationName: locName)
-        } catch {
-            #if DEBUG
-            print("[FamilyFeed] Send failed (adding locally): \(error)")
-            #endif
-            let localPost = FamilyPost(
-                id: UUID().uuidString,
-                authorId: coordinator.currentUser?.id ?? "local",
-                authorName: coordinator.currentUser?.displayName ?? langManager.localized("familyFeed.me"),
-                authorInitial: coordinator.currentUser?.avatarInitial ?? langManager.localized("familyFeed.me"),
-                authorAvatarPath: coordinator.currentUser?.avatarLocalPath,
-                text: text,
-                mediaURLs: finalMediaURLs,
-                createdAt: Date(),
-                comments: [],
-                commentCount: 0,
-                latitude: lat,
-                longitude: lng,
-                locationName: locName
-            )
-            await MainActor.run {
-                coordinator.familyPosts.insert(localPost, at: 0)
-                coordinator.persistFamilyPosts()
-            }
-        }
-
+        let id = await coordinator.queueFamilyPost(text: text, images: images)
         isSending = false
+        if let id { await coordinator.sendFamilyPost(id: id) }
     }
 }
 
@@ -558,6 +567,8 @@ struct MessageBubbleView: View {
     @State private var isEditing = false
     @State private var editText = ""
     @State private var showActions = false
+    @State private var commentFailed = false
+    @State private var isSendingComment = false
 
     private var isOwnMessage: Bool {
         post.authorId == coordinator.currentUser?.id
@@ -625,7 +636,7 @@ struct MessageBubbleView: View {
                     }
 
                     // Media
-                    if !post.mediaURLs.isEmpty {
+                    if !post.mediaURLs.isEmpty || !(post.delivery?.pendingImages.isEmpty ?? true) {
                         mediaGrid
                     }
                 }
@@ -634,18 +645,32 @@ struct MessageBubbleView: View {
                 .background(isOwnMessage ? safe : Color(.systemBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .shadow(color: .black.opacity(0.04), radius: 2, y: 1)
+                .opacity(post.isUnsent ? 0.6 : 1)
                 .onLongPressGesture {
                     if isOwnMessage { showActions = true }
                 }
                 .confirmationDialog(LanguageManager.shared.localized("familyFeed.messageActions"), isPresented: $showActions) {
-                    Button(LanguageManager.shared.localized("familyFeed.edit")) {
-                        editText = post.text
-                        isEditing = true
-                    }
-                    Button(LanguageManager.shared.localized("familyFeed.deleteMsg"), role: .destructive) {
-                        deletePost()
+                    if post.isUnsent {
+                        if post.delivery?.state == .failed {
+                            Button(LanguageManager.shared.localized("familyFeed.retry")) { retrySend() }
+                            Button(LanguageManager.shared.localized("familyFeed.deleteMsg"), role: .destructive) {
+                                coordinator.deleteUnsentFamilyPost(id: post.id)
+                            }
+                        }
+                    } else {
+                        Button(LanguageManager.shared.localized("familyFeed.edit")) {
+                            editText = post.text
+                            isEditing = true
+                        }
+                        Button(LanguageManager.shared.localized("familyFeed.deleteMsg"), role: .destructive) {
+                            deletePost()
+                        }
                     }
                     Button(LanguageManager.shared.localized("familyFeed.cancel"), role: .cancel) {}
+                }
+
+                if let delivery = post.delivery {
+                    deliveryRow(delivery)
                 }
 
                 // Time + location for own messages
@@ -665,11 +690,13 @@ struct MessageBubbleView: View {
                     }
                 }
 
-                // Reaction bar
-                ReactionBarView(postId: post.id)
+                // Reaction bar (not for a post the server doesn't have yet)
+                if !post.isUnsent {
+                    ReactionBarView(postId: post.id)
+                }
 
                 // Comment count / reply button
-                if post.commentCount > 0 || showComments {
+                if !post.isUnsent && (post.commentCount > 0 || showComments) {
                     Button {
                         showComments.toggle()
                     } label: {
@@ -684,7 +711,7 @@ struct MessageBubbleView: View {
                 }
 
                 // Comments
-                if showComments {
+                if showComments && !post.isUnsent {
                     commentsSection
                 }
             }
@@ -699,54 +726,111 @@ struct MessageBubbleView: View {
         .padding(.vertical, 2)
     }
 
+    // MARK: - Delivery
+
+    /// "Sending…" or "Not sent · Retry · Delete" under an unsent post.
+    private func deliveryRow(_ delivery: FamilyPostDelivery) -> some View {
+        HStack(spacing: 8) {
+            if delivery.state == .sending {
+                ProgressView()
+                    .controlSize(.mini)
+                Text(LanguageManager.shared.localized("familyFeed.sending"))
+                    .font(.scaled(size: 12))
+                    .foregroundStyle(.secondary)
+            } else {
+                Image(systemName: "exclamationmark.circle.fill")
+                    .font(.scaled(size: 12))
+                    .foregroundStyle(.red)
+                Text(LanguageManager.shared.localized("familyFeed.notSent"))
+                    .font(.scaled(size: 12, weight: .medium))
+                    .foregroundStyle(.red)
+                Button(LanguageManager.shared.localized("familyFeed.retry")) { retrySend() }
+                    .font(.scaled(size: 12, weight: .semibold))
+                    .foregroundStyle(safe)
+                    .accessibilityIdentifier("familyFeed.retrySend")
+                Button(LanguageManager.shared.localized("familyFeed.deleteMsg"), role: .destructive) {
+                    coordinator.deleteUnsentFamilyPost(id: post.id)
+                }
+                .font(.scaled(size: 12))
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func retrySend() {
+        let id = post.id
+        Task { await coordinator.sendFamilyPost(id: id) }
+    }
+
     // MARK: - Media
 
+    private enum MediaItem: Hashable {
+        case remote(String)
+        case pending(String)
+    }
+
     private var mediaGrid: some View {
-        let urls = post.mediaURLs
-        let columns = urls.count == 1
+        let items = post.mediaURLs.map(MediaItem.remote) + (post.delivery?.pendingImages ?? []).map(MediaItem.pending)
+        let columns = items.count == 1
             ? [GridItem(.flexible())]
             : [GridItem(.flexible()), GridItem(.flexible())]
-        let maxH: CGFloat = urls.count == 1 ? 220 : 120
+        let maxH: CGFloat = items.count == 1 ? 220 : 120
 
         return LazyVGrid(columns: columns, spacing: 3) {
-            ForEach(urls, id: \.self) { urlString in
-                if urlString.hasPrefix("file://"),
-                   let fileURL = URL(string: urlString),
-                   let uiImage = UIImage(contentsOfFile: fileURL.path) {
-                    // Local file image
-                    Image(uiImage: uiImage)
+            ForEach(items, id: \.self) { item in
+                switch item {
+                case .pending(let name):
+                    LocalFamilyImage(maxHeight: maxH) { coordinator.localStore.loadFamilyMedia(name: name) }
+                case .remote(let urlString):
+                    remoteImage(urlString, maxHeight: maxH)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func remoteImage(_ urlString: String, maxHeight maxH: CGFloat) -> some View {
+        if urlString.hasPrefix("file://"),
+           let fileURL = URL(string: urlString),
+           let uiImage = UIImage(contentsOfFile: fileURL.path) {
+            // Posts from older builds may still point at a file on this phone
+            Image(uiImage: uiImage)
+                .resizable()
+                .scaledToFill()
+                .frame(minHeight: 80, maxHeight: maxH)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+        } else if let url = URL(string: urlString), url.host == DemoURLProtocol.host {
+            // Explore Mode: photos "uploaded" to the demo live in memory
+            LocalFamilyImage(maxHeight: maxH) { DemoURLProtocol.store?.mediaData(for: url) }
+        } else {
+            AsyncImage(url: URL(string: urlString)) { phase in
+                switch phase {
+                case .success(let image):
+                    image
                         .resizable()
                         .scaledToFill()
                         .frame(minHeight: 80, maxHeight: maxH)
                         .clipShape(RoundedRectangle(cornerRadius: 8))
-                } else {
-                    // Remote URL image
-                    AsyncImage(url: URL(string: urlString)) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .scaledToFill()
-                                .frame(minHeight: 80, maxHeight: maxH)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                        case .failure:
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Color(.systemGray6))
-                                .frame(height: 80)
-                                .overlay {
-                                    Image(systemName: "photo")
-                                        .foregroundStyle(.secondary)
-                                }
-                        case .empty:
-                            ProgressView()
-                                .frame(height: 80)
-                        @unknown default:
-                            EmptyView()
-                        }
-                    }
+                case .failure:
+                    mediaPlaceholder
+                case .empty:
+                    ProgressView()
+                        .frame(height: 80)
+                @unknown default:
+                    EmptyView()
                 }
             }
         }
+    }
+
+    private var mediaPlaceholder: some View {
+        RoundedRectangle(cornerRadius: 8)
+            .fill(Color(.systemGray6))
+            .frame(height: 80)
+            .overlay {
+                Image(systemName: "photo")
+                    .foregroundStyle(.secondary)
+            }
     }
 
     // MARK: - Comments
@@ -781,17 +865,28 @@ struct MessageBubbleView: View {
                     .background(Color(.systemGray6))
                     .clipShape(Capsule())
                 Button {
-                    guard !commentText.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+                    let text = commentText.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !text.isEmpty, !isSendingComment else { return }
+                    isSendingComment = true
                     Task {
-                        await coordinator.addComment(postId: post.id, text: commentText)
-                        commentText = ""
+                        let sent = await coordinator.addComment(postId: post.id, text: text)
+                        // Keep the text when it didn't go out, so nothing is lost
+                        if sent { commentText = "" }
+                        commentFailed = !sent
+                        isSendingComment = false
                     }
                 } label: {
                     Image(systemName: "arrow.up.circle.fill")
                         .font(.scaled(size: 22))
                         .foregroundStyle(safe)
                 }
-                .disabled(commentText.trimmingCharacters(in: .whitespaces).isEmpty)
+                .disabled(commentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSendingComment)
+            }
+
+            if commentFailed {
+                Text(LanguageManager.shared.localized("familyFeed.replyFailed"))
+                    .font(.scaled(size: 11))
+                    .foregroundStyle(.red)
             }
         }
         .padding(8)
@@ -847,5 +942,34 @@ struct MessageBubbleView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm"
         return formatter.string(from: date)
+    }
+}
+
+// MARK: - Local image (unsent photo, Explore Mode photo)
+
+/// Decodes image data off the main thread once and shows it like a feed photo.
+private struct LocalFamilyImage: View {
+    let maxHeight: CGFloat
+    let load: () -> Data?
+    @State private var image: UIImage?
+
+    var body: some View {
+        Group {
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(minHeight: 80, maxHeight: maxHeight)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            } else {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(.systemGray6))
+                    .frame(height: 80)
+            }
+        }
+        .task {
+            guard image == nil, let data = load() else { return }
+            image = await Task.detached(priority: .userInitiated) { UIImage(data: data)?.preparingForDisplay() }.value
+        }
     }
 }

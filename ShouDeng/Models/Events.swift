@@ -174,8 +174,8 @@ enum AlertLevel: String, Codable {
 
 // MARK: - Family Feed
 
-struct FamilyPost: Codable, Identifiable {
-    let id: String
+struct FamilyPost: Codable, Identifiable, Equatable {
+    var id: String
     let authorId: String
     let authorName: String
     let authorInitial: String
@@ -188,9 +188,55 @@ struct FamilyPost: Codable, Identifiable {
     var latitude: Double?
     var longitude: Double?
     var locationName: String?
+    /// Set only on this phone, for a post it wrote that the server hasn't confirmed.
+    /// nil = the post is on the server.
+    var delivery: FamilyPostDelivery? = nil
+
+    var isUnsent: Bool { delivery != nil }
+
+    enum CodingKeys: String, CodingKey {
+        case id, authorId, authorName, authorInitial, authorAvatarPath, text, mediaURLs, createdAt,
+             comments, commentCount, latitude, longitude, locationName, delivery
+    }
 }
 
-struct FamilyComment: Codable, Identifiable {
+/// Where an unsent post is on its way to the server.
+struct FamilyPostDelivery: Codable, Equatable {
+    enum State: String, Codable {
+        case sending
+        case failed
+    }
+    var state: State
+    var attempts: Int = 0
+    /// Photos not uploaded yet: names of the downsized JPEGs in LocalStore. They
+    /// stay on this phone until uploaded; their names are never sent anywhere.
+    var pendingImages: [String] = []
+}
+
+extension FamilyPost {
+    /// Tolerant decoding: only `id` and `createdAt` are required, so one post with
+    /// a missing or odd field can't blank the feed (the array is decoded lossily too).
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        createdAt = try c.decode(Date.self, forKey: .createdAt)
+        authorId = c.lossy(String.self, .authorId) ?? ""
+        authorName = c.lossy(String.self, .authorName) ?? ""
+        let initial = c.lossy(String.self, .authorInitial) ?? ""
+        authorInitial = initial.isEmpty ? (authorName.first.map { String($0) } ?? "?") : initial
+        authorAvatarPath = c.lossy(String.self, .authorAvatarPath)
+        text = c.lossy(String.self, .text) ?? ""
+        mediaURLs = c.lossy(LossyArray<String>.self, .mediaURLs)?.elements ?? []
+        comments = c.lossy(LossyArray<FamilyComment>.self, .comments)?.elements ?? []
+        commentCount = max(c.lossy(Int.self, .commentCount) ?? 0, comments.count)
+        latitude = c.lossy(Double.self, .latitude)
+        longitude = c.lossy(Double.self, .longitude)
+        locationName = c.lossy(String.self, .locationName)
+        delivery = c.lossy(FamilyPostDelivery.self, .delivery)
+    }
+}
+
+struct FamilyComment: Codable, Identifiable, Equatable {
     let id: String
     let authorId: String
     let authorName: String
@@ -198,6 +244,24 @@ struct FamilyComment: Codable, Identifiable {
     var authorAvatarPath: String?
     let text: String
     let createdAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id, authorId, authorName, authorInitial, authorAvatarPath, text, createdAt
+    }
+}
+
+extension FamilyComment {
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        createdAt = try c.decode(Date.self, forKey: .createdAt)
+        authorId = c.lossy(String.self, .authorId) ?? ""
+        authorName = c.lossy(String.self, .authorName) ?? ""
+        let initial = c.lossy(String.self, .authorInitial) ?? ""
+        authorInitial = initial.isEmpty ? (authorName.first.map { String($0) } ?? "?") : initial
+        authorAvatarPath = c.lossy(String.self, .authorAvatarPath)
+        text = c.lossy(String.self, .text) ?? ""
+    }
 }
 
 // MARK: - Heartbeat Signal

@@ -31,6 +31,8 @@ final class DemoStore {
     private(set) var checkIns: [(userId: String, at: Date)] = []
     /// Requests the demo couldn't answer (shown as errors in the UI, never sent anywhere).
     private(set) var unhandled: [String] = []
+    /// Photos "uploaded" to the family circle, by id (kept in memory only).
+    private var media: [String: Data] = [:]
 
     /// Called (on any thread) when demo state changes in a way the other
     /// phone would hear about (check-in, SOS, acknowledge).
@@ -117,6 +119,73 @@ final class DemoStore {
         onEvent?(.checkedIn(personId: userId, at: date))
     }
 
+    /// A photo uploaded during this demo (its URL points at the demo host).
+    func mediaData(for url: URL) -> Data? {
+        guard url.host == DemoURLProtocol.host, url.path.hasPrefix("/media/") else { return nil }
+        let id = url.deletingPathExtension().lastPathComponent
+        return lock.withLock { media[id] }
+    }
+
+    // MARK: - Family circle (same rules as routes/family.ts)
+
+    private func bodyObject(_ body: Data?) -> [String: Any] {
+        (body.flatMap { try? JSONSerialization.jsonObject(with: $0) } as? [String: Any]) ?? [:]
+    }
+
+    private func createPost(by me: String, body: Data?) -> (Int, Data) {
+        let b = bodyObject(body)
+        let text = (b["text"] as? String) ?? ""
+        let urls = FamilyFeedSync.remoteMediaURLs((b["mediaURLs"] as? [String]) ?? [])
+        guard !text.isEmpty || !urls.isEmpty else { return (400, json(["error": "Post must have text or media"])) }
+        return lock.withLock {
+            let id = (b["clientPostId"] as? String) ?? "demo-post-\(dataset.posts.count + 1)"
+            if dataset.posts.contains(where: { $0.id == id }) { return (200, json(["postId": id])) }
+            guard let u = dataset.user(me) else { return (404, json(["error": "User not found"])) }
+            let post = FamilyPost(
+                id: id, authorId: me, authorName: u.displayName, authorInitial: u.avatarInitial, authorAvatarPath: nil,
+                text: text, mediaURLs: urls, createdAt: Date(), comments: [], commentCount: 0,
+                latitude: b["latitude"] as? Double, longitude: b["longitude"] as? Double,
+                locationName: b["locationName"] as? String)
+            dataset.posts.insert(post, at: 0)
+            return (201, json(["postId": id]))
+        }
+    }
+
+    private func addComment(by me: String, postId: String, body: Data?) -> (Int, Data) {
+        let text = ((bodyObject(body)["text"] as? String) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return (400, json(["error": "Comment text is required"])) }
+        return lock.withLock {
+            guard let i = dataset.posts.firstIndex(where: { $0.id == postId }) else { return (404, json(["error": "Post not found"])) }
+            guard let u = dataset.user(me) else { return (404, json(["error": "User not found"])) }
+            let id = "demo-comment-\(Int(Date().timeIntervalSince1970 * 1000))"
+            dataset.posts[i].comments.append(FamilyComment(
+                id: id, authorId: me, authorName: u.displayName, authorInitial: u.avatarInitial,
+                authorAvatarPath: nil, text: text, createdAt: Date()))
+            dataset.posts[i].commentCount += 1
+            return (201, json(["commentId": id]))
+        }
+    }
+
+    private func uploadMedia(body: Data?) -> (Int, Data) {
+        guard let base64 = bodyObject(body)["data"] as? String, let data = Data(base64Encoded: base64), !data.isEmpty else {
+            return (400, json(["error": "Missing data"]))
+        }
+        let id = UUID().uuidString
+        lock.withLock { media[id] = data }
+        return (200, json(["url": "https://\(DemoURLProtocol.host)/media/\(id).jpg"]))
+    }
+
+    /// Posts as the feed returns them: the newest 10 comments, and the full count.
+    private func feed() -> [FamilyPost] {
+        lock.withLock {
+            dataset.posts.sorted { $0.createdAt > $1.createdAt }.map { post in
+                var p = post
+                p.comments = Array(post.comments.sorted { $0.createdAt < $1.createdAt }.suffix(10))
+                return p
+            }
+        }
+    }
+
     func noteUnhandled(_ request: String) {
         lock.withLock { unhandled.append(request) }
     }
@@ -164,7 +233,33 @@ final class DemoStore {
             return (200, encode(guardians))
 
         case ("GET", "/v1/family/posts"):
-            return (200, encode(lock.withLock { dataset.posts }))
+            return (200, encode(feed()))
+
+        case ("POST", "/v1/family/posts"):
+            return createPost(by: me, body: body)
+
+        case ("POST", "/v1/family/upload"):
+            return uploadMedia(body: body)
+
+        case ("POST", let p) where p.hasPrefix("/v1/family/posts/") && p.hasSuffix("/comments"):
+            let postId = p.dropFirst("/v1/family/posts/".count).dropLast("/comments".count)
+            return addComment(by: me, postId: String(postId), body: body)
+
+        case ("PUT", let p) where p.hasPrefix("/v1/family/posts/"):
+            let postId = String(p.dropFirst("/v1/family/posts/".count))
+            let text = (bodyObject(body)["text"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return lock.withLock {
+                guard let i = dataset.posts.firstIndex(where: { $0.id == postId && $0.authorId == me }), !text.isEmpty else {
+                    return (404, json(["error": "Post not found"]))
+                }
+                dataset.posts[i].text = text
+                return (200, json(["success": true]))
+            }
+
+        case ("DELETE", let p) where p.hasPrefix("/v1/family/posts/"):
+            let postId = String(p.dropFirst("/v1/family/posts/".count))
+            lock.withLock { dataset.posts.removeAll { $0.id == postId && $0.authorId == me } }
+            return (200, json(["success": true]))
 
         case ("GET", "/v1/timeline"):
             let who = query["personId"] ?? me

@@ -1165,6 +1165,13 @@
 "familyFeed.replies" = "%d 条回复";
 "familyFeed.reply" = "回复…";
 "familyFeed.save" = "保存";
+"familyFeed.loadFailed" = "消息加载失败";
+"familyFeed.loadFailedHint" = "请检查网络连接后重试。";
+"familyFeed.retry" = "重试";
+"familyFeed.refreshFailed" = "无法刷新，正在显示已保存的消息。";
+"familyFeed.sending" = "发送中…";
+"familyFeed.notSent" = "未发送";
+"familyFeed.replyFailed" = "回复未发送，请重试。";
 "home_safe" = "到家了";
 "home_safe_confirmed" = "已报平安";
 "location.closeMap" = "关闭地图";

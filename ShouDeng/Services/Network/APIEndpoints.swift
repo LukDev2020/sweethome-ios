@@ -363,7 +363,13 @@ struct DataExportRequest: Codable {
 
 struct CreatePostRequest: Codable {
     let text: String
+    /// https links only (see FamilyFeedSync.remoteMediaURLs).
     let mediaURLs: [String]
+    var latitude: Double? = nil
+    var longitude: Double? = nil
+    var locationName: String? = nil
+    /// The post's id on this phone; a retried send lands on the same server post.
+    var clientPostId: String? = nil
 }
 
 struct CreatePostResponse: Codable {

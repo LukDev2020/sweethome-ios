@@ -1164,6 +1164,13 @@
 "familyFeed.replies" = "%d件の返信";
 "familyFeed.reply" = "返信…";
 "familyFeed.save" = "保存";
+"familyFeed.loadFailed" = "メッセージを読み込めませんでした";
+"familyFeed.loadFailedHint" = "接続を確認して、もう一度お試しください。";
+"familyFeed.retry" = "再試行";
+"familyFeed.refreshFailed" = "更新できませんでした。保存済みのメッセージを表示しています。";
+"familyFeed.sending" = "送信中…";
+"familyFeed.notSent" = "未送信";
+"familyFeed.replyFailed" = "返信を送信できませんでした。もう一度お試しください。";
 "home_safe" = "無事に帰宅";
 "home_safe_confirmed" = "無事を確認済み";
 "location.closeMap" = "地図を閉じる";
