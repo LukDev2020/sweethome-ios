@@ -35,6 +35,10 @@ export const RATE_LIMITS = {
   // General API: 100 per minute per user
   general: { name: "general", windowMs: 60 * 1000, maxRequests: 100 },
 
+  // Invite preview / accept: 30 per 10 minutes per user. Codes are short, and
+  // the preview shows the inviter's name, so guessing must stay expensive.
+  invite: { name: "invite", windowMs: 10 * 60 * 1000, maxRequests: 30 },
+
   // SOS trigger: its own generous bucket. Trigger is idempotent while an SOS is
   // active, so this only bounds trigger→resolve→trigger loops (Twilio cost);
   // a second real emergency in the same hour must still go through.
