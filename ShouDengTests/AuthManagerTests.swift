@@ -239,14 +239,19 @@ final class AuthManagerTests: XCTestCase {
 final class MockPhoneAuthProvider: PhoneAuthProviding {
     var lastPhoneNumber: String?
     var shouldFail = false
+    /// SMS codes "sent"
+    private(set) var verifyCount = 0
+    private(set) var signInCount = 0
 
     func verifyPhoneNumber(_ phoneNumber: String) async throws -> String {
+        verifyCount += 1
         lastPhoneNumber = phoneNumber
         if shouldFail { throw AuthError.smsSendFailed("Mock failure") }
         return "mock-verification-id-\(phoneNumber.hash)"
     }
 
     func signIn(verificationID: String, verificationCode: String) async throws -> String {
+        signInCount += 1
         if shouldFail { throw AuthError.invalidVerificationCode }
         guard verificationCode.count >= 4 else {
             throw AuthError.invalidVerificationCode

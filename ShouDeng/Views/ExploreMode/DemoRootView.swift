@@ -37,6 +37,12 @@ struct DemoRootView: View {
             }
             .environmentObject(coordinator)
         }
+        // "Enter invite code" in the family circle / Settings. Requests stay on
+        // the phone (DemoURLProtocol), so a code is simply not found.
+        .sheet(isPresented: $coordinator.showInviteAccept) {
+            InviteAcceptSheet(initialCode: coordinator.pendingInviteCode)
+                .environmentObject(coordinator)
+        }
     }
 }
 

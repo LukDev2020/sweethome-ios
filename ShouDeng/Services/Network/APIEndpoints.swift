@@ -125,7 +125,13 @@ struct CheckInResponse: Codable {
 // MARK: - Relationships
 
 struct CreateInviteRequest: Codable {
-    let role: String
+    /// What the inviter becomes once the invite is accepted: "protected" (the
+    /// acceptor will guard them) or "guardian" (they will guard the acceptor).
+    let inviterRole: String
+
+    init(inviterRole: UserRole) {
+        self.inviterRole = inviterRole.rawValue
+    }
 }
 
 struct CreateInviteResponse: Codable {
@@ -133,6 +139,24 @@ struct CreateInviteResponse: Codable {
     let code: String
     let expiresAt: String
     let status: String
+}
+
+/// GET /v1/invite/preview — shown on the confirmation screen before accepting.
+struct InvitePreviewResponse: Codable, Equatable {
+    let code: String
+    /// nil unless the invite can still be accepted
+    let inviterName: String?
+    let avatarInitial: String?
+    let inviterRole: String
+    let expiresAt: String?
+    /// "pending" | "accepted" | "expired"
+    let status: String
+    let isOwnInvite: Bool?
+
+    /// The side the person accepting ends up on.
+    var acceptorRole: UserRole {
+        inviterRole == UserRole.protected_.rawValue ? .guardian : .protected_
+    }
 }
 
 struct AcceptInviteRequest: Codable {
@@ -146,6 +170,8 @@ struct AcceptInviteResponse: Codable {
     let guardianId: String
     let protectedPersonId: String
     let linkId: String
+    /// "guardian" | "protected" (older servers don't send it)
+    var acceptorRole: String? = nil
 }
 
 struct UpdatePermissionsRequest: Codable {

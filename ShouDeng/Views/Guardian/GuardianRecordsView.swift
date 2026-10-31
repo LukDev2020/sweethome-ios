@@ -63,7 +63,7 @@ struct GuardianRecordsView: View {
                 loadGuardianMembers()
             }
             .sheet(isPresented: $showInviteSheet) {
-                InviteGuardianSheet(members: $guardianMembers)
+                InviteGuardianSheet()
                     .environmentObject(coordinator)
             }
             .sheet(isPresented: $showAddEmergency) {
@@ -974,7 +974,7 @@ struct GuardianRecordsView: View {
             do {
                 let _: EmptyResponse = try await coordinator.apiClient.post(
                     "/v1/invite/create",
-                    body: ["role": "guardian"]
+                    body: CreateInviteRequest(inviterRole: .guardian)
                 )
             } catch {
                 #if DEBUG
@@ -1061,18 +1061,20 @@ struct GuardianMember: Identifiable {
 }
 
 // MARK: - Invite Guardian Sheet
+//
+// A guardian invites someone to be looked after (inviterRole "guardian"): the
+// person who accepts becomes protected and sees what they are agreeing to first.
+// Inviting another guardian to share the care of someone (primary / backup /
+// observer) is a later phase, so the role picker is not shown.
 
 struct InviteGuardianSheet: View {
-    @Binding var members: [GuardianMember]
     @EnvironmentObject var coordinator: AppCoordinator
     @Environment(\.dismiss) var dismiss
 
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
 
-    @State private var inviteName = ""
     @State private var invitePhone = ""
-    @State private var inviteRole: GuardianMember.Role = .backup
     @State private var inviteMethod: InviteMethod = .sms
     @State private var showCopied = false
     @State private var inviteError: String?
@@ -1097,26 +1099,8 @@ struct InviteGuardianSheet: View {
         NavigationStack {
             Form {
                 Section(LanguageManager.shared.localized("invite.sheet.invitee")) {
-                    TextField(LanguageManager.shared.localized("invite.sheet.name"), text: $inviteName)
                     TextField(LanguageManager.shared.localized("invite.sheet.phone"), text: $invitePhone)
                         .keyboardType(.phonePad)
-                }
-
-                Section(LanguageManager.shared.localized("invite.sheet.role")) {
-                    Picker(LanguageManager.shared.localized("invite.sheet.assignRole"), selection: $inviteRole) {
-                        ForEach(GuardianMember.Role.allCases, id: \.self) { role in
-                            Text(role.label).tag(role)
-                        }
-                    }
-                    .pickerStyle(.menu)
-
-                    // Role descriptions
-                    VStack(alignment: .leading, spacing: 6) {
-                        roleDescription(GuardianMember.Role.primary.label, desc: LanguageManager.shared.localized("member.role.primary.desc"))
-                        roleDescription(GuardianMember.Role.backup.label, desc: LanguageManager.shared.localized("member.role.backup.desc"))
-                        roleDescription(GuardianMember.Role.observer.label, desc: LanguageManager.shared.localized("member.role.observer.desc"))
-                    }
-                    .padding(.vertical, 4)
                 }
 
                 Section(LanguageManager.shared.localized("invite.sheet.method")) {
@@ -1145,17 +1129,16 @@ struct InviteGuardianSheet: View {
                                 }
                             }
                         }
-                        .disabled(inviteName.isEmpty)
                     }
                 }
 
                 Section {
-                    Text(LanguageManager.shared.localized("invite.sheet.footer"))
+                    Text(LanguageManager.shared.localized("invite.sheet.protectFooter"))
                         .font(.scaled(size: 12))
                         .foregroundStyle(.tertiary)
                 }
             }
-            .navigationTitle(LanguageManager.shared.localized("invite.sheet.title"))
+            .navigationTitle(LanguageManager.shared.localized("invite.sheet.protectTitle"))
             .navigationBarTitleDisplayMode(.inline)
             .alert(LanguageManager.shared.localized("invite.sheet.errorTitle"), isPresented: Binding(
                 get: { inviteError != nil },
@@ -1173,50 +1156,21 @@ struct InviteGuardianSheet: View {
         }
     }
 
-    private func roleDescription(_ title: String, desc: String) -> some View {
-        HStack(alignment: .top, spacing: 6) {
-            Circle()
-                .fill(safe.opacity(0.3))
-                .frame(width: 5, height: 5)
-                .padding(.top, 5)
-            VStack(alignment: .leading, spacing: 1) {
-                Text(title)
-                    .font(.scaled(size: 12, weight: .medium))
-                Text(desc)
-                    .font(.scaled(size: 12))
-                    .foregroundStyle(.secondary)
-            }
-        }
-    }
-
     private func sendInvite(via method: InviteMethod) {
         Task {
             // Create invite on server. A code that only exists locally can never
             // be accepted, so on failure tell the user instead of sharing it.
             let inviteCode: String
             do {
-                let response: CreateInviteResponse = try await coordinator.apiClient.post(
-                    "/v1/invite/create",
-                    body: ["role": "guardian"]
-                )
+                let response: CreateInviteResponse = try await coordinator.createInviteCode(inviterRole: .guardian)
                 inviteCode = response.code
             } catch {
                 inviteError = LanguageManager.shared.localized("invite.sheet.errorBody")
                 return
             }
 
-            let newMember = GuardianMember(
-                id: UUID().uuidString,
-                name: inviteName,
-                city: "",
-                phone: invitePhone,
-                role: inviteRole,
-                status: .pending,
-                isMe: false,
-                joinedAt: Date()
-            )
-            members.append(newMember)
-
+            // The invitee will be someone I protect, not a member of the guardian
+            // team, so they are not added to `members`.
             let inviteLink = "https://shoudeng.app/invite?code=\(inviteCode)"
 
             switch method {
@@ -1227,15 +1181,18 @@ struct InviteGuardianSheet: View {
                     showCopied = false
                 }
             case .sms:
-                let encoded = inviteLink.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? inviteLink
-                if let url = URL(string: "sms:&body=\(encoded)") {
+                let message = String(format: LanguageManager.shared.localized("invite.sheet.protectShareText"), inviteLink)
+                let encoded = message.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? inviteLink
+                // The phone number (optional) becomes the message recipient
+                let recipient = invitePhone.filter { $0.isNumber || $0 == "+" }
+                if let url = URL(string: "sms:\(recipient)&body=\(encoded)") {
                     ExternalURL.open(url)
                 }
                 dismiss()
             case .wechat:
                 // Use system share sheet as fallback
                 let activityVC = UIActivityViewController(
-                    activityItems: [String(format: LanguageManager.shared.localized("invite.sheet.shareText"), inviteLink)],
+                    activityItems: [String(format: LanguageManager.shared.localized("invite.sheet.protectShareText"), inviteLink)],
                     applicationActivities: nil
                 )
                 if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,

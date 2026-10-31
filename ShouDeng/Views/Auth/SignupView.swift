@@ -2,9 +2,11 @@ import SwiftUI
 
 // MARK: - Signup View
 //
-// Phone + verification code + name + role selection.
+// Phone + verification code + name + "how do you want to start?".
 // Supports international phone numbers with country code picker.
-// Role determines which portal (Protected/Guardian) the user enters.
+// Nothing is preselected: protected, guardian, or "I have an invite code"
+// (then the invite decides the side, after the account exists).
+// A login that verified an unregistered number opens straight at the profile.
 //
 // Security: 5 failed code attempts -> lock + contact Vela support.
 
@@ -30,7 +32,11 @@ struct SignupView: View {
     @State private var phone = ""
     @State private var code = ""
     @State private var displayName = ""
-    @State private var selectedRole: UserRole = .protected_
+    @State private var selectedRole: UserRole?
+    @State private var usesInviteCode = false
+    @State private var inviteCode = ""
+    /// Opened from a login that already verified this number (no second SMS)
+    @State private var phoneVerifiedByLogin = false
     @State private var agreedToDataTransfer = false
     @State private var step: Step = .phone
     @State private var isLoading = false
@@ -43,7 +49,7 @@ struct SignupView: View {
     @State private var birthdate = Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
     @State private var showAgeRestricted = false
 
-    private enum Field { case phone, code, name }
+    private enum Field { case phone, code, name, invite }
     @FocusState private var focusedField: Field?
 
     enum Step {
@@ -131,6 +137,17 @@ struct SignupView: View {
                 if let prefillCountry = coordinator.signupCountry {
                     selectedCountry = prefillCountry
                     coordinator.signupCountry = nil
+                }
+                // Login already verified this number: go straight to the profile
+                if coordinator.signupPhoneVerified, coordinator.authManager.hasVerifiedPhone {
+                    phoneVerifiedByLogin = true
+                    step = .profile
+                }
+                coordinator.signupPhoneVerified = false
+                // Opened from an invite link: that path is chosen and the code filled in
+                if case .invite(let linkCode) = coordinator.pendingDeepLink {
+                    chooseInvite()
+                    inviteCode = linkCode
                 }
                 checkLockout()
                 applyLanguageForCountry(selectedCountry)
@@ -269,70 +286,133 @@ struct SignupView: View {
             .padding(.horizontal, 32)
 
         case .profile:
-            VStack(spacing: 16) {
-                Text(lang.localized("signup.profile.title"))
-                    .font(.scaled(size: 20, weight: .bold))
-                TextField(lang.localized("signup.name.placeholder"), text: $displayName)
-                    .font(.scaled(size: 15))
-                    .textContentType(.name)
-                    .focused($focusedField, equals: .name)
-                    .padding(12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color(.separator).opacity(0.4), lineWidth: 1)
-                    )
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(lang.localized("signup.birthdate"))
-                        .font(.scaled(size: 13))
-                        .foregroundStyle(.secondary)
-                    DatePicker("", selection: $birthdate, in: ...Date(), displayedComponents: .date)
-                        .datePickerStyle(.compact)
-                        .labelsHidden()
-                }
-
-                if userAge >= 13 && userAge < 18 {
-                    HStack(spacing: 6) {
-                        Image(systemName: "info.circle.fill")
-                            .foregroundStyle(lamp)
-                            .font(.scaled(size: 14))
-                        Text(lang.localized("signup.minor.parental.notice"))
-                            .font(.scaled(size: 12))
-                            .foregroundStyle(ink2)
+            ScrollView {
+                VStack(spacing: 16) {
+                    if phoneVerifiedByLogin {
+                        HStack(spacing: 6) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(safe)
+                            Text(String(format: lang.localized("signup.verified.banner"), "\(selectedCountry.dialCode) \(phone)"))
+                                .font(.scaled(size: 13))
+                                .foregroundStyle(ink2)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(10)
+                        .background(RoundedRectangle(cornerRadius: 8).fill(safe.opacity(0.08)))
                     }
-                    .padding(10)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(lamp.opacity(0.08))
-                    )
-                }
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(lang.localized("signup.role.title"))
-                        .font(.scaled(size: 13))
-                        .foregroundStyle(.secondary)
-                    roleOption(.protected_, icon: "shield.fill",
-                               title: lang.localized("signup.role.protected"),
-                               desc: lang.localized("signup.role.protected.desc"))
-                    roleOption(.guardian, icon: "eye.fill",
-                               title: lang.localized("signup.role.guardian"),
-                               desc: lang.localized("signup.role.guardian.desc"))
-                }
+                    Text(lang.localized("signup.profile.title"))
+                        .font(.scaled(size: 20, weight: .bold))
+                    TextField(lang.localized("signup.name.placeholder"), text: $displayName)
+                        .font(.scaled(size: 15))
+                        .textContentType(.name)
+                        .focused($focusedField, equals: .name)
+                        .padding(12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(Color(.separator).opacity(0.4), lineWidth: 1)
+                        )
 
-                DataTransferConsentToggle(isOn: $agreedToDataTransfer)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(lang.localized("signup.birthdate"))
+                            .font(.scaled(size: 13))
+                            .foregroundStyle(.secondary)
+                        DatePicker("", selection: $birthdate, in: ...Date(), displayedComponents: .date)
+                            .datePickerStyle(.compact)
+                            .labelsHidden()
+                    }
+
+                    if userAge >= 13 && userAge < 18 {
+                        HStack(spacing: 6) {
+                            Image(systemName: "info.circle.fill")
+                                .foregroundStyle(lamp)
+                                .font(.scaled(size: 14))
+                            Text(lang.localized("signup.minor.parental.notice"))
+                                .font(.scaled(size: 12))
+                                .foregroundStyle(ink2)
+                        }
+                        .padding(10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(lamp.opacity(0.08))
+                        )
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(lang.localized("signup.start.title"))
+                            .font(.scaled(size: 15, weight: .semibold))
+                            .foregroundStyle(ink)
+                        Text(lang.localized("signup.start.subtitle"))
+                            .font(.scaled(size: 12))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        startOption(isSelected: selectedRole == .protected_, icon: "shield.fill",
+                                    title: lang.localized("signup.start.protected"),
+                                    desc: lang.localized("signup.start.protected.desc")) {
+                            chooseRole(.protected_)
+                        }
+                        .accessibilityIdentifier("signup.start.protected")
+                        startOption(isSelected: selectedRole == .guardian, icon: "eye.fill",
+                                    title: lang.localized("signup.start.guardian"),
+                                    desc: lang.localized("signup.start.guardian.desc")) {
+                            chooseRole(.guardian)
+                        }
+                        .accessibilityIdentifier("signup.start.guardian")
+                        startOption(isSelected: usesInviteCode, icon: "key.fill",
+                                    title: lang.localized("signup.start.invite"),
+                                    desc: lang.localized("signup.start.invite.desc")) {
+                            chooseInvite()
+                            focusedField = .invite
+                        }
+                        .accessibilityIdentifier("signup.start.invite")
+
+                        if usesInviteCode {
+                            TextField(lang.localized("wizard.invite.codePlaceholder"), text: $inviteCode)
+                                .font(.scaled(size: 18, weight: .semibold, design: .monospaced))
+                                .multilineTextAlignment(.center)
+                                .textInputAutocapitalization(.characters)
+                                .autocorrectionDisabled()
+                                .focused($focusedField, equals: .invite)
+                                .padding(12)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(Color(.separator).opacity(0.4), lineWidth: 1)
+                                )
+                                .onChange(of: inviteCode) { _, newValue in
+                                    let cleaned = String(newValue.uppercased().filter { $0.isASCII && ($0.isLetter || $0.isNumber) }.prefix(12))
+                                    if cleaned != newValue { inviteCode = cleaned }
+                                }
+                                .accessibilityIdentifier("signup.inviteCode")
+                        }
+                    }
+
+                    DataTransferConsentToggle(isOn: $agreedToDataTransfer)
+                }
+                .padding(.horizontal, 32)
+                .padding(.vertical, 8)
             }
-            .padding(.horizontal, 32)
+            .scrollDismissesKeyboard(.interactively)
         }
     }
 
-    private func roleOption(_ role: UserRole, icon: String, title: String, desc: String) -> some View {
-        Button {
-            selectedRole = role
-        } label: {
+    private func chooseRole(_ role: UserRole) {
+        selectedRole = role
+        usesInviteCode = false
+    }
+
+    private func chooseInvite() {
+        selectedRole = nil
+        usesInviteCode = true
+    }
+
+    private func startOption(isSelected: Bool, icon: String, title: String, desc: String,
+                             action: @escaping () -> Void) -> some View {
+        Button(action: action) {
             HStack(spacing: 10) {
                 Image(systemName: icon)
                     .font(.scaled(size: 18))
-                    .foregroundStyle(selectedRole == role ? lamp : ink.opacity(0.4))
+                    .foregroundStyle(isSelected ? lamp : ink.opacity(0.4))
                     .frame(width: 28)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
@@ -344,15 +424,18 @@ struct SignupView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer()
-                Image(systemName: selectedRole == role ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(selectedRole == role ? safe : Color(.separator))
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(isSelected ? safe : Color(.separator))
             }
             .padding(12)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(selectedRole == role ? safe.opacity(0.5) : Color(.separator).opacity(0.3), lineWidth: 1)
+                    .stroke(isSelected ? safe.opacity(0.5) : Color(.separator).opacity(0.3), lineWidth: 1)
             )
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     private var buttonTitle: String {
@@ -370,7 +453,10 @@ struct SignupView: View {
         switch step {
         case .phone: return phone.count < 4 || countdown > 0
         case .code: return code.count < 4
-        case .profile: return displayName.trimmingCharacters(in: .whitespaces).isEmpty || !agreedToDataTransfer
+        case .profile:
+            return !SignupProfileGate.canFinish(name: displayName, selectedRole: selectedRole,
+                                                usesInviteCode: usesInviteCode, inviteCode: inviteCode,
+                                                agreedToDataTransfer: agreedToDataTransfer)
         }
     }
 
@@ -405,14 +491,22 @@ struct SignupView: View {
                     copyVersion: "v1.0",
                     action: userAge < 18 ? "minor_acknowledged" : "adult_verified"
                 )
+                guard let role = SignupProfileGate.accountRole(selectedRole: selectedRole,
+                                                               usesInviteCode: usesInviteCode) else { return }
                 try await coordinator.authManager.signup(
                     displayName: displayName,
-                    role: selectedRole.rawValue,
+                    role: role.rawValue,
                     countryCode: selectedCountry.isoCode,
                     dataTransferConsent: DataTransferConsent.version
                 )
-                coordinator.userRole = selectedRole
+                coordinator.userRole = role
                 coordinator.showSetupWizard = true
+                if usesInviteCode {
+                    // The account exists now: confirm and accept the invite right
+                    // away. Accepting sets the side the invite gives this account.
+                    if case .invite = coordinator.pendingDeepLink { coordinator.pendingDeepLink = nil }
+                    coordinator.presentInviteAccept(code: inviteCode)
+                }
                 coordinator.showSignup = false
             }
         } catch {
@@ -459,5 +553,27 @@ struct SignupView: View {
                 else { countdownTimer?.invalidate() }
             }
         }
+    }
+}
+
+// MARK: - Profile step rules
+
+/// "How do you want to start?" has no default: Finish stays disabled until one
+/// of the three options is chosen (and, for an invite, a code is entered).
+enum SignupProfileGate {
+    static func canFinish(name: String, selectedRole: UserRole?, usesInviteCode: Bool,
+                          inviteCode: String, agreedToDataTransfer: Bool) -> Bool {
+        guard !name.trimmingCharacters(in: .whitespaces).isEmpty, agreedToDataTransfer else { return false }
+        if usesInviteCode {
+            return DeepLinkRouter.normalizedInviteCode(inviteCode) != nil
+        }
+        return selectedRole != nil
+    }
+
+    /// Role the account is created with. On the invite path the invite decides
+    /// the side when it is accepted; until then the account starts as protected
+    /// (the server moves it to the guardian side if the invite says so).
+    static func accountRole(selectedRole: UserRole?, usesInviteCode: Bool) -> UserRole? {
+        usesInviteCode ? .protected_ : selectedRole
     }
 }

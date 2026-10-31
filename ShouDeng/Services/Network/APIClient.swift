@@ -95,11 +95,24 @@ final class APIClient {
         return try await execute(request)
     }
 
+    /// GET where a 4xx answer carrying a JSON `code` throws `APIServerError`
+    /// (so the caller can tell failures apart) instead of the generic `APIError`.
+    func getReportingCode<T: Decodable>(_ path: String) async throws -> T {
+        let request = try buildRequest(path: path, method: "GET", body: nil as Empty?)
+        return try await execute(request, reportsErrorCode: true)
+    }
+
     // MARK: - POST
 
     func post<B: Encodable, T: Decodable>(_ path: String, body: B) async throws -> T {
         let request = try buildRequest(path: path, method: "POST", body: body)
         return try await execute(request)
+    }
+
+    /// POST counterpart of `getReportingCode`.
+    func postReportingCode<B: Encodable, T: Decodable>(_ path: String, body: B) async throws -> T {
+        let request = try buildRequest(path: path, method: "POST", body: body)
+        return try await execute(request, reportsErrorCode: true)
     }
 
     /// POST that must not trigger the 401 → refresh path (the refresh call itself:
@@ -307,7 +320,8 @@ final class APIClient {
         ["GET", "PUT", "DELETE", "HEAD"].contains(request.httpMethod ?? "GET")
     }
 
-    private func execute<T: Decodable>(_ request: URLRequest, attempt: Int = 0, allowRefresh: Bool = true) async throws -> T {
+    private func execute<T: Decodable>(_ request: URLRequest, attempt: Int = 0, allowRefresh: Bool = true,
+                                       reportsErrorCode: Bool = false) async throws -> T {
         let data: Data
         let response: URLResponse
         do {
@@ -316,13 +330,19 @@ final class APIClient {
             // Transport error: the server may or may not have applied a POST.
             if Self.isIdempotent(request), attempt < config.maxRetries {
                 try await Task.sleep(nanoseconds: 1_000_000_000)
-                return try await execute(request, attempt: attempt + 1, allowRefresh: allowRefresh)
+                return try await execute(request, attempt: attempt + 1, allowRefresh: allowRefresh,
+                                         reportsErrorCode: reportsErrorCode)
             }
             throw APIError.networkError(error)
         }
 
         guard let http = response as? HTTPURLResponse else {
             throw APIError.unknown
+        }
+
+        if reportsErrorCode, (400...499).contains(http.statusCode), http.statusCode != 401,
+           let coded = APIServerError(status: http.statusCode, body: data) {
+            throw coded
         }
 
         switch http.statusCode {
@@ -349,7 +369,8 @@ final class APIClient {
                     if let token = self.accessToken {
                         retryRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
                     }
-                    return try await execute(retryRequest, attempt: attempt + 1, allowRefresh: false)
+                    return try await execute(retryRequest, attempt: attempt + 1, allowRefresh: false,
+                                             reportsErrorCode: reportsErrorCode)
                 }
             }
             throw APIError.unauthorized
@@ -367,7 +388,8 @@ final class APIClient {
         case 500...599:
             if Self.isIdempotent(request), attempt < config.maxRetries {
                 try await Task.sleep(nanoseconds: UInt64(1_000_000_000 * (attempt + 1)))
-                return try await execute(request, attempt: attempt + 1, allowRefresh: allowRefresh)
+                return try await execute(request, attempt: attempt + 1, allowRefresh: allowRefresh,
+                                         reportsErrorCode: reportsErrorCode)
             }
             throw APIError.serverError(http.statusCode)
         default:
@@ -419,6 +441,44 @@ enum APIError: LocalizedError {
         case .unknown:              return "未知错误"
         }
     }
+}
+
+// MARK: - Coded Server Error
+
+/// A 4xx answer whose body names the failure, e.g.
+/// `{"error": "Invite has expired", "code": "INVITE_EXPIRED"}`.
+struct APIServerError: LocalizedError, Equatable {
+    let status: Int
+    let code: String
+    let message: String?
+    /// Other fields of the body (numbers, booleans and strings only).
+    var details: [String: String] = [:]
+
+    init(status: Int, code: String, message: String? = nil, details: [String: String] = [:]) {
+        self.status = status
+        self.code = code
+        self.message = message
+        self.details = details
+    }
+
+    /// nil when the body has no `code` string.
+    init?(status: Int, body: Data) {
+        guard let object = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
+              let code = object["code"] as? String, !code.isEmpty else { return nil }
+        self.status = status
+        self.code = code
+        self.message = object["error"] as? String
+        for (key, value) in object where key != "code" && key != "error" {
+            if let n = value as? NSNumber {
+                // JSON booleans arrive as NSNumber too
+                details[key] = CFGetTypeID(n) == CFBooleanGetTypeID() ? (n.boolValue ? "true" : "false") : n.stringValue
+            } else if let s = value as? String {
+                details[key] = s
+            }
+        }
+    }
+
+    var errorDescription: String? { message ?? code }
 }
 
 // MARK: - Server Validation Error
