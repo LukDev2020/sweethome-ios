@@ -17,7 +17,6 @@
 		AA11BB2200001004 /* BLETrackerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB2200002004 /* BLETrackerService.swift */; };
 		AA11BB2200001005 /* BLETrackerSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB2200002005 /* BLETrackerSettingsView.swift */; };
 		6381F3B161D54F6CAFF43D6A /* VoiceNoteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331DA921543B4CBF8494F9CB /* VoiceNoteService.swift */; };
-		83319C5123A244E5A04A6F69 /* MapTileCacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4164ACB441247EC971F57AE /* MapTileCacheManager.swift */; };
 		60EB257ED1324508AA9FF43D /* LocationBatchUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE1267A17B7842458F45DF8F /* LocationBatchUploader.swift */; };
 		63A5E7FB29564BFDA8AC649A /* SOSIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C31E30D854D419485218EB5 /* SOSIntent.swift */; };
 		5DBA9286D1814F94900F3CCD /* SOSWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CC500243E04462A86E5F65 /* SOSWidget.swift */; };
@@ -376,7 +375,6 @@
 		AA11BB2200002003 /* SilentAlarmService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilentAlarmService.swift; sourceTree = "<group>"; };
 		AA11BB2200002004 /* BLETrackerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLETrackerService.swift; sourceTree = "<group>"; };
 		AA11BB2200002005 /* BLETrackerSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLETrackerSettingsView.swift; sourceTree = "<group>"; };
-		E4164ACB441247EC971F57AE /* MapTileCacheManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapTileCacheManager.swift; sourceTree = "<group>"; };
 		AE1267A17B7842458F45DF8F /* LocationBatchUploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationBatchUploader.swift; sourceTree = "<group>"; };
 		2C31E30D854D419485218EB5 /* SOSIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SOSIntent.swift; sourceTree = "<group>"; };
 		B5CC500243E04462A86E5F65 /* SOSWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SOSWidget.swift; sourceTree = "<group>"; };
@@ -524,7 +522,6 @@
 				F1B701F788B9889DD64303E4 /* LiveActivity */,
 				96CBEBED557E67E5211C30B1 /* Localization */,
 				632F2EFA5DEF1367F909B2AB /* Location */,
-				E4509D3D639E4FBBBA895104 /* Map */,
 				1ABB70C9C776A4ED817980BD /* Motion */,
 				D556AA218FBB44F58BA9F1D1 /* Audio */,
 				8F486E6F44264208B0B50CDB /* Crypto */,
@@ -922,14 +919,6 @@
 			path = App;
 			sourceTree = "<group>";
 		};
-		E4509D3D639E4FBBBA895104 /* Map */ = {
-			isa = PBXGroup;
-			children = (
-				E4164ACB441247EC971F57AE /* MapTileCacheManager.swift */,
-			);
-			path = Map;
-			sourceTree = "<group>";
-		};
 		D556AA218FBB44F58BA9F1D1 /* Audio */ = {
 			isa = PBXGroup;
 			children = (
@@ -1209,7 +1198,6 @@
 				886F1FE080674640A06C0E51 /* VoiceCommandService.swift in Sources */,
 				589279344DF24A4C98FF98F8 /* DistressDetectionService.swift in Sources */,
 				6381F3B161D54F6CAFF43D6A /* VoiceNoteService.swift in Sources */,
-				83319C5123A244E5A04A6F69 /* MapTileCacheManager.swift in Sources */,
 				60EB257ED1324508AA9FF43D /* LocationBatchUploader.swift in Sources */,
 				AA11BB2200001001 /* DuressCodeSettingsView.swift in Sources */,
 				AA11BB2200001002 /* SilentAlarmSettingsView.swift in Sources */,

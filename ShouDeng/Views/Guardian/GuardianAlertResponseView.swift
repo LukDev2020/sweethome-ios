@@ -155,7 +155,8 @@ struct GuardianAlertResponseView: View {
                 .mapStyle(.standard(pointsOfInterest: .excludingAll))
                 .frame(height: 180)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                .overlay(alignment: .bottomLeading) {
+                // Top-leading: the Apple Maps logo and Legal link sit bottom-leading and must stay visible.
+                .overlay(alignment: .topLeading) {
                     if let accuracy = sosEvent?.location?.accuracy {
                         Text(String(format: langManager.localized("guardian.alert.accuracy"), Int(accuracy)))
                             .font(.scaled(size: 12))
@@ -184,7 +185,7 @@ struct GuardianAlertResponseView: View {
                 .mapStyle(.standard(pointsOfInterest: .excludingAll))
                 .frame(height: 180)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                .overlay(alignment: .bottomLeading) {
+                .overlay(alignment: .topLeading) {
                     Text(langManager.localized("guardian.alert.last.known"))
                         .font(.scaled(size: 12))
                         .foregroundStyle(.white)

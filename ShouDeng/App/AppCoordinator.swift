@@ -68,7 +68,6 @@ final class AppCoordinator: ObservableObject {
     lazy var e2eEncryption = E2ELocationEncryption(keyManager: keyManager)
     let storeKitManager: StoreKitManager
     let paymentMethodManager: PaymentMethodManager
-    let mapTileCacheManager = MapTileCacheManager()
     let locationBatchUploader = LocationBatchUploader()
     let voiceNoteService = VoiceNoteService()
     let bleTrackerService = BLETrackerService.shared
