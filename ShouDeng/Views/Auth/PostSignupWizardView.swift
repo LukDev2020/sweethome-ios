@@ -211,125 +211,120 @@ struct PostSignupWizardView: View {
     }
 
     // MARK: - Step 4: Payment (Guardian only)
+    //
+    // Prices, periods and any free trial come from the App Store products; trial
+    // wording only when this Apple ID can still use the introductory offer. Each plan
+    // is offered monthly, yearly and lifetime (one-time purchase).
 
     @State private var selectedProductId: String?
     @State private var purchaseInProgress = false
     @State private var purchaseSuccess = false
+    @State private var showPrivacyPolicy = false
+    @State private var showCancelSubscriptionHint = false
 
     private var paymentStep: some View {
         let store = coordinator.storeKitManager
 
-        return VStack(spacing: 16) {
-            Spacer()
+        return ScrollView {
+            VStack(spacing: 16) {
+                Image(systemName: "shield.checkered")
+                    .font(.scaled(size: 48))
+                    .foregroundStyle(safe.opacity(0.8))
+                    .padding(.top, 8)
 
-            Image(systemName: "shield.checkered")
-                .font(.scaled(size: 48))
-                .foregroundStyle(safe.opacity(0.8))
+                Text(lang.localized("wizard.plan.title"))
+                    .font(.scaled(size: 22, weight: .bold))
+                    .foregroundStyle(ink)
 
-            Text(lang.localized("wizard.plan.title"))
-                .font(.scaled(size: 22, weight: .bold))
-                .foregroundStyle(ink)
+                Text(lang.localized("wizard.plan.subtitle"))
+                    .font(.scaled(size: 14))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
 
-            Text(lang.localized("wizard.plan.subtitle"))
-                .font(.scaled(size: 14))
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .lineSpacing(3)
+                if purchaseSuccess {
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(safe)
+                        Text(lang.localized("wizard.plan.subscribed"))
+                            .font(.scaled(size: 15, weight: .medium))
+                            .foregroundStyle(safe)
+                    }
+                    .padding(.top, 8)
+                } else if store.products.isEmpty {
+                    ProductsUnavailableView(
+                        isLoading: store.isLoadingProducts || !store.productsLoadFailed,
+                        accent: safe,
+                        onRetry: { Task { await store.fetchProducts() } }
+                    )
+                    .padding(.horizontal, 8)
+                } else {
+                    VStack(spacing: 10) {
+                        ForEach(store.products, id: \.id) { product in
+                            productRow(product, isSelected: selectedProductId == product.id)
+                        }
+                    }
+                    .padding(.horizontal, 8)
 
-            if purchaseSuccess {
-                HStack(spacing: 6) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(safe)
-                    Text(lang.localized("wizard.plan.subscribed"))
-                        .font(.scaled(size: 15, weight: .medium))
-                        .foregroundStyle(safe)
-                }
-                .padding(.top, 8)
-            } else if store.products.isEmpty {
-                // Products not loaded yet — show static fallback
-                VStack(spacing: 10) {
-                    planCard(title: lang.localized("wizard.plan.single.title"), price: lang.localized("wizard.plan.single.price"), description: lang.localized("wizard.plan.single.desc"), highlight: true)
-                    planCard(title: lang.localized("wizard.plan.family.title"), price: lang.localized("wizard.plan.family.price"), description: lang.localized("wizard.plan.family.desc"), highlight: false)
-                }
-                .padding(.horizontal, 8)
-            } else {
-                // Real StoreKit products
-                VStack(spacing: 10) {
-                    ForEach(store.products, id: \.id) { product in
-                        let isSelected = selectedProductId == product.id
+                    if let selectedId = selectedProductId,
+                       let product = store.products.first(where: { $0.id == selectedId }) {
+                        let pricing = store.pricing(for: product)
                         Button {
-                            selectedProductId = product.id
+                            Task { await purchaseProduct(product) }
                         } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(store.planDisplayName(for: store.planId(for: product)))
-                                        .font(.scaled(size: 15, weight: .medium))
-                                        .foregroundStyle(ink)
-                                    Text(product.description)
-                                        .font(.scaled(size: 12))
-                                        .foregroundStyle(.secondary)
+                            HStack(spacing: 6) {
+                                if purchaseInProgress {
+                                    ProgressView()
+                                        .tint(.white)
                                 }
-                                Spacer()
-                                Text(product.displayPrice)
-                                    .font(.scaled(size: 15, weight: .semibold))
-                                    .foregroundStyle(isSelected ? safe : .secondary)
-                                if isSelected {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(safe)
-                                        .font(.scaled(size: 16))
-                                }
+                                Text(pricing.subscribeButtonTitle())
+                                    .font(.scaled(size: 15, weight: .medium))
+                                    .foregroundStyle(cream)
+                                    .multilineTextAlignment(.center)
                             }
-                            .padding(14)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
                             .background(
                                 RoundedRectangle(cornerRadius: 12)
-                                    .fill(isSelected ? safe.opacity(0.08) : Color(.systemGray6))
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(isSelected ? safe.opacity(0.3) : Color.clear, lineWidth: 1.5)
+                                    .fill(purchaseInProgress ? safe.opacity(0.5) : safe)
                             )
                         }
+                        .disabled(purchaseInProgress)
+                        .padding(.horizontal, 8)
+
+                        Text(pricing.legalText(planName: store.planDisplayName(for: store.planId(for: product))))
+                            .font(.scaled(size: 11))
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.horizontal, 8)
                     }
                 }
-                .padding(.horizontal, 8)
 
-                if let selectedId = selectedProductId,
-                   let product = store.products.first(where: { $0.id == selectedId }) {
-                    Button {
-                        Task { await purchaseProduct(product) }
-                    } label: {
-                        HStack(spacing: 6) {
-                            if purchaseInProgress {
-                                ProgressView()
-                                    .tint(.white)
-                            }
-                            Text(lang.localized("wizard.plan.startTrial"))
-                                .font(.scaled(size: 15, weight: .medium))
-                                .foregroundStyle(cream)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(purchaseInProgress ? safe.opacity(0.5) : safe)
-                        )
-                    }
-                    .disabled(purchaseInProgress)
-                    .padding(.horizontal, 8)
+                if let error = store.errorMessage, !store.products.isEmpty {
+                    Text(error)
+                        .font(.scaled(size: 12))
+                        .foregroundStyle(.red)
+                        .multilineTextAlignment(.center)
+                }
+
+                SubscriptionLegalLinks(accent: navy) { showPrivacyPolicy = true }
+                    .padding(.bottom, 8)
+            }
+        }
+        .sheet(isPresented: $showPrivacyPolicy) {
+            PrivacyPolicyView().environmentObject(coordinator)
+        }
+        .alert(lang.localized("store.lifetime.purchased.title"), isPresented: $showCancelSubscriptionHint) {
+            Button(lang.localized("guardian.billing.manage.subscription")) {
+                Task {
+                    await store.showManageSubscriptions()
+                    advanceStep()
                 }
             }
-
-            if let error = store.errorMessage {
-                Text(error)
-                    .font(.scaled(size: 12))
-                    .foregroundStyle(.red)
-            }
-
-            Text(lang.localized("wizard.plan.trialNote"))
-                .font(.scaled(size: 12))
-                .foregroundStyle(.tertiary)
-
-            Spacer()
+            Button(lang.localized("store.later"), role: .cancel) { advanceStep() }
+        } message: {
+            Text(lang.localized("store.lifetime.cancelSubscriptionHint"))
         }
         .task {
             if store.products.isEmpty {
@@ -338,42 +333,67 @@ struct PostSignupWizardView: View {
         }
     }
 
+    private func productRow(_ product: Product, isSelected: Bool) -> some View {
+        let store = coordinator.storeKitManager
+        let pricing = store.pricing(for: product)
+        return Button {
+            selectedProductId = product.id
+        } label: {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(StoreKitManager.isLifetime(product.id)
+                         ? String(format: lang.localized("store.lifetime.planName"), store.planDisplayName(for: store.planId(for: product)))
+                         : store.planDisplayName(for: store.planId(for: product)))
+                        .font(.scaled(size: 15, weight: .medium))
+                        .foregroundStyle(ink)
+                    Text(pricing.recurringPrice())
+                        .font(.scaled(size: 12))
+                        .foregroundStyle(.secondary)
+                    if let intro = pricing.introSummary() {
+                        Text(intro)
+                            .font(.scaled(size: 12, weight: .medium))
+                            .foregroundStyle(safe)
+                    }
+                }
+                Spacer()
+                Text(product.displayPrice)
+                    .font(.scaled(size: 15, weight: .semibold))
+                    .foregroundStyle(isSelected ? safe : .secondary)
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(safe)
+                        .font(.scaled(size: 16))
+                }
+            }
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(isSelected ? safe.opacity(0.08) : Color(.systemGray6))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isSelected ? safe.opacity(0.3) : Color.clear, lineWidth: 1.5)
+            )
+        }
+    }
+
     private func purchaseProduct(_ product: Product) async {
+        let store = coordinator.storeKitManager
+        let hadRenewingSubscription = store.hasRenewingSubscription
         purchaseInProgress = true
-        let success = await coordinator.storeKitManager.purchase(product)
+        let success = await store.purchase(product)
         purchaseInProgress = false
         if success {
             purchaseSuccess = true
+            // Apple doesn't cancel a running subscription when lifetime access is bought
+            if StoreKitManager.isLifetime(product.id), hadRenewingSubscription || store.hasRenewingSubscription {
+                showCancelSubscriptionHint = true
+                return
+            }
             // Auto-advance after a short delay
             try? await Task.sleep(nanoseconds: 1_000_000_000)
             advanceStep()
         }
-    }
-
-    private func planCard(title: String, price: String, description: String, highlight: Bool) -> some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.scaled(size: 15, weight: .medium))
-                    .foregroundStyle(ink)
-                Text(description)
-                    .font(.scaled(size: 12))
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-            Text(price)
-                .font(.scaled(size: 15, weight: .semibold))
-                .foregroundStyle(highlight ? safe : .secondary)
-        }
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(highlight ? safe.opacity(0.08) : Color(.systemGray6))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(highlight ? safe.opacity(0.3) : Color.clear, lineWidth: 1.5)
-        )
     }
 
     // MARK: - Step 5: Invite Guidance

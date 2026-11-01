@@ -6,6 +6,7 @@ import {
 } from "./fcm";
 import { sendSOSSms, sendEmergencyContactSms, hasAppInstalled } from "./sms";
 import { initiateVoiceCall, publicApiBaseUrl } from "./twilio";
+import { reserveSms, recordSms, reserveVoiceMinute, releaseVoiceMinute } from "./fairUse";
 import { createShareToken } from "./evidence";
 import { localTime, onDutyAt } from "./localTime";
 import { userLang } from "./locale";
@@ -218,6 +219,26 @@ async function logEntry(sosId: string, entry: Record<string, unknown>, sentKey?:
   await db.collection("sos_events").doc(sosId).update(update);
 }
 
+/**
+ * An SOS SMS within the person's monthly fair-use allowance. null = allowance used up
+ * (the guardian still got the push); a send that fails gives its SMS back.
+ */
+async function fairUseSms(
+  sosId: string, personId: string, now: Date, send: () => Promise<boolean>,
+): Promise<boolean | null> {
+  if (!(await reserveSms(personId, 1, now))) {
+    await markFairUseLimited(sosId);
+    return null;
+  }
+  const ok = await send();
+  if (!ok) await recordSms(personId, -1, now);
+  return ok;
+}
+
+async function markFairUseLimited(sosId: string) {
+  await db.collection("sos_events").doc(sosId).update({ fairUseLimited: true });
+}
+
 async function stillActive(sosId: string): Promise<boolean> {
   const d = (await db.collection("sos_events").doc(sosId).get()).data();
   return !!d && !d.resolvedAt && d.escalationState !== "frozen";
@@ -239,7 +260,7 @@ async function runStep(sosId: string, step: EscalationStep, sos: SOSDoc, now: Da
 
   if (guardianIds.length === 0) {
     if (step !== "hop1") return { stop: true };
-    return notifyWithoutGuardians(sosId, personId, personName, user, sent);
+    return notifyWithoutGuardians(sosId, personId, personName, user, sent, now);
   }
 
   switch (step) {
@@ -252,7 +273,8 @@ async function runStep(sosId: string, step: EscalationStep, sos: SOSDoc, now: Da
         const push = await sendSOSAlert(gid, personName, sosId, alertDetails);
         let channel = "push";
         if (push.allFailed) {
-          channel = (await sendSOSSms(gid, personName, sosId)) ? "sms_fallback" : "failed";
+          const ok = await fairUseSms(sosId, personId, now, () => sendSOSSms(gid, personName, sosId));
+          channel = ok === null ? "sms_fair_use_limit" : ok ? "sms_fallback" : "failed";
         }
         await logEntry(sosId, { hop: 1, targetId: gid, channel }, key);
       }
@@ -266,8 +288,8 @@ async function runStep(sosId: string, step: EscalationStep, sos: SOSDoc, now: Da
         let channel = "push";
         const hasApp = await hasAppInstalled(gid);
         if (!hasApp || push.allFailed) {
-          const ok = await sendSOSSms(gid, personName, sosId);
-          channel = ok ? "sms_fallback" : hasApp ? "push_failed" : "sms_failed";
+          const ok = await fairUseSms(sosId, personId, now, () => sendSOSSms(gid, personName, sosId));
+          channel = ok === null ? "sms_fair_use_limit" : ok ? "sms_fallback" : hasApp ? "push_failed" : "sms_failed";
         }
         await logEntry(sosId, { hop: 2, targetId: gid, channel }, key);
       }
@@ -282,10 +304,20 @@ async function runStep(sosId: string, step: EscalationStep, sos: SOSDoc, now: Da
         if (sent[key]) continue;
         // Stop ringing phones the moment someone acknowledges
         if (!(await stillActive(sosId))) return { stop: true };
+        const reservation = await reserveVoiceMinute(personId, now);
+        if (!reservation) {
+          // Monthly call minutes used up: remind by push instead of calling
+          await markFairUseLimited(sosId);
+          await sendSOSAlert(gid, personName, sosId, alertDetails);
+          await logEntry(sosId, { hop: 3, round, targetId: gid, channel: "push_fair_use_limit" }, key);
+          continue;
+        }
         const callSid = await initiateVoiceCall(gid, sosId, personName, {
           round,
           isLastRound: round === VOICE_ROUNDS,
+          fairUse: reservation,
         });
+        if (!callSid) await releaseVoiceMinute(reservation);
         await logEntry(sosId, {
           hop: 3,
           round,
@@ -302,8 +334,10 @@ async function runStep(sosId: string, step: EscalationStep, sos: SOSDoc, now: Da
       for (const gid of guardianIds) {
         const key = `share:${gid}`;
         if (sent[key]) continue;
-        const ok = await sendSOSSms(gid, personName, sosId, url);
-        await logEntry(sosId, { hop: 4, targetId: gid, channel: ok ? "sms_link" : "sms_failed" }, key);
+        const ok = await fairUseSms(sosId, personId, now, () => sendSOSSms(gid, personName, sosId, url));
+        await logEntry(sosId, {
+          hop: 4, targetId: gid, channel: ok === null ? "sms_fair_use_limit" : ok ? "sms_link" : "sms_failed",
+        }, key);
       }
       await db.collection("sos_events").doc(sosId).update({
         shareLinkSentAt: admin.firestore.Timestamp.now(),
@@ -334,7 +368,8 @@ async function notifyWithoutGuardians(
   personId: string,
   personName: string,
   user: admin.firestore.DocumentData,
-  sent: Record<string, boolean>
+  sent: Record<string, boolean>,
+  now: Date,
 ): Promise<StepOutcome> {
   const contactsDoc = await db.collection("emergency_contacts").doc(personId).get();
   const contacts: { id: string; phone: string }[] = contactsDoc.exists ? contactsDoc.data()?.contacts ?? [] : [];
@@ -344,8 +379,12 @@ async function notifyWithoutGuardians(
     for (const c of contacts) {
       const key = `contact:${c.id}`;
       if (sent[key]) { texted++; continue; }
+      // The only way anyone hears of this SOS: counted, never capped
       const ok = await sendEmergencyContactSms(c.phone, personName, userLang(user), url);
-      if (ok) texted++;
+      if (ok) {
+        texted++;
+        await recordSms(personId, 1, now);
+      }
       await logEntry(sosId, { hop: 1, targetId: `contact:${c.id}`, channel: ok ? "sms_contact" : "sms_failed" }, key);
     }
   }

@@ -122,6 +122,30 @@ npm run build          # TypeScript compilation
 npm run serve          # Start Firebase emulators
 ```
 
+#### App Store subscriptions (functions/.env)
+
+| Variable | Value |
+|---|---|
+| `APPLE_APP_ID` | **Required for release.** Numeric Apple ID from App Store Connect → App Information. Not committed — set it in `shoudeng-backend/functions/.env` and redeploy. |
+| `APPLE_ALLOW_SANDBOX` | Optional, default `true`. Sandbox purchases (TestFlight, App Review) keep working. |
+
+Signed transactions are verified with Apple's root certificates (`functions/certs/`), Production
+first and Sandbox as the fallback. Configure App Store Server Notifications **V2** in App Store
+Connect (App Information → App Store Server Notifications) with the same URL for Production and
+Sandbox: `https://us-central1-sweethome-b4e82.cloudfunctions.net/api/v1/payment/apple-webhook`.
+Each purchase carries an `appAccountToken` (UUID v5 of the user id); one App Store subscription
+unlocks exactly one account (`apple_subscription_owners/{originalTransactionId}`).
+
+Products (docs/pricing/PRICING.md): single / family × monthly, yearly (auto-renewing, one
+subscription group) and lifetime (`com.shoudeng.app.{single,family}.lifetime`, non-consumable,
+stored as `subscriptions/{uid}.lifetime`; the better of subscription and lifetime applies).
+`ultimate` products still resolve but are no longer sold in the app (organisation plan, contact us).
+
+SOS SMS fallback and voice escalation are on every plan, free included, within fair use: 50 SMS
+and 30 call minutes per protected person per calendar month (UTC, `sos_usage/{uid}_{YYYY-MM}`,
+`services/fairUse.ts`). Beyond that, escalation continues by push only; the SOS is never blocked
+and texts to emergency contacts (when there are no guardians) are always sent.
+
 Emulators run on:
 - Functions: `localhost:5001`
 - Firestore: `localhost:8080`

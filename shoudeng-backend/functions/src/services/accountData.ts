@@ -1,6 +1,6 @@
 import * as admin from "firebase-admin";
 import { BigQuery } from "@google-cloud/bigquery";
-import { PLANS, PlanId } from "./payment";
+import { PLANS, paidPlanOf, SUBSCRIPTION_OWNERS } from "./payment";
 
 // Account data rights: export, erasure, and per-plan retention.
 // The in-app privacy policy (iOS LegalView.swift) describes exactly what this does —
@@ -22,12 +22,7 @@ type Retention = { heartbeat: number; location: number; checkin: number };
 
 // MARK: - Retention
 
-function isPaidActive(data: FirebaseFirestore.DocumentData | undefined): data is { planId: PlanId } {
-  if (!data || data.planId === "free" || !(data.planId in PLANS)) return false;
-  if (!["active", "grace_period", "billing_retry", "cancelled"].includes(data.status)) return false;
-  const end = data.currentPeriodEnd?.toDate?.();
-  return !end || end > new Date();
-}
+
 
 function longer(a: Retention, b: Retention): Retention {
   const pick = (x: number, y: number) => (x === -1 || y === -1 ? -1 : Math.max(x, y));
@@ -40,11 +35,13 @@ function longer(a: Retention, b: Retention): Retention {
  */
 export async function paidRetentionByUser(): Promise<Map<string, Retention>> {
   const result = new Map<string, Retention>();
-  const subs = await db.collection("subscriptions").where("planId", "!=", "free").get();
+  // All docs: a lifetime-only doc has no subscription planId. Same rule as feature access
+  // (refunded, expired or transferred subscriptions and refunded lifetime purchases don't count).
+  const subs = await db.collection("subscriptions").get();
   const paid: { uid: string; ttl: Retention }[] = [];
   for (const doc of subs.docs) {
-    const data = doc.data();
-    if (isPaidActive(data)) paid.push({ uid: doc.id, ttl: PLANS[data.planId].ttlDays });
+    const plan = paidPlanOf(doc.data());
+    if (plan) paid.push({ uid: doc.id, ttl: PLANS[plan.planId].ttlDays });
   }
   const add = (uid: string, ttl: Retention) => result.set(uid, result.has(uid) ? longer(result.get(uid)!, ttl) : ttl);
   for (const { uid, ttl } of paid) {
@@ -232,6 +229,7 @@ export async function eraseAccount(uid: string): Promise<{ bigQueryComplete: boo
     deleteWhere(db.collection("trips").where("userId", "==", uid)),           // + points
     deleteWhere(db.collection("sos_events").where("protectedPersonId", "==", uid)), // + voice_notes
     deleteWhere(db.collection("family_posts").where("authorId", "==", uid)), // + comments
+    deleteWhere(db.collection(SUBSCRIPTION_OWNERS).where("uid", "==", uid)), // frees the Apple subscription
   ]);
 
   try {

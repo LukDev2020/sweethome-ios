@@ -313,12 +313,26 @@ router.post("/voice-call", authMiddleware, createRateLimiter(RATE_LIMITS.voiceCa
       return;
     }
 
+    // Fair use: calls count against the person's monthly minutes
+    const { reserveVoiceMinute, releaseVoiceMinute, FAIR_USE } = await import("../services/fairUse");
+    const reservation = await reserveVoiceMinute(personId);
+    if (!reservation) {
+      res.status(429).json({
+        error: "This month's SOS call minutes are used up; guardians are still notified by push",
+        code: "FAIR_USE_LIMIT",
+        voiceMinutesPerMonth: FAIR_USE.voiceMinutesPerMonth,
+      });
+      return;
+    }
+
     const { initiateVoiceCall } = await import("../services/twilio");
     const personDoc = await db.collection("users").doc(personId).get();
     const callSid = await initiateVoiceCall(guardianId, sosEventId, personDoc.data()?.displayName || "", {
       round: 0,
       isLastRound: false,
+      fairUse: reservation,
     });
+    if (!callSid) await releaseVoiceMinute(reservation);
 
     if (callSid) {
       await sosRef.update({

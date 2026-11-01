@@ -2,6 +2,7 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import * as crypto from "crypto";
 import { Lang, userLang } from "./locale";
+import type { VoiceReservation } from "./fairUse";
 
 const db = admin.firestore();
 
@@ -210,7 +211,7 @@ export async function initiateVoiceCall(
   guardianId: string,
   sosEventId: string,
   protectedPersonName: string,
-  opts: { round: number; isLastRound: boolean } = { round: 1, isLastRound: false }
+  opts: { round: number; isLastRound: boolean; fairUse?: VoiceReservation } = { round: 1, isLastRound: false }
 ): Promise<string | null> {
   const client = getClient();
   if (!client) {
@@ -256,6 +257,7 @@ export async function initiateVoiceCall(
       personName: protectedPersonName,
       round: opts.round,
       isLastRound: opts.isLastRound,
+      fairUse: opts.fairUse ?? null, // minute reserved by fair use; settled by the status callback
       createdAt: admin.firestore.Timestamp.now(),
       status: "queued",
     });

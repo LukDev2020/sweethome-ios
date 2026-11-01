@@ -6,6 +6,7 @@ import { isValidTimeZone } from "../services/localTime";
 import { normalizeLocale } from "../services/locale";
 import { eraseAccount, exportAccount } from "../services/accountData";
 import { recordDataTransferConsent } from "../services/consent";
+import { appAccountTokenFor } from "../services/payment";
 
 const router = Router();
 const db = admin.firestore();
@@ -28,6 +29,12 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
     }
 
     const data = userDoc.data()!;
+    // Lets App Store notifications find this account by the purchase's appAccountToken
+    const appAccountToken = appAccountTokenFor(uid);
+    if (data.appAccountToken !== appAccountToken) {
+      userDoc.ref.update({ appAccountToken }).catch((e) =>
+        console.error("[User] could not store appAccountToken:", e));
+    }
     res.json({
       id: uid,
       displayName: data.displayName,

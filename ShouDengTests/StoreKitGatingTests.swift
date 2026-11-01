@@ -22,9 +22,19 @@ final class StoreKitGatingTests: XCTestCase {
         XCTAssertEqual(plan, "single")
     }
 
-    func testMinimumPlanForSMSFallback() {
-        let plan = StoreKitManager.minimumPlan(for: "sms_fallback")
-        XCTAssertEqual(plan, "family")
+    @MainActor
+    func testSMSAndVoiceEscalationAreOnEveryPlan() {
+        // Safety floor (docs/pricing/PRICING.md): free plan included, fair use on the server
+        for feature in ["sms_fallback", "voice_call_escalation", "basic_sos"] {
+            XCTAssertTrue(StoreKitManager.safetyFloor.contains(feature), feature)
+            XCTAssertEqual(StoreKitManager.minimumPlan(for: feature), "single", "first paid tier also has \(feature)")
+        }
+        let manager = StoreKitManager(apiClient: APIClient(config: .init(baseURL: "https://api.test"), offlineQueue: OfflineQueue(fileURL: nil)),
+                                      observeTransactions: false)
+        XCTAssertNil(manager.purchasedPlanId)
+        XCTAssertTrue(manager.canAccessFeature("sms_fallback"), "free plan")
+        XCTAssertTrue(manager.canAccessFeature("voice_call_escalation"), "free plan")
+        XCTAssertFalse(manager.canAccessFeature("export_pdf"))
     }
 
     func testMinimumPlanForFamilyDashboard() {
@@ -58,8 +68,8 @@ final class StoreKitGatingTests: XCTestCase {
     }
 
     func testFamilyExclusiveFeatures() {
-        // sms_fallback, family_dashboard, location_history_export are family+
-        let familyFeatures = ["sms_fallback", "family_dashboard", "location_history_export"]
+        // family_dashboard, location_history_export are family+
+        let familyFeatures = ["family_dashboard", "location_history_export"]
         for feature in familyFeatures {
             XCTAssertEqual(StoreKitManager.minimumPlan(for: feature), "family",
                          "\(feature) should require family plan")
