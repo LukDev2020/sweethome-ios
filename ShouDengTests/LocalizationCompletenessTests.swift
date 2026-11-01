@@ -210,6 +210,10 @@ final class DynamicLocalizationKeyTests: XCTestCase {
         keys += ["walking", "cycling", "driving", "flying", "stationary", "unknown", "running"].map { "trip.mode.\($0)" }
         keys += ["offlineMaps", "findMy", "satelliteSOS", "carrierSatellite"].flatMap { ["preflight.\($0).title", "preflight.\($0).detail"] }
         keys += ["standard", "large", "extraLarge", "huge"].map { "fontScale.\($0)" }
+        // In-app tips (read through AppTips.text, which the literal scan does not see)
+        keys += ["sos", "homeSafe", "inviteGuardian", "memberCard", "statusBar", "inviteCode"]
+            .flatMap { ["tip.\($0).title", "tip.\($0).message"] } + ["tip.inviteGuardian.action"]
+        keys += ["section", "show", "reset", "resetDone"].map { "settings.tips.\($0)" }
         for language in ["en", "zh-Hans", "zh-Hant", "fr", "ja"] {
             let path = try XCTUnwrap(Bundle.main.path(forResource: "Localizable", ofType: "strings",
                                                       inDirectory: nil, forLocalization: language), language)

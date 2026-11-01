@@ -188,6 +188,7 @@ struct ProtectedSettingsView: View {
                 languagePanel
                 fontSizePanel
                 darkModePanel
+                TipsSettingsPanel()
                 notificationPanel
                 dataPanel
                 legalPanel

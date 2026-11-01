@@ -1,4 +1,5 @@
 import SwiftUI
+import TipKit
 import PhotosUI
 
 // MARK: - Family Feed View ("家庭圈")
@@ -55,11 +56,13 @@ struct FamilyFeedView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
+                        InviteCodeTip().invalidate(reason: .actionPerformed)
                         coordinator.presentInviteAccept()
                     } label: {
                         Label(langManager.localized("familyFeed.enterInviteCode"), systemImage: "key")
                     }
                     .accessibilityIdentifier("familyFeed.enterInviteCode")
+                    .appTip(AppTips.available(InviteCodeTip()), arrowEdge: .top)
                 }
             }
             .task {

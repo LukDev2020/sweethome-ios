@@ -6,6 +6,10 @@ struct ShouDengApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @Environment(\.scenePhase) private var scenePhase
 
+    init() {
+        AppTips.configure()
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()

@@ -1,4 +1,5 @@
 import SwiftUI
+import TipKit
 import MapKit
 import Combine
 
@@ -189,6 +190,14 @@ struct ProtectedHomeView: View {
                     .coachMark(CoachAnchor.tracking)
                     .padding(.horizontal, 16)
                     .padding(.top, 4)
+
+                if coordinator.myGuardians.isEmpty, let tip = AppTips.available(InviteGuardianTip()) {
+                    TipView(tip) { action in
+                        if action.id == "invite" { showInviteGuardian = true }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                }
 
                 globeSection
                     .coachMark(CoachAnchor.guardiansGlobe)

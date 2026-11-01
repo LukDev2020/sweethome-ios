@@ -1,4 +1,5 @@
 import SwiftUI
+import TipKit
 
 struct RootView: View {
     @EnvironmentObject var coordinator: AppCoordinator
@@ -268,6 +269,7 @@ struct FamilyStatusBar: View {
         let background: Color = s.level == .urgent ? alert : lamp
         let foreground: Color = s.level == .urgent ? .white : ink
         Button {
+            StatusBarTip().invalidate(reason: .actionPerformed)
             s.action?()
         } label: {
             HStack(spacing: 8) {
@@ -292,6 +294,8 @@ struct FamilyStatusBar: View {
         .buttonStyle(.plain)
         // Not .disabled: that greys the whole bar out when it has nothing to open
         .allowsHitTesting(s.action != nil)
+        .appTip(coordinator.userRole == .guardian && s.level != .calm && s.action != nil
+                    ? AppTips.available(StatusBarTip()) : nil, arrowEdge: .top)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(s.level == .urgent ? .isHeader : [])
     }

@@ -163,6 +163,7 @@ struct GuardianSettingsView: View {
                 languagePanel
                 fontSizePanel
                 darkModePanel
+                TipsSettingsPanel()
                 notificationPanel
                 dataPanel
                 legalPanel

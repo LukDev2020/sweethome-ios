@@ -1752,3 +1752,22 @@ vos gardiens seront automatiquement notifiés.";
 "status.protected.none" = "Personne ne veille encore sur vous";
 "status.protected.sos" = "SOS en cours";
 "status.protected.paused" = "Partage de position en pause";
+
+/* In-app tips */
+"tip.sos.title" = "Maintenez pour l'aide";
+"tip.sos.message" = "Maintenez SOS 3 secondes. Vous avez 5 secondes pour annuler avant que vos proches soient prévenus.";
+"tip.homeSafe.title" = "Dites que vous êtes rentré·e";
+"tip.homeSafe.message" = "Un geste et vos proches savent que vous êtes bien rentré·e.";
+"tip.inviteGuardian.title" = "Personne ne veille encore sur vous";
+"tip.inviteGuardian.message" = "Invitez un proche pour que vos SOS et nouvelles arrivent à quelqu'un.";
+"tip.inviteGuardian.action" = "Inviter un proche";
+"tip.memberCard.title" = "Voir comment il va";
+"tip.memberCard.message" = "Touchez une fiche pour voir position, batterie et activité récente.";
+"tip.statusBar.title" = "Quelque chose demande votre attention";
+"tip.statusBar.message" = "Touchez cette barre pour voir directement qui est concerné et ce qui s'est passé.";
+"tip.inviteCode.title" = "Vous avez un code d'invitation ?";
+"tip.inviteCode.message" = "Touchez la clé pour le saisir et rejoindre vos proches.";
+"settings.tips.section" = "Astuces";
+"settings.tips.show" = "Afficher les astuces";
+"settings.tips.reset" = "Réafficher toutes les astuces";
+"settings.tips.resetDone" = "Les astuces réapparaîtront à la prochaine ouverture de l'app.";

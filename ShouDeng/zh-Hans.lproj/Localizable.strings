@@ -1752,3 +1752,22 @@
 "status.protected.none" = "还没有守护你的家人";
 "status.protected.sos" = "求助进行中";
 "status.protected.paused" = "位置共享已暂停";
+
+/* In-app tips */
+"tip.sos.title" = "按住求助";
+"tip.sos.message" = "按住 SOS 3 秒发送求助。通知家人前有 5 秒可以取消。";
+"tip.homeSafe.title" = "告诉家人你到家了";
+"tip.homeSafe.message" = "点一下，守护你的家人就知道你已安全到家。";
+"tip.inviteGuardian.title" = "还没有家人守护你";
+"tip.inviteGuardian.message" = "邀请一位家人，你的求助和报平安才有人收到。";
+"tip.inviteGuardian.action" = "邀请家人";
+"tip.memberCard.title" = "查看家人近况";
+"tip.memberCard.message" = "点卡片查看位置、电量和最近动态。";
+"tip.statusBar.title" = "有情况需要你关注";
+"tip.statusBar.message" = "点这条提示，直接查看是谁、发生了什么。";
+"tip.inviteCode.title" = "收到邀请码了？";
+"tip.inviteCode.message" = "点钥匙输入邀请码，加入家人。";
+"settings.tips.section" = "使用提示";
+"settings.tips.show" = "显示使用提示";
+"settings.tips.reset" = "重新显示所有提示";
+"settings.tips.resetDone" = "下次打开 App 时会重新显示提示。";

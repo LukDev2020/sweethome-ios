@@ -1,4 +1,5 @@
 import SwiftUI
+import TipKit
 
 struct HomeSafePill: View {
     @EnvironmentObject var coordinator: AppCoordinator
@@ -31,10 +32,12 @@ struct HomeSafePill: View {
             .shadow(color: safe.opacity(0.25), radius: 4, y: 2)
         }
         .disabled(confirmed)
+        .appTip(AppTips.available(HomeSafeTip()), arrowEdge: .bottom)
         .accessibilityLabel(lang.localized("home_safe", fallback: "I'm Home Safe"))
     }
 
     private func confirmSafe() {
+        HomeSafeTip().invalidate(reason: .actionPerformed)
         let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
 

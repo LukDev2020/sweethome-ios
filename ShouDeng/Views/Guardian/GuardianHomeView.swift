@@ -1,4 +1,5 @@
 import SwiftUI
+import TipKit
 import MapKit
 
 // MARK: - Screen B1: Guardian Home
@@ -575,6 +576,12 @@ struct GuardianHomeView: View {
 
     // MARK: - Needs Attention
 
+    /// The card that carries the "tap a card" tip: the first one on screen.
+    private var firstCardPersonId: String? {
+        let warning = coordinator.protectedPersons.filter { $0.isOverdue || $0.status == .overdue || $0.status == .alert }
+        return warning.first?.id ?? coordinator.protectedPersons.first?.id
+    }
+
     private var needsAttentionSection: some View {
         let warningPersons = coordinator.protectedPersons.filter { $0.isOverdue || $0.status == .overdue || $0.status == .alert }
 
@@ -600,6 +607,7 @@ struct GuardianHomeView: View {
                             )
                         }
                         .coachMark(person.id == warningPersons.first(where: { $0.status == .alert })?.id ? CoachAnchor.alertPerson : "guardian.person.\(person.id)")
+                        .appTip(person.id == firstCardPersonId ? AppTips.available(MemberCardTip()) : nil, arrowEdge: .bottom)
                         .buttonStyle(.plain)
                         .contextMenu {
                             Button {
@@ -680,6 +688,7 @@ struct GuardianHomeView: View {
                             )
                         }
                         .coachMark(person.id == normalPersons.first?.id ? CoachAnchor.firstPerson : "guardian.person.\(person.id)")
+                        .appTip(person.id == firstCardPersonId ? AppTips.available(MemberCardTip()) : nil, arrowEdge: .bottom)
                         .buttonStyle(.plain)
                         .contextMenu {
                             Button {

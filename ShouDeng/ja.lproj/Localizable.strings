@@ -1751,3 +1751,22 @@
 "status.protected.none" = "まだ見守る家族がいません";
 "status.protected.sos" = "SOS発信中";
 "status.protected.paused" = "位置情報の共有を一時停止中";
+
+/* In-app tips */
+"tip.sos.title" = "長押しでSOS";
+"tip.sos.message" = "SOSを3秒間長押しすると送信します。家族に届く前に5秒間キャンセルできます。";
+"tip.homeSafe.title" = "帰宅を知らせる";
+"tip.homeSafe.message" = "タップするだけで、見守る家族全員に無事帰宅を知らせます。";
+"tip.inviteGuardian.title" = "まだ見守る家族がいません";
+"tip.inviteGuardian.message" = "家族を招待すると、SOSや無事報告が届くようになります。";
+"tip.inviteGuardian.action" = "家族を招待";
+"tip.memberCard.title" = "様子を見る";
+"tip.memberCard.message" = "カードをタップすると、位置・バッテリー・最近の様子を確認できます。";
+"tip.statusBar.title" = "確認が必要です";
+"tip.statusBar.message" = "このバーをタップすると、誰に何があったかをすぐに確認できます。";
+"tip.inviteCode.title" = "招待コードがありますか？";
+"tip.inviteCode.message" = "鍵をタップしてコードを入力し、家族に参加します。";
+"settings.tips.section" = "ヒント";
+"settings.tips.show" = "ヒントを表示";
+"settings.tips.reset" = "すべてのヒントを再表示";
+"settings.tips.resetDone" = "次回アプリを開いたときにヒントが再表示されます。";

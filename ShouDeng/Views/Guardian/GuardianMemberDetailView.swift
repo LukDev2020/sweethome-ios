@@ -1,4 +1,5 @@
 import SwiftUI
+import TipKit
 import MapKit
 
 // MARK: - Screen B3: Member Detail
@@ -43,7 +44,10 @@ struct GuardianMemberDetailView: View {
 
                     // Timeline
                     timelineSection
-                        .task(id: personId) { personTimeline = await coordinator.fetchTimeline(of: personId) }
+                        .task(id: personId) {
+                            MemberCardTip().invalidate(reason: .actionPerformed)
+                            personTimeline = await coordinator.fetchTimeline(of: personId)
+                        }
 
                     // Emergency contacts
                     NavigationLink {

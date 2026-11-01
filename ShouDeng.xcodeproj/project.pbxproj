@@ -196,6 +196,7 @@
 		A2F1E0D9C8B7A6F5E4D3C2B1 /* MLFallClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A6B7C8D9E0F1A2 /* MLFallClassifier.swift */; };
 		27B0B7CDEE2B49B18E8FDE32 /* FloatingSOSButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD670A9F667544F38781B41A /* FloatingSOSButton.swift */; };
 		1D0F0A554877406A9B2D7355 /* BatteryIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C54FBFA48A54BBFA4C1B499 /* BatteryIndicatorView.swift */; };
+		F06797BB85BA4C7EB6D94A9A /* AppTips.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB50B08C37D14BD88EBFE063 /* AppTips.swift */; };
 		862F35BC5650451AB0F25C79 /* HomeSafePill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C0C843D3C714D578DFF5690 /* HomeSafePill.swift */; };
 		B31C2969CC6A4B1B9786BAE8 /* ReactionBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78D285E5A8124670ACBD6168 /* ReactionBarView.swift */; };
 		F3DCD539ABF44643B97B26C7 /* LocationShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D406A35BC93841D6B5C20657 /* LocationShareCardView.swift */; };
@@ -449,6 +450,7 @@
 		B1C2D3E4F5A6B7C8D9E0F1A2 /* MLFallClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLFallClassifier.swift; sourceTree = "<group>"; };
 		DD670A9F667544F38781B41A /* FloatingSOSButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingSOSButton.swift; sourceTree = "<group>"; };
 		9C54FBFA48A54BBFA4C1B499 /* BatteryIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryIndicatorView.swift; sourceTree = "<group>"; };
+		DB50B08C37D14BD88EBFE063 /* AppTips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTips.swift; sourceTree = "<group>"; };
 		1C0C843D3C714D578DFF5690 /* HomeSafePill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeSafePill.swift; sourceTree = "<group>"; };
 		78D285E5A8124670ACBD6168 /* ReactionBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionBarView.swift; sourceTree = "<group>"; };
 		D406A35BC93841D6B5C20657 /* LocationShareCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationShareCardView.swift; sourceTree = "<group>"; };
@@ -724,6 +726,7 @@
 			children = (
 				DD670A9F667544F38781B41A /* FloatingSOSButton.swift */,
 				9C54FBFA48A54BBFA4C1B499 /* BatteryIndicatorView.swift */,
+				DB50B08C37D14BD88EBFE063 /* AppTips.swift */,
 				1C0C843D3C714D578DFF5690 /* HomeSafePill.swift */,
 				78D285E5A8124670ACBD6168 /* ReactionBarView.swift */,
 				D406A35BC93841D6B5C20657 /* LocationShareCardView.swift */,
@@ -1249,6 +1252,7 @@
 				DD4C82603D4B0B8218838586 /* AppLifecycleRouter.swift in Sources */,
 				27B0B7CDEE2B49B18E8FDE32 /* FloatingSOSButton.swift in Sources */,
 				1D0F0A554877406A9B2D7355 /* BatteryIndicatorView.swift in Sources */,
+				F06797BB85BA4C7EB6D94A9A /* AppTips.swift in Sources */,
 				862F35BC5650451AB0F25C79 /* HomeSafePill.swift in Sources */,
 				B31C2969CC6A4B1B9786BAE8 /* ReactionBarView.swift in Sources */,
 				F3DCD539ABF44643B97B26C7 /* LocationShareCardView.swift in Sources */,

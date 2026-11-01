@@ -1,4 +1,5 @@
 import SwiftUI
+import TipKit
 
 struct FloatingSOSButton: View {
     @EnvironmentObject var coordinator: AppCoordinator
@@ -58,6 +59,7 @@ struct FloatingSOSButton: View {
             }
             if pressing {
                 pressStartedAt = Date()
+                SOSHoldTip().invalidate(reason: .actionPerformed)
                 hideHoldHint()
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 withAnimation(.linear(duration: holdDuration)) {
@@ -97,6 +99,8 @@ struct FloatingSOSButton: View {
             }
         }
         .coachMark(CoachAnchor.sosButton)
+        .appTip(coordinator.pendingSOS == nil && coordinator.activeSOSEvent == nil
+                    ? AppTips.available(SOSHoldTip()) : nil, arrowEdge: .bottom)
         .accessibilityLabel(LanguageManager.shared.localized("sos.button.a11yLabel"))
         .accessibilityHint(LanguageManager.shared.localized("sos.button.a11yHint"))
     }

@@ -1752,3 +1752,22 @@ your guardians will be automatically notified.";
 "status.protected.none" = "No one is watching over you yet";
 "status.protected.sos" = "SOS in progress";
 "status.protected.paused" = "Location sharing is paused";
+
+/* In-app tips */
+"tip.sos.title" = "Hold for help";
+"tip.sos.message" = "Press and hold SOS for 3 seconds. You get 5 seconds to cancel before your family is alerted.";
+"tip.homeSafe.title" = "Let them know you're home";
+"tip.homeSafe.message" = "One tap and everyone watching over you knows you got home safely.";
+"tip.inviteGuardian.title" = "No one is watching over you yet";
+"tip.inviteGuardian.message" = "Invite a family member so your SOS and check-ins reach someone.";
+"tip.inviteGuardian.action" = "Invite family";
+"tip.memberCard.title" = "See how they're doing";
+"tip.memberCard.message" = "Tap a card for their location, battery and recent activity.";
+"tip.statusBar.title" = "Something needs your attention";
+"tip.statusBar.message" = "Tap this bar to go straight to who it is and what happened.";
+"tip.inviteCode.title" = "Got an invite code?";
+"tip.inviteCode.message" = "Tap the key to enter it and join your family.";
+"settings.tips.section" = "Tips";
+"settings.tips.show" = "Show tips";
+"settings.tips.reset" = "Show all tips again";
+"settings.tips.resetDone" = "Tips will show again the next time you open the app.";
