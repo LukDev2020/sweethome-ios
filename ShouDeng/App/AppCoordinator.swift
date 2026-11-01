@@ -107,7 +107,6 @@ final class AppCoordinator: ObservableObject {
     let keyManager = KeyManager()
     lazy var e2eEncryption = E2ELocationEncryption(keyManager: keyManager)
     let storeKitManager: StoreKitManager
-    let paymentMethodManager: PaymentMethodManager
     let locationBatchUploader = LocationBatchUploader()
     let voiceNoteService = VoiceNoteService()
     let bleTrackerService = BLETrackerService.shared
@@ -153,7 +152,6 @@ final class AppCoordinator: ObservableObject {
         #endif
         authManager = AuthManager(api: apiClient, defaults: environment.defaults, restore: !environment.isDemo)
         storeKitManager = StoreKitManager(apiClient: apiClient, observeTransactions: !environment.isDemo)
-        paymentMethodManager = PaymentMethodManager(apiClient: apiClient)
 
         // Wire 401 auto-refresh: when server returns 401, attempt token refresh.
         // In dev bypass mode, suppress logout to avoid wiping local state.
@@ -356,7 +354,7 @@ final class AppCoordinator: ObservableObject {
                         self.userRole = role
                         self.localStore.saveUserRole(role)
                     }
-                    self.onLoginComplete()
+                    self.onLoginComplete(userId: userId)
                 case .loggedOut:
                     self.onLogout()
                 case .unknown:
@@ -366,7 +364,7 @@ final class AppCoordinator: ObservableObject {
             .store(in: &cancellables)
     }
 
-    private func onLoginComplete() {
+    private func onLoginComplete(userId: String) {
         // Flush any queued offline requests
         Task { await apiClient.flushOfflineQueue() }
 
@@ -407,9 +405,16 @@ final class AppCoordinator: ObservableObject {
             }
         }
 
-        // Sync subscription status from StoreKit (catches overnight expirations/renewals)
+        // Sync subscription status from StoreKit (catches overnight expirations/renewals),
+        // and tell the server about subscriptions it hasn't seen (bought on another
+        // device, restored, renewed while offline). Purchases carry this account's token.
         if !isDemo {
-            Task { await storeKitManager.refreshSubscriptionStatus() }
+            let storeKit = storeKitManager
+            Task { @MainActor in
+                storeKit.setAccount(userId)
+                await storeKit.refreshSubscriptionStatus()
+                await storeKit.syncEntitlementsWithServer()
+            }
         }
 
         // Sync local notification preferences to server
@@ -447,6 +452,10 @@ final class AppCoordinator: ObservableObject {
 
     private func onLogout() {
         if !isDemo { liveActivityManager.endAllActivities() }
+        if !isDemo {
+            let storeKit = storeKitManager
+            Task { @MainActor in storeKit.setAccount(nil) }
+        }
         currentUser = nil
         protectedPersons = []
         myGuardians = []

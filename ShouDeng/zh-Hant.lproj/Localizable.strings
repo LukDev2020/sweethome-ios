@@ -400,7 +400,6 @@
 "guardian.billing.free" = "免費";
 "guardian.billing.hero.subtitle" = "選擇適合你家庭的守護方案";
 "guardian.billing.hero.title" = "升級守護";
-"guardian.billing.legal.text" = "訂閱費用將透過您的 Apple ID 賬戶扣款，支援 Apple Pay、信用卡、簽帳金融卡及 Apple ID 餘額。除非在當前訂閱期結束前至少 24 小時關閉自動續訂，否則訂閱將自動續訂。";
 "guardian.billing.manage.subscription" = "管理訂閱";
 "guardian.billing.monthly" = "月付";
 "guardian.billing.ok" = "好的";
@@ -430,7 +429,6 @@
 "guardian.billing.row.sos" = "SOS 求助";
 "guardian.billing.row.timeline" = "時間線";
 "guardian.billing.row.voice" = "語音升級";
-"guardian.billing.save.20" = "省20%";
 "guardian.billing.single" = "單人";
 "guardian.billing.subscribe.now" = "立即訂閱";
 "guardian.billing.subscribe.success.message" = "感謝訂閱！功能已解鎖。";
@@ -1428,16 +1426,8 @@
 "wizard.biometric.enable" = "啟用%@";
 "wizard.biometric.skip" = "暫不開啟";
 "wizard.plan.title" = "選擇守護方案";
-"wizard.plan.subtitle" = "守燈提供7天免費試用，試用期間享受完整功能。\n試用結束後可繼續使用基礎版。";
+"wizard.plan.subtitle" = "付費方案覆蓋您守護的所有家人。\n您也可以繼續使用免費版，隨時升級。";
 "wizard.plan.subscribed" = "訂閱成功";
-"wizard.plan.single.title" = "單人關注版";
-"wizard.plan.single.price" = "¥10/月";
-"wizard.plan.single.desc" = "守護1位家人";
-"wizard.plan.family.title" = "家庭版";
-"wizard.plan.family.price" = "¥30/月";
-"wizard.plan.family.desc" = "守護多位家人";
-"wizard.plan.startTrial" = "開始免費試用";
-"wizard.plan.trialNote" = "免費試用7天，隨時取消";
 "wizard.invite.guardian.title" = "新增守護物件";
 "wizard.invite.guardian.subtitle" = "輸入被守護者發給你的邀請碼，\n也可以生成邀請碼發給你想守護的家人。";
 "wizard.invite.protected.title" = "邀請守護者";
@@ -1771,3 +1761,23 @@
 "settings.tips.show" = "顯示使用提示";
 "settings.tips.reset" = "重新顯示所有提示";
 "settings.tips.resetDone" = "下次開啟 App 時會重新顯示提示。";
+
+/* Subscriptions (StoreKit paywall) */
+"store.loading.plans" = "正在載入訂閱方案…";
+"store.retry" = "重試";
+"store.save.percent" = "省%d%%";
+"store.price.perDay" = "每天 %@";
+"store.price.perWeek" = "每週 %@";
+"store.price.perMonth" = "每月 %@";
+"store.price.perYear" = "每年 %@";
+"store.price.perPeriod" = "每%2$@ %1$@";
+"store.intro.free" = "免費試用 %@";
+"store.intro.paid" = "前 %2$@ %1$@";
+"store.cta.freeTrial" = "開始 %@ 免費試用";
+"store.cta.subscribe" = "訂閱 · %@";
+"store.legal.renewal" = "%1$@：%2$@。確認購買時將從您的 Apple ID 賬戶扣款。除非在當前訂閱期結束前至少 24 小時取消，訂閱將按此價格自動續訂。您可以在 App Store 賬戶設定中管理或取消訂閱。";
+"store.legal.trial" = "%1$@：免費試用 %2$@，之後 %3$@。除非在試用期結束前至少 24 小時取消，試用結束時將從您的 Apple ID 賬戶扣款，訂閱隨後自動續訂，直至您取消。您可以在 App Store 賬戶設定中管理或取消訂閱。";
+"store.legal.intro" = "%1$@：%2$@，之後 %3$@。確認購買時將從您的 Apple ID 賬戶扣款。除非在當前訂閱期結束前至少 24 小時取消，訂閱將自動續訂。您可以在 App Store 賬戶設定中管理或取消訂閱。";
+"store.link.terms" = "使用條款（EULA）";
+"store.link.privacy" = "隱私政策";
+"store.error.ownedByOtherAccount" = "該 App Store 訂閱已繫結另一個守燈賬號，請登入該賬號使用。";

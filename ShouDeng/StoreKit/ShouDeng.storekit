@@ -87,7 +87,7 @@
           ],
           "displayPrice" : "1.49",
           "familyShareable" : false,
-          "groupNumber" : 1,
+          "groupNumber" : 3,
           "internalID" : "single_monthly_001",
           "introductoryOffer" : {
             "displayPrice" : "0",
@@ -123,7 +123,7 @@
           ],
           "displayPrice" : "14.99",
           "familyShareable" : false,
-          "groupNumber" : 1,
+          "groupNumber" : 3,
           "internalID" : "single_yearly_001",
           "introductoryOffer" : {
             "displayPrice" : "0",
@@ -231,7 +231,7 @@
           ],
           "displayPrice" : "19.99",
           "familyShareable" : false,
-          "groupNumber" : 3,
+          "groupNumber" : 1,
           "internalID" : "ultimate_monthly_001",
           "introductoryOffer" : {
             "displayPrice" : "0",
@@ -267,7 +267,7 @@
           ],
           "displayPrice" : "199.99",
           "familyShareable" : false,
-          "groupNumber" : 3,
+          "groupNumber" : 1,
           "internalID" : "ultimate_yearly_001",
           "introductoryOffer" : {
             "displayPrice" : "0",

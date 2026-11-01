@@ -400,7 +400,6 @@
 "guardian.billing.free" = "免费";
 "guardian.billing.hero.subtitle" = "选择适合你家庭的守护方案";
 "guardian.billing.hero.title" = "升级守护";
-"guardian.billing.legal.text" = "订阅费用将通过您的 Apple ID 账户扣款，支持 Apple Pay、信用卡、借记卡及 Apple ID 余额。除非在当前订阅期结束前至少 24 小时关闭自动续订，否则订阅将自动续订。";
 "guardian.billing.manage.subscription" = "管理订阅";
 "guardian.billing.monthly" = "月付";
 "guardian.billing.ok" = "好的";
@@ -430,7 +429,6 @@
 "guardian.billing.row.sos" = "SOS 求助";
 "guardian.billing.row.timeline" = "时间线";
 "guardian.billing.row.voice" = "语音升级";
-"guardian.billing.save.20" = "省20%";
 "guardian.billing.single" = "单人";
 "guardian.billing.subscribe.now" = "立即订阅";
 "guardian.billing.subscribe.success.message" = "感谢订阅！功能已解锁。";
@@ -1428,16 +1426,8 @@
 "wizard.biometric.enable" = "启用%@";
 "wizard.biometric.skip" = "暂不开启";
 "wizard.plan.title" = "选择守护方案";
-"wizard.plan.subtitle" = "守灯提供7天免费试用，试用期间享受完整功能。\n试用结束后可继续使用基础版。";
+"wizard.plan.subtitle" = "付费方案覆盖您守护的所有家人。\n您也可以继续使用免费版，随时升级。";
 "wizard.plan.subscribed" = "订阅成功";
-"wizard.plan.single.title" = "单人关注版";
-"wizard.plan.single.price" = "¥10/月";
-"wizard.plan.single.desc" = "守护1位家人";
-"wizard.plan.family.title" = "家庭版";
-"wizard.plan.family.price" = "¥30/月";
-"wizard.plan.family.desc" = "守护多位家人";
-"wizard.plan.startTrial" = "开始免费试用";
-"wizard.plan.trialNote" = "免费试用7天，随时取消";
 "wizard.invite.guardian.title" = "添加守护对象";
 "wizard.invite.guardian.subtitle" = "输入被守护者发给你的邀请码，\n也可以生成邀请码发给你想守护的家人。";
 "wizard.invite.protected.title" = "邀请守护者";
@@ -1771,3 +1761,23 @@
 "settings.tips.show" = "显示使用提示";
 "settings.tips.reset" = "重新显示所有提示";
 "settings.tips.resetDone" = "下次打开 App 时会重新显示提示。";
+
+/* Subscriptions (StoreKit paywall) */
+"store.loading.plans" = "正在加载订阅方案…";
+"store.retry" = "重试";
+"store.save.percent" = "省%d%%";
+"store.price.perDay" = "每天 %@";
+"store.price.perWeek" = "每周 %@";
+"store.price.perMonth" = "每月 %@";
+"store.price.perYear" = "每年 %@";
+"store.price.perPeriod" = "每%2$@ %1$@";
+"store.intro.free" = "免费试用 %@";
+"store.intro.paid" = "前 %2$@ %1$@";
+"store.cta.freeTrial" = "开始 %@ 免费试用";
+"store.cta.subscribe" = "订阅 · %@";
+"store.legal.renewal" = "%1$@：%2$@。确认购买时将从您的 Apple ID 账户扣款。除非在当前订阅期结束前至少 24 小时取消，订阅将按此价格自动续订。您可以在 App Store 账户设置中管理或取消订阅。";
+"store.legal.trial" = "%1$@：免费试用 %2$@，之后 %3$@。除非在试用期结束前至少 24 小时取消，试用结束时将从您的 Apple ID 账户扣款，订阅随后自动续订，直至您取消。您可以在 App Store 账户设置中管理或取消订阅。";
+"store.legal.intro" = "%1$@：%2$@，之后 %3$@。确认购买时将从您的 Apple ID 账户扣款。除非在当前订阅期结束前至少 24 小时取消，订阅将自动续订。您可以在 App Store 账户设置中管理或取消订阅。";
+"store.link.terms" = "使用条款（EULA）";
+"store.link.privacy" = "隐私政策";
+"store.error.ownedByOtherAccount" = "该 App Store 订阅已绑定另一个守灯账号，请登录该账号使用。";

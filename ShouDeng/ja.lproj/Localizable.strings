@@ -400,7 +400,6 @@
 "guardian.billing.free" = "無料";
 "guardian.billing.hero.subtitle" = "ご家族に合ったプランをお選びください";
 "guardian.billing.hero.title" = "見守りをアップグレード";
-"guardian.billing.legal.text" = "サブスクリプションの料金はApple IDに請求されます。期間終了の24時間前までに解約しない限り、自動的に更新されます。Apple Pay、クレジットカード、デビットカード、Apple IDの残高でお支払いいただけます。";
 "guardian.billing.manage.subscription" = "サブスクリプションを管理";
 "guardian.billing.monthly" = "月額";
 "guardian.billing.ok" = "OK";
@@ -430,7 +429,6 @@
 "guardian.billing.row.sos" = "SOSアラート";
 "guardian.billing.row.timeline" = "タイムライン";
 "guardian.billing.row.voice" = "音声通話へのエスカレーション";
-"guardian.billing.save.20" = "20%お得";
 "guardian.billing.single" = "シングル";
 "guardian.billing.subscribe.now" = "今すぐ登録";
 "guardian.billing.subscribe.success.message" = "ご登録ありがとうございます。機能のロックが解除されました。";
@@ -1427,16 +1425,8 @@
 "wizard.biometric.enable" = "%@を使用";
 "wizard.biometric.skip" = "今はしない";
 "wizard.plan.title" = "プランを選択";
-"wizard.plan.subtitle" = "Lantern Careでは、すべての機能を使える7日間の無料体験をご用意しています。\n無料体験の終了後も、ベーシックプランを引き続きご利用いただけます。";
+"wizard.plan.subtitle" = "有料プランは見守るご家族全員に適用されます。\n無料プランのまま使い続け、いつでもアップグレードできます。";
 "wizard.plan.subscribed" = "登録済み";
-"wizard.plan.single.title" = "シングル";
-"wizard.plan.single.price" = "¥10/月";
-"wizard.plan.single.desc" = "家族1人を見守る";
-"wizard.plan.family.title" = "ファミリー";
-"wizard.plan.family.price" = "¥30/月";
-"wizard.plan.family.desc" = "複数の家族を見守る";
-"wizard.plan.startTrial" = "無料体験を開始";
-"wizard.plan.trialNote" = "7日間無料、いつでもキャンセル可能";
 "wizard.invite.guardian.title" = "見守る相手を追加";
 "wizard.invite.guardian.subtitle" = "見守る相手から届いた招待コードを入力するか、\nコードを作成して相手に送ってください。";
 "wizard.invite.protected.title" = "見守る人を招待";
@@ -1770,3 +1760,23 @@
 "settings.tips.show" = "ヒントを表示";
 "settings.tips.reset" = "すべてのヒントを再表示";
 "settings.tips.resetDone" = "次回アプリを開いたときにヒントが再表示されます。";
+
+/* Subscriptions (StoreKit paywall) */
+"store.loading.plans" = "プランを読み込み中…";
+"store.retry" = "再試行";
+"store.save.percent" = "%d%%お得";
+"store.price.perDay" = "1日 %@";
+"store.price.perWeek" = "週額 %@";
+"store.price.perMonth" = "月額 %@";
+"store.price.perYear" = "年額 %@";
+"store.price.perPeriod" = "%2$@ごとに %1$@";
+"store.intro.free" = "%@無料";
+"store.intro.paid" = "最初の%2$@は%1$@";
+"store.cta.freeTrial" = "%@の無料トライアルを開始";
+"store.cta.subscribe" = "登録する · %@";
+"store.legal.renewal" = "%1$@：%2$@。購入確定時にApple IDに請求されます。現在の期間終了の24時間前までに解約しない限り、この価格で自動更新されます。App Storeのアカウント設定で管理・解約できます。";
+"store.legal.trial" = "%1$@：%2$@無料、その後 %3$@。トライアル終了の24時間前までに解約しない限り、終了時にApple IDに請求され、解約するまで自動更新されます。App Storeのアカウント設定で管理・解約できます。";
+"store.legal.intro" = "%1$@：%2$@、その後 %3$@。購入確定時にApple IDに請求されます。現在の期間終了の24時間前までに解約しない限り、自動更新されます。App Storeのアカウント設定で管理・解約できます。";
+"store.link.terms" = "利用規約（EULA）";
+"store.link.privacy" = "プライバシーポリシー";
+"store.error.ownedByOtherAccount" = "このApp Storeサブスクリプションは別のLantern Careアカウントに紐づいています。そのアカウントでサインインしてご利用ください。";

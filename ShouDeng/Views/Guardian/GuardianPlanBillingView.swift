@@ -3,11 +3,14 @@ import StoreKit
 
 // MARK: - Plan & Billing
 //
-// Subscription page aligned with pricing doc:
-//   - Free / 单人关注版 (single) ¥10/月 / 家庭版 (family) ¥30/月 / 企业版 (ultimate) ¥128/月
+// Subscription page:
+//   - Free / 单人关注版 (single) / 家庭版 (family) / 企业版 (ultimate)
 //   - Plan IDs match StoreKitManager and backend PLANS
-//   - Monthly / Yearly toggle (yearly saves ~20%)
-//   - Payment methods: Apple Pay, Credit Card, Alipay, WeChat Pay, PayPal
+//   - Prices, periods, trials and the yearly saving all come from the App Store
+//     products (never hardcoded); while they load / if they fail: spinner / Retry
+//   - Monthly / Yearly toggle
+//   - Paid through the App Store (in-app purchase) only
+//   - Per-product auto-renewal terms + Terms of Use (EULA) and Privacy Policy links
 //   - Feature comparison table
 //   - Only guardians pay
 
@@ -16,9 +19,9 @@ struct GuardianPlanBillingView: View {
     @ObservedObject private var langManager = LanguageManager.shared
     @State private var billingCycle: BillingCycle = .monthly
     @State private var selectedPlan: PlanTier = .single
-    @State private var showRestoreAlert = false
-    @State private var showPaymentSheet = false
+    @State private var restoreResult: StoreKitManager.RestoreResult?
     @State private var showPaymentSuccess = false
+    @State private var showPrivacyPolicy = false
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
@@ -56,17 +59,35 @@ struct GuardianPlanBillingView: View {
             await coordinator.storeKitManager.fetchProducts()
             await coordinator.storeKitManager.refreshSubscriptionStatus()
         }
-        .alert(langManager.localized("guardian.billing.restore.purchase"), isPresented: $showRestoreAlert) {
+        .alert(langManager.localized("guardian.billing.restore.purchase"), isPresented: Binding(
+            get: { restoreResult != nil }, set: { if !$0 { restoreResult = nil } }
+        )) {
             Button(langManager.localized("guardian.billing.ok")) {}
         } message: {
-            Text(coordinator.storeKitManager.purchasedPlanId != nil
-                 ? langManager.localized("guardian.billing.restore.success")
-                 : langManager.localized("guardian.billing.restore.none"))
+            Text(restoreMessage)
+        }
+        .sheet(isPresented: $showPrivacyPolicy) {
+            PrivacyPolicyView().environmentObject(coordinator)
         }
         .alert(langManager.localized("guardian.billing.subscribe.success.title"), isPresented: $showPaymentSuccess) {
             Button(langManager.localized("guardian.billing.ok")) {}
         } message: {
             Text(langManager.localized("guardian.billing.subscribe.success.message"))
+        }
+    }
+
+    private var restoreMessage: String {
+        switch restoreResult {
+        case .restored:
+            return langManager.localized("guardian.billing.restore.success")
+        case .ownedByOtherAccount:
+            return langManager.localized("store.error.ownedByOtherAccount")
+        case .failed where coordinator.storeKitManager.purchasedPlanId != nil:
+            return langManager.localized("guardian.billing.restore.success")
+        case .failed:
+            return coordinator.storeKitManager.errorMessage ?? langManager.localized("guardian.billing.restore.none")
+        case .nothingToRestore, .none:
+            return langManager.localized("guardian.billing.restore.none")
         }
     }
 
@@ -132,8 +153,8 @@ struct GuardianPlanBillingView: View {
                     HStack(spacing: 4) {
                         Text(cycle == .monthly ? langManager.localized("guardian.billing.monthly") : langManager.localized("guardian.billing.yearly"))
                             .font(.scaled(size: 14, weight: .medium))
-                        if cycle == .yearly {
-                            Text(langManager.localized("guardian.billing.save.20"))
+                        if cycle == .yearly, let percent = coordinator.storeKitManager.yearlySavingsPercent {
+                            Text(String(format: langManager.localized("store.save.percent"), percent))
                                 .font(.scaled(size: 12, weight: .bold))
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 6)
@@ -162,11 +183,21 @@ struct GuardianPlanBillingView: View {
 
     // MARK: - Plan Cards
 
+    @ViewBuilder
     private var planCards: some View {
-        VStack(spacing: 12) {
-            singlePlanCard
-            familyPlanCard
-            ultimatePlanCard
+        let store = coordinator.storeKitManager
+        if store.products.isEmpty {
+            ProductsUnavailableView(
+                isLoading: store.isLoadingProducts || !store.productsLoadFailed,
+                accent: accent,
+                onRetry: { Task { await store.fetchProducts() } }
+            )
+        } else {
+            VStack(spacing: 12) {
+                singlePlanCard
+                familyPlanCard
+                ultimatePlanCard
+            }
         }
     }
 
@@ -180,8 +211,8 @@ struct GuardianPlanBillingView: View {
             subtitle: langManager.localized("guardian.billing.plan.single.subtitle"),
             icon: "person.fill.checkmark",
             iconColor: safe,
-            price: product?.displayPrice ?? (billingCycle == .monthly ? "¥10" : "¥96"),
-            usdPrice: billingCycle == .monthly ? "$1.49" : "$14.99",
+            product: product,
+            pricing: product.map { coordinator.storeKitManager.pricing(for: $0) },
             period: billingCycle == .monthly ? langManager.localized("guardian.billing.per.month") : langManager.localized("guardian.billing.per.year"),
             isCurrent: isCurrent,
             isSelected: selectedPlan == .single && !isCurrent,
@@ -211,8 +242,8 @@ struct GuardianPlanBillingView: View {
             subtitle: langManager.localized("guardian.billing.plan.family.subtitle"),
             icon: "house.fill",
             iconColor: accent,
-            price: product?.displayPrice ?? (billingCycle == .monthly ? "¥30" : "¥288"),
-            usdPrice: billingCycle == .monthly ? "$4.99" : "$49.99",
+            product: product,
+            pricing: product.map { coordinator.storeKitManager.pricing(for: $0) },
             period: billingCycle == .monthly ? langManager.localized("guardian.billing.per.month") : langManager.localized("guardian.billing.per.year"),
             isCurrent: isCurrent,
             isSelected: selectedPlan == .family && !isCurrent,
@@ -245,8 +276,8 @@ struct GuardianPlanBillingView: View {
             subtitle: langManager.localized("guardian.billing.plan.ultimate.subtitle"),
             icon: "building.2.fill",
             iconColor: warm,
-            price: product?.displayPrice ?? (billingCycle == .monthly ? "¥128" : "¥1,228"),
-            usdPrice: billingCycle == .monthly ? "$19.99" : "$199.99",
+            product: product,
+            pricing: product.map { coordinator.storeKitManager.pricing(for: $0) },
             period: billingCycle == .monthly ? langManager.localized("guardian.billing.per.month") : langManager.localized("guardian.billing.per.year"),
             isCurrent: isCurrent,
             isSelected: selectedPlan == .ultimate && !isCurrent,
@@ -271,7 +302,10 @@ struct GuardianPlanBillingView: View {
     }
 
     private func subscribeToPlan(_ planId: String, product: Product?) {
-        guard let product else { return }
+        guard let product else {
+            Task { await coordinator.storeKitManager.fetchProducts() }
+            return
+        }
         Task {
             let success = await coordinator.storeKitManager.purchase(product)
             if success {
@@ -490,8 +524,8 @@ struct GuardianPlanBillingView: View {
             // Restore
             Button {
                 Task {
-                    await coordinator.storeKitManager.restorePurchases()
-                    showRestoreAlert = true
+                    restoreResult = await coordinator.storeKitManager.restorePurchases()
+                    await coordinator.fetchSubscription()
                 }
             } label: {
                 Text(langManager.localized("guardian.billing.restore.purchase"))
@@ -500,13 +534,82 @@ struct GuardianPlanBillingView: View {
             }
             .disabled(coordinator.storeKitManager.isLoading)
 
-            // Legal
-            Text(langManager.localized("guardian.billing.legal.text"))
-                .font(.scaled(size: 12))
-                .foregroundStyle(.tertiary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 8)
+            // Legal (per-product renewal terms are on each card)
+            SubscriptionLegalLinks(accent: accent) { showPrivacyPolicy = true }
         }
+    }
+}
+
+// MARK: - Products unavailable (loading / failed)
+
+/// Shown instead of plan cards until the App Store products load. Never shows a price.
+struct ProductsUnavailableView: View {
+    @ObservedObject private var langManager = LanguageManager.shared
+    let isLoading: Bool
+    let accent: Color
+    let onRetry: () -> Void
+
+    var body: some View {
+        VStack(spacing: 12) {
+            if isLoading {
+                ProgressView()
+                Text(langManager.localized("store.loading.plans"))
+                    .font(.scaled(size: 14))
+                    .foregroundStyle(.secondary)
+            } else {
+                Image(systemName: "wifi.exclamationmark")
+                    .font(.scaled(size: 28))
+                    .foregroundStyle(.secondary)
+                Text(langManager.localized("store.error.loadPlans"))
+                    .font(.scaled(size: 14))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                Button(action: onRetry) {
+                    Text(langManager.localized("store.retry"))
+                        .font(.scaled(size: 15, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 28)
+                        .padding(.vertical, 10)
+                        .background(accent)
+                        .clipShape(Capsule())
+                }
+                .accessibilityIdentifier("store.retry")
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 32)
+        .background(Color(.systemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+}
+
+// MARK: - Terms of Use / Privacy Policy links
+
+/// Required on every paywall (App Store guideline 3.1.2): Terms of Use (Apple's standard
+/// EULA — the app has no custom one) and the Privacy Policy (in-app).
+struct SubscriptionLegalLinks: View {
+    @ObservedObject private var langManager = LanguageManager.shared
+    static let termsOfUseURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
+    let accent: Color
+    let onPrivacyPolicy: () -> Void
+
+    var body: some View {
+        HStack(spacing: 16) {
+            Button {
+                ExternalURL.open(Self.termsOfUseURL)
+            } label: {
+                Text(langManager.localized("store.link.terms"))
+                    .underline()
+            }
+            Text("·").foregroundStyle(.tertiary)
+            Button(action: onPrivacyPolicy) {
+                Text(langManager.localized("store.link.privacy"))
+                    .underline()
+            }
+        }
+        .font(.scaled(size: 12))
+        .foregroundStyle(accent)
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -518,8 +621,8 @@ private struct PlanCardView: View {
     let subtitle: String
     let icon: String
     let iconColor: Color
-    let price: String
-    let usdPrice: String
+    let product: Product?
+    let pricing: SubscriptionPricing?
     let period: String
     let isCurrent: Bool
     let isSelected: Bool
@@ -562,18 +665,20 @@ private struct PlanCardView: View {
                     }
                 }
 
-                // Price
+                // Price (from the App Store product)
                 HStack(alignment: .firstTextBaseline, spacing: 2) {
-                    Text(price)
+                    Text(product?.displayPrice ?? "—")
                         .font(.scaled(size: 28, weight: .bold, design: .rounded))
                         .foregroundStyle(ink)
                     Text(period)
                         .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Text(usdPrice + period)
-                        .font(.scaled(size: 13))
-                        .foregroundStyle(.tertiary)
+                    if let intro = pricing?.introSummary() {
+                        Text(intro)
+                            .font(.scaled(size: 12, weight: .semibold))
+                            .foregroundStyle(accentColor)
+                    }
                 }
 
                 // Divider
@@ -620,8 +725,9 @@ private struct PlanCardView: View {
                                 ProgressView()
                                     .tint(.white)
                             } else {
-                                Text(langManager.localized("guardian.billing.subscribe.now"))
+                                Text(pricing?.subscribeButtonTitle() ?? langManager.localized("guardian.billing.subscribe.now"))
                                     .font(.scaled(size: 15, weight: .semibold))
+                                    .multilineTextAlignment(.center)
                             }
                             Spacer()
                         }
@@ -630,7 +736,14 @@ private struct PlanCardView: View {
                         .background(accentColor)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
-                    .disabled(isLoading)
+                    .disabled(isLoading || product == nil)
+
+                    if let pricing {
+                        Text(pricing.legalText(planName: planName))
+                            .font(.scaled(size: 11))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
             .padding(16)

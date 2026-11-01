@@ -75,9 +75,6 @@ function scrape(): Call[] {
  */
 const KNOWN_UNREACHABLE: Record<string, string> = {
   "get /v1/device/crowd-tags": "CrowdSourcedBLEService is never instantiated",
-  "post /v1/payment/create-intent": "PaymentMethodManager is not used by any view (StoreKit is the purchase path)",
-  "post /v1/payment/confirm": "PaymentMethodManager is not used by any view",
-  "post /v1/payment/verify-callback": "PaymentMethodManager is not used by any view",
 };
 
 describe("every iOS API call has a backend route", () => {

@@ -102,6 +102,7 @@
 		5A9F01A61315F1C229230439 /* GuardianSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB252440C67956A6E95C34C2 /* GuardianSettingsView.swift */; };
 		5BF317DDA31D8A059C33D9FC /* ProtectedCoverageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2CBED579613C2FC6F68B5B6 /* ProtectedCoverageView.swift */; };
 				A1B2C3D4E5F60001B0000001 /* StoreKitGatingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60001A0000001 /* StoreKitGatingTests.swift */; };
+		A1B2C3D4E5F60002B0000001 /* StoreKitPurchaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60002A0000001 /* StoreKitPurchaseTests.swift */; };
 				A1B2C3D4E5F60001B0000002 /* ConsentLoggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60001A0000002 /* ConsentLoggerTests.swift */; };
 				A1B2C3D4E5F60001B0000003 /* KeychainHelperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60001A0000003 /* KeychainHelperTests.swift */; };
 		5E1BA1B8E61306352C819EA8 /* AuthManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C38041E8CCB6EAE0ECF2D4F /* AuthManagerTests.swift */; };
@@ -138,7 +139,6 @@
 		987EA4563028AC5BDB0BDEE8 /* ClaimPDFGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F70A5DDA0A5E4325411CBE4 /* ClaimPDFGenerator.swift */; };
 		99541A8CAB47148212819EA3 /* APIEndpoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC3B8E4A971D9B9EDE21F15 /* APIEndpoints.swift */; };
 		423DF0C81DF8D448EC50A5F7 /* FamilyFeedSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020103B129FA2C5559005243 /* FamilyFeedSync.swift */; };
-		99FC8FF203EC949973C261AE /* PaymentMethodManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB4A0B2BAF8D86AD90900742 /* PaymentMethodManager.swift */; };
 		9CB0FF8A248F056D774B567D /* LanguageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90B997F6B5ED8D73AF5B4F8 /* LanguageManager.swift */; };
 		9E430D20E87642C220576CA3 /* ShouDengWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E2D380787D5C7576D1DF4B6C /* ShouDengWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A1302B34EE4C90A44A1ED47C /* ShouDengApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5465F763A8A338E12D44592E /* ShouDengApp.swift */; };
@@ -316,6 +316,7 @@
 		36FD0E52F4564B5B9E057EB3 /* LocationCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationCardView.swift; sourceTree = "<group>"; };
 		37E2174A14C8BD5D344A7E54 /* GuardianTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianTabView.swift; sourceTree = "<group>"; };
 				A1B2C3D4E5F60001A0000001 /* StoreKitGatingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitGatingTests.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60002A0000001 /* StoreKitPurchaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitPurchaseTests.swift; sourceTree = "<group>"; };
 				A1B2C3D4E5F60001A0000002 /* ConsentLoggerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsentLoggerTests.swift; sourceTree = "<group>"; };
 				A1B2C3D4E5F60001A0000003 /* KeychainHelperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelperTests.swift; sourceTree = "<group>"; };
 		3C38041E8CCB6EAE0ECF2D4F /* AuthManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManagerTests.swift; sourceTree = "<group>"; };
@@ -380,7 +381,6 @@
 		B8A2C4C823537F3C06A0EE0E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		BAA9F22E2D872D3B7AE014A1 /* GuardianDutyScheduleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianDutyScheduleView.swift; sourceTree = "<group>"; };
 		BB252440C67956A6E95C34C2 /* GuardianSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianSettingsView.swift; sourceTree = "<group>"; };
-		BB4A0B2BAF8D86AD90900742 /* PaymentMethodManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentMethodManager.swift; sourceTree = "<group>"; };
 		BCC9F2C44D93C9435463C4A7 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		BF7FCEEEEB1FA39016A477FF /* DuoTabItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuoTabItem.swift; sourceTree = "<group>"; };
 		BFCD3BD31A5FBC796E2E2A49 /* ShouDeng.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShouDeng.entitlements; sourceTree = "<group>"; };
@@ -895,6 +895,7 @@
 				A1B2C3D4E5F60001A0000003 /* KeychainHelperTests.swift */,
 				A1B2C3D4E5F60001A0000002 /* ConsentLoggerTests.swift */,
 				A1B2C3D4E5F60001A0000001 /* StoreKitGatingTests.swift */,
+				A1B2C3D4E5F60002A0000001 /* StoreKitPurchaseTests.swift */,
 				C3DFF6F31788D3DCA3A0EA15 /* BaselineScorerTests.swift */,
 				2FC2559DEFD8D966B804EC79 /* ClaimMaterialTests.swift */,
 				DC654D034E59F72E979F06BE /* CountryCodeTests.swift */,
@@ -953,7 +954,6 @@
 		D61FBDB5A20879AC289D362A /* Payment */ = {
 			isa = PBXGroup;
 			children = (
-				BB4A0B2BAF8D86AD90900742 /* PaymentMethodManager.swift */,
 				FFA8CF629FC20FB22F8C8757 /* StoreKitManager.swift */,
 			);
 			path = Payment;
@@ -1341,7 +1341,6 @@
 				FD27D57BCFCB4A4640B7864C /* OfflineQueue.swift in Sources */,
 				647CECC1E71D0A4EF094D5C7 /* OnboardingView.swift in Sources */,
 				91B694B65DF0CB555CA4C950 /* OrgDashboardView.swift in Sources */,
-				99FC8FF203EC949973C261AE /* PaymentMethodManager.swift in Sources */,
 				6AC917981978E3093AAC36EC /* ProfileEditView.swift in Sources */,
 				D8451768FAA8839B90AA37DE /* ProtectedActivityAttributes.swift in Sources */,
 				5BF317DDA31D8A059C33D9FC /* ProtectedCoverageView.swift in Sources */,
@@ -1415,6 +1414,7 @@
 				A1B2C3D4E5F60001B0000003 /* KeychainHelperTests.swift in Sources */,
 				A1B2C3D4E5F60001B0000002 /* ConsentLoggerTests.swift in Sources */,
 				A1B2C3D4E5F60001B0000001 /* StoreKitGatingTests.swift in Sources */,
+				A1B2C3D4E5F60002B0000001 /* StoreKitPurchaseTests.swift in Sources */,
 				1DFEC1C4BFFAE279D78FB734 /* BaselineScorerTests.swift in Sources */,
 				F961424AEC6B46170477E03A /* ClaimMaterialTests.swift in Sources */,
 				270DE17DDB5012F906FAE7D2 /* CountryCodeTests.swift in Sources */,
@@ -1631,6 +1631,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				OTHER_SWIFT_FLAGS = "$(inherited) -Xcc -Wno-deprecated-declarations";
 				PRODUCT_BUNDLE_IDENTIFIER = com.shoudeng.app.tests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1648,6 +1649,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				OTHER_SWIFT_FLAGS = "$(inherited) -Xcc -Wno-deprecated-declarations";
 				PRODUCT_BUNDLE_IDENTIFIER = com.shoudeng.app.tests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1742,6 +1744,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				OTHER_SWIFT_FLAGS = "$(inherited) -Xcc -Wno-deprecated-declarations";
 				PRODUCT_BUNDLE_IDENTIFIER = com.shoudeng.app.tests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
