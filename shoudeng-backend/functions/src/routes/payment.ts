@@ -1,19 +1,20 @@
 import { Router, Request, Response } from "express";
-import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
 import { createRateLimiter, RATE_LIMITS } from "../middleware/rateLimit";
 import {
   verifyAppleReceipt,
-  upsertSubscription,
+  applyTransaction,
+  claimSubscription,
+  ensureAppAccountToken,
   getSubscription,
   handleAppleNotification,
   mapProductToPlan,
+  AppleVerificationError,
+  VerifiedReceipt,
   PLANS,
-  PlanId,
 } from "../services/payment";
 
 const router = Router();
-const db = admin.firestore();
 
 /**
  * GET /v1/payment/plans
@@ -52,10 +53,19 @@ router.get(
   }
 );
 
+/** 409 body when the Apple subscription already unlocks another account. */
+const OWNED_ELSEWHERE = {
+  error: "This App Store subscription is already linked to another account",
+  code: "SUBSCRIPTION_OWNED_BY_OTHER_ACCOUNT",
+};
+
+/** At most this many JWS per restore call (one subscription group → normally 1). */
+const MAX_RESTORE_TRANSACTIONS = 20;
+
 /**
  * POST /v1/payment/verify-receipt
- * Verify an Apple App Store receipt and activate subscription.
- * Called by the iOS client after a successful StoreKit 2 purchase.
+ * Verify an Apple App Store signed transaction and activate the subscription.
+ * Called by the iOS client after a successful StoreKit 2 purchase or renewal.
  */
 router.post(
   "/verify-receipt",
@@ -65,16 +75,17 @@ router.post(
     const uid = req.uid!;
     const { signedTransaction } = req.body;
 
-    if (!signedTransaction) {
+    if (!signedTransaction || typeof signedTransaction !== "string") {
       res.status(400).json({ error: "signedTransaction is required" });
       return;
     }
 
     try {
+      await ensureAppAccountToken(uid);
       const result = await verifyAppleReceipt(signedTransaction);
 
-      if (!result.valid) {
-        res.status(400).json({ error: result.error || "Invalid receipt" });
+      if (!result.valid || !result.transaction) {
+        res.status(result.retryable ? 503 : 400).json({ error: result.error || "Invalid receipt" });
         return;
       }
 
@@ -85,13 +96,13 @@ router.post(
         return;
       }
 
-      await upsertSubscription({
-        userId: uid,
-        planId: resolvedPlanId,
-        appleOriginalTransactionId: result.originalTransactionId || null,
-        appleProductId: result.productId || null,
-        expiresDate: result.expiresDate || null,
-      });
+      const claim = await claimSubscription(uid, result.transaction);
+      if (!claim.ok) {
+        res.status(409).json(OWNED_ELSEWHERE);
+        return;
+      }
+
+      await applyTransaction({ userId: uid, transaction: result.transaction, environment: result.environment });
 
       const sub = await getSubscription(uid);
       res.json({ success: true, subscription: sub });
@@ -104,11 +115,13 @@ router.post(
 
 /**
  * POST /v1/payment/restore
- * Restore purchases — verify all transactions and activate matching subscription.
+ * Sync the App Store's current entitlements (Transaction.currentEntitlements JWS) to
+ * the server. Called by the app at login and after "Restore Purchases".
  */
 router.post(
   "/restore",
   authMiddleware,
+  createRateLimiter(RATE_LIMITS.general),
   async (req: Request, res: Response) => {
     const uid = req.uid!;
     const { signedTransactions } = req.body;
@@ -117,46 +130,40 @@ router.post(
       res.status(400).json({ error: "signedTransactions array is required" });
       return;
     }
+    if (signedTransactions.length > MAX_RESTORE_TRANSACTIONS) {
+      res.status(400).json({ error: `At most ${MAX_RESTORE_TRANSACTIONS} transactions` });
+      return;
+    }
 
     try {
-      let latestValid: {
-        planId: PlanId;
-        originalTransactionId: string;
-        productId: string;
-        expiresDate: Date | null;
-      } | null = null;
+      await ensureAppAccountToken(uid);
+      const now = new Date();
+      let best: VerifiedReceipt | null = null;
+      let ownedElsewhere = 0;
 
-      for (const tx of signedTransactions) {
-        const result = await verifyAppleReceipt(tx);
-        if (result.valid && result.expiresDate && result.expiresDate > new Date()) {
-          const plan = mapProductToPlan(result.productId);
-          if (!plan) continue;
-          if (
-            !latestValid ||
-            (result.expiresDate > (latestValid.expiresDate || new Date(0)))
-          ) {
-            latestValid = {
-              planId: plan,
-              originalTransactionId: result.originalTransactionId || "",
-              productId: result.productId || "",
-              expiresDate: result.expiresDate,
-            };
-          }
+      for (const jws of signedTransactions) {
+        if (typeof jws !== "string") continue;
+        const result = await verifyAppleReceipt(jws);
+        if (!result.valid || !result.transaction || !mapProductToPlan(result.productId)) continue;
+        // Refunded/revoked or lapsed transactions don't restore anything
+        if (result.revocationDate || !result.expiresDate || result.expiresDate <= now) continue;
+        const claim = await claimSubscription(uid, result.transaction);
+        if (!claim.ok) {
+          ownedElsewhere++;
+          continue;
         }
+        if (!best || result.expiresDate > (best.expiresDate as Date)) best = result;
       }
 
-      if (latestValid) {
-        await upsertSubscription({
-          userId: uid,
-          planId: latestValid.planId,
-          appleOriginalTransactionId: latestValid.originalTransactionId,
-          appleProductId: latestValid.productId,
-          expiresDate: latestValid.expiresDate,
-        });
+      if (best?.transaction) {
+        await applyTransaction({ userId: uid, transaction: best.transaction, environment: best.environment });
+      } else if (ownedElsewhere > 0) {
+        res.status(409).json(OWNED_ELSEWHERE);
+        return;
       }
 
       const sub = await getSubscription(uid);
-      res.json({ success: true, subscription: sub, restored: !!latestValid });
+      res.json({ success: true, subscription: sub, restored: !!best });
     } catch (error) {
       console.error("[Payment] restore error:", error);
       res.status(500).json({ error: "Failed to restore purchases" });
@@ -166,22 +173,26 @@ router.post(
 
 /**
  * POST /v1/payment/apple-webhook
- * Apple App Store Server Notification v2 webhook.
- * Apple sends subscription lifecycle events here.
+ * Apple App Store Server Notification V2 webhook (Production and Sandbox URL).
  * NO authentication — Apple signs the payload with JWS.
+ * Non-2xx answers make Apple retry, so verification failures are not acknowledged.
  */
 router.post("/apple-webhook", async (req: Request, res: Response) => {
   const { signedPayload } = req.body;
 
-  if (!signedPayload) {
+  if (!signedPayload || typeof signedPayload !== "string") {
     res.status(400).json({ error: "signedPayload is required" });
     return;
   }
 
   try {
-    await handleAppleNotification(signedPayload);
-    res.json({ success: true });
+    const result = await handleAppleNotification(signedPayload);
+    res.json({ success: true, outcome: result.outcome });
   } catch (error) {
+    if (error instanceof AppleVerificationError) {
+      res.status(error.retryable ? 503 : 401).json({ error: "Notification could not be verified" });
+      return;
+    }
     console.error("[Payment] webhook error:", error);
     res.status(500).json({ error: "Webhook processing failed" });
   }
