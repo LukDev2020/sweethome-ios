@@ -372,29 +372,23 @@
 "guardian.alert.triggered.at" = "触发时间";
 "guardian.alert.unknown" = "未知";
 "guardian.billing.180days" = "180天";
-"guardian.billing.365days" = "365天";
 "guardian.billing.90days" = "90天";
 "guardian.billing.benefit.1.protected" = "守护 1 位家人";
 "guardian.billing.benefit.180d.timeline" = "180 天守护时间线";
 "guardian.billing.benefit.3.guardians" = "最多 3 位守护者";
-"guardian.billing.benefit.365d.timeline" = "365 天守护时间线";
 "guardian.billing.benefit.4.protected" = "守护最多 4 位家人";
 "guardian.billing.benefit.90d.timeline" = "90 天守护时间线";
 "guardian.billing.benefit.dashboard" = "家庭安全仪表板";
 "guardian.billing.benefit.duty" = "值班排班表";
 "guardian.billing.benefit.gpx" = "位置轨迹 GPX 导出";
 "guardian.billing.benefit.pdf" = "事件报告 PDF 导出";
-"guardian.billing.benefit.priority.support" = "专属客服经理";
-"guardian.billing.benefit.sms" = "短信回退通知";
 "guardian.billing.benefit.unlimited.guardians" = "无限守护者";
-"guardian.billing.benefit.unlimited.protected" = "无限被守护者";
-"guardian.billing.benefit.voice" = "SOS 语音呼叫升级";
 "guardian.billing.comparison" = "方案对比";
 "guardian.billing.contact.us" = "联系我们";
 "guardian.billing.current" = "当前方案";
 "guardian.billing.current.plan" = "当前方案：%@";
-"guardian.billing.custom.description" = "超大型组织、特殊需求或批量折扣，请联系我们获取专属报价";
-"guardian.billing.custom.plan" = "需要定制方案？";
+"guardian.billing.custom.description" = "面向养老机构、社区服务、学校和公益组织，不在 App 内销售，请联系我们。";
+"guardian.billing.custom.plan" = "机构 / 社区版";
 "guardian.billing.family" = "家庭";
 "guardian.billing.feature" = "功能";
 "guardian.billing.free" = "免费";
@@ -412,7 +406,6 @@
 "guardian.billing.plan.single" = "单人关注版";
 "guardian.billing.plan.single.subtitle" = "守护你最重要的人";
 "guardian.billing.plan.ultimate" = "企业版";
-"guardian.billing.plan.ultimate.subtitle" = "无限守护，全面覆盖";
 "guardian.billing.recommended" = "推荐";
 "guardian.billing.restore.none" = "未找到之前的购买记录";
 "guardian.billing.restore.purchase" = "恢复购买";
@@ -423,7 +416,6 @@
 "guardian.billing.row.gpx" = "GPX 导出";
 "guardian.billing.row.guardians" = "守护者";
 "guardian.billing.row.pdf" = "PDF 导出";
-"guardian.billing.row.priority.support" = "优先客服";
 "guardian.billing.row.protected" = "被守护者";
 "guardian.billing.row.sms" = "短信回退";
 "guardian.billing.row.sos" = "SOS 求助";
@@ -434,7 +426,6 @@
 "guardian.billing.subscribe.success.message" = "感谢订阅！功能已解锁。";
 "guardian.billing.subscribe.success.title" = "订阅成功";
 "guardian.billing.title" = "方案与订阅";
-"guardian.billing.ultimate" = "企业";
 "guardian.billing.valid.until" = "有效期至 %@";
 "guardian.billing.via.appstore" = "通过 App Store 订阅";
 "guardian.billing.yearly" = "年付";
@@ -1763,6 +1754,18 @@
 "settings.tips.resetDone" = "下次打开 App 时会重新显示提示。";
 
 /* Subscriptions (StoreKit paywall) */
+"store.price.oneTime" = "一次性 %@";
+"store.cta.buyLifetime" = "终身买断 · %@";
+"store.legal.lifetime" = "%1$@终身版：一次性支付 %2$@，确认购买时从您的 Apple ID 账户扣款。这不是订阅，不会自动续费，也无需取消。在其他设备上可通过「恢复购买」找回。";
+"store.cycle.lifetime" = "终身";
+"store.period.oneTime" = " 一次买断";
+"store.lifetime.planName" = "%@ · 终身";
+"store.lifetime.current" = "已终身买断：%@";
+"store.lifetime.purchased.title" = "已开通终身版";
+"store.lifetime.cancelSubscriptionHint" = "Apple 不会自动取消您现有的订阅。请在「管理订阅」中取消，以免再次扣费。";
+"store.lifetime.subscriptionNote" = "您的订阅会自动续费。购买终身版不会取消它，购买后请在「管理订阅」中取消。";
+"store.later" = "以后再说";
+"guardian.billing.safetyFloor" = "所有方案（含免费版）都包含 SOS 求助及短信、电话升级（合理用量：每位被守护者每月 50 条短信、30 分钟电话）。";
 "store.loading.plans" = "正在加载订阅方案…";
 "store.retry" = "重试";
 "store.save.percent" = "省%d%%";

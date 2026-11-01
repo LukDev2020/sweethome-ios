@@ -151,7 +151,11 @@ final class AppCoordinator: ObservableObject {
         print("[AppCoordinator] API base URL: \(config.baseURL)")
         #endif
         authManager = AuthManager(api: apiClient, defaults: environment.defaults, restore: !environment.isDemo)
-        storeKitManager = StoreKitManager(apiClient: apiClient, observeTransactions: !environment.isDemo)
+        // Unit tests drive StoreKit through SKTestSession; the test host must not start
+        // listening to the real App Store first (on a fresh simulator that process then
+        // never sees the test configuration's products)
+        let hostingUnitTests = ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil
+        storeKitManager = StoreKitManager(apiClient: apiClient, observeTransactions: !environment.isDemo && !hostingUnitTests)
 
         // Wire 401 auto-refresh: when server returns 401, attempt token refresh.
         // In dev bypass mode, suppress logout to avoid wiping local state.

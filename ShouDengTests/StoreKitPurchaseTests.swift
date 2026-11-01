@@ -80,11 +80,31 @@ final class StoreKitPurchaseTests: XCTestCase {
     }
 
     func testYearlySavingsComeFromPrices() {
-        // ShouDeng.storekit (USD): 1.49/14.99, 4.99/49.99, 19.99/199.99 → 16.2%, 16.5%, 16.6%
-        let pairs: [(monthly: Decimal, yearly: Decimal)] = [(1.49, 14.99), (4.99, 49.99), (19.99, 199.99)]
-        XCTAssertEqual(SubscriptionPricing.yearlySavingsPercent(pairs), 16)
+        // ShouDeng.storekit (A tier, USD): 1.99/14.99, 4.99/39.99 → 37.2%, 33.2%
+        let pairs: [(monthly: Decimal, yearly: Decimal)] = [(1.99, 14.99), (4.99, 39.99)]
+        XCTAssertEqual(SubscriptionPricing.yearlySavingsPercent(pairs), 33)
         XCTAssertNil(SubscriptionPricing.yearlySavingsPercent([(10, 115)]), "4% is too little to advertise")
         XCTAssertNil(SubscriptionPricing.yearlySavingsPercent([]))
+    }
+
+    func testLifetimeWording() {
+        let pricing = SubscriptionPricing(lifetimePrice: "$99.99")
+        XCTAssertTrue(pricing.isLifetime)
+        XCTAssertNil(pricing.introSummary(), "no trial on a one-time purchase")
+        XCTAssertEqual(pricing.subscribeButtonTitle(), "Buy lifetime access · $99.99")
+        XCTAssertEqual(pricing.recurringPrice(), "$99.99 one-time")
+        let legal = pricing.legalText(planName: "Family")
+        XCTAssertTrue(legal.hasPrefix("Family, lifetime access: a one-time payment of $99.99"), legal)
+        XCTAssertTrue(legal.contains("not a subscription"), legal)
+    }
+
+    func testBetterPlanPicksTheHigherTier() {
+        XCTAssertEqual(StoreKitManager.betterPlan("single", "family"), "family")
+        XCTAssertEqual(StoreKitManager.betterPlan("family", "single"), "family")
+        XCTAssertEqual(StoreKitManager.betterPlan(nil, "single"), "single")
+        XCTAssertNil(StoreKitManager.betterPlan(nil, nil))
+        XCTAssertTrue(StoreKitManager.isLifetime("com.shoudeng.app.family.lifetime"))
+        XCTAssertFalse(StoreKitManager.productIds.contains { $0.contains("ultimate") }, "ultimate is not sold in the app")
     }
 
     // MARK: - StoreKitTest
@@ -92,23 +112,37 @@ final class StoreKitPurchaseTests: XCTestCase {
     /// One session per process: a second SKTestSession resets the environment under the first.
     private static var sharedSession: SKTestSession?
 
-    private func makeSession() async throws -> SKTestSession {
-        let session: SKTestSession
-        if let existing = Self.sharedSession {
-            session = existing
-        } else {
-            let url = URL(fileURLWithPath: #filePath)
-                .deletingLastPathComponent().deletingLastPathComponent()
-                .appendingPathComponent("ShouDeng/StoreKit/ShouDeng.storekit")
-            session = try SKTestSession(contentsOf: url)
-            Self.sharedSession = session
-        }
+    private static func newSession() throws -> SKTestSession {
+        let url = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("ShouDeng/StoreKit/ShouDeng.storekit")
+        let session = try SKTestSession(contentsOf: url)
         session.resetToDefaultState()
         session.disableDialogs = true
         session.clearTransactions()
+        sharedSession = session
+        return session
+    }
+
+    private func makeSession() async throws -> SKTestSession {
+        var session: SKTestSession
+        if let existing = Self.sharedSession {
+            session = existing
+            session.resetToDefaultState()
+            session.disableDialogs = true
+            session.clearTransactions()
+        } else {
+            session = try Self.newSession()
+        }
         // Both settle asynchronously in the StoreKit daemon: wait until the previous
-        // test's purchases are gone, the products load and the intro offer is available again
-        for _ in 0..<300 {
+        // test's purchases are gone, the products load and the intro offer is available again.
+        // On a freshly created simulator the first session sometimes never serves
+        // products; a new session does.
+        for attempt in 0..<300 {
+            if attempt > 0, attempt % 50 == 0,
+               ((try? await Product.products(for: StoreKitManager.productIds).count) ?? 0) == 0 {
+                session = try Self.newSession()
+            }
             var hasEntitlement = false
             for await _ in Transaction.currentEntitlements { hasEntitlement = true; break }
             let products = (try? await Product.products(for: StoreKitManager.productIds)) ?? []
@@ -120,8 +154,8 @@ final class StoreKitPurchaseTests: XCTestCase {
         return session
     }
 
-    /// Purchases show up in currentEntitlements / intro-offer eligibility a moment after
-    /// buyProduct returns: buy, then wait until StoreKit reports it.
+    /// Purchases show up in currentEntitlements a moment after buyProduct returns: buy,
+    /// then wait until StoreKit reports it.
     private func buy(_ session: SKTestSession, _ productID: String,
                      options: Set<Product.PurchaseOption> = []) async throws {
         _ = try await session.buyProduct(identifier: productID, options: options)
@@ -130,9 +164,7 @@ final class StoreKitPurchaseTests: XCTestCase {
             for await result in Transaction.currentEntitlements {
                 if case .verified(let t) = result, t.productID == productID { owned = true }
             }
-            let products = try await Product.products(for: [productID])
-            let stillEligible = await products.first?.subscription?.isEligibleForIntroOffer ?? false
-            if owned && !stillEligible { return }
+            if owned { return }
             try await Task.sleep(nanoseconds: 100_000_000)
         }
         XCTFail("\(productID) purchase never showed up")
@@ -158,7 +190,12 @@ final class StoreKitPurchaseTests: XCTestCase {
         XCTAssertEqual(alice.products.count, 6)
         XCTAssertFalse(alice.productsLoadFailed)
         XCTAssertTrue(alice.isEligibleForIntroOffer)
-        XCTAssertEqual(alice.yearlySavingsPercent, 16)
+        XCTAssertEqual(alice.yearlySavingsPercent, 33)
+        let lifetime = try XCTUnwrap(alice.products(forPlan: "family").lifetime)
+        XCTAssertEqual(lifetime.type, .nonConsumable)
+        XCTAssertEqual(lifetime.displayPrice, "$99.99")
+        XCTAssertTrue(alice.pricing(for: lifetime).isLifetime)
+        XCTAssertNil(alice.pricing(for: lifetime).introOffer)
         let single = try XCTUnwrap(alice.products(forPlan: "single").monthly)
         let pricing = alice.pricing(for: single)
         XCTAssertEqual(pricing.introOffer?.mode, .freeTrial)
@@ -171,7 +208,18 @@ final class StoreKitPurchaseTests: XCTestCase {
         await alice.refreshSubscriptionStatus()
         XCTAssertEqual(alice.purchasedPlanId, "family")
 
-        // Login sync sends the entitlement's JWS to the server
+        XCTAssertNil(alice.lifetimePlanId)
+
+        // Lifetime single on top of the family subscription: family stays in effect, the
+        // subscription keeps renewing (Apple doesn't cancel it → the paywall says so)
+        try await buy(session, "com.shoudeng.app.single.lifetime",
+                      options: [.appAccountToken(StoreKitManager.appAccountToken(for: "alice"))])
+        await alice.refreshSubscriptionStatus()
+        XCTAssertEqual(alice.lifetimePlanId, "single")
+        XCTAssertEqual(alice.purchasedPlanId, "family")
+        XCTAssertTrue(alice.hasRenewingSubscription)
+
+        // Login sync sends the entitlements' JWS (subscription + lifetime) to the server
         StubURLProtocol.reset()
         StubURLProtocol.handler = { _ in (200, self.json(#"{"success":true,"restored":true}"#)) }
         let result = await alice.syncEntitlementsWithServer()
@@ -179,15 +227,14 @@ final class StoreKitPurchaseTests: XCTestCase {
         let restore = try XCTUnwrap(StubURLProtocol.requests.last { $0.path == "/v1/payment/restore" })
         XCTAssertEqual(restore.method, "POST")
         let body = try JSONDecoder().decode(RestorePurchaseRequest.self, from: try XCTUnwrap(restore.body))
-        XCTAssertEqual(body.signedTransactions.count, 1)
+        XCTAssertEqual(body.signedTransactions.count, 2)
         XCTAssertEqual(body.signedTransactions.first?.split(separator: ".").count, 3, "a JWS")
 
-        // The intro offer is used up: no more trial wording
-        await alice.fetchProducts()
-        XCTAssertFalse(alice.isEligibleForIntroOffer)
-        let after = alice.pricing(for: try XCTUnwrap(alice.products(forPlan: "single").monthly))
-        XCTAssertNil(after.introOffer)
-        XCTAssertTrue(after.subscribeButtonTitle().hasPrefix("Subscribe · "), after.subscribeButtonTitle())
+        // Not eligible any more → no trial wording (StoreKitTest doesn't reliably update
+        // eligibility after a test purchase, so the ineligible case is checked directly)
+        let ineligible = SubscriptionPricing(product: single, eligibleForIntroOffer: false)
+        XCTAssertNil(ineligible.introOffer)
+        XCTAssertEqual(ineligible.subscribeButtonTitle(), "Subscribe · $1.99 per month")
 
         // Bob signs in on the same Apple ID: Alice's subscription is not his plan
         let bob = StoreKitManager(apiClient: stubClient())

@@ -213,12 +213,14 @@ struct PostSignupWizardView: View {
     // MARK: - Step 4: Payment (Guardian only)
     //
     // Prices, periods and any free trial come from the App Store products; trial
-    // wording only when this Apple ID can still use the introductory offer.
+    // wording only when this Apple ID can still use the introductory offer. Each plan
+    // is offered monthly, yearly and lifetime (one-time purchase).
 
     @State private var selectedProductId: String?
     @State private var purchaseInProgress = false
     @State private var purchaseSuccess = false
     @State private var showPrivacyPolicy = false
+    @State private var showCancelSubscriptionHint = false
 
     private var paymentStep: some View {
         let store = coordinator.storeKitManager
@@ -313,6 +315,17 @@ struct PostSignupWizardView: View {
         .sheet(isPresented: $showPrivacyPolicy) {
             PrivacyPolicyView().environmentObject(coordinator)
         }
+        .alert(lang.localized("store.lifetime.purchased.title"), isPresented: $showCancelSubscriptionHint) {
+            Button(lang.localized("guardian.billing.manage.subscription")) {
+                Task {
+                    await store.showManageSubscriptions()
+                    advanceStep()
+                }
+            }
+            Button(lang.localized("store.later"), role: .cancel) { advanceStep() }
+        } message: {
+            Text(lang.localized("store.lifetime.cancelSubscriptionHint"))
+        }
         .task {
             if store.products.isEmpty {
                 await store.fetchProducts()
@@ -328,7 +341,9 @@ struct PostSignupWizardView: View {
         } label: {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(store.planDisplayName(for: store.planId(for: product)))
+                    Text(StoreKitManager.isLifetime(product.id)
+                         ? String(format: lang.localized("store.lifetime.planName"), store.planDisplayName(for: store.planId(for: product)))
+                         : store.planDisplayName(for: store.planId(for: product)))
                         .font(.scaled(size: 15, weight: .medium))
                         .foregroundStyle(ink)
                     Text(pricing.recurringPrice())
@@ -363,11 +378,18 @@ struct PostSignupWizardView: View {
     }
 
     private func purchaseProduct(_ product: Product) async {
+        let store = coordinator.storeKitManager
+        let hadRenewingSubscription = store.hasRenewingSubscription
         purchaseInProgress = true
-        let success = await coordinator.storeKitManager.purchase(product)
+        let success = await store.purchase(product)
         purchaseInProgress = false
         if success {
             purchaseSuccess = true
+            // Apple doesn't cancel a running subscription when lifetime access is bought
+            if StoreKitManager.isLifetime(product.id), hadRenewingSubscription || store.hasRenewingSubscription {
+                showCancelSubscriptionHint = true
+                return
+            }
             // Auto-advance after a short delay
             try? await Task.sleep(nanoseconds: 1_000_000_000)
             advanceStep()

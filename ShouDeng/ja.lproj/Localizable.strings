@@ -372,29 +372,23 @@
 "guardian.alert.triggered.at" = "発信時刻";
 "guardian.alert.unknown" = "不明";
 "guardian.billing.180days" = "180日";
-"guardian.billing.365days" = "365日";
 "guardian.billing.90days" = "90日";
 "guardian.billing.benefit.1.protected" = "家族1人を見守り";
 "guardian.billing.benefit.180d.timeline" = "180日間の見守りタイムライン";
 "guardian.billing.benefit.3.guardians" = "見守る人は最大3人";
-"guardian.billing.benefit.365d.timeline" = "365日間の見守りタイムライン";
 "guardian.billing.benefit.4.protected" = "家族を最大4人まで見守り";
 "guardian.billing.benefit.90d.timeline" = "90日間の見守りタイムライン";
 "guardian.billing.benefit.dashboard" = "家族の安全ダッシュボード";
 "guardian.billing.benefit.duty" = "当番スケジュール";
 "guardian.billing.benefit.gpx" = "位置情報のGPX書き出し";
 "guardian.billing.benefit.pdf" = "イベントレポートのPDF書き出し";
-"guardian.billing.benefit.priority.support" = "専任のアカウントマネージャー";
-"guardian.billing.benefit.sms" = "SMSによる予備通知";
 "guardian.billing.benefit.unlimited.guardians" = "見守る人の人数無制限";
-"guardian.billing.benefit.unlimited.protected" = "見守られる人の人数無制限";
-"guardian.billing.benefit.voice" = "SOS時の音声通話エスカレーション";
 "guardian.billing.comparison" = "プランの比較";
 "guardian.billing.contact.us" = "お問い合わせ";
 "guardian.billing.current" = "現在のプラン";
 "guardian.billing.current.plan" = "現在のプラン：%@";
-"guardian.billing.custom.description" = "大規模な組織や特別なご要望には、個別にお見積もりいたします。お気軽にお問い合わせください。";
-"guardian.billing.custom.plan" = "カスタムプランをご希望ですか？";
+"guardian.billing.custom.description" = "介護施設、地域サービス、学校、非営利団体向けです。アプリ内では販売していません。お問い合わせください。";
+"guardian.billing.custom.plan" = "団体・地域向けプラン";
 "guardian.billing.family" = "ファミリー";
 "guardian.billing.feature" = "機能";
 "guardian.billing.free" = "無料";
@@ -412,7 +406,6 @@
 "guardian.billing.plan.single" = "個人";
 "guardian.billing.plan.single.subtitle" = "いちばん大切な人を見守る";
 "guardian.billing.plan.ultimate" = "アルティメット";
-"guardian.billing.plan.ultimate.subtitle" = "人数無制限の見守りで、すべてをカバー";
 "guardian.billing.recommended" = "おすすめ";
 "guardian.billing.restore.none" = "以前の購入履歴が見つかりません";
 "guardian.billing.restore.purchase" = "購入を復元";
@@ -423,7 +416,6 @@
 "guardian.billing.row.gpx" = "GPX書き出し";
 "guardian.billing.row.guardians" = "見守る人";
 "guardian.billing.row.pdf" = "PDF書き出し";
-"guardian.billing.row.priority.support" = "優先サポート";
 "guardian.billing.row.protected" = "見守られる人";
 "guardian.billing.row.sms" = "SMSによる代替通知";
 "guardian.billing.row.sos" = "SOSアラート";
@@ -434,7 +426,6 @@
 "guardian.billing.subscribe.success.message" = "ご登録ありがとうございます。機能のロックが解除されました。";
 "guardian.billing.subscribe.success.title" = "サブスクリプション登録完了";
 "guardian.billing.title" = "プランとお支払い";
-"guardian.billing.ultimate" = "アルティメット";
 "guardian.billing.valid.until" = "%@まで有効";
 "guardian.billing.via.appstore" = "App Storeで登録";
 "guardian.billing.yearly" = "年額";
@@ -1762,6 +1753,18 @@
 "settings.tips.resetDone" = "次回アプリを開いたときにヒントが再表示されます。";
 
 /* Subscriptions (StoreKit paywall) */
+"store.price.oneTime" = "買い切り %@";
+"store.cta.buyLifetime" = "買い切りで購入 · %@";
+"store.legal.lifetime" = "%1$@ 買い切り：%2$@の一回払いで、購入確定時にApple IDに請求されます。サブスクリプションではないため、自動更新も解約も不要です。別のデバイスでは「購入を復元」をご利用ください。";
+"store.cycle.lifetime" = "買い切り";
+"store.period.oneTime" = " 買い切り";
+"store.lifetime.planName" = "%@ · 買い切り";
+"store.lifetime.current" = "買い切り済み：%@";
+"store.lifetime.purchased.title" = "買い切りプランを有効にしました";
+"store.lifetime.cancelSubscriptionHint" = "現在のサブスクリプションはAppleによって自動では解約されません。再度請求されないよう、「サブスクリプションを管理」で解約してください。";
+"store.lifetime.subscriptionNote" = "現在のサブスクリプションは自動更新されます。買い切りを購入しても解約されないため、購入後に「サブスクリプションを管理」で解約してください。";
+"store.later" = "あとで";
+"guardian.billing.safetyFloor" = "SOS通知とSMS・電話による連絡は全プラン無料です（適正利用：見守られる方1人あたり月50通のSMSと30分の通話）。";
 "store.loading.plans" = "プランを読み込み中…";
 "store.retry" = "再試行";
 "store.save.percent" = "%d%%お得";

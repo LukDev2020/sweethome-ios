@@ -1,6 +1,7 @@
 import StoreKit
 import Foundation
 import CryptoKit
+import UIKit
 
 // MARK: - StoreKit 2 Manager
 //
@@ -11,7 +12,10 @@ import CryptoKit
 //   - Receipt forwarding to backend for server-side validation
 //   - Purchase restoration, and syncing current entitlements to the server at login
 //
-// Plans: single (单人关注版), family (家庭版), ultimate (企业版), each monthly/yearly.
+// Plans sold in the app (docs/pricing/PRICING.md): single (单人关注版) and family (家庭版),
+// each monthly / yearly (auto-renewing, one subscription group) or lifetime (one-time,
+// non-consumable). ultimate (机构 / 社区版) is contact-us only; its products still map to a
+// plan so an existing purchase resolves. SMS fallback and voice escalation are free.
 // Plan IDs and product IDs must match App Store Connect and PLANS in
 // shoudeng-backend/functions/src/services/payment.ts.
 
@@ -20,8 +24,11 @@ final class StoreKitManager: ObservableObject {
     // MARK: - Published State
 
     @MainActor @Published var products: [Product] = []
+    /// Plan in effect: the better of an active subscription and a lifetime purchase
     @MainActor @Published var purchasedPlanId: String?
     @MainActor @Published var subscriptionStatus: SubscriptionInfo?
+    /// Plan of a lifetime (one-time) purchase on this account, if any
+    @MainActor @Published var lifetimePlanId: String?
     /// A purchase / restore is in progress
     @MainActor @Published var isLoading = false
     @MainActor @Published var isLoadingProducts = false
@@ -49,23 +56,42 @@ final class StoreKitManager: ObservableObject {
 
     // MARK: - Product IDs (must match App Store Connect)
 
+    /// Products offered on the paywall
     static let productIds: Set<String> = [
         "com.shoudeng.app.single.monthly",
         "com.shoudeng.app.single.yearly",
+        "com.shoudeng.app.single.lifetime",
         "com.shoudeng.app.family.monthly",
         "com.shoudeng.app.family.yearly",
-        "com.shoudeng.app.ultimate.monthly",
-        "com.shoudeng.app.ultimate.yearly",
+        "com.shoudeng.app.family.lifetime",
     ]
 
+    /// One-time (non-consumable) purchases: no expiry, not in the subscription group
+    static let lifetimeProductIds: Set<String> = [
+        "com.shoudeng.app.single.lifetime",
+        "com.shoudeng.app.family.lifetime",
+    ]
+
+    /// Every product that grants a plan, including ones no longer sold (ultimate)
     private static let productToPlan: [String: String] = [
         "com.shoudeng.app.single.monthly": "single",
         "com.shoudeng.app.single.yearly": "single",
+        "com.shoudeng.app.single.lifetime": "single",
         "com.shoudeng.app.family.monthly": "family",
         "com.shoudeng.app.family.yearly": "family",
+        "com.shoudeng.app.family.lifetime": "family",
         "com.shoudeng.app.ultimate.monthly": "ultimate",
         "com.shoudeng.app.ultimate.yearly": "ultimate",
     ]
+
+    private static let planRank: [String: Int] = ["free": 0, "single": 1, "family": 2, "ultimate": 3]
+
+    /// The better of two plans (nil = none)
+    static func betterPlan(_ a: String?, _ b: String?) -> String? {
+        guard let a else { return b }
+        guard let b else { return a }
+        return (planRank[b] ?? 0) > (planRank[a] ?? 0) ? b : a
+    }
 
     // MARK: - Dependencies
 
@@ -117,6 +143,7 @@ final class StoreKitManager: ObservableObject {
         foreignOriginalIds = []
         if userId == nil {
             purchasedPlanId = nil
+            lifetimePlanId = nil
             subscriptionStatus = nil
         }
     }
@@ -150,7 +177,7 @@ final class StoreKitManager: ObservableObject {
             let storeProducts = try await Product.products(for: Self.productIds)
             products = storeProducts.sorted { $0.price < $1.price }
             productsLoadFailed = storeProducts.isEmpty
-            if let subscription = storeProducts.first?.subscription {
+            if let subscription = storeProducts.first(where: { $0.subscription != nil })?.subscription {
                 isEligibleForIntroOffer = await subscription.isEligibleForIntroOffer
             }
         } catch {
@@ -169,10 +196,43 @@ final class StoreKitManager: ObservableObject {
     // MARK: - Product Accessors
 
     @MainActor
-    func products(forPlan planId: String) -> (monthly: Product?, yearly: Product?) {
+    func products(forPlan planId: String) -> (monthly: Product?, yearly: Product?, lifetime: Product?) {
         let m = products.first { $0.id == "com.shoudeng.app.\(planId).monthly" }
         let y = products.first { $0.id == "com.shoudeng.app.\(planId).yearly" }
-        return (m, y)
+        let l = products.first { $0.id == "com.shoudeng.app.\(planId).lifetime" }
+        return (m, y, l)
+    }
+
+    static func isLifetime(_ productId: String) -> Bool { lifetimeProductIds.contains(productId) }
+
+    /// An auto-renewing subscription that will charge again — Apple doesn't cancel it
+    /// when someone buys lifetime access.
+    @MainActor
+    var hasRenewingSubscription: Bool {
+        guard let status = subscriptionStatus else { return false }
+        return status.isActive && status.willAutoRenew
+    }
+
+    /// Apple's Manage Subscriptions sheet (cancel the subscription after buying lifetime).
+    @MainActor
+    func showManageSubscriptions() async {
+        let scene = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first { $0.activationState == .foregroundActive }
+        if let scene {
+            do {
+                try await AppStore.showManageSubscriptions(in: scene)
+                await refreshSubscriptionStatus()
+                return
+            } catch {
+                #if DEBUG
+                print("[StoreKit] Manage subscriptions sheet failed: \(error)")
+                #endif
+            }
+        }
+        if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+            await UIApplication.shared.open(url)
+        }
     }
 
     /// Price, period and (when this Apple ID is eligible) introductory offer of a product.
@@ -185,7 +245,7 @@ final class StoreKitManager: ObservableObject {
     /// so "Save N%" is true for every plan). nil until products load or when below 5%.
     @MainActor
     var yearlySavingsPercent: Int? {
-        let pairs = ["single", "family", "ultimate"].compactMap { plan -> (monthly: Decimal, yearly: Decimal)? in
+        let pairs = ["single", "family"].compactMap { plan -> (monthly: Decimal, yearly: Decimal)? in
             let p = products(forPlan: plan)
             guard let m = p.monthly?.price, let y = p.yearly?.price else { return nil }
             return (m, y)
@@ -285,7 +345,7 @@ final class StoreKitManager: ObservableObject {
         var entitlements: [(jws: String, originalID: UInt64)] = []
         for await result in Transaction.currentEntitlements {
             guard case .verified(let transaction) = result,
-                  transaction.productType == .autoRenewable,
+                  transaction.productType == .autoRenewable || Self.isLifetime(transaction.productID),
                   transaction.revocationDate == nil else { continue }
             entitlements.append((result.jwsRepresentation, transaction.originalID))
         }
@@ -322,15 +382,21 @@ final class StoreKitManager: ObservableObject {
         guard usesStoreKit else { return }
         var latestTransaction: Transaction?
         var latestExpiry: Date?
+        var lifetime: String?
 
         for await result in Transaction.currentEntitlements {
             guard let transaction = try? checkVerified(result) else { continue }
 
             // Refunded / revoked / superseded transactions, and other accounts' purchases, unlock nothing
-            guard transaction.productType == .autoRenewable,
-                  transaction.revocationDate == nil,
+            guard transaction.revocationDate == nil,
                   !transaction.isUpgraded,
                   belongsToCurrentAccount(transaction) else { continue }
+
+            if Self.isLifetime(transaction.productID) {
+                lifetime = Self.betterPlan(lifetime, Self.productToPlan[transaction.productID])
+                continue
+            }
+            guard transaction.productType == .autoRenewable else { continue }
 
             let expiry = transaction.expirationDate ?? .distantFuture
             if latestExpiry == nil || expiry > latestExpiry! {
@@ -339,6 +405,7 @@ final class StoreKitManager: ObservableObject {
             }
         }
 
+        lifetimePlanId = lifetime
         if let tx = latestTransaction {
             let planId = Self.productToPlan[tx.productID] ?? "free"
             let isActive = latestExpiry.map { $0 > Date() } ?? false
@@ -348,7 +415,7 @@ final class StoreKitManager: ObservableObject {
                 willAutoRenew = renewal.willAutoRenew
             }
 
-            purchasedPlanId = isActive ? planId : nil
+            purchasedPlanId = Self.betterPlan(isActive ? planId : nil, lifetime)
 
             subscriptionStatus = SubscriptionInfo(
                 planId: planId,
@@ -358,7 +425,7 @@ final class StoreKitManager: ObservableObject {
                 willAutoRenew: willAutoRenew
             )
         } else {
-            purchasedPlanId = nil
+            purchasedPlanId = lifetime
             subscriptionStatus = nil
         }
     }
@@ -391,7 +458,7 @@ final class StoreKitManager: ObservableObject {
             && (transaction.expirationDate ?? .distantFuture) > Date()
 
         if isActive {
-            purchasedPlanId = planId
+            purchasedPlanId = Self.betterPlan(purchasedPlanId, planId)
         }
 
         // Refunds too: the server records them (and Apple's notification confirms it)
@@ -423,14 +490,16 @@ final class StoreKitManager: ObservableObject {
 
     // MARK: - Feature Gating
 
+    /// Every plan, free included: SOS with SMS fallback and voice escalation (fair use).
+    static let safetyFloor: Set<String> = ["basic_sos", "checkin", "sms_fallback", "voice_call_escalation"]
+
     /// Features available per plan tier. Must match backend PLANS definition.
     private static let planFeatures: [String: Set<String>] = [
-        "free": ["basic_sos", "checkin"],
-        "single": ["basic_sos", "checkin", "duty_schedule", "voice_call_escalation", "export_pdf"],
-        "family": ["basic_sos", "checkin", "duty_schedule", "voice_call_escalation", "export_pdf",
-                    "sms_fallback", "family_dashboard", "location_history_export"],
-        "ultimate": ["basic_sos", "checkin", "duty_schedule", "voice_call_escalation", "export_pdf",
-                      "sms_fallback", "family_dashboard", "location_history_export", "priority_support"],
+        "free": safetyFloor,
+        "single": safetyFloor.union(["duty_schedule", "export_pdf"]),
+        "family": safetyFloor.union(["duty_schedule", "export_pdf", "family_dashboard", "location_history_export"]),
+        "ultimate": safetyFloor.union(["duty_schedule", "export_pdf", "family_dashboard", "location_history_export",
+                                       "priority_support"]),
     ]
 
     private static let planLimits: [String: (maxGuardians: Int, maxProtected: Int)] = [
@@ -547,18 +616,30 @@ struct SubscriptionPricing: Equatable {
     let period: Period
     /// nil when there is none or the Apple ID already used one in this group
     let introOffer: IntroOffer?
+    /// One-time purchase (lifetime access): no period, no renewal, no intro offer
+    let isLifetime: Bool
 
     init(displayPrice: String, period: Period, introOffer: IntroOffer?) {
         self.displayPrice = displayPrice
         self.period = period
         self.introOffer = introOffer
+        self.isLifetime = false
+    }
+
+    /// A one-time (lifetime) purchase
+    init(lifetimePrice: String) {
+        self.displayPrice = lifetimePrice
+        self.period = Period(value: 1, unit: .year)
+        self.introOffer = nil
+        self.isLifetime = true
     }
 
     init(product: Product, eligibleForIntroOffer: Bool) {
         let subscription = product.subscription
+        self.isLifetime = subscription == nil
         self.displayPrice = product.displayPrice
         self.period = subscription.map { Self.period($0.subscriptionPeriod) } ?? Period(value: 1, unit: .month)
-        if eligibleForIntroOffer, let offer = subscription?.introductoryOffer {
+        if !isLifetime, eligibleForIntroOffer, let offer = subscription?.introductoryOffer {
             let mode: OfferMode
             if offer.paymentMode == .freeTrial { mode = .freeTrial }
             else if offer.paymentMode == .payUpFront { mode = .payUpFront }
@@ -615,8 +696,10 @@ struct SubscriptionPricing: Equatable {
         }
     }
 
+    /// "$1.49 per month", or "$39.99 one-time" for lifetime
     func recurringPrice(lang: LanguageManager = .shared) -> String {
-        Self.recurring(displayPrice, every: period, lang: lang)
+        if isLifetime { return String(format: lang.localized("store.price.oneTime"), displayPrice) }
+        return Self.recurring(displayPrice, every: period, lang: lang)
     }
 
     /// "Free for 1 week" / "$0.99 per month for 3 months" / "$2.99 for 3 months"
@@ -636,6 +719,7 @@ struct SubscriptionPricing: Equatable {
 
     /// Purchase button: "Start 1-week free trial" only when eligible, else "Subscribe · $1.49 per month".
     func subscribeButtonTitle(lang: LanguageManager = .shared) -> String {
+        if isLifetime { return String(format: lang.localized("store.cta.buyLifetime"), displayPrice) }
         if let offer = introOffer, offer.mode == .freeTrial {
             return String(format: lang.localized("store.cta.freeTrial"),
                           Self.duration(offer.period, times: offer.periodCount, lang: lang))
@@ -648,6 +732,7 @@ struct SubscriptionPricing: Equatable {
 
     /// Auto-renewal disclosure for this product (App Store guideline 3.1.2).
     func legalText(planName: String, lang: LanguageManager = .shared) -> String {
+        if isLifetime { return String(format: lang.localized("store.legal.lifetime"), planName, displayPrice) }
         let recurring = recurringPrice(lang: lang)
         guard let offer = introOffer, let summary = introSummary(lang: lang) else {
             return String(format: lang.localized("store.legal.renewal"), planName, recurring)
