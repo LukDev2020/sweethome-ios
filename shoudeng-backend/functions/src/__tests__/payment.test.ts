@@ -93,7 +93,7 @@ jest.mock("firebase-admin", () => {
   };
 });
 
-// Mock BigQuery consent audit (used by upsertSubscription)
+// Mock BigQuery consent audit (used by applyTransaction)
 jest.mock("../services/bigquery", () => ({
   insertConsentAudit: jest.fn().mockResolvedValue(undefined),
 }));
@@ -147,8 +147,9 @@ describe("Payment Service — PLANS", () => {
   });
 
   test("all paid plans have appleProductIds", () => {
-    expect(PLANS.single.appleProductIds).toHaveLength(2);
-    expect(PLANS.family.appleProductIds).toHaveLength(2);
+    // monthly, yearly, lifetime (one-time); ultimate is no longer sold (no lifetime)
+    expect(PLANS.single.appleProductIds).toHaveLength(3);
+    expect(PLANS.family.appleProductIds).toHaveLength(3);
     expect(PLANS.ultimate.appleProductIds).toHaveLength(2);
   });
 
@@ -320,7 +321,7 @@ describe("Payment — product ID consistency", () => {
       ...PLANS.ultimate.appleProductIds,
     ];
     for (const pid of allProductIds) {
-      expect(pid).toMatch(/^com\.shoudeng\.app\.(single|family|ultimate)\.(monthly|yearly)$/);
+      expect(pid).toMatch(/^com\.shoudeng\.app\.(single|family|ultimate)\.(monthly|yearly|lifetime)$/);
     }
   });
 

@@ -73,6 +73,7 @@ import request from "supertest";
 import { resetFakeAdmin, seed, readDoc, ts, tokenFor } from "./helpers/fakeAdmin";
 import {
   appAccountTokenFor, getSubscription, hasPaidAccess, resetAppleVerifiersForTests, verifyAppleReceipt,
+  mapProductToPlan, isLifetimeProduct,
 } from "../services/payment";
 import { requireFeature } from "../middleware/subscription";
 import { paidRetentionByUser } from "../services/accountData";
@@ -563,5 +564,106 @@ describe("App Store Server Notifications", () => {
 
   test("missing signedPayload → 400", async () => {
     expect((await request(app).post("/v1/payment/apple-webhook").send({})).status).toBe(400);
+  });
+});
+
+describe("lifetime (one-time) purchases", () => {
+  const lifetimeTx = (uid: string, plan: "single" | "family", over: Record<string, unknown> = {}) => {
+    const t: Record<string, unknown> = {
+      ...tx({ appAccountToken: appAccountTokenFor(uid), originalTransactionId: `LT-${plan}-${uid}` }),
+      productId: `com.shoudeng.app.${plan}.lifetime`,
+      ...over,
+    };
+    delete t.expiresDate; // non-consumables never expire
+    return t;
+  };
+  const subTx = (over: Record<string, unknown> = {}) => tx({ appAccountToken: appAccountTokenFor("alice"), ...over });
+
+  test("map to their plans", () => {
+    expect(mapProductToPlan("com.shoudeng.app.single.lifetime")).toBe("single");
+    expect(mapProductToPlan("com.shoudeng.app.family.lifetime")).toBe("family");
+    expect(isLifetimeProduct("com.shoudeng.app.family.lifetime")).toBe(true);
+    expect(isLifetimeProduct("com.shoudeng.app.family.yearly")).toBe(false);
+  });
+
+  test("a lifetime purchase is active with no end date", async () => {
+    const res = await as("alice").post("/v1/payment/verify-receipt", { signedTransaction: jws(lifetimeTx("alice", "single")) });
+    expect(res.status).toBe(200);
+    expect(res.body.subscription).toMatchObject({ planId: "single", status: "active", expiresAt: null, lifetime: true });
+    expect(sub("alice")?.lifetime).toMatchObject({ planId: "single", revokedAt: null });
+    expect(readDoc("apple_subscription_owners/LT-single-alice")?.uid).toBe("alice");
+  });
+
+  test("lifetime and subscription side by side: the better plan wins, lifetime outlasts the subscription", async () => {
+    await as("alice").post("/v1/payment/verify-receipt", { signedTransaction: jws(lifetimeTx("alice", "single")) });
+    await as("alice").post("/v1/payment/verify-receipt", { signedTransaction: jws(subTx()) }); // family monthly
+    expect((await getSubscription("alice")).planId).toBe("family");
+    await webhook(notification("EXPIRED", subTx()));
+    const s = await getSubscription("alice");
+    expect(s).toMatchObject({ planId: "single", lifetime: true, expiresAt: null });
+  });
+
+  test("a family lifetime beats a single subscription", async () => {
+    await as("alice").post("/v1/payment/verify-receipt", {
+      signedTransaction: jws(subTx({ productId: "com.shoudeng.app.single.monthly" })),
+    });
+    await as("alice").post("/v1/payment/verify-receipt", { signedTransaction: jws(lifetimeTx("alice", "family")) });
+    expect(await getSubscription("alice")).toMatchObject({ planId: "family", lifetime: true });
+    expect(sub("alice")?.planId).toBe("single"); // the subscription record is untouched
+  });
+
+  test.each(["REFUND", "REVOKE"])("%s of a lifetime purchase → free; REFUND_REVERSED restores it", async (type) => {
+    await as("alice").post("/v1/payment/verify-receipt", { signedTransaction: jws(lifetimeTx("alice", "family")) });
+    await webhook(notification(type, lifetimeTx("alice", "family", { revocationDate: Date.now() })));
+    expect((await getSubscription("alice")).planId).toBe("free");
+    expect(sub("alice")?.lifetime.revokedAt).toBeTruthy();
+    await webhook(notification("REFUND_REVERSED", lifetimeTx("alice", "family")));
+    expect((await getSubscription("alice")).planId).toBe("family");
+  });
+
+  test("ONE_TIME_CHARGE before the app reports it: linked by appAccountToken", async () => {
+    const res = await webhook(notification("ONE_TIME_CHARGE", lifetimeTx("alice", "single")));
+    expect(res.body.outcome).toBe("applied");
+    expect(await getSubscription("alice")).toMatchObject({ planId: "single", lifetime: true });
+  });
+
+  test("restore includes lifetime purchases (they have no expiresDate)", async () => {
+    const res = await as("alice").post("/v1/payment/restore", { signedTransactions: [jws(lifetimeTx("alice", "family"))] });
+    expect(res.status).toBe(200);
+    expect(res.body.restored).toBe(true);
+    expect(res.body.subscription).toMatchObject({ planId: "family", lifetime: true });
+  });
+
+  test("restore: lifetime + subscription together; refunded lifetime skipped; someone else's refused", async () => {
+    const both = await as("alice").post("/v1/payment/restore", {
+      signedTransactions: [jws(lifetimeTx("alice", "single")), jws(subTx())],
+    });
+    expect(both.body.subscription.planId).toBe("family");
+    expect(sub("alice")?.lifetime.planId).toBe("single");
+
+    const refunded = await as("bob").post("/v1/payment/restore", {
+      signedTransactions: [jws(lifetimeTx("bob", "family", { revocationDate: Date.now() }))],
+    });
+    expect(refunded.body.restored).toBe(false);
+
+    const stolen = await as("bob").post("/v1/payment/restore", { signedTransactions: [jws(lifetimeTx("alice", "family"))] });
+    expect(stolen.status).toBe(409);
+  });
+
+  test("paid retention counts lifetime-only accounts, not refunded ones", async () => {
+    await as("alice").post("/v1/payment/verify-receipt", { signedTransaction: jws(lifetimeTx("alice", "family")) });
+    await as("bob").post("/v1/payment/verify-receipt", {
+      signedTransaction: jws(lifetimeTx("bob", "single", { revocationDate: Date.now() })),
+    });
+    const paid = await paidRetentionByUser();
+    expect(paid.get("alice")?.heartbeat).toBe(180);
+    expect(paid.has("bob")).toBe(false);
+  });
+
+  test("the organisation plan (ultimate) still resolves but is not sold in the app", async () => {
+    expect(mapProductToPlan("com.shoudeng.app.ultimate.yearly")).toBe("ultimate");
+    const plans = await request(app).get("/v1/payment/plans");
+    expect(plans.body.find((p: { id: string }) => p.id === "ultimate").soldInApp).toBe(false);
+    expect(plans.body.find((p: { id: string }) => p.id === "family").soldInApp).toBe(true);
   });
 });

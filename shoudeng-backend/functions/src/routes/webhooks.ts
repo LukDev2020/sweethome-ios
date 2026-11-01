@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
 import { verifyTwilioSignature } from "../services/twilio";
+import { settleVoiceCall } from "../services/fairUse";
 
 const router = Router();
 const db = admin.firestore();
@@ -48,6 +49,8 @@ router.post("/twilio/call-status", async (req: Request, res: Response) => {
       return;
     }
     await callRef.update({ status: CallStatus, duration: CallDuration ?? null, to: To ?? null, from: From ?? null });
+    // Fair use: replace the minute reserved for this call with the billed minutes
+    await settleVoiceCall(String(CallSid), String(CallStatus), Number(CallDuration ?? 0));
 
     // Mirror onto the SOS escalation log entry for this call
     const sosRef = db.collection("sos_events").doc(call.data()!.sosEventId);

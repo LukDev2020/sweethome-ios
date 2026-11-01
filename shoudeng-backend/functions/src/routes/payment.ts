@@ -9,6 +9,7 @@ import {
   getSubscription,
   handleAppleNotification,
   mapProductToPlan,
+  isLifetimeProduct,
   AppleVerificationError,
   VerifiedReceipt,
   PLANS,
@@ -26,6 +27,7 @@ router.get("/plans", (_req: Request, res: Response) => {
     name: p.name,
     prices: p.prices,
     appleProductIds: "appleProductIds" in p ? p.appleProductIds : [],
+    soldInApp: p.id !== "ultimate", // organisation / community plan: contact us
     maxGuardians: p.maxGuardians,
     maxProtected: p.maxProtected,
     features: p.features,
@@ -139,31 +141,38 @@ router.post(
       await ensureAppAccountToken(uid);
       const now = new Date();
       let best: VerifiedReceipt | null = null;
+      const lifetimes: VerifiedReceipt[] = [];
       let ownedElsewhere = 0;
 
       for (const jws of signedTransactions) {
         if (typeof jws !== "string") continue;
         const result = await verifyAppleReceipt(jws);
         if (!result.valid || !result.transaction || !mapProductToPlan(result.productId)) continue;
-        // Refunded/revoked or lapsed transactions don't restore anything
-        if (result.revocationDate || !result.expiresDate || result.expiresDate <= now) continue;
+        // Refunded/revoked transactions and lapsed subscriptions don't restore anything;
+        // lifetime purchases have no expiry
+        if (result.revocationDate) continue;
+        const lifetime = isLifetimeProduct(result.productId);
+        if (!lifetime && (!result.expiresDate || result.expiresDate <= now)) continue;
         const claim = await claimSubscription(uid, result.transaction);
         if (!claim.ok) {
           ownedElsewhere++;
           continue;
         }
-        if (!best || result.expiresDate > (best.expiresDate as Date)) best = result;
+        if (lifetime) lifetimes.push(result);
+        else if (!best || result.expiresDate! > (best.expiresDate as Date)) best = result;
       }
 
-      if (best?.transaction) {
-        await applyTransaction({ userId: uid, transaction: best.transaction, environment: best.environment });
-      } else if (ownedElsewhere > 0) {
+      for (const r of [...lifetimes, ...(best ? [best] : [])]) {
+        await applyTransaction({ userId: uid, transaction: r.transaction!, environment: r.environment });
+      }
+      const restored = !!best || lifetimes.length > 0;
+      if (!restored && ownedElsewhere > 0) {
         res.status(409).json(OWNED_ELSEWHERE);
         return;
       }
 
       const sub = await getSubscription(uid);
-      res.json({ success: true, subscription: sub, restored: !!best });
+      res.json({ success: true, subscription: sub, restored });
     } catch (error) {
       console.error("[Payment] restore error:", error);
       res.status(500).json({ error: "Failed to restore purchases" });

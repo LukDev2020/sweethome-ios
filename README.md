@@ -136,6 +136,16 @@ Sandbox: `https://us-central1-sweethome-b4e82.cloudfunctions.net/api/v1/payment/
 Each purchase carries an `appAccountToken` (UUID v5 of the user id); one App Store subscription
 unlocks exactly one account (`apple_subscription_owners/{originalTransactionId}`).
 
+Products (docs/pricing/PRICING.md): single / family × monthly, yearly (auto-renewing, one
+subscription group) and lifetime (`com.shoudeng.app.{single,family}.lifetime`, non-consumable,
+stored as `subscriptions/{uid}.lifetime`; the better of subscription and lifetime applies).
+`ultimate` products still resolve but are no longer sold in the app (organisation plan, contact us).
+
+SOS SMS fallback and voice escalation are on every plan, free included, within fair use: 50 SMS
+and 30 call minutes per protected person per calendar month (UTC, `sos_usage/{uid}_{YYYY-MM}`,
+`services/fairUse.ts`). Beyond that, escalation continues by push only; the SOS is never blocked
+and texts to emergency contacts (when there are no guardians) are always sent.
+
 Emulators run on:
 - Functions: `localhost:5001`
 - Firestore: `localhost:8080`

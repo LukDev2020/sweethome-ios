@@ -278,7 +278,11 @@ async function ownerOfSubscription(otid: string): Promise<string | null> {
 
 // Subscription plan definitions — single source of truth for plan IDs.
 // Product IDs must match App Store Connect and StoreKitManager.productIds (iOS).
-// Prices are reference values only; App Store Connect pricing is authoritative.
+// Prices are reference values only (docs/pricing/PRICING.md, A tier USD / B tier CNY);
+// App Store Connect pricing is authoritative.
+// SMS fallback and voice escalation are in every plan, within fair use (services/fairUse.ts).
+const SAFETY_FLOOR = ["basic_sos", "checkin", "sms_fallback", "voice_call_escalation"] as const;
+
 export const PLANS = {
   free: {
     id: "free",
@@ -287,44 +291,48 @@ export const PLANS = {
     ttlDays: { heartbeat: 7, location: 7, checkin: 30 },
     maxGuardians: 1,
     maxProtected: 1,
-    features: ["basic_sos", "1_guardian", "24h_timeline", "checkin"],
+    features: [...SAFETY_FLOOR, "1_guardian", "24h_timeline"],
   },
   single: {
     id: "single",
     name: "单人关注版",
-    prices: { monthly: { CNY: 10, USD: 1.49 }, yearly: { CNY: 96, USD: 14.99 } },
+    prices: {
+      monthly: { CNY: 8, USD: 1.99 }, yearly: { CNY: 68, USD: 14.99 }, lifetime: { CNY: 168, USD: 39.99 },
+    },
     appleProductIds: [
       "com.shoudeng.app.single.monthly",
       "com.shoudeng.app.single.yearly",
+      "com.shoudeng.app.single.lifetime",
     ],
     ttlDays: { heartbeat: 90, location: 90, checkin: -1 },
     maxGuardians: 3,
     maxProtected: 1,
-    features: [
-      "basic_sos", "checkin", "3_guardians", "90d_timeline",
-      "duty_schedule", "voice_call_escalation", "export_pdf",
-    ],
+    features: [...SAFETY_FLOOR, "3_guardians", "90d_timeline", "duty_schedule", "export_pdf"],
   },
   family: {
     id: "family",
     name: "家庭版",
-    prices: { monthly: { CNY: 30, USD: 4.99 }, yearly: { CNY: 288, USD: 49.99 } },
+    prices: {
+      monthly: { CNY: 18, USD: 4.99 }, yearly: { CNY: 168, USD: 39.99 }, lifetime: { CNY: 398, USD: 99.99 },
+    },
     appleProductIds: [
       "com.shoudeng.app.family.monthly",
       "com.shoudeng.app.family.yearly",
+      "com.shoudeng.app.family.lifetime",
     ],
     ttlDays: { heartbeat: 180, location: 180, checkin: -1 },
     maxGuardians: -1,
     maxProtected: 4,
     features: [
-      "basic_sos", "checkin", "unlimited_guardians", "180d_timeline",
-      "duty_schedule", "voice_call_escalation", "sms_fallback",
+      ...SAFETY_FLOOR, "unlimited_guardians", "180d_timeline", "duty_schedule",
       "export_pdf", "family_dashboard", "location_history_export",
     ],
   },
+  // No longer sold in the app (organisation / community plan, contact us). Kept so an
+  // existing App Store purchase of these products still resolves.
   ultimate: {
     id: "ultimate",
-    name: "企业版",
+    name: "机构 / 社区版",
     prices: { monthly: { CNY: 128, USD: 19.99 }, yearly: { CNY: 1228, USD: 199.99 } },
     appleProductIds: [
       "com.shoudeng.app.ultimate.monthly",
@@ -334,15 +342,27 @@ export const PLANS = {
     maxGuardians: -1,
     maxProtected: -1,
     features: [
-      "basic_sos", "checkin", "unlimited_guardians", "unlimited_protected",
-      "365d_timeline", "duty_schedule", "voice_call_escalation", "sms_fallback",
-      "export_pdf", "family_dashboard", "location_history_export",
-      "priority_support",
+      ...SAFETY_FLOOR, "unlimited_guardians", "unlimited_protected",
+      "365d_timeline", "duty_schedule", "export_pdf", "family_dashboard",
+      "location_history_export", "priority_support",
     ],
   },
 } as const;
 
 export type PlanId = keyof typeof PLANS;
+
+/** One-time (non-consumable) purchases: lifetime access, no expiry, not in the subscription group. */
+export const LIFETIME_PRODUCT_IDS: readonly string[] = [
+  "com.shoudeng.app.single.lifetime",
+  "com.shoudeng.app.family.lifetime",
+];
+
+export function isLifetimeProduct(productId: string | undefined): boolean {
+  return !!productId && LIFETIME_PRODUCT_IDS.includes(productId);
+}
+
+/** Higher = more. Used to pick the better of a subscription and a lifetime purchase. */
+const PLAN_RANK: Record<PlanId, number> = { free: 0, single: 1, family: 2, ultimate: 3 };
 
 /**
  * Map an App Store product ID to its plan. Returns null for unknown products.
@@ -371,6 +391,8 @@ export interface SubscriptionDoc {
   status: SubscriptionStatus;
   currentPeriodStart: FirebaseFirestore.Timestamp;
   currentPeriodEnd: FirebaseFirestore.Timestamp;
+  /** One-time lifetime purchase, kept apart from the subscription (a user can have both) */
+  lifetime?: LifetimePurchase | null;
   gracePeriodEnd?: FirebaseFirestore.Timestamp | null;
   /** Plan of a pending downgrade (takes effect at the next renewal) */
   pendingPlanId?: PlanId | null;
@@ -380,6 +402,16 @@ export interface SubscriptionDoc {
   autoRenew: boolean;
   createdAt: FirebaseFirestore.Timestamp;
   updatedAt: FirebaseFirestore.Timestamp;
+}
+
+export interface LifetimePurchase {
+  planId: PlanId;
+  appleOriginalTransactionId: string | null;
+  appleProductId: string;
+  environment: string | null;
+  purchasedAt: FirebaseFirestore.Timestamp | null;
+  /** Refunded / revoked: no longer grants anything */
+  revokedAt: FirebaseFirestore.Timestamp | null;
 }
 
 function toDate(v: unknown): Date | null {
@@ -409,6 +441,26 @@ export function hasPaidAccess(
     default:
       return false;
   }
+}
+
+/**
+ * Plan a subscription doc grants right now: the better of the subscription (if it
+ * grants access) and a lifetime purchase (unless refunded/revoked). null = free.
+ */
+export function paidPlanOf(
+  data: Partial<SubscriptionDoc> | FirebaseFirestore.DocumentData | undefined,
+  now: Date = new Date(),
+): { planId: PlanId; source: "subscription" | "lifetime" } | null {
+  if (!data) return null;
+  const candidates: { planId: PlanId; source: "subscription" | "lifetime" }[] = [];
+  if (hasPaidAccess(data, now)) candidates.push({ planId: data.planId as PlanId, source: "subscription" });
+  const lifetime = data.lifetime as LifetimePurchase | null | undefined;
+  if (lifetime && !lifetime.revokedAt && lifetime.planId in PLANS && lifetime.planId !== "free") {
+    candidates.push({ planId: lifetime.planId, source: "lifetime" });
+  }
+  candidates.sort((a, b) => PLAN_RANK[b.planId] - PLAN_RANK[a.planId] ||
+    (a.source === "lifetime" ? -1 : 1));
+  return candidates[0] ?? null;
 }
 
 export interface VerifiedReceipt {
@@ -473,6 +525,27 @@ export async function applyTransaction(params: {
   const ref = db.collection("subscriptions").doc(userId);
   const existingSnap = await ref.get();
   const existing = existingSnap.exists ? (existingSnap.data() as SubscriptionDoc) : null;
+
+  if (isLifetimeProduct(tx.productId)) {
+    // One-time purchase: no expiry; stored next to (never over) the subscription
+    const now = admin.firestore.Timestamp.now();
+    const lifetime: LifetimePurchase = {
+      planId,
+      appleOriginalTransactionId: tx.originalTransactionId ?? null,
+      appleProductId: tx.productId!,
+      environment: params.environment ?? tx.environment ?? null,
+      purchasedAt: tx.purchaseDate ? admin.firestore.Timestamp.fromDate(new Date(tx.purchaseDate)) : now,
+      revokedAt: tx.revocationDate ? admin.firestore.Timestamp.fromDate(new Date(tx.revocationDate)) : null,
+    };
+    await ref.set({ userId, lifetime, updatedAt: now, ...(existing ? {} : { createdAt: now }) }, { merge: true });
+    if (!lifetime.revokedAt && !(existing?.lifetime && !existing.lifetime.revokedAt)) {
+      await insertConsentAudit({
+        userId, consentType: "subscription", action: "granted", grantedTo: "system",
+        detail: `Lifetime purchase: ${planId}`,
+      });
+    }
+    return { applied: true, planId };
+  }
   const sameSubscription = existing?.appleOriginalTransactionId === (tx.originalTransactionId ?? null);
   const appliedPurchase = toDate(existing?.latestPurchaseDate)?.getTime();
   if (sameSubscription && appliedPurchase && tx.purchaseDate && tx.purchaseDate < appliedPurchase) {
@@ -529,6 +602,8 @@ export async function getSubscription(userId: string): Promise<{
   planId: PlanId;
   status: string;
   expiresAt: string | null;
+  /** The plan comes from a one-time lifetime purchase (no expiry) */
+  lifetime?: boolean;
   features: readonly string[];
   ttlDays: { heartbeat: number; location: number; checkin: number };
 }> {
@@ -546,14 +621,17 @@ export async function getSubscription(userId: string): Promise<{
 
   const data = subDoc.data() as SubscriptionDoc;
   const periodEnd = toDate(data.currentPeriodEnd);
+  const now = new Date();
+  const paid = paidPlanOf(data, now);
 
-  if (!hasPaidAccess(data)) {
-    let status: string = data.status;
-    if (data.status === "active" || data.status === "grace_period") {
-      // Period (or grace period) ran out without a notification saying so
-      status = "expired";
-      await subDoc.ref.update({ status: "expired", updatedAt: admin.firestore.Timestamp.now() });
-    }
+  // Period (or grace period) ran out without a notification saying so
+  let status: string = data.status ?? "expired";
+  if ((data.status === "active" || data.status === "grace_period") && !hasPaidAccess(data, now)) {
+    status = "expired";
+    await subDoc.ref.update({ status: "expired", updatedAt: admin.firestore.Timestamp.now() });
+  }
+
+  if (!paid) {
     return {
       planId: "free",
       status,
@@ -563,12 +641,12 @@ export async function getSubscription(userId: string): Promise<{
     };
   }
 
-  const plan = PLANS[data.planId];
-
+  const plan = PLANS[paid.planId];
   return {
-    planId: data.planId,
-    status: data.status,
-    expiresAt: periodEnd ? periodEnd.toISOString() : null,
+    planId: paid.planId,
+    status: paid.source === "lifetime" ? "active" : status,
+    expiresAt: paid.source === "lifetime" ? null : (periodEnd ? periodEnd.toISOString() : null),
+    lifetime: paid.source === "lifetime",
     features: plan.features,
     ttlDays: plan.ttlDays,
   };
@@ -649,6 +727,31 @@ export async function handleAppleNotification(signedPayload: string): Promise<{
     await applyTransaction({ userId, transaction: tx, environment: envName, renewal });
   }
   const now = admin.firestore.Timestamp.now();
+
+  if (isLifetimeProduct(tx.productId)) {
+    switch (notificationType) {
+      case "ONE_TIME_CHARGE":
+        await applyTransaction({ userId, transaction: tx, environment: envName });
+        break;
+      case "REFUND":
+      case "REVOKE":
+        await subRef.update({
+          "lifetime.revokedAt": tx.revocationDate
+            ? admin.firestore.Timestamp.fromDate(new Date(tx.revocationDate)) : now,
+          updatedAt: now,
+        });
+        break;
+      case "REFUND_REVERSED":
+        await applyTransaction({ userId, transaction: { ...tx, revocationDate: undefined }, environment: envName });
+        break;
+      default:
+        console.log(`[Payment] Lifetime purchase: unhandled notification ${notificationType}`);
+        return { outcome: "ignored", notificationType, userId };
+    }
+    console.log(`[Payment] ${notificationType} applied to lifetime purchase ${otid}`);
+    return { outcome: "applied", notificationType, userId };
+  }
+
   const fromTransaction = () => applyTransaction({ userId: userId!, transaction: tx, environment: envName, renewal });
   const pendingFromRenewal = (): PlanId | null =>
     renewal?.autoRenewProductId ? mapProductToPlan(renewal.autoRenewProductId) : null;
