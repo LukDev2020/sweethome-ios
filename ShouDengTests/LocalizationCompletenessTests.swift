@@ -195,3 +195,27 @@ final class JapaneseTests: XCTestCase {
         XCTAssertTrue(screens[0].body.contains("119"))
     }
 }
+
+/// Keys built at runtime (`localized("prefix.\(value)")`) are invisible to the
+/// literal-key scan above; a mismatch shows the raw key on screen (the guardian
+/// Records tabs showed "guardian.records.tab.timeline").
+final class DynamicLocalizationKeyTests: XCTestCase {
+    func testEveryRuntimeBuiltKeyExistsInEveryLanguage() throws {
+        var keys: [String] = []
+        keys += ["timeline", "schedule", "contacts"].map { "guardian.records.tab.\($0)" }
+        keys += ["primary", "backup", "observer"].map { "member.role.\($0)" }
+        keys += ["active", "pending", "declined"].map { "member.status.\($0)" }
+        keys += ["sms", "wechat", "link"].map { "invite.method.\($0)" }
+        keys += ["walking", "cycling", "driving", "transit"].map { "map.route.\($0)" }
+        keys += ["walking", "cycling", "driving", "flying", "stationary", "unknown", "running"].map { "trip.mode.\($0)" }
+        keys += ["offlineMaps", "findMy", "satelliteSOS", "carrierSatellite"].flatMap { ["preflight.\($0).title", "preflight.\($0).detail"] }
+        keys += ["standard", "large", "extraLarge", "huge"].map { "fontScale.\($0)" }
+        for language in ["en", "zh-Hans", "zh-Hant", "fr", "ja"] {
+            let path = try XCTUnwrap(Bundle.main.path(forResource: "Localizable", ofType: "strings",
+                                                      inDirectory: nil, forLocalization: language), language)
+            let table = try XCTUnwrap(NSDictionary(contentsOfFile: path) as? [String: String], language)
+            let missing = keys.filter { table[$0]?.isEmpty ?? true }
+            XCTAssertEqual(missing, [], language)
+        }
+    }
+}

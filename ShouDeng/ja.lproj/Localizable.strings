@@ -996,9 +996,9 @@
 "map.route.duration.hm" = "%d時間%d分";
 
 // MARK: - Guardian Records Tabs (dynamic)
-"guardian.records.tab.时间线" = "タイムライン";
-"guardian.records.tab.排班" = "スケジュール";
-"guardian.records.tab.联络人" = "連絡先";
+"guardian.records.tab.timeline" = "タイムライン";
+"guardian.records.tab.schedule" = "スケジュール";
+"guardian.records.tab.contacts" = "連絡先";
 
 // MARK: - Fake Call
 "fakecall.title" = "偽の着信";
@@ -1732,3 +1732,22 @@
 "store.error.purchase" = "購入できませんでした：%@";
 "store.error.nothingToRestore" = "復元できるサブスクリプションが見つかりません。";
 "store.error.restore" = "購入を復元できませんでした：%@";
+"sos.button.holdHint" = "3秒間長押しでSOSを送信";
+"settings.data.storageLocation" = "データの保存場所";
+"settings.data.storageLocation.value" = "米国";
+"settings.data.storageLocation.pending" = "米国・未確認";
+"consent.transfer.agreed" = "米国での保存に同意済みです";
+"trip.mode.flying" = "飛行機";
+"trip.mode.unknown" = "不明";
+"trip.mode.running" = "ランニング";
+
+/* Family status bar */
+"status.guardian.allSafe" = "全員無事・%d人を見守り中";
+"status.guardian.sos" = "%@さんがSOSを発信中";
+"status.guardian.overdue" = "%@さんの無事報告がありません";
+"status.guardian.overdueMore" = "%@さんほか%d人の無事報告がありません";
+"status.guardian.none" = "見守る家族はまだいません";
+"status.protected.guarded" = "%d人の家族が見守っています";
+"status.protected.none" = "まだ見守る家族がいません";
+"status.protected.sos" = "SOS発信中";
+"status.protected.paused" = "位置情報の共有を一時停止中";

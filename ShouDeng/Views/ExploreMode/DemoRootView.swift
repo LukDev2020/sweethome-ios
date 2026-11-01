@@ -12,6 +12,7 @@ struct DemoRootView: View {
     var body: some View {
         VStack(spacing: 0) {
             DemoBannerView(explore: explore)
+            FamilyStatusBar()
             switch coordinator.userRole {
             case .protected_:
                 ProtectedTabView()
@@ -19,6 +20,7 @@ struct DemoRootView: View {
                 GuardianTabView()
             }
         }
+        .sosOverlays(coordinator)
         .environmentObject(coordinator)
         // SwiftUI Links (hotlines, consulate…) must not dial anyone from the demo
         .environment(\.openURL, OpenURLAction { url in

@@ -997,9 +997,9 @@
 "map.route.duration.hm" = "%d小時%d分";
 
 // MARK: - Guardian Records Tabs (dynamic)
-"guardian.records.tab.时间线" = "時間線";
-"guardian.records.tab.排班" = "排班";
-"guardian.records.tab.联络人" = "聯絡人";
+"guardian.records.tab.timeline" = "時間線";
+"guardian.records.tab.schedule" = "排班";
+"guardian.records.tab.contacts" = "聯絡人";
 
 // MARK: - Fake Call
 "fakecall.title" = "假來電";
@@ -1733,3 +1733,22 @@
 "store.error.purchase" = "購買失敗：%@";
 "store.error.nothingToRestore" = "未找到可恢復的訂閱";
 "store.error.restore" = "恢復購買失敗：%@";
+"sos.button.holdHint" = "按住 3 秒傳送求助";
+"settings.data.storageLocation" = "資料儲存地點";
+"settings.data.storageLocation.value" = "美國";
+"settings.data.storageLocation.pending" = "美國 · 待確認";
+"consent.transfer.agreed" = "你已同意資料儲存在美國";
+"trip.mode.flying" = "飛行";
+"trip.mode.unknown" = "未知";
+"trip.mode.running" = "跑步";
+
+/* Family status bar */
+"status.guardian.allSafe" = "全家平安 · 守護 %d 人";
+"status.guardian.sos" = "%@ 正在求助";
+"status.guardian.overdue" = "%@ 未按時報平安";
+"status.guardian.overdueMore" = "%@ 等 %d 人未按時報平安";
+"status.guardian.none" = "還沒有守護的家人";
+"status.protected.guarded" = "正在被 %d 位家人守護";
+"status.protected.none" = "還沒有守護你的家人";
+"status.protected.sos" = "求助進行中";
+"status.protected.paused" = "位置共享已暫停";

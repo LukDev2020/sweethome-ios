@@ -406,7 +406,11 @@ final class ExploreModeController: ObservableObject {
                 guard let self, let scene else { return }
                 let appWindow = scene.windows.first { !($0 is PassthroughWindow) && $0.isKeyWindow }
                     ?? scene.windows.first { !($0 is PassthroughWindow) }
+                // A sheet/alert, or the full-screen SOS countdown / fall check (drawn
+                // as overlays, not presented): the tips must not cover their buttons.
                 let presenting = appWindow?.rootViewController?.presentedViewController != nil
+                    || self.coordinator?.pendingSOS != nil
+                    || self.coordinator?.showFallConfirmation == true
                 if presenting != self.isAppPresentingModal { self.isAppPresentingModal = presenting }
             }
         }

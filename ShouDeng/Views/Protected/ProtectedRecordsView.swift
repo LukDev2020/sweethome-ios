@@ -56,11 +56,9 @@ struct ProtectedRecordsView: View {
 
     private var recordsCompact: some View {
         VStack(spacing: 0) {
-            Picker("", selection: $selectedTab) {
-                Text(langManager.localized("protected.records.timeline")).tag(0)
-                Text(langManager.localized("protected.records.emergencyContacts")).tag(1)
-            }
-            .pickerStyle(.segmented)
+            ReadableSegmentedTabs(selection: $selectedTab,
+                                  options: [(0, langManager.localized("protected.records.timeline")),
+                                            (1, langManager.localized("protected.records.emergencyContacts"))])
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
 

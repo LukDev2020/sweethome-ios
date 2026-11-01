@@ -704,6 +704,16 @@ struct GuardianSettingsView: View {
             Text(langManager.localized("settings.section.data"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
+            NavigationLink {
+                DataLocationView().environmentObject(coordinator)
+            } label: {
+                fixedRow(langManager.localized("settings.data.storageLocation"),
+                         value: langManager.localized(coordinator.needsDataTransferConsent
+                                                      ? "settings.data.storageLocation.pending"
+                                                      : "settings.data.storageLocation.value"),
+                         isWarning: coordinator.needsDataTransferConsent)
+            }
+            .buttonStyle(.plain)
             Button { showExportAlert = true } label: {
                 fixedRow(langManager.localized("settings.data.exportAll"), value: langManager.localized("settings.action.requestExport"), isWarning: false)
             }

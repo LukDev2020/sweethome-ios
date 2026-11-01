@@ -385,63 +385,62 @@ struct DataTransferConsentToggle: View {
     }
 }
 
-/// Asked once of people who signed up before the consent existed. Declining does not
-/// switch off SOS or location sharing mid-way; it explains how to stop the transfer.
-struct DataTransferConsentSheet: View {
+/// Settings → Data → Data storage location. Shows where data is stored and lets
+/// people who signed up before the consent existed agree. Never pops up by itself.
+struct DataLocationView: View {
     @EnvironmentObject private var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
     @State private var showPolicy = false
-    @State private var showDeclined = false
     @State private var isSaving = false
     @State private var failed = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Image(systemName: "globe.americas.fill")
-                .font(.scaled(size: 40))
-                .foregroundStyle(Color(red: 1/255, green: 69/255, blue: 129/255))
-            Text(lang.localized("consent.transfer.title"))
-                .font(.scaled(size: 22, weight: .bold))
-            Text(lang.localized("consent.transfer.body"))
-                .font(.scaled(size: 15))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-            Button(lang.localized("consent.transfer.readPolicy")) { showPolicy = true }
-                .font(.scaled(size: 14, weight: .medium))
-            if failed {
-                Text(lang.localized("consent.transfer.failed"))
-                    .font(.scaled(size: 13))
-                    .foregroundStyle(.red)
-            }
-            Spacer()
-            Button {
-                Task {
-                    isSaving = true
-                    defer { isSaving = false }
-                    do { try await coordinator.recordDataTransferConsent() } catch { failed = true }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text(lang.localized("consent.transfer.title"))
+                    .font(.scaled(size: 20, weight: .bold))
+                Text(lang.localized("consent.transfer.body"))
+                    .font(.scaled(size: 15))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button(lang.localized("consent.transfer.readPolicy")) { showPolicy = true }
+                    .font(.scaled(size: 14, weight: .medium))
+
+                if coordinator.needsDataTransferConsent {
+                    if failed {
+                        Text(lang.localized("consent.transfer.failed"))
+                            .font(.scaled(size: 13))
+                            .foregroundStyle(.red)
+                    }
+                    Button {
+                        Task {
+                            isSaving = true
+                            defer { isSaving = false }
+                            do { try await coordinator.recordDataTransferConsent() } catch { failed = true }
+                        }
+                    } label: {
+                        Text(lang.localized("consent.transfer.agree"))
+                            .font(.scaled(size: 16, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(RoundedRectangle(cornerRadius: 14).fill(Color(red: 1/255, green: 69/255, blue: 129/255)))
+                    }
+                    .disabled(isSaving)
+                    Text(lang.localized("consent.transfer.declined.body"))
+                        .font(.scaled(size: 12.5))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Label(lang.localized("consent.transfer.agreed"), systemImage: "checkmark.seal.fill")
+                        .font(.scaled(size: 14, weight: .medium))
+                        .foregroundStyle(Color(red: 63/255, green: 143/255, blue: 110/255))
                 }
-            } label: {
-                Text(lang.localized("consent.transfer.agree"))
-                    .font(.scaled(size: 16, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(RoundedRectangle(cornerRadius: 14).fill(Color(red: 1/255, green: 69/255, blue: 129/255)))
             }
-            .disabled(isSaving)
-            Button(lang.localized("consent.transfer.decline")) { showDeclined = true }
-                .font(.scaled(size: 15))
-                .frame(maxWidth: .infinity)
+            .padding(20)
         }
-        .padding(24)
-        .interactiveDismissDisabled()
+        .navigationTitle(lang.localized("settings.data.storageLocation"))
+        .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showPolicy) { PrivacyPolicyView().environmentObject(coordinator) }
-        .alert(lang.localized("consent.transfer.declined.title"), isPresented: $showDeclined) {
-            Button(lang.localized("consent.transfer.declined.later"), role: .cancel) {
-                coordinator.needsDataTransferConsent = false
-            }
-        } message: {
-            Text(lang.localized("consent.transfer.declined.body"))
-        }
     }
 }

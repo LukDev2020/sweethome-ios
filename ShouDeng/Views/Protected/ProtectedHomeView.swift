@@ -1468,7 +1468,7 @@ struct SOSActiveView: View {
 
         return VStack(spacing: 0) {
             HStack {
-                Text(String(format: langManager.localized("protected.home.sosElapsed"), mins, secs))
+                Text(String(format: langManager.localized("protected.home.sosElapsed"), String(format: "%d:%02d", mins, secs)))
                     .font(.scaled(size: 11.5, weight: .medium))
                     .foregroundStyle(alert)
                 Spacer()

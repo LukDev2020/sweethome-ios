@@ -295,6 +295,20 @@ struct FamilyFeedView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
+            Button {
+                Task { await loadPosts() }
+            } label: {
+                Text(langManager.localized("familyFeed.retry"))
+                    .font(.scaled(size: 14, weight: .semibold))
+            }
+            #if BETA || DEBUG
+            if let diagnostic = coordinator.familyFeedDiagnostic {
+                Text(diagnostic)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundStyle(.tertiary)
+                    .textSelection(.enabled)
+            }
+            #endif
             Spacer()
         }
         .frame(maxWidth: .infinity)

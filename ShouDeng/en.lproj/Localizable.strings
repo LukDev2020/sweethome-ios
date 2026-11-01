@@ -997,9 +997,9 @@ your guardians will be automatically notified.";
 "map.route.duration.hm" = "%dh %dm";
 
 // MARK: - Guardian Records Tabs (dynamic)
-"guardian.records.tab.时间线" = "Timeline";
-"guardian.records.tab.排班" = "Schedule";
-"guardian.records.tab.联络人" = "Contacts";
+"guardian.records.tab.timeline" = "Timeline";
+"guardian.records.tab.schedule" = "Schedule";
+"guardian.records.tab.contacts" = "Contacts";
 
 // MARK: - Fake Call
 "fakecall.title" = "Fake Call";
@@ -1733,3 +1733,22 @@ your guardians will be automatically notified.";
 "store.error.purchase" = "Purchase failed: %@";
 "store.error.nothingToRestore" = "No subscription found to restore.";
 "store.error.restore" = "Couldn't restore purchases: %@";
+"sos.button.holdHint" = "Hold for 3 seconds to send SOS";
+"settings.data.storageLocation" = "Data storage location";
+"settings.data.storageLocation.value" = "United States";
+"settings.data.storageLocation.pending" = "United States · confirm";
+"consent.transfer.agreed" = "You've agreed to storage in the United States";
+"trip.mode.flying" = "Flying";
+"trip.mode.unknown" = "Unknown";
+"trip.mode.running" = "Running";
+
+/* Family status bar */
+"status.guardian.allSafe" = "Everyone's safe · watching over %d";
+"status.guardian.sos" = "%@ needs help";
+"status.guardian.overdue" = "%@ hasn't checked in";
+"status.guardian.overdueMore" = "%@ and %d others haven't checked in";
+"status.guardian.none" = "No one to watch over yet";
+"status.protected.guarded" = "%d family members are watching over you";
+"status.protected.none" = "No one is watching over you yet";
+"status.protected.sos" = "SOS in progress";
+"status.protected.paused" = "Location sharing is paused";

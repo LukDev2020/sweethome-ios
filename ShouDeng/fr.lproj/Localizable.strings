@@ -997,9 +997,9 @@ vos gardiens seront automatiquement notifiés.";
 "map.route.duration.hm" = "%dh %dm";
 
 // MARK: - Guardian Records Tabs (dynamic)
-"guardian.records.tab.时间线" = "Chronologie";
-"guardian.records.tab.排班" = "Planning";
-"guardian.records.tab.联络人" = "Personnes-contacts";
+"guardian.records.tab.timeline" = "Chronologie";
+"guardian.records.tab.schedule" = "Planning";
+"guardian.records.tab.contacts" = "Personnes-contacts";
 
 // MARK: - Fake Call
 "fakecall.title" = "Faux appel";
@@ -1733,3 +1733,22 @@ vos gardiens seront automatiquement notifiés.";
 "store.error.purchase" = "Échec de l'achat : %@";
 "store.error.nothingToRestore" = "Aucun abonnement à restaurer.";
 "store.error.restore" = "Impossible de restaurer les achats : %@";
+"sos.button.holdHint" = "Maintenez 3 secondes pour envoyer le SOS";
+"settings.data.storageLocation" = "Lieu de stockage des données";
+"settings.data.storageLocation.value" = "États-Unis";
+"settings.data.storageLocation.pending" = "États-Unis · à confirmer";
+"consent.transfer.agreed" = "Vous avez accepté le stockage aux États-Unis";
+"trip.mode.flying" = "En avion";
+"trip.mode.unknown" = "Inconnu";
+"trip.mode.running" = "Course";
+
+/* Family status bar */
+"status.guardian.allSafe" = "Tout le monde va bien · %d proches suivis";
+"status.guardian.sos" = "%@ a besoin d'aide";
+"status.guardian.overdue" = "%@ n'a pas donné de nouvelles";
+"status.guardian.overdueMore" = "%@ et %d autres n'ont pas donné de nouvelles";
+"status.guardian.none" = "Aucun proche suivi pour l'instant";
+"status.protected.guarded" = "%d proches veillent sur vous";
+"status.protected.none" = "Personne ne veille encore sur vous";
+"status.protected.sos" = "SOS en cours";
+"status.protected.paused" = "Partage de position en pause";

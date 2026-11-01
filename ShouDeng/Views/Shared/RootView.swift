@@ -86,6 +86,8 @@ private struct AuthenticatedRootView: View {
                             // Banners take their own space above the screens instead of
                             // floating over the navigation bar title.
                             VStack(spacing: 0) {
+                                FamilyStatusBar()
+                                    .environmentObject(coordinator)
                                 betaBanner
                                 DegradationBannerView()
                                     .environmentObject(coordinator)
@@ -98,15 +100,7 @@ private struct AuthenticatedRootView: View {
                                     GuardianTabView()
                                 }
                             }
-                            .overlay {
-                                if coordinator.showFallConfirmation {
-                                    FallConfirmationOverlay()
-                                        .environmentObject(coordinator)
-                                } else if let pending = coordinator.pendingSOS {
-                                    SOSCountdownOverlay(pending: pending)
-                                        .environmentObject(coordinator)
-                                }
-                            }
+                            .sosOverlays(coordinator)
                             .alert(
                                 LanguageManager.shared.localized("sos.confirmExternal.title"),
                                 isPresented: Binding(
@@ -125,9 +119,6 @@ private struct AuthenticatedRootView: View {
                             }
                             .sheet(isPresented: $showBiometricPrompt) {
                                 BiometricEnablePromptView(isPresented: $showBiometricPrompt)
-                            }
-                            .sheet(isPresented: $coordinator.needsDataTransferConsent) {
-                                DataTransferConsentSheet().environmentObject(coordinator)
                             }
                             .onAppear {
                                 // After login, offer biometric setup if available (skip if wizard already handled it)
@@ -202,5 +193,106 @@ private struct AuthenticatedRootView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemBackground))
+    }
+}
+
+// MARK: - Family status bar
+
+/// The orange bar at the top of the app: the family's state in one line.
+/// Guardian: "Everyone's safe · watching over 2" / "Mom hasn't checked in" / "Mom needs help".
+/// Protected person: "3 family members are watching over you" / "SOS in progress".
+/// Turns red when someone needs help; tapping it goes straight there.
+struct FamilyStatusBar: View {
+    @EnvironmentObject private var coordinator: AppCoordinator
+    @ObservedObject private var lang = LanguageManager.shared
+
+    private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
+    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
+
+    private enum Level { case calm, attention, urgent }
+
+    private struct Status {
+        let level: Level
+        let icon: String
+        let text: String
+        var action: (() -> Void)? = nil
+    }
+
+    private var status: Status {
+        coordinator.userRole == .guardian ? guardianStatus : protectedStatus
+    }
+
+    private var guardianStatus: Status {
+        let persons = coordinator.protectedPersons
+        if let sos = persons.first(where: { coordinator.guardianSOS[$0.id] != nil || $0.activeSOS != nil }) {
+            let id = sos.id
+            return Status(level: .urgent, icon: "exclamationmark.triangle.fill",
+                          text: String(format: lang.localized("status.guardian.sos"), sos.user.displayName),
+                          action: { coordinator.pendingAlertPersonId = id })
+        }
+        let late = persons.filter { $0.isOverdue || $0.status == .overdue || $0.status == .alert }
+        if let first = late.first {
+            let text = late.count == 1
+                ? String(format: lang.localized("status.guardian.overdue"), first.user.displayName)
+                : String(format: lang.localized("status.guardian.overdueMore"), first.user.displayName, late.count - 1)
+            return Status(level: .attention, icon: "clock.badge.exclamationmark", text: text)
+        }
+        if persons.isEmpty {
+            return Status(level: .calm, icon: "person.badge.plus", text: lang.localized("status.guardian.none"),
+                          action: { coordinator.presentInviteAccept() })
+        }
+        return Status(level: .calm, icon: "checkmark.shield.fill",
+                      text: String(format: lang.localized("status.guardian.allSafe"), persons.count))
+    }
+
+    private var protectedStatus: Status {
+        if coordinator.activeSOSEvent != nil {
+            return Status(level: .urgent, icon: "sos", text: lang.localized("status.protected.sos"),
+                          action: { coordinator.isSOSScreenPresented = true })
+        }
+        if coordinator.isTrackingPaused {
+            return Status(level: .attention, icon: "location.slash.fill", text: lang.localized("status.protected.paused"))
+        }
+        let count = coordinator.myGuardians.count
+        if count == 0 {
+            return Status(level: .calm, icon: "person.badge.plus", text: lang.localized("status.protected.none"),
+                          action: { coordinator.presentInviteAccept() })
+        }
+        return Status(level: .calm, icon: "shield.fill",
+                      text: String(format: lang.localized("status.protected.guarded"), count))
+    }
+
+    var body: some View {
+        let s = status
+        let background: Color = s.level == .urgent ? alert : lamp
+        let foreground: Color = s.level == .urgent ? .white : ink
+        Button {
+            s.action?()
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: s.icon)
+                    .font(.scaled(size: 14, weight: .semibold))
+                Text(s.text)
+                    .font(.scaled(size: 14, weight: .semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                Spacer(minLength: 4)
+                if s.action != nil {
+                    Image(systemName: "chevron.right")
+                        .font(.scaled(size: 12, weight: .semibold))
+                }
+            }
+            .foregroundStyle(foreground)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 9)
+            .frame(maxWidth: .infinity)
+            .background(background.ignoresSafeArea(edges: .top))
+        }
+        .buttonStyle(.plain)
+        // Not .disabled: that greys the whole bar out when it has nothing to open
+        .allowsHitTesting(s.action != nil)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(s.level == .urgent ? .isHeader : [])
     }
 }

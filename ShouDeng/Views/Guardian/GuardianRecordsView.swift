@@ -84,12 +84,8 @@ struct GuardianRecordsView: View {
 
     private var recordsCompact: some View {
         VStack(spacing: 0) {
-            Picker("", selection: $selectedTab) {
-                ForEach(RecordTab.allCases, id: \.self) { tab in
-                    Text(langManager.localized("guardian.records.tab.\(tab)")).tag(tab)
-                }
-            }
-            .pickerStyle(.segmented)
+            ReadableSegmentedTabs(selection: $selectedTab,
+                                   options: RecordTab.allCases.map { ($0, langManager.localized("guardian.records.tab.\($0)")) })
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
 
@@ -118,12 +114,8 @@ struct GuardianRecordsView: View {
                         .font(.scaled(size: 20, weight: .bold))
                         .padding(.top, 8)
 
-                    Picker("", selection: $selectedTab) {
-                        ForEach(RecordTab.allCases, id: \.self) { tab in
-                            Text(langManager.localized("guardian.records.tab.\(tab)")).tag(tab)
-                        }
-                    }
-                    .pickerStyle(.segmented)
+                    ReadableSegmentedTabs(selection: $selectedTab,
+                                           options: RecordTab.allCases.map { ($0, langManager.localized("guardian.records.tab.\($0)")) })
 
                     // Stats for current tab
                     switch selectedTab {

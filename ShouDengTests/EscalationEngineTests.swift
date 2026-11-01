@@ -129,6 +129,20 @@ final class CriticalAlertClaimsTests: XCTestCase {
         coordinator.cancelPendingSOS()
     }
 
+    /// TestFlight build 33: an SOS left active on the phone made every press of the
+    /// SOS button do nothing. A press now opens the running SOS instead.
+    func testPressingSOSWhileOneIsActiveShowsIt() {
+        let coordinator = AppCoordinator()
+        coordinator.activeSOSEvent = SOSEvent(id: "old", protectedPersonId: "me", triggeredAt: Date().addingTimeInterval(-3600),
+                                              triggerMethod: .longPress, location: nil, batteryLevel: nil,
+                                              escalationState: .initiated, resolvedAt: nil, resolvedBy: nil, resolution: nil)
+        coordinator.isSOSScreenPresented = false
+        coordinator.requestSOS(method: .longPress)
+        XCTAssertTrue(coordinator.isSOSScreenPresented, "the running SOS is shown")
+        XCTAssertNil(coordinator.pendingSOS, "no second SOS on top of the running one")
+        coordinator.activeSOSEvent = nil
+    }
+
     func testDuressSOSDoesNotShowACountdown() {
         let coordinator = AppCoordinator()
         coordinator.requestSOS(method: .duressPassword)

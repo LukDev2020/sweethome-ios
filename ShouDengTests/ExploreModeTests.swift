@@ -167,11 +167,9 @@ final class ExploreModeTests: XCTestCase {
         KeychainHelper.shared.save("sa_win", value: "45")
         // LocalStore writes are async (atomic: temp file, then rename) — wait for the
         // real entry to land instead of a fixed sleep, which raced the write.
-        await waitUntil {
-            let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-                .appendingPathComponent("store/timeline.json")
-            return (try? String(contentsOf: url, encoding: .utf8))?.contains("real-1") == true
-        }
+        // load() runs on the store's serial queue, so once it sees the entry the write
+        // has finished (on disk, or in the overlay if a previous test left one active).
+        await waitUntil { LocalStore.shared.loadTimeline().contains { $0.id == "real-1" } }
         let before = snapshot()
 
         let explore = ExploreModeController.shared

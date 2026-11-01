@@ -770,6 +770,16 @@ struct ProtectedSettingsView: View {
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             fixedRow(langManager.localized("settings.data.locationRetention"), value: langManager.localized("settings.data.locationRetentionValue"), isWarning: false)
+            NavigationLink {
+                DataLocationView().environmentObject(coordinator)
+            } label: {
+                fixedRow(langManager.localized("settings.data.storageLocation"),
+                         value: langManager.localized(coordinator.needsDataTransferConsent
+                                                      ? "settings.data.storageLocation.pending"
+                                                      : "settings.data.storageLocation.value"),
+                         isWarning: coordinator.needsDataTransferConsent)
+            }
+            .buttonStyle(.plain)
             Button { showExportAlert = true } label: {
                 fixedRow(langManager.localized("settings.data.exportAll"), value: langManager.localized("settings.action.requestExport"), isWarning: false)
             }

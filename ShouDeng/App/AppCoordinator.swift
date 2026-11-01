@@ -50,6 +50,9 @@ final class AppCoordinator: ObservableObject {
     @Published var familyPosts: [FamilyPost] = []
     /// The last family-circle refresh failed (the feed shows cached posts or an error).
     @Published var familyFeedRefreshFailed = false
+    /// Last family-feed fetch, for the small diagnostic line under an empty feed
+    /// (TestFlight reported an empty circle that we could not reproduce).
+    @Published var familyFeedDiagnostic: String?
     private var familyFetchTask: Task<Bool, Never>?
     private var familyDeliveriesInFlight = Set<String>()
     /// Posts the server confirmed, and when (kept through a fetch that started earlier).
@@ -1190,7 +1193,12 @@ final class AppCoordinator: ObservableObject {
     /// Entry point for user-initiated SOS. Starts a short cancel countdown
     /// (accidental presses, pocket triggers) and sends the SOS when it ends.
     func requestSOS(method: SOSTriggerMethod = .longPress) {
-        guard activeSOSEvent == nil, pendingSOS == nil else { return }
+        // An SOS already running: show it instead of silently ignoring the press.
+        if activeSOSEvent != nil {
+            if !method.isSilent { isSOSScreenPresented = true }
+            return
+        }
+        guard pendingSOS == nil else { return }
         let seconds = Self.sosCancelWindow(for: method)
         guard seconds > 0 else {
             triggerSOS(method: method)
@@ -1349,6 +1357,25 @@ final class AppCoordinator: ObservableObject {
         Task { await refreshOwnSOSStatus() }
     }
 
+    private var hasQueuedSOSTrigger: Bool {
+        offlineQueue.peekAll().contains { $0.path == "/v1/sos/trigger" }
+    }
+
+    /// Local cleanup for an SOS that already ended on the server (no API calls).
+    private func clearEndedSOSLocally() {
+        guard activeSOSEvent != nil else { return }
+        activeSOSEvent = nil
+        ownSOSStatus = nil
+        sosDeliveryFailed = false
+        isSOSScreenPresented = false
+        localStore.saveActiveSOSEvent(nil)
+        syncWidgetState()
+        if !isDemo {
+            locationManager.exitSOSMode()
+            liveActivityManager.cancelSOS()
+        }
+    }
+
     /// Protected person: what the server has actually done for my SOS.
     func refreshOwnSOSStatus() async {
         guard activeSOSEvent != nil else { return }
@@ -1356,6 +1383,15 @@ final class AppCoordinator: ObservableObject {
             let response: ActiveSOSResponse = try await apiClient.get("/v1/sos/active")
             await MainActor.run {
                 self.ownSOSStatus = response.sos
+                if response.sos == nil, !self.hasQueuedSOSTrigger,
+                   let local = self.activeSOSEvent, Date().timeIntervalSince(local.triggeredAt) > 60 {
+                    // The server has no active SOS for me (a guardian resolved it, or it
+                    // ended while the app was closed), nothing is waiting to be sent, and
+                    // it isn't one just sent: drop the stale local copy, which otherwise
+                    // blocked every new SOS.
+                    self.clearEndedSOSLocally()
+                    return
+                }
                 if let sos = response.sos {
                     self.sosDeliveryFailed = false
                     if self.activeSOSEvent?.id != sos.sosEventId {
@@ -1805,6 +1841,7 @@ final class AppCoordinator: ObservableObject {
             familyConfirmedAt = familyConfirmedAt.filter { $0.value >= startedAt }
             familyPosts = FamilyFeedSync.merge(server: lossy.elements, local: familyPosts, keep: keep)
             familyFeedRefreshFailed = false
+            familyFeedDiagnostic = "OK · \(lossy.elements.count) received · \(lossy.droppedCount) unreadable · \(Self.shortTime(Date()))"
             persistFamilyPosts()
             // The server is reachable: try the posts that didn't go out earlier
             Task { @MainActor [weak self] in await self?.retryUnsentFamilyPosts(automatic: true) }
@@ -1815,7 +1852,27 @@ final class AppCoordinator: ObservableObject {
             #endif
             // Keep what we have; the feed says it couldn't refresh
             familyFeedRefreshFailed = true
+            familyFeedDiagnostic = "\(Self.diagnosticName(error)) · \(Self.shortTime(Date()))"
             return false
+        }
+    }
+
+    private static func shortTime(_ date: Date) -> String {
+        let f = DateFormatter(); f.dateFormat = "HH:mm:ss"; return f.string(from: date)
+    }
+
+    /// Error kind only — never message bodies or tokens.
+    private static func diagnosticName(_ error: Error) -> String {
+        guard let api = error as? APIError else { return String(describing: type(of: error)) }
+        switch api {
+        case .unauthorized: return "401 unauthorized"
+        case .forbidden: return "403 forbidden"
+        case .notFound: return "404 not found"
+        case .serverError(let code): return "\(code) server error"
+        case .rateLimited: return "429 rate limited"
+        case .networkError(let e): return "network: \((e as NSError).code)"
+        case .decoding: return "decoding error"
+        default: return String(describing: api)
         }
     }
 

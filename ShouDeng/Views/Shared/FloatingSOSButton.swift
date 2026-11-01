@@ -6,6 +6,12 @@ struct FloatingSOSButton: View {
     @State private var progress: Double = 0
     @State private var pulseScale: CGFloat = 1.0
     @State private var showConfirm = false
+    /// Shown when the button is released before 3 s — a tap used to do nothing at all.
+    @State private var showHoldHint = false
+    @State private var hintTask: Task<Void, Never>?
+    /// When the current press began. `progress` can't tell an early release: inside
+    /// withAnimation it is already 1.0 the moment the press starts.
+    @State private var pressStartedAt: Date?
 
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
     /// Same 3 s hold as the home-screen slider and the copy ("Hold 3s to send
@@ -21,11 +27,11 @@ struct FloatingSOSButton: View {
                 .frame(width: 70, height: 70)
                 .scaleEffect(pulseScale)
 
-            // Progress ring
+            // Progress ring (outside the button, so it reads clearly while holding)
             Circle()
                 .trim(from: 0, to: progress)
-                .stroke(Color.white.opacity(0.6), lineWidth: 3)
-                .frame(width: 56, height: 56)
+                .stroke(alert, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                .frame(width: 66, height: 66)
                 .rotationEffect(.degrees(-90))
 
             // Main button
@@ -51,19 +57,40 @@ struct FloatingSOSButton: View {
                 isPressed = pressing
             }
             if pressing {
+                pressStartedAt = Date()
+                hideHoldHint()
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 withAnimation(.linear(duration: holdDuration)) {
                     progress = 1.0
                 }
             } else {
-                if progress < 0.95 {
+                let held = pressStartedAt.map { Date().timeIntervalSince($0) } ?? 0
+                pressStartedAt = nil
+                if held < holdDuration - 0.05 {
                     withAnimation(.easeOut(duration: 0.2)) {
                         progress = 0
                     }
+                    showHoldHintBriefly()
                 }
             }
         }, perform: {
             triggerSOS()
         })
+        .overlay(alignment: .trailing) {
+            // To the left of the button (above it sits Explore Mode's "Show tips" pill)
+            if showHoldHint {
+                Text(LanguageManager.shared.localized("sos.button.holdHint"))
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 12).padding(.vertical, 7)
+                    .background(Capsule().fill(Color.black.opacity(0.8)))
+                    .fixedSize()
+                    .offset(x: -78)
+                    .transition(.opacity)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
+        }
         .onAppear {
             withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
                 pulseScale = 1.15
@@ -72,6 +99,21 @@ struct FloatingSOSButton: View {
         .coachMark(CoachAnchor.sosButton)
         .accessibilityLabel(LanguageManager.shared.localized("sos.button.a11yLabel"))
         .accessibilityHint(LanguageManager.shared.localized("sos.button.a11yHint"))
+    }
+
+    private func showHoldHintBriefly() {
+        withAnimation(.easeOut(duration: 0.15)) { showHoldHint = true }
+        hintTask?.cancel()
+        hintTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 2_500_000_000)
+            guard !Task.isCancelled else { return }
+            hideHoldHint()
+        }
+    }
+
+    private func hideHoldHint() {
+        hintTask?.cancel()
+        withAnimation(.easeIn(duration: 0.15)) { showHoldHint = false }
     }
 
     private func triggerSOS() {
@@ -91,5 +133,31 @@ extension View {
     /// nested in a NavigationStack, unlike safeAreaInset.
     func floatingSOSClearance() -> some View {
         contentMargins(.bottom, 120, for: .scrollContent)
+    }
+}
+
+// MARK: - SOS overlays
+
+/// The 5-second cancel countdown and the fall check, on top of everything. Used by the
+/// real app (RootView) and Explore Mode (DemoRootView), which showed nothing for 5 s.
+private struct SOSOverlays: ViewModifier {
+    @ObservedObject var coordinator: AppCoordinator
+
+    func body(content: Content) -> some View {
+        content.overlay {
+            if coordinator.showFallConfirmation {
+                FallConfirmationOverlay()
+                    .environmentObject(coordinator)
+            } else if let pending = coordinator.pendingSOS {
+                SOSCountdownOverlay(pending: pending)
+                    .environmentObject(coordinator)
+            }
+        }
+    }
+}
+
+extension View {
+    func sosOverlays(_ coordinator: AppCoordinator) -> some View {
+        modifier(SOSOverlays(coordinator: coordinator))
     }
 }
