@@ -297,7 +297,7 @@ export const PLANS = {
     id: "single",
     name: "单人关注版",
     prices: {
-      monthly: { CNY: 8, USD: 1.99 }, yearly: { CNY: 68, USD: 14.99 }, lifetime: { CNY: 168, USD: 39.99 },
+      monthly: { CNY: 8, USD: 2.99 }, yearly: { CNY: 68, USD: 22.99 }, lifetime: { CNY: 168, USD: 59.99 },
     },
     appleProductIds: [
       "com.shoudeng.app.single.monthly",
@@ -313,7 +313,7 @@ export const PLANS = {
     id: "family",
     name: "家庭版",
     prices: {
-      monthly: { CNY: 18, USD: 4.99 }, yearly: { CNY: 168, USD: 39.99 }, lifetime: { CNY: 398, USD: 99.99 },
+      monthly: { CNY: 18, USD: 5.99 }, yearly: { CNY: 168, USD: 49.99 }, lifetime: { CNY: 398, USD: 129.99 },
     },
     appleProductIds: [
       "com.shoudeng.app.family.monthly",

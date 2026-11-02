@@ -56,7 +56,7 @@ final class StoreKitPurchaseTests: XCTestCase {
     func testFreeTrialWordingUsesTheOffer() {
         let pricing = SubscriptionPricing(displayPrice: "$14.99", period: .init(value: 1, unit: .year),
                                           introOffer: .init(mode: .freeTrial, displayPrice: "$0.00", period: week, periodCount: 1))
-        XCTAssertEqual(pricing.subscribeButtonTitle(), "Start 1 week free trial")
+        XCTAssertEqual(pricing.subscribeButtonTitle(), "Try free for 1 week")
         XCTAssertEqual(pricing.introSummary(), "Free for 1 week")
         let legal = pricing.legalText(planName: "Family")
         XCTAssertTrue(legal.hasPrefix("Family: free for 1 week, then $14.99 per year."), legal)
@@ -80,9 +80,9 @@ final class StoreKitPurchaseTests: XCTestCase {
     }
 
     func testYearlySavingsComeFromPrices() {
-        // ShouDeng.storekit (A tier, USD): 1.99/14.99, 4.99/39.99 → 37.2%, 33.2%
-        let pairs: [(monthly: Decimal, yearly: Decimal)] = [(1.99, 14.99), (4.99, 39.99)]
-        XCTAssertEqual(SubscriptionPricing.yearlySavingsPercent(pairs), 33)
+        // ShouDeng.storekit (A tier, USD): 2.99/22.99, 5.99/49.99 → 35.9%, 30.5%
+        let pairs: [(monthly: Decimal, yearly: Decimal)] = [(2.99, 22.99), (5.99, 49.99)]
+        XCTAssertEqual(SubscriptionPricing.yearlySavingsPercent(pairs), 30)
         XCTAssertNil(SubscriptionPricing.yearlySavingsPercent([(10, 115)]), "4% is too little to advertise")
         XCTAssertNil(SubscriptionPricing.yearlySavingsPercent([]))
     }
@@ -190,17 +190,17 @@ final class StoreKitPurchaseTests: XCTestCase {
         XCTAssertEqual(alice.products.count, 6)
         XCTAssertFalse(alice.productsLoadFailed)
         XCTAssertTrue(alice.isEligibleForIntroOffer)
-        XCTAssertEqual(alice.yearlySavingsPercent, 33)
+        XCTAssertEqual(alice.yearlySavingsPercent, 30)
         let lifetime = try XCTUnwrap(alice.products(forPlan: "family").lifetime)
         XCTAssertEqual(lifetime.type, .nonConsumable)
-        XCTAssertEqual(lifetime.displayPrice, "$99.99")
+        XCTAssertEqual(lifetime.displayPrice, "$129.99")
         XCTAssertTrue(alice.pricing(for: lifetime).isLifetime)
         XCTAssertNil(alice.pricing(for: lifetime).introOffer)
         let single = try XCTUnwrap(alice.products(forPlan: "single").monthly)
         let pricing = alice.pricing(for: single)
         XCTAssertEqual(pricing.introOffer?.mode, .freeTrial)
-        XCTAssertEqual(pricing.introOffer?.period, week)
-        XCTAssertEqual(pricing.subscribeButtonTitle(), "Start 1 week free trial")
+        XCTAssertEqual(pricing.introOffer?.period, .init(value: 3, unit: .day))
+        XCTAssertEqual(pricing.subscribeButtonTitle(), "Try free for 3 days")
 
         // Alice subscribes (purchases carry her appAccountToken)
         try await buy(session, "com.shoudeng.app.family.yearly",
@@ -234,7 +234,7 @@ final class StoreKitPurchaseTests: XCTestCase {
         // eligibility after a test purchase, so the ineligible case is checked directly)
         let ineligible = SubscriptionPricing(product: single, eligibleForIntroOffer: false)
         XCTAssertNil(ineligible.introOffer)
-        XCTAssertEqual(ineligible.subscribeButtonTitle(), "Subscribe · $1.99 per month")
+        XCTAssertEqual(ineligible.subscribeButtonTitle(), "Subscribe · $2.99 per month")
 
         // Bob signs in on the same Apple ID: Alice's subscription is not his plan
         let bob = StoreKitManager(apiClient: stubClient())

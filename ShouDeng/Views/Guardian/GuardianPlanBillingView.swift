@@ -12,6 +12,8 @@ import StoreKit
 //   - Monthly / Yearly / Lifetime (one-time purchase) toggle; buying lifetime while a
 //     subscription renews → hint + Manage Subscriptions (Apple doesn't cancel it)
 //   - Paid through the App Store (in-app purchase) only
+//   - Yearly shown first; each card carries a price anchor (per month, lifetime) worked
+//     out from the App Store prices; renewal reminder 5 days before an auto-renewal
 //   - Per-product auto-renewal terms + Terms of Use (EULA) and Privacy Policy links
 //   - Feature comparison table
 //   - Only guardians pay
@@ -19,8 +21,9 @@ import StoreKit
 struct GuardianPlanBillingView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var langManager = LanguageManager.shared
-    @State private var billingCycle: BillingCycle = .monthly
-    @State private var selectedPlan: PlanTier = .single
+    /// Yearly first: it is what most families choose, and its card points to lifetime
+    @State private var billingCycle: BillingCycle = .yearly
+    @State private var selectedPlan: PlanTier = .family
     @State private var restoreResult: StoreKitManager.RestoreResult?
     @State private var showPaymentSuccess = false
     @State private var showPrivacyPolicy = false
@@ -43,10 +46,10 @@ struct GuardianPlanBillingView: View {
         ScrollView {
             VStack(spacing: 20) {
                 heroSection
+                renewalReminder
                 currentPlanBanner
                 billingToggle
                 planCards
-                paymentMethodSection
                 featureComparison
                 enterpriseCTA
                 footerSection
@@ -270,9 +273,72 @@ struct GuardianPlanBillingView: View {
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                singlePlanCard
                 familyPlanCard
+                singlePlanCard
+                if billingCycle == .lifetime {
+                    Text(langManager.localized("store.lifetime.footnote"))
+                        .font(.scaled(size: 11))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
+        }
+    }
+
+    /// The price comparison under each card, worked out from the App Store prices:
+    /// yearly → per month + lifetime; lifetime → years of yearly, per month over 5 years.
+    private func anchorText(forPlan plan: String) -> String? {
+        let p = coordinator.storeKitManager.products(forPlan: plan)
+        guard let yearly = p.yearly, let lifetime = p.lifetime, yearly.price > 0 else { return nil }
+        let style = lifetime.priceFormatStyle
+        let years = String(format: "%.1f", NSDecimalNumber(decimal: lifetime.price / yearly.price).doubleValue)
+        switch billingCycle {
+        case .monthly:
+            return String(format: langManager.localized("store.anchor.monthly"), lifetime.displayPrice, years)
+        case .yearly:
+            return String(format: langManager.localized("store.anchor.yearly"),
+                          (yearly.price / 12).formatted(yearly.priceFormatStyle), lifetime.displayPrice)
+        case .lifetime:
+            let perMonth = (lifetime.price / 60).formatted(style)
+            if plan == "family" {
+                return String(format: langManager.localized("store.anchor.lifetime.family"),
+                              years, perMonth, (lifetime.price / 600).formatted(style))
+            }
+            return String(format: langManager.localized("store.anchor.lifetime"), years, perMonth)
+        }
+    }
+
+    // MARK: - Renewal reminder (5 days before an auto-renewal)
+
+    @ViewBuilder
+    private var renewalReminder: some View {
+        let store = coordinator.storeKitManager
+        if store.hasRenewingSubscription,
+           let status = store.subscriptionStatus,
+           let renews = status.expiresDate,
+           renews.timeIntervalSinceNow < StoreKitManager.renewalReminderLead,
+           let product = store.products.first(where: { $0.id == status.productId }) {
+            Button {
+                Task { await store.showManageSubscriptions() }
+            } label: {
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "bell.fill")
+                        .font(.scaled(size: 14))
+                    Text(String(format: langManager.localized("store.renewal.reminder"),
+                                store.planDisplayName(for: status.planId),
+                                renews.formatted(.dateTime.month().day()),
+                                product.displayPrice))
+                        .font(.scaled(size: 13))
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                }
+                .foregroundStyle(Color(red: 99/255, green: 56/255, blue: 6/255))
+                .padding(12)
+                .background(warm.opacity(0.18))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -282,6 +348,7 @@ struct GuardianPlanBillingView: View {
 
         return PlanCardView(
             planName: langManager.localized("guardian.billing.plan.single"),
+            headline: nil,
             subtitle: langManager.localized("guardian.billing.plan.single.subtitle"),
             icon: "person.fill.checkmark",
             iconColor: safe,
@@ -292,9 +359,9 @@ struct GuardianPlanBillingView: View {
             isSelected: selectedPlan == .single && !isCurrent,
             isPopular: false,
             accentColor: safe,
+            anchor: anchorText(forPlan: "single"),
             benefits: [
-                ("person.fill.checkmark", langManager.localized("guardian.billing.benefit.1.protected")),
-                ("person.2", langManager.localized("guardian.billing.benefit.3.guardians")),
+                ("person.2.fill", langManager.localized("billing.benefit.essential.people")),
                 ("clock.arrow.circlepath", langManager.localized("guardian.billing.benefit.90d.timeline")),
                 ("calendar.badge.clock", langManager.localized("guardian.billing.benefit.duty")),
                 ("doc.richtext", langManager.localized("guardian.billing.benefit.pdf")),
@@ -311,7 +378,8 @@ struct GuardianPlanBillingView: View {
 
         return PlanCardView(
             planName: langManager.localized("guardian.billing.plan.family"),
-            subtitle: langManager.localized("guardian.billing.plan.family.subtitle"),
+            headline: langManager.localized("billing.family.headline"),
+            subtitle: langManager.localized("billing.family.pitch"),
             icon: "house.fill",
             iconColor: accent,
             product: product,
@@ -321,9 +389,9 @@ struct GuardianPlanBillingView: View {
             isSelected: selectedPlan == .family && !isCurrent,
             isPopular: true,
             accentColor: accent,
+            anchor: anchorText(forPlan: "family"),
             benefits: [
-                ("person.3.fill", langManager.localized("guardian.billing.benefit.4.protected")),
-                ("person.fill.badge.plus", langManager.localized("guardian.billing.benefit.unlimited.guardians")),
+                ("person.3.fill", langManager.localized("billing.benefit.family.people")),
                 ("clock.arrow.circlepath", langManager.localized("guardian.billing.benefit.180d.timeline")),
                 ("calendar.badge.clock", langManager.localized("guardian.billing.benefit.duty")),
                 ("doc.richtext", langManager.localized("guardian.billing.benefit.pdf")),
@@ -354,41 +422,6 @@ struct GuardianPlanBillingView: View {
                     showPaymentSuccess = true
                 }
             }
-        }
-    }
-
-    // MARK: - Payment Info Section
-
-    private var paymentMethodSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(langManager.localized("guardian.billing.payment.method"))
-                .font(.scaled(size: 13, weight: .semibold))
-                .foregroundStyle(ink)
-
-            HStack(spacing: 12) {
-                Image(systemName: "apple.logo")
-                    .font(.scaled(size: 22))
-                    .foregroundStyle(ink)
-                    .frame(width: 36, height: 36)
-                    .background(Color(.systemGray6))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(langManager.localized("guardian.billing.via.appstore"))
-                        .font(.scaled(size: 14, weight: .medium))
-                        .foregroundStyle(ink)
-                    Text(langManager.localized("guardian.billing.payment.support"))
-                        .font(.scaled(size: 12))
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                Image(systemName: "checkmark.shield.fill")
-                    .font(.scaled(size: 16))
-                    .foregroundStyle(safe)
-            }
-            .padding(14)
-            .background(Color(.systemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
 
@@ -427,9 +460,9 @@ struct GuardianPlanBillingView: View {
 
             Divider().padding(.horizontal, 12)
 
-            comparisonRow(langManager.localized("guardian.billing.row.guardians"), free: "1", single: "3", family: "∞")
-            comparisonRow(langManager.localized("guardian.billing.row.protected"), free: "1", single: "1", family: "4")
-            comparisonRow(langManager.localized("guardian.billing.row.timeline"), free: "24h", single: langManager.localized("guardian.billing.90days"), family: langManager.localized("guardian.billing.180days"))
+            comparisonRow(langManager.localized("guardian.billing.row.guardians"), free: "1", single: "2", family: "4")
+            comparisonRow(langManager.localized("guardian.billing.row.protected"), free: "1", single: "2", family: "6")
+            comparisonRow(langManager.localized("guardian.billing.row.timeline"), free: langManager.localized("guardian.billing.7days"), single: langManager.localized("guardian.billing.90days"), family: langManager.localized("guardian.billing.180days"))
             comparisonRow(langManager.localized("guardian.billing.row.sos"), free: true, single: true, family: true)
             comparisonRow(langManager.localized("guardian.billing.row.checkin"), free: true, single: true, family: true)
             comparisonRow(langManager.localized("guardian.billing.row.duty"), free: false, single: true, family: true)
@@ -490,36 +523,34 @@ struct GuardianPlanBillingView: View {
     // MARK: - Enterprise CTA
 
     private var enterpriseCTA: some View {
-        VStack(spacing: 8) {
-            HStack(spacing: 8) {
-                Image(systemName: "questionmark.circle")
-                    .font(.scaled(size: 16))
-                    .foregroundStyle(ink.opacity(0.6))
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(langManager.localized("guardian.billing.custom.plan"))
                     .font(.scaled(size: 15, weight: .semibold))
                     .foregroundStyle(ink)
+                Text(langManager.localized("guardian.billing.custom.description"))
+                    .font(.scaled(size: 12))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            Text(langManager.localized("guardian.billing.custom.description"))
-                .font(.scaled(size: 13))
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+            Spacer(minLength: 0)
             Button {
-                if let url = URL(string: "mailto:support@shoudeng.app?subject=定制方案咨询") {
+                if let url = URL(string: "mailto:support@shoudeng.app?subject=Organization%20plan") {
                     ExternalURL.open(url)
                 }
             } label: {
                 Text(langManager.localized("guardian.billing.contact.us"))
-                    .font(.scaled(size: 14, weight: .medium))
+                    .font(.scaled(size: 13, weight: .medium))
                     .foregroundStyle(accent)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 10)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
                     .overlay(
                         RoundedRectangle(cornerRadius: 10)
                             .stroke(accent.opacity(0.4), lineWidth: 1)
                     )
             }
         }
-        .padding(16)
+        .padding(14)
         .frame(maxWidth: .infinity)
         .background(Color(.systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 14))
@@ -651,6 +682,8 @@ struct SubscriptionLegalLinks: View {
 private struct PlanCardView: View {
     @ObservedObject var langManager = LanguageManager.shared
     let planName: String
+    /// Family: "Peace of mind for your parents"
+    let headline: String?
     let subtitle: String
     let icon: String
     let iconColor: Color
@@ -661,6 +694,8 @@ private struct PlanCardView: View {
     let isSelected: Bool
     let isPopular: Bool
     let accentColor: Color
+    /// "Works out to $4.17 a month · lifetime $129.99 saves more over time"
+    let anchor: String?
     let benefits: [(icon: String, text: String)]
     let onSelect: () -> Void
     let onSubscribe: () -> Void
@@ -682,9 +717,16 @@ private struct PlanCardView: View {
                                 .font(.scaled(size: 17, weight: .bold))
                                 .foregroundStyle(ink)
                         }
+                        if let headline {
+                            Text(headline)
+                                .font(.scaled(size: 15, weight: .semibold))
+                                .foregroundStyle(ink)
+                                .padding(.top, 2)
+                        }
                         Text(subtitle)
                             .font(.scaled(size: 13))
                             .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer()
                     if isPopular {
@@ -711,7 +753,18 @@ private struct PlanCardView: View {
                         Text(intro)
                             .font(.scaled(size: 12, weight: .semibold))
                             .foregroundStyle(accentColor)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(accentColor.opacity(0.1))
+                            .clipShape(Capsule())
                     }
+                }
+
+                if let anchor {
+                    Text(anchor)
+                        .font(.scaled(size: 12))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 // Divider

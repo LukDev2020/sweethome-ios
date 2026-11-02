@@ -2,6 +2,7 @@ import StoreKit
 import Foundation
 import CryptoKit
 import UIKit
+import UserNotifications
 
 // MARK: - StoreKit 2 Manager
 //
@@ -211,6 +212,35 @@ final class StoreKitManager: ObservableObject {
     var hasRenewingSubscription: Bool {
         guard let status = subscriptionStatus else { return false }
         return status.isActive && status.willAutoRenew
+    }
+
+    // MARK: - Renewal reminder
+    //
+    // Auto-renewal must be announced in advance (App Store 3.1.2; China's auto-renewal
+    // rules): the plans page shows a banner in the last 5 days, and a local notification
+    // fires 5 days before the renewal date. Rescheduled on every status refresh.
+
+    static let renewalReminderLead: TimeInterval = 5 * 24 * 3600
+    static let renewalReminderId = "subscription.renewal.reminder"
+
+    @MainActor
+    private func scheduleRenewalReminder() {
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: [Self.renewalReminderId])
+        guard let status = subscriptionStatus, status.isActive, status.willAutoRenew,
+              let renews = status.expiresDate else { return }
+        let fireAt = renews.addingTimeInterval(-Self.renewalReminderLead)
+        guard fireAt > Date() else { return } // short trials: the banner covers it
+        let lang = LanguageManager.shared
+        let price = products.first { $0.id == status.productId }?.displayPrice ?? ""
+        let content = UNMutableNotificationContent()
+        content.title = lang.localized("store.renewal.notif.title")
+        content.body = String(format: lang.localized("store.renewal.reminder"),
+                              planDisplayName(for: status.planId),
+                              renews.formatted(.dateTime.month().day()), price)
+        let parts = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: fireAt)
+        center.add(UNNotificationRequest(identifier: Self.renewalReminderId, content: content,
+                                         trigger: UNCalendarNotificationTrigger(dateMatching: parts, repeats: false)))
     }
 
     /// Apple's Manage Subscriptions sheet (cancel the subscription after buying lifetime).
@@ -428,6 +458,7 @@ final class StoreKitManager: ObservableObject {
             purchasedPlanId = lifetime
             subscriptionStatus = nil
         }
+        scheduleRenewalReminder()
     }
 
     // MARK: - Transaction Listener (background renewals, refunds, etc.)
