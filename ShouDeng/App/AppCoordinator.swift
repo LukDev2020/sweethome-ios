@@ -1390,12 +1390,16 @@ final class AppCoordinator: ObservableObject {
                                                                          LanguageManager.shared.localized("sos.method.\(method.rawValue)")))
 
         #if BETA
-        // Beta: simulate escalation — skip real API call and immediately acknowledge
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
-            self?.activeSOSEvent?.escalationState = .acknowledged
-            self?.addTimelineEntry(type: .sosResolved, description: LanguageManager.shared.localized("timeline.sosBetaSim"))
+        // TestFlight: simulate escalation — skip the real API call and acknowledge —
+        // unless the tester turned on real SOS in Settings (BuildChannel).
+        if BuildChannel.shared.simulatesSOS {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+                self?.activeSOSEvent?.escalationState = .frozen // what the server sets on acknowledge
+                self?.addTimelineEntry(type: .sosResolved, description: LanguageManager.shared.localized("timeline.sosBetaSim"))
+            }
+            return
         }
-        #else
+        #endif
         // Persist to the offline queue FIRST, then try right away with a short
         // timeout; if that fails the queue retries on reconnect / foreground.
         sosDeliveryFailed = false
@@ -1420,7 +1424,6 @@ final class AppCoordinator: ObservableObject {
                 self.sosDeliveryFailed = true
             }
         }
-        #endif
     }
 
     /// The server answered for a queued/direct SOS trigger: adopt its id so

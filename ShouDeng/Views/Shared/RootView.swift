@@ -164,18 +164,7 @@ private struct AuthenticatedRootView: View {
     @ViewBuilder
     private var betaBanner: some View {
         #if BETA
-        HStack(spacing: 6) {
-            Image(systemName: "hammer.fill")
-                .font(.caption)
-            Text("TestFlight 测试版")
-                .font(.caption.bold())
-            Text("· SOS/跌倒升级走模拟通道")
-                .font(.caption2)
-        }
-        .foregroundStyle(.white)
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 6)
-        .background(Color.orange)
+        BetaBanner() // TestFlight builds only (BuildChannel.swift)
         #endif
     }
 
