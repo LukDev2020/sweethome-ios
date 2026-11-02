@@ -294,6 +294,16 @@ struct GuardianSettingsView: View {
 
     // MARK: - Subscription Panel
 
+    /// "2 of 4 guardians · 2 of 6 family members" for a paid household
+    @ViewBuilder
+    private var householdSeats: some View {
+        if let h = coordinator.storeKitManager.household, h.planId != "free", h.maxGuardians >= 0, h.maxProtected >= 0 {
+            Text(String(format: langManager.localized("household.seats"), h.guardians, h.maxGuardians, h.protected, h.maxProtected))
+                .font(.scaled(size: 12))
+                .foregroundStyle(.secondary)
+        }
+    }
+
     private var subscriptionPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(langManager.localized("guardian.settings.section.subscription"))
@@ -313,6 +323,24 @@ struct GuardianSettingsView: View {
                                 .font(.scaled(size: 12))
                                 .foregroundStyle(.secondary)
                         }
+                        householdSeats
+                    }
+                    Spacer()
+                }
+                .padding(.vertical, 2)
+            } else if let payer = coordinator.storeKitManager.coveredByName {
+                // A family member's plan covers this account
+                HStack(spacing: 8) {
+                    Image(systemName: "house.fill")
+                        .foregroundStyle(safe)
+                        .font(.scaled(size: 14))
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(coordinator.storeKitManager.planDisplayName(for: coordinator.storeKitManager.activePlanId))
+                            .font(.scaled(size: 13, weight: .medium))
+                        Text(String(format: langManager.localized("household.coveredBy"), payer))
+                            .font(.scaled(size: 12))
+                            .foregroundStyle(.secondary)
+                        householdSeats
                     }
                     Spacer()
                 }

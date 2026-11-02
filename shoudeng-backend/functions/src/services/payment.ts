@@ -295,7 +295,7 @@ export const PLANS = {
   },
   single: {
     id: "single",
-    name: "单人关注版",
+    name: "基础版",
     prices: {
       monthly: { CNY: 8, USD: 2.99 }, yearly: { CNY: 68, USD: 22.99 }, lifetime: { CNY: 168, USD: 59.99 },
     },
@@ -305,9 +305,10 @@ export const PLANS = {
       "com.shoudeng.app.single.lifetime",
     ],
     ttlDays: { heartbeat: 90, location: 90, checkin: -1 },
-    maxGuardians: 3,
-    maxProtected: 1,
-    features: [...SAFETY_FLOOR, "3_guardians", "90d_timeline", "duty_schedule", "export_pdf"],
+    // Per household (services/household.ts): 2 guardians + 2 protected
+    maxGuardians: 2,
+    maxProtected: 2,
+    features: [...SAFETY_FLOOR, "2_guardians", "90d_timeline", "duty_schedule", "export_pdf"],
   },
   family: {
     id: "family",
@@ -321,10 +322,11 @@ export const PLANS = {
       "com.shoudeng.app.family.lifetime",
     ],
     ttlDays: { heartbeat: 180, location: 180, checkin: -1 },
-    maxGuardians: -1,
-    maxProtected: 4,
+    // Per household: 4 guardians + 6 protected (extra seats come with 1.1)
+    maxGuardians: 4,
+    maxProtected: 6,
     features: [
-      ...SAFETY_FLOOR, "unlimited_guardians", "180d_timeline", "duty_schedule",
+      ...SAFETY_FLOOR, "4_guardians", "180d_timeline", "duty_schedule",
       "export_pdf", "family_dashboard", "location_history_export",
     ],
   },
@@ -362,7 +364,7 @@ export function isLifetimeProduct(productId: string | undefined): boolean {
 }
 
 /** Higher = more. Used to pick the better of a subscription and a lifetime purchase. */
-const PLAN_RANK: Record<PlanId, number> = { free: 0, single: 1, family: 2, ultimate: 3 };
+export const PLAN_RANK: Record<PlanId, number> = { free: 0, single: 1, family: 2, ultimate: 3 };
 
 /**
  * Map an App Store product ID to its plan. Returns null for unknown products.

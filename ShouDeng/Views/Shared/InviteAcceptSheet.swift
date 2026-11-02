@@ -21,6 +21,8 @@ enum InviteFailure: Equatable {
     /// - max: how many people the guardian's plan covers, when the server says
     /// - yourPlan: the full plan is mine (I would be the guardian)
     case planLimit(max: Int?, yourPlan: Bool)
+    /// The family's plan has no guardian seat left (households: Essential 2, Family 4)
+    case guardianLimit(max: Int?, yourPlan: Bool)
     case network
     case tooManyAttempts
     case other
@@ -32,6 +34,9 @@ enum InviteFailure: Equatable {
             case "INVITE_EXPIRED": self = .expired
             case "INVITE_USED": self = .used
             case "SELF_ACCEPT": self = .selfAccept
+            case "PLAN_LIMIT" where coded.details["limit"] == "guardians":
+                self = .guardianLimit(max: coded.details["max"].flatMap { Int($0) },
+                                      yourPlan: coded.details["guardianIsYou"] == "true")
             case "PLAN_LIMIT":
                 self = .planLimit(max: coded.details["maxProtected"].flatMap { Int($0) },
                                   yourPlan: coded.details["guardianIsYou"] == "true")
@@ -93,6 +98,9 @@ enum InviteFailure: Equatable {
         case .planLimit(nil, true): return lang.localized("invite.error.planLimit.yoursFull")
         case .planLimit(let max?, false): return String(format: lang.localized("invite.error.planLimit.theirs"), max)
         case .planLimit(nil, false): return lang.localized("invite.error.planLimit.theirsFull")
+        case .guardianLimit(let max?, true): return String(format: lang.localized("invite.error.guardianLimit.yours"), max)
+        case .guardianLimit(let max?, false): return String(format: lang.localized("invite.error.guardianLimit.theirs"), max)
+        case .guardianLimit(nil, _): return lang.localized("invite.error.guardianLimit.full")
         case .network: return lang.localized("invite.error.network")
         case .tooManyAttempts: return lang.localized("invite.error.tooMany")
         case .other: return lang.localized("invite.error.other")
@@ -102,6 +110,7 @@ enum InviteFailure: Equatable {
     /// "Tell them to upgrade" is offered when the other person's plan is full.
     var suggestsAskingToUpgrade: Bool {
         if case .planLimit(_, false) = self { return true }
+        if case .guardianLimit(_, false) = self { return true }
         return false
     }
 }

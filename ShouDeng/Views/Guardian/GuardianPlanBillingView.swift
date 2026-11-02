@@ -135,6 +135,22 @@ struct GuardianPlanBillingView: View {
 
     @ViewBuilder
     private var currentPlanBanner: some View {
+        if let payer = coordinator.storeKitManager.coveredByName {
+            HStack(spacing: 10) {
+                Image(systemName: "house.fill")
+                    .font(.scaled(size: 18))
+                    .foregroundStyle(safe)
+                Text(String(format: langManager.localized("household.coveredBy.banner"), payer,
+                            coordinator.storeKitManager.planDisplayName(for: coordinator.storeKitManager.activePlanId)))
+                    .font(.scaled(size: 14, weight: .semibold))
+                    .foregroundStyle(ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer()
+            }
+            .padding(14)
+            .background(safe.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
         if let lifetime = coordinator.storeKitManager.lifetimePlanId {
             HStack(spacing: 10) {
                 Image(systemName: "checkmark.seal.fill")
@@ -251,7 +267,7 @@ struct GuardianPlanBillingView: View {
             guard let owned = store.lifetimePlanId else { return false }
             return StoreKitManager.betterPlan(owned, plan) == owned
         }
-        return store.purchasedPlanId == plan
+        return store.activePlanId == plan
     }
 
     // MARK: - Plan Cards

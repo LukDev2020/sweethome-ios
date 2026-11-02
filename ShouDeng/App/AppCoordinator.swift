@@ -871,6 +871,8 @@ final class AppCoordinator: ObservableObject {
                 self.localStore.saveProtectedPersons(mapped)
                 self.syncWidgetState()
             }
+            // Links decide the household plan (a family member may pay for everyone)
+            await storeKitManager.refreshHousehold()
         } catch {
             #if DEBUG
             print("[Coordinator] Failed to fetch protected persons: \(error)")
@@ -886,6 +888,7 @@ final class AppCoordinator: ObservableObject {
                 self.localStore.saveGuardians(guardians)
                 self.syncWidgetState()
             }
+            await storeKitManager.refreshHousehold()
         } catch {
             #if DEBUG
             print("[Coordinator] Failed to fetch guardians: \(error)")
@@ -2300,6 +2303,7 @@ final class AppCoordinator: ObservableObject {
 
     func fetchSubscription() async {
         await storeKitManager.refreshSubscriptionStatus()
+        await storeKitManager.refreshHousehold()
     }
 
     // MARK: - Risk Score Refresh

@@ -127,16 +127,16 @@ describe("Payment Service — PLANS", () => {
     expect(PLANS.free.maxProtected).toBe(1);
   });
 
-  test("single plan has 6 expected features", () => {
+  test("Essential (single) is 2 guardians + 2 protected per household", () => {
     expect(PLANS.single.features).toContain("duty_schedule");
     expect(PLANS.single.features).toContain("export_pdf");
-    expect(PLANS.single.maxGuardians).toBe(3);
-    expect(PLANS.single.maxProtected).toBe(1);
+    expect(PLANS.single.maxGuardians).toBe(2);
+    expect(PLANS.single.maxProtected).toBe(2);
   });
 
-  test("family plan has unlimited guardians", () => {
-    expect(PLANS.family.maxGuardians).toBe(-1);
-    expect(PLANS.family.maxProtected).toBe(4);
+  test("Family is 4 guardians + 6 protected per household", () => {
+    expect(PLANS.family.maxGuardians).toBe(4);
+    expect(PLANS.family.maxProtected).toBe(6);
     expect(PLANS.family.features).toContain("sms_fallback");
   });
 

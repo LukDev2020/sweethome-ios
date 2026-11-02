@@ -4,7 +4,7 @@ import * as crypto from "crypto";
 import { authMiddleware } from "../middleware/auth";
 import { createRateLimiter, RATE_LIMITS } from "../middleware/rateLimit";
 import { insertConsentAudit } from "../services/bigquery";
-import { getSubscription, PLANS, PlanId } from "../services/payment";
+import { checkNewLinkFor } from "../services/household";
 
 const router = Router();
 const db = admin.firestore();
@@ -37,7 +37,7 @@ const INVITE_ERRORS: Record<InviteErrorCode, { status: number; error: string }> 
   INVITE_EXPIRED: { status: 410, error: "Invite has expired" },
   INVITE_USED: { status: 409, error: "Invite already used" },
   SELF_ACCEPT: { status: 400, error: "Cannot accept your own invite" },
-  PLAN_LIMIT: { status: 403, error: "Guardian's plan limit reached. Upgrade to add more protected persons." },
+  PLAN_LIMIT: { status: 403, error: "This family's plan is full. Upgrade to add more people." },
   USER_NOT_FOUND: { status: 404, error: "User not found" },
 };
 
@@ -260,26 +260,21 @@ router.post("/accept", createRateLimiter(RATE_LIMITS.invite), async (req: Reques
       const linkId = `${guardianId}_${protectedPersonId}`;
       const linkRef = db.collection("guardian_links").doc(linkId);
 
-      // Check guardian's plan capacity (protected person limit). Re-linking the
-      // same pair doesn't take another seat.
-      const guardianSub = await getSubscription(guardianId);
-      const guardianPlan = PLANS[guardianSub.planId as PlanId] || PLANS.free;
-      const maxProtected = (guardianPlan as any).maxProtected ?? 1;
-
-      if (maxProtected >= 0) {
-        const existingLinks = await db
-          .collection("guardian_links")
-          .where("guardianId", "==", guardianId)
-          .where("status", "==", "active")
-          .get();
-        const used = existingLinks.docs.filter((d) => d.id !== linkId).length;
-        if (used >= maxProtected) {
-          throw new InviteError("PLAN_LIMIT", {
-            upgrade: true,
-            maxProtected,
-            guardianIsYou: guardianId === uid,
-          });
-        }
+      // Household seats (services/household.ts): protected people and guardians per
+      // plan, shared by the family. Re-linking the same pair doesn't take a seat.
+      const violation = await checkNewLinkFor(guardianId, protectedPersonId);
+      if (violation) {
+        const owner = violation.payerId ?? guardianId;
+        throw new InviteError("PLAN_LIMIT", {
+          upgrade: true,
+          limit: violation.limit,
+          max: violation.max,
+          planId: violation.planId,
+          // Kept for older apps, which read maxProtected
+          ...(violation.limit === "protected" ? { maxProtected: violation.max } : { maxGuardians: violation.max }),
+          // The plan that is full belongs to the person accepting
+          guardianIsYou: owner === uid,
+        });
       }
 
       // Someone joining their first family opens the app on their side of the

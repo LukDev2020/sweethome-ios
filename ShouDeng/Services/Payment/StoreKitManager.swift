@@ -142,6 +142,7 @@ final class StoreKitManager: ObservableObject {
         guard userId != accountId else { return }
         accountId = userId
         foreignOriginalIds = []
+        household = nil
         if userId == nil {
             purchasedPlanId = nil
             lifetimePlanId = nil
@@ -533,10 +534,11 @@ final class StoreKitManager: ObservableObject {
                                        "priority_support"]),
     ]
 
+    /// Per household (backend services/household.ts); -1 = unlimited
     private static let planLimits: [String: (maxGuardians: Int, maxProtected: Int)] = [
         "free": (1, 1),
-        "single": (3, 1),
-        "family": (-1, 4),    // -1 = unlimited
+        "single": (2, 2),
+        "family": (4, 6),
         "ultimate": (-1, -1),
     ]
 
@@ -550,7 +552,59 @@ final class StoreKitManager: ObservableObject {
     /// Current active plan ID (defaults to "free")
     @MainActor
     var activePlanId: String {
-        purchasedPlanId ?? "free"
+        Self.betterPlan(purchasedPlanId, householdPlanId) ?? "free"
+    }
+
+    // MARK: - Household (a family member's plan covers everyone in the family)
+
+    /// The family's plan as the server sees it: own, or the household of whoever pays
+    /// for someone this account guards (GET /v1/payment/subscription → household).
+    struct HouseholdInfo: Decodable, Equatable {
+        let planId: String
+        let payerId: String?
+        let payerName: String?
+        let guardians: Int
+        let maxGuardians: Int
+        let `protected`: Int
+        let maxProtected: Int
+    }
+
+    @MainActor @Published private(set) var household: HouseholdInfo?
+
+    /// A paid household plan someone else pays for (nil if it is free or this account's own)
+    @MainActor
+    var householdPlanId: String? {
+        guard let h = household, h.planId != "free" else { return nil }
+        return h.planId
+    }
+
+    /// "Sarah" when another family member's plan is the one in effect
+    @MainActor
+    var coveredByName: String? {
+        guard let h = household, h.planId != "free", let payer = h.payerId, payer != accountId,
+              StoreKitManager.betterPlan(purchasedPlanId, h.planId) == h.planId,
+              purchasedPlanId != h.planId else { return nil }
+        return h.payerName ?? ""
+    }
+
+    private struct SubscriptionResponse: Decodable { let household: HouseholdInfo? }
+
+    @MainActor
+    func applyHousehold(_ info: HouseholdInfo?) {
+        household = info
+    }
+
+    @MainActor
+    func refreshHousehold() async {
+        guard usesStoreKit, accountId != nil else { return }
+        do {
+            let response: SubscriptionResponse = try await apiClient.get("/v1/payment/subscription")
+            applyHousehold(response.household)
+        } catch {
+            #if DEBUG
+            print("[StoreKit] Household refresh failed: \(error)")
+            #endif
+        }
     }
 
     /// Check if user's plan includes a specific feature
@@ -573,13 +627,13 @@ final class StoreKitManager: ObservableObject {
     /// Guardian count limit for current plan (-1 = unlimited)
     @MainActor
     var maxGuardians: Int {
-        Self.planLimits[activePlanId]?.maxGuardians ?? 1
+        household?.maxGuardians ?? Self.planLimits[activePlanId]?.maxGuardians ?? 1
     }
 
     /// Protected person count limit for current plan (-1 = unlimited)
     @MainActor
     var maxProtected: Int {
-        Self.planLimits[activePlanId]?.maxProtected ?? 1
+        household?.maxProtected ?? Self.planLimits[activePlanId]?.maxProtected ?? 1
     }
 
     /// Timeline retention days for current plan

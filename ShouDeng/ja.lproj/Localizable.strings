@@ -1724,6 +1724,12 @@
 "invite.error.planLimit.theirsFull" = "相手のプランは上限に達しています。";
 "invite.error.planLimit.tellThem" = "相手にアップグレードを依頼";
 "invite.error.planLimit.shareText" = "Lantern Careであなたとつながろうとしましたが、プランの上限に達していました。設定 → プランからアップグレードしてもらえますか？";
+"invite.error.guardianLimit.yours" = "ご家族のプランは見守る人がすでに %d 人です。アップグレードすると追加できます。";
+"invite.error.guardianLimit.theirs" = "このご家族のプランは見守る人がすでに %d 人です。";
+"invite.error.guardianLimit.full" = "このご家族のプランは見守る人の枠がいっぱいです。";
+"household.coveredBy" = "%@ さんが家族のために支払い済み";
+"household.coveredBy.banner" = "%@ さんの%@に含まれています。追加の購入は不要です。";
+"household.seats" = "見守る人 %d / %d · 家族 %d / %d";
 "invite.error.network" = "接続が不安定です。しばらくしてからもう一度お試しください。";
 "invite.error.tooMany" = "試行回数が多すぎます。数分待ってからもう一度お試しください。";
 "invite.error.other" = "問題が発生しました。もう一度お試しください。";

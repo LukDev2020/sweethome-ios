@@ -1725,6 +1725,12 @@
 "invite.error.planLimit.theirsFull" = "对方的方案人数已满";
 "invite.error.planLimit.tellThem" = "告诉对方升级";
 "invite.error.planLimit.shareText" = "我想加入你的守灯家庭，但你的方案人数已满。可以在设置 → 方案里升级吗？";
+"invite.error.guardianLimit.yours" = "你的家庭方案已有 %d 位守护者，升级后可以加入更多";
+"invite.error.guardianLimit.theirs" = "这个家庭的方案已有 %d 位守护者";
+"invite.error.guardianLimit.full" = "这个家庭的方案守护者名额已满";
+"household.coveredBy" = "由 %@ 为全家支付";
+"household.coveredBy.banner" = "你已在 %@ 的%@中，不需要另外购买。";
+"household.seats" = "守护者 %d / %d · 家人 %d / %d";
 "invite.error.network" = "网络不稳定，请稍后重试";
 "invite.error.tooMany" = "尝试次数过多，请几分钟后再试";
 "invite.error.other" = "出了点问题，请稍后重试";

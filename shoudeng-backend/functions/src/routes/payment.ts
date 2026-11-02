@@ -14,6 +14,7 @@ import {
   VerifiedReceipt,
   PLANS,
 } from "../services/payment";
+import { householdSummary } from "../services/household";
 
 const router = Router();
 
@@ -47,7 +48,14 @@ router.get(
 
     try {
       const sub = await getSubscription(uid);
-      res.json(sub);
+      // Plan in effect for the family (own or a household's) and its seats
+      let household = null;
+      try {
+        household = await householdSummary(uid);
+      } catch (error) {
+        console.warn("[Payment] household summary failed:", error);
+      }
+      res.json({ ...sub, household });
     } catch (error) {
       console.error("[Payment] get subscription error:", error);
       res.status(500).json({ error: "Failed to get subscription" });

@@ -323,4 +323,35 @@ final class InviteFlowTests: XCTestCase {
         XCTAssertEqual(body["code"] as? String, "7F3A9C")
         XCTAssertEqual(body["criticalAlertConsent"] as? Bool, false)
     }
+
+    // MARK: - Households (one plan for the family)
+
+    func testGuardianLimitIsItsOwnMessage() {
+        let full = APIServerError(status: 403, code: "PLAN_LIMIT",
+                                  details: ["limit": "guardians", "max": "4", "guardianIsYou": "false"])
+        let failure = InviteFailure(error: full)
+        XCTAssertEqual(failure, .guardianLimit(max: 4, yourPlan: false))
+        XCTAssertTrue(failure.message.contains("4"))
+        XCTAssertTrue(failure.suggestsAskingToUpgrade)
+        XCTAssertFalse(InviteFailure.guardianLimit(max: nil, yourPlan: true).message.isEmpty)
+    }
+
+    @MainActor
+    func testHouseholdPlanUnlocksFeaturesForAFamilyMemberWhoDidntPay() {
+        let store = StoreKitManager(apiClient: APIClient(config: .init(baseURL: "https://api.test"), offlineQueue: OfflineQueue(fileURL: nil)), observeTransactions: false)
+        store.setAccount("kevin")
+        XCTAssertEqual(store.activePlanId, "free")
+        XCTAssertFalse(store.canAccessFeature("duty_schedule"))
+        store.applyHousehold(.init(planId: "family", payerId: "sarah", payerName: "Sarah",
+                                   guardians: 2, maxGuardians: 4, protected: 2, maxProtected: 6))
+        XCTAssertEqual(store.activePlanId, "family")
+        XCTAssertTrue(store.canAccessFeature("duty_schedule"))
+        XCTAssertEqual(store.coveredByName, "Sarah")
+        XCTAssertEqual(store.maxProtected, 6)
+        XCTAssertEqual(store.maxGuardians, 4)
+        // Own plan: not "covered by"
+        store.applyHousehold(.init(planId: "family", payerId: "kevin", payerName: nil,
+                                   guardians: 1, maxGuardians: 4, protected: 1, maxProtected: 6))
+        XCTAssertNil(store.coveredByName)
+    }
 }
