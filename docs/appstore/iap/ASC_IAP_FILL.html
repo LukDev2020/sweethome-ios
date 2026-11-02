@@ -1,0 +1,90 @@
+<!doctype html><html><head><meta charset='utf-8'><style>
+@page { size: A4; margin: 16mm 14mm; }
+body { font-family: -apple-system, 'PingFang SC', 'Hiragino Sans', sans-serif; font-size: 10.5pt; color:#1b2433; line-height:1.45 }
+h1 { font-size: 19pt; margin:0 0 4px } h2 { font-size: 14pt; border-bottom:2px solid #6b5ca5; padding-bottom:3px; margin-top:22px }
+h3 { font-size: 12pt; margin:18px 0 6px; color:#3f2f86; page-break-after: avoid }
+table { border-collapse: collapse; width:100%; margin:4px 0 8px; page-break-inside: avoid }
+th, td { border:1px solid #cfd6e0; padding:4px 7px; vertical-align: top; text-align:left }
+table.kv th { width: 22%; background:#f3f1fa; font-weight:600 } table.loc th { background:#eef2f7 }
+code { font-family: Menlo, monospace; font-size:9.5pt; background:#f2f4f7; padding:1px 4px; border-radius:3px }
+pre { white-space: pre-wrap; font-family: Menlo, monospace; font-size:8.8pt; background:#f7f8fa; border:1px solid #e1e5eb; padding:7px; page-break-inside: avoid }
+.lbl { font-weight:600; margin:8px 0 2px } .note { background:#fff7e8; border-left:4px solid #e8a33d; padding:6px 10px; margin:8px 0 }
+.sub { color:#5b6676 } .prod { page-break-before: always }
+</style></head><body>
+<h1>App Store Connect · App 内购买项目填写表</h1>
+<div class='sub'>Lantern Care / 守灯 · App ID 6816965331 · 2026-11-01 · 依据 docs/pricing/PRICING.md（第二版）</div>
+<div class='note'><b>本表采用的方案：</b>基础版 = 2 位守护者 + 2 位被守护者（原「单人版」改名，价格不变）；家庭版 = 4 位守护者 + 6 位被守护者。如果改用「基础版 2 + 3」，价格和描述都要改，告诉我重新生成。</div>
+
+<h2>一、总览（6 个产品）</h2>
+<table><tr><th>产品</th><th>产品 ID</th><th>类型</th><th>美国价格</th><th>B 档（约）</th></tr>
+<tr><td>Family Lifetime</td><td><code>com.shoudeng.app.family.lifetime</code></td><td>非消耗型</td><td>US$99.99</td><td>US$59.99</td></tr>
+<tr><td>Family Monthly</td><td><code>com.shoudeng.app.family.monthly</code></td><td>自动续期订阅 · 级别 1</td><td>US$4.99</td><td>US$2.99</td></tr>
+<tr><td>Family Yearly</td><td><code>com.shoudeng.app.family.yearly</code></td><td>自动续期订阅 · 级别 1</td><td>US$39.99</td><td>US$24.99</td></tr>
+<tr><td>Essential Lifetime</td><td><code>com.shoudeng.app.single.lifetime</code></td><td>非消耗型（已创建）</td><td>US$39.99</td><td>US$24.99</td></tr>
+<tr><td>Essential Monthly</td><td><code>com.shoudeng.app.single.monthly</code></td><td>自动续期订阅 · 级别 2</td><td>US$1.99</td><td>US$1.29</td></tr>
+<tr><td>Essential Yearly</td><td><code>com.shoudeng.app.single.yearly</code></td><td>自动续期订阅 · 级别 2</td><td>US$14.99</td><td>US$9.99</td></tr></table>
+<p>产品 ID 必须和 App 代码完全一致，否则 App 读不到价格。ID 里的 <code>single</code> 用户看不到，改名不需要改 ID。</p>
+<p><b>A 档（美国价格自动换算）：</b>美国、加拿大、澳大利亚、新西兰、新加坡、日本、香港、澳门、台湾。<b>B 档（手动设置）：</b>马来西亚、泰国、菲律宾。</p>
+
+<h2>二、已创建的 Individual Lifetime 要改的地方</h2>
+<table class='kv'><tr><th>参考名称</th><td>改为 <b>Essential Lifetime</b>（产品 ID 不变）</td></tr>
+<tr><th>本地化</th><td>5 种语言的显示名称、描述都换成第六节「Essential Lifetime」的内容</td></tr>
+<tr><th>审核备注</th><td>换成第六节的新文字</td></tr></table>
+
+<h2>三、先建订阅群组（订阅 → 创建）</h2>
+<table class='kv'><tr><th>参考名称</th><td><b>ShouDeng Subscriptions</b></td></tr>
+<tr><th>群组本地化</th><td>每种语言：订阅群组显示名称如下；「App 名称」选 <b>使用 App 名称</b>（这样以后 App 改名也不用改这里）</td></tr></table>
+<table class='loc'><tr><th style='width:30%'>语言</th><th>订阅群组显示名称</th></tr><tr><td>English (U.S.)</td><td><b>Plans</b></td></tr><tr><td>简体中文</td><td><b>会员方案</b></td></tr><tr><td>繁體中文</td><td><b>會員方案</b></td></tr><tr><td>Français</td><td><b>Formules</b></td></tr><tr><td>日本語</td><td><b>プラン</b></td></tr></table>
+<p>群组里 4 个订阅：家庭版月付、年付 = 级别 1；基础版月付、年付 = 级别 2。用户在群组内升级、降级时 Apple 自动处理差价。</p>
+
+<h2>四、加位（Extra seat）现在要不要建？——不要</h2>
+<ul>
+<li><b>1.0 的 App 里没有「加一位」的购买入口。</b>Apple 审核内购时会在 App 里找对应的购买流程；找不到会被拒（规则 2.1），还会拖累整个版本的审核。</li>
+<li>新的内购项目只能跟着一个 App 版本一起提交，所以等 1.1 做好「加一位」功能后再建，和 1.1 一起提交。</li>
+<li>价格照样写在官网和条款里：US$0.99 / 月、US$9.99 / 年、US$24.99 终身（每位，守护者或被守护者同价，仅家庭版可加，最多 4 位）。</li>
+<li>1.1 要建的产品（先记下，现在不建）：订阅群组「Extra Seats」里 <code>com.shoudeng.app.seats.1</code>…<code>.4</code>（各有月、年）；非消耗型 <code>com.shoudeng.app.seat.lifetime.1</code>…<code>.4</code>。同一产品不能重复购买，所以按位数分别建。</li>
+</ul>
+
+<h2>五、填写顺序</h2>
+<ol>
+<li>改已有的 Individual Lifetime（第二节）。</li>
+<li>新建非消耗型：Family Lifetime。</li>
+<li>新建订阅群组（第三节），再在群组里建 4 个订阅。</li>
+<li>每个产品：价格 → 本地化（5 种语言）→ 家庭共享关闭 → 审核信息（截屏 + 备注）→ 存储。订阅另加推介促销。</li>
+<li>全部显示「准备提交」即可，<b>现在不要提交</b>。等 1.0 新版本上传后，在版本页「App 内购买项目和订阅项目」里勾选这 6 个，和版本一起提交。</li>
+<li>提交前确认：协议、税务和银行业务里「付费 App 协议」已生效；「App 审核信息」里的演示账号是守护者身份。</li>
+</ol>
+
+<h2>六、逐项填写</h2>
+<div class='prod'><h3>1. Family Lifetime（家庭版 · 终身）</h3><table class='kv'><tr><th>参考名称</th><td><b>Family Lifetime</b></td></tr><tr><th>产品 ID</th><td><code>com.shoudeng.app.family.lifetime</code>（创建后不可更改）</td></tr><tr><th>所在位置</th><td>App 内购买项目 → ＋ → 类型：<b>非消耗型项目</b></td></tr><tr><th>价格</th><td>基准国家/地区：<b>美国 US$99.99</b>，其余 A 档市场用自动换算<br>手动改：马来西亚、泰国、菲律宾 → 最接近 <b>US$59.99</b> 的当地价格点</td></tr><tr><th>销售范围</th><td>与 App 相同（12 个市场）</td></tr><tr><th>家庭共享</th><td><b>关闭</b>（开启后不能再关）</td></tr><tr><th>税务类别</th><td>保持默认（与 App 相同）</td></tr><tr><th>审核截屏</th><td>iap-review-family-lifetime.png（需重拍，见第七节）</td></tr><tr><th>图像（可选）</th><td>family-lifetime-1024.png（Downloads，无文字，可直接用）</td></tr></table><p class='lbl'>本地化（5 种语言都添加）</p><table class='loc'><tr><th style='width:18%'>语言</th><th style='width:30%'>显示名称（≤30）</th><th>描述（≤45）</th></tr><tr><td>English (U.S.)</td><td><b>Family – Lifetime</b></td><td>6 people protected, 4 guardians. Pay once.</td></tr><tr><td>简体中文</td><td><b>家庭版 · 终身</b></td><td>守护最多 6 人，最多 4 位守护者，一次买断</td></tr><tr><td>繁體中文</td><td><b>家庭版 · 終身</b></td><td>守護最多 6 人，最多 4 位守護者，一次買斷</td></tr><tr><td>Français</td><td><b>Famille – À vie</b></td><td>6 proches, 4 gardiens. Achat unique.</td></tr><tr><td>日本語</td><td><b>ファミリー・買い切り</b></td><td>最大6人・見守る人4人まで。買い切り</td></tr></table><p class='lbl'>审核备注（复制粘贴）</p><pre>One-time, non-consumable purchase. Unlocks the Family plan permanently: protect up to 6 people, up to 4 guardians, 180-day timeline, duty schedule, event report PDF export, family safety dashboard, location GPX export.
+To find it: sign in with the review account (Guardian role) → Settings → Subscription → View Plans → Lifetime tab → &quot;Buy lifetime access&quot; on the Family card.
+SOS alerts, including SMS and phone-call escalation, are free on every plan and are not part of this purchase. Restore Purchase is on the same page.</pre></div><div class=''><h3>2. Family Monthly（家庭版 · 月付）</h3><table class='kv'><tr><th>参考名称</th><td><b>Family Monthly</b></td></tr><tr><th>产品 ID</th><td><code>com.shoudeng.app.family.monthly</code>（创建后不可更改）</td></tr><tr><th>所在位置</th><td>订阅 → 群组「ShouDeng Subscriptions」→ 创建订阅</td></tr><tr><th>订阅时长</th><td>1 个月</td></tr><tr><th>级别</th><td>1（家庭版 = 1 最高，基础版 = 2）</td></tr><tr><th>价格</th><td>基准国家/地区：<b>美国 US$4.99</b>，其余 A 档市场用自动换算<br>手动改：马来西亚、泰国、菲律宾 → 最接近 <b>US$2.99</b> 的当地价格点</td></tr><tr><th>销售范围</th><td>与 App 相同（12 个市场）</td></tr><tr><th>家庭共享</th><td><b>关闭</b>（开启后不能再关）</td></tr><tr><th>税务类别</th><td>保持默认（与 App 相同）</td></tr><tr><th>推介促销</th><td>免费 · <b>1 周</b> · 新订阅者 · 所有国家和地区（在「订阅价格」→「推介促销」里添加）</td></tr><tr><th>审核截屏</th><td>iap-review-subscriptions.png（需重拍，见第七节）</td></tr></table><p class='lbl'>本地化（5 种语言都添加）</p><table class='loc'><tr><th style='width:18%'>语言</th><th style='width:30%'>显示名称（≤30）</th><th>描述（≤45）</th></tr><tr><td>English (U.S.)</td><td><b>Family – Monthly</b></td><td>Protect up to 6 people, up to 4 guardians</td></tr><tr><td>简体中文</td><td><b>家庭版 · 月付</b></td><td>守护最多 6 人，最多 4 位守护者，按月续订</td></tr><tr><td>繁體中文</td><td><b>家庭版 · 月付</b></td><td>守護最多 6 人，最多 4 位守護者，按月續訂</td></tr><tr><td>Français</td><td><b>Famille – Mensuel</b></td><td>Jusqu&#x27;à 6 proches et 4 gardiens</td></tr><tr><td>日本語</td><td><b>ファミリー・月額</b></td><td>最大6人を見守り、見守る人は4人まで</td></tr></table><p class='lbl'>审核备注（复制粘贴）</p><pre>Auto-renewable subscription. Unlocks the Family plan: protect up to 6 people, up to 4 guardians, 180-day timeline, duty schedule, event report PDF export, family safety dashboard, location GPX export. New subscribers get a 1-week free trial.
+To find it: sign in with the review account (Guardian role) → Settings → Subscription → View Plans → Monthly tab → &quot;Subscribe&quot; on the Family card.
+SOS alerts, including SMS and phone-call escalation, are free on every plan. Restore Purchase is on the same page.</pre></div><div class=''><h3>3. Family Yearly（家庭版 · 年付）</h3><table class='kv'><tr><th>参考名称</th><td><b>Family Yearly</b></td></tr><tr><th>产品 ID</th><td><code>com.shoudeng.app.family.yearly</code>（创建后不可更改）</td></tr><tr><th>所在位置</th><td>订阅 → 群组「ShouDeng Subscriptions」→ 创建订阅</td></tr><tr><th>订阅时长</th><td>1 年</td></tr><tr><th>级别</th><td>1（家庭版 = 1 最高，基础版 = 2）</td></tr><tr><th>价格</th><td>基准国家/地区：<b>美国 US$39.99</b>，其余 A 档市场用自动换算<br>手动改：马来西亚、泰国、菲律宾 → 最接近 <b>US$24.99</b> 的当地价格点</td></tr><tr><th>销售范围</th><td>与 App 相同（12 个市场）</td></tr><tr><th>家庭共享</th><td><b>关闭</b>（开启后不能再关）</td></tr><tr><th>税务类别</th><td>保持默认（与 App 相同）</td></tr><tr><th>推介促销</th><td>免费 · <b>1 周</b> · 新订阅者 · 所有国家和地区（在「订阅价格」→「推介促销」里添加）</td></tr><tr><th>审核截屏</th><td>iap-review-subscriptions.png（需重拍，见第七节）</td></tr></table><p class='lbl'>本地化（5 种语言都添加）</p><table class='loc'><tr><th style='width:18%'>语言</th><th style='width:30%'>显示名称（≤30）</th><th>描述（≤45）</th></tr><tr><td>English (U.S.)</td><td><b>Family – Yearly</b></td><td>Protect up to 6 people, up to 4 guardians</td></tr><tr><td>简体中文</td><td><b>家庭版 · 年付</b></td><td>守护最多 6 人，最多 4 位守护者，按年续订</td></tr><tr><td>繁體中文</td><td><b>家庭版 · 年付</b></td><td>守護最多 6 人，最多 4 位守護者，按年續訂</td></tr><tr><td>Français</td><td><b>Famille – Annuel</b></td><td>Jusqu&#x27;à 6 proches et 4 gardiens</td></tr><tr><td>日本語</td><td><b>ファミリー・年額</b></td><td>最大6人を見守り、見守る人は4人まで</td></tr></table><p class='lbl'>审核备注（复制粘贴）</p><pre>Auto-renewable subscription. Unlocks the Family plan: protect up to 6 people, up to 4 guardians, 180-day timeline, duty schedule, event report PDF export, family safety dashboard, location GPX export. New subscribers get a 1-week free trial.
+To find it: sign in with the review account (Guardian role) → Settings → Subscription → View Plans → Yearly tab → &quot;Subscribe&quot; on the Family card.
+SOS alerts, including SMS and phone-call escalation, are free on every plan. Restore Purchase is on the same page.</pre></div><div class=''><h3>4. Essential Lifetime（基础版 · 终身）</h3><table class='kv'><tr><th>参考名称</th><td><b>Essential Lifetime</b></td></tr><tr><th>产品 ID</th><td><code>com.shoudeng.app.single.lifetime</code>（创建后不可更改）</td></tr><tr><th>所在位置</th><td>App 内购买项目 → ＋ → 类型：<b>非消耗型项目</b></td></tr><tr><th>价格</th><td>基准国家/地区：<b>美国 US$39.99</b>，其余 A 档市场用自动换算<br>手动改：马来西亚、泰国、菲律宾 → 最接近 <b>US$24.99</b> 的当地价格点</td></tr><tr><th>销售范围</th><td>与 App 相同（12 个市场）</td></tr><tr><th>家庭共享</th><td><b>关闭</b>（开启后不能再关）</td></tr><tr><th>税务类别</th><td>保持默认（与 App 相同）</td></tr><tr><th>审核截屏</th><td>iap-review-individual-lifetime.png（需重拍，见第七节）</td></tr><tr><th>图像（可选）</th><td>individual-lifetime-1024.png（Downloads，无文字，可直接用）</td></tr></table><p class='lbl'>本地化（5 种语言都添加）</p><table class='loc'><tr><th style='width:18%'>语言</th><th style='width:30%'>显示名称（≤30）</th><th>描述（≤45）</th></tr><tr><td>English (U.S.)</td><td><b>Essential – Lifetime</b></td><td>2 people protected, 2 guardians. Pay once.</td></tr><tr><td>简体中文</td><td><b>基础版 · 终身</b></td><td>守护 2 人，最多 2 位守护者，一次买断</td></tr><tr><td>繁體中文</td><td><b>基礎版 · 終身</b></td><td>守護 2 人，最多 2 位守護者，一次買斷</td></tr><tr><td>Français</td><td><b>Essentiel – À vie</b></td><td>2 proches, 2 gardiens. Achat unique.</td></tr><tr><td>日本語</td><td><b>ベーシック・買い切り</b></td><td>最大2人・見守る人2人まで。買い切り</td></tr></table><p class='lbl'>审核备注（复制粘贴）</p><pre>One-time, non-consumable purchase. Unlocks the Essential plan permanently: protect up to 2 people, up to 2 guardians, 90-day timeline, duty schedule, event report PDF export.
+To find it: sign in with the review account (Guardian role) → Settings → Subscription → View Plans → Lifetime tab → &quot;Buy lifetime access&quot; on the Essential card.
+SOS alerts, including SMS and phone-call escalation, are free on every plan and are not part of this purchase. Restore Purchase is on the same page.</pre></div><div class=''><h3>5. Essential Monthly（基础版 · 月付）</h3><table class='kv'><tr><th>参考名称</th><td><b>Essential Monthly</b></td></tr><tr><th>产品 ID</th><td><code>com.shoudeng.app.single.monthly</code>（创建后不可更改）</td></tr><tr><th>所在位置</th><td>订阅 → 群组「ShouDeng Subscriptions」→ 创建订阅</td></tr><tr><th>订阅时长</th><td>1 个月</td></tr><tr><th>级别</th><td>2（家庭版 = 1 最高，基础版 = 2）</td></tr><tr><th>价格</th><td>基准国家/地区：<b>美国 US$1.99</b>，其余 A 档市场用自动换算<br>手动改：马来西亚、泰国、菲律宾 → 最接近 <b>US$1.29</b> 的当地价格点</td></tr><tr><th>销售范围</th><td>与 App 相同（12 个市场）</td></tr><tr><th>家庭共享</th><td><b>关闭</b>（开启后不能再关）</td></tr><tr><th>税务类别</th><td>保持默认（与 App 相同）</td></tr><tr><th>推介促销</th><td>免费 · <b>1 周</b> · 新订阅者 · 所有国家和地区（在「订阅价格」→「推介促销」里添加）</td></tr><tr><th>审核截屏</th><td>iap-review-subscriptions.png（需重拍，见第七节）</td></tr></table><p class='lbl'>本地化（5 种语言都添加）</p><table class='loc'><tr><th style='width:18%'>语言</th><th style='width:30%'>显示名称（≤30）</th><th>描述（≤45）</th></tr><tr><td>English (U.S.)</td><td><b>Essential – Monthly</b></td><td>Protect 2 people, up to 2 guardians</td></tr><tr><td>简体中文</td><td><b>基础版 · 月付</b></td><td>守护 2 人，最多 2 位守护者，按月续订</td></tr><tr><td>繁體中文</td><td><b>基礎版 · 月付</b></td><td>守護 2 人，最多 2 位守護者，按月續訂</td></tr><tr><td>Français</td><td><b>Essentiel – Mensuel</b></td><td>Jusqu&#x27;à 2 proches et 2 gardiens</td></tr><tr><td>日本語</td><td><b>ベーシック・月額</b></td><td>最大2人を見守り、見守る人は2人まで</td></tr></table><p class='lbl'>审核备注（复制粘贴）</p><pre>Auto-renewable subscription. Unlocks the Essential plan: protect up to 2 people, up to 2 guardians, 90-day timeline, duty schedule, event report PDF export. New subscribers get a 1-week free trial.
+To find it: sign in with the review account (Guardian role) → Settings → Subscription → View Plans → Monthly tab → &quot;Subscribe&quot; on the Essential card.
+SOS alerts, including SMS and phone-call escalation, are free on every plan. Restore Purchase is on the same page.</pre></div><div class=''><h3>6. Essential Yearly（基础版 · 年付）</h3><table class='kv'><tr><th>参考名称</th><td><b>Essential Yearly</b></td></tr><tr><th>产品 ID</th><td><code>com.shoudeng.app.single.yearly</code>（创建后不可更改）</td></tr><tr><th>所在位置</th><td>订阅 → 群组「ShouDeng Subscriptions」→ 创建订阅</td></tr><tr><th>订阅时长</th><td>1 年</td></tr><tr><th>级别</th><td>2（家庭版 = 1 最高，基础版 = 2）</td></tr><tr><th>价格</th><td>基准国家/地区：<b>美国 US$14.99</b>，其余 A 档市场用自动换算<br>手动改：马来西亚、泰国、菲律宾 → 最接近 <b>US$9.99</b> 的当地价格点</td></tr><tr><th>销售范围</th><td>与 App 相同（12 个市场）</td></tr><tr><th>家庭共享</th><td><b>关闭</b>（开启后不能再关）</td></tr><tr><th>税务类别</th><td>保持默认（与 App 相同）</td></tr><tr><th>推介促销</th><td>免费 · <b>1 周</b> · 新订阅者 · 所有国家和地区（在「订阅价格」→「推介促销」里添加）</td></tr><tr><th>审核截屏</th><td>iap-review-subscriptions.png（需重拍，见第七节）</td></tr></table><p class='lbl'>本地化（5 种语言都添加）</p><table class='loc'><tr><th style='width:18%'>语言</th><th style='width:30%'>显示名称（≤30）</th><th>描述（≤45）</th></tr><tr><td>English (U.S.)</td><td><b>Essential – Yearly</b></td><td>Protect 2 people, up to 2 guardians</td></tr><tr><td>简体中文</td><td><b>基础版 · 年付</b></td><td>守护 2 人，最多 2 位守护者，按年续订</td></tr><tr><td>繁體中文</td><td><b>基礎版 · 年付</b></td><td>守護 2 人，最多 2 位守護者，按年續訂</td></tr><tr><td>Français</td><td><b>Essentiel – Annuel</b></td><td>Jusqu&#x27;à 2 proches et 2 gardiens</td></tr><tr><td>日本語</td><td><b>ベーシック・年額</b></td><td>最大2人を見守り、見守る人は2人まで</td></tr></table><p class='lbl'>审核备注（复制粘贴）</p><pre>Auto-renewable subscription. Unlocks the Essential plan: protect up to 2 people, up to 2 guardians, 90-day timeline, duty schedule, event report PDF export. New subscribers get a 1-week free trial.
+To find it: sign in with the review account (Guardian role) → Settings → Subscription → View Plans → Yearly tab → &quot;Subscribe&quot; on the Essential card.
+SOS alerts, including SMS and phone-call escalation, are free on every plan. Restore Purchase is on the same page.</pre></div>
+
+<h2 class='prod'>七、审核截屏要重拍</h2>
+<p>现在 Downloads 里的截屏是旧方案（「Individual · Protect 1 family member · Up to 3 guardians」「Family · Protect up to 4 · Unlimited guardians」）。App 改成基础版 2 + 2、家庭版 4 + 6 之后，付费页文字会变；审核截屏必须和提交的 App 一致。等 App 改好后我重拍，替换以下文件：</p>
+<ul><li>iap-review-individual-lifetime.png → 改名 iap-review-essential-lifetime.png</li><li>iap-review-family-lifetime.png</li><li>iap-review-subscriptions.png</li></ul>
+<p>在此之前可以先上传现有截屏让产品变成「准备提交」，之后随时替换。</p>
+
+<h2>八、还没定的事</h2>
+<ul>
+<li><b>App 名称已定为 Lantern Care：</b>请在 App Store Connect → 分发 → App 信息 → 本地化信息，把「名称」从「Vela Care-Real-time Guardian」改为下表（每种语言 ≤30 字符，要和手机上显示的名称一致，规则 2.3.8）。如果提示名称已被占用，换一个副标题式写法即可。<br>
+<table class='loc'><tr><th style='width:22%'>语言</th><th style='width:40%'>名称</th><th>手机上显示</th></tr>
+<tr><td>English (U.S.)</td><td><b>Lantern Care: Family Safety</b></td><td>Lantern Care</td></tr>
+<tr><td>简体中文</td><td><b>守灯：家人安全守护</b></td><td>守灯</td></tr>
+<tr><td>繁體中文</td><td><b>守燈：家人安全守護</b></td><td>守燈</td></tr>
+<tr><td>Français</td><td><b>Lantern Care: Sécurité famille</b></td><td>Lantern Care</td></tr>
+<tr><td>日本語</td><td><b>Lantern Care：家族の見守り</b></td><td>Lantern Care</td></tr></table>
+条款和隐私政策页面写的是公司名「Vela Care Technology」；如果这是公司的注册名称就保留，否则要一起改。</li>
+<li>后端还没部署终身版、账户绑定和合理用量；Release 版本仍开着 BETA 开关；短信电话服务未配置。</li>
+</ul>
+</body></html>

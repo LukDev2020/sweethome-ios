@@ -8,13 +8,13 @@
       "internalID" : "single_lifetime_001",
       "localizations" : [
         {
-          "description" : "Guard 1 person, up to 3 guardians, 90-day timeline — one-time purchase",
-          "displayName" : "Single Plan Lifetime",
+          "description" : "Protect 1 person. Pay once.",
+          "displayName" : "Individual – Lifetime",
           "locale" : "en_CA"
         },
         {
-          "description" : "守护1人，最多3位守护者，90天时间线 — 一次买断",
-          "displayName" : "单人关注版 终身",
+          "description" : "守护 1 人，最多 3 位守护者，一次买断",
+          "displayName" : "单人版 · 终身",
           "locale" : "zh_Hans"
         }
       ],
@@ -28,13 +28,13 @@
       "internalID" : "family_lifetime_001",
       "localizations" : [
         {
-          "description" : "Guard up to 4 people, unlimited guardians, 180-day timeline — one-time purchase",
-          "displayName" : "Family Plan Lifetime",
+          "description" : "Protect up to 4 people. Pay once.",
+          "displayName" : "Family – Lifetime",
           "locale" : "en_CA"
         },
         {
-          "description" : "守护最多4人，守护者不限，180天时间线 — 一次买断",
-          "displayName" : "家庭版 终身",
+          "description" : "守护最多 4 人，守护者不限，一次买断",
+          "displayName" : "家庭版 · 终身",
           "locale" : "zh_Hans"
         }
       ],
@@ -104,12 +104,12 @@
       "localizations" : [
         {
           "description" : "",
-          "displayName" : "ShouDeng Subscriptions",
+          "displayName" : "Lantern Care Plans",
           "locale" : "en_CA"
         },
         {
           "description" : "",
-          "displayName" : "ShouDeng Subscriptions",
+          "displayName" : "守灯会员方案",
           "locale" : "zh_Hans"
         }
       ],
@@ -131,13 +131,13 @@
           },
           "localizations" : [
             {
-              "description" : "Guard 1 person, up to 3 guardians, 90-day timeline",
-              "displayName" : "Single Plan Monthly",
+              "description" : "Protect 1 person, up to 3 guardians",
+              "displayName" : "Individual – Monthly",
               "locale" : "en_CA"
             },
             {
-              "description" : "守护1人，最多3位守护者，90天时间线",
-              "displayName" : "单人关注版 月付",
+              "description" : "守护 1 人，最多 3 位守护者，按月续订",
+              "displayName" : "单人版 · 月付",
               "locale" : "zh_Hans"
             }
           ],
@@ -163,13 +163,13 @@
           },
           "localizations" : [
             {
-              "description" : "Guard 1 person, up to 3 guardians, 90-day timeline. Save 20%.",
-              "displayName" : "Single Plan Yearly",
+              "description" : "Protect 1 person, up to 3 guardians",
+              "displayName" : "Individual – Yearly",
               "locale" : "en_CA"
             },
             {
-              "description" : "守护1人，最多3位守护者，90天时间线。省20%。",
-              "displayName" : "单人关注版 年付",
+              "description" : "守护 1 人，最多 3 位守护者，按年续订",
+              "displayName" : "单人版 · 年付",
               "locale" : "zh_Hans"
             }
           ],
@@ -195,13 +195,13 @@
           },
           "localizations" : [
             {
-              "description" : "Guard up to 4 people, unlimited guardians, 180-day timeline, SMS",
-              "displayName" : "Family Plan Monthly",
+              "description" : "Protect up to 4 people, unlimited guardians",
+              "displayName" : "Family – Monthly",
               "locale" : "en_CA"
             },
             {
-              "description" : "守护最多4人，无限守护者，180天时间线，短信通知",
-              "displayName" : "家庭版 月付",
+              "description" : "守护最多 4 人，守护者不限，按月续订",
+              "displayName" : "家庭版 · 月付",
               "locale" : "zh_Hans"
             }
           ],
@@ -227,13 +227,13 @@
           },
           "localizations" : [
             {
-              "description" : "Guard up to 4 people, unlimited guardians, 180-day timeline, SMS. Save 20%.",
-              "displayName" : "Family Plan Yearly",
+              "description" : "Protect up to 4 people, unlimited guardians",
+              "displayName" : "Family – Yearly",
               "locale" : "en_CA"
             },
             {
-              "description" : "守护最多4人，无限守护者，180天时间线，短信通知。省20%。",
-              "displayName" : "家庭版 年付",
+              "description" : "守护最多 4 人，守护者不限，按年续订",
+              "displayName" : "家庭版 · 年付",
               "locale" : "zh_Hans"
             }
           ],
