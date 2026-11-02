@@ -31,13 +31,14 @@ jest.mock("firebase-admin", () => {
   };
 });
 
-// ---- Mock firebase-functions config ----
+// ---- Mock firebase-functions; Twilio auth token comes from the TWILIO_AUTH_TOKEN param ----
 jest.mock("firebase-functions", () => ({
-  config: jest.fn(() => ({
-    twilio: { auth_token: "test-auth-token-secret" },
-  })),
   https: { onRequest: jest.fn() },
 }));
+process.env.TWILIO_AUTH_TOKEN = "test-auth-token-secret";
+afterAll(() => {
+  delete process.env.TWILIO_AUTH_TOKEN;
+});
 
 /**
  * Compute a valid Twilio-style HMAC-SHA1 signature.

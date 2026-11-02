@@ -255,6 +255,20 @@ describe("acknowledge (\"I've got it\")", () => {
     await advanceEscalation("sos1", at(90));
     expect(mockCalls.map((c) => c.guardianId)).toEqual(["sarah"]);
   });
+
+  it("pushes instead when a call cannot be placed (Twilio not configured)", async () => {
+    seedFamily();
+    for (const sec of [0, 30]) await advanceEscalation("sos1", at(sec));
+    const twilio = require("../services/twilio");
+    for (let i = 0; i < 3; i++) twilio.initiateVoiceCall.mockResolvedValueOnce(null);
+    sentMessages.length = 0;
+    await advanceEscalation("sos1", at(90));
+    expect(pushTargets().sort()).toEqual(["tok-kevin", "tok-sarah"]);
+    const voiceLog = sos().escalationLog.filter((e: { hop: number }) => e.hop === 3);
+    expect(voiceLog.map((e: { channel: string }) => e.channel)).toEqual([
+      "push_voice_unavailable", "push_voice_unavailable", "push_voice_unavailable",
+    ]);
+  });
 });
 
 describe("no guardians", () => {

@@ -1,0 +1,67 @@
+[
+  {
+    "name": "id",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "Row UUID (v4)"
+  },
+  {
+    "name": "user_id",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "Firebase uid of the person"
+  },
+  {
+    "name": "timestamp",
+    "type": "TIMESTAMP",
+    "mode": "REQUIRED",
+    "description": "Event time reported by the device (partition column)"
+  },
+  {
+    "name": "source",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "timer | significantLocation | silentPush | appForeground | regionEvent | watchSync"
+  },
+  {
+    "name": "battery_level",
+    "type": "FLOAT64",
+    "mode": "NULLABLE",
+    "description": "0.0-1.0"
+  },
+  {
+    "name": "battery_state",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "charging | unplugged | full | unknown"
+  },
+  {
+    "name": "latitude",
+    "type": "FLOAT64",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "longitude",
+    "type": "FLOAT64",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "accuracy",
+    "type": "FLOAT64",
+    "mode": "NULLABLE",
+    "description": "Metres"
+  },
+  {
+    "name": "row_hash",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "SHA-256 over the row's fields (integrity proofs)"
+  },
+  {
+    "name": "ingested_at",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE",
+    "description": "Server insert time",
+    "defaultValueExpression": "CURRENT_TIMESTAMP()"
+  }
+]

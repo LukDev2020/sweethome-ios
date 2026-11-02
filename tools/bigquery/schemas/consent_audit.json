@@ -1,0 +1,66 @@
+[
+  {
+    "name": "id",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "Row UUID (v4)"
+  },
+  {
+    "name": "user_id",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "Firebase uid of the person"
+  },
+  {
+    "name": "timestamp",
+    "type": "TIMESTAMP",
+    "mode": "REQUIRED",
+    "description": "Event time reported by the device (partition column)"
+  },
+  {
+    "name": "consent_type",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "location | notification | motion | guardian_link | data_export | ..."
+  },
+  {
+    "name": "action",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "granted | revoked | exported | accessed | ..."
+  },
+  {
+    "name": "granted_to",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Target user id or \"system\""
+  },
+  {
+    "name": "detail",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "ip_address",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "device_info",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "row_hash",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "SHA-256 over the row's fields (integrity proofs)"
+  },
+  {
+    "name": "ingested_at",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE",
+    "description": "Server insert time",
+    "defaultValueExpression": "CURRENT_TIMESTAMP()"
+  }
+]

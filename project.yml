@@ -6,6 +6,8 @@ options:
   xcodeVersion: "16.0"
   generateEmptyDirectories: true
 
+# Beta = Release + BETA (TestFlight: simulated SOS by default, banner, developer switches).
+# Release must never define BETA — it is what goes to the App Store. docs/ops/RELEASE.md
 configs:
   Debug: debug
   Beta: release
@@ -18,8 +20,46 @@ settings:
     MARKETING_VERSION: "1.0.0"
     CURRENT_PROJECT_VERSION: "3"
   configs:
+    Debug:
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
     Beta:
       SWIFT_ACTIVE_COMPILATION_CONDITIONS: BETA
+
+schemes:
+  # App Store: Product → Archive archives Release.
+  ShouDeng:
+    build:
+      targets:
+        ShouDeng: all
+    run:
+      config: Debug
+      storeKitConfiguration: ShouDeng/StoreKit/ShouDeng.storekit
+    test:
+      config: Debug
+      targets: [ShouDengTests]
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+  # TestFlight: Product → Archive archives Beta.
+  ShouDeng-TestFlight:
+    build:
+      targets:
+        ShouDeng: all
+    run:
+      config: Beta
+      storeKitConfiguration: ShouDeng/StoreKit/ShouDeng.storekit
+    test:
+      config: Debug
+      targets: [ShouDengTests]
+    profile:
+      config: Beta
+    analyze:
+      config: Debug
+    archive:
+      config: Beta
 
 packages:
   firebase-ios-sdk:

@@ -170,6 +170,9 @@ struct GuardianSettingsView: View {
                 #if DEBUG
                 devPanel
                 #endif
+                #if BETA
+                BetaDeveloperPanel()
+                #endif
                 Spacer().frame(height: 24)
             }
             .padding(.horizontal, 16)
@@ -211,6 +214,9 @@ struct GuardianSettingsView: View {
                     legalPanel
                     #if DEBUG
                     devPanel
+                    #endif
+                    #if BETA
+                    BetaDeveloperPanel()
                     #endif
                     Spacer().frame(height: 24)
                 }
@@ -833,6 +839,9 @@ struct GuardianSettingsView: View {
             .buttonStyle(.settingsRow)
             .accessibilityIdentifier("settings.joinFamily")
 
+            // Switching roles silently turns off protection for this person, so it is
+            // DEBUG-only until roles phase B (docs/roles/ROLES.md: dual roles + view switcher).
+            #if DEBUG
             Button { showRoleSwitchInfo = true } label: {
                 HStack {
                     Text(langManager.localized("guardian.settings.role.switchToProtected"))
@@ -848,6 +857,7 @@ struct GuardianSettingsView: View {
                 .padding(.vertical, 2)
             }
             .buttonStyle(.settingsRow)
+            #endif
         }
         .padding(12)
         .background(

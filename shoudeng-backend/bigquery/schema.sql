@@ -1,6 +1,10 @@
--- ShouDeng BigQuery Schema
+-- ShouDeng BigQuery Schema (reference DDL)
 -- Dataset: shoudeng
 -- All tables use date partitioning on timestamp and clustering on user_id
+--
+-- Production is created by tools/bigquery/setup.sh from tools/bigquery/schemas/*.json
+-- (see docs/ops/BIGQUERY.md). Keep the columns here identical — a jest test
+-- (bigquery.schema.test.ts) compares both with what the functions insert.
 
 -- 1. Heartbeat Signals
 -- ~12 writes/hour per user, used for liveness detection

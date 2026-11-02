@@ -28,6 +28,10 @@ struct ShouDengApp: App {
                 .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
                     appDelegate.appCoordinator.handleUserActivity(activity)
                 }
+                #if BETA
+                // A Beta binary installed from the App Store must behave like Release
+                .task { await BuildChannel.shared.refreshInstallEnvironment() }
+                #endif
         }
         .onChange(of: scenePhase) { oldPhase, newPhase in
             let coordinator = appDelegate.appCoordinator

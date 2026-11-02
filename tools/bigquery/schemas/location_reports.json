@@ -1,0 +1,70 @@
+[
+  {
+    "name": "id",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "Row UUID (v4)"
+  },
+  {
+    "name": "user_id",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "Firebase uid of the person"
+  },
+  {
+    "name": "timestamp",
+    "type": "TIMESTAMP",
+    "mode": "REQUIRED",
+    "description": "Event time reported by the device (partition column)"
+  },
+  {
+    "name": "latitude",
+    "type": "FLOAT64",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "longitude",
+    "type": "FLOAT64",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "accuracy",
+    "type": "FLOAT64",
+    "mode": "NULLABLE",
+    "description": "Metres"
+  },
+  {
+    "name": "altitude",
+    "type": "FLOAT64",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "speed",
+    "type": "FLOAT64",
+    "mode": "NULLABLE",
+    "description": "m/s"
+  },
+  {
+    "name": "is_in_safe_zone",
+    "type": "BOOL",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "safe_zone_name",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "row_hash",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "SHA-256 over the row's fields (integrity proofs)"
+  },
+  {
+    "name": "ingested_at",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE",
+    "description": "Server insert time",
+    "defaultValueExpression": "CURRENT_TIMESTAMP()"
+  }
+]

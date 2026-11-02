@@ -1,0 +1,48 @@
+[
+  {
+    "name": "id",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "Row UUID (v4)"
+  },
+  {
+    "name": "user_id",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "Firebase uid of the person"
+  },
+  {
+    "name": "timestamp",
+    "type": "TIMESTAMP",
+    "mode": "REQUIRED",
+    "description": "Event time reported by the device (partition column)"
+  },
+  {
+    "name": "latitude",
+    "type": "FLOAT64",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "longitude",
+    "type": "FLOAT64",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "note",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "row_hash",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "SHA-256 over the row's fields (integrity proofs)"
+  },
+  {
+    "name": "ingested_at",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE",
+    "description": "Server insert time",
+    "defaultValueExpression": "CURRENT_TIMESTAMP()"
+  }
+]

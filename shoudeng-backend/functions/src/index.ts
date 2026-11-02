@@ -1,5 +1,6 @@
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
+import { API_SECRETS } from "./config/params";
 
 // Initialize Firebase Admin SDK (before any module calls admin.firestore())
 admin.initializeApp();
@@ -8,7 +9,9 @@ admin.initializeApp();
 const { app } = require("./app");
 
 // --- Export HTTP function ---
-export const api = functions.https.onRequest(app);
+// Secrets: Twilio (SOS SMS/voice, webhook signatures) + Google Maps (geocoding).
+// Every function that can reach services/sms or services/twilio must bind TWILIO_SECRETS.
+export const api = functions.runWith({ secrets: API_SECRETS }).https.onRequest(app);
 
 // --- Trigger Exports ---
 export { onSOSCreated } from "./triggers/onSOSCreated";
