@@ -6,6 +6,8 @@ import Combine
 struct DemoRolePickerView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var now = Date()
+    /// The phone being opened: preparing the sample family takes a few seconds
+    @State private var starting: DemoRole?
     nonisolated(unsafe) private let timer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
 
     private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
@@ -80,10 +82,13 @@ struct DemoRolePickerView: View {
 
     private func roleButton(_ role: DemoRole, icon: String, title: String, detail: String) -> some View {
         Button {
-            dismiss()
-            // Start after the sheet is gone so the tab UI appears cleanly
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            guard starting == nil else { return }
+            // Show the spinner first, then build the demo behind the sheet and close it
+            // when ready — closing first left the login screen frozen for seconds.
+            starting = role
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 ExploreModeController.shared.start(role: role)
+                dismiss()
             }
         } label: {
             HStack(spacing: 12) {
@@ -97,9 +102,16 @@ struct DemoRolePickerView: View {
                     Text(detail).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.leading)
                 }
                 Spacer()
-                Image(systemName: "chevron.right").foregroundStyle(.secondary)
+                if starting == role {
+                    ProgressView()
+                } else {
+                    Image(systemName: "chevron.right").foregroundStyle(.secondary)
+                }
             }
             .padding(14)
+            // The whole card is the button — it is only outlined, so without a shape
+            // only the icon and text took taps
+            .contentShape(RoundedRectangle(cornerRadius: 14))
             .background(RoundedRectangle(cornerRadius: 14).stroke(role == .mom ? lamp : Color(.separator), lineWidth: role == .mom ? 2 : 1))
         }
         .buttonStyle(.plain)

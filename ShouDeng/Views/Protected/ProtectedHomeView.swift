@@ -914,7 +914,7 @@ struct ProtectedHomeView: View {
             }
         }
         .simultaneousGesture(
-            LongPressGesture(minimumDuration: FloatingSOSButton.holdDuration)
+            LongPressGesture(minimumDuration: FloatingSOSButton.holdDuration, maximumDistance: FloatingSOSButton.holdTolerance)
                 .onChanged { _ in
                     isSOSPressed = true
                     sosDisclosureTrigger = true

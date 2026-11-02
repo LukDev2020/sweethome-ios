@@ -1323,6 +1323,7 @@
 "explore.tip.showRecords" = "記録を表示";
 "explore.tip.hide" = "ヒントを非表示";
 "explore.tip.show" = "ヒントを表示";
+"explore.tip.show.moveHint" = "ドラッグして移動できます。";
 "explore.tip.mom.homeSafe.title" = "帰宅したことをみんなに伝えましょう";
 "explore.tip.mom.homeSafe.body" = "「無事に帰宅」をワンタップするだけで、Sarah、Kevin、Lucyがどこにいても、あなたが帰宅したことが伝わります。メッセージを入力したり、電話をかけたりする必要はありません。";
 "explore.tip.mom.guardians.title" = "3人の見守る人、3つのタイムゾーン";

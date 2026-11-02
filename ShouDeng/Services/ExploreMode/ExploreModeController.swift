@@ -56,6 +56,10 @@ final class ExploreModeController: ObservableObject {
     /// True while the app (under the overlay) shows a sheet or alert — tips step aside.
     @Published private(set) var isAppPresentingModal = false
 
+    /// Where the person dragged the "Show tip" button (offset from its resting place),
+    /// kept for the whole demo so it stays out of the way.
+    @Published var tipButtonOffset: CGSize = .zero
+
     /// On-screen frames of the overlay's tappable parts (tip card, banner, …).
     /// The overlay window only takes touches inside these; everything else passes through.
     private(set) var overlayRegions: [String: CGRect] = [:]

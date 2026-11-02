@@ -1324,6 +1324,7 @@
 "explore.tip.showRecords" = "查看记录";
 "explore.tip.hide" = "隐藏提示";
 "explore.tip.show" = "显示提示";
+"explore.tip.show.moveHint" = "可以拖动到不挡视线的位置。";
 "explore.tip.mom.homeSafe.title" = "告诉大家你到家了";
 "explore.tip.mom.homeSafe.body" = "点一下“到家了”，Sarah、Kevin 和 Lucy 无论在哪都会知道你已到家。不用打字，不用打电话。";
 "explore.tip.mom.guardians.title" = "三位守护者，三个时区";

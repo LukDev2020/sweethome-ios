@@ -19,6 +19,9 @@ struct FloatingSOSButton: View {
     /// 5 s after user testing: 3 s was triggered by accident several times. A real
     /// SOS still goes through the 5 s cancel countdown afterwards.
     static let holdDuration: Double = 5.0
+    /// How far the finger may drift during the hold. The system default (10 pt) cancels
+    /// a 5 s hold too easily: the press then seemed to do nothing.
+    static let holdTolerance: CGFloat = 40
     private var holdDuration: Double { Self.holdDuration }
 
     var body: some View {
@@ -54,7 +57,7 @@ struct FloatingSOSButton: View {
                 )
                 .scaleEffect(isPressed ? 0.92 : 1.0)
         }
-        .onLongPressGesture(minimumDuration: holdDuration, pressing: { pressing in
+        .onLongPressGesture(minimumDuration: holdDuration, maximumDistance: Self.holdTolerance, pressing: { pressing in
             withAnimation(.easeInOut(duration: 0.15)) {
                 isPressed = pressing
             }

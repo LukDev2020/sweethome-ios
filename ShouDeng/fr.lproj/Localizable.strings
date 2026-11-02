@@ -1324,6 +1324,7 @@ vos gardiens seront automatiquement notifiés.";
 "explore.tip.showRecords" = "Voir les relevés";
 "explore.tip.hide" = "Masquer les astuces";
 "explore.tip.show" = "Afficher l'astuce";
+"explore.tip.show.moveHint" = "Faites-le glisser pour le déplacer.";
 "explore.tip.mom.homeSafe.title" = "Dites à tous que vous êtes rentrée";
 "explore.tip.mom.homeSafe.body" = "Un geste sur « Bien rentré » prévient Sarah, Kevin et Lucy, où qu'ils soient. Rien à écrire, aucun appel.";
 "explore.tip.mom.guardians.title" = "Trois gardiens, trois fuseaux";

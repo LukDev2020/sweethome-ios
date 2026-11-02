@@ -96,6 +96,8 @@ private struct DemoTipLayer: View {
     /// The person chose "Hide tips": drop the highlight ring too (it stays for "Try it").
     @State private var hiddenByUser = false
     @AccessibilityFocusState private var titleFocused: Bool
+    /// Live drag of the "Show tip" button
+    @GestureState private var tipDrag: CGSize = .zero
 
     private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
     private let ink = Color(red: 13/255, green: 52/255, blue: 99/255)
@@ -139,8 +141,18 @@ private struct DemoTipLayer: View {
                             .background(Capsule().fill(lamp))
                             .foregroundStyle(.black)
                     }
+                    // Drag it anywhere; a short tap still shows the tip
+                    .gesture(
+                        DragGesture(minimumDistance: 8)
+                            .updating($tipDrag) { value, state, _ in state = value.translation }
+                            .onEnded { value in
+                                explore.tipButtonOffset = clampedTipOffset(explore.tipButtonOffset + value.translation)
+                            }
+                    )
                     .overlayRegion("tipShow")
-                    .position(x: column.upperBound - 70, y: screen.height - safeBottom - 150)
+                    .position(tipButtonHome)
+                    .offset(explore.tipButtonOffset + tipDrag)
+                    .accessibilityHint(LanguageManager.shared.localized("explore.tip.show.moveHint"))
                 }
             } else {
                 card
@@ -166,6 +178,19 @@ private struct DemoTipLayer: View {
             }
         }
         .onAppear { titleFocused = true }
+    }
+
+    /// Lower left, clear of the SOS button (bottom right) and the tab bar.
+    private var tipButtonHome: CGPoint {
+        CGPoint(x: column.lowerBound + 80, y: screen.height - safeBottom - 150)
+    }
+
+    /// Keeps the dragged button on screen.
+    private func clampedTipOffset(_ offset: CGSize) -> CGSize {
+        let home = tipButtonHome
+        let x = min(max(home.x + offset.width, column.lowerBound + 70), column.upperBound - 70)
+        let y = min(max(home.y + offset.height, safeTop + 60), screen.height - safeBottom - 40)
+        return CGSize(width: x - home.x, height: y - home.y)
     }
 
     private let cardHeight: CGFloat = 230
@@ -430,3 +455,5 @@ private extension View {
         }
     }
 }
+
+private func + (a: CGSize, b: CGSize) -> CGSize { CGSize(width: a.width + b.width, height: a.height + b.height) }

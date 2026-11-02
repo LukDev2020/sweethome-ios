@@ -1324,6 +1324,7 @@ your guardians will be automatically notified.";
 "explore.tip.showRecords" = "Show records";
 "explore.tip.hide" = "Hide tips";
 "explore.tip.show" = "Show tip";
+"explore.tip.show.moveHint" = "Drag to move it out of the way.";
 "explore.tip.mom.homeSafe.title" = "Tell everyone you're home";
 "explore.tip.mom.homeSafe.body" = "One tap on Home Safe lets Sarah, Kevin and Lucy know you arrived — wherever they are. No message to type, no call to make.";
 "explore.tip.mom.guardians.title" = "Three guardians, three time zones";
