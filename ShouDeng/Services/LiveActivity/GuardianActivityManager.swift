@@ -15,6 +15,8 @@ final class GuardianActivityManager {
         userName: String,
         guardians: [ProtectedActivityAttributes.GuardianInfo],
         lastCheckIn: Date?,
+        latestUpdate: String? = nil,
+        latestUpdateAt: Date? = nil,
         emergencyPhone: String,
         emergencyLabel: String,
         bloodType: String? = nil,
@@ -48,7 +50,9 @@ final class GuardianActivityManager {
             allergies: allergies,
             conditions: conditions,
             emergencyNote: emergencyNote,
-            emergencyMedications: emergencyMedications
+            emergencyMedications: emergencyMedications,
+            latestUpdate: latestUpdate,
+            latestUpdateAt: latestUpdateAt
         )
 
         do {
@@ -137,6 +141,34 @@ final class GuardianActivityManager {
             state.lastCheckIn = Date()
             state.status = .normal
             state.statusText = WidgetDataStore.localized("la.normal")
+            await activity.update(.init(state: state, staleDate: Date().addingTimeInterval(600)))
+        }
+    }
+
+    /// Guardians, last check-in and latest family post, refreshed on each trip to the background.
+    func updateProtectedOverview(
+        guardians: [ProtectedActivityAttributes.GuardianInfo],
+        lastCheckIn: Date?,
+        latestUpdate: String?,
+        latestUpdateAt: Date?
+    ) {
+        guard let activity = protectedActivity else { return }
+        Task {
+            var state = activity.content.state
+            state.guardians = guardians
+            if let lastCheckIn, lastCheckIn > (state.lastCheckIn ?? .distantPast) { state.lastCheckIn = lastCheckIn }
+            state.latestUpdate = latestUpdate
+            state.latestUpdateAt = latestUpdateAt
+            await activity.update(.init(state: state, staleDate: Date().addingTimeInterval(600)))
+        }
+    }
+
+    /// "Location" on the card: a fresh location went to the family.
+    func updateProtectedLocationShared() {
+        guard let activity = protectedActivity else { return }
+        Task {
+            var state = activity.content.state
+            state.lastLocationShare = Date()
             await activity.update(.init(state: state, staleDate: Date().addingTimeInterval(600)))
         }
     }
@@ -281,3 +313,50 @@ final class GuardianActivityManager {
         }
     }
 }
+
+#if DEBUG
+// MARK: - Simulator preview
+//
+// Launch with `-la-preview protected|protected-empty|guardian|guardian-empty` to put a
+// sample card on the lock screen (Debug builds only), e.g. to check the fixed layout.
+extension GuardianActivityManager {
+    func startPreview(_ kind: String) {
+        let now = Date()
+        switch kind {
+        case "protected", "protected-empty":
+            let full = kind == "protected"
+            startProtectedActivity(
+                userName: "妈妈",
+                guardians: full ? [
+                    .init(name: "Sarah", initial: "S", isOnDuty: true, isOnline: true),
+                    .init(name: "Kevin", initial: "K", isOnDuty: false, isOnline: false),
+                ] : [],
+                lastCheckIn: full ? now.addingTimeInterval(-25 * 60) : nil,
+                latestUpdate: full ? "Sarah：妈，到家了吗？" : nil,
+                latestUpdateAt: full ? now.addingTimeInterval(-6 * 60) : nil,
+                emergencyPhone: "120",
+                emergencyLabel: "120",
+                bloodType: full ? "A+" : nil,
+                allergies: full ? ["青霉素"] : [],
+                emergencyMedications: full ? [.init(name: "硝酸甘油", location: "包里", dosage: "")] : []
+            )
+            if full { updateProtectedTimer(deadline: now.addingTimeInterval(18 * 60), label: nil) }
+        case "guardian", "guardian-empty":
+            let full = kind == "guardian"
+            startGuardianActivity(
+                guardianName: "Sarah",
+                persons: full ? [
+                    .init(id: "1", displayName: "妈妈", initial: "妈", status: .normal, cityName: "成都",
+                          lastCheckIn: now.addingTimeInterval(-25 * 60), batteryLevel: 0.82),
+                    .init(id: "2", displayName: "爸爸", initial: "爸", status: .overdue, cityName: "成都",
+                          lastCheckIn: now.addingTimeInterval(-9 * 3600), batteryLevel: 0.15),
+                ] : [],
+                priorityPersonName: full ? "爸爸" : "",
+                priorityPersonPhone: full ? "+8613800138000" : ""
+            )
+        default:
+            break
+        }
+    }
+}
+#endif

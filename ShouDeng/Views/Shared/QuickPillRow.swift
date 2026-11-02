@@ -1,17 +1,19 @@
 import SwiftUI
 
+/// Row under the protected person's status: Home Safe + text size.
+///
+/// The language button that used to sit here was removed after user testing: it was
+/// tapped by accident (the app suddenly turned French), its label was unclear, and
+/// it crashed on languages without a label. Language is chosen in Settings, on the
+/// login screen and during onboarding.
 struct QuickPillRow: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
     @ObservedObject private var fontScale = FontScaleManager.shared
+    @State private var showFontSizes = false
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
     private let offWhiteBg = Color(red: 251/255, green: 248/255, blue: 241/255)
-
-    private let languages: [AppLanguage] = [.english, .chinese, .traditionalChinese, .french, .japanese]
-    private let langLabels = ["EN", "\u{4E2D}\u{6587}", "FR"]
-    private let fontLevels: [FontScaleLevel] = [.standard, .large, .extraLarge, .huge]
-    private let fontLabels = ["S", "M", "L", "XL"]
 
     var body: some View {
         HStack(spacing: 8) {
@@ -21,18 +23,16 @@ struct QuickPillRow: View {
             HomeSafePill()
                 .coachMark(CoachAnchor.homeSafe)
 
-            // Language pill
+            // Text size — written out ("字体大小：标准"), not "Aa S"
             Button {
-                let currentIdx = languages.firstIndex(of: lang.current) ?? 0
-                let nextIdx = (currentIdx + 1) % languages.count
-                lang.choose(languages[nextIdx])
+                showFontSizes = true
             } label: {
-                let idx = languages.firstIndex(of: lang.current) ?? 0
                 HStack(spacing: 5) {
-                    Image(systemName: "globe")
+                    Image(systemName: "textformat.size")
                         .font(.system(size: 12))
-                    Text(langLabels[idx])
+                    Text(FontSizeSheet.buttonTitle(lang: lang, level: fontScale.level))
                         .font(.system(size: 12, weight: .semibold))
+                        .lineLimit(1)
                 }
                 .foregroundColor(ink)
                 .padding(.horizontal, 14)
@@ -44,33 +44,84 @@ struct QuickPillRow: View {
                         .stroke(ink.opacity(0.1), lineWidth: 1)
                 )
             }
-
-            // Font size pill
-            Button {
-                let currentIdx = fontLevels.firstIndex(of: fontScale.level) ?? 0
-                let nextIdx = (currentIdx + 1) % fontLevels.count
-                fontScale.level = fontLevels[nextIdx]
-            } label: {
-                let idx = fontLevels.firstIndex(of: fontScale.level) ?? 0
-                HStack(spacing: 5) {
-                    Text("Aa")
-                        .font(.system(size: 12, weight: .medium))
-                    Text(fontLabels[idx])
-                        .font(.system(size: 12, weight: .semibold))
-                }
-                .foregroundColor(ink)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 9)
-                .background(offWhiteBg)
-                .cornerRadius(20)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(ink.opacity(0.1), lineWidth: 1)
-                )
-            }
+            .accessibilityLabel(FontSizeSheet.buttonTitle(lang: lang, level: fontScale.level))
 
             Spacer()
         }
         .padding(.vertical, 4)
+        .sheet(isPresented: $showFontSizes) {
+            FontSizeSheet()
+                .presentationDetents([.medium, .large])
+        }
+    }
+}
+
+/// Pick a text size from four large, labelled rows, each previewed at its own size.
+struct FontSizeSheet: View {
+    @ObservedObject private var lang = LanguageManager.shared
+    @ObservedObject private var fontScale = FontScaleManager.shared
+    @Environment(\.dismiss) private var dismiss
+
+    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
+
+    /// "字体大小：标准" / "Text size: Standard"
+    static func buttonTitle(lang: LanguageManager, level: FontScaleLevel) -> String {
+        String(format: lang.localized("fontScale.button.current"), level.label)
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 10) {
+                    ForEach(FontScaleLevel.allCases, id: \.self) { level in
+                        Button {
+                            fontScale.level = level
+                            dismiss()
+                        } label: {
+                            HStack(spacing: 12) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(level.label)
+                                        .font(.system(size: 15, weight: .semibold))
+                                        .foregroundStyle(ink)
+                                    Text(lang.localized("fontScale.sample"))
+                                        .font(.system(size: 15 * level.scale))
+                                        .foregroundStyle(ink.opacity(0.75))
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.6)
+                                }
+                                Spacer()
+                                if fontScale.level == level {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 22))
+                                        .foregroundStyle(safe)
+                                }
+                            }
+                            .padding(14)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                            .background(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .fill(fontScale.level == level ? safe.opacity(0.08) : Color(.secondarySystemBackground))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .stroke(fontScale.level == level ? safe : .clear, lineWidth: 2)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityAddTraits(fontScale.level == level ? .isSelected : [])
+                    }
+                }
+                .padding(16)
+            }
+            .navigationTitle(lang.localized("fontScale.button"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(lang.localized("settings.action.ok")) { dismiss() }
+                }
+            }
+        }
     }
 }

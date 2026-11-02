@@ -914,12 +914,12 @@ struct ProtectedHomeView: View {
             }
         }
         .simultaneousGesture(
-            LongPressGesture(minimumDuration: 3.0)
+            LongPressGesture(minimumDuration: FloatingSOSButton.holdDuration)
                 .onChanged { _ in
                     isSOSPressed = true
                     sosDisclosureTrigger = true
                     UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-                    withAnimation(.linear(duration: 3.0)) {
+                    withAnimation(.linear(duration: FloatingSOSButton.holdDuration)) {
                         sosProgress = 1.0
                     }
                 }
@@ -937,7 +937,7 @@ struct ProtectedHomeView: View {
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
                 .onEnded { _ in
-                    // Released before 3 seconds
+                    // Released before the hold completed
                     if sosProgress < 1.0 {
                         withAnimation {
                             isSOSPressed = false

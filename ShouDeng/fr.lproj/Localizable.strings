@@ -59,7 +59,7 @@
 
 /* Home View - Protected */
 "home.sos" = "SOS";
-"home.sos.hold" = "Maintenez 3s pour SOS";
+"home.sos.hold" = "Maintenez 5s pour SOS";
 "home.checkin" = "Je vais bien";
 "home.checkin.done" = "Signalé";
 "home.send.location" = "Envoyer position";
@@ -162,6 +162,12 @@
 "duress.error.mismatch" = "Les codes ne correspondent pas";
 "duress.error.empty" = "Veuillez entrer un code";
 "duress.save.success" = "Code de contrainte enregistré";
+"duress.warning.title" = "Uniquement sous la contrainte";
+"duress.code.placeholder" = "Au moins 4 chiffres";
+"duress.save" = "Enregistrer";
+"duress.active.desc" = "Saisir ce code à la connexion ouvre l'app normalement et envoie un SOS silencieux à vos gardiens.";
+"duress.saved.message" = "Gardez-le secret. Utilisez-le seulement si quelqu'un vous force à déverrouiller l'app.";
+"duress.error.short" = "Au moins 4 chiffres";
 
 /* Alarme silencieuse */
 "silent.alarm.title" = "Alarme silencieuse";
@@ -763,7 +769,7 @@ vos gardiens seront automatiquement notifiés.";
 "protected.home.sosElapsed" = "Écoulé %@";
 "protected.home.sosEnabled" = "SOS activé";
 "protected.home.sosHighFreqLocation" = "Localisation haute fréq. activée";
-"protected.home.sosHint" = "Double-cliquez et maintenez 3s pour envoyer un SOS";
+"protected.home.sosHint" = "Double-cliquez et maintenez 5s pour envoyer un SOS";
 "protected.home.sosInProgress" = "SOS en cours";
 "protected.home.sosLabel" = "SOS d'urgence";
 "protected.home.sosLowPower" = "Mode basse consommation";
@@ -823,7 +829,7 @@ vos gardiens seront automatiquement notifiés.";
 "protected.settings.security.silentAlarm" = "Alarme silencieuse";
 "protected.settings.security.silentAlarmDesc" = "Vérification planifiée — notification auto si manquée";
 "protected.settings.sos.bluetooth" = "Bouton Bluetooth";
-"protected.settings.sos.longPress" = "Appui long (3s)";
+"protected.settings.sos.longPress" = "Appui long (5s)";
 "protected.settings.sos.notPaired" = "Non associé";
 "protected.settings.sos.redundancyHint" = "Plusieurs méthodes pour garantir le SOS";
 "protected.settings.sos.silentMode" = "Mode silencieux";
@@ -899,7 +905,7 @@ vos gardiens seront automatiquement notifiés.";
 "claim.networkError" = "Erreur réseau, veuillez réessayer";
 "claim.referenceChecklist" = "Liste de référence : %@";
 "claim.sharePDF" = "Partager PDF";
-"claim.velaProvides" = "Vela Care fournit des données de sécurité vérifiées pour les réclamations d'assurance";
+"claim.velaProvides" = "Lantern Care fournit des données de sécurité vérifiées pour les réclamations d'assurance";
 
 // MARK: - Duress Code (additional)
 "duress.cancel" = "Annuler";
@@ -1261,7 +1267,7 @@ vos gardiens seront automatiquement notifiés.";
 
 /* SOS button (W2-b) */
 "sos.button.a11yLabel" = "Bouton SOS d'urgence";
-"sos.button.a11yHint" = "Maintenez 3 secondes pour alerter votre famille";
+"sos.button.a11yHint" = "Maintenez 5 secondes pour alerter votre famille";
 
 /* Guardian SOS response (W2-d/e) */
 "guardian.alert.noActiveSOS" = "Aucun SOS en cours.";
@@ -1311,7 +1317,7 @@ vos gardiens seront automatiquement notifiés.";
 "explore.tip.mom.guardians.title" = "Trois gardiens, trois fuseaux";
 "explore.tip.mom.guardians.body" = "Sarah à Toronto, Kevin à Shanghai et Lucy à Paris se relaient : quelqu'un est souvent réveillé quand vous en avez besoin.";
 "explore.tip.mom.sos.title" = "Entraînez-vous au SOS";
-"explore.tip.mom.sos.body" = "Maintenez le bouton rouge 3 secondes. En vrai, vos gardiens reçoivent une alerte, puis un SMS, puis un appel jusqu'à ce que quelqu'un réponde. Dans la démo, personne n'est alerté — vous verrez ce que voit Sarah.";
+"explore.tip.mom.sos.body" = "Maintenez le bouton rouge 5 secondes. En vrai, vos gardiens reçoivent une alerte, puis un SMS, puis un appel jusqu'à ce que quelqu'un réponde. Dans la démo, personne n'est alerté — vous verrez ce que voit Sarah.";
 "explore.tip.mom.tracking.title" = "Vous décidez qui voit où vous êtes";
 "explore.tip.mom.tracking.body" = "Mettez le partage en pause jusqu'à 4 heures. Un SOS le réactive toujours.";
 "explore.tip.mom.done.title" = "Voilà le côté de maman";
@@ -1489,6 +1495,9 @@ vos gardiens seront automatiquement notifiés.";
 "fontScale.large" = "Grand";
 "fontScale.extraLarge" = "Très grand";
 "fontScale.huge" = "Énorme";
+"fontScale.button" = "Taille du texte";
+"fontScale.button.current" = "Taille du texte : %@";
+"fontScale.sample" = "Maman a donné des nouvelles à 19 h 30";
 
 /* 12-market localization pass (2026-10-31) */
 "hotline.emergency" = "Numéro d'urgence";
@@ -1714,7 +1723,7 @@ vos gardiens seront automatiquement notifiés.";
 "store.error.purchase" = "Échec de l'achat : %@";
 "store.error.nothingToRestore" = "Aucun abonnement à restaurer.";
 "store.error.restore" = "Impossible de restaurer les achats : %@";
-"sos.button.holdHint" = "Maintenez 3 secondes pour envoyer le SOS";
+"sos.button.holdHint" = "Maintenez 5 secondes pour envoyer le SOS";
 "settings.data.storageLocation" = "Lieu de stockage des données";
 "settings.data.storageLocation.value" = "États-Unis";
 "settings.data.storageLocation.pending" = "États-Unis · à confirmer";
@@ -1736,7 +1745,7 @@ vos gardiens seront automatiquement notifiés.";
 
 /* In-app tips */
 "tip.sos.title" = "Maintenez pour l'aide";
-"tip.sos.message" = "Maintenez SOS 3 secondes. Vous avez 5 secondes pour annuler avant que vos proches soient prévenus.";
+"tip.sos.message" = "Maintenez SOS 5 secondes. Vous avez 5 secondes pour annuler avant que vos proches soient prévenus.";
 "tip.homeSafe.title" = "Dites que vous êtes rentré·e";
 "tip.homeSafe.message" = "Un geste et vos proches savent que vous êtes bien rentré·e.";
 "tip.inviteGuardian.title" = "Personne ne veille encore sur vous";

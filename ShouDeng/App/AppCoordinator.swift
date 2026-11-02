@@ -550,6 +550,10 @@ final class AppCoordinator: ObservableObject {
             case .arrived:
                 apiClient.postQueued("/v1/home-timer/dismiss", body: EmptyBody())
                 performCheckIn(note: LanguageManager.shared.localized("widget.arrived.note"))
+            case .shareLocation:
+                // A fresh fix goes to the family through the normal location report
+                locationManager.requestSingleLocation()
+                liveActivityManager.updateProtectedLocationShared()
             }
         }
     }
@@ -1101,6 +1105,63 @@ final class AppCoordinator: ObservableObject {
         guard defaults.bool(forKey: "lockscreen_card_enabled") else { return }
         if !liveActivityManager.isRunning {
             startLiveActivityIfNeeded()
+        } else {
+            refreshLiveActivityOverview()
+        }
+    }
+
+    /// Latest family-circle post for the protected person's card ("Sarah: Home yet?").
+    private var latestFamilyUpdate: (text: String, at: Date)? {
+        guard let post = familyPosts.filter({ !$0.isUnsent }).max(by: { $0.createdAt < $1.createdAt }) else { return nil }
+        let body = post.text.isEmpty ? "📷" : post.text
+        return ("\(post.authorName)：\(body)", post.createdAt)
+    }
+
+    /// Keeps a running card current each time the app goes to the background.
+    private func refreshLiveActivityOverview() {
+        guard !isDemo else { return }
+        if userRole == .protected_ {
+            let latest = latestFamilyUpdate
+            liveActivityManager.updateProtectedOverview(
+                guardians: protectedActivityGuardians,
+                lastCheckIn: WidgetDataStore.read().lastCheckInDate,
+                latestUpdate: latest?.text,
+                latestUpdateAt: latest?.at
+            )
+        } else {
+            let priority = protectedPersons
+                .sorted { Self.statusPriority($0.status) > Self.statusPriority($1.status) }
+                .first
+            liveActivityManager.updateGuardianPersons(
+                guardianActivityPersons,
+                priorityName: priority?.user.displayName ?? "",
+                priorityPhone: priority?.user.phone ?? ""
+            )
+        }
+    }
+
+    private var protectedActivityGuardians: [ProtectedActivityAttributes.GuardianInfo] {
+        myGuardians.map { g in
+            ProtectedActivityAttributes.GuardianInfo(
+                name: g.user.displayName,
+                initial: g.user.avatarInitial,
+                isOnDuty: g.isOnDuty,
+                isOnline: g.isOnDuty // approximate: on-duty ≈ online
+            )
+        }
+    }
+
+    private var guardianActivityPersons: [GuardianActivityAttributes.PersonInfo] {
+        protectedPersons.map { pp in
+            GuardianActivityAttributes.PersonInfo(
+                id: pp.id,
+                displayName: pp.user.displayName,
+                initial: pp.user.avatarInitial,
+                status: Self.mapPersonStatus(pp.status),
+                cityName: pp.user.cityName,
+                lastCheckIn: pp.lastCheckIn,
+                batteryLevel: pp.batteryLevel
+            )
         }
     }
 
@@ -1124,10 +1185,13 @@ final class AppCoordinator: ObservableObject {
                 ProtectedActivityAttributes.MedInfo(name: $0.name, location: $0.storageLocation, dosage: $0.dosage)
             }
 
+            let latest = latestFamilyUpdate
             liveActivityManager.startProtectedActivity(
                 userName: currentUser?.displayName ?? "",
                 guardians: guardianInfos,
-                lastCheckIn: nil,
+                lastCheckIn: WidgetDataStore.read().lastCheckInDate,
+                latestUpdate: latest?.text,
+                latestUpdateAt: latest?.at,
                 emergencyPhone: emergencyPhone,
                 emergencyLabel: localEmergencyNumber,
                 bloodType: cachedCard?.bloodType,
@@ -1152,11 +1216,12 @@ final class AppCoordinator: ObservableObject {
             let priority = protectedPersons
                 .sorted { Self.statusPriority($0.status) > Self.statusPriority($1.status) }
                 .first
+            // "Call Mom" dials Mom — it used to dial the local emergency number
             liveActivityManager.startGuardianActivity(
                 guardianName: currentUser?.displayName ?? "",
                 persons: personInfos,
                 priorityPersonName: priority?.user.displayName ?? "",
-                priorityPersonPhone: emergencyPhone
+                priorityPersonPhone: priority?.user.phone ?? ""
             )
         }
     }
@@ -1555,6 +1620,8 @@ final class AppCoordinator: ObservableObject {
 
         addTimelineEntry(type: .checkIn, description: note ?? LanguageManager.shared.localized("timeline.checkIn"))
         syncWidgetState()
+        // The lock-screen card shows the new time (tapping "OK" there looked like it did nothing)
+        liveActivityManager.updateProtectedCheckIn()
 
         let checkinLocation = locationManager.lastReportedLocation
         apiClient.postQueued("/v1/checkin", body: CheckInRequest(

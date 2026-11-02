@@ -121,6 +121,10 @@ struct OnboardingView: View {
 
             // D-07: Language switcher top-right, matching login screen
             HStack(spacing: 2) {
+                Image(systemName: "globe")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.white.opacity(0.5))
+                    .accessibilityLabel(lang.localized("settings.language"))
                 ForEach(AppLanguage.allCases, id: \.self) { language in
                     Button {
                         lang.choose(language)

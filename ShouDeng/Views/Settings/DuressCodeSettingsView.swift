@@ -23,9 +23,7 @@ struct DuressCodeSettingsView: View {
     @State private var showRemoveConfirm = false
     @State private var showSuccess = false
 
-    private var hasDuressCode: Bool {
-        KeychainHelper.shared.read(.duressCode) != nil
-    }
+    @State private var hasDuressCode = KeychainHelper.shared.read(.duressCode) != nil
 
     var body: some View {
         NavigationStack {
@@ -37,10 +35,10 @@ struct DuressCodeSettingsView: View {
                             .font(.scaled(size: 24))
                             .foregroundStyle(lamp)
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("duress.warning.title")
+                            Text(langManager.localized("duress.warning.title"))
                                 .font(.scaled(size: 14, weight: .semibold))
                                 .foregroundStyle(ink)
-                            Text("duress.warning.body")
+                            Text(langManager.localized("duress.warning"))
                                 .font(.scaled(size: 12))
                                 .foregroundStyle(.secondary)
                         }
@@ -63,7 +61,7 @@ struct DuressCodeSettingsView: View {
 
                     // How it works
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("duress.how.title")
+                        Text(langManager.localized("duress.how.title"))
                             .font(.scaled(size: 13, weight: .semibold))
                             .foregroundStyle(ink)
 
@@ -81,16 +79,16 @@ struct DuressCodeSettingsView: View {
                 .padding(16)
             }
             .background(Color(.systemBackground))
-            .navigationTitle("duress.title")
+            .navigationTitle(langManager.localized("duress.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button { dismiss() } label: { Label(langManager.localized("duress.close"), systemImage: "xmark") }
                 }
             }
-            .alert("duress.remove.title", isPresented: $showRemoveConfirm) {
+            .alert(langManager.localized("duress.remove.confirm.title"), isPresented: $showRemoveConfirm) {
                 Button(langManager.localized("duress.cancel"), role: .cancel) {}
-                Button("duress.remove.confirm", role: .destructive) {
+                Button(langManager.localized("duress.remove.confirm"), role: .destructive) {
                     KeychainHelper.shared.delete(.duressCode)
                     ConsentLogger.shared.log(
                         userId: coordinator.authManager.currentUserId ?? "unknown",
@@ -101,12 +99,12 @@ struct DuressCodeSettingsView: View {
                     dismiss()
                 }
             } message: {
-                Text("duress.remove.message")
+                Text(langManager.localized("duress.remove.confirm.message"))
             }
-            .alert("duress.saved.title", isPresented: $showSuccess) {
+            .alert(langManager.localized("duress.save.success"), isPresented: $showSuccess) {
                 Button(langManager.localized("duress.ok")) { dismiss() }
             } message: {
-                Text("duress.saved.message")
+                Text(langManager.localized("duress.saved.message"))
             }
         }
     }
@@ -115,11 +113,11 @@ struct DuressCodeSettingsView: View {
 
     private var newCodeView: some View {
         VStack(spacing: 14) {
-            Text("duress.set.title")
+            Text(langManager.localized("duress.new.code"))
                 .font(.scaled(size: 16, weight: .semibold))
                 .foregroundStyle(ink)
 
-            SecureField("duress.code.placeholder", text: $newCode)
+            SecureField(langManager.localized("duress.code.placeholder"), text: $newCode)
                 .keyboardType(.numberPad)
                 .textContentType(.oneTimeCode)
                 .font(.scaled(size: 18))
@@ -129,7 +127,7 @@ struct DuressCodeSettingsView: View {
                         .stroke(Color(.separator).opacity(0.4), lineWidth: 1)
                 )
 
-            SecureField("duress.confirm.placeholder", text: $confirmCode)
+            SecureField(langManager.localized("duress.confirm.code"), text: $confirmCode)
                 .keyboardType(.numberPad)
                 .textContentType(.oneTimeCode)
                 .font(.scaled(size: 18))
@@ -148,7 +146,7 @@ struct DuressCodeSettingsView: View {
             Button {
                 saveDuressCode()
             } label: {
-                Text("duress.save")
+                Text(langManager.localized("duress.save"))
                     .font(.scaled(size: 15, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
@@ -175,12 +173,12 @@ struct DuressCodeSettingsView: View {
                 Image(systemName: "checkmark.shield.fill")
                     .foregroundStyle(safe)
                     .font(.scaled(size: 20))
-                Text("duress.active")
+                Text(langManager.localized("duress.configured"))
                     .font(.scaled(size: 15, weight: .semibold))
                     .foregroundStyle(safe)
             }
 
-            Text("duress.active.desc")
+            Text(langManager.localized("duress.active.desc"))
                 .font(.scaled(size: 13))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -189,7 +187,7 @@ struct DuressCodeSettingsView: View {
                 Button {
                     showRemoveConfirm = true
                 } label: {
-                    Text("duress.remove")
+                    Text(langManager.localized("duress.remove"))
                         .font(.scaled(size: 14, weight: .medium))
                         .foregroundStyle(alert)
                         .frame(maxWidth: .infinity)
@@ -202,9 +200,11 @@ struct DuressCodeSettingsView: View {
 
                 Button {
                     KeychainHelper.shared.delete(.duressCode)
-                    // Switch to new code entry
+                    newCode = ""
+                    confirmCode = ""
+                    hasDuressCode = false
                 } label: {
-                    Text("duress.change")
+                    Text(langManager.localized("duress.change"))
                         .font(.scaled(size: 14, weight: .medium))
                         .foregroundStyle(ink)
                         .frame(maxWidth: .infinity)
@@ -236,7 +236,7 @@ struct DuressCodeSettingsView: View {
                 .foregroundStyle(.white)
                 .frame(width: 20, height: 20)
                 .background(Circle().fill(ink.opacity(0.6)))
-            Text(LocalizedStringKey(text))
+            Text(langManager.localized(text))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
         }
@@ -244,11 +244,11 @@ struct DuressCodeSettingsView: View {
 
     private func saveDuressCode() {
         guard newCode.count >= 4 else {
-            errorMessage = "duress.error.short"
+            errorMessage = langManager.localized("duress.error.short")
             return
         }
         guard newCode == confirmCode else {
-            errorMessage = "duress.error.mismatch"
+            errorMessage = langManager.localized("duress.error.mismatch")
             return
         }
         KeychainHelper.shared.save(newCode, for: .duressCode)

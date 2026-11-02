@@ -14,6 +14,10 @@ struct ShouDengApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(appDelegate.appCoordinator)
+                #if DEBUG
+                // `-la-gallery`: the lock-screen cards, all four states (see LockScreenCards.swift)
+                .overlay { if ProcessInfo.processInfo.arguments.contains("-la-gallery") { LockScreenCardGallery() } }
+                #endif
                 .preferredColorScheme(.light)
                 // Firebase phone-auth reCAPTCHA callback + shoudeng:// deep links
                 .onOpenURL { url in

@@ -59,7 +59,7 @@
 
 /* Home View - Protected */
 "home.sos" = "緊急求助";
-"home.sos.hold" = "長按 3 秒傳送 SOS";
+"home.sos.hold" = "長按 5 秒傳送 SOS";
 "home.checkin" = "報平安";
 "home.checkin.done" = "已報平安";
 "home.send.location" = "傳送位置";
@@ -162,6 +162,12 @@
 "duress.error.mismatch" = "兩次輸入的密碼不一致";
 "duress.error.empty" = "請輸入密碼";
 "duress.save.success" = "脅迫密碼已儲存";
+"duress.warning.title" = "僅在被脅迫時使用";
+"duress.code.placeholder" = "至少 4 位數字";
+"duress.save" = "儲存";
+"duress.active.desc" = "登入時輸入此密碼，App 會照常開啟，同時在背景靜默向守護者傳送 SOS。";
+"duress.saved.message" = "請保密。只在被人強迫解鎖 App 時使用。";
+"duress.error.short" = "至少需要 4 位數字";
 
 /* 沉默即報警 */
 "silent.alarm.title" = "沉默即報警";
@@ -763,7 +769,7 @@
 "protected.home.sosElapsed" = "已持續 %@";
 "protected.home.sosEnabled" = "SOS 已啟用";
 "protected.home.sosHighFreqLocation" = "高頻定位已啟用";
-"protected.home.sosHint" = "雙擊並長按三秒傳送SOS緊急求助訊號給所有守護者";
+"protected.home.sosHint" = "雙擊並長按五秒傳送SOS緊急求助訊號給所有守護者";
 "protected.home.sosInProgress" = "緊急求助中";
 "protected.home.sosLabel" = "緊急求助";
 "protected.home.sosLowPower" = "低電量模式";
@@ -823,7 +829,7 @@
 "protected.settings.security.silentAlarm" = "靜默警報";
 "protected.settings.security.silentAlarmDesc" = "定時確認安全，未確認自動通知";
 "protected.settings.sos.bluetooth" = "藍芽按鈕";
-"protected.settings.sos.longPress" = "長按按鈕（3秒）";
+"protected.settings.sos.longPress" = "長按按鈕（5秒）";
 "protected.settings.sos.notPaired" = "未配對";
 "protected.settings.sos.redundancyHint" = "多種觸發方式確保緊急時能夠求助";
 "protected.settings.sos.silentMode" = "靜默模式";
@@ -899,7 +905,7 @@
 "claim.networkError" = "網路錯誤，請重試";
 "claim.referenceChecklist" = "參考清單：%@";
 "claim.sharePDF" = "分享PDF";
-"claim.velaProvides" = "Vela Care 提供經過驗證的安全資料用於保險理賠";
+"claim.velaProvides" = "守燈提供經過驗證的安全資料用於保險理賠";
 
 // MARK: - Duress Code (additional)
 "duress.cancel" = "取消";
@@ -1261,7 +1267,7 @@
 
 /* SOS button (W2-b) */
 "sos.button.a11yLabel" = "緊急求助按鈕";
-"sos.button.a11yHint" = "長按 3 秒向家人發出求助";
+"sos.button.a11yHint" = "長按 5 秒向家人發出求助";
 
 /* Guardian SOS response (W2-d/e) */
 "guardian.alert.noActiveSOS" = "當前沒有進行中的求助。";
@@ -1311,7 +1317,7 @@
 "explore.tip.mom.guardians.title" = "三位守護者，三個時區";
 "explore.tip.mom.guardians.body" = "Sarah 在多倫多，Kevin 在上海，Lucy 在巴黎，輪流照看，你需要時通常總有人醒著。";
 "explore.tip.mom.sos.title" = "練習一次求助";
-"explore.tip.mom.sos.body" = "按住紅色按鈕 3 秒。真實緊急情況下，守護者會先收到提醒，然後是簡訊，再是電話，直到有人回應。體驗中不會真的通知任何人——你會看到 Sarah 看到的一切。";
+"explore.tip.mom.sos.body" = "按住紅色按鈕 5 秒。真實緊急情況下，守護者會先收到提醒，然後是簡訊，再是電話，直到有人回應。體驗中不會真的通知任何人——你會看到 Sarah 看到的一切。";
 "explore.tip.mom.tracking.title" = "你決定誰能看到你的位置";
 "explore.tip.mom.tracking.body" = "需要隱私時可暫停共享最多 4 小時。發出求助時會自動恢復。";
 "explore.tip.mom.done.title" = "這就是媽媽這邊";
@@ -1489,6 +1495,9 @@
 "fontScale.large" = "大字";
 "fontScale.extraLarge" = "特大";
 "fontScale.huge" = "超大";
+"fontScale.button" = "字體大小";
+"fontScale.button.current" = "字體大小：%@";
+"fontScale.sample" = "媽媽 19:30 報了平安";
 
 /* 12-market localization pass (2026-10-31) */
 "hotline.emergency" = "緊急號碼";
@@ -1714,7 +1723,7 @@
 "store.error.purchase" = "購買失敗：%@";
 "store.error.nothingToRestore" = "未找到可恢復的訂閱";
 "store.error.restore" = "恢復購買失敗：%@";
-"sos.button.holdHint" = "按住 3 秒傳送求助";
+"sos.button.holdHint" = "按住 5 秒傳送求助";
 "settings.data.storageLocation" = "資料儲存地點";
 "settings.data.storageLocation.value" = "美國";
 "settings.data.storageLocation.pending" = "美國 · 待確認";
@@ -1736,7 +1745,7 @@
 
 /* In-app tips */
 "tip.sos.title" = "按住求助";
-"tip.sos.message" = "按住 SOS 3 秒傳送求助。通知家人前有 5 秒可以取消。";
+"tip.sos.message" = "按住 SOS 5 秒傳送求助。通知家人前有 5 秒可以取消。";
 "tip.homeSafe.title" = "告訴家人你到家了";
 "tip.homeSafe.message" = "點一下，守護你的家人就知道你已安全到家。";
 "tip.inviteGuardian.title" = "還沒有家人守護你";

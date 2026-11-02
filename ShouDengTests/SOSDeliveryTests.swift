@@ -253,8 +253,25 @@ final class SafetyPathTests: XCTestCase {
         XCTAssertFalse(SOSTriggerMethod.deadManSwitch.isSilent)
     }
 
-    func testSOSHoldIsThreeSeconds() {
-        XCTAssertEqual(FloatingSOSButton.holdDuration, 3.0)
+    /// 5 s after user testing (3 s was triggered by accident); the copy must say the same.
+    func testSOSHoldIsFiveSecondsAndTheCopySaysSo() throws {
+        XCTAssertEqual(FloatingSOSButton.holdDuration, 5.0)
+        let bundle = Bundle(for: AppCoordinator.self)
+        for lang in ["en", "zh-Hans", "zh-Hant", "fr", "ja"] {
+            let url = try XCTUnwrap(bundle.url(forResource: "Localizable", withExtension: "strings", subdirectory: nil, localization: lang))
+            let table = try XCTUnwrap(NSDictionary(contentsOf: url) as? [String: String])
+            for key in ["sos.button.holdHint", "home.sos.hold", "sos.button.a11yHint"] {
+                let text = try XCTUnwrap(table[key], "\(lang) \(key)")
+                XCTAssertTrue(text.contains("5") || text.contains("五"), "\(lang) \(key): \(text)")
+                XCTAssertFalse(text.contains("3") || text.contains("三"), "\(lang) \(key): \(text)")
+            }
+        }
+    }
+
+    func testLockScreenLocationButtonIsQueued() {
+        _ = WidgetDataStore.takePendingActions()
+        WidgetDataStore.enqueuePendingAction(.shareLocation)
+        XCTAssertEqual(WidgetDataStore.takePendingActions(), [.shareLocation])
     }
 
     func testWidgetPendingActionsAreTakenOnceAndExpire() {

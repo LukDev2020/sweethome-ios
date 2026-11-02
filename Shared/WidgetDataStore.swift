@@ -47,6 +47,8 @@ enum WidgetDataStore {
     enum PendingAction: String, Codable {
         case checkIn
         case arrived
+        /// Lock-screen card "Location": send a fresh location to the family
+        case shareLocation
     }
 
     private struct PendingEntry: Codable {
@@ -115,6 +117,9 @@ enum WidgetDataStore {
         "la.alert": "緊急 SOS", "la.offline": "オフライン", "la.people.safe": "人が無事",
         "widget.sos.title": "緊急 SOS", "widget.sos.description": "ワンタップで SOS",
         "widget.sos.tap": "タップで SOS", "widget.login.required": "ログインしてください",
+        "la.guardians.none": "見守る人はまだいません", "la.latest": "最新の動き",
+        "la.location.sent": "家族に位置を送信しました", "la.blood": "血液型 ", "la.meds": "常備薬 ",
+        "la.slot.empty": "未登録", "la.open.app": "アプリを開く", "la.persons.none": "家族はまだいません",
     ]
 
     private static func baseLocalized(_ key: String) -> String {
@@ -151,6 +156,16 @@ enum WidgetDataStore {
         case "la.alert":        return isZh ? "紧急求助" : isFr ? "Alerte" : "Alert"
         case "la.offline":      return isZh ? "离线" : isFr ? "Hors ligne" : "Offline"
         case "la.people.safe":  return isZh ? "人安全" : isFr ? " en sécurité" : " safe"
+
+        // Live Activity — fixed-size cards (empty fields show "—")
+        case "la.guardians.none": return isZh ? "还没有守护者" : isFr ? "Aucun gardien" : "No guardians yet"
+        case "la.latest":       return isZh ? "最新动态" : isFr ? "Dernière nouvelle" : "Latest"
+        case "la.location.sent": return isZh ? "已向家人发送位置" : isFr ? "Position envoyée à la famille" : "Location sent to family"
+        case "la.blood":        return isZh ? "血型 " : isFr ? "Groupe " : "Blood "
+        case "la.meds":         return isZh ? "急救药 " : isFr ? "Médicament " : "Meds "
+        case "la.slot.empty":   return isZh ? "未添加" : isFr ? "Non ajouté" : "Not added"
+        case "la.open.app":     return isZh ? "打开 App" : isFr ? "Ouvrir l'app" : "Open app"
+        case "la.persons.none": return isZh ? "还没有家人" : isFr ? "Aucun proche" : "No family yet"
 
         // Widget — SOS
         case "widget.sos.title":   return isZh ? "紧急求助" : isFr ? "SOS Urgence" : "Emergency SOS"

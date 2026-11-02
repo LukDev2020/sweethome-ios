@@ -5,7 +5,7 @@ import CryptoKit
 //
 // 3-step flow: Select scope → Preview records → Export
 // Both Guardian and Protected portals can access this.
-// Vela provides reference data only — no certifications.
+// Lantern Care provides reference data only — no certifications.
 
 struct ClaimMaterialsView: View {
     @EnvironmentObject var coordinator: AppCoordinator
@@ -496,7 +496,7 @@ struct ClaimMaterialsView: View {
 
             Divider()
 
-            // Vela records
+            // Lantern Care records
             VStack(alignment: .leading, spacing: 4) {
                 Text(langManager.localized("claim.velaProvides"))
                     .font(.scaled(size: 11, weight: .medium))

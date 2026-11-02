@@ -7,7 +7,7 @@ struct FloatingSOSButton: View {
     @State private var progress: Double = 0
     @State private var pulseScale: CGFloat = 1.0
     @State private var showConfirm = false
-    /// Shown when the button is released before 3 s — a tap used to do nothing at all.
+    /// Shown when the button is released early — a tap used to do nothing at all.
     @State private var showHoldHint = false
     @State private var hintTask: Task<Void, Never>?
     /// When the current press began. `progress` can't tell an early release: inside
@@ -15,9 +15,10 @@ struct FloatingSOSButton: View {
     @State private var pressStartedAt: Date?
 
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
-    /// Same 3 s hold as the home-screen slider and the copy ("Hold 3s to send
-    /// SOS"); long enough to avoid pocket / accidental SOS.
-    static let holdDuration: Double = 3.0
+    /// Same hold as the home-screen slider and the copy ("Hold 5s to send SOS").
+    /// 5 s after user testing: 3 s was triggered by accident several times. A real
+    /// SOS still goes through the 5 s cancel countdown afterwards.
+    static let holdDuration: Double = 5.0
     private var holdDuration: Double { Self.holdDuration }
 
     var body: some View {

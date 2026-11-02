@@ -59,7 +59,7 @@
 
 /* Home View - Protected */
 "home.sos" = "SOS";
-"home.sos.hold" = "3秒間長押ししてSOSを送信";
+"home.sos.hold" = "5秒間長押ししてSOSを送信";
 "home.checkin" = "無事です";
 "home.checkin.done" = "無事を知らせました";
 "home.send.location" = "位置情報を送信";
@@ -162,6 +162,12 @@
 "duress.error.mismatch" = "コードが一致しません";
 "duress.error.empty" = "コードを入力してください";
 "duress.save.success" = "強要時コードを保存しました";
+"duress.warning.title" = "強要されたときだけ使用";
+"duress.code.placeholder" = "4桁以上の数字";
+"duress.save" = "保存";
+"duress.active.desc" = "ログイン時にこのコードを入力すると、アプリは通常どおり開き、見守る人にSOSが密かに送信されます。";
+"duress.saved.message" = "他人に知られないようにしてください。アプリのロック解除を強要されたときだけ使います。";
+"duress.error.short" = "4桁以上入力してください";
 
 /* Silent Alarm */
 "silent.alarm.title" = "サイレントアラーム";
@@ -762,7 +768,7 @@
 "protected.home.sosElapsed" = "経過時間 %@";
 "protected.home.sosEnabled" = "SOS有効";
 "protected.home.sosHighFreqLocation" = "高頻度の位置情報取得が有効です";
-"protected.home.sosHint" = "ダブルタップして3秒間長押しすると、すべての見守る人にSOSを送信します。";
+"protected.home.sosHint" = "ダブルタップして5秒間長押しすると、すべての見守る人にSOSを送信します。";
 "protected.home.sosInProgress" = "SOS発信中";
 "protected.home.sosLabel" = "緊急SOS";
 "protected.home.sosLowPower" = "低電力モード";
@@ -822,7 +828,7 @@
 "protected.settings.security.silentAlarm" = "サイレントアラーム";
 "protected.settings.security.silentAlarmDesc" = "決まった時刻に安全を確認し、応答がない場合は自動で通知します";
 "protected.settings.sos.bluetooth" = "Bluetoothボタン";
-"protected.settings.sos.longPress" = "長押し（3秒）";
+"protected.settings.sos.longPress" = "長押し（5秒）";
 "protected.settings.sos.notPaired" = "未ペアリング";
 "protected.settings.sos.redundancyHint" = "複数の発信方法を用意しておくと、いざという時に確実にSOSを送れます";
 "protected.settings.sos.silentMode" = "サイレントモード";
@@ -898,7 +904,7 @@
 "claim.networkError" = "ネットワークエラーが発生しました。もう一度お試しください";
 "claim.referenceChecklist" = "参考チェックリスト：%@";
 "claim.sharePDF" = "PDFを共有";
-"claim.velaProvides" = "Vela Careは、保険請求に使える検証済みの安全データを提供します";
+"claim.velaProvides" = "Lantern Careは、保険請求に使える検証済みの安全データを提供します";
 
 // MARK: - Duress Code (additional)
 "duress.cancel" = "キャンセル";
@@ -1260,7 +1266,7 @@
 
 /* SOS button (W2-b) */
 "sos.button.a11yLabel" = "SOS緊急ボタン";
-"sos.button.a11yHint" = "3秒間長押しすると家族に通知します";
+"sos.button.a11yHint" = "5秒間長押しすると家族に通知します";
 
 /* Guardian SOS response (W2-d/e) */
 "guardian.alert.noActiveSOS" = "現在、進行中のSOSはありません。";
@@ -1310,7 +1316,7 @@
 "explore.tip.mom.guardians.title" = "3人の見守る人、3つのタイムゾーン";
 "explore.tip.mom.guardians.body" = "トロントのSarah、上海のKevin、パリのLucyが1日を分担して見守っているので、あなたが必要なときはたいてい誰かが起きています。";
 "explore.tip.mom.sos.title" = "SOSを練習しましょう";
-"explore.tip.mom.sos.body" = "赤いボタンを3秒間長押ししてください。実際の緊急時には、見守る人にまず通知が届き、次にSMS、そして誰かが応答するまで電話がかかります。デモでは実際には誰にも通知されません。Sarahに表示される画面をそのまま確認できます。";
+"explore.tip.mom.sos.body" = "赤いボタンを5秒間長押ししてください。実際の緊急時には、見守る人にまず通知が届き、次にSMS、そして誰かが応答するまで電話がかかります。デモでは実際には誰にも通知されません。Sarahに表示される画面をそのまま確認できます。";
 "explore.tip.mom.tracking.title" = "居場所を誰に見せるかはあなたが決められます";
 "explore.tip.mom.tracking.body" = "プライバシーを守りたいときは、いつでも最大4時間まで共有を一時停止できます。SOSを発信すると、共有は必ず再開されます。";
 "explore.tip.mom.done.title" = "以上がお母さんの画面です";
@@ -1488,6 +1494,9 @@
 "fontScale.large" = "大";
 "fontScale.extraLarge" = "特大";
 "fontScale.huge" = "最大";
+"fontScale.button" = "文字サイズ";
+"fontScale.button.current" = "文字サイズ：%@";
+"fontScale.sample" = "母が19:30に無事を報告しました";
 
 /* 12-market localization pass (2026-10-31) */
 "hotline.emergency" = "緊急番号";
@@ -1713,7 +1722,7 @@
 "store.error.purchase" = "購入できませんでした：%@";
 "store.error.nothingToRestore" = "復元できるサブスクリプションが見つかりません。";
 "store.error.restore" = "購入を復元できませんでした：%@";
-"sos.button.holdHint" = "3秒間長押しでSOSを送信";
+"sos.button.holdHint" = "5秒間長押しでSOSを送信";
 "settings.data.storageLocation" = "データの保存場所";
 "settings.data.storageLocation.value" = "米国";
 "settings.data.storageLocation.pending" = "米国・未確認";
@@ -1735,7 +1744,7 @@
 
 /* In-app tips */
 "tip.sos.title" = "長押しでSOS";
-"tip.sos.message" = "SOSを3秒間長押しすると送信します。家族に届く前に5秒間キャンセルできます。";
+"tip.sos.message" = "SOSを5秒間長押しすると送信します。家族に届く前に5秒間キャンセルできます。";
 "tip.homeSafe.title" = "帰宅を知らせる";
 "tip.homeSafe.message" = "タップするだけで、見守る家族全員に無事帰宅を知らせます。";
 "tip.inviteGuardian.title" = "まだ見守る家族がいません";

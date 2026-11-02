@@ -49,6 +49,25 @@ final class LocalizationCompletenessTests: XCTestCase {
         }
     }
 
+    /// `Text("some.key")` looks the key up in the phone's language, not the one chosen
+    /// in the app, and escapes `testEveryUsedKeyExistsInAllLanguages` (a missing key
+    /// shows on screen as "some.key"). Keys must go through LanguageManager.
+    func testNoLiteralKeysInSwiftUIViews() throws {
+        let regex = try NSRegularExpression(
+            pattern: #"\b(?:Text|Label|SecureField|TextField|Toggle|Button|navigationTitle|alert)\(\s*"([a-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)+)""#)
+        let dir = repoRoot.appendingPathComponent("ShouDeng")
+        let files = FileManager.default.enumerator(at: dir, includingPropertiesForKeys: nil)!
+            .compactMap { $0 as? URL }.filter { $0.pathExtension == "swift" }
+        var found: [String] = []
+        for file in files {
+            let text = try String(contentsOf: file, encoding: .utf8)
+            for m in regex.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
+                found.append("\(text[Range(m.range(at: 1), in: text)!]) (\(file.lastPathComponent))")
+            }
+        }
+        XCTAssertTrue(found.isEmpty, "use LanguageManager.localized for: \(found.prefix(20))")
+    }
+
     func testTablesHaveTheSameKeys() throws {
         let en = Set(try table("en").keys)
         for lang in ["zh-Hans", "zh-Hant", "fr", "ja"] {
@@ -220,6 +239,38 @@ final class DynamicLocalizationKeyTests: XCTestCase {
             let table = try XCTUnwrap(NSDictionary(contentsOfFile: path) as? [String: String], language)
             let missing = keys.filter { table[$0]?.isEmpty ?? true }
             XCTAssertEqual(missing, [], language)
+        }
+    }
+}
+
+/// The lock-screen cards use the widget's own text table (WidgetDataStore), which
+/// returns the key itself when a text is missing — a card would show "la.latest".
+final class LockScreenCardTextTests: XCTestCase {
+    func testEveryCardTextExistsInEveryLanguage() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        var keys = Set<String>()
+        for file in ["Shared/LockScreenCards.swift", "ShouDengWidgets/ProtectedLiveActivity.swift", "ShouDengWidgets/GuardianLiveActivity.swift"] {
+            let text = try String(contentsOf: root.appendingPathComponent(file), encoding: .utf8)
+            let regex = try NSRegularExpression(pattern: #"L\("([a-z.]+)"\)"#)
+            for m in regex.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
+                keys.insert(String(text[Range(m.range(at: 1), in: text)!]))
+            }
+        }
+        XCTAssertGreaterThan(keys.count, 15)
+        let saved = WidgetDataStore.currentLanguage
+        defer { WidgetDataStore.writeLanguage(saved) }
+        for lang in ["en", "zh-Hans", "zh-Hant", "fr", "ja"] {
+            WidgetDataStore.writeLanguage(lang)
+            let missing = keys.filter { WidgetDataStore.localized($0) == $0 }.sorted()
+            XCTAssertTrue(missing.isEmpty, "\(lang) is missing \(missing)")
+        }
+    }
+
+    func testFontSizeButtonIsWrittenOut() {
+        for level in FontScaleLevel.allCases {
+            let title = FontSizeSheet.buttonTitle(lang: .shared, level: level)
+            XCTAssertTrue(title.contains(level.label), title)
+            XCTAssertFalse(title.contains("%@") || title.contains("fontScale."), title)
         }
     }
 }

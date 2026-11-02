@@ -7,7 +7,7 @@ import UIKit
 // Design follows the lighthouse design system:
 //   navy #014581, blue #3D9AC0, cream #FCF2DA, bg #FBF8F1, ink #0E2B4A
 //
-// Security: 5 failed code attempts → lock + contact Vela support.
+// Security: 5 failed code attempts → lock + contact Lantern Care support.
 // Reset: clears all state and returns to phone entry.
 
 struct LoginView: View {
@@ -229,8 +229,9 @@ struct LoginView: View {
                         HStack(spacing: 3) {
                             Image(systemName: "textformat.size")
                                 .font(.system(size: 11))
-                            Text(fontScale.level.label)
+                            Text(FontSizeSheet.buttonTitle(lang: lang, level: fontScale.level))
                                 .font(.system(size: 10))
+                                .lineLimit(1)
                         }
                         .foregroundStyle(showFontPicker ? .white : navy.opacity(0.6))
                         .padding(.horizontal, 8)
@@ -240,8 +241,12 @@ struct LoginView: View {
                         )
                     }
 
-                    // Language switcher
+                    // Language switcher (globe = "language", for people who don't read the codes)
                     HStack(spacing: 2) {
+                        Image(systemName: "globe")
+                            .font(.system(size: 11))
+                            .foregroundStyle(ink3)
+                            .accessibilityLabel(lang.localized("settings.language"))
                         ForEach(AppLanguage.allCases, id: \.self) { language in
                             Button {
                                 lang.choose(language)
@@ -652,7 +657,7 @@ struct LoginView: View {
     }
 
     private func openSupport() {
-        if let url = URL(string: "mailto:support@velarcare.com?subject=Account%20Locked") {
+        if let url = URL(string: "mailto:support@shoudeng.app?subject=Account%20Locked") {
             ExternalURL.open(url)
         }
     }

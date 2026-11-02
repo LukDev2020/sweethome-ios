@@ -37,6 +37,15 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             #endif
         }
 
+        // Lock-screen card buttons (check in, location) run here, without opening the app
+        let coordinator = appCoordinator
+        LiveActivityActionBridge.handler = { coordinator.processPendingWidgetActions() }
+        #if DEBUG
+        if let kind = UserDefaults.standard.string(forKey: "la-preview") {
+            coordinator.liveActivityManager.startPreview(kind)
+        }
+        #endif
+
         // Register background tasks (must happen before didFinishLaunching returns)
         DeadManSwitchService.registerBGTask()
         // A running dead-man countdown survives app kill: reconnect it (and fire

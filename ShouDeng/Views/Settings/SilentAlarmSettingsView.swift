@@ -27,10 +27,10 @@ struct SilentAlarmSettingsView: View {
                     // Enable toggle
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("silent.alarm.enable")
+                            Text(langManager.localized("silent.alarm.toggle"))
                                 .font(.scaled(size: 15, weight: .medium))
                                 .foregroundStyle(ink)
-                            Text("silent.alarm.enable.desc")
+                            Text(langManager.localized("silent.alarm.subtitle"))
                                 .font(.scaled(size: 12))
                                 .foregroundStyle(.secondary)
                         }
@@ -49,7 +49,7 @@ struct SilentAlarmSettingsView: View {
                         // Check-in times
                         VStack(alignment: .leading, spacing: 10) {
                             HStack {
-                                Text("silent.alarm.times")
+                                Text(langManager.localized("silent.alarm.times"))
                                     .font(.scaled(size: 13, weight: .semibold))
                                     .foregroundStyle(ink)
                                 Spacer()
@@ -88,10 +88,10 @@ struct SilentAlarmSettingsView: View {
 
                         // Confirm window
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("silent.alarm.window")
+                            Text(langManager.localized("silent.alarm.window"))
                                 .font(.scaled(size: 13, weight: .semibold))
                                 .foregroundStyle(ink)
-                            Text("silent.alarm.window.desc")
+                            Text(langManager.localized("silent.alarm.window.desc"))
                                 .font(.scaled(size: 12))
                                 .foregroundStyle(.secondary)
 
@@ -110,10 +110,10 @@ struct SilentAlarmSettingsView: View {
 
                         // Grace period
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("silent.alarm.grace")
+                            Text(langManager.localized("silent.alarm.grace"))
                                 .font(.scaled(size: 13, weight: .semibold))
                                 .foregroundStyle(ink)
-                            Text("silent.alarm.grace.desc")
+                            Text(langManager.localized("silent.alarm.grace.desc"))
                                 .font(.scaled(size: 12))
                                 .foregroundStyle(.secondary)
 
@@ -132,11 +132,11 @@ struct SilentAlarmSettingsView: View {
 
                         // Explanation
                         VStack(alignment: .leading, spacing: 6) {
-                            Label("silent.alarm.escalation.title", systemImage: "arrow.up.right.circle.fill")
+                            Label(langManager.localized("silent.alarm.escalation.title"), systemImage: "arrow.up.right.circle.fill")
                                 .font(.scaled(size: 13, weight: .semibold))
                                 .foregroundStyle(lamp)
 
-                            Text("silent.alarm.escalation.desc")
+                            Text(langManager.localized("silent.alarm.escalation.desc"))
                                 .font(.scaled(size: 12))
                                 .foregroundStyle(.secondary)
                         }
@@ -154,7 +154,7 @@ struct SilentAlarmSettingsView: View {
                 .padding(16)
             }
             .background(Color(.systemBackground))
-            .navigationTitle("silent.alarm.title")
+            .navigationTitle(langManager.localized("silent.alarm.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

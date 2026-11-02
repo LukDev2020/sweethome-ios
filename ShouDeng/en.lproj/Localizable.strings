@@ -59,7 +59,7 @@
 
 /* Home View - Protected */
 "home.sos" = "SOS";
-"home.sos.hold" = "Hold 3s to send SOS";
+"home.sos.hold" = "Hold 5s to send SOS";
 "home.checkin" = "I'm OK";
 "home.checkin.done" = "Checked in";
 "home.send.location" = "Send Location";
@@ -162,6 +162,12 @@
 "duress.error.mismatch" = "Codes do not match";
 "duress.error.empty" = "Please enter a code";
 "duress.save.success" = "Duress code saved";
+"duress.warning.title" = "Only for when you are forced";
+"duress.code.placeholder" = "At least 4 digits";
+"duress.save" = "Save";
+"duress.active.desc" = "Entering this code at login opens the app as usual and silently sends an SOS to your guardians.";
+"duress.saved.message" = "Keep it secret. Use it only if someone forces you to unlock the app.";
+"duress.error.short" = "Use at least 4 digits";
 
 /* Silent Alarm */
 "silent.alarm.title" = "Silent Alarm";
@@ -763,7 +769,7 @@ your guardians will be automatically notified.";
 "protected.home.sosElapsed" = "Elapsed %@";
 "protected.home.sosEnabled" = "SOS Enabled";
 "protected.home.sosHighFreqLocation" = "High-freq location enabled";
-"protected.home.sosHint" = "Double-tap and hold 3s to send SOS to all guardians";
+"protected.home.sosHint" = "Double-tap and hold 5s to send SOS to all guardians";
 "protected.home.sosInProgress" = "SOS In Progress";
 "protected.home.sosLabel" = "Emergency SOS";
 "protected.home.sosLowPower" = "Low Power Mode";
@@ -823,7 +829,7 @@ your guardians will be automatically notified.";
 "protected.settings.security.silentAlarm" = "Silent Alarm";
 "protected.settings.security.silentAlarmDesc" = "Scheduled safety check — auto-notify if missed";
 "protected.settings.sos.bluetooth" = "Bluetooth Button";
-"protected.settings.sos.longPress" = "Long Press (3s)";
+"protected.settings.sos.longPress" = "Long Press (5s)";
 "protected.settings.sos.notPaired" = "Not Paired";
 "protected.settings.sos.redundancyHint" = "Multiple trigger methods ensure SOS works when needed";
 "protected.settings.sos.silentMode" = "Silent Mode";
@@ -899,7 +905,7 @@ your guardians will be automatically notified.";
 "claim.networkError" = "Network error, please try again";
 "claim.referenceChecklist" = "Reference checklist: %@";
 "claim.sharePDF" = "Share PDF";
-"claim.velaProvides" = "Vela Care provides verified safety data for insurance claims";
+"claim.velaProvides" = "Lantern Care provides verified safety data for insurance claims";
 
 // MARK: - Duress Code (additional)
 "duress.cancel" = "Cancel";
@@ -1261,7 +1267,7 @@ your guardians will be automatically notified.";
 
 /* SOS button (W2-b) */
 "sos.button.a11yLabel" = "SOS emergency button";
-"sos.button.a11yHint" = "Touch and hold for 3 seconds to alert your family";
+"sos.button.a11yHint" = "Touch and hold for 5 seconds to alert your family";
 
 /* Guardian SOS response (W2-d/e) */
 "guardian.alert.noActiveSOS" = "No active SOS right now.";
@@ -1311,7 +1317,7 @@ your guardians will be automatically notified.";
 "explore.tip.mom.guardians.title" = "Three guardians, three time zones";
 "explore.tip.mom.guardians.body" = "Sarah in Toronto, Kevin in Shanghai and Lucy in Paris share the day between them, so someone is usually awake when you need them.";
 "explore.tip.mom.sos.title" = "Practice an SOS";
-"explore.tip.mom.sos.body" = "Press and hold the red button for 3 seconds. In a real emergency your guardians get an alert, then a text, then a phone call until someone responds. In the demo nobody is really alerted — you'll see exactly what Sarah sees.";
+"explore.tip.mom.sos.body" = "Press and hold the red button for 5 seconds. In a real emergency your guardians get an alert, then a text, then a phone call until someone responds. In the demo nobody is really alerted — you'll see exactly what Sarah sees.";
 "explore.tip.mom.tracking.title" = "You decide who sees where you are";
 "explore.tip.mom.tracking.body" = "Pause sharing for up to 4 hours whenever you want privacy. An SOS always turns it back on.";
 "explore.tip.mom.done.title" = "That's Mom's side";
@@ -1489,6 +1495,9 @@ your guardians will be automatically notified.";
 "fontScale.large" = "Large";
 "fontScale.extraLarge" = "Extra Large";
 "fontScale.huge" = "Huge";
+"fontScale.button" = "Text size";
+"fontScale.button.current" = "Text size: %@";
+"fontScale.sample" = "Mom checked in at 7:30 pm";
 
 /* 12-market localization pass (2026-10-31) */
 "hotline.emergency" = "Emergency number";
@@ -1714,7 +1723,7 @@ your guardians will be automatically notified.";
 "store.error.purchase" = "Purchase failed: %@";
 "store.error.nothingToRestore" = "No subscription found to restore.";
 "store.error.restore" = "Couldn't restore purchases: %@";
-"sos.button.holdHint" = "Hold for 3 seconds to send SOS";
+"sos.button.holdHint" = "Hold for 5 seconds to send SOS";
 "settings.data.storageLocation" = "Data storage location";
 "settings.data.storageLocation.value" = "United States";
 "settings.data.storageLocation.pending" = "United States · confirm";
@@ -1736,7 +1745,7 @@ your guardians will be automatically notified.";
 
 /* In-app tips */
 "tip.sos.title" = "Hold for help";
-"tip.sos.message" = "Press and hold SOS for 3 seconds. You get 5 seconds to cancel before your family is alerted.";
+"tip.sos.message" = "Press and hold SOS for 5 seconds. You get 5 seconds to cancel before your family is alerted.";
 "tip.homeSafe.title" = "Let them know you're home";
 "tip.homeSafe.message" = "One tap and everyone watching over you knows you got home safely.";
 "tip.inviteGuardian.title" = "No one is watching over you yet";

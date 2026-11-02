@@ -29,6 +29,12 @@ struct ProtectedActivityAttributes: ActivityAttributes {
         var conditions: [String]
         var emergencyNote: String?
         var emergencyMedications: [MedInfo]
+
+        /// Latest family-circle post ("Sarah：Home yet?"), shown as "Latest"
+        var latestUpdate: String? = nil
+        var latestUpdateAt: Date? = nil
+        /// Last time "Location" on the card sent a fresh location to the family
+        var lastLocationShare: Date? = nil
     }
 
     struct MedInfo: Codable, Hashable {

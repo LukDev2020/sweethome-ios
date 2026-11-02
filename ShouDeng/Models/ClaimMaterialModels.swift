@@ -3,7 +3,7 @@ import Foundation
 // MARK: - Claim Material Models
 //
 // Models for the insurance claim materials organizer.
-// Vela only provides reference data — no proofs, no certifications.
+// Lantern Care only provides reference data — no proofs, no certifications.
 
 // MARK: - Insurance Types
 
@@ -33,7 +33,7 @@ enum InsuranceType: String, CaseIterable, Identifiable, Codable {
     /// What the insurer typically requires (third-party documents)
     var insurerRequires: [String] { lines("claim.requires.\(rawValue)") }
 
-    /// What Vela device records may contain
+    /// What Lantern Care device records may contain
     var velaCanProvide: [String] { lines("claim.provides.\(rawValue)") }
 
     private func lines(_ key: String) -> [String] {

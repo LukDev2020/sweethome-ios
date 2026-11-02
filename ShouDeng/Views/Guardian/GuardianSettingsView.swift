@@ -246,7 +246,7 @@ struct GuardianSettingsView: View {
                 }
                 .padding(.vertical, 2)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
         }
         .padding(12)
         .background(
@@ -288,7 +288,7 @@ struct GuardianSettingsView: View {
                         )
                 )
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
         }
     }
 
@@ -349,7 +349,7 @@ struct GuardianSettingsView: View {
                 }
                 .padding(.vertical, 2)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
         }
         .padding(12)
         .background(
@@ -372,7 +372,7 @@ struct GuardianSettingsView: View {
             Button { showMedicalCard = true } label: {
                 fixedRow(langManager.localized("settings.safetyTools.medicalCard"), value: langManager.localized("settings.action.edit"), isWarning: false)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
 
             HStack(spacing: 6) {
                 Image(systemName: "lock.display")
@@ -390,12 +390,12 @@ struct GuardianSettingsView: View {
             Button { showEmergencyText = true } label: {
                 fixedRow(langManager.localized("settings.safetyTools.emergencyCard"), value: langManager.localized("settings.action.view"), isWarning: false)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
 
             Button { showConsulate = true } label: {
                 fixedRow(langManager.localized("settings.safetyTools.consulate"), value: langManager.localized("settings.action.view"), isWarning: false)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
         }
         .padding(12)
         .background(
@@ -415,12 +415,12 @@ struct GuardianSettingsView: View {
             Button { showOrgDashboard = true } label: {
                 fixedRow(langManager.localized("guardian.settings.org.complianceDashboard"), value: langManager.localized("settings.action.view"), isWarning: false)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
 
             Button { showInsuranceReport = true } label: {
                 fixedRow(langManager.localized("settings.safetyTools.claimMaterials"), value: langManager.localized("settings.action.start"), isWarning: false)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
         }
         .padding(12)
         .background(
@@ -541,7 +541,7 @@ struct GuardianSettingsView: View {
                 }
                 .padding(.vertical, 2)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
 
             // BLE tracker
             Button { showBLETracker = true } label: {
@@ -568,7 +568,7 @@ struct GuardianSettingsView: View {
                 }
                 .padding(.vertical, 2)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
         }
         .padding(12)
         .background(
@@ -714,15 +714,15 @@ struct GuardianSettingsView: View {
                                                       : "settings.data.storageLocation.value"),
                          isWarning: coordinator.needsDataTransferConsent)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
             Button { showExportAlert = true } label: {
                 fixedRow(langManager.localized("settings.data.exportAll"), value: langManager.localized("settings.action.requestExport"), isWarning: false)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
             Button { showDeleteConfirm = true } label: {
                 fixedRow(langManager.localized("settings.delete.account"), value: "", isWarning: true)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
         }
         .padding(12)
         .background(
@@ -741,15 +741,15 @@ struct GuardianSettingsView: View {
             Button { showPrivacy = true } label: {
                 fixedRow(langManager.localized("settings.legal.privacyAndTerms"), value: langManager.localized("settings.action.view"), isWarning: false)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
             Button { showAbout = true } label: {
                 fixedRow(langManager.localized("settings.legal.about"), value: "v1.0.0", isWarning: false)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
             Button { coordinator.authManager.logout() } label: {
                 fixedRow(langManager.localized("settings.logout"), value: "", isWarning: true)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
         }
         .padding(12)
         .background(
@@ -802,7 +802,7 @@ struct GuardianSettingsView: View {
                 .padding(.vertical, 2)
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
             .accessibilityIdentifier("settings.joinFamily")
 
             Button { showRoleSwitchInfo = true } label: {
@@ -819,7 +819,7 @@ struct GuardianSettingsView: View {
                 }
                 .padding(.vertical, 2)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
         }
         .padding(12)
         .background(
@@ -924,4 +924,21 @@ struct GuardianSettingsView: View {
         }
         .padding(.vertical, 2)
     }
+}
+
+// MARK: - Row button style
+
+/// Plain look, but the whole row is tappable — including the Spacer between the
+/// title and the chevron. A contentShape on the Button/NavigationLink itself does
+/// not reach a NavigationLink's label; here it is applied to the label.
+struct SettingsRowButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .contentShape(Rectangle())
+            .opacity(configuration.isPressed ? 0.6 : 1)
+    }
+}
+
+extension ButtonStyle where Self == SettingsRowButtonStyle {
+    static var settingsRow: SettingsRowButtonStyle { SettingsRowButtonStyle() }
 }

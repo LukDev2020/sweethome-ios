@@ -10,7 +10,7 @@ struct GuardianLiveActivity: Widget {
 
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: GuardianActivityAttributes.self) { context in
-            guardianLockScreenView(context: context)
+            GuardianLockScreenCard(state: context.state)
                 .activityBackgroundTint(SharedColors.ink)
         } dynamicIsland: { context in
             DynamicIsland {
@@ -111,99 +111,6 @@ struct GuardianLiveActivity: Widget {
                 }
             }
         }
-    }
-
-    // MARK: - Lock Screen Banner
-
-    @ViewBuilder
-    private func guardianLockScreenView(context: ActivityViewContext<GuardianActivityAttributes>) -> some View {
-        let sorted = prioritySorted(context.state.persons)
-
-        VStack(spacing: 10) {
-            // Header
-            HStack {
-                HStack(spacing: 6) {
-                    Image("AppLogo")
-                        .resizable()
-                        .frame(width: 20, height: 20)
-                    Text("\(WidgetDataStore.appName) · \(context.state.persons.count)\(L("la.persons.count"))")
-                        .font(.subheadline.bold())
-                        .foregroundStyle(.white)
-                }
-                Spacer()
-                HStack(spacing: 4) {
-                    Circle()
-                        .fill(overallStatusColor(context.state.overallStatus))
-                        .frame(width: 8, height: 8)
-                    Text(context.state.overallStatusText)
-                        .font(.caption)
-                        .foregroundStyle(overallStatusColor(context.state.overallStatus))
-                }
-            }
-
-            // Person rows (max 3)
-            ForEach(Array(sorted.prefix(3))) { person in
-                HStack(spacing: 8) {
-                    // Avatar
-                    ZStack {
-                        Circle()
-                            .fill(personStatusColor(person.status).opacity(0.3))
-                            .frame(width: 30, height: 30)
-                        Text(person.initial)
-                            .font(.caption2.bold())
-                            .foregroundStyle(.white)
-                    }
-                    // Name + status
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(person.displayName)
-                            .font(.caption.bold())
-                            .foregroundStyle(.white)
-                        HStack(spacing: 4) {
-                            Text(personStatusLabel(person))
-                                .font(.caption2)
-                                .foregroundStyle(personStatusColor(person.status))
-                            Text("·")
-                                .font(.caption2)
-                                .foregroundStyle(.white.opacity(0.3))
-                            Text(person.cityName)
-                                .font(.caption2)
-                                .foregroundStyle(.white.opacity(0.5))
-                        }
-                    }
-                    Spacer()
-                    // Battery
-                    if let battery = person.batteryLevel {
-                        HStack(spacing: 2) {
-                            Image(systemName: batteryIcon(battery))
-                                .font(.caption2)
-                                .foregroundStyle(battery < 0.2 ? SharedColors.alert : .white.opacity(0.5))
-                            Text("\(Int(battery * 100))%")
-                                .font(.caption2)
-                                .foregroundStyle(battery < 0.2 ? SharedColors.alert : .white.opacity(0.5))
-                        }
-                    }
-                }
-            }
-
-            // CTA: Call priority person
-            if !context.state.priorityPersonPhone.isEmpty,
-               let url = URL(string: "tel:\(context.state.priorityPersonPhone)") {
-                Link(destination: url) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "phone.fill")
-                        Text(L("la.call") + context.state.priorityPersonName)
-                            .fontWeight(.semibold)
-                    }
-                    .font(.subheadline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(callButtonColor(context.state.overallStatus))
-                    .foregroundStyle(.white)
-                    .clipShape(Capsule())
-                }
-            }
-        }
-        .padding(16)
     }
 
     // MARK: - Helpers

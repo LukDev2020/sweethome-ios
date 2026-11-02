@@ -276,7 +276,7 @@ struct ProtectedSettingsView: View {
                 }
                 .padding(.vertical, 2)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
         }
         .padding(12)
         .background(
@@ -318,7 +318,7 @@ struct ProtectedSettingsView: View {
                         )
                 )
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
         }
     }
 
@@ -413,7 +413,7 @@ struct ProtectedSettingsView: View {
             Button { showMedicalCard = true } label: {
                 fixedRow(langManager.localized("settings.safetyTools.medicalCard"), value: langManager.localized("settings.action.edit"), isWarning: false)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
 
             // Lock screen hint
             HStack(spacing: 6) {
@@ -432,39 +432,39 @@ struct ProtectedSettingsView: View {
             Button { showEmergencyText = true } label: {
                 fixedRow(langManager.localized("settings.safetyTools.emergencyCard"), value: langManager.localized("settings.action.view"), isWarning: false)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
 
             Button { showConsulate = true } label: {
                 fixedRow(langManager.localized("settings.safetyTools.consulate"), value: langManager.localized("settings.action.view"), isWarning: false)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
 
             Button { showClaimMaterials = true } label: {
                 fixedRow(langManager.localized("settings.safetyTools.claimMaterials"), value: langManager.localized("settings.action.start"), isWarning: false)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
 
             Divider().padding(.vertical, 4)
 
             Button { showFakeCall = true } label: {
                 fixedRow(langManager.localized("settings.safetyTools.fakeCall"), value: langManager.localized("settings.action.start"), isWarning: false)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
 
             Button { showDeadManSwitch = true } label: {
                 fixedRow(langManager.localized("settings.safetyTools.deadManSwitch"), value: langManager.localized("settings.action.start"), isWarning: false)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
 
             Button { showTrackerDetection = true } label: {
                 fixedRow(langManager.localized("settings.safetyTools.trackerDetection"), value: langManager.localized("settings.action.view"), isWarning: false)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
 
             Button { showDisguiseMode = true } label: {
                 fixedRow(langManager.localized("settings.safetyTools.disguiseMode"), value: langManager.localized("settings.action.start"), isWarning: false)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
         }
         .padding(12)
         .background(
@@ -585,7 +585,7 @@ struct ProtectedSettingsView: View {
                 }
                 .padding(.vertical, 2)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
 
             // Silent alarm
             Button { showSilentAlarm = true } label: {
@@ -612,7 +612,7 @@ struct ProtectedSettingsView: View {
                 }
                 .padding(.vertical, 2)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
 
             // BLE tracker
             Button { showBLETracker = true } label: {
@@ -639,7 +639,7 @@ struct ProtectedSettingsView: View {
                 }
                 .padding(.vertical, 2)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
         }
         .padding(12)
         .background(
@@ -780,15 +780,15 @@ struct ProtectedSettingsView: View {
                                                       : "settings.data.storageLocation.value"),
                          isWarning: coordinator.needsDataTransferConsent)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
             Button { showExportAlert = true } label: {
                 fixedRow(langManager.localized("settings.data.exportAll"), value: langManager.localized("settings.action.requestExport"), isWarning: false)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
             Button { showDeleteConfirm = true } label: {
                 fixedRow(langManager.localized("settings.delete.account"), value: "", isWarning: true)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
         }
         .padding(12)
         .background(
@@ -807,15 +807,15 @@ struct ProtectedSettingsView: View {
             Button { showPrivacy = true } label: {
                 fixedRow(langManager.localized("settings.legal.privacyAndTerms"), value: langManager.localized("settings.action.view"), isWarning: false)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
             Button { showAbout = true } label: {
                 fixedRow(langManager.localized("settings.legal.about"), value: "v1.0.0", isWarning: false)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
             Button { coordinator.authManager.logout() } label: {
                 fixedRow(langManager.localized("settings.logout"), value: "", isWarning: true)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
         }
         .padding(12)
         .background(
@@ -868,7 +868,7 @@ struct ProtectedSettingsView: View {
                 .padding(.vertical, 2)
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
             .accessibilityIdentifier("settings.joinFamily")
 
             Button { showRoleSwitchInfo = true } label: {
@@ -885,7 +885,7 @@ struct ProtectedSettingsView: View {
                 }
                 .padding(.vertical, 2)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.settingsRow)
         }
         .padding(12)
         .background(
