@@ -11,10 +11,11 @@ jest.mock("@google-cloud/bigquery", () => ({
     dataset: () => ({ table: () => ({ insert: jest.fn(async () => undefined) }) }),
   })),
 }));
-jest.mock("firebase-functions", () => ({
-  ...jest.requireActual("firebase-functions"),
-  config: () => ({ twilio: { auth_token: "twilio-secret" }, google: {} }),
-}));
+// Twilio webhook signatures are checked with the TWILIO_AUTH_TOKEN param.
+process.env.TWILIO_AUTH_TOKEN = "twilio-secret";
+afterAll(() => {
+  delete process.env.TWILIO_AUTH_TOKEN;
+});
 
 import * as crypto from "crypto";
 import request from "supertest";

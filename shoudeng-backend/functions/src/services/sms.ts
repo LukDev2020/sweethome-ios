@@ -1,6 +1,6 @@
 import { localeFromPhone, normalizeLocale } from "./locale";
-import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import { twilioConfig, missingTwilioParams, reportMissingConfig } from "../config/params";
 
 const db = admin.firestore();
 
@@ -65,19 +65,24 @@ async function getUserLocale(userId: string): Promise<string> {
   return userDoc.exists ? userDoc.data()?.locale || "zh" : "zh";
 }
 
-// Twilio client for SMS — initialized lazily
+// Twilio client for SMS — initialized lazily from the TWILIO_* params (config/params.ts)
 let twilioClient: ReturnType<typeof createClient> | null = null;
 
 function createClient() {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const twilio = require("twilio");
-  const accountSid = functions.config().twilio?.account_sid;
-  const authToken = functions.config().twilio?.auth_token;
-  if (!accountSid || !authToken) {
-    console.warn("[SMS] Twilio not configured — SMS disabled");
+  const cfg = twilioConfig();
+  const missing = missingTwilioParams("sms", cfg);
+  if (missing.length > 0) {
+    reportMissingConfig("SMS", missing, "SOS reaches guardians by push only; emergency contacts get no text.");
     return null;
   }
-  return twilio(accountSid, authToken);
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const twilio = require("twilio");
+  return twilio(cfg.accountSid, cfg.authToken);
+}
+
+/** Tests only. */
+export function __setSmsClientForTests(client: unknown) {
+  twilioClient = client as ReturnType<typeof createClient>;
 }
 
 function getClient() {
@@ -106,7 +111,7 @@ export async function sendSOSSms(
     return false;
   }
 
-  const fromNumber = functions.config().twilio?.sms_from || functions.config().twilio?.from_number;
+  const fromNumber = twilioConfig().smsFrom;
   if (!fromNumber) return false;
 
   const locale = await getUserLocale(guardianId);
@@ -139,7 +144,7 @@ export async function sendEmergencyContactSms(
 ): Promise<boolean> {
   const client = getClient();
   if (!client) return false;
-  const fromNumber = functions.config().twilio?.sms_from || functions.config().twilio?.from_number;
+  const fromNumber = twilioConfig().smsFrom;
   if (!fromNumber) return false;
   try {
     await client.messages.create({
@@ -167,7 +172,7 @@ export async function sendCheckinReminderSms(
   const phone = await getUserPhone(guardianId);
   if (!phone) return false;
 
-  const fromNumber = functions.config().twilio?.sms_from || functions.config().twilio?.from_number;
+  const fromNumber = twilioConfig().smsFrom;
   if (!fromNumber) return false;
 
   const locale = await getUserLocale(guardianId);
@@ -196,7 +201,7 @@ export async function sendVerificationSms(
   const client = getClient();
   if (!client) return false;
 
-  const fromNumber = functions.config().twilio?.sms_from || functions.config().twilio?.from_number;
+  const fromNumber = twilioConfig().smsFrom;
   if (!fromNumber) return false;
 
   // Verification SMS uses phone's country to guess locale (no userId available)

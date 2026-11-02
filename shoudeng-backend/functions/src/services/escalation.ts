@@ -317,12 +317,16 @@ async function runStep(sosId: string, step: EscalationStep, sos: SOSDoc, now: Da
           isLastRound: round === VOICE_ROUNDS,
           fairUse: reservation,
         });
-        if (!callSid) await releaseVoiceMinute(reservation);
+        if (!callSid) {
+          await releaseVoiceMinute(reservation);
+          // Twilio not configured or the call failed: remind by push instead
+          await sendSOSAlert(gid, personName, sosId, alertDetails);
+        }
         await logEntry(sosId, {
           hop: 3,
           round,
           targetId: gid,
-          channel: callSid ? "voice" : "voice_unavailable",
+          channel: callSid ? "voice" : "push_voice_unavailable",
           callSid: callSid ?? null,
         }, key);
       }

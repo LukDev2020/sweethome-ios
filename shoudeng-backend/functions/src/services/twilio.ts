@@ -1,31 +1,24 @@
-import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import * as crypto from "crypto";
 import { Lang, userLang } from "./locale";
 import type { VoiceReservation } from "./fairUse";
+import { twilioConfig, missingTwilioParams, reportMissingConfig } from "../config/params";
 
 const db = admin.firestore();
 
-// Twilio client — initialized lazily from Firebase config
+// Twilio client — initialized lazily from the TWILIO_* params (config/params.ts)
 let twilioClient: ReturnType<typeof createTwilioClient> | null = null;
 
-function twilioConfig(): { account_sid?: string; auth_token?: string; from_number?: string } {
-  try {
-    return functions.config().twilio ?? {};
-  } catch {
-    return {};
-  }
-}
-
 function createTwilioClient() {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const twilio = require("twilio");
-  const { account_sid: accountSid, auth_token: authToken } = twilioConfig();
-  if (!accountSid || !authToken) {
-    console.warn("[Twilio] Missing config — voice calls disabled");
+  const cfg = twilioConfig();
+  const missing = missingTwilioParams("voice", cfg);
+  if (missing.length > 0) {
+    reportMissingConfig("SOS voice calls", missing, "Guardians get a push reminder instead of each call.");
     return null;
   }
-  return twilio(accountSid, authToken);
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const twilio = require("twilio");
+  return twilio(cfg.accountSid, cfg.authToken);
 }
 
 function getClient() {
@@ -48,7 +41,7 @@ export function __setTwilioClientForTests(client: unknown) {
  */
 export function publicApiBaseUrl(): string {
   if (process.env.PUBLIC_API_BASE_URL) return process.env.PUBLIC_API_BASE_URL.replace(/\/$/, "");
-  const project = process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || "sweethome-d1edd";
+  const project = process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || "sweethome-b4e82";
   const region = process.env.FUNCTION_REGION || "us-central1";
   return `https://${region}-${project}.cloudfunctions.net/api`;
 }
@@ -61,7 +54,7 @@ export function verifyTwilioSignature(
   signature: string | undefined,
   path: string,
   params: Record<string, unknown>,
-  authToken = twilioConfig().auth_token
+  authToken = twilioConfig().authToken
 ): boolean {
   if (process.env.FUNCTIONS_EMULATOR === "true") return true;
   if (!authToken || !signature) return false;
@@ -214,10 +207,7 @@ export async function initiateVoiceCall(
   opts: { round: number; isLastRound: boolean; fairUse?: VoiceReservation } = { round: 1, isLastRound: false }
 ): Promise<string | null> {
   const client = getClient();
-  if (!client) {
-    console.warn("[Twilio] Client not configured — skipping voice call");
-    return null;
-  }
+  if (!client) return null; // not configured — reported once by createTwilioClient
 
   const [phone, guardianDoc] = await Promise.all([
     getUserPhone(guardianId),
@@ -227,11 +217,8 @@ export async function initiateVoiceCall(
     console.warn(`[Twilio] No phone number for guardian ${guardianId}`);
     return null;
   }
-  const fromNumber = twilioConfig().from_number;
-  if (!fromNumber) {
-    console.warn("[Twilio] twilio.from_number not configured — skipping voice call");
-    return null;
-  }
+  const fromNumber = twilioConfig().voiceFrom;
+  if (!fromNumber) return null;
 
   const lang = userLang(guardianDoc.data());
   const base = publicApiBaseUrl();

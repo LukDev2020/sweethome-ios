@@ -1,5 +1,5 @@
-import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import { googleMapsApiKey, reportMissingConfig, GOOGLE_MAPS_API_KEY } from "../config/params";
 
 const db = admin.firestore();
 
@@ -16,9 +16,9 @@ export async function reverseGeocode(
   latitude: number,
   longitude: number
 ): Promise<string | null> {
-  const apiKey = functions.config().google?.maps_api_key;
+  const apiKey = googleMapsApiKey();
   if (!apiKey) {
-    console.warn("[Geocoding] No API key configured — skipping");
+    reportMissingConfig("Reverse geocoding", [GOOGLE_MAPS_API_KEY.name], "Addresses are left out; coordinates still work.");
     return null;
   }
 
