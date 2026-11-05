@@ -43,6 +43,8 @@ final class LiveWeatherStore: ObservableObject {
 
 struct WeatherCardView: View {
     let location: CLLocation?
+    /// Where this weather is ("成都"); the card looked like it could be anywhere
+    var placeName: String = ""
     @ObservedObject private var lang = LanguageManager.shared
     @StateObject private var store = LiveWeatherStore()
 
@@ -91,6 +93,12 @@ struct WeatherCardView: View {
         VStack(spacing: 0) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
+                    if !placeName.isEmpty {
+                        Label(placeName, systemImage: "location.fill")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.white)
+                            .lineLimit(1)
+                    }
                     Text(temperature(now.temperature))
                         .font(.system(size: 36, weight: .light))
                         .foregroundColor(.white)

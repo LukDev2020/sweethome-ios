@@ -85,7 +85,8 @@ struct ProtectedCoverageView: View {
 
                 // Live weather where the person is (Apple WeatherKit)
                 sectionHeader(langManager.localized("coverage_weather", fallback: "Weather"))
-                WeatherCardView(location: coordinator.locationManager.bestAvailableLocation)
+                WeatherCardView(location: coordinator.locationManager.bestAvailableLocation,
+                                placeName: cityName.isEmpty ? countryName : cityName)
 
                 if showsSampleCards {
                     AQICardView(value: 32, label: "Good")
