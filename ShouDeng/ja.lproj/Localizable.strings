@@ -1841,3 +1841,24 @@
 "yp.touristHelpline" = "訪日外国人旅行者ホットライン（24時間）";
 "yp.poisons" = "中毒情報";
 "store.demo.noPurchase" = "体験モードでは購入できません。実際のアプリではプランと価格が表示されます。";
+
+/* Weather (WeatherKit) */
+"weather.loading" = "天気を取得しています…";
+"weather.unavailable" = "現在、天気を取得できません。";
+"weather.wind" = "風";
+"weather.humidity" = "湿度";
+"weather.condition.clear" = "晴れ";
+"weather.condition.partlyCloudy" = "晴れ時々曇り";
+"weather.condition.cloudy" = "曇り";
+"weather.condition.fog" = "霧・もや";
+"weather.condition.wind" = "風が強い";
+"weather.condition.rain" = "雨";
+"weather.condition.heavyRain" = "大雨";
+"weather.condition.storm" = "雷雨";
+"weather.condition.snow" = "雪";
+"weather.condition.heavySnow" = "大雪";
+"weather.condition.sleet" = "みぞれ・着氷性の雨";
+"weather.condition.hot" = "猛暑";
+"weather.condition.cold" = "厳しい寒さ";
+"weather.condition.hurricane" = "台風・熱帯低気圧";
+"weather.condition.unknown" = "—";

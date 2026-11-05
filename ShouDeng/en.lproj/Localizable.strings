@@ -1842,3 +1842,24 @@ your guardians will be automatically notified.";
 "yp.touristHelpline" = "Visitor helpline (24h)";
 "yp.poisons" = "Poisons information";
 "store.demo.noPurchase" = "Plans and prices appear in the real app. Nothing can be bought in the demo.";
+
+/* Weather (WeatherKit) */
+"weather.loading" = "Getting the weather…";
+"weather.unavailable" = "Weather is unavailable right now.";
+"weather.wind" = "Wind";
+"weather.humidity" = "Humidity";
+"weather.condition.clear" = "Clear";
+"weather.condition.partlyCloudy" = "Partly cloudy";
+"weather.condition.cloudy" = "Cloudy";
+"weather.condition.fog" = "Fog or haze";
+"weather.condition.wind" = "Windy";
+"weather.condition.rain" = "Rain";
+"weather.condition.heavyRain" = "Heavy rain";
+"weather.condition.storm" = "Thunderstorms";
+"weather.condition.snow" = "Snow";
+"weather.condition.heavySnow" = "Heavy snow";
+"weather.condition.sleet" = "Sleet or freezing rain";
+"weather.condition.hot" = "Very hot";
+"weather.condition.cold" = "Very cold";
+"weather.condition.hurricane" = "Typhoon or tropical storm";
+"weather.condition.unknown" = "—";

@@ -222,6 +222,8 @@ final class DynamicLocalizationKeyTests: XCTestCase {
     func testEveryRuntimeBuiltKeyExistsInEveryLanguage() throws {
         var keys: [String] = []
         keys += ["timeline", "schedule", "contacts"].map { "guardian.records.tab.\($0)" }
+        keys += ["clear", "partlyCloudy", "cloudy", "fog", "wind", "rain", "heavyRain", "storm", "snow",
+                 "heavySnow", "sleet", "hot", "cold", "hurricane", "unknown"].map { "weather.condition.\($0)" }
         keys += ["primary", "backup", "observer"].map { "member.role.\($0)" }
         keys += ["active", "pending", "declined"].map { "member.status.\($0)" }
         keys += ["sms", "wechat", "link"].map { "invite.method.\($0)" }

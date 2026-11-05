@@ -1842,3 +1842,24 @@
 "yp.touristHelpline" = "访日游客热线（24 小时）";
 "yp.poisons" = "中毒咨询";
 "store.demo.noPurchase" = "体验模式中不能购买，正式使用时这里会显示方案和价格。";
+
+/* Weather (WeatherKit) */
+"weather.loading" = "正在获取天气…";
+"weather.unavailable" = "暂时无法获取天气";
+"weather.wind" = "风";
+"weather.humidity" = "湿度";
+"weather.condition.clear" = "晴";
+"weather.condition.partlyCloudy" = "多云间晴";
+"weather.condition.cloudy" = "多云";
+"weather.condition.fog" = "雾或霾";
+"weather.condition.wind" = "有风";
+"weather.condition.rain" = "小雨";
+"weather.condition.heavyRain" = "大雨";
+"weather.condition.storm" = "雷雨";
+"weather.condition.snow" = "雪";
+"weather.condition.heavySnow" = "大雪";
+"weather.condition.sleet" = "雨夹雪或冻雨";
+"weather.condition.hot" = "炎热";
+"weather.condition.cold" = "严寒";
+"weather.condition.hurricane" = "台风或热带风暴";
+"weather.condition.unknown" = "—";

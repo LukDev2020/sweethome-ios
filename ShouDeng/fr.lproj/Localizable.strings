@@ -1842,3 +1842,24 @@ vos gardiens seront automatiquement notifiés.";
 "yp.touristHelpline" = "Assistance aux visiteurs (24 h)";
 "yp.poisons" = "Centre antipoison";
 "store.demo.noPurchase" = "Les formules et les prix s'affichent dans l'app réelle. Aucun achat dans la démo.";
+
+/* Weather (WeatherKit) */
+"weather.loading" = "Chargement de la météo…";
+"weather.unavailable" = "Météo indisponible pour le moment.";
+"weather.wind" = "Vent";
+"weather.humidity" = "Humidité";
+"weather.condition.clear" = "Dégagé";
+"weather.condition.partlyCloudy" = "Partiellement nuageux";
+"weather.condition.cloudy" = "Nuageux";
+"weather.condition.fog" = "Brouillard ou brume";
+"weather.condition.wind" = "Venteux";
+"weather.condition.rain" = "Pluie";
+"weather.condition.heavyRain" = "Forte pluie";
+"weather.condition.storm" = "Orages";
+"weather.condition.snow" = "Neige";
+"weather.condition.heavySnow" = "Fortes chutes de neige";
+"weather.condition.sleet" = "Grésil ou pluie verglaçante";
+"weather.condition.hot" = "Très chaud";
+"weather.condition.cold" = "Très froid";
+"weather.condition.hurricane" = "Cyclone ou tempête tropicale";
+"weather.condition.unknown" = "—";

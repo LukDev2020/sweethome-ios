@@ -83,9 +83,11 @@ struct ProtectedCoverageView: View {
                 sectionHeader(langManager.localized("coverage_medical", fallback: "Nearby Medical"))
                 findHospitalsButton
 
+                // Live weather where the person is (Apple WeatherKit)
+                sectionHeader(langManager.localized("coverage_weather", fallback: "Weather"))
+                WeatherCardView(location: coordinator.locationManager.bestAvailableLocation)
+
                 if showsSampleCards {
-                    sectionHeader(langManager.localized("coverage_weather", fallback: "Weather"))
-                    WeatherCardView()
                     AQICardView(value: 32, label: "Good")
                     sectionHeader(langManager.localized("coverage_advisory", fallback: "Safety Advisory"))
                     safetyAdvisoryCard

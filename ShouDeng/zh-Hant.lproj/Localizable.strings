@@ -1842,3 +1842,24 @@
 "yp.touristHelpline" = "訪日旅客熱線（24 小時）";
 "yp.poisons" = "中毒諮詢";
 "store.demo.noPurchase" = "體驗模式中不能購買，正式使用時這裡會顯示方案和價格。";
+
+/* Weather (WeatherKit) */
+"weather.loading" = "正在取得天氣…";
+"weather.unavailable" = "暫時無法取得天氣";
+"weather.wind" = "風";
+"weather.humidity" = "濕度";
+"weather.condition.clear" = "晴";
+"weather.condition.partlyCloudy" = "多雲時晴";
+"weather.condition.cloudy" = "多雲";
+"weather.condition.fog" = "霧或霾";
+"weather.condition.wind" = "有風";
+"weather.condition.rain" = "小雨";
+"weather.condition.heavyRain" = "大雨";
+"weather.condition.storm" = "雷雨";
+"weather.condition.snow" = "雪";
+"weather.condition.heavySnow" = "大雪";
+"weather.condition.sleet" = "雨夾雪或凍雨";
+"weather.condition.hot" = "炎熱";
+"weather.condition.cold" = "嚴寒";
+"weather.condition.hurricane" = "颱風或熱帶風暴";
+"weather.condition.unknown" = "—";
