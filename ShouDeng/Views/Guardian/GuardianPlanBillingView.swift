@@ -275,7 +275,18 @@ struct GuardianPlanBillingView: View {
     @ViewBuilder
     private var planCards: some View {
         let store = coordinator.storeKitManager
-        if store.products.isEmpty {
+        if ExploreMode.isActive {
+            // The demo never talks to the App Store, so prices would spin forever
+            Label(langManager.localized("store.demo.noPurchase"), systemImage: "sparkles")
+                .font(.scaled(size: 14))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(.systemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+        } else if store.products.isEmpty {
             ProductsUnavailableView(
                 isLoading: store.isLoadingProducts || !store.productsLoadFailed,
                 accent: accent,

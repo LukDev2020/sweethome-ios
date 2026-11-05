@@ -34,6 +34,7 @@ struct AvatarView: View {
                     .fill(Color(.systemGray5))
                     .frame(width: size, height: size)
                 Text(resolvedInitial)
+                    .lineLimit(1).minimumScaleFactor(0.4)
                     .font(.scaled(size: size * 0.38, weight: .medium))
                     .foregroundStyle(ink)
             }
@@ -156,7 +157,8 @@ struct ProfileEditView: View {
                             .fill(Color(.systemGray5))
                             .frame(width: 80, height: 80)
                             .overlay {
-                                Text(displayName.isEmpty ? "?" : String(displayName.prefix(1)))
+                                Text(displayName.isEmpty ? "?" : AvatarInitial.make(for: displayName))
+                                    .lineLimit(1).minimumScaleFactor(0.4)
                                     .font(.scaled(size: 28, weight: .medium))
                                     .foregroundStyle(ink)
                             }
@@ -359,7 +361,7 @@ struct ProfileEditView: View {
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
         if coordinator.currentUser != nil {
             coordinator.currentUser?.displayName = name
-            coordinator.currentUser?.avatarInitial = String(name.prefix(1))
+            coordinator.currentUser?.avatarInitial = AvatarInitial.make(for: name)
             coordinator.currentUser?.avatarLocalPath = avatarPath
             coordinator.currentUser?.email = trimmedEmail.isEmpty ? nil : trimmedEmail
             coordinator.currentUser?.cityName = city
@@ -370,7 +372,7 @@ struct ProfileEditView: View {
                 id: "dev_local_user",
                 displayName: name,
                 role: coordinator.userRole,
-                avatarInitial: String(name.prefix(1)),
+                avatarInitial: AvatarInitial.make(for: name),
                 avatarLocalPath: avatarPath,
                 timeZone: selectedTimeZone,
                 countryCode: "",

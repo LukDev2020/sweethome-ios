@@ -398,3 +398,19 @@ final class ModelTests: XCTestCase {
         )
     }
 }
+
+final class AvatarInitialTests: XCTestCase {
+    func testChineseNamesShowTheGivenName() {
+        XCTAssertEqual(AvatarInitial.make(for: "陈思雅"), "思雅")
+        XCTAssertEqual(AvatarInitial.make(for: "王芳"), "芳")
+        XCTAssertEqual(AvatarInitial.make(for: "妈"), "妈")
+        XCTAssertEqual(AvatarInitial.make(for: "田中太郎"), "太郎")
+    }
+
+    func testOtherNamesShowTheFirstLetter() {
+        XCTAssertEqual(AvatarInitial.make(for: "sarah Chen"), "S")
+        XCTAssertEqual(AvatarInitial.make(for: "Sarah 陈"), "S")
+        XCTAssertEqual(AvatarInitial.make(for: "  "), "?")
+    }
+}
+

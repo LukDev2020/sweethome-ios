@@ -728,7 +728,7 @@ struct ProtectedHomeView: View {
     }
 
     private static func countryName(_ code: String) -> String {
-        Locale.current.localizedString(forRegionCode: code) ?? ""
+        code.isEmpty ? "" : RegionalEmergencyInfo.regionName(code)
     }
 
     // MARK: - Live Tracking Banner (loc-banner from prototype)

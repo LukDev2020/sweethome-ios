@@ -223,7 +223,7 @@ extension FamilyPost {
         authorId = c.lossy(String.self, .authorId) ?? ""
         authorName = c.lossy(String.self, .authorName) ?? ""
         let initial = c.lossy(String.self, .authorInitial) ?? ""
-        authorInitial = initial.isEmpty ? (authorName.first.map { String($0) } ?? "?") : initial
+        authorInitial = authorName.isEmpty ? (initial.isEmpty ? "?" : initial) : AvatarInitial.make(for: authorName)
         authorAvatarPath = c.lossy(String.self, .authorAvatarPath)
         text = c.lossy(String.self, .text) ?? ""
         mediaURLs = c.lossy(LossyArray<String>.self, .mediaURLs)?.elements ?? []
@@ -258,7 +258,7 @@ extension FamilyComment {
         authorId = c.lossy(String.self, .authorId) ?? ""
         authorName = c.lossy(String.self, .authorName) ?? ""
         let initial = c.lossy(String.self, .authorInitial) ?? ""
-        authorInitial = initial.isEmpty ? (authorName.first.map { String($0) } ?? "?") : initial
+        authorInitial = authorName.isEmpty ? (initial.isEmpty ? "?" : initial) : AvatarInitial.make(for: authorName)
         authorAvatarPath = c.lossy(String.self, .authorAvatarPath)
         text = c.lossy(String.self, .text) ?? ""
     }

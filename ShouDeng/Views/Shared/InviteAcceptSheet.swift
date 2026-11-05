@@ -239,7 +239,8 @@ struct InviteAcceptSheet: View {
         let becomesGuardian = preview.acceptorRole == .guardian
         return VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 12) {
-                Text(preview.avatarInitial.flatMap { $0.isEmpty ? nil : $0 } ?? String(name.prefix(1)))
+                Text(AvatarInitial.make(for: name))
+                    .lineLimit(1).minimumScaleFactor(0.4)
                     .font(.scaled(size: 20, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(width: 48, height: 48)

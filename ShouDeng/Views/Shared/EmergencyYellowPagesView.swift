@@ -2,10 +2,15 @@ import SwiftUI
 
 struct EmergencyYellowPagesView: View {
     @ObservedObject private var lang = LanguageManager.shared
-    @State private var selectedCountry: String = {
-        let region = Locale.current.region?.identifier ?? "CA"
-        return RegionalEmergencyInfo.supportedRegions.contains(region) ? region : "CA"
-    }()
+    @State private var selectedCountry: String
+
+    /// - Parameter country: where the numbers should start (the person's emergency
+    ///   country); the phone's region was used before, so Mom in Chengdu saw Canada.
+    init(country: String? = nil) {
+        let fallback = Locale.current.region?.identifier ?? "CA"
+        let code = (country?.isEmpty == false ? country! : fallback).uppercased()
+        _selectedCountry = State(initialValue: RegionalEmergencyInfo.supportedRegions.contains(code) ? code : fallback)
+    }
 
     private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
@@ -44,38 +49,18 @@ struct EmergencyYellowPagesView: View {
         return emergency + extras
     }
 
+    /// National lines beyond the emergency numbers. Embassies and consulates are in the
+    /// app's consulate page (verified data), not repeated here.
     private var extras: [YPEntry] {
+        func row(_ icon: String, _ color: Color, _ key: String, _ number: String) -> YPEntry {
+            YPEntry(icon: icon, iconColor: color, title: lang.localized("yp.\(key)"), subtitle: "", number: number)
+        }
         switch selectedCountry {
-        case "CA": return [
-            YPEntry(icon: "building.columns.fill", iconColor: cobalt, title: "Chinese Consulate \u{2014} Toronto", subtitle: "240 St George St", number: "+1-416-964-7260"),
-            YPEntry(icon: "heart.fill", iconColor: pro, title: "Crisis Helpline", subtitle: "Mental health support", number: "988"),
-            YPEntry(icon: "phone.fill", iconColor: lamp, title: "Non-Emergency Police", subtitle: "Toronto Police", number: "+1-416-808-2222")
-        ]
-        case "CN": return [
-            YPEntry(icon: "globe", iconColor: cobalt, title: "MFA Consular Protection", subtitle: "Overseas citizens 24h", number: "12308"),
-            YPEntry(icon: "heart.fill", iconColor: pro, title: "Mental Health Hotline", subtitle: "Beijing Psychological Crisis", number: "010-82951332")
-        ]
-        case "JP": return [
-            YPEntry(icon: "building.columns.fill", iconColor: cobalt, title: "Chinese Embassy \u{2014} Tokyo", subtitle: "3-4-33 Moto-Azabu, Minato", number: "+81-3-3403-3388"),
-            YPEntry(icon: "globe", iconColor: lamp, title: "JNTO Tourist Helpline", subtitle: "English support 24h", number: "050-3816-2787")
-        ]
-        case "US": return [
-            YPEntry(icon: "building.columns.fill", iconColor: cobalt, title: "Chinese Embassy \u{2014} D.C.", subtitle: "Consular protection · office hours (after hours: 12308)", number: "+1-202-495-2216"),
-            YPEntry(icon: "heart.fill", iconColor: pro, title: "Suicide & Crisis Lifeline", subtitle: "24/7 support", number: "988")
-        ]
-        case "GB": return [
-            YPEntry(icon: "building.columns.fill", iconColor: cobalt, title: "Chinese Embassy \u{2014} London", subtitle: "49 Portland Pl", number: "+44-20-7299-4049")
-        ]
-        case "AU": return [
-            YPEntry(icon: "building.columns.fill", iconColor: cobalt, title: "Chinese Embassy \u{2014} Canberra", subtitle: "15 Coronation Dr, Yarralumla", number: "+61-2-6228-3999"),
-            YPEntry(icon: "cross.vial.fill", iconColor: safe, title: "Poisons Information", subtitle: "24h hotline", number: "13 11 26")
-        ]
-        case "FR": return [
-            YPEntry(icon: "building.columns.fill", iconColor: cobalt, title: "Chinese Embassy \u{2014} Paris", subtitle: "11 Avenue George V", number: "+33-1-4952-1950")
-        ]
-        case "DE": return [
-            YPEntry(icon: "building.columns.fill", iconColor: cobalt, title: "Chinese Embassy \u{2014} Berlin", subtitle: "Markisches Ufer 54", number: "+49-30-27588-0")
-        ]
+        case "CA", "US": return [row("heart.fill", pro, "crisisLine", "988")]
+        case "CN": return [row("globe", cobalt, "consularHotline", "12308"),
+                           row("heart.fill", pro, "crisisLine", "010-82951332")]
+        case "JP": return [row("globe", lamp, "touristHelpline", "050-3816-2787")]
+        case "AU": return [row("cross.vial.fill", safe, "poisons", "13 11 26")]
         default: return []
         }
     }

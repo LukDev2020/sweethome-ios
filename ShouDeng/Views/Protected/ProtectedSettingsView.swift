@@ -488,7 +488,7 @@ struct ProtectedSettingsView: View {
                 .foregroundStyle(.secondary)
 
             HStack {
-                Image(systemName: "rectangle.on.rectangle.badge.person.crop")
+                Image(systemName: "lock.rectangle.stack.fill")
                     .font(.scaled(size: 14))
                     .foregroundStyle(safe)
                     .frame(width: 20)

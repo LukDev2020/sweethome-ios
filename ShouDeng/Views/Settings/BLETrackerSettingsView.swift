@@ -252,6 +252,7 @@ struct BLETrackerSettingsView: View {
                                         .foregroundStyle(.secondary)
                                 }
                                 .padding(12)
+                                .contentShape(RoundedRectangle(cornerRadius: 10))
                                 .background(
                                     RoundedRectangle(cornerRadius: 10)
                                         .stroke(Color(.separator).opacity(0.3), lineWidth: 1)

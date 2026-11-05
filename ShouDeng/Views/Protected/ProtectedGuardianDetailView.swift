@@ -160,6 +160,7 @@ struct ProtectedGuardianDetailView: View {
                     .fill(Color(.systemGray5))
                     .frame(width: 40, height: 40)
                 Text(g.user.avatarInitial)
+                    .lineLimit(1).minimumScaleFactor(0.4)
                     .font(.scaled(size: 14, weight: .medium))
                     .foregroundStyle(ink)
                 if g.isOnDuty {
@@ -307,6 +308,7 @@ struct ProtectedGuardianDetailView: View {
                     }
                 }
                 .padding(.vertical, 2)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         }

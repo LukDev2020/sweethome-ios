@@ -175,6 +175,7 @@ struct FamilyFeedView: View {
             }
             .foregroundStyle(ink)
             .padding(12)
+            .contentShape(RoundedRectangle(cornerRadius: 12))
             .background(RoundedRectangle(cornerRadius: 12).stroke(paneBorder, lineWidth: 1))
         }
         .buttonStyle(.plain)
@@ -247,6 +248,7 @@ struct FamilyFeedView: View {
                     .fill(safe.opacity(0.12))
                     .frame(width: 36, height: 36)
                 Text(initial)
+                    .lineLimit(1).minimumScaleFactor(0.4)
                     .font(.scaled(size: 14, weight: .medium))
                     .foregroundStyle(safe)
             }
@@ -439,8 +441,10 @@ struct FamilyFeedView: View {
     private func dateLabel(for date: Date, cal: Calendar) -> String {
         if cal.isDateInToday(date) { return langManager.localized("familyFeed.today") }
         if cal.isDateInYesterday(date) { return langManager.localized("familyFeed.yesterday") }
+        // Month and day in the app's language ("Nov 5", "5 nov.", "11月5日")
         let formatter = DateFormatter()
-        formatter.dateFormat = "M月d日"
+        formatter.locale = Locale(identifier: langManager.current.rawValue)
+        formatter.setLocalizedDateFormatFromTemplate("MMMd")
         return formatter.string(from: date)
     }
 

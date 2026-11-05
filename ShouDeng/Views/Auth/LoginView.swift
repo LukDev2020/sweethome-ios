@@ -228,6 +228,8 @@ struct LoginView: View {
                     } label: {
                         HStack(spacing: 3) {
                             Image(systemName: "textformat.size")
+                                // The symbol is localized ("大小" in Chinese) and repeated the label; keep "AA"
+                                .environment(\.locale, Locale(identifier: "en"))
                                 .font(.system(size: 11))
                             Text(FontSizeSheet.buttonTitle(lang: lang, level: fontScale.level))
                                 .font(.system(size: 10))

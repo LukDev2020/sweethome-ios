@@ -293,6 +293,7 @@ struct GuardianMediumView: View {
                             .fill(WidgetHelpers.statusColor(for: person.status).opacity(0.3))
                             .frame(width: 28, height: 28)
                         Text(person.initial)
+                            .lineLimit(1).minimumScaleFactor(0.4)
                             .font(.caption2.bold())
                             .foregroundStyle(.white)
                     }

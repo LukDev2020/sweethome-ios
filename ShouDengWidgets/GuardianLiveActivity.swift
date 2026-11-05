@@ -46,6 +46,7 @@ struct GuardianLiveActivity: Widget {
                                     .frame(width: 20, height: 20)
                                     .overlay(
                                         Text(person.initial)
+                                            .lineLimit(1).minimumScaleFactor(0.4)
                                             .font(.system(size: 9).bold())
                                             .foregroundStyle(.white)
                                     )

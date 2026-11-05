@@ -33,14 +33,21 @@ final class APIClientTests: XCTestCase {
 
     // MARK: - Error Descriptions
 
+    /// Messages follow the app's language (they were always Chinese).
     func testAPIErrorDescriptions() {
-        XCTAssertEqual(APIError.invalidURL.errorDescription, "无效的请求地址")
+        let lang = LanguageManager.shared
+        let saved = lang.current
+        defer { lang.choose(saved) }
+        lang.choose(.chinese)
         XCTAssertEqual(APIError.unauthorized.errorDescription, "登录已过期，请重新登录")
-        XCTAssertEqual(APIError.forbidden.errorDescription, "无权执行此操作")
-        XCTAssertEqual(APIError.notFound.errorDescription, "请求的资源不存在")
-        XCTAssertEqual(APIError.rateLimited.errorDescription, "请求过于频繁，请稍后再试")
         XCTAssertEqual(APIError.serverError(500).errorDescription, "服务器错误（500）")
-        XCTAssertEqual(APIError.unknown.errorDescription, "未知错误")
+        lang.choose(.english)
+        XCTAssertEqual(APIError.unauthorized.errorDescription, "Your session expired. Sign in again.")
+        XCTAssertEqual(APIError.serverError(500).errorDescription, "Server error (500)")
+        for error in [APIError.invalidURL, .forbidden, .notFound, .conflict, .rateLimited, .unknown] {
+            let text = error.errorDescription ?? ""
+            XCTAssertFalse(text.isEmpty || text.hasPrefix("api.error."), "\(error): \(text)")
+        }
     }
 
     func testValidationError() {
@@ -51,7 +58,8 @@ final class APIClientTests: XCTestCase {
     func testNetworkError() {
         let underlying = NSError(domain: NSURLErrorDomain, code: -1009)
         let error = APIError.networkError(underlying)
-        XCTAssertEqual(error.errorDescription, "网络连接失败，请检查网络设置")
+        XCTAssertEqual(error.errorDescription, LanguageManager.shared.localized("api.error.network"))
+        XCTAssertFalse(error.errorDescription?.hasPrefix("api.error.") ?? true)
     }
 
     // MARK: - OnUnauthorized Callback

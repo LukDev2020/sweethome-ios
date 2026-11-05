@@ -680,10 +680,15 @@ final class AppCoordinator: ObservableObject {
     /// One source of truth: RegionalEmergencyInfo (ambulance first). The region is the
     /// one picked in the consulate screen, else the profile country, else the device region.
     var localEmergencyNumber: String {
+        RegionalEmergencyInfo.forCountry(emergencyCountryCode).primaryNumber
+    }
+
+    /// The country whose emergency numbers apply: the hotline the person picked, else
+    /// their profile country, else the phone's region.
+    var emergencyCountryCode: String {
         let picked = selectedHotline?.countryCode ?? ""
         let profile = currentUser?.countryCode ?? ""
-        let country = !picked.isEmpty ? picked : (!profile.isEmpty ? profile : (Locale.current.region?.identifier ?? ""))
-        return RegionalEmergencyInfo.forCountry(country).primaryNumber
+        return !picked.isEmpty ? picked : (!profile.isEmpty ? profile : (Locale.current.region?.identifier ?? ""))
     }
 
     // MARK: - Explore Mode personas
@@ -833,7 +838,7 @@ final class AppCoordinator: ObservableObject {
                         id: p.personId,
                         displayName: p.displayName,
                         role: .protected_,
-                        avatarInitial: String(p.displayName.prefix(1)),
+                        avatarInitial: AvatarInitial.make(for: p.displayName),
                         timeZone: p.timeZoneId.flatMap { TimeZone(identifier: $0) } ?? .current,
                         countryCode: p.countryCode ?? "",
                         cityName: p.cityName ?? p.locationAddress ?? "",

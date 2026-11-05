@@ -1812,3 +1812,33 @@
 "store.link.terms" = "使用條款（EULA）";
 "store.link.privacy" = "隱私政策";
 "store.error.ownedByOtherAccount" = "該 App Store 訂閱已繫結另一個守燈賬號，請登入該賬號使用。";
+
+/* UX pass 2026-11-05 */
+"notif.checkinReminder.title" = "報平安提醒";
+"notif.checkinReminder.body" = "今天還好嗎？點擊報個平安。";
+"notif.handoff.title" = "值班交接";
+"notif.handoff.body" = "%@的值班即將結束，%@即將接班。";
+"notif.dutyStart.title" = "值班開始";
+"notif.dutyStart.body" = "你的值班時段即將開始。";
+"notif.sos.localTitle" = "%@正在求助";
+"api.error.validation" = "請求參數有誤";
+"api.error.invalidURL" = "無效的請求位址";
+"api.error.unauthorized" = "登入已過期，請重新登入";
+"api.error.forbidden" = "無權執行此操作";
+"api.error.notFound" = "請求的資源不存在";
+"api.error.conflict" = "狀態已變更，請重新整理";
+"api.error.rateLimited" = "請求過於頻繁，請稍後再試";
+"api.error.server" = "伺服器錯誤（%d）";
+"api.error.network" = "網路連線失敗，請檢查網路設定";
+"api.error.decoding" = "伺服器傳回的資料無法讀取";
+"api.error.unknown" = "未知錯誤";
+"subscription.later" = "稍後再說";
+"onboarding.skip" = "略過";
+"protected.coverage.detected" = "%@（已自動識別）";
+"coverage.findHospitals" = "在地圖中尋找附近醫院";
+"coverage.findHospitals.query" = "醫院";
+"yp.crisisLine" = "心理危機熱線";
+"yp.consularHotline" = "外交部領事保護熱線（24 小時）";
+"yp.touristHelpline" = "訪日旅客熱線（24 小時）";
+"yp.poisons" = "中毒諮詢";
+"store.demo.noPurchase" = "體驗模式中不能購買，正式使用時這裡會顯示方案和價格。";

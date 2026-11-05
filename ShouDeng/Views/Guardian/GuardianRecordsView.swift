@@ -255,7 +255,7 @@ struct GuardianRecordsView: View {
             // Emergency Yellow Pages
             sectionHeader(langManager.localized("coverage_emergency", fallback: "Emergency Yellow Pages"))
                 .padding(.horizontal, 16)
-            EmergencyYellowPagesView()
+            EmergencyYellowPagesView(country: coordinator.emergencyCountryCode)
                 .padding(.horizontal, 16)
                 .padding(.bottom, 24)
         }
@@ -321,7 +321,7 @@ struct GuardianRecordsView: View {
             // Emergency Yellow Pages
             sectionHeader(langManager.localized("coverage_emergency", fallback: "Emergency Yellow Pages"))
                 .padding(.horizontal, 16)
-            EmergencyYellowPagesView()
+            EmergencyYellowPagesView(country: coordinator.emergencyCountryCode)
                 .padding(.horizontal, 16)
 
             // Export
@@ -682,7 +682,8 @@ struct GuardianRecordsView: View {
                 Circle()
                     .fill(statusColor(member.status).opacity(0.12))
                     .frame(width: 36, height: 36)
-                Text(String(member.name.prefix(1)))
+                Text(AvatarInitial.make(for: member.name))
+                    .lineLimit(1).minimumScaleFactor(0.4)
                     .font(.scaled(size: 14, weight: .medium))
                     .foregroundStyle(statusColor(member.status))
             }
@@ -849,7 +850,8 @@ struct GuardianRecordsView: View {
                 Circle()
                     .fill(alert.opacity(0.1))
                     .frame(width: 32, height: 32)
-                Text(String(contact.name.prefix(1)))
+                Text(AvatarInitial.make(for: contact.name))
+                    .lineLimit(1).minimumScaleFactor(0.4)
                     .font(.scaled(size: 12, weight: .medium))
                     .foregroundStyle(alert)
             }
@@ -1039,13 +1041,6 @@ struct GuardianMember: Identifiable {
 
         var label: String { LanguageManager.shared.localized("member.status.\(self)") }
     }
-
-    static let demoData: [GuardianMember] = [
-        GuardianMember(id: "me", name: "妈妈", city: "多伦多", phone: "+1 416-xxx-xxxx", role: .primary, status: .active, isMe: true, joinedAt: Date().addingTimeInterval(-90 * 86400)),
-        GuardianMember(id: "dad", name: "爸爸", city: "多伦多", phone: "+1 416-xxx-xxxx", role: .primary, status: .active, isMe: false, joinedAt: Date().addingTimeInterval(-90 * 86400)),
-        GuardianMember(id: "aunt", name: "姑姑", city: "悉尼", phone: "+61 4xx-xxx-xxx", role: .backup, status: .active, isMe: false, joinedAt: Date().addingTimeInterval(-60 * 86400)),
-        GuardianMember(id: "uncle", name: "叔叔", city: "北京", phone: "+86 138-xxxx-xxxx", role: .observer, status: .pending, isMe: false, joinedAt: Date()),
-    ]
 }
 
 // MARK: - Invite Guardian Sheet

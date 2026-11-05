@@ -29,6 +29,8 @@ struct QuickPillRow: View {
             } label: {
                 HStack(spacing: 5) {
                     Image(systemName: "textformat.size")
+                        // The symbol is localized ("大小" in Chinese) and repeated the label; keep "AA"
+                        .environment(\.locale, Locale(identifier: "en"))
                         .font(.system(size: 12))
                     Text(FontSizeSheet.buttonTitle(lang: lang, level: fontScale.level))
                         .font(.system(size: 12, weight: .semibold))

@@ -7,6 +7,33 @@ enum UserRole: String, Codable {
     case guardian = "guardian"      // 守护者 (e.g. 妈妈 in Toronto)
 }
 
+// MARK: - Avatar initial
+
+/// What goes in an avatar circle. For Chinese / Japanese / Korean names it is the
+/// given name — 陈思雅 → 思雅, 王芳 → 芳 — because a family shares its surname and every
+/// circle used to read 陈. Other names keep their first letter.
+enum AvatarInitial {
+    static func make(for name: String) -> String {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let first = trimmed.first else { return "?" }
+        let chars = trimmed.filter { !$0.isWhitespace }
+        guard !chars.isEmpty, chars.allSatisfy(isCJK) else { return String(first).uppercased() }
+        switch chars.count {
+        case 1: return String(chars)
+        case 2: return String(chars.suffix(1))
+        default: return String(chars.suffix(2))
+        }
+    }
+
+    private static func isCJK(_ c: Character) -> Bool {
+        c.unicodeScalars.allSatisfy { s in
+            (0x4E00...0x9FFF).contains(s.value) || (0x3400...0x4DBF).contains(s.value)   // CJK ideographs
+                || (0x3040...0x30FF).contains(s.value)                                   // hiragana, katakana
+                || (0xAC00...0xD7AF).contains(s.value)                                   // hangul
+        }
+    }
+}
+
 // MARK: - User
 
 struct User: Codable, Identifiable {
@@ -42,7 +69,9 @@ extension User {
         id = try c.decode(String.self, forKey: .id)
         displayName = c.lossy(String.self, .displayName) ?? ""
         role = c.lossy(UserRole.self, .role) ?? .protected_
-        avatarInitial = c.lossy(String.self, .avatarInitial) ?? String(displayName.prefix(1))
+        avatarInitial = displayName.isEmpty
+            ? (c.lossy(String.self, .avatarInitial) ?? "?")
+            : AvatarInitial.make(for: displayName)
         avatarLocalPath = c.lossy(String.self, .avatarLocalPath)
         phone = c.lossy(String.self, .phone)
         email = c.lossy(String.self, .email)

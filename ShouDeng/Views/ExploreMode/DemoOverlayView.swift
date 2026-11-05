@@ -323,7 +323,7 @@ private struct DemoHandoffView: View {
                 HStack(spacing: 22) {
                     phone(label: "SOS", color: Color(red: 196/255, green: 69/255, blue: 60/255))
                     Image(systemName: "arrow.right").foregroundStyle(.white.opacity(0.6))
-                    phone(label: String(t.sarahName.prefix(1)), color: Color(red: 63/255, green: 143/255, blue: 110/255))
+                    phone(label: AvatarInitial.make(for: t.sarahName), color: Color(red: 63/255, green: 143/255, blue: 110/255))
                 }
                 .accessibilityHidden(true)
                 Text(String(format: lm.localized("explore.handoff.sent"), t.chengdu, chengduTime).uppercased())

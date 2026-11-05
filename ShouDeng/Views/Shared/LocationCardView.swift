@@ -117,7 +117,8 @@ struct LocationCardView: View {
                                             Circle()
                                                 .fill(pin.color)
                                                 .frame(width: 20, height: 20)
-                                            Text(String(pin.name.prefix(1)))
+                                            Text(AvatarInitial.make(for: pin.name))
+                                                .lineLimit(1).minimumScaleFactor(0.4)
                                                 .font(.system(size: 10, weight: .bold))
                                                 .foregroundStyle(.white)
                                         }
@@ -419,7 +420,8 @@ struct LocationCardView: View {
                                     .font(.system(size: 8, weight: .bold))
                                     .foregroundStyle(Color.red)
                             } else {
-                                Text(String(pin.name.prefix(1)))
+                                Text(AvatarInitial.make(for: pin.name))
+                                    .lineLimit(1).minimumScaleFactor(0.4)
                                     .font(.system(size: 9, weight: .bold))
                                     .foregroundStyle(.white)
                             }
@@ -487,7 +489,7 @@ struct LocationCardView: View {
         let geocoder = CLGeocoder()
         let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         do {
-            let placemarks = try await geocoder.reverseGeocodeLocation(location)
+            let placemarks = try await geocoder.reverseGeocodeLocation(location, preferredLocale: Locale(identifier: LanguageManager.shared.current.rawValue))
             if let placemark = placemarks.first {
                 let parts = [
                     placemark.name,
@@ -1395,7 +1397,7 @@ struct FullScreenMapView: View {
         let geocoder = CLGeocoder()
         let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         do {
-            let placemarks = try await geocoder.reverseGeocodeLocation(location)
+            let placemarks = try await geocoder.reverseGeocodeLocation(location, preferredLocale: Locale(identifier: LanguageManager.shared.current.rawValue))
             if let placemark = placemarks.first {
                 let parts = [
                     placemark.name,

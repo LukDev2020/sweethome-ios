@@ -209,7 +209,8 @@ struct EmergencyContactsView: View {
                 Circle()
                     .fill(safe.opacity(0.12))
                     .frame(width: 32, height: 32)
-                Text(String(contact.name.prefix(1)))
+                Text(AvatarInitial.make(for: contact.name))
+                    .lineLimit(1).minimumScaleFactor(0.4)
                     .font(.scaled(size: 13, weight: .medium))
                     .foregroundStyle(safe)
             }

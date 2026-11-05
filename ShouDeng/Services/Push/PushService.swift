@@ -174,8 +174,8 @@ final class PushService: NSObject {
     /// Schedule a check-in reminder at a specific time
     func scheduleCheckInReminder(at hour: Int, minute: Int = 0) {
         let content = UNMutableNotificationContent()
-        content.title = "报平安提醒"
-        content.body = "今天还好吗？点击报个平安。"
+        content.title = LanguageManager.shared.localized("notif.checkinReminder.title")
+        content.body = LanguageManager.shared.localized("notif.checkinReminder.body")
         content.categoryIdentifier = Self.categoryCheckInReminder
         content.sound = .default
 
@@ -202,11 +202,11 @@ final class PushService: NSObject {
         let content = UNMutableNotificationContent()
 
         if let outgoing {
-            content.title = "值班交接"
-            content.body = "\(outgoing)的值班即将结束，\(incoming)即将接班。"
+            content.title = LanguageManager.shared.localized("notif.handoff.title")
+            content.body = String(format: LanguageManager.shared.localized("notif.handoff.body"), outgoing, incoming)
         } else {
-            content.title = "值班开始"
-            content.body = "你的值班时段即将开始。"
+            content.title = LanguageManager.shared.localized("notif.dutyStart.title")
+            content.body = LanguageManager.shared.localized("notif.dutyStart.body")
         }
 
         content.categoryIdentifier = Self.categoryHandoff
@@ -263,7 +263,7 @@ final class PushService: NSObject {
         sosEventId: String
     ) {
         let content = UNMutableNotificationContent()
-        content.title = "\(protectedPersonName)正在求助"
+        content.title = String(format: LanguageManager.shared.localized("notif.sos.localTitle"), protectedPersonName)
         content.body = locationDescription
         content.categoryIdentifier = Self.categorySOSAlert
         content.userInfo = [

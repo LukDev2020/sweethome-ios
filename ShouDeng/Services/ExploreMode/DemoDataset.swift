@@ -58,7 +58,7 @@ struct DemoDataset {
         func ago(_ minutes: Double) -> Date { now.addingTimeInterval(-minutes * 60) }
 
         func user(_ id: String, _ name: String, _ role: UserRole, _ tz: String, _ cc: String, _ city: String, _ phone: String) -> User {
-            User(id: id, displayName: name, role: role, avatarInitial: String(name.prefix(1)), avatarLocalPath: nil,
+            User(id: id, displayName: name, role: role, avatarInitial: AvatarInitial.make(for: name), avatarLocalPath: nil,
                  phone: phone, email: nil, timeZone: TimeZone(identifier: tz)!, countryCode: cc,
                  cityName: city, createdAt: ago(60 * 24 * 90))
         }

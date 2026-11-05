@@ -155,7 +155,7 @@ struct ProtectedRecordsView: View {
                     .foregroundColor(ink.opacity(0.55))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, 16)
-                EmergencyYellowPagesView()
+                EmergencyYellowPagesView(country: coordinator.emergencyCountryCode)
 
                 exportPanel
                 upsellCard
@@ -449,7 +449,8 @@ private struct EmergencyContactCardRow: View {
             // Avatar
             ZStack {
                 Circle().fill(safe.opacity(0.12)).frame(width: 38, height: 38)
-                Text(String(contact.name.prefix(1)))
+                Text(AvatarInitial.make(for: contact.name))
+                    .lineLimit(1).minimumScaleFactor(0.4)
                     .font(.scaled(size: 15, weight: .semibold))
                     .foregroundStyle(safe)
             }

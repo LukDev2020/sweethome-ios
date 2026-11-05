@@ -31,10 +31,10 @@ struct DemoRolePickerView: View {
                     .foregroundStyle(.secondary)
 
                 HStack(spacing: 8) {
-                    member(String(t.momName.prefix(1)), lm.localized("explore.member.mom"), t.chengdu, "Asia/Shanghai", lamp)
-                    member(String(t.sarahName.prefix(1)), t.sarahName.components(separatedBy: " ").first ?? t.sarahName, t.toronto, "America/Toronto", safe)
-                    member(String(t.kevinName.prefix(1)), t.kevinName.components(separatedBy: " ").first ?? t.kevinName, t.shanghai, "Asia/Shanghai", safe)
-                    member(String(t.lucyName.prefix(1)), t.lucyName.components(separatedBy: " ").first ?? t.lucyName, t.paris, "Europe/Paris", safe)
+                    member(AvatarInitial.make(for: t.momName), lm.localized("explore.member.mom"), t.chengdu, "Asia/Shanghai", lamp)
+                    member(AvatarInitial.make(for: t.sarahName), t.sarahName.components(separatedBy: " ").first ?? t.sarahName, t.toronto, "America/Toronto", safe)
+                    member(AvatarInitial.make(for: t.kevinName), t.kevinName.components(separatedBy: " ").first ?? t.kevinName, t.shanghai, "Asia/Shanghai", safe)
+                    member(AvatarInitial.make(for: t.lucyName), t.lucyName.components(separatedBy: " ").first ?? t.lucyName, t.paris, "Europe/Paris", safe)
                 }
 
                 Text(lm.localized("explore.picker.question"))
@@ -61,7 +61,7 @@ struct DemoRolePickerView: View {
     private func member(_ initial: String, _ name: String, _ city: String, _ tz: String, _ color: Color) -> some View {
         VStack(spacing: 4) {
             Circle().fill(color).frame(width: 30, height: 30)
-                .overlay(Text(initial).font(.footnote.weight(.bold)).foregroundStyle(.white))
+                .overlay(Text(initial).font(.footnote.weight(.bold)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.4).padding(2))
                 .accessibilityHidden(true)
             Text(name).font(.footnote.weight(.semibold)).foregroundStyle(ink).lineLimit(1)
             Text(city).font(.caption2).foregroundStyle(.secondary).lineLimit(1)

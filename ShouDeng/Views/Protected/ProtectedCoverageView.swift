@@ -22,10 +22,17 @@ struct ProtectedCoverageView: View {
     @State private var smsDowngrade = true
     @State private var lowPowerSaving = true
 
-    private var countryName: String {
-        let code = coordinator.currentUser?.countryCode ?? "CN"
-        return Locale.current.localizedString(forRegionCode: code) ?? code
+    /// Real per-country numbers (the same table the SOS screens use)
+    private var emergencyInfo: RegionalEmergencyInfo {
+        RegionalEmergencyInfo.forCountry(coordinator.emergencyCountryCode)
     }
+
+    private var countryName: String { emergencyInfo.regionName }
+
+    /// Weather, air quality, the safety advisory, the hospital list and local info were
+    /// fixed sample content (Toronto hospitals for someone in Chengdu, English weather).
+    /// Not shown anywhere until they come from real data; "find hospitals" opens Maps.
+    private var showsSampleCards: Bool { false }
 
     private var cityName: String {
         coordinator.currentUser?.cityName ?? ""
@@ -69,34 +76,25 @@ struct ProtectedCoverageView: View {
                         .foregroundStyle(.secondary)
                 }
                 .padding(.top, 8)
-                sampleDataBanner
+                if showsSampleCards { sampleDataBanner }
                 localResourcesPanel
 
-                // Weather
-                sectionHeader(langManager.localized("coverage_weather", fallback: "Weather"))
-                WeatherCardView()
-
-                // Air Quality
-                AQICardView(value: 32, label: "Good")
-
-                // Safety Advisory
-                sectionHeader(langManager.localized("coverage_advisory", fallback: "Safety Advisory"))
-                safetyAdvisoryCard
-
-                // Nearby Medical
+                // Nearby Medical: a real Maps search; the sample list only in the demo
                 sectionHeader(langManager.localized("coverage_medical", fallback: "Nearby Medical"))
-                NearbyMedicalView()
+                findHospitalsButton
 
-                // Emergency Numbers
-                sectionHeader(langManager.localized("coverage_emergency", fallback: "Emergency Numbers"))
-                emergencyNumbersCard
-
-                // Local Info
-                sectionHeader(langManager.localized("coverage_local_info", fallback: "Local Info"))
-                localInfoGrid
+                if showsSampleCards {
+                    sectionHeader(langManager.localized("coverage_weather", fallback: "Weather"))
+                    WeatherCardView()
+                    AQICardView(value: 32, label: "Good")
+                    sectionHeader(langManager.localized("coverage_advisory", fallback: "Safety Advisory"))
+                    safetyAdvisoryCard
+                    sectionHeader(langManager.localized("coverage_local_info", fallback: "Local Info"))
+                    localInfoGrid
+                }
 
                 offlinePackPanel
-                weakNetworkPanel
+                if showsSampleCards { weakNetworkPanel }
                 Text(langManager.localized("protected.coverage.footer"))
                     .font(.scaled(size: 12))
                     .foregroundStyle(.secondary.opacity(0.7))
@@ -120,8 +118,9 @@ struct ProtectedCoverageView: View {
                             .foregroundStyle(.secondary)
                     }
                     .padding(.top, 8)
-                    sampleDataBanner
+                    if showsSampleCards { sampleDataBanner }
                     localResourcesPanel
+                    findHospitalsButton
                 }
                 .padding(.horizontal, 16)
             }
@@ -130,7 +129,7 @@ struct ProtectedCoverageView: View {
             ScrollView {
                 VStack(spacing: 12) {
                     offlinePackPanel
-                    weakNetworkPanel
+                    if showsSampleCards { weakNetworkPanel }
                     Text(langManager.localized("protected.coverage.footer"))
                         .font(.scaled(size: 12))
                         .foregroundStyle(.secondary.opacity(0.7))
@@ -148,19 +147,67 @@ struct ProtectedCoverageView: View {
 
     private var localResourcesPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("\(countryName)\(cityName.isEmpty ? "" : " · \(cityName)")（已自动识别）")
+            Text(String(format: langManager.localized("protected.coverage.detected"),
+                        countryName + (cityName.isEmpty ? "" : " · \(cityName)")))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            resourceRow(langManager.localized("protected.coverage.localNumber"), value: langManager.localized("protected.coverage.localNumberValue"), isOk: true)
-            resourceRow(langManager.localized("protected.coverage.responseLanguage"), value: langManager.localized("protected.coverage.responseLanguageValue"), isOk: true)
-            resourceRow(langManager.localized("protected.coverage.embassyLine"), value: langManager.localized("protected.coverage.embassyLineValue"), isOk: true)
-            resourceRow(langManager.localized("protected.coverage.rescuePartner"), value: langManager.localized("protected.coverage.rescuePartnerValue"), isOk: true)
+            Text(langManager.localized("protected.coverage.localNumber"))
+                .font(.scaled(size: 13, weight: .semibold))
+            // This country's real numbers; tap to call
+            ForEach(emergencyInfo.numbers, id: \.number) { item in
+                Button {
+                    let digits = item.number.filter { $0.isNumber }
+                    if let url = URL(string: "tel:\(digits)") { ExternalURL.open(url) }
+                } label: {
+                    HStack {
+                        Image(systemName: item.icon)
+                            .font(.scaled(size: 13))
+                            .foregroundStyle(item.color)
+                            .frame(width: 22)
+                        Text(item.label).font(.scaled(size: 13))
+                        Spacer()
+                        Text(item.number)
+                            .font(.scaled(size: 15, weight: .semibold).monospacedDigit())
+                            .foregroundStyle(safe)
+                        Image(systemName: "phone.fill")
+                            .font(.scaled(size: 11))
+                            .foregroundStyle(safe)
+                    }
+                    .padding(.vertical, 3)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(item.label) \(item.number)")
+            }
         }
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
         )
+    }
+
+    /// Opens Apple Maps searching for hospitals near the person (real results, any country)
+    private var findHospitalsButton: some View {
+        Button {
+            let query = langManager.localized("coverage.findHospitals.query")
+                .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "hospital"
+            if let url = URL(string: "maps://?q=\(query)") { ExternalURL.open(url) }
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "cross.case.fill")
+                    .foregroundStyle(alert)
+                Text(langManager.localized("coverage.findHospitals"))
+                    .font(.scaled(size: 14, weight: .medium))
+                Spacer()
+                Image(systemName: "arrow.up.forward.app")
+                    .foregroundStyle(.secondary)
+            }
+            .padding(12)
+            .contentShape(RoundedRectangle(cornerRadius: 12))
+            .background(RoundedRectangle(cornerRadius: 12).stroke(Color(.separator).opacity(0.3), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Offline Pack
@@ -252,22 +299,6 @@ struct ProtectedCoverageView: View {
         .background(safe.opacity(0.06))
         .cornerRadius(16)
         .overlay(RoundedRectangle(cornerRadius: 16).stroke(safe.opacity(0.2), lineWidth: 1))
-    }
-
-    private var emergencyNumbersCard: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(langManager.localized("coverage_local_emergency", fallback: "Local Emergency Services"))
-                .font(.system(size: 12, weight: .semibold))
-            HStack(spacing: 6) {
-                Text("Police: 911").font(.system(size: 10)).padding(.horizontal, 8).padding(.vertical, 4).background(Color(.secondarySystemBackground)).cornerRadius(6)
-                Text("Fire: 911").font(.system(size: 10)).padding(.horizontal, 8).padding(.vertical, 4).background(Color(.secondarySystemBackground)).cornerRadius(6)
-                Text("Ambulance: 911").font(.system(size: 10)).padding(.horizontal, 8).padding(.vertical, 4).background(Color(.secondarySystemBackground)).cornerRadius(6)
-            }
-        }
-        .padding(12)
-        .background(Color(.secondarySystemBackground).opacity(0.5))
-        .cornerRadius(16)
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(.separator).opacity(0.3), lineWidth: 1))
     }
 
     private var localInfoGrid: some View {

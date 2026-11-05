@@ -109,7 +109,7 @@ struct OnboardingView: View {
                 Button {
                     skipToHome()
                 } label: {
-                    Text(lang.current.isChinese ? lang.zh("跳过") : "Skip")
+                    Text(lang.localized("onboarding.skip"))
                         .font(.scaled(size: 14, weight: .medium))
                         .foregroundStyle(.white.opacity(0.6))
                         .padding(.horizontal, 16)

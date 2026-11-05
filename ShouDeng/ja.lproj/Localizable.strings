@@ -1811,3 +1811,33 @@
 "store.link.terms" = "利用規約（EULA）";
 "store.link.privacy" = "プライバシーポリシー";
 "store.error.ownedByOtherAccount" = "このApp Storeサブスクリプションは別のLantern Careアカウントに紐づいています。そのアカウントでサインインしてご利用ください。";
+
+/* UX pass 2026-11-05 */
+"notif.checkinReminder.title" = "無事報告のリマインダー";
+"notif.checkinReminder.body" = "今日はお元気ですか？タップして無事を知らせましょう。";
+"notif.handoff.title" = "当番の引き継ぎ";
+"notif.handoff.body" = "%@ さんの当番がまもなく終わり、%@ さんに引き継がれます。";
+"notif.dutyStart.title" = "当番が始まります";
+"notif.dutyStart.body" = "まもなくあなたの当番の時間です。";
+"notif.sos.localTitle" = "%@ さんが助けを求めています";
+"api.error.validation" = "入力内容に誤りがあります。";
+"api.error.invalidURL" = "無効なリクエスト先です。";
+"api.error.unauthorized" = "ログインの有効期限が切れました。もう一度ログインしてください。";
+"api.error.forbidden" = "この操作を行う権限がありません。";
+"api.error.notFound" = "見つかりませんでした。";
+"api.error.conflict" = "状態が変わりました。更新してもう一度お試しください。";
+"api.error.rateLimited" = "リクエストが多すぎます。しばらくしてからお試しください。";
+"api.error.server" = "サーバーエラー（%d）";
+"api.error.network" = "接続できませんでした。ネットワーク設定を確認してください。";
+"api.error.decoding" = "サーバーからの応答を読み取れませんでした。";
+"api.error.unknown" = "不明なエラーが発生しました。";
+"subscription.later" = "あとで";
+"onboarding.skip" = "スキップ";
+"protected.coverage.detected" = "%@（自動で判定）";
+"coverage.findHospitals" = "マップで近くの病院を探す";
+"coverage.findHospitals.query" = "病院";
+"yp.crisisLine" = "こころの相談ダイヤル";
+"yp.consularHotline" = "領事保護ホットライン（24時間）";
+"yp.touristHelpline" = "訪日外国人旅行者ホットライン（24時間）";
+"yp.poisons" = "中毒情報";
+"store.demo.noPurchase" = "体験モードでは購入できません。実際のアプリではプランと価格が表示されます。";

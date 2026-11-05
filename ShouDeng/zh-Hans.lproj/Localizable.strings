@@ -1812,3 +1812,33 @@
 "store.link.terms" = "使用条款（EULA）";
 "store.link.privacy" = "隐私政策";
 "store.error.ownedByOtherAccount" = "该 App Store 订阅已绑定另一个守灯账号，请登录该账号使用。";
+
+/* UX pass 2026-11-05 */
+"notif.checkinReminder.title" = "报平安提醒";
+"notif.checkinReminder.body" = "今天还好吗？点击报个平安。";
+"notif.handoff.title" = "值班交接";
+"notif.handoff.body" = "%@的值班即将结束，%@即将接班。";
+"notif.dutyStart.title" = "值班开始";
+"notif.dutyStart.body" = "你的值班时段即将开始。";
+"notif.sos.localTitle" = "%@正在求助";
+"api.error.validation" = "请求参数有误";
+"api.error.invalidURL" = "无效的请求地址";
+"api.error.unauthorized" = "登录已过期，请重新登录";
+"api.error.forbidden" = "无权执行此操作";
+"api.error.notFound" = "请求的资源不存在";
+"api.error.conflict" = "状态已变更，请刷新";
+"api.error.rateLimited" = "请求过于频繁，请稍后再试";
+"api.error.server" = "服务器错误（%d）";
+"api.error.network" = "网络连接失败，请检查网络设置";
+"api.error.decoding" = "服务器返回的数据无法读取";
+"api.error.unknown" = "未知错误";
+"subscription.later" = "稍后再说";
+"onboarding.skip" = "跳过";
+"protected.coverage.detected" = "%@（已自动识别）";
+"coverage.findHospitals" = "在地图中查找附近医院";
+"coverage.findHospitals.query" = "医院";
+"yp.crisisLine" = "心理危机热线";
+"yp.consularHotline" = "外交部领事保护热线（24 小时）";
+"yp.touristHelpline" = "访日游客热线（24 小时）";
+"yp.poisons" = "中毒咨询";
+"store.demo.noPurchase" = "体验模式中不能购买，正式使用时这里会显示方案和价格。";

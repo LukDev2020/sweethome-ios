@@ -50,7 +50,7 @@ struct SubscriptionGateView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
 
-                Button("稍后再说") {
+                Button(LanguageManager.shared.localized("subscription.later")) {
                     onDismiss()
                 }
                 .font(.scaled(size: 14))

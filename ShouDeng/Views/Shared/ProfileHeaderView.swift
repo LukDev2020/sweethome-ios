@@ -27,6 +27,7 @@ struct ProfileHeaderView: View {
                         .frame(width: 56, height: 56)
                         .overlay(
                             Text(initial)
+                                .lineLimit(1).minimumScaleFactor(0.4)
                                 .font(.system(size: 22, weight: .bold))
                                 .foregroundColor(.white)
                         )

@@ -131,6 +131,7 @@ struct ProtectedLockScreenCard: View {
                 Circle()
                     .fill(guardian.isOnline ? SharedColors.safe.opacity(0.45) : SharedColors.offline.opacity(0.35))
                 Text(guardian.initial)
+                    .lineLimit(1).minimumScaleFactor(0.4)
                     .font(.system(size: 9, weight: .bold))
                     .foregroundStyle(.white)
             } else {
@@ -262,6 +263,7 @@ struct GuardianLockScreenCard: View {
                 if let person {
                     Circle().fill(personStatusColor(person.status).opacity(0.35))
                     Text(person.initial)
+                        .lineLimit(1).minimumScaleFactor(0.4)
                         .font(.system(size: 9, weight: .bold))
                         .foregroundStyle(.white)
                 } else {

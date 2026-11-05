@@ -351,6 +351,25 @@ struct GuardianSettingsView: View {
                     Spacer()
                 }
                 .padding(.vertical, 2)
+            } else if coordinator.storeKitManager.activePlanId != "free" {
+                // Lifetime access (no renewing subscription), or the sample family's plan
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .foregroundStyle(safe)
+                        .font(.scaled(size: 14))
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(coordinator.storeKitManager.planDisplayName(for: coordinator.storeKitManager.activePlanId))
+                            .font(.scaled(size: 13, weight: .medium))
+                        if coordinator.storeKitManager.lifetimePlanId != nil {
+                            Text(langManager.localized("store.cycle.lifetime"))
+                                .font(.scaled(size: 12))
+                                .foregroundStyle(.secondary)
+                        }
+                        householdSeats
+                    }
+                    Spacer()
+                }
+                .padding(.vertical, 2)
             } else {
                 HStack(spacing: 8) {
                     Image(systemName: "gift")
@@ -472,7 +491,7 @@ struct GuardianSettingsView: View {
                 .foregroundStyle(.secondary)
 
             HStack {
-                Image(systemName: "rectangle.on.rectangle.badge.person.crop")
+                Image(systemName: "lock.rectangle.stack.fill")
                     .font(.scaled(size: 14))
                     .foregroundStyle(safe)
                     .frame(width: 20)

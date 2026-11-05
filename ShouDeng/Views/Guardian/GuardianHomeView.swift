@@ -488,7 +488,7 @@ struct GuardianHomeView: View {
     }
 
     private static func countryName(_ code: String) -> String {
-        Locale.current.localizedString(forRegionCode: code) ?? ""
+        code.isEmpty ? "" : RegionalEmergencyInfo.regionName(code)
     }
 
     private func legendDot(color: Color, label: String) -> some View {

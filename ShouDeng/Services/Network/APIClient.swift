@@ -382,7 +382,7 @@ final class APIClient {
             throw APIError.conflict
         case 422:
             let detail = try? decoder.decode(ValidationError.self, from: data)
-            throw APIError.validation(detail?.message ?? "请求参数有误")
+            throw APIError.validation(detail?.message ?? LanguageManager.shared.localized("api.error.validation"))
         case 429:
             throw APIError.rateLimited
         case 500...599:
@@ -428,17 +428,17 @@ enum APIError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidURL:           return "无效的请求地址"
-        case .unauthorized:         return "登录已过期，请重新登录"
-        case .forbidden:            return "无权执行此操作"
-        case .notFound:             return "请求的资源不存在"
-        case .conflict:             return "状态已变更，请刷新"
+        case .invalidURL:           return LanguageManager.shared.localized("api.error.invalidURL")
+        case .unauthorized:         return LanguageManager.shared.localized("api.error.unauthorized")
+        case .forbidden:            return LanguageManager.shared.localized("api.error.forbidden")
+        case .notFound:             return LanguageManager.shared.localized("api.error.notFound")
+        case .conflict:             return LanguageManager.shared.localized("api.error.conflict")
         case .validation(let msg):  return msg
-        case .rateLimited:          return "请求过于频繁，请稍后再试"
-        case .serverError(let c):   return "服务器错误（\(c)）"
-        case .networkError:         return "网络连接失败，请检查网络设置"
-        case .decoding:             return "服务器返回的数据无法读取"
-        case .unknown:              return "未知错误"
+        case .rateLimited:          return LanguageManager.shared.localized("api.error.rateLimited")
+        case .serverError(let c):   return String(format: LanguageManager.shared.localized("api.error.server"), c)
+        case .networkError:         return LanguageManager.shared.localized("api.error.network")
+        case .decoding:             return LanguageManager.shared.localized("api.error.decoding")
+        case .unknown:              return LanguageManager.shared.localized("api.error.unknown")
         }
     }
 }
