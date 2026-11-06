@@ -59,7 +59,7 @@
 
 /* Home View - Protected */
 "home.sos" = "SOS";
-"home.sos.hold" = "Maintenez 5s pour SOS";
+"home.sos.hold" = "Maintenez 3s pour SOS";
 "home.checkin" = "Je vais bien";
 "home.checkin.done" = "Signalé";
 "home.send.location" = "Envoyer position";
@@ -781,7 +781,7 @@ vos gardiens seront automatiquement notifiés.";
 "protected.home.sosElapsed" = "Écoulé %@";
 "protected.home.sosEnabled" = "SOS activé";
 "protected.home.sosHighFreqLocation" = "Localisation haute fréq. activée";
-"protected.home.sosHint" = "Double-cliquez et maintenez 5s pour envoyer un SOS";
+"protected.home.sosHint" = "Double-cliquez et maintenez 3s pour envoyer un SOS";
 "protected.home.sosInProgress" = "SOS en cours";
 "protected.home.sosLabel" = "SOS d'urgence";
 "protected.home.sosLowPower" = "Mode basse consommation";
@@ -841,7 +841,7 @@ vos gardiens seront automatiquement notifiés.";
 "protected.settings.security.silentAlarm" = "Alarme silencieuse";
 "protected.settings.security.silentAlarmDesc" = "Vérification planifiée — notification auto si manquée";
 "protected.settings.sos.bluetooth" = "Bouton Bluetooth";
-"protected.settings.sos.longPress" = "Appui long (5s)";
+"protected.settings.sos.longPress" = "Appui long (3s)";
 "protected.settings.sos.notPaired" = "Non associé";
 "protected.settings.sos.redundancyHint" = "Plusieurs méthodes pour garantir le SOS";
 "protected.settings.sos.silentMode" = "Mode silencieux";
@@ -1279,7 +1279,7 @@ vos gardiens seront automatiquement notifiés.";
 
 /* SOS button (W2-b) */
 "sos.button.a11yLabel" = "Bouton SOS d'urgence";
-"sos.button.a11yHint" = "Maintenez 5 secondes pour alerter votre famille";
+"sos.button.a11yHint" = "Maintenez 3 secondes pour alerter votre famille";
 
 /* Guardian SOS response (W2-d/e) */
 "guardian.alert.noActiveSOS" = "Aucun SOS en cours.";
@@ -1330,7 +1330,7 @@ vos gardiens seront automatiquement notifiés.";
 "explore.tip.mom.guardians.title" = "Trois gardiens, trois fuseaux";
 "explore.tip.mom.guardians.body" = "Sarah à Toronto, Kevin à Shanghai et Lucy à Paris se relaient : quelqu'un est souvent réveillé quand vous en avez besoin.";
 "explore.tip.mom.sos.title" = "Entraînez-vous au SOS";
-"explore.tip.mom.sos.body" = "Maintenez le bouton rouge 5 secondes. En vrai, vos gardiens reçoivent une alerte, puis un SMS, puis un appel jusqu'à ce que quelqu'un réponde. Dans la démo, personne n'est alerté — vous verrez ce que voit Sarah.";
+"explore.tip.mom.sos.body" = "Maintenez le bouton rouge 3 secondes. En vrai, vos gardiens reçoivent une alerte, puis un SMS, puis un appel jusqu'à ce que quelqu'un réponde. Dans la démo, personne n'est alerté — vous verrez ce que voit Sarah.";
 "explore.tip.mom.tracking.title" = "Vous décidez qui voit où vous êtes";
 "explore.tip.mom.tracking.body" = "Mettez le partage en pause jusqu'à 4 heures. Un SOS le réactive toujours.";
 "explore.tip.mom.done.title" = "Voilà le côté de maman";
@@ -1742,7 +1742,7 @@ vos gardiens seront automatiquement notifiés.";
 "store.error.purchase" = "Échec de l'achat : %@";
 "store.error.nothingToRestore" = "Aucun abonnement à restaurer.";
 "store.error.restore" = "Impossible de restaurer les achats : %@";
-"sos.button.holdHint" = "Maintenez 5 secondes pour envoyer le SOS";
+"sos.button.holdHint" = "Maintenez 3 secondes pour envoyer le SOS";
 "settings.data.storageLocation" = "Lieu de stockage des données";
 "settings.data.storageLocation.value" = "États-Unis";
 "settings.data.storageLocation.pending" = "États-Unis · à confirmer";
@@ -1764,7 +1764,7 @@ vos gardiens seront automatiquement notifiés.";
 
 /* In-app tips */
 "tip.sos.title" = "Maintenez pour l'aide";
-"tip.sos.message" = "Maintenez SOS 5 secondes. Vous avez 5 secondes pour annuler avant que vos proches soient prévenus.";
+"tip.sos.message" = "Maintenez SOS 3 secondes. Vous avez 5 secondes pour annuler avant que vos proches soient prévenus.";
 "tip.homeSafe.title" = "Dites que vous êtes rentré·e";
 "tip.homeSafe.message" = "Un geste et vos proches savent que vous êtes bien rentré·e.";
 "tip.inviteGuardian.title" = "Personne ne veille encore sur vous";
@@ -1927,7 +1927,7 @@ vos gardiens seront automatiquement notifiés.";
 "simple.home" = "Je suis rentré(e)";
 "simple.homeSent" = "Envoyé — la famille sait que vous êtes rentré(e)";
 "simple.call" = "Appeler %@";
-"simple.sosHold" = "Maintenir 5 secondes";
+"simple.sosHold" = "Maintenir 3 secondes";
 "simple.switchToStandard" = "Passer à l'accueil complet";
 "simple.switchToSimple" = "Passer à l'accueil simplifié";
 "homeStyle.section" = "Écran d'accueil";

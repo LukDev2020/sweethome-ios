@@ -253,17 +253,19 @@ final class SafetyPathTests: XCTestCase {
         XCTAssertFalse(SOSTriggerMethod.deadManSwitch.isSilent)
     }
 
-    /// 5 s after user testing (3 s was triggered by accident); the copy must say the same.
-    func testSOSHoldIsFiveSecondsAndTheCopySaysSo() throws {
-        XCTAssertEqual(FloatingSOSButton.holdDuration, 5.0)
+    /// The hold is 3 s (owner's choice, the 5 s cancel countdown follows); every text
+    /// that names the hold must say the same.
+    func testSOSHoldIsThreeSecondsAndTheCopySaysSo() throws {
+        XCTAssertEqual(FloatingSOSButton.holdDuration, 3.0)
         let bundle = Bundle(for: AppCoordinator.self)
         for lang in ["en", "zh-Hans", "zh-Hant", "fr", "ja"] {
             let url = try XCTUnwrap(bundle.url(forResource: "Localizable", withExtension: "strings", subdirectory: nil, localization: lang))
             let table = try XCTUnwrap(NSDictionary(contentsOf: url) as? [String: String])
-            for key in ["sos.button.holdHint", "home.sos.hold", "sos.button.a11yHint"] {
+            for key in ["sos.button.holdHint", "home.sos.hold", "sos.button.a11yHint", "simple.sosHold",
+                        "protected.settings.sos.longPress", "protected.home.sosHint"] {
                 let text = try XCTUnwrap(table[key], "\(lang) \(key)")
-                XCTAssertTrue(text.contains("5") || text.contains("五"), "\(lang) \(key): \(text)")
-                XCTAssertFalse(text.contains("3") || text.contains("三"), "\(lang) \(key): \(text)")
+                XCTAssertTrue(text.contains("3") || text.contains("三"), "\(lang) \(key): \(text)")
+                XCTAssertFalse(text.contains("5") || text.contains("五"), "\(lang) \(key): \(text)")
             }
         }
     }

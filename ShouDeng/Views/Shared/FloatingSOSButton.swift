@@ -15,12 +15,13 @@ struct FloatingSOSButton: View {
     @State private var pressStartedAt: Date?
 
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
-    /// Same hold as the home-screen slider and the copy ("Hold 5s to send SOS").
-    /// 5 s after user testing: 3 s was triggered by accident several times. A real
-    /// SOS still goes through the 5 s cancel countdown afterwards.
-    static let holdDuration: Double = 5.0
+    /// Same hold as the home-screen slider and the copy ("Hold 3s to send SOS").
+    /// History: 3 s → 5 s after China user testing (accidental triggers) → back to
+    /// 3 s at the owner's request (5 s felt too long in an emergency). Accidental
+    /// presses are still caught by the 5 s cancel countdown that follows.
+    static let holdDuration: Double = 3.0
     /// How far the finger may drift during the hold. The system default (10 pt) cancels
-    /// a 5 s hold too easily: the press then seemed to do nothing.
+    /// a long hold too easily: the press then seemed to do nothing.
     static let holdTolerance: CGFloat = 40
     private var holdDuration: Double { Self.holdDuration }
 

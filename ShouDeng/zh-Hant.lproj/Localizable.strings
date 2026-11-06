@@ -59,7 +59,7 @@
 
 /* Home View - Protected */
 "home.sos" = "緊急求助";
-"home.sos.hold" = "長按 5 秒傳送 SOS";
+"home.sos.hold" = "長按 3 秒傳送 SOS";
 "home.checkin" = "報平安";
 "home.checkin.done" = "已報平安";
 "home.send.location" = "傳送位置";
@@ -781,7 +781,7 @@
 "protected.home.sosElapsed" = "已持續 %@";
 "protected.home.sosEnabled" = "SOS 已啟用";
 "protected.home.sosHighFreqLocation" = "高頻定位已啟用";
-"protected.home.sosHint" = "雙擊並長按五秒傳送SOS緊急求助訊號給所有守護者";
+"protected.home.sosHint" = "雙擊並長按三秒傳送SOS緊急求助訊號給所有守護者";
 "protected.home.sosInProgress" = "緊急求助中";
 "protected.home.sosLabel" = "緊急求助";
 "protected.home.sosLowPower" = "低電量模式";
@@ -841,7 +841,7 @@
 "protected.settings.security.silentAlarm" = "靜默警報";
 "protected.settings.security.silentAlarmDesc" = "定時確認安全，未確認自動通知";
 "protected.settings.sos.bluetooth" = "藍芽按鈕";
-"protected.settings.sos.longPress" = "長按按鈕（5秒）";
+"protected.settings.sos.longPress" = "長按按鈕（3秒）";
 "protected.settings.sos.notPaired" = "未配對";
 "protected.settings.sos.redundancyHint" = "多種觸發方式確保緊急時能夠求助";
 "protected.settings.sos.silentMode" = "靜默模式";
@@ -1279,7 +1279,7 @@
 
 /* SOS button (W2-b) */
 "sos.button.a11yLabel" = "緊急求助按鈕";
-"sos.button.a11yHint" = "長按 5 秒向家人發出求助";
+"sos.button.a11yHint" = "長按 3 秒向家人發出求助";
 
 /* Guardian SOS response (W2-d/e) */
 "guardian.alert.noActiveSOS" = "當前沒有進行中的求助。";
@@ -1330,7 +1330,7 @@
 "explore.tip.mom.guardians.title" = "三位守護者，三個時區";
 "explore.tip.mom.guardians.body" = "Sarah 在多倫多，Kevin 在上海，Lucy 在巴黎，輪流照看，你需要時通常總有人醒著。";
 "explore.tip.mom.sos.title" = "練習一次求助";
-"explore.tip.mom.sos.body" = "按住紅色按鈕 5 秒。真實緊急情況下，守護者會先收到提醒，然後是簡訊，再是電話，直到有人回應。體驗中不會真的通知任何人——你會看到 Sarah 看到的一切。";
+"explore.tip.mom.sos.body" = "按住紅色按鈕 3 秒。真實緊急情況下，守護者會先收到提醒，然後是簡訊，再是電話，直到有人回應。體驗中不會真的通知任何人——你會看到 Sarah 看到的一切。";
 "explore.tip.mom.tracking.title" = "你決定誰能看到你的位置";
 "explore.tip.mom.tracking.body" = "需要隱私時可暫停共享最多 4 小時。發出求助時會自動恢復。";
 "explore.tip.mom.done.title" = "這就是媽媽這邊";
@@ -1742,7 +1742,7 @@
 "store.error.purchase" = "購買失敗：%@";
 "store.error.nothingToRestore" = "未找到可恢復的訂閱";
 "store.error.restore" = "恢復購買失敗：%@";
-"sos.button.holdHint" = "按住 5 秒傳送求助";
+"sos.button.holdHint" = "按住 3 秒傳送求助";
 "settings.data.storageLocation" = "資料儲存地點";
 "settings.data.storageLocation.value" = "美國";
 "settings.data.storageLocation.pending" = "美國 · 待確認";
@@ -1764,7 +1764,7 @@
 
 /* In-app tips */
 "tip.sos.title" = "按住求助";
-"tip.sos.message" = "按住 SOS 5 秒傳送求助。通知家人前有 5 秒可以取消。";
+"tip.sos.message" = "按住 SOS 3 秒傳送求助。通知家人前有 5 秒可以取消。";
 "tip.homeSafe.title" = "告訴家人你到家了";
 "tip.homeSafe.message" = "點一下，守護你的家人就知道你已安全到家。";
 "tip.inviteGuardian.title" = "還沒有家人守護你";
@@ -1927,7 +1927,7 @@
 "simple.home" = "我到家了";
 "simple.homeSent" = "已送出 — 家人知道你到家了";
 "simple.call" = "打給 %@";
-"simple.sosHold" = "按住 5 秒";
+"simple.sosHold" = "按住 3 秒";
 "simple.switchToStandard" = "切換到完整版首頁";
 "simple.switchToSimple" = "切換到簡潔版首頁";
 "homeStyle.section" = "首頁樣式";
