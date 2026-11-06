@@ -224,6 +224,8 @@
 		CC33DD0100002009 /* FakeCallSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD0100001009 /* FakeCallSettingsView.swift */; };
 		CC33DD010000200A /* DeadManSwitchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD010000100A /* DeadManSwitchView.swift */; };
 		CC33DD010000200B /* TrackerDetectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD010000100B /* TrackerDetectionView.swift */; };
+		CC33DD0100002102 /* SimpleProtectedHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD0100001102 /* SimpleProtectedHomeView.swift */; };
+		CC33DD0100002101 /* SOSModeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD0100001101 /* SOSModeView.swift */; };
 		CC33DD010000200C /* DisguiseCalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD010000100C /* DisguiseCalculatorView.swift */; };
 		CC33DD010000200D /* DisguiseWeatherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD010000100D /* DisguiseWeatherView.swift */; };
 		CC33DD010000200E /* DisguiseNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD010000100E /* DisguiseNotesView.swift */; };
@@ -482,6 +484,8 @@
 		CC33DD0100001009 /* FakeCallSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeCallSettingsView.swift; sourceTree = "<group>"; };
 		CC33DD010000100A /* DeadManSwitchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeadManSwitchView.swift; sourceTree = "<group>"; };
 		CC33DD010000100B /* TrackerDetectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackerDetectionView.swift; sourceTree = "<group>"; };
+		CC33DD0100001102 /* SimpleProtectedHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleProtectedHomeView.swift; sourceTree = "<group>"; };
+		CC33DD0100001101 /* SOSModeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SOSModeView.swift; sourceTree = "<group>"; };
 		CC33DD010000100C /* DisguiseCalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisguiseCalculatorView.swift; sourceTree = "<group>"; };
 		CC33DD010000100D /* DisguiseWeatherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisguiseWeatherView.swift; sourceTree = "<group>"; };
 		CC33DD010000100E /* DisguiseNotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisguiseNotesView.swift; sourceTree = "<group>"; };
@@ -662,6 +666,7 @@
 				A2CBED579613C2FC6F68B5B6 /* ProtectedCoverageView.swift */,
 				219089B647D70FDE60419C11 /* ProtectedGuardianDetailView.swift */,
 				06711676C420190B6BF2FB41 /* ProtectedHomeView.swift */,
+				CC33DD0100001102 /* SimpleProtectedHomeView.swift */,
 				78733745F4A30EAE16699215 /* TripPreflightView.swift */,
 				D199DA3C341478E8441C8FED /* ProtectedRecordsView.swift */,
 				9BEAFFBD653265D29795FC10 /* ProtectedSettingsView.swift */,
@@ -1120,6 +1125,7 @@
 				CC33DD010000100D /* DisguiseWeatherView.swift */,
 				CC33DD010000100E /* DisguiseNotesView.swift */,
 				CC33DD010000100F /* DisguiseModeSettingsView.swift */,
+				CC33DD0100001101 /* SOSModeView.swift */,
 			);
 			path = Safety;
 			sourceTree = "<group>";
@@ -1393,6 +1399,8 @@
 				CC33DD0100002009 /* FakeCallSettingsView.swift in Sources */,
 				CC33DD010000200A /* DeadManSwitchView.swift in Sources */,
 				CC33DD010000200B /* TrackerDetectionView.swift in Sources */,
+				CC33DD0100002102 /* SimpleProtectedHomeView.swift in Sources */,
+				CC33DD0100002101 /* SOSModeView.swift in Sources */,
 				CC33DD010000200C /* DisguiseCalculatorView.swift in Sources */,
 				CC33DD010000200D /* DisguiseWeatherView.swift in Sources */,
 				CC33DD010000200E /* DisguiseNotesView.swift in Sources */,

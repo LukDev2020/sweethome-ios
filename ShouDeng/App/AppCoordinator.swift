@@ -18,7 +18,9 @@ final class AppCoordinator: ObservableObject {
     @Published var userRole: UserRole = .protected_
     @Published var protectedPersons: [ProtectedPerson] = []  // Guardian sees these
     @Published var myGuardians: [Guardian] = []               // Protected person sees these
-    @Published var activeSOSEvent: SOSEvent?
+    @Published var activeSOSEvent: SOSEvent? {
+        didSet { if activeSOSEvent == nil, sosConcealed { sosConcealed = false } }
+    }
     /// The direct SOS request didn't get through; it is queued and retried on
     /// reconnect / foreground. Cleared when a flush delivers it.
     @Published var sosDeliveryFailed = false
@@ -28,6 +30,14 @@ final class AppCoordinator: ObservableObject {
     @Published var guardianSOS: [String: SOSStatus] = [:]
     /// Protected side: show SOSActiveView (never for a silent/duress SOS).
     @Published var isSOSScreenPresented = false
+    /// My own path since the SOS started (the SOS map draws it)
+    @Published var sosLocalTrail: [CLLocationCoordinate2D] = []
+    /// Duress code entered to "end" the SOS: the screen closes, the SOS keeps going
+    /// Duress code used at "end SOS": the SOS keeps running but nothing on this phone
+    /// shows it. Kept across launches so a restart doesn't bring the SOS screen back.
+    @Published var sosConcealed = UserDefaults.standard.bool(forKey: "sos_concealed") {
+        didSet { UserDefaults.standard.set(sosConcealed, forKey: "sos_concealed") }
+    }
     /// Guardian side: an SOS push was opened — show its response screen.
     @Published var pendingAlertPersonId: String?
     @Published var showFallConfirmation = false
@@ -1281,7 +1291,7 @@ final class AppCoordinator: ObservableObject {
     func requestSOS(method: SOSTriggerMethod = .longPress) {
         // An SOS already running: show it instead of silently ignoring the press.
         if activeSOSEvent != nil {
-            if !method.isSilent { isSOSScreenPresented = true }
+            if !method.isSilent { sosConcealed = false; isSOSScreenPresented = true }
             return
         }
         guard pendingSOS == nil else { return }
@@ -1372,6 +1382,8 @@ final class AppCoordinator: ObservableObject {
 
         activeSOSEvent = sosEvent
         ownSOSStatus = nil
+        sosConcealed = false
+        sosLocalTrail = locationManager.bestAvailableLocation.map { [$0.coordinate] } ?? []
         if !method.isSilent { isSOSScreenPresented = true }
         localStore.saveActiveSOSEvent(sosEvent)
         syncWidgetState()
@@ -1572,8 +1584,37 @@ final class AppCoordinator: ObservableObject {
         triggerSOS(method: method)
     }
 
+    /// "Send this route to my family" during an SOS (POST /v1/sos/route).
+    func shareSOSRoute(name: String, coordinate: CLLocationCoordinate2D, mode: String) async -> Bool {
+        if isDemo { return true }   // the sample family: nothing leaves the phone
+        do {
+            let _: SuccessResponse = try await apiClient.post("/v1/sos/route", body: SOSRouteRequest(
+                name: name, latitude: coordinate.latitude, longitude: coordinate.longitude, mode: mode))
+            return true
+        } catch {
+            #if DEBUG
+            print("[Coordinator] share route failed: \(error)")
+            #endif
+            return false
+        }
+    }
+
+    /// Duress code at "end SOS": looks ended to whoever is watching (screen and lock
+    /// screen back to normal), but the family keeps getting the live location.
+    func concealSOS() {
+        guard activeSOSEvent != nil else { return }
+        sosConcealed = true
+        isSOSScreenPresented = false
+        if !isDemo { liveActivityManager.cancelSOS() }
+        syncWidgetState()
+        // Same entry as a real end, so the timeline gives nothing away
+        addTimelineEntry(type: .sosResolved, description: LanguageManager.shared.localized("timeline.sosCancelled"))
+    }
+
     func cancelSOS() {
         guard let sos = activeSOSEvent else { return }
+        sosConcealed = false
+        sosLocalTrail = []
         let userId = authManager.currentUserId ?? currentUser?.id ?? "unknown"
         escalationEngine.resolve(by: userId, resolution: .protectedCancelled)
         activeSOSEvent = nil
@@ -1702,6 +1743,16 @@ final class AppCoordinator: ObservableObject {
     // MARK: - Event Handlers
 
     private func handleLocationUpdate(_ location: Location) {
+        if activeSOSEvent != nil {
+            let point = CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
+            if let last = sosLocalTrail.last,
+               CLLocation(latitude: last.latitude, longitude: last.longitude)
+                .distance(from: CLLocation(latitude: point.latitude, longitude: point.longitude)) < 5 {
+            } else {
+                sosLocalTrail.append(point)
+                if sosLocalTrail.count > 500 { sosLocalTrail.removeFirst(sosLocalTrail.count - 500) }
+            }
+        }
         // Build E2E encrypted payload for each guardian who has a public key
         var encryptedPayload: E2ELocationEncryption.EncryptedPayload?
         if let firstGuardian = myGuardians.first,
@@ -2371,7 +2422,7 @@ final class AppCoordinator: ObservableObject {
             let userName = currentUser?.displayName
             let guardianCount = myGuardians.count
             let lastCheckIn = timeline.first(where: { $0.type == .checkIn })?.timestamp
-            let sosActive = activeSOSEvent != nil
+            let sosActive = activeSOSEvent != nil && !sosConcealed
             let sosTriggeredAt = activeSOSEvent?.triggeredAt
             let emergencyPhone: String? = localEmergencyNumber
 

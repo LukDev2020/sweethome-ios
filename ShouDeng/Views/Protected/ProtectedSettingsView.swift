@@ -179,6 +179,7 @@ struct ProtectedSettingsView: View {
                 profilePanel
                 emailMissingBanner
                 rolePanel
+                HomeStylePanel()
                 sosTriggerPanel
                 smartDetectionPanel
                 checkInPanel
@@ -220,6 +221,7 @@ struct ProtectedSettingsView: View {
                     profilePanel
                     emailMissingBanner
                     rolePanel
+                    HomeStylePanel()
                     sosTriggerPanel
                     smartDetectionPanel
                     checkInPanel

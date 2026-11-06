@@ -235,6 +235,12 @@ final class DynamicLocalizationKeyTests: XCTestCase {
         keys += ["sos", "homeSafe", "inviteGuardian", "memberCard", "statusBar", "inviteCode"]
             .flatMap { ["tip.\($0).title", "tip.\($0).message"] } + ["tip.inviteGuardian.action"]
         keys += ["section", "show", "reset", "resetDone"].map { "settings.tips.\($0)" }
+        // SOS mode map (enum raw values) and home style
+        keys += ["hospital", "pharmacy", "police", "fire", "consulate", "staffed", "transit"].map { "sosmode.cat.\($0)" }
+        keys += ["standard", "satellite", "hybrid", "night"].map { "sosmode.style.\($0)" }
+        keys += ["followMe", "showAll"].map { "sosmode.camera.\($0)" }
+        keys += HomeStyle.allCases.flatMap { ["homeStyle.\($0.rawValue)", "homeStyle.\($0.rawValue).desc"] }
+        keys += ["morning", "afternoon", "evening"].flatMap { ["simple.greeting.\($0)", "simple.greeting.\($0).plain"] }
         for language in ["en", "zh-Hans", "zh-Hant", "fr", "ja"] {
             let path = try XCTUnwrap(Bundle.main.path(forResource: "Localizable", ofType: "strings",
                                                       inDirectory: nil, forLocalization: language), language)

@@ -363,6 +363,9 @@ const SAME_IN_ZH = new Set([
 ]);
 const SAME_IN_FR = new Set([
   ...SAME_IN_ZH,
+  // SOS mode: "Code", "Police", "Standard", "Satellite" and "%d min · %@" are French too
+  "sosmode.end.codePlaceholder", "sosmode.cat.police", "sosmode.style.standard", "sosmode.style.satellite",
+  "sosmode.route.summary",
   "protected.coverage.responseLanguageValue", "map.route.duration.m", "map.route.duration.hm",
   "sos.method.watchQuickAction", "sos.method.widgetTap", "legal.version", "consent.transfer.declined.later",
   "trip.points.count", "deadman.extend", "silent.alarm.minutes", "silent.alarm.15min",

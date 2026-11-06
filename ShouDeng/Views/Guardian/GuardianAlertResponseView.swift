@@ -24,6 +24,8 @@ struct GuardianAlertResponseView: View {
     @State private var isWorking = false
     @State private var errorText: String?
     @State private var tick = Date()
+    /// Follows the person while the SOS moves (re-centred when a new position arrives)
+    @State private var sosCamera: MapCameraPosition = .automatic
     nonisolated(unsafe) private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     private var person: ProtectedPerson? {
@@ -216,12 +218,19 @@ struct GuardianAlertResponseView: View {
         Group {
             if let lat = sos?.latitude, let lng = sos?.longitude {
                 let coord = CLLocationCoordinate2D(latitude: lat, longitude: lng)
-                Map(initialPosition: .region(MKCoordinateRegion(
-                    center: coord,
-                    span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
-                ))) {
+                let trail = (sos?.trail ?? []).map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) }
+                Map(position: $sosCamera) {
                     // Explore Mode: MapKit draws the device's real position — hide it in the demo.
                     if !ExploreMode.isActive { UserAnnotation() }
+                    if trail.count > 1 {
+                        MapPolyline(coordinates: trail + [coord])
+                            .stroke(alert.opacity(0.7), style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
+                    }
+                    if let route = sos?.route {
+                        Marker(route.name, systemImage: routeIcon(route.mode),
+                               coordinate: CLLocationCoordinate2D(latitude: route.latitude, longitude: route.longitude))
+                            .tint(safe)
+                    }
                     Annotation(personName, coordinate: coord) {
                         ZStack {
                             Circle().fill(alert.opacity(0.3)).frame(width: 32, height: 32)
@@ -230,8 +239,12 @@ struct GuardianAlertResponseView: View {
                     }
                 }
                 .mapStyle(.standard(pointsOfInterest: .excludingAll))
-                .frame(height: 180)
+                .frame(height: 220)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
+                .onAppear { recenter(on: coord) }
+                .onChange(of: lat) { recenter(on: CLLocationCoordinate2D(latitude: lat, longitude: lng)) }
+                .onChange(of: lng) { recenter(on: CLLocationCoordinate2D(latitude: lat, longitude: lng)) }
+                .onChange(of: sos?.route?.name) { recenter(on: coord) }
                 // Top-leading: the Apple Maps logo and Legal link sit bottom-leading and must stay visible.
                 .overlay(alignment: .topLeading) {
                     Text(langManager.localized("guardian.alert.sosLocation"))
@@ -243,6 +256,7 @@ struct GuardianAlertResponseView: View {
                         .clipShape(Capsule())
                         .padding(6)
                 }
+                sosLocationNotes
                 OpenInAppleMapsButton(coordinate: coord, name: personName)
             } else if let loc = person?.lastKnownLocation {
                 let coord = CLLocationCoordinate2D(latitude: loc.latitude, longitude: loc.longitude)
@@ -288,6 +302,46 @@ struct GuardianAlertResponseView: View {
                     }
                 }
             }
+        }
+    }
+
+    /// With a shared destination, fit both; otherwise stay close on the person.
+    private func recenter(on coord: CLLocationCoordinate2D) {
+        if sos?.route != nil {
+            sosCamera = .automatic
+        } else {
+            sosCamera = .region(MKCoordinateRegion(center: coord,
+                                                   span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)))
+        }
+    }
+
+    private func routeIcon(_ mode: String) -> String {
+        switch mode {
+        case "driving": return "car.fill"
+        case "transit": return "tram.fill"
+        default: return "figure.walk"
+        }
+    }
+
+    /// "Heading to …" and "Location updated 14:32" under the map
+    @ViewBuilder
+    private var sosLocationNotes: some View {
+        if let route = sos?.route {
+            HStack(spacing: 8) {
+                Image(systemName: routeIcon(route.mode))
+                Text(String(format: langManager.localized("guardian.alert.headingTo"), route.name))
+                    .font(.scaled(size: 14, weight: .semibold))
+                Spacer()
+            }
+            .foregroundStyle(safe)
+            .padding(10)
+            .background(RoundedRectangle(cornerRadius: 10).fill(safe.opacity(0.1)))
+        }
+        if let updated = sos?.locationUpdatedAt ?? sos?.triggeredAt {
+            Text(String(format: langManager.localized("guardian.alert.locationUpdated"), formatTime(updated)))
+                .font(.scaled(size: 12))
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 

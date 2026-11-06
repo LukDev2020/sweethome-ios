@@ -23,7 +23,7 @@ struct DemoOverlayView: View {
                         .overlayRegion("checklist")
                         .transition(.move(edge: .bottom))
                 } else if explore.isTourVisible, let step = explore.currentStep {
-                    DemoTipLayer(step: step, screen: geo.size, column: Self.cardColumn(in: geo, window: explore.overlayWindow),
+                    DemoTipLayer(initialStep: step, screen: geo.size, column: Self.cardColumn(in: geo, window: explore.overlayWindow),
                                  safeTop: geo.safeAreaInsets.top, safeBottom: geo.safeAreaInsets.bottom)
                 }
 
@@ -84,7 +84,11 @@ extension DemoOverlayView {
 
 private struct DemoTipLayer: View {
     @EnvironmentObject var explore: ExploreModeController
-    let step: DemoTourStep
+    /// The step when this layer was built; the live step is read from the controller
+    /// (the parent isn't always re-evaluated when the step advances, which left the
+    /// card showing the previous step's text under the new step number).
+    let initialStep: DemoTourStep
+    private var step: DemoTourStep { explore.currentStep ?? initialStep }
     let screen: CGSize
     /// Horizontal range the card stays within (see DemoOverlayView.cardColumn).
     let column: ClosedRange<CGFloat>
@@ -118,7 +122,8 @@ private struct DemoTipLayer: View {
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
             }
-            if let anchor, !hiddenByUser {
+            // Not over a sheet: the control it rings is underneath (e.g. SOS button under the SOS screen)
+            if let anchor, !hiddenByUser, !explore.isAppPresentingModal {
                 RoundedRectangle(cornerRadius: 14)
                     .stroke(lamp, lineWidth: 3)
                     .frame(width: anchor.width + 12, height: anchor.height + 12)

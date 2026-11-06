@@ -61,6 +61,7 @@ struct QuickPillRow: View {
 /// Pick a text size from four large, labelled rows, each previewed at its own size.
 struct FontSizeSheet: View {
     @ObservedObject private var lang = LanguageManager.shared
+    @AppStorage(HomeStyle.storageKey) private var homeStyle = HomeStyle.standard.rawValue
     @ObservedObject private var fontScale = FontScaleManager.shared
     @Environment(\.dismiss) private var dismiss
 
@@ -116,6 +117,23 @@ struct FontSizeSheet: View {
                     }
                 }
                 .padding(16)
+
+                // Large text reads best on the simple home
+                if (fontScale.level == .extraLarge || fontScale.level == .huge),
+                   homeStyle == HomeStyle.standard.rawValue {
+                    Button {
+                        homeStyle = HomeStyle.simple.rawValue
+                        dismiss()
+                    } label: {
+                        Label(lang.localized("homeStyle.suggest"), systemImage: "textformat.size.larger")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(safe)
+                            .frame(maxWidth: .infinity, minHeight: 48)
+                            .background(RoundedRectangle(cornerRadius: 14).stroke(safe, lineWidth: 1.5))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 16)
+                }
             }
             .navigationTitle(lang.localized("fontScale.button"))
             .navigationBarTitleDisplayMode(.inline)

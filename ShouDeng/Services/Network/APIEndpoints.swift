@@ -71,6 +71,33 @@ struct SOSStatus: Codable, Equatable {
     let acknowledgedByName: String?
     let acknowledgedAt: Date?
     let elapsedSeconds: Int
+    /// Live position during the SOS (absent from older servers)
+    var locationUpdatedAt: Date? = nil
+    /// Thinned path since the SOS started
+    var trail: [SOSTrailPoint]? = nil
+    /// Where the person said they are heading
+    var route: SOSSharedRoute? = nil
+}
+
+struct SOSTrailPoint: Codable, Equatable {
+    let latitude: Double
+    let longitude: Double
+    var at: String? = nil
+}
+
+struct SOSSharedRoute: Codable, Equatable {
+    let name: String
+    let latitude: Double
+    let longitude: Double
+    let mode: String
+    var sharedAt: String? = nil
+}
+
+struct SOSRouteRequest: Codable {
+    let name: String
+    let latitude: Double
+    let longitude: Double
+    let mode: String
 }
 
 struct ActiveSOSResponse: Decodable {

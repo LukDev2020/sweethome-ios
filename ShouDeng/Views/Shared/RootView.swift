@@ -237,7 +237,8 @@ struct FamilyStatusBar: View {
     }
 
     private var protectedStatus: Status {
-        if coordinator.activeSOSEvent != nil {
+        // A duress-concealed SOS must look ended
+        if coordinator.activeSOSEvent != nil, !coordinator.sosConcealed {
             return Status(level: .urgent, icon: "sos", text: lang.localized("status.protected.sos"),
                           action: { coordinator.isSOSScreenPresented = true })
         }
