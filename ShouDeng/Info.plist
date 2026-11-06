@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.shoudeng.deadman.check</string>
+	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -36,7 +40,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>41</string>
+	<string>42</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSAppTransportSecurity</key>
@@ -44,8 +48,6 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
 	</dict>
-	<key>NSPrivacyPolicyURL</key>
-	<string>https://shoudeng.app/privacy</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Lantern Care connects to your Bluetooth panic button and tracking tags to trigger SOS alerts and detect separation. Bluetooth is used only after you pair a device in Settings.</string>
 	<key>NSContactsUsageDescription</key>
@@ -60,16 +62,14 @@
 	<string>During an active SOS, the microphone may record ambient audio to help your chosen family members assess the situation. Recording starts only if you have enabled this option and local laws permit it.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>Lantern Care uses motion sensors to detect a possible fall while the app is open. If a fall is detected, you have 60 seconds to dismiss the alert before your family is notified.</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Voice commands let you trigger an SOS hands-free by saying "help" or "救命". All recognition is processed on your device.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Share photos with family members in your guardian circle. Photos are visible only to people in your guardianship relationship.</string>
+	<key>NSPrivacyPolicyURL</key>
+	<string>https://shoudeng.app/privacy</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Voice commands let you trigger an SOS hands-free by saying "help" or "救命". All recognition is processed on your device.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
-	<key>BGTaskSchedulerPermittedIdentifiers</key>
-	<array>
-		<string>com.shoudeng.deadman.check</string>
-	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>bluetooth-central</string>
