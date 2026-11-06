@@ -17,22 +17,39 @@ final class LiveWeatherStore: ObservableObject {
 
     @Published private(set) var state: State = .idle
     @Published private(set) var attribution: WeatherAttribution?
+    /// City / district of the location the weather is for ("锦江区", "Toronto")
+    @Published private(set) var place: String?
 
     private static var cache: [String: (weather: Weather, at: Date)] = [:]
+    private struct TimedOut: Error {}
 
-    func load(for location: CLLocation?) async {
+    /// `locate` is asked again while there is no fix yet (first launch, permission
+    /// just granted): the card used to give up, or wait forever, without one.
+    func load(locate: () -> CLLocation?, language: String) async {
+        var location = locate()
+        if location == nil {
+            state = .loading
+            for _ in 0..<15 where location == nil {
+                try? await Task.sleep(for: .seconds(1))
+                if Task.isCancelled { return }
+                location = locate()
+            }
+        }
         guard let location else { state = .unavailable("no location"); return }
+
+        async let placeName = Self.placeName(for: location, language: language)
         let key = String(format: "%.2f,%.2f", location.coordinate.latitude, location.coordinate.longitude)
         if let hit = Self.cache[key], Date().timeIntervalSince(hit.at) < 30 * 60 {
             state = .loaded(hit.weather)
         } else {
             if case .loaded = state {} else { state = .loading }
-            // Right after launch (or just after WeatherKit is switched on for the app)
-            // the first token request can fail: try three times before giving up.
+            // Two tries, 10 s each: right after launch (or just after WeatherKit is
+            // switched on for the app) the token request can fail — or never answer,
+            // which left the card on "loading" for good.
             var lastError: Error?
-            for attempt in 0..<3 {
+            for attempt in 0..<2 {
                 do {
-                    let weather = try await WeatherService.shared.weather(for: location)
+                    let weather = try await Self.fetch(location)
                     Self.cache[key] = (weather, Date())
                     state = .loaded(weather)
                     lastError = nil
@@ -40,25 +57,55 @@ final class LiveWeatherStore: ObservableObject {
                 } catch {
                     lastError = error
                     if Task.isCancelled { return }
-                    if attempt < 2 { try? await Task.sleep(for: .seconds(Double(2 << attempt))) }
+                    if attempt == 0 { try? await Task.sleep(for: .seconds(2)) }
                 }
             }
             if let lastError {
                 #if DEBUG
                 print("[Weather] unavailable: \(lastError)")
                 #endif
-                let ns = lastError as NSError
-                state = .unavailable("\(ns.domain.split(separator: ".").last ?? "") \(ns.code)")
+                if lastError is TimedOut {
+                    state = .unavailable("timeout")
+                } else {
+                    // e.g. "WDSJWTAuthenticatorServiceListener.Errors 2" = WeatherKit sign-in refused
+                    let ns = lastError as NSError
+                    let domain = ns.domain.split(separator: ".").suffix(2).joined(separator: ".")
+                    state = .unavailable("\(domain) \(ns.code)")
+                }
             }
         }
+        place = await placeName
         if attribution == nil { attribution = try? await WeatherService.shared.attribution }
+    }
+
+    private static func fetch(_ location: CLLocation) async throws -> Weather {
+        try await withThrowingTaskGroup(of: Weather.self) { group in
+            group.addTask { try await WeatherService.shared.weather(for: location) }
+            group.addTask {
+                try await Task.sleep(for: .seconds(10))
+                throw TimedOut()
+            }
+            defer { group.cancelAll() }
+            guard let first = try await group.next() else { throw TimedOut() }
+            return first
+        }
+    }
+
+    /// District or city in the app's language, nil if the lookup fails
+    private static func placeName(for location: CLLocation, language: String) async -> String? {
+        let marks = try? await CLGeocoder().reverseGeocodeLocation(location, preferredLocale: Locale(identifier: language))
+        guard let mark = marks?.first else { return nil }
+        return mark.locality ?? mark.subAdministrativeArea ?? mark.administrativeArea
     }
 }
 
 struct WeatherCardView: View {
-    let location: CLLocation?
-    /// Where this weather is ("成都"); the card looked like it could be anywhere
+    /// Asked on load and again while there is no fix yet
+    let locate: () -> CLLocation?
+    /// Fallback place name ("成都") when the location can't be looked up
     var placeName: String = ""
+    /// Rounded location when the card appeared; a move of ~1 km reloads
+    @State private var locationKey = "none"
     @ObservedObject private var lang = LanguageManager.shared
     @StateObject private var store = LiveWeatherStore()
 
@@ -77,11 +124,22 @@ struct WeatherCardView: View {
                 .frame(maxWidth: .infinity, minHeight: 90)
             case .unavailable(let reason):
                 VStack(spacing: 8) {
+                    if !shownPlace.isEmpty {
+                        Label(shownPlace, systemImage: "location.fill")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.white)
+                    }
                     Text(lang.localized("weather.unavailable"))
                         .font(.system(size: 13))
                         .foregroundColor(.white.opacity(0.9))
+                    if reason == "no location" {
+                        Text(lang.localized("weather.noLocation"))
+                            .font(.system(size: 11))
+                            .foregroundColor(.white.opacity(0.75))
+                            .multilineTextAlignment(.center)
+                    }
                     Button {
-                        Task { await store.load(for: location) }
+                        Task { await store.load(locate: locate, language: lang.current.rawValue) }
                     } label: {
                         Label(lang.localized("weather.retry"), systemImage: "arrow.clockwise")
                             .font(.system(size: 13, weight: .semibold))
@@ -107,13 +165,18 @@ struct WeatherCardView: View {
         )
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .overlay(alignment: .bottomTrailing) { attributionMark }
-        .task(id: locationKey) { await store.load(for: location) }
+        .task(id: locationKey) {
+            await store.load(locate: locate, language: lang.current.rawValue)
+        }
+        .onAppear { locationKey = Self.key(locate()) }
     }
 
-    private var locationKey: String {
+    private static func key(_ location: CLLocation?) -> String {
         guard let c = location?.coordinate else { return "none" }
         return String(format: "%.2f,%.2f", c.latitude, c.longitude)
     }
+
+    private var shownPlace: String { store.place ?? placeName }
 
     // MARK: Loaded
 
@@ -123,8 +186,8 @@ struct WeatherCardView: View {
         VStack(spacing: 0) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    if !placeName.isEmpty {
-                        Label(placeName, systemImage: "location.fill")
+                    if !shownPlace.isEmpty {
+                        Label(shownPlace, systemImage: "location.fill")
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundColor(.white)
                             .lineLimit(1)

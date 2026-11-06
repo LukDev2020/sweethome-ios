@@ -1972,3 +1972,6 @@
 "lsc.row.noRoom" = "この文字サイズでは入りません。先に別の行をオフにしてください。";
 "lsc.reset" = "初期設定に戻す";
 "lsc.sample.latest" = "Sarah：もう家に着いた？";
+"weather.noLocation" = "現在地を取得できません。設定で Lantern Care の位置情報を許可してください。";
+"lsc.disabledInSettings" = "iOS の設定で Lantern Care のライブアクティビティがオフのため、カードを表示できません。タップして設定を開きます。";
+"lsc.demoNote" = "デモ：ロック画面に陳家のサンプルカードが表示されます。デモを終了すると消えます。";

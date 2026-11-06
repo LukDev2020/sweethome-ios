@@ -131,6 +131,14 @@ final class ExploreModeController: ObservableObject {
             coordinator.adoptDemoOwnSOS(own)
         }
         enterStep()
+        // A sample lock-screen card from the other phone is wrong now
+        if coordinator.liveActivityManager.isRunning {
+            coordinator.liveActivityManager.endAllActivities()
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(1.5)) // the new persona's data loads
+                if self.isActive { self.coordinator?.startLiveActivityIfNeeded() }
+            }
+        }
     }
 
     /// Own teardown: restores the logged-out app without touching real data.
@@ -146,6 +154,8 @@ final class ExploreModeController: ObservableObject {
         if let blockedObserver { NotificationCenter.default.removeObserver(blockedObserver) }
         blockedObserver = nil
         cancellables.removeAll()
+        // The demo's sample lock-screen card goes with it
+        coordinator?.liveActivityManager.endAllActivities()
         coordinator = nil
         store = nil
         DemoURLProtocol.store = nil

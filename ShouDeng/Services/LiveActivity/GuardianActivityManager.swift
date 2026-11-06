@@ -23,9 +23,11 @@ final class GuardianActivityManager {
         allergies: [String] = [],
         conditions: [String] = [],
         emergencyNote: String? = nil,
-        emergencyMedications: [ProtectedActivityAttributes.MedInfo] = []
+        emergencyMedications: [ProtectedActivityAttributes.MedInfo] = [],
+        demo: Bool = false
     ) {
-        guard !ExploreMode.isActive else { return }
+        // During the demo only the demo's own (sample) card may start — never the real one
+        guard !ExploreMode.isActive || demo else { return }
         let authInfo = ActivityAuthorizationInfo()
         NSLog("[LiveActivity] Protected — areActivitiesEnabled: \(authInfo.areActivitiesEnabled)")
 
@@ -76,9 +78,10 @@ final class GuardianActivityManager {
         guardianName: String,
         persons: [GuardianActivityAttributes.PersonInfo],
         priorityPersonName: String,
-        priorityPersonPhone: String
+        priorityPersonPhone: String,
+        demo: Bool = false
     ) {
-        guard !ExploreMode.isActive else { return }
+        guard !ExploreMode.isActive || demo else { return }
         let authInfo = ActivityAuthorizationInfo()
         NSLog("[LiveActivity] Guardian — areActivitiesEnabled: \(authInfo.areActivitiesEnabled)")
 

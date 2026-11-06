@@ -1973,3 +1973,6 @@
 "lsc.row.noRoom" = "這個文字大小放不下了，請先關掉另一行。";
 "lsc.reset" = "恢復預設";
 "lsc.sample.latest" = "Sarah：到家了嗎？";
+"weather.noLocation" = "無法取得你的位置。請在系統設定中允許守燈使用定位。";
+"lsc.disabledInSettings" = "iOS 設定裡關閉了守燈的「即時動態」，卡片無法顯示。點此打開設定。";
+"lsc.demoNote" = "示範：鎖定畫面會顯示陳家的示範卡片，離開示範時自動移除。";

@@ -81,7 +81,12 @@ struct LockScreenCardSettingsView: View {
             fitted.sections = new.visibleSections
             if fitted != new { style = fitted; return }
             new.save()
-            coordinator.liveActivityManager.restyle()
+            if coordinator.liveActivityManager.isRunning {
+                coordinator.liveActivityManager.restyle()
+            } else if UserDefaults.standard.bool(forKey: "lockscreen_card_enabled") {
+                // Not on the lock screen yet (e.g. the demo): put it there to see the style
+                coordinator.startLiveActivityIfNeeded()
+            }
         }
     }
 

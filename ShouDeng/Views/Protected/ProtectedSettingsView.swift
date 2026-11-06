@@ -1,4 +1,5 @@
 import SwiftUI
+import ActivityKit
 
 // MARK: - Screen A6: Settings
 //
@@ -513,6 +514,23 @@ struct ProtectedSettingsView: View {
                 } else {
                     coordinator.liveActivityManager.endAllActivities()
                 }
+            }
+            // Live Activities switched off for the app in iOS Settings: no card can appear
+            if lockscreenCardEnabled && !ActivityAuthorizationInfo().areActivitiesEnabled {
+                Button {
+                    if let url = URL(string: UIApplication.openSettingsURLString) { ExternalURL.open(url) }
+                } label: {
+                    Label(langManager.localized("lsc.disabledInSettings"), systemImage: "exclamationmark.triangle.fill")
+                        .font(.scaled(size: 12))
+                        .foregroundStyle(.orange)
+                        .multilineTextAlignment(.leading)
+                }
+                .buttonStyle(.plain)
+            }
+            if coordinator.isDemo {
+                Text(langManager.localized("lsc.demoNote"))
+                    .font(.scaled(size: 11))
+                    .foregroundStyle(.secondary)
             }
             // Text size, colours, rows
             NavigationLink {

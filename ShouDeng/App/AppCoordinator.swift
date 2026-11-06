@@ -1183,8 +1183,10 @@ final class AppCoordinator: ObservableObject {
         }
     }
 
+    /// In the demo this puts a sample card on the lock screen built only from the demo
+    /// family (no real medical card or check-in), so the card and its style can be tried;
+    /// it ends with the demo.
     func startLiveActivityIfNeeded() {
-        guard !isDemo else { return }
         let emergencyPhone = localEmergencyNumber
 
         if userRole == .protected_ {
@@ -1197,8 +1199,8 @@ final class AppCoordinator: ObservableObject {
                     isOnline: g.isOnDuty // approximate: on-duty ≈ online
                 )
             }
-            // Load emergency medical info from cache
-            let cachedCard = MedicalCardCache.load()
+            // Load emergency medical info from cache (the real person's — not in the demo)
+            let cachedCard = isDemo ? nil : MedicalCardCache.load()
             let medInfos: [ProtectedActivityAttributes.MedInfo] = (cachedCard?.emergencyMedications ?? []).map {
                 ProtectedActivityAttributes.MedInfo(name: $0.name, location: $0.storageLocation, dosage: $0.dosage)
             }
@@ -1207,7 +1209,8 @@ final class AppCoordinator: ObservableObject {
             liveActivityManager.startProtectedActivity(
                 userName: currentUser?.displayName ?? "",
                 guardians: guardianInfos,
-                lastCheckIn: WidgetDataStore.read().lastCheckInDate,
+                lastCheckIn: isDemo ? timeline.first(where: { $0.type == .checkIn })?.timestamp
+                                    : WidgetDataStore.read().lastCheckInDate,
                 latestUpdate: latest?.text,
                 latestUpdateAt: latest?.at,
                 emergencyPhone: emergencyPhone,
@@ -1216,7 +1219,8 @@ final class AppCoordinator: ObservableObject {
                 allergies: cachedCard?.allergies ?? [],
                 conditions: cachedCard?.conditions ?? [],
                 emergencyNote: cachedCard?.emergencyNote,
-                emergencyMedications: medInfos
+                emergencyMedications: medInfos,
+                demo: isDemo
             )
         } else {
             // Guardian: show each protected person's status
@@ -1239,7 +1243,8 @@ final class AppCoordinator: ObservableObject {
                 guardianName: currentUser?.displayName ?? "",
                 persons: personInfos,
                 priorityPersonName: priority?.user.displayName ?? "",
-                priorityPersonPhone: priority?.user.phone ?? ""
+                priorityPersonPhone: priority?.user.phone ?? "",
+                demo: isDemo
             )
         }
     }
