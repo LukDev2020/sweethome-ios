@@ -18,6 +18,9 @@ struct GuardianActivityAttributes: ActivityAttributes {
 
         /// Updated timestamp
         var updatedAt: Date
+
+        /// Settings → Lock screen card (nil: the stored style); a change here redraws the card
+        var cardStyle: LockScreenCardStyle? = nil
     }
 
     struct PersonInfo: Codable, Hashable, Identifiable {

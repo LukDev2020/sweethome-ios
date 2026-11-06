@@ -35,6 +35,8 @@ struct ProtectedActivityAttributes: ActivityAttributes {
         var latestUpdateAt: Date? = nil
         /// Last time "Location" on the card sent a fresh location to the family
         var lastLocationShare: Date? = nil
+        /// Settings → Lock screen card (nil: the stored style); a change here redraws the card
+        var cardStyle: LockScreenCardStyle? = nil
     }
 
     struct MedInfo: Codable, Hashable {

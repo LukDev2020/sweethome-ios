@@ -11,15 +11,13 @@ struct GuardianLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: GuardianActivityAttributes.self) { context in
             GuardianLockScreenCard(state: context.state)
-                .activityBackgroundTint(SharedColors.ink)
+                .activityBackgroundTint((context.state.cardStyle ?? .stored).theme.background)
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 4) {
-                            Image(systemName: "shield.checkered")
-                                .font(.caption2)
-                                .foregroundStyle(SharedColors.lamp)
+                            CardLogo(size: 16)
                             Text(WidgetDataStore.appName)
                                 .font(.caption.bold())
                         }
@@ -79,9 +77,7 @@ struct GuardianLiveActivity: Widget {
                 }
             } compactLeading: {
                 HStack(spacing: 4) {
-                    Image(systemName: "shield.checkered")
-                        .font(.caption2)
-                        .foregroundStyle(SharedColors.lamp)
+                    CardLogo(size: 16)
                     Text(WidgetDataStore.appName)
                         .font(.caption2.bold())
                 }
@@ -104,11 +100,10 @@ struct GuardianLiveActivity: Widget {
                 }
             } minimal: {
                 ZStack {
+                    // Logo inside a ring in the status colour
+                    CardLogo(size: 18)
                     Circle()
-                        .fill(overallStatusColor(context.state.overallStatus).opacity(0.3))
-                    Image(systemName: "shield.checkered")
-                        .font(.caption2)
-                        .foregroundStyle(overallStatusColor(context.state.overallStatus))
+                        .strokeBorder(overallStatusColor(context.state.overallStatus), lineWidth: 2)
                 }
             }
         }

@@ -52,7 +52,8 @@ final class GuardianActivityManager {
             emergencyNote: emergencyNote,
             emergencyMedications: emergencyMedications,
             latestUpdate: latestUpdate,
-            latestUpdateAt: latestUpdateAt
+            latestUpdateAt: latestUpdateAt,
+            cardStyle: .stored
         )
 
         do {
@@ -96,7 +97,8 @@ final class GuardianActivityManager {
             persons: Array(persons.prefix(3)),
             priorityPersonName: priorityPersonName,
             priorityPersonPhone: priorityPersonPhone,
-            updatedAt: Date()
+            updatedAt: Date(),
+            cardStyle: .stored
         )
 
         do {
@@ -201,9 +203,29 @@ final class GuardianActivityManager {
                 persons: Array(persons.prefix(3)),
                 priorityPersonName: priorityName,
                 priorityPersonPhone: priorityPhone,
-                updatedAt: Date()
+                updatedAt: Date(),
+                cardStyle: .stored
             )
             await activity.update(.init(state: newState, staleDate: Date().addingTimeInterval(600)))
+        }
+    }
+
+    /// Settings → Lock screen card changed: redraw both cards with the stored style.
+    func restyle() {
+        let style = LockScreenCardStyle.stored
+        if let activity = protectedActivity {
+            Task {
+                var state = activity.content.state
+                state.cardStyle = style
+                await activity.update(.init(state: state, staleDate: Date().addingTimeInterval(600)))
+            }
+        }
+        if let activity = guardianActivity {
+            Task {
+                var state = activity.content.state
+                state.cardStyle = style
+                await activity.update(.init(state: state, staleDate: Date().addingTimeInterval(600)))
+            }
         }
     }
 

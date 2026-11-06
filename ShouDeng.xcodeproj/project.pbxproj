@@ -50,6 +50,7 @@
 		5DBA9286D1814F94900F3CCD /* SOSWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CC500243E04462A86E5F65 /* SOSWidget.swift */; };
 		02E7F90A2B6831265F6305B0 /* ProtectedActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CD6466B4BA2EA1E57F4AEBC /* ProtectedActivityAttributes.swift */; };
 		0505E7358600028AB24F69D6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B0993240A8B2FFA1C6928BF2 /* Assets.xcassets */; };
+		DD44EE0100000007 /* WidgetAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DD44EE0100000006 /* WidgetAssets.xcassets */; };
 		06386B2FC24D4DFE3C69F2CB /* HotlineCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 525930DD8BF30E7421491576 /* HotlineCardView.swift */; };
 		08008D4727E3F87A4F8C3F87 /* DismissTimerIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 040C57BD82556A18B68CDDE7 /* DismissTimerIntent.swift */; };
 		0A520BDDFC2C9F526CAEB9EC /* ConsentLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35327FBDA1338FA0E3A57540 /* ConsentLogger.swift */; };
@@ -89,6 +90,8 @@
 		424C26E0D54CBC317BF0EFC7 /* ProtectedTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C974A21D52F2544D4735C712 /* ProtectedTabView.swift */; };
 		42A6F0543B22E8DBB972EEBD /* WidgetDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E49AE653FD21F8E431675140 /* WidgetDataStore.swift */; };
 		E263556E1CCC41A5AA61A3B2 /* LockScreenCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B99EE122444850AEC1C1C3 /* LockScreenCards.swift */; };
+		DD44EE0100000002 /* LockScreenCardStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD44EE0100000001 /* LockScreenCardStyle.swift */; };
+		DD44EE0100000003 /* LockScreenCardStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD44EE0100000001 /* LockScreenCardStyle.swift */; };
 		869402DE966047DDAF9174D6 /* LiveActivityIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0E3BE9D20F47CD8FF9A329 /* LiveActivityIntents.swift */; };
 		42EB6C1D6EF94947A335FBD7 /* DutySchedulerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7EB063E62540D4BB03A491D /* DutySchedulerTests.swift */; };
 		445FC9E110BFEAD1DAB39BAB /* GuardianHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 323C5F3CDB46FE9F3750B9AA /* GuardianHomeView.swift */; };
@@ -230,6 +233,7 @@
 		CC33DD010000200D /* DisguiseWeatherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD010000100D /* DisguiseWeatherView.swift */; };
 		CC33DD010000200E /* DisguiseNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD010000100E /* DisguiseNotesView.swift */; };
 		CC33DD010000200F /* DisguiseModeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD010000100F /* DisguiseModeSettingsView.swift */; };
+		DD44EE0100000005 /* LockScreenCardSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD44EE0100000004 /* LockScreenCardSettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -385,6 +389,7 @@
 		ABAA69ADBB6EF5CD2EE9C115 /* CheckInIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInIntent.swift; sourceTree = "<group>"; };
 		ABAFCCA942C4FA62E1F96326 /* CountryCodePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryCodePicker.swift; sourceTree = "<group>"; };
 		B0993240A8B2FFA1C6928BF2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		DD44EE0100000006 /* WidgetAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = WidgetAssets.xcassets; sourceTree = "<group>"; };
 		B273093A701FBEED8E657124 /* APIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClientTests.swift; sourceTree = "<group>"; };
 		4E7E845F98EC7CE44B31E699 /* OutdoorSatelliteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutdoorSatelliteTests.swift; sourceTree = "<group>"; };
 		B2DCC7B638A2022D63472071 /* TimerWidgetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerWidgetViews.swift; sourceTree = "<group>"; };
@@ -415,6 +420,7 @@
 		E2D380787D5C7576D1DF4B6C /* ShouDengWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = ShouDengWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		E49AE653FD21F8E431675140 /* WidgetDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataStore.swift; sourceTree = "<group>"; };
 		A7B99EE122444850AEC1C1C3 /* LockScreenCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockScreenCards.swift; sourceTree = "<group>"; };
+		DD44EE0100000001 /* LockScreenCardStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockScreenCardStyle.swift; sourceTree = "<group>"; };
 		DD0E3BE9D20F47CD8FF9A329 /* LiveActivityIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityIntents.swift; sourceTree = "<group>"; };
 		E56310453259DD87FAE127E5 /* SignupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignupView.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60002 /* PostSignupWizardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostSignupWizardView.swift; sourceTree = "<group>"; };
@@ -490,6 +496,7 @@
 		CC33DD010000100D /* DisguiseWeatherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisguiseWeatherView.swift; sourceTree = "<group>"; };
 		CC33DD010000100E /* DisguiseNotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisguiseNotesView.swift; sourceTree = "<group>"; };
 		CC33DD010000100F /* DisguiseModeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisguiseModeSettingsView.swift; sourceTree = "<group>"; };
+		DD44EE0100000004 /* LockScreenCardSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockScreenCardSettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -537,6 +544,7 @@
 				89A06F4A4A91CD6FCD7305FC /* SharedColors.swift */,
 				E49AE653FD21F8E431675140 /* WidgetDataStore.swift */,
 				A7B99EE122444850AEC1C1C3 /* LockScreenCards.swift */,
+				DD44EE0100000001 /* LockScreenCardStyle.swift */,
 				DD0E3BE9D20F47CD8FF9A329 /* LiveActivityIntents.swift */,
 				5DBF4A67FF0C78834A8728A8 /* WidgetState.swift */,
 			);
@@ -995,6 +1003,7 @@
 				698DE0633FDCC2DCFB041042 /* Info.plist */,
 				6C0D6EE1A2DDEF20B0D245C8 /* ProtectedLiveActivity.swift */,
 				88B67AB48387F3263CABF4FE /* ShouDengWidgetBundle.swift */,
+				DD44EE0100000006 /* WidgetAssets.xcassets */,
 				325580AA75684B4486819630 /* ShouDengWidgets.entitlements */,
 				8AAD2A5190E8EB3FF3F30C92 /* Intents */,
 				2BB3566311840A35DCD43359 /* Providers */,
@@ -1086,6 +1095,7 @@
 		AA11BB2200003001 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				DD44EE0100000004 /* LockScreenCardSettingsView.swift */,
 				AA11BB2200002001 /* DuressCodeSettingsView.swift */,
 				AA11BB2200002002 /* SilentAlarmSettingsView.swift */,
 				AA11BB2200002005 /* BLETrackerSettingsView.swift */,
@@ -1138,6 +1148,7 @@
 			buildConfigurationList = 653E96C4E92D588184FF0162 /* Build configuration list for PBXNativeTarget "ShouDengWidgets" */;
 			buildPhases = (
 				38809C43A58FA93A36349AB5 /* Sources */,
+				DD44EE0100000008 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -1247,6 +1258,14 @@
 				7D9761B4731755AF8D1F6F8C /* InfoPlist.strings in Resources */,
 				17EC1E86D8BBE96D039EEE5D /* Localizable.strings in Resources */,
 				36066D7A4E9FAA28FD533C5E /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DD44EE0100000008 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DD44EE0100000007 /* WidgetAssets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1405,11 +1424,13 @@
 				CC33DD010000200D /* DisguiseWeatherView.swift in Sources */,
 				CC33DD010000200E /* DisguiseNotesView.swift in Sources */,
 				CC33DD010000200F /* DisguiseModeSettingsView.swift in Sources */,
+				DD44EE0100000005 /* LockScreenCardSettingsView.swift in Sources */,
 				BB22CC3300001003 /* TripHistoryView.swift in Sources */,
 				BB22CC3300001004 /* TripDetailView.swift in Sources */,
 				0B1E36F80D59153D5A93D7BA /* FoldSplitView.swift in Sources */,
 				42A6F0543B22E8DBB972EEBD /* WidgetDataStore.swift in Sources */,
 				E263556E1CCC41A5AA61A3B2 /* LockScreenCards.swift in Sources */,
+				DD44EE0100000002 /* LockScreenCardStyle.swift in Sources */,
 				869402DE966047DDAF9174D6 /* LiveActivityIntents.swift in Sources */,
 				56AD258510E394952C8E2319 /* WidgetState.swift in Sources */,
 			);
@@ -1480,6 +1501,7 @@
 				52489C60F5461F5FFB5287BF /* TimerWidgetViews.swift in Sources */,
 				8EDA7BEE00ED2EDD6EF801B3 /* WidgetDataStore.swift in Sources */,
 				984691B3293243C9B79CD24D /* LockScreenCards.swift in Sources */,
+				DD44EE0100000003 /* LockScreenCardStyle.swift in Sources */,
 				F993C37469264BA3AF63AE84 /* LiveActivityIntents.swift in Sources */,
 				3AB9D0B1A1EC566225F07308 /* WidgetHelpers.swift in Sources */,
 				677834490B57DB6C3C54821D /* WidgetPreviews.swift in Sources */,

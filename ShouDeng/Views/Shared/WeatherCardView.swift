@@ -12,7 +12,8 @@ import WeatherKit
 
 @MainActor
 final class LiveWeatherStore: ObservableObject {
-    enum State { case idle, loading, loaded(Weather), unavailable }
+    /// `unavailable` keeps Apple's error text (shown on BETA builds to diagnose setup)
+    enum State { case idle, loading, loaded(Weather), unavailable(String) }
 
     @Published private(set) var state: State = .idle
     @Published private(set) var attribution: WeatherAttribution?
@@ -20,21 +21,34 @@ final class LiveWeatherStore: ObservableObject {
     private static var cache: [String: (weather: Weather, at: Date)] = [:]
 
     func load(for location: CLLocation?) async {
-        guard let location else { state = .unavailable; return }
+        guard let location else { state = .unavailable("no location"); return }
         let key = String(format: "%.2f,%.2f", location.coordinate.latitude, location.coordinate.longitude)
         if let hit = Self.cache[key], Date().timeIntervalSince(hit.at) < 30 * 60 {
             state = .loaded(hit.weather)
         } else {
             if case .loaded = state {} else { state = .loading }
-            do {
-                let weather = try await WeatherService.shared.weather(for: location)
-                Self.cache[key] = (weather, Date())
-                state = .loaded(weather)
-            } catch {
+            // Right after launch (or just after WeatherKit is switched on for the app)
+            // the first token request can fail: try three times before giving up.
+            var lastError: Error?
+            for attempt in 0..<3 {
+                do {
+                    let weather = try await WeatherService.shared.weather(for: location)
+                    Self.cache[key] = (weather, Date())
+                    state = .loaded(weather)
+                    lastError = nil
+                    break
+                } catch {
+                    lastError = error
+                    if Task.isCancelled { return }
+                    if attempt < 2 { try? await Task.sleep(for: .seconds(Double(2 << attempt))) }
+                }
+            }
+            if let lastError {
                 #if DEBUG
-                print("[Weather] unavailable: \(error)")
+                print("[Weather] unavailable: \(lastError)")
                 #endif
-                state = .unavailable
+                let ns = lastError as NSError
+                state = .unavailable("\(ns.domain.split(separator: ".").last ?? "") \(ns.code)")
             }
         }
         if attribution == nil { attribution = try? await WeatherService.shared.attribution }
@@ -61,11 +75,27 @@ struct WeatherCardView: View {
                         .foregroundColor(.white.opacity(0.8))
                 }
                 .frame(maxWidth: .infinity, minHeight: 90)
-            case .unavailable:
-                Text(lang.localized("weather.unavailable"))
-                    .font(.system(size: 12))
-                    .foregroundColor(.white.opacity(0.85))
-                    .frame(maxWidth: .infinity, minHeight: 60)
+            case .unavailable(let reason):
+                VStack(spacing: 8) {
+                    Text(lang.localized("weather.unavailable"))
+                        .font(.system(size: 13))
+                        .foregroundColor(.white.opacity(0.9))
+                    Button {
+                        Task { await store.load(for: location) }
+                    } label: {
+                        Label(lang.localized("weather.retry"), systemImage: "arrow.clockwise")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 14).padding(.vertical, 6)
+                            .background(Capsule().fill(Color.white.opacity(0.2)))
+                    }
+                    .buttonStyle(.plain)
+                    #if BETA || DEBUG
+                    // Tester builds: Apple's error, to tell setup problems from outages
+                    Text(reason).font(.system(size: 10)).foregroundColor(.white.opacity(0.6))
+                    #endif
+                }
+                .frame(maxWidth: .infinity, minHeight: 70)
             case .loaded(let weather):
                 content(weather)
             }

@@ -1940,3 +1940,36 @@
 "guardian.alert.locationUpdated" = "位置更新於 %@";
 "sosmode.ended" = "SOS 已結束";
 "sosmode.ended.detail" = "已告訴家人你平安。";
+"weather.retry" = "重試";
+
+/* Lock screen card settings */
+"lsc.customize" = "自訂卡片";
+"lsc.title" = "鎖定畫面卡片";
+"lsc.preview" = "預覽";
+"lsc.preview.hint" = "紅線是鎖定畫面截斷卡片的位置。";
+"lsc.textSize" = "文字大小";
+"lsc.textSize.standard" = "標準";
+"lsc.textSize.large" = "大";
+"lsc.textSize.extraLarge" = "特大";
+"lsc.textSize.hint" = "文字越大，能放的行越少。";
+"lsc.guardianRows" = "這個大小下，卡片顯示 %d 位家人。";
+"lsc.background" = "背景";
+"lsc.theme.navy" = "藏青";
+"lsc.theme.midnight" = "黑色";
+"lsc.theme.forest" = "森林綠";
+"lsc.theme.plum" = "梅紫";
+"lsc.theme.light" = "淺色";
+"lsc.accent" = "強調色";
+"lsc.accent.lantern" = "燈籠紅";
+"lsc.accent.gold" = "金色";
+"lsc.accent.teal" = "青色";
+"lsc.accent.green" = "綠色";
+"lsc.accent.sky" = "天藍";
+"lsc.rows" = "卡片上的內容";
+"lsc.row.checkIn" = "上次報平安和到家倒數";
+"lsc.row.latest" = "家人最新消息";
+"lsc.row.medical" = "急救醫療資訊";
+"lsc.row.actions" = "SOS · 平安 · 位置 按鈕";
+"lsc.row.noRoom" = "這個文字大小放不下了，請先關掉另一行。";
+"lsc.reset" = "恢復預設";
+"lsc.sample.latest" = "Sarah：到家了嗎？";

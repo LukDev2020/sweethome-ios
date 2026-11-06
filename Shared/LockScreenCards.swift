@@ -9,171 +9,214 @@ import SwiftUI
 // Fixed layout: every row is always there, with "—" when there is no data yet, so a
 // card keeps the same size whether or not the family is set up.
 
+/// The app's logo on a small white disc (readable on every card background). The
+/// widget has its own small copy of "AppLogo" in its asset catalog.
+struct CardLogo: View {
+    let size: CGFloat
+    var body: some View {
+        Image("AppLogo")
+            .resizable()
+            .scaledToFit()
+            .padding(size * 0.08)
+            .frame(width: size, height: size)
+            .background(Circle().fill(.white))
+            .accessibilityHidden(true)
+    }
+}
+
 /// Protected person: who guards me, last check-in, home countdown, latest family
-/// activity, emergency medical info, and SOS / OK / Location.
+/// activity, emergency medical info, and SOS / OK / Location — the rows chosen in
+/// Settings → Lock screen card, at the chosen text size and colours.
 struct ProtectedLockScreenCard: View {
     let state: ProtectedActivityAttributes.ContentState
+    /// Settings preview passes the style being edited; the widget uses the card's own
+    var style: LockScreenCardStyle? = nil
 
     private func L(_ key: String) -> String { WidgetDataStore.localized(key) }
     private let dash = "—"
+    private var st: LockScreenCardStyle { style ?? state.cardStyle ?? .stored }
+    private var s: CGFloat { st.s }
+    private var primary: Color { st.theme.primary }
+    private var secondary: Color { st.theme.secondary }
+    private var accent: Color { st.accent.color }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 7) {
-            // 1. App · who is guarding me (3 slots) · status
-            HStack(spacing: 8) {
-                HStack(spacing: 4) {
-                    Image(systemName: "shield.checkered")
-                        .font(.caption2)
-                        .foregroundStyle(SharedColors.lamp)
-                    Text(WidgetDataStore.appName)
-                        .font(.caption.bold())
-                        .foregroundStyle(.white)
+        VStack(alignment: .leading, spacing: LockScreenCardStyle.rowSpacing) {
+            header
+            ForEach(st.visibleSections, id: \.self) { section in
+                switch section {
+                case .checkIn: checkInRow
+                case .latest: latestRow
+                case .medical: medicalRow
+                case .actions: actionsRow
                 }
-                HStack(spacing: -5) {
-                    ForEach(0..<3, id: \.self) { i in
-                        guardianSlot(i < state.guardians.count ? state.guardians[i] : nil)
-                    }
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, LockScreenCardStyle.verticalPadding)
+    }
+
+    // 1. Logo · app · who is guarding me · status
+    private var header: some View {
+        HStack(spacing: 7 * s) {
+            CardLogo(size: 22 * s)
+            Text(WidgetDataStore.appName)
+                .font(.system(size: 15 * s, weight: .bold))
+                .foregroundStyle(primary)
+                .lineLimit(1)
+                .layoutPriority(1)
+            HStack(spacing: -5 * s) {
+                ForEach(0..<3, id: \.self) { i in
+                    guardianSlot(i < state.guardians.count ? state.guardians[i] : nil)
                 }
-                Text(state.guardians.isEmpty
-                     ? L("la.guardians.none")
-                     : "\(state.guardians.count)\(L("la.guardians"))")
-                    .font(.system(size: 10))
-                    .foregroundStyle(.white.opacity(0.6))
+            }
+            Spacer(minLength: 4)
+            HStack(spacing: 4) {
+                Circle()
+                    .fill(statusColor)
+                    .frame(width: 8 * s, height: 8 * s)
+                Text(state.statusText)
+                    .font(.system(size: 13 * s, weight: .semibold))
+                    .foregroundStyle(statusColor)
                     .lineLimit(1)
-                Spacer(minLength: 4)
-                HStack(spacing: 3) {
-                    Circle()
-                        .fill(protectedStatusColor(state.status))
-                        .frame(width: 6, height: 6)
-                    Text(state.statusText)
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(protectedStatusColor(state.status))
-                        .lineLimit(1)
-                }
+                    .minimumScaleFactor(0.7)
             }
-            .frame(height: 22)
+        }
+        .frame(height: st.headerHeight)
+    }
 
-            // 2. Last check-in · home countdown
-            HStack(spacing: 10) {
-                field(icon: "checkmark.circle", label: L("la.last.checkin")) {
-                    if let ci = state.lastCheckIn {
-                        Text(ci, style: .time)
-                    } else {
-                        Text(dash)
-                    }
-                }
-                field(icon: "timer", label: L("la.home.countdown")) {
-                    if let deadline = state.homeTimerDeadline {
-                        Text(deadline, style: .timer).monospacedDigit()
-                    } else {
-                        Text(dash)
-                    }
-                }
-            }
-
-            // 3. Latest family activity (or the location just sent)
-            field(icon: "bubble.left", label: L("la.latest")) {
-                if let shared = state.lastLocationShare,
-                   shared > (state.latestUpdateAt ?? .distantPast) {
-                    Text("\(L("la.location.sent")) · ") + Text(shared, style: .time)
-                } else if let latest = state.latestUpdate, !latest.isEmpty {
-                    Text(latest)
+    // 2. Last check-in · home countdown
+    private var checkInRow: some View {
+        HStack(spacing: 12) {
+            field(icon: "checkmark.circle", label: L("la.last.checkin")) {
+                if let ci = state.lastCheckIn {
+                    Text(ci, style: .time)
                 } else {
                     Text(dash)
                 }
             }
-
-            // 4. Emergency medical info — for first responders
-            HStack(spacing: 6) {
-                Image(systemName: "staroflife.fill")
-                    .font(.system(size: 9))
-                    .foregroundStyle(.orange)
-                Text(medicalLine(state))
-                    .font(.system(size: 10))
-                    .foregroundStyle(.white.opacity(0.85))
-                    .lineLimit(1)
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, 8)
-            .frame(height: 20)
-            .background(Color.orange.opacity(0.15))
-            .clipShape(RoundedRectangle(cornerRadius: 6))
-
-            // 5. Actions. SOS opens the app to confirm and count down; "OK" and
-            // "Location" act right here without opening the app.
-            HStack(spacing: 6) {
-                Link(destination: URL(string: "shoudeng://sos")!) {
-                    actionLabel("sos", L("la.sos.button"))
-                        .background(state.status == .sosActive ? .red : SharedColors.alert)
-                        .clipShape(Capsule())
+            field(icon: "timer", label: L("la.home.countdown")) {
+                if let deadline = state.homeTimerDeadline {
+                    Text(deadline, style: .timer).monospacedDigit()
+                } else {
+                    Text(dash)
                 }
-                Button(intent: LockScreenCheckInIntent()) {
-                    actionLabel("checkmark.circle.fill", L("la.checkin.button"))
-                        .background(SharedColors.safe.opacity(0.85))
-                        .clipShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                Button(intent: LockScreenShareLocationIntent()) {
-                    actionLabel("location.fill", L("la.location.button"))
-                        .background(Color.blue.opacity(0.8))
-                        .clipShape(Capsule())
-                }
-                .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
+        .frame(height: st.height(of: .checkIn))
+    }
+
+    // 3. Latest family activity (or the location just sent)
+    private var latestRow: some View {
+        field(icon: "bubble.left", label: L("la.latest")) {
+            if let shared = state.lastLocationShare,
+               shared > (state.latestUpdateAt ?? .distantPast) {
+                Text("\(L("la.location.sent")) · ") + Text(shared, style: .time)
+            } else if let latest = state.latestUpdate, !latest.isEmpty {
+                Text(latest)
+            } else {
+                Text(dash)
+            }
+        }
+        .frame(height: st.height(of: .latest))
+    }
+
+    // 4. Emergency medical info — for first responders
+    private var medicalRow: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "staroflife.fill")
+                .font(.system(size: 12 * s))
+                .foregroundStyle(.orange)
+            Text(medicalLine(state))
+                .font(.system(size: 13 * s, weight: .medium))
+                .foregroundStyle(primary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 8)
+        .frame(height: st.height(of: .medical))
+        .background(Color.orange.opacity(st.theme.isLight ? 0.18 : 0.2))
+        .clipShape(RoundedRectangle(cornerRadius: 7))
+    }
+
+    // 5. Actions. SOS opens the app to confirm and count down; "OK" and "Location"
+    // act right here without opening the app.
+    private var actionsRow: some View {
+        HStack(spacing: 6) {
+            Link(destination: URL(string: "shoudeng://sos")!) {
+                actionLabel("exclamationmark.triangle.fill", L("la.sos.button"))
+                    .background(SharedColors.alert)
+                    .clipShape(Capsule())
+            }
+            Button(intent: LockScreenCheckInIntent()) {
+                actionLabel("checkmark.circle.fill", L("la.checkin.button"))
+                    .background(SharedColors.safe.opacity(0.9))
+                    .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            Button(intent: LockScreenShareLocationIntent()) {
+                actionLabel("location.fill", L("la.location.button"))
+                    .background(accent)
+                    .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+        .frame(height: st.height(of: .actions))
     }
 
     private func guardianSlot(_ guardian: ProtectedActivityAttributes.GuardianInfo?) -> some View {
         ZStack {
             if let guardian {
                 Circle()
-                    .fill(guardian.isOnline ? SharedColors.safe.opacity(0.45) : SharedColors.offline.opacity(0.35))
+                    .fill(guardian.isOnline ? SharedColors.safe.opacity(0.75) : SharedColors.offline.opacity(0.6))
                 Text(guardian.initial)
                     .lineLimit(1).minimumScaleFactor(0.4)
-                    .font(.system(size: 9, weight: .bold))
+                    .font(.system(size: 11 * s, weight: .bold))
                     .foregroundStyle(.white)
             } else {
                 Circle()
-                    .strokeBorder(.white.opacity(0.35), style: StrokeStyle(lineWidth: 1, dash: [2, 2]))
-                    .background(Circle().fill(SharedColors.ink))
+                    .strokeBorder(secondary, style: StrokeStyle(lineWidth: 1, dash: [2, 2]))
+                    .background(Circle().fill(st.theme.background))
             }
         }
-        .frame(width: 20, height: 20)
+        .frame(width: 22 * s, height: 22 * s)
     }
 
     private func field<V: View>(icon: String, label: String, @ViewBuilder value: () -> V) -> some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 5) {
             Image(systemName: icon)
-                .font(.system(size: 9))
-                .foregroundStyle(.white.opacity(0.55))
+                .font(.system(size: 12 * s))
+                .foregroundStyle(accent)
+            // The label gives way first; the value (time, countdown) is what matters
             Text(label)
-                .font(.system(size: 10))
-                .foregroundStyle(.white.opacity(0.55))
+                .font(.system(size: 13 * s))
+                .foregroundStyle(secondary)
                 .lineLimit(1)
-                .layoutPriority(1)
+                .truncationMode(.tail)
             value()
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.white)
+                .font(.system(size: 15 * s, weight: .semibold))
+                .foregroundStyle(primary)
                 .lineLimit(1)
+                .minimumScaleFactor(0.75)
+                .layoutPriority(1)
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(height: 15)
     }
 
     private func actionLabel(_ icon: String, _ title: String) -> some View {
-        HStack(spacing: 3) {
+        HStack(spacing: 4) {
             Image(systemName: icon)
-                .font(.system(size: 10))
+                .font(.system(size: 13 * s, weight: .semibold))
             Text(title)
-                .font(.caption2.weight(.semibold))
+                .font(.system(size: 14 * s, weight: .semibold))
                 .lineLimit(1)
+                .minimumScaleFactor(0.7)
         }
         .foregroundStyle(.white)
         .frame(maxWidth: .infinity)
-        .frame(height: 28)
+        .frame(height: st.height(of: .actions))
     }
 
     /// "Blood A+ · Allergies: Penicillin · Meds Nitroglycerin (bag)", "—" for anything missing.
@@ -186,55 +229,65 @@ struct ProtectedLockScreenCard: View {
         return "\(L("la.blood"))\(blood) · \(L("la.allergy"))\(allergies) · \(L("la.meds"))\(meds)"
     }
 
-    private func protectedStatusColor(_ status: ProtectedActivityAttributes.OverallStatus) -> Color {
-        switch status {
+    private var statusColor: Color {
+        switch state.status {
         case .normal: return SharedColors.safe
         case .sosActive: return SharedColors.alert
-        case .timerRunning: return .blue
+        case .timerRunning: return st.theme.isLight ? .blue : Color(red: 0.45, green: 0.7, blue: 1)
         case .pendingCheckIn: return SharedColors.warning
         }
     }
 }
 
-/// Guardian: three family rows (status, city, last check-in, battery) and a call button.
+/// Guardian: family rows (status, city, last check-in, battery) — as many as fit at
+/// the chosen text size — and a call button.
 struct GuardianLockScreenCard: View {
     let state: GuardianActivityAttributes.ContentState
+    var style: LockScreenCardStyle? = nil
 
     private func L(_ key: String) -> String { WidgetDataStore.localized(key) }
     private let dash = "—"
+    private var st: LockScreenCardStyle { style ?? state.cardStyle ?? .stored }
+    private var s: CGFloat { st.s }
+    private var primary: Color { st.theme.primary }
+    private var secondary: Color { st.theme.secondary }
 
     var body: some View {
         let sorted = prioritySorted(state.persons)
+        let rows = st.guardianPersonRows
 
-        VStack(spacing: 6) {
+        VStack(spacing: LockScreenCardStyle.rowSpacing) {
             // Header
-            HStack {
-                HStack(spacing: 6) {
-                    // (The app's logo image isn't in the widget's asset catalog.)
-                    Image(systemName: "shield.checkered")
-                        .font(.caption)
-                        .foregroundStyle(SharedColors.lamp)
-                    Text(sorted.isEmpty
-                         ? "\(WidgetDataStore.appName) · \(L("la.persons.none"))"
-                         : "\(WidgetDataStore.appName) · \(sorted.count)\(L("la.persons.count"))")
-                        .font(.caption.bold())
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
+            HStack(spacing: 7 * s) {
+                CardLogo(size: 20 * s)
+                Text(sorted.isEmpty
+                     ? "\(WidgetDataStore.appName) · \(L("la.persons.none"))"
+                     : "\(WidgetDataStore.appName) · \(sorted.count)\(L("la.persons.count"))")
+                    .font(.system(size: 15 * s, weight: .bold))
+                    .foregroundStyle(primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                Spacer(minLength: 4)
+                if sorted.count > rows {
+                    // More people than rows at this text size
+                    Text("+\(sorted.count - rows)")
+                        .font(.system(size: 13 * s, weight: .semibold))
+                        .foregroundStyle(secondary)
                 }
-                Spacer()
                 HStack(spacing: 4) {
                     Circle()
                         .fill(sorted.isEmpty ? SharedColors.offline : overallStatusColor(state.overallStatus))
-                        .frame(width: 7, height: 7)
+                        .frame(width: 8 * s, height: 8 * s)
                     Text(sorted.isEmpty ? dash : state.overallStatusText)
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(sorted.isEmpty ? .white.opacity(0.5) : overallStatusColor(state.overallStatus))
+                        .font(.system(size: 13 * s, weight: .semibold))
+                        .foregroundStyle(sorted.isEmpty ? secondary : overallStatusColor(state.overallStatus))
+                        .lineLimit(1)
                 }
             }
-            .frame(height: 20)
+            .frame(height: st.guardianHeaderHeight)
 
-            // Three person rows, empty slots included
-            ForEach(0..<3, id: \.self) { i in
+            // Person rows, empty slots included
+            ForEach(0..<rows, id: \.self) { i in
                 personRow(i < sorted.count ? sorted[i] : nil)
             }
 
@@ -244,16 +297,17 @@ struct GuardianLockScreenCard: View {
                 Link(destination: url) {
                     bottomButton(icon: "phone.fill",
                                  title: L("la.call") + state.priorityPersonName,
-                                 color: callButtonColor(state.overallStatus))
+                                 color: state.overallStatus == .sosAlert ? .red : st.accent.color)
                 }
             } else {
                 Link(destination: URL(string: "shoudeng://open")!) {
-                    bottomButton(icon: "arrow.up.forward.app", title: L("la.open.app"), color: .white.opacity(0.15))
+                    bottomButton(icon: "arrow.up.forward.app", title: L("la.open.app"),
+                                 color: st.theme.isLight ? SharedColors.ink.opacity(0.75) : .white.opacity(0.18))
                 }
             }
         }
         .padding(.horizontal, 14)
-        .padding(.vertical, 11)
+        .padding(.vertical, LockScreenCardStyle.verticalPadding)
     }
 
     @ViewBuilder
@@ -261,34 +315,36 @@ struct GuardianLockScreenCard: View {
         HStack(spacing: 7) {
             ZStack {
                 if let person {
-                    Circle().fill(personStatusColor(person.status).opacity(0.35))
+                    Circle().fill(personStatusColor(person.status).opacity(0.75))
                     Text(person.initial)
                         .lineLimit(1).minimumScaleFactor(0.4)
-                        .font(.system(size: 9, weight: .bold))
+                        .font(.system(size: 10 * s, weight: .bold))
                         .foregroundStyle(.white)
                 } else {
-                    Circle().strokeBorder(.white.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [2, 2]))
+                    Circle().strokeBorder(secondary, style: StrokeStyle(lineWidth: 1, dash: [2, 2]))
                 }
             }
-            .frame(width: 20, height: 20)
+            .frame(width: 20 * s, height: 20 * s)
 
             if let person {
                 Text(person.displayName)
-                    .font(.caption.bold())
-                    .foregroundStyle(.white)
+                    .font(.system(size: 15 * s, weight: .semibold))
+                    .foregroundStyle(primary)
                     .lineLimit(1)
                 Text(personStatusLabel(person))
-                    .font(.caption2.weight(.semibold))
+                    .font(.system(size: 13 * s, weight: .semibold))
                     .foregroundStyle(personStatusColor(person.status))
                     .lineLimit(1)
-                Text(person.cityName.isEmpty ? dash : person.cityName)
-                    .font(.caption2)
-                    .foregroundStyle(.white.opacity(0.5))
-                    .lineLimit(1)
+                if s < 1.2 {
+                    Text(person.cityName.isEmpty ? dash : person.cityName)
+                        .font(.system(size: 13 * s))
+                        .foregroundStyle(secondary)
+                        .lineLimit(1)
+                }
             } else {
                 Text(L("la.slot.empty"))
-                    .font(.caption2)
-                    .foregroundStyle(.white.opacity(0.35))
+                    .font(.system(size: 13 * s))
+                    .foregroundStyle(secondary)
             }
 
             Spacer(minLength: 4)
@@ -296,29 +352,31 @@ struct GuardianLockScreenCard: View {
             // Last check-in time
             HStack(spacing: 2) {
                 Image(systemName: "checkmark.circle")
-                    .font(.system(size: 9))
+                    .font(.system(size: 11 * s))
                 if let ci = person?.lastCheckIn {
                     Text(ci, style: .time)
                 } else {
                     Text(dash)
                 }
             }
-            .font(.caption2)
-            .foregroundStyle(.white.opacity(person == nil ? 0.3 : 0.6))
-            .frame(width: 62, alignment: .trailing)
+            .font(.system(size: 13 * s))
+            .foregroundStyle(secondary)
+            .lineLimit(1)
+            .fixedSize()
 
             // Battery
             HStack(spacing: 2) {
                 let battery = person?.batteryLevel
                 Image(systemName: battery.map(batteryIcon) ?? "battery.0")
-                    .font(.system(size: 9))
+                    .font(.system(size: 11 * s))
                 Text(battery.map { "\(Int($0 * 100))%" } ?? dash)
             }
-            .font(.caption2)
-            .foregroundStyle((person?.batteryLevel ?? 1) < 0.2 ? SharedColors.alert : .white.opacity(person == nil ? 0.3 : 0.6))
-            .frame(width: 44, alignment: .trailing)
+            .font(.system(size: 13 * s))
+            .foregroundStyle((person?.batteryLevel ?? 1) < 0.2 ? SharedColors.alert : secondary)
+            .lineLimit(1)
+            .fixedSize()
         }
-        .frame(height: 22)
+        .frame(height: st.guardianRowHeight)
     }
 
     private func bottomButton(icon: String, title: String, color: Color) -> some View {
@@ -328,10 +386,10 @@ struct GuardianLockScreenCard: View {
                 .fontWeight(.semibold)
                 .lineLimit(1)
         }
-        .font(.footnote)
+        .font(.system(size: 15 * s))
         .foregroundStyle(.white)
         .frame(maxWidth: .infinity)
-        .frame(height: 30)
+        .frame(height: st.guardianButtonHeight)
         .background(color)
         .clipShape(Capsule())
     }
@@ -362,10 +420,6 @@ struct GuardianLockScreenCard: View {
         case .alert: return L("la.alert")
         case .unreachable: return L("la.offline")
         }
-    }
-
-    private func callButtonColor(_ status: GuardianActivityAttributes.OverallStatus) -> Color {
-        status == .sosAlert ? .red : SharedColors.lamp
     }
 
     private func batteryIcon(_ level: Double) -> String {
@@ -469,7 +523,7 @@ struct LockScreenCardGallery: View {
                 .foregroundStyle(.white.opacity(0.8))
             card
                 .frame(width: width)
-                .background(SharedColors.ink)
+                .background(LockScreenCardStyle.stored.theme.background)
                 .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                 .overlay(alignment: .top) {
                     // The lock screen cuts a card off at 160 pt

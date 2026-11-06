@@ -239,6 +239,10 @@ final class DynamicLocalizationKeyTests: XCTestCase {
         keys += ["hospital", "pharmacy", "police", "fire", "consulate", "staffed", "transit"].map { "sosmode.cat.\($0)" }
         keys += ["standard", "satellite", "hybrid", "night"].map { "sosmode.style.\($0)" }
         keys += ["followMe", "showAll"].map { "sosmode.camera.\($0)" }
+        keys += LockScreenCardStyle.TextSize.allCases.map { "lsc.textSize.\($0.rawValue)" }
+        keys += LockScreenCardStyle.Theme.allCases.map { "lsc.theme.\($0.rawValue)" }
+        keys += LockScreenCardStyle.Accent.allCases.map { "lsc.accent.\($0.rawValue)" }
+        keys += LockScreenCardStyle.Section.allCases.map { "lsc.row.\($0.rawValue)" }
         keys += HomeStyle.allCases.flatMap { ["homeStyle.\($0.rawValue)", "homeStyle.\($0.rawValue).desc"] }
         keys += ["morning", "afternoon", "evening"].flatMap { ["simple.greeting.\($0)", "simple.greeting.\($0).plain"] }
         for language in ["en", "zh-Hans", "zh-Hant", "fr", "ja"] {

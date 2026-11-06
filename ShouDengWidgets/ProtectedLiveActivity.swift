@@ -11,15 +11,13 @@ struct ProtectedLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: ProtectedActivityAttributes.self) { context in
             ProtectedLockScreenCard(state: context.state)
-                .activityBackgroundTint(SharedColors.ink)
+                .activityBackgroundTint((context.state.cardStyle ?? .stored).theme.background)
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 4) {
-                            Image(systemName: "shield.checkered")
-                                .font(.caption2)
-                                .foregroundStyle(SharedColors.lamp)
+                            CardLogo(size: 16)
                             Text(WidgetDataStore.appName)
                                 .font(.caption.bold())
                         }
@@ -46,7 +44,7 @@ struct ProtectedLiveActivity: Widget {
                         // SOS button
                         Link(destination: URL(string: "shoudeng://sos")!) {
                             HStack(spacing: 4) {
-                                Image(systemName: "sos")
+                                Image(systemName: "exclamationmark.triangle.fill")
                                     .font(.caption)
                                 Text(L("la.sos.button"))
                                     .font(.caption.weight(.semibold))
@@ -76,9 +74,7 @@ struct ProtectedLiveActivity: Widget {
                 }
             } compactLeading: {
                 HStack(spacing: 4) {
-                    Image(systemName: "shield.checkered")
-                        .font(.caption2)
-                        .foregroundStyle(SharedColors.lamp)
+                    CardLogo(size: 16)
                     Text(WidgetDataStore.appName)
                         .font(.caption2.bold())
                 }
@@ -95,11 +91,10 @@ struct ProtectedLiveActivity: Widget {
                 }
             } minimal: {
                 ZStack {
+                    // Logo inside a ring in the status colour
+                    CardLogo(size: 18)
                     Circle()
-                        .fill(protectedStatusColor(context.state.status).opacity(0.3))
-                    Image(systemName: "shield.checkered")
-                        .font(.caption2)
-                        .foregroundStyle(protectedStatusColor(context.state.status))
+                        .strokeBorder(protectedStatusColor(context.state.status), lineWidth: 2)
                 }
             }
         }

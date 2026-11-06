@@ -515,6 +515,26 @@ struct GuardianSettingsView: View {
                     coordinator.liveActivityManager.endAllActivities()
                 }
             }
+            // Text size, colours, rows
+            NavigationLink {
+                LockScreenCardSettingsView().environmentObject(coordinator)
+            } label: {
+                HStack {
+                    Image(systemName: "paintpalette")
+                        .font(.scaled(size: 14))
+                        .foregroundStyle(safe)
+                        .frame(width: 20)
+                    Text(langManager.localized("lsc.customize"))
+                        .font(.scaled(size: 13))
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.scaled(size: 12))
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(.vertical, 4)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
         }
         .padding(12)
         .background(

@@ -1939,3 +1939,36 @@
 "guardian.alert.locationUpdated" = "位置情報の更新 %@";
 "sosmode.ended" = "SOS を終了しました";
 "sosmode.ended.detail" = "無事であることを家族に伝えました。";
+"weather.retry" = "再試行";
+
+/* Lock screen card settings */
+"lsc.customize" = "カードをカスタマイズ";
+"lsc.title" = "ロック画面カード";
+"lsc.preview" = "プレビュー";
+"lsc.preview.hint" = "赤い線はロック画面でカードが切れる位置です。";
+"lsc.textSize" = "文字サイズ";
+"lsc.textSize.standard" = "標準";
+"lsc.textSize.large" = "大";
+"lsc.textSize.extraLarge" = "特大";
+"lsc.textSize.hint" = "文字が大きいほど表示できる行が減ります。";
+"lsc.guardianRows" = "このサイズでは家族 %d 人を表示します。";
+"lsc.background" = "背景";
+"lsc.theme.navy" = "ネイビー";
+"lsc.theme.midnight" = "ブラック";
+"lsc.theme.forest" = "フォレスト";
+"lsc.theme.plum" = "プラム";
+"lsc.theme.light" = "ライト";
+"lsc.accent" = "アクセントカラー";
+"lsc.accent.lantern" = "ランタン";
+"lsc.accent.gold" = "ゴールド";
+"lsc.accent.teal" = "ティール";
+"lsc.accent.green" = "グリーン";
+"lsc.accent.sky" = "スカイ";
+"lsc.rows" = "カードに表示する行";
+"lsc.row.checkIn" = "最後の安否報告と帰宅タイマー";
+"lsc.row.latest" = "家族の最新メッセージ";
+"lsc.row.medical" = "救急用の医療情報";
+"lsc.row.actions" = "SOS・元気です・位置 ボタン";
+"lsc.row.noRoom" = "この文字サイズでは入りません。先に別の行をオフにしてください。";
+"lsc.reset" = "初期設定に戻す";
+"lsc.sample.latest" = "Sarah：もう家に着いた？";
