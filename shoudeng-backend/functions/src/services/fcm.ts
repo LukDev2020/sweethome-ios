@@ -20,6 +20,10 @@ const fcmStrings: Record<string, {
   ackOthersBody: (guardian: string, person: string) => string;
   ackProtectedTitle: string;
   ackProtectedBody: (guardian: string) => string;
+  sosSafeTitle: (name: string) => string;
+  sosSafeBody: string;
+  routeTitle: (name: string) => string;
+  routeBody: (place: string, mode: string) => string;
 }> = {
   zh: {
     sosTitle: "紧急求助",
@@ -37,6 +41,10 @@ const fcmStrings: Record<string, {
     ackOthersBody: (g, p) => `${g}正在处理${p}的求助，自动呼叫已停止`,
     ackProtectedTitle: "家人已收到",
     ackProtectedBody: (g) => `${g}已收到你的求助，正在处理`,
+    sosSafeTitle: (name) => `${name}已安全`,
+    sosSafeBody: "她自己结束了求助。",
+    routeTitle: (name) => `${name}正在前往`,
+    routeBody: (place, mode) => `${place}（${mode === "driving" ? "开车" : mode === "transit" ? "公共交通" : "步行"}）· 打开守灯查看路线和实时位置`,
   },
   "zh-Hant": {
     sosTitle: "緊急求助",
@@ -54,6 +62,10 @@ const fcmStrings: Record<string, {
     ackOthersBody: (g, p) => `${g}正在處理${p}的求助，自動呼叫已停止`,
     ackProtectedTitle: "家人已收到",
     ackProtectedBody: (g) => `${g}已收到你的求助，正在處理`,
+    sosSafeTitle: (name) => `${name}已安全`,
+    sosSafeBody: "她自己結束了求助。",
+    routeTitle: (name) => `${name}正在前往`,
+    routeBody: (place, mode) => `${place}（${mode === "driving" ? "開車" : mode === "transit" ? "大眾運輸" : "步行"}）· 打開守燈查看路線和即時位置`,
   },
   en: {
     sosTitle: "Emergency SOS",
@@ -71,6 +83,10 @@ const fcmStrings: Record<string, {
     ackOthersBody: (g, p) => `${g} is handling ${p}'s SOS — automatic calls stopped`,
     ackProtectedTitle: "Your family has it",
     ackProtectedBody: (g) => `${g} got your SOS and is responding`,
+    sosSafeTitle: (name) => `${name} is safe`,
+    sosSafeBody: "They ended the SOS themselves.",
+    routeTitle: (name) => `${name} is heading to`,
+    routeBody: (place, mode) => `${place} (${mode === "driving" ? "driving" : mode === "transit" ? "public transport" : "on foot"}) · open Lantern Care for the route and live location`,
   },
   fr: {
     sosTitle: "SOS Urgence",
@@ -88,6 +104,10 @@ const fcmStrings: Record<string, {
     ackOthersBody: (g, p) => `${g} gère le SOS de ${p} — appels automatiques arrêtés`,
     ackProtectedTitle: "Votre famille est là",
     ackProtectedBody: (g) => `${g} a reçu votre SOS et intervient`,
+    sosSafeTitle: (name) => `${name} est en sécurité`,
+    sosSafeBody: "La personne a mis fin au SOS elle-même.",
+    routeTitle: (name) => `${name} se rend à`,
+    routeBody: (place, mode) => `${place} (${mode === "driving" ? "en voiture" : mode === "transit" ? "en transports" : "à pied"}) · ouvrez Lantern Care pour l'itinéraire et la position en direct`,
   },
   ja: {
     sosTitle: "緊急SOS",
@@ -105,6 +125,10 @@ const fcmStrings: Record<string, {
     ackOthersBody: (g, p) => `${g}さんが${p}さんのSOSに対応しています。自動発信は停止しました`,
     ackProtectedTitle: "家族に届きました",
     ackProtectedBody: (g) => `${g}さんがあなたのSOSを受け取り、対応しています`,
+    sosSafeTitle: (name) => `${name}さんは無事です`,
+    sosSafeBody: "本人がSOSを終了しました。",
+    routeTitle: (name) => `${name}さんが向かっています`,
+    routeBody: (place, mode) => `${place}（${mode === "driving" ? "車" : mode === "transit" ? "公共交通" : "徒歩"}）· Lantern Care でルートと現在地を確認できます`,
   },
 };
 
@@ -502,5 +526,25 @@ export async function sendSOSAcknowledgedToProtected(
   await sendSimple(protectedPersonId, s.ackProtectedTitle, s.ackProtectedBody(ackGuardianName), {
     action: "sos_acknowledged",
     sos_id: sosEventId,
+  }, { sound: "default", "interruption-level": "time-sensitive" });
+}
+
+/** "Mom is safe — she ended the SOS herself" to each guardian. */
+export async function sendSOSEndedByPersonNotification(
+  guardianId: string, personName: string, sosEventId: string, protectedPersonId: string
+): Promise<void> {
+  const s = getStrings(await getUserLocale(guardianId));
+  await sendSimple(guardianId, s.sosSafeTitle(personName), s.sosSafeBody, {
+    action: "sos_resolved_by_person", sos_id: sosEventId, person_id: protectedPersonId,
+  }, { sound: "default", "interruption-level": "time-sensitive" });
+}
+
+/** "Mom is heading to the hospital (on foot)" to each guardian during an SOS. */
+export async function sendSOSRouteNotification(
+  guardianId: string, personName: string, place: string, mode: string, sosEventId: string, protectedPersonId: string
+): Promise<void> {
+  const s = getStrings(await getUserLocale(guardianId));
+  await sendSimple(guardianId, s.routeTitle(personName), s.routeBody(place, mode), {
+    action: "sos_route", sos_id: sosEventId, person_id: protectedPersonId,
   }, { sound: "default", "interruption-level": "time-sensitive" });
 }

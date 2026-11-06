@@ -20,6 +20,9 @@
     "acknowledgedBy": null,
     "acknowledgedByName": null,
     "acknowledgedAt": null,
-    "elapsedSeconds": 120
+    "elapsedSeconds": 120,
+    "locationUpdatedAt": null,
+    "trail": [],
+    "route": null
   }
 }

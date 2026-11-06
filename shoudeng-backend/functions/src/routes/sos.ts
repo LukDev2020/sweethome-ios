@@ -3,7 +3,8 @@ import * as admin from "firebase-admin";
 import { v4 as uuidv4 } from "uuid";
 import { authMiddleware } from "../middleware/auth";
 import { createRateLimiter, RATE_LIMITS } from "../middleware/rateLimit";
-import { sendSOSResolvedNotification } from "../services/fcm";
+import { sendSOSResolvedNotification, sendSOSEndedByPersonNotification, sendSOSRouteNotification } from "../services/fcm";
+import { parseRoute, activeGuardianIds } from "../services/sosTracking";
 import {
   acknowledgeSOS,
   activeSOSDoc,
@@ -254,6 +255,14 @@ router.post("/resolve", authMiddleware, async (req: Request, res: Response) => {
       detail: null,
     });
 
+    // The person ended it themselves: tell the family she is safe
+    if (isProtected) {
+      const name = (await db.collection("users").doc(uid).get()).data()?.displayName ?? "";
+      const guardians = await activeGuardianIds(uid);
+      await Promise.all(guardians.map((g) =>
+        sendSOSEndedByPersonNotification(g, name, sosRef.id, uid).catch((e) => console.warn("[SOS] safe notice failed:", e))));
+    }
+
     // Tell the protected person a guardian closed it
     if (!isProtected) {
       const resolverDoc = await db.collection("users").doc(uid).get();
@@ -267,6 +276,37 @@ router.post("/resolve", authMiddleware, async (req: Request, res: Response) => {
   } catch (error) {
     console.error("[SOS] resolve error:", error);
     res.status(500).json({ error: "Failed to resolve SOS" });
+  }
+});
+
+/**
+ * POST /v1/sos/route
+ * The person shares where they are heading during their SOS ("hospital, on foot").
+ * Body: { name, latitude, longitude, mode: walking | driving | transit }
+ * Stored on the open SOS (guardians see it on the map) and pushed to the guardians.
+ */
+router.post("/route", authMiddleware, async (req: Request, res: Response) => {
+  const uid = req.uid!;
+  const route = parseRoute(req.body ?? {});
+  if (!route) {
+    res.status(400).json({ error: "name, latitude and longitude are required" });
+    return;
+  }
+  try {
+    const doc = await activeSOSDoc(uid);
+    if (!doc) {
+      res.status(404).json({ error: "No active SOS" });
+      return;
+    }
+    await doc.ref.update({ route });
+    const name = (await db.collection("users").doc(uid).get()).data()?.displayName ?? "";
+    const guardians = await activeGuardianIds(uid);
+    await Promise.all(guardians.map((g) =>
+      sendSOSRouteNotification(g, name, route.name, route.mode, doc.id, uid).catch((e) => console.warn("[SOS] route notice failed:", e))));
+    res.json({ success: true, sosEventId: doc.id, route });
+  } catch (error) {
+    console.error("[SOS] route error:", error);
+    res.status(500).json({ error: "Failed to share route" });
   }
 });
 

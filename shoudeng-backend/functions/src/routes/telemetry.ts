@@ -1,3 +1,4 @@
+import { recordSOSLocation } from "../services/sosTracking";
 import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
@@ -131,6 +132,9 @@ router.post("/location/report", authMiddleware, telemetryLimit, async (req: Requ
   } catch (error) {
     console.warn("[Telemetry] user_telemetry location write failed:", error);
   }
+
+  // During an SOS the guardians' map follows this position
+  await recordSOSLocation(userId, latitude, longitude);
 
   try {
     await insertLocationReport({
@@ -372,6 +376,14 @@ router.post("/location/batch", authMiddleware, telemetryLimit, async (req: Reque
       errorCount++;
       // Continue processing — don't fail the whole batch
     }
+  }
+
+  // The newest point of the batch moves an open SOS (sent after a dead zone)
+  const newest = batch.filter((r: any) => r.userId === req.uid && typeof r.latitude === "number")
+    .sort((a: any, b: any) => Date.parse(a.timestamp ?? 0) - Date.parse(b.timestamp ?? 0)).pop();
+  if (newest) {
+    const at = Date.parse(newest.timestamp);
+    await recordSOSLocation(req.uid!, newest.latitude, newest.longitude, Number.isFinite(at) ? new Date(at) : new Date());
   }
 
   res.json({ success: true, processed: successCount, errors: errorCount });

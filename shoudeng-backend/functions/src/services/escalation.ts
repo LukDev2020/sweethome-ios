@@ -501,6 +501,12 @@ export interface SOSStatus {
   acknowledgedByName: string | null;
   acknowledgedAt: string | null;
   elapsedSeconds: number;
+  /** Live position updated during the SOS (null before the first update) */
+  locationUpdatedAt: string | null;
+  /** Thinned path since the SOS started */
+  trail: { latitude: number; longitude: number; at: string }[];
+  /** Where the person said they are heading, if they shared a route */
+  route: { name: string; latitude: number; longitude: number; mode: string; sharedAt: string } | null;
 }
 
 export async function sosStatus(
@@ -539,6 +545,9 @@ export async function sosStatus(
     acknowledgedByName: ackDoc?.data()?.displayName ?? null,
     acknowledgedAt: toIso(d.acknowledgedAt),
     elapsedSeconds: triggered ? Math.max(0, Math.round((now.getTime() - triggered) / 1000)) : 0,
+    locationUpdatedAt: toIso(d.locationUpdatedAt),
+    trail: Array.isArray(d.trail) ? d.trail : [],
+    route: d.route ?? null,
   };
 }
 

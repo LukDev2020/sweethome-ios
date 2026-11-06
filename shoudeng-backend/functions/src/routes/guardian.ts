@@ -144,6 +144,8 @@ router.get("/sos/active", async (req: Request, res: Response) => {
     if (link.data()?.permissions?.canSeeLocation === false) {
       sos.latitude = null;
       sos.longitude = null;
+      sos.trail = [];
+      sos.route = null;
     }
     res.json({ active: true, sos });
   } catch (error) {
