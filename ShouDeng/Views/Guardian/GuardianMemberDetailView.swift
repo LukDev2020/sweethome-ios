@@ -13,7 +13,7 @@ struct GuardianMemberDetailView: View {
     let personId: String
     @State private var personTimeline: [TimelineEntry] = []
 
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
@@ -162,7 +162,7 @@ struct GuardianMemberDetailView: View {
                             .foregroundStyle(.white)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
-                            .background(ink.opacity(0.7))
+                            .background(Color.inkSolid.opacity(0.7))
                             .clipShape(Capsule())
                             .padding(6)
                     }

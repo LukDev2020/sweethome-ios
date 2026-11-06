@@ -55,6 +55,7 @@
 		08008D4727E3F87A4F8C3F87 /* DismissTimerIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 040C57BD82556A18B68CDDE7 /* DismissTimerIntent.swift */; };
 		0A520BDDFC2C9F526CAEB9EC /* ConsentLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35327FBDA1338FA0E3A57540 /* ConsentLogger.swift */; };
 		0B1E36F80D59153D5A93D7BA /* FoldSplitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AD061FC3A7B8EC6D203DC4A /* FoldSplitView.swift */; };
+		DD44EE010000000A /* AppColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD44EE0100000009 /* AppColors.swift */; };
 		0B892C8BFA3A8FE116B892CF /* ProtectedSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BEAFFBD653265D29795FC10 /* ProtectedSettingsView.swift */; };
 		0C1536421573BD9FE11F0A4A /* EmergencyTextCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEFD93DE7D272B9E6D75E3E9 /* EmergencyTextCardView.swift */; };
 		104682298328A68ED6876ADA /* SharedColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89A06F4A4A91CD6FCD7305FC /* SharedColors.swift */; };
@@ -360,6 +361,7 @@
 		698DE0633FDCC2DCFB041042 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		6A74BE5139B5DC4EF7E94362 /* InviteGuardianView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteGuardianView.swift; sourceTree = "<group>"; };
 		6AD061FC3A7B8EC6D203DC4A /* FoldSplitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoldSplitView.swift; sourceTree = "<group>"; };
+		DD44EE0100000009 /* AppColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppColors.swift; sourceTree = "<group>"; };
 		6C0D6EE1A2DDEF20B0D245C8 /* ProtectedLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtectedLiveActivity.swift; sourceTree = "<group>"; };
 		6CD6466B4BA2EA1E57F4AEBC /* ProtectedActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtectedActivityAttributes.swift; sourceTree = "<group>"; };
 		6D380C2024773F6C6EF07A8B /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
@@ -943,6 +945,7 @@
 				25DA0BADFC82EF6B5BCFAB7D /* DuoAdaptiveTabContainer.swift */,
 				BF7FCEEEEB1FA39016A477FF /* DuoTabItem.swift */,
 				6AD061FC3A7B8EC6D203DC4A /* FoldSplitView.swift */,
+				DD44EE0100000009 /* AppColors.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -1428,6 +1431,7 @@
 				BB22CC3300001003 /* TripHistoryView.swift in Sources */,
 				BB22CC3300001004 /* TripDetailView.swift in Sources */,
 				0B1E36F80D59153D5A93D7BA /* FoldSplitView.swift in Sources */,
+				DD44EE010000000A /* AppColors.swift in Sources */,
 				42A6F0543B22E8DBB972EEBD /* WidgetDataStore.swift in Sources */,
 				E263556E1CCC41A5AA61A3B2 /* LockScreenCards.swift in Sources */,
 				DD44EE0100000002 /* LockScreenCardStyle.swift in Sources */,

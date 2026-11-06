@@ -3,11 +3,11 @@ import SwiftUI
 struct NearbyMedicalView: View {
     @ObservedObject private var lang = LanguageManager.shared
 
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
     private let pro = Color(red: 107/255, green: 92/255, blue: 165/255)
-    private let offWhiteBg = Color(red: 251/255, green: 248/255, blue: 241/255)
+    private let offWhiteBg = Color.paper(251, 248, 241, elevated: true)
 
     struct MedicalPlace: Identifiable {
         let id = UUID()

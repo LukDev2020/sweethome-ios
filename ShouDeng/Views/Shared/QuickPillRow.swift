@@ -12,8 +12,8 @@ struct QuickPillRow: View {
     @ObservedObject private var fontScale = FontScaleManager.shared
     @State private var showFontSizes = false
 
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
-    private let offWhiteBg = Color(red: 251/255, green: 248/255, blue: 241/255)
+    private let ink = Color.appInk
+    private let offWhiteBg = Color.paper(251, 248, 241, elevated: true)
 
     var body: some View {
         HStack(spacing: 8) {
@@ -65,7 +65,7 @@ struct FontSizeSheet: View {
     @ObservedObject private var fontScale = FontScaleManager.shared
     @Environment(\.dismiss) private var dismiss
 
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
 
     /// "字体大小：标准" / "Text size: Standard"

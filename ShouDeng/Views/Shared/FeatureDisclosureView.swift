@@ -19,7 +19,7 @@ struct FeatureDisclosureView: View {
     let onAcknowledge: (Bool) -> Void  // true = granted, false = denied
 
     // Design system
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
     private let inkDeep = Color(red: 8/255, green: 15/255, blue: 27/255)
     private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
 
@@ -81,7 +81,7 @@ struct FeatureDisclosureView: View {
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(ink)
+                            .background(Color.inkSolid)
                             .clipShape(RoundedRectangle(cornerRadius: 13))
                     }
                 }
@@ -97,7 +97,7 @@ struct FeatureDisclosureView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(ink)
+                        .background(Color.inkSolid)
                         .clipShape(RoundedRectangle(cornerRadius: 13))
                 }
             }

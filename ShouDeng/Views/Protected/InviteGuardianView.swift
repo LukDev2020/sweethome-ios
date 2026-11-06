@@ -19,7 +19,7 @@ struct InviteGuardianView: View {
     private var direction: UserRole { inviterRole ?? coordinator.userRole }
     private var invitesGuardian: Bool { direction == .protected_ }
 
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
 
     @State private var inviteCode: String?

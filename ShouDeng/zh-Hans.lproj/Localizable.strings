@@ -1970,9 +1970,10 @@
 "lsc.row.latest" = "家人最新消息";
 "lsc.row.medical" = "急救医疗信息";
 "lsc.row.actions" = "SOS · 平安 · 位置 按钮";
-"lsc.row.noRoom" = "这个文字大小放不下了，请先关掉另一行。";
 "lsc.reset" = "恢复默认";
 "lsc.sample.latest" = "Sarah：到家了吗？";
 "weather.noLocation" = "无法获取你的位置。请在系统设置中允许守灯使用定位。";
 "lsc.disabledInSettings" = "iOS 设置里关闭了守灯的「实时活动」，卡片无法显示。点此打开设置。";
 "lsc.demoNote" = "演示：锁屏会显示陈家的示例卡片，退出演示时自动移除。";
+"lsc.row.madeRoom" = "为腾出空间，已关闭「%@」。";
+"lsc.rows.hint" = "卡片大约能放三行；打开一行时可能会关闭另一行。";

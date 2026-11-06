@@ -440,6 +440,8 @@ final class ExploreModeController: ObservableObject {
         else { return }
         let window = PassthroughWindow(windowScene: scene)
         window.windowLevel = .normal + 1
+        // Tour cards are designed light (white card, navy text) in either app mode
+        window.overrideUserInterfaceStyle = .light
         window.interactiveRegions = { [weak self] in
             MainActor.assumeIsolated { self.map { Array($0.overlayRegions.values) } ?? [] }
         }

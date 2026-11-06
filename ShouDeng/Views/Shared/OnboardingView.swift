@@ -18,7 +18,7 @@ struct OnboardingView: View {
 
     // Design system
     private let inkDeep = Color(red: 8/255, green: 15/255, blue: 27/255)
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
     private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
     private let paper = Color(red: 236/255, green: 238/255, blue: 240/255)
 

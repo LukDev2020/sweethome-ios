@@ -7,15 +7,18 @@ struct ShouDengApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("onboardingComplete") private var onboardingComplete = false
     @AppStorage("app_dark_mode") private var darkModeEnabled = false
+    /// Set by RootView while login / Face ID / setup wizard is on screen
+    @AppStorage("ui_light_only_screen") private var lightOnlyScreen = false
     @ObservedObject private var explore = ExploreModeController.shared
 
     /// Decided here, at the top: an inner preferredColorScheme loses to an outer one.
-    /// Explore Mode is light; onboarding is drawn dark (a light scheme left the status
-    /// bar black on black); otherwise the in-app dark mode setting.
+    /// Onboarding is drawn dark (a light scheme left the status bar black on black);
+    /// otherwise — the demo included — the in-app dark mode setting.
     private var colorScheme: ColorScheme {
-        if explore.isActive { return .light }
+        if explore.isActive { return darkModeEnabled ? .dark : .light }
         let onboarding = !onboardingComplete || ProcessInfo.processInfo.arguments.contains("-show-onboarding")
-        return darkModeEnabled || onboarding ? .dark : .light
+        if onboarding { return .dark }
+        return darkModeEnabled && !lightOnlyScreen ? .dark : .light
     }
 
     init() {

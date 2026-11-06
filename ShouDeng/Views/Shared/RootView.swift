@@ -37,6 +37,7 @@ private struct AuthenticatedRootView: View {
     @AppStorage("onboardingComplete") private var onboardingComplete = false
     @AppStorage("setupWizardComplete") private var setupWizardComplete = false
     @AppStorage("app_dark_mode") private var darkModeEnabled = false
+    @AppStorage("ui_light_only_screen") private var lightOnlyScreen = false
     @ObservedObject private var biometric = BiometricAuthManager.shared
     @ObservedObject private var fontScale = FontScaleManager.shared
     @ObservedObject private var langManager = LanguageManager.shared
@@ -144,6 +145,15 @@ private struct AuthenticatedRootView: View {
         }
         .preferredColorScheme(darkModeEnabled ? .dark : .light)
         .id("\(fontScale.level.rawValue)-\(langManager.current.rawValue)")
+        // Login, Face ID gate and setup wizard are drawn light only: tell the app root
+        .onChange(of: onLightOnlyScreen, initial: true) { _, light in lightOnlyScreen = light }
+    }
+
+    /// Screens designed light (cream background, navy and brand-blue text)
+    private var onLightOnlyScreen: Bool {
+        guard case .loggedIn = coordinator.authState else { return true }
+        if biometric.isEnabled && !biometric.isUnlocked { return true }
+        return !setupWizardComplete && coordinator.showSetupWizard
     }
 
     private var inviteSheetBinding: Binding<Bool> {
@@ -197,7 +207,7 @@ struct FamilyStatusBar: View {
     @ObservedObject private var lang = LanguageManager.shared
 
     private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.inkSolid // on the fixed lamp-orange status bar
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
 
     private enum Level { case calm, attention, urgent }

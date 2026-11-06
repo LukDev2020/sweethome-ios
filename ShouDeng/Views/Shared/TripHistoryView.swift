@@ -13,7 +13,7 @@ struct TripHistoryView: View {
     var targetUserId: String?
     var targetUserName: String?
 
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
 
     var body: some View {

@@ -9,7 +9,7 @@ struct SatelliteModeBanner: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
 
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
 
     var body: some View {
         if coordinator.isOnSatellite {
@@ -30,7 +30,7 @@ struct SatelliteModeBanner: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(ink)
+            .background(Color.inkSolid)
             .accessibilityElement(children: .combine)
             .transition(.move(edge: .top).combined(with: .opacity))
         }

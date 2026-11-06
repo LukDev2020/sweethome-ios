@@ -12,7 +12,7 @@ struct DuressCodeSettingsView: View {
     @Environment(\.dismiss) private var dismiss
 
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
     private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
 
@@ -235,7 +235,7 @@ struct DuressCodeSettingsView: View {
                 .font(.scaled(size: 11, weight: .bold))
                 .foregroundStyle(.white)
                 .frame(width: 20, height: 20)
-                .background(Circle().fill(ink.opacity(0.6)))
+                .background(Circle().fill(Color.inkSolid.opacity(0.6)))
             Text(langManager.localized(text))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)

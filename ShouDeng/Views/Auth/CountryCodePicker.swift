@@ -11,7 +11,7 @@ struct CountryCodePicker: View {
     @Binding var selected: CountryCode
     @State private var searchText = ""
 
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
 
     private var filtered: [CountryCode] {
         if searchText.isEmpty { return CountryCode.all }

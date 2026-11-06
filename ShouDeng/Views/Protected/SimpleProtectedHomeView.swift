@@ -20,11 +20,11 @@ struct SimpleProtectedHomeView: View {
     @State private var homeConfirmed = false
     @State private var showInvite = false
 
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let teal = Color(red: 47/255, green: 111/255, blue: 143/255)
     private let indigo = Color(red: 74/255, green: 93/255, blue: 138/255)
-    private let cream = Color(red: 251/255, green: 248/255, blue: 241/255)
+    private let cream = Color.paper(251, 248, 241)
 
     /// 陈秀兰 → 秀兰; "Margaret Chen" → Margaret
     private var givenName: String {

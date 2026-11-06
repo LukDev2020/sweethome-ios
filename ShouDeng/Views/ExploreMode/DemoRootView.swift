@@ -51,7 +51,7 @@ struct DemoRootView: View {
 struct DemoBannerView: View {
     @ObservedObject var explore: ExploreModeController
     private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.inkSolid // on the fixed orange demo banner
 
     var body: some View {
         let lm = LanguageManager.shared
@@ -60,7 +60,7 @@ struct DemoBannerView: View {
                 .font(.caption.weight(.heavy))
                 .foregroundStyle(lamp)
                 .padding(.horizontal, 7).padding(.vertical, 3)
-                .background(RoundedRectangle(cornerRadius: 6).fill(ink))
+                .background(RoundedRectangle(cornerRadius: 6).fill(Color.inkSolid))
             Text(lm.localized("explore.banner.subtitle"))
                 .font(.caption.weight(.medium))
                 .foregroundStyle(ink)
@@ -74,7 +74,7 @@ struct DemoBannerView: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 10).padding(.vertical, 6)
-                    .background(Capsule().fill(ink))
+                    .background(Capsule().fill(Color.inkSolid))
                     .lineLimit(1)
             }
             Button(lm.localized("explore.exit")) { explore.exit() }

@@ -10,6 +10,8 @@ struct LockScreenCardSettingsView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
     @State private var style = LockScreenCardStyle.stored
+    /// "Turned off … to make room"
+    @State private var roomNote: String?
 
     private var isGuardian: Bool { coordinator.userRole == .guardian }
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
@@ -60,6 +62,9 @@ struct LockScreenCardSettingsView: View {
                         ForEach(LockScreenCardStyle.Section.allCases, id: \.self) { row in
                             rowToggle(row)
                         }
+                        Text(roomNote ?? lang.localized("lsc.rows.hint"))
+                            .font(.scaled(size: 12))
+                            .foregroundStyle(roomNote == nil ? .secondary : Color.orange)
                     }
                 }
 
@@ -143,8 +148,9 @@ struct LockScreenCardSettingsView: View {
             homeTimerLabel: nil,
             emergencyPhone: coordinator.localEmergencyNumber,
             emergencyLabel: coordinator.localEmergencyNumber,
-            bloodType: MedicalCardCache.load()?.bloodType,
-            allergies: MedicalCardCache.load()?.allergies ?? [],
+            // The demo never shows the real person's medical card
+            bloodType: coordinator.isDemo ? nil : MedicalCardCache.load()?.bloodType,
+            allergies: coordinator.isDemo ? [] : MedicalCardCache.load()?.allergies ?? [],
             conditions: [],
             emergencyNote: nil,
             emergencyMedications: []
@@ -211,27 +217,29 @@ struct LockScreenCardSettingsView: View {
     }
 
     private func rowToggle(_ row: LockScreenCardStyle.Section) -> some View {
-        let on = style.sections.contains(row)
-        var with = style.sections
-        if !on { with.append(row) }
-        let fits = on || style.fits(Array(Set(with)))
-        return Toggle(isOn: Binding(
-            get: { on },
-            set: { newValue in
-                if newValue { style.sections.append(row) } else { style.sections.removeAll { $0 == row } }
-            }
-        )) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(lang.localized("lsc.row.\(row.rawValue)"))
-                    .font(.scaled(size: 15))
-                if !fits {
-                    Text(lang.localized("lsc.row.noRoom"))
-                        .font(.scaled(size: 11))
-                        .foregroundStyle(.secondary)
+        Toggle(isOn: Binding(
+            get: { style.sections.contains(row) },
+            set: { on in
+                roomNote = nil
+                guard on else { style.sections.removeAll { $0 == row }; return }
+                // No room for one more row: turn off the least important other row
+                var rows = style.sections + [row]
+                var dropped: [LockScreenCardStyle.Section] = []
+                for other in [LockScreenCardStyle.Section.latest, .checkIn, .medical, .actions]
+                where other != row && rows.contains(other) && !style.fits(rows) {
+                    rows.removeAll { $0 == other }
+                    dropped.append(other)
+                }
+                style.sections = rows
+                if !dropped.isEmpty {
+                    roomNote = String(format: lang.localized("lsc.row.madeRoom"),
+                                      dropped.map { lang.localized("lsc.row.\($0.rawValue)") }.joined(separator: ", "))
                 }
             }
+        )) {
+            Text(lang.localized("lsc.row.\(row.rawValue)"))
+                .font(.scaled(size: 15))
         }
         .tint(safe)
-        .disabled(!fits)
     }
 }

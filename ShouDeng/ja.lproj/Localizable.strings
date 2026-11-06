@@ -1969,9 +1969,10 @@
 "lsc.row.latest" = "家族の最新メッセージ";
 "lsc.row.medical" = "救急用の医療情報";
 "lsc.row.actions" = "SOS・元気です・位置 ボタン";
-"lsc.row.noRoom" = "この文字サイズでは入りません。先に別の行をオフにしてください。";
 "lsc.reset" = "初期設定に戻す";
 "lsc.sample.latest" = "Sarah：もう家に着いた？";
 "weather.noLocation" = "現在地を取得できません。設定で Lantern Care の位置情報を許可してください。";
 "lsc.disabledInSettings" = "iOS の設定で Lantern Care のライブアクティビティがオフのため、カードを表示できません。タップして設定を開きます。";
 "lsc.demoNote" = "デモ：ロック画面に陳家のサンプルカードが表示されます。デモを終了すると消えます。";
+"lsc.row.madeRoom" = "スペースを空けるため「%@」をオフにしました。";
+"lsc.rows.hint" = "カードに入るのは約 3 行です。1 行をオンにすると別の行がオフになることがあります。";

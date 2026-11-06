@@ -14,7 +14,7 @@ struct TripDetailView: View {
     @State private var scrubberValue: Double = 1.0
     @State private var showExportSheet = false
 
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let routeColor = Color(red: 61/255, green: 154/255, blue: 192/255)
 
@@ -139,7 +139,7 @@ struct TripDetailView: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
-                    .background(ink)
+                    .background(Color.inkSolid)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
             }

@@ -26,14 +26,14 @@ struct GuardianHomeView: View {
     @State private var tripHistoryUserName: String?
     @Environment(\.horizontalSizeClass) private var sizeClass
 
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
     private let inkDeep = Color(red: 8/255, green: 15/255, blue: 27/255)
     private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
     private let pro = Color(red: 107/255, green: 92/255, blue: 165/255)
-    private let creamBg = Color(red: 254/255, green: 252/255, blue: 247/255)
-    private let offWhiteBg = Color(red: 251/255, green: 248/255, blue: 241/255)
+    private let creamBg = Color.paper(254, 252, 247)
+    private let offWhiteBg = Color.paper(251, 248, 241, elevated: true)
     private let paneBorder = Color(red: 1/255, green: 69/255, blue: 129/255).opacity(0.13)
 
     private var dynamicClocks: [(city: String, time: String, note: String, isYou: Bool)] {

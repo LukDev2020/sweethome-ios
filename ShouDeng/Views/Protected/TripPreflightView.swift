@@ -33,7 +33,7 @@ struct TripPreflightView: View {
     @State private var done: Set<Item> = []
     @State private var batteryLevel: Float = -1
 
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
     private let safe = Color(red: 62/255, green: 142/255, blue: 99/255)
     private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
 

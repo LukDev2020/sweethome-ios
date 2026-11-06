@@ -29,7 +29,7 @@ struct GuardianPlanBillingView: View {
     @State private var showPrivacyPolicy = false
     @State private var showCancelSubscriptionHint = false
 
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let accent = Color(red: 107/255, green: 92/255, blue: 165/255)
     private let warm = Color(red: 232/255, green: 165/255, blue: 72/255)
@@ -728,7 +728,7 @@ private struct PlanCardView: View {
     let onSubscribe: () -> Void
     let isLoading: Bool
 
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
 
     var body: some View {
         Button(action: { if !isCurrent { onSelect() } }) {

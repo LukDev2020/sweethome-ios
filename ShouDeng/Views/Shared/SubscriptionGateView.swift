@@ -8,7 +8,7 @@ struct SubscriptionGateView: View {
     let featureName: String
     let onDismiss: () -> Void
 
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
     private let pro = Color(red: 107/255, green: 92/255, blue: 165/255)
 
     private var requiredPlan: String {

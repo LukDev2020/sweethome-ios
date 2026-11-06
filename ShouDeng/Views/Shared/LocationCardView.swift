@@ -19,7 +19,7 @@ struct LocationCardView: View {
     /// Optional reactive location service for live updates
     @ObservedObject var locationService: ReactiveLocationService
 
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
 
@@ -134,7 +134,7 @@ struct LocationCardView: View {
                                     .background(
                                         focusedPinId == pin.id
                                             ? Capsule().fill(pin.color.opacity(0.85))
-                                            : Capsule().fill(ink.opacity(0.5))
+                                            : Capsule().fill(Color.inkSolid.opacity(0.5))
                                     )
                                 }
                             }
@@ -159,7 +159,7 @@ struct LocationCardView: View {
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 3)
-                                .background(ink.opacity(0.7))
+                                .background(Color.inkSolid.opacity(0.7))
                                 .clipShape(Capsule())
                         }
                         if let mins = liveUpdateMinutes {
@@ -168,7 +168,7 @@ struct LocationCardView: View {
                                 .foregroundStyle(.white.opacity(0.9))
                                 .padding(.horizontal, 7)
                                 .padding(.vertical, 2)
-                                .background(ink.opacity(0.5))
+                                .background(Color.inkSolid.opacity(0.5))
                                 .clipShape(Capsule())
                         }
                     }
@@ -207,7 +207,7 @@ struct LocationCardView: View {
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                                .background(ink.opacity(0.6))
+                                .background(Color.inkSolid.opacity(0.6))
                                 .clipShape(Capsule())
                             }
                             .accessibilityLabel(LanguageManager.shared.localized("location.collapseMap"))
@@ -229,7 +229,7 @@ struct LocationCardView: View {
                         .font(.scaled(size: 12))
                         .foregroundStyle(.white)
                         .frame(width: 30, height: 30)
-                        .background(ink.opacity(0.65))
+                        .background(Color.inkSolid.opacity(0.65))
                         .clipShape(Circle())
                 }
                 .accessibilityLabel(LanguageManager.shared.localized("location.expandMap"))
@@ -520,7 +520,7 @@ struct FullScreenMapView: View {
     @ObservedObject var locationService: ReactiveLocationService
     @Environment(\.dismiss) private var dismiss
 
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
 
@@ -771,7 +771,7 @@ struct FullScreenMapView: View {
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 5)
-                                .background(ink.opacity(0.7))
+                                .background(Color.inkSolid.opacity(0.7))
                                 .clipShape(Capsule())
                         }
 
@@ -796,7 +796,7 @@ struct FullScreenMapView: View {
                             .font(.scaled(size: 14, weight: .medium))
                             .foregroundStyle(.white)
                             .frame(width: 34, height: 34)
-                            .background(ink.opacity(0.65))
+                            .background(Color.inkSolid.opacity(0.65))
                             .clipShape(Circle())
                     }
 
@@ -853,7 +853,7 @@ struct FullScreenMapView: View {
                         .foregroundStyle(.white)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
-                        .background(ink.opacity(0.7))
+                        .background(Color.inkSolid.opacity(0.7))
                         .clipShape(RoundedRectangle(cornerRadius: 10))
                         .padding(.bottom, 40)
                 }
@@ -928,7 +928,7 @@ struct FullScreenMapView: View {
             }
         }
         .padding(14)
-        .background(ink.opacity(0.85))
+        .background(Color.inkSolid.opacity(0.85))
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .padding(.horizontal, 16)
         .padding(.bottom, 8)
@@ -1126,12 +1126,12 @@ struct FullScreenMapView: View {
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
-                .background(ink.opacity(0.4))
+                .background(Color.inkSolid.opacity(0.4))
                 .clipShape(RoundedRectangle(cornerRadius: 8))
             }
         }
         .padding(14)
-        .background(ink.opacity(0.85))
+        .background(Color.inkSolid.opacity(0.85))
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .padding(.horizontal, 16)
         .padding(.bottom, 8)
@@ -1221,7 +1221,7 @@ struct FullScreenMapView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
-        .background(ink.opacity(0.75))
+        .background(Color.inkSolid.opacity(0.75))
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
@@ -1243,7 +1243,7 @@ struct FullScreenMapView: View {
                         .foregroundStyle(.white)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
-                        .background(ink.opacity(0.6))
+                        .background(Color.inkSolid.opacity(0.6))
                         .clipShape(Capsule())
                     }
                 }
@@ -1290,7 +1290,7 @@ struct FullScreenMapView: View {
                 }
             }
         }
-        .background(ink.opacity(0.75))
+        .background(Color.inkSolid.opacity(0.75))
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
@@ -1316,7 +1316,7 @@ struct FullScreenMapView: View {
         }
         .padding(.horizontal, 4)
         .padding(.vertical, 2)
-        .background(ink.opacity(0.5))
+        .background(Color.inkSolid.opacity(0.5))
         .clipShape(Capsule())
     }
 

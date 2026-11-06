@@ -30,7 +30,7 @@ extension EnvironmentValues {
 struct ReadableSegmentedTabs<Value: Hashable>: View {
     @Binding var selection: Value
     let options: [(value: Value, title: String)]
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
 
     var body: some View {
         HStack(spacing: 4) {

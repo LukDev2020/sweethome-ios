@@ -11,7 +11,7 @@ struct DemoRolePickerView: View {
     nonisolated(unsafe) private let timer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
 
     private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
 
     var body: some View {

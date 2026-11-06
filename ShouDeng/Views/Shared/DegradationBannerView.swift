@@ -21,7 +21,7 @@ struct DegradationBannerView: View {
     // Design system
     private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
 
     var body: some View {
         VStack(spacing: 0) {

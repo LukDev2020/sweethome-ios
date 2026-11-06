@@ -14,7 +14,7 @@ struct EmergencyContactsView: View {
     let personName: String
     let countryCode: String  // ISO 3166-1 alpha-2 (e.g. "UA", "CN", "CA")
 
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
 

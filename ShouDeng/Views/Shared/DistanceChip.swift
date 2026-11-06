@@ -5,7 +5,7 @@ struct DistanceChip: View {
     let from: CLLocationCoordinate2D?
     let to: CLLocationCoordinate2D?
 
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
 
     var body: some View {
         if let distanceText = formattedDistance {

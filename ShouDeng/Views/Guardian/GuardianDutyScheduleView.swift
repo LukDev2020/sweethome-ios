@@ -13,7 +13,7 @@ struct GuardianDutyScheduleView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var langManager = LanguageManager.shared
 
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
     private let pro = Color(red: 107/255, green: 92/255, blue: 165/255)

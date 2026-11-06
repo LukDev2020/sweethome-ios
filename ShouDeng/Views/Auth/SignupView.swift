@@ -17,7 +17,7 @@ struct SignupView: View {
 
     // Lighthouse palette (matching LoginView)
     private let navy = Color(red: 1/255, green: 69/255, blue: 129/255)
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
     private let ink2 = Color(red: 14/255, green: 43/255, blue: 74/255).opacity(0.62)
     private let ink3 = Color(red: 14/255, green: 43/255, blue: 74/255).opacity(0.4)
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)

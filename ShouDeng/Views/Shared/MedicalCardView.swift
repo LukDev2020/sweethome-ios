@@ -16,7 +16,7 @@ struct MedicalCardView: View {
     var targetUserName: String?
 
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
-    private let ink = Color(red: 18/255, green: 32/255, blue: 58/255)
+    private let ink = Color.appInk
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
 
     @State private var card = MedicalCardData.empty
