@@ -54,9 +54,10 @@ struct GuardianAlertResponseView: View {
             VStack(spacing: 12) {
                 // Header — real data
                 VStack(spacing: 2) {
-                    Text(String(format: langManager.localized("guardian.alert.seeking.help"), personName))
+                    // Once the SOS is over the heading says so (it stayed "needs help")
+                    Text(String(format: langManager.localized(sos == nil ? "guardian.alert.sosEnded" : "guardian.alert.seeking.help"), personName))
                         .font(.scaled(size: 20, weight: .bold))
-                        .foregroundStyle(alert)
+                        .foregroundStyle(sos == nil ? safe : alert)
                     Text(headerSubtitle)
                         .font(.scaled(size: 13))
                         .foregroundStyle(.secondary)
@@ -135,8 +136,10 @@ struct GuardianAlertResponseView: View {
                     Text(errorText).font(.scaled(size: 12)).foregroundStyle(alert)
                 }
 
-                // Escalation chain
-                escalationChain
+                // Escalation chain (only while the SOS runs: it said "Escalating" after the end)
+                if sos != nil {
+                    escalationChain
+                }
 
                 // Scene info
                 sceneInfoPanel

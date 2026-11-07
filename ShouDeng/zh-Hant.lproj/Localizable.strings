@@ -618,8 +618,7 @@
 "homeTimer.safeArrival" = "安全到達";
 "homeTimer.setEntry" = "已設定回家計時：%@";
 "homeTimer.setup" = "設定回家時間";
-"homeTimer.setupDesc" = "如果到時間還沒有關閉計時器，
-系統會自動通知你的守護者。";
+"homeTimer.setupDesc" = "如果到時間還沒有關閉計時器，系統會自動通知你的守護者。";
 "homeTimer.start" = "開始計時";
 "homeTimer.title" = "回家計時器";
 
@@ -1028,9 +1027,9 @@
 "fakecall.delay.30s" = "30秒";
 "fakecall.delay.60s" = "60秒";
 
-// MARK: - Dead Man's Switch
+// MARK: - Safety Timer (deadman.* keys)
 "deadman.title" = "安全計時器";
-"deadman.info.title" = "出行保護倒計時";
+"deadman.info.title" = "安全計時器怎麼用";
 "deadman.info.body" = "啟動倒計時。如果你沒有在時間內取消，系統會自動將你的位置傳送給守護者。";
 "deadman.presets" = "快速啟動";
 "deadman.preset.walkingHome" = "走路回家";
@@ -2339,3 +2338,17 @@
 "report.limit.fall" = "跌倒檢測只在 App 打開時運行，可能漏檢，也可能把手機掉落誤判為跌倒。";
 "report.limit.gaps" = "某時段無數據表示手機沒有上報（無信號、關機或暫停共享），並不代表沒有發生任何事。";
 "report.disclaimer" = "守燈不是緊急救援服務。遇到危險請先撥打當地急救電話。";
+
+// MARK: - Full button test leftovers (Records schedule, contacts, SOS end)
+"emergencyContact.delete.title" = "刪除 %@？";
+"emergencyContact.delete.message" = "此人將從緊急聯絡人列表中移除。";
+"emergencyContact.delete.confirm" = "刪除";
+"emergencyContact.delete.cancel" = "取消";
+"guardian.alert.sosEnded" = "%@ 的 SOS 已結束";
+"guardian.records.coverage" = "今天 24 小時中有 %d 小時有人值守";
+"guardian.records.shift.none" = "今天不值班";
+"guardian.records.shift.awake" = "未設值班時間 · 按平時清醒時段計算";
+"guardian.records.shift.gap" = "無人值守";
+"claim.medicalEmpty" = "尚未填寫醫療卡。";
+"timeline.sosEnded" = "SOS 已結束";
+"duress.how.step5" = "它也能「假裝」結束 SOS：在「結束 SOS？」裡點「改用密碼」並輸入此密碼。螢幕上 SOS 看起來已結束，但守護者仍會繼續收到警報";

@@ -110,6 +110,23 @@ struct MedicalCardView: View {
         }
     }
 
+    private func bloodTypeChip(_ label: String, value: String?) -> some View {
+        let selected = card.bloodType == value
+        return Button {
+            card.bloodType = value
+        } label: {
+            Text(label)
+                .font(.scaled(size: 14, weight: selected ? .semibold : .regular))
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .frame(maxWidth: .infinity, minHeight: 36)
+                .foregroundStyle(selected ? .white : ink)
+                .background(RoundedRectangle(cornerRadius: 8).fill(selected ? safe : Color(.secondarySystemBackground)))
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+
     private var formView: some View {
         ScrollView {
             VStack(spacing: 16) {
@@ -129,16 +146,13 @@ struct MedicalCardView: View {
 
                 // Blood Type
                 section(title: langManager.localized("medical.bloodType")) {
-                    Picker(langManager.localized("medical.bloodType"), selection: Binding(
-                        get: { card.bloodType ?? "" },
-                        set: { card.bloodType = $0.isEmpty ? nil : $0 }
-                    )) {
-                        Text(langManager.localized("medical.notSet")).tag("")
+                    // Chips that wrap: nine segments squeezed "Not set" down to "No…"
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 64), spacing: 8)], spacing: 8) {
+                        bloodTypeChip(langManager.localized("medical.notSet"), value: nil)
                         ForEach(bloodTypes, id: \.self) { type in
-                            Text(type).tag(type)
+                            bloodTypeChip(type, value: type)
                         }
                     }
-                    .pickerStyle(.segmented)
                 }
 
                 // Allergies

@@ -58,6 +58,7 @@ struct CountryCodePicker: View {
             }
             .listStyle(.plain)
             .searchable(text: $searchText, prompt: lang.localized("picker.search"))
+            .keepsTitleWhileSearching()
             .navigationTitle(lang.localized("picker.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -65,6 +66,18 @@ struct CountryCodePicker: View {
                     Button { dismiss() } label: { Label(lang.localized("picker.cancel"), systemImage: "xmark") }
                 }
             }
+        }
+    }
+}
+
+extension View {
+    /// The navigation bar (title, Cancel) slid away while typing a search.
+    @ViewBuilder
+    func keepsTitleWhileSearching() -> some View {
+        if #available(iOS 17.1, *) {
+            searchPresentationToolbarBehavior(.avoidHidingContent)
+        } else {
+            self
         }
     }
 }

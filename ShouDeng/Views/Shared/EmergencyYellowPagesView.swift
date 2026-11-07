@@ -72,6 +72,8 @@ struct EmergencyYellowPagesView: View {
                 Text(lang.localized("yp_region", fallback: "Region:"))
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(ink.opacity(0.55))
+                    .lineLimit(1)
+                    .fixedSize()
                 Picker("", selection: $selectedCountry) {
                     ForEach(countries, id: \.code) { c in
                         Text("\(c.flag) \(c.name)").tag(c.code)
@@ -79,6 +81,8 @@ struct EmergencyYellowPagesView: View {
                 }
                 .pickerStyle(.menu)
                 .tint(ink)
+                .lineLimit(1)
+                Spacer(minLength: 0)
             }
 
             // Directory card

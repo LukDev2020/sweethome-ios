@@ -46,6 +46,10 @@ final class DemoStore {
     private(set) var unhandled: [String] = []
     /// Photos "uploaded" to the family circle, by id (kept in memory only).
     private var media: [String: Data] = [:]
+    /// SOS that ended during this demo (for the claim materials)
+    private var pastSOS: [String: [(state: SOSState, resolvedAt: Date)]] = [:]
+    /// Emergency medical cards by person (Mom starts with one filled in)
+    private var medicalCards: [String: Data] = [:]
 
     // Rider demo (Kai's phone): shift, crew, caution spots, crew answers
     private var kaiOnShift = false
@@ -77,6 +81,33 @@ final class DemoStore {
     init(dataset: DemoDataset, currentUserId: String) {
         self.dataset = dataset
         self._currentUserId = currentUserId
+        let t = DemoText(language: LanguageManager.shared.current)
+        let momCard = MedicalCardData(bloodType: "A+", allergies: [t.penicillin],
+                                      medicationItems: [MedicationItem(id: "demo-med-1", name: t.amlodipine,
+                                                                       storageLocation: t.medicineShelf, dosage: t.everyMorning)],
+                                      conditions: [t.highBloodPressure], insuranceProvider: t.insurer,
+                                      insurancePolicyNumber: "PH-2026-0417", emergencyNote: t.medicalNote)
+        medicalCards[DemoDataset.momId] = (try? JSONEncoder().encode(momCard)) ?? Data()
+    }
+
+    /// The persona's phone battery (the demo never reads the device's).
+    func batteryLevel(of personId: String) -> Double? {
+        lock.withLock {
+            switch personId {
+            case DemoDataset.momId: return dataset.momPerson.batteryLevel
+            case DemoDataset.dadId: return dataset.dadPerson.batteryLevel
+            case DemoDataset.sarahId: return 0.64
+            case DemoDataset.kaiId: return 0.71
+            default: return nil
+            }
+        }
+    }
+
+    /// Caller holds `lock`. What the server writes to the person's own timeline.
+    private func noteOnTimeline(_ personId: String, _ type: TimelineEntryType, _ text: String, at date: Date = Date()) {
+        let entry = TimelineEntry(id: "demo-\(type.rawValue)-\(Int(date.timeIntervalSince1970 * 1000))", timestamp: date,
+                                  type: type, description: text, detail: nil)
+        extraTimeline[personId, default: []].insert(entry, at: 0)
     }
 
     // MARK: - Mutations (also used by the scenario engine)
@@ -102,6 +133,9 @@ final class DemoStore {
                                triggerMethod: method)
             sos[personId] = new
             if personId == DemoDataset.momId { dataset.momPerson.status = .alert }
+            let lm = LanguageManager.shared
+            noteOnTimeline(personId, .sosTriggered, String(format: lm.localized("timeline.sosTriggered"),
+                                                           lm.localized("sos.method.\(method)")), at: date)
             return new
         }
         onEvent?(.sosTriggered(personId: personId))
@@ -114,6 +148,10 @@ final class DemoStore {
             if sos[key]?.acknowledgedBy == nil {
                 sos[key]?.acknowledgedBy = userId
                 sos[key]?.acknowledgedAt = Date()
+                if let name = dataset.user(userId)?.displayName {
+                    noteOnTimeline(key, .guardianAlert,
+                                   String(format: LanguageManager.shared.localized("sos.status.acknowledged"), name))
+                }
             }
             return sos[key]
         }
@@ -124,9 +162,11 @@ final class DemoStore {
     func resolveSOS(id: String) {
         let personId: String? = lock.withLock {
             let key = sos.first(where: { $0.value.sosEventId == id || $0.key == currentUserIdUnlocked })?.key
-            if let key {
+            if let key, let ended = sos[key] {
                 sos[key] = nil
+                pastSOS[key, default: []].append((ended, Date()))
                 if key == DemoDataset.momId { dataset.momPerson.status = .normal }
+                noteOnTimeline(key, .sosResolved, LanguageManager.shared.localized("timeline.sosEnded"))
             }
             return key
         }
@@ -268,6 +308,29 @@ final class DemoStore {
             guard me == DemoDataset.sarahId else { return (200, json([])) }
             let rows = lock.withLock { [dataset.momPerson, dataset.dadPerson].map { statusRow($0) } }
             return (200, json(rows))
+
+        case ("GET", "/v1/guardian/circle"):
+            // Same rule as the server: only someone who looks after the person
+            let personId = query["personId"] ?? ""
+            let circle: [Guardian]? = lock.withLock {
+                let guardians = personId == DemoDataset.momId ? dataset.guardiansOfMom
+                    : personId == DemoDataset.dadId ? dataset.guardiansOfDad : []
+                return guardians.contains { $0.id == me } ? guardians : nil
+            }
+            guard let circle else { return (403, json(["error": "No active guardian link for this person"])) }
+            return (200, encode(circle))
+
+        case ("GET", "/v1/medical-card"), ("GET", "/v1/medical-card/\(DemoDataset.momId)"):
+            let personId = path == "/v1/medical-card" ? me : DemoDataset.momId
+            return (200, lock.withLock { medicalCards[personId] } ?? json([:] as [String: Any]))
+
+        case ("PUT", "/v1/medical-card"), ("PUT", "/v1/medical-card/\(DemoDataset.momId)"):
+            let personId = path == "/v1/medical-card" ? me : DemoDataset.momId
+            lock.withLock { medicalCards[personId] = body }
+            return (200, json(["success": true]))
+
+        case ("POST", "/v1/insurance/claim-materials"):
+            return claimMaterials(for: me, body: bodyObject(body))
 
         case ("GET", "/v1/protected/guardians"):
             let guardians = lock.withLock {
@@ -613,6 +676,66 @@ final class DemoStore {
             ] as [String: Any]
         }
         return row
+    }
+
+    // MARK: - Claim materials (same shape as routes/insurance.ts)
+
+    private func claimMaterials(for me: String, body: [String: Any]) -> (Int, Data) {
+        func date(_ any: Any?) -> Date? {
+            guard let text = any as? String else { return nil }
+            let f = ISO8601DateFormatter()
+            if let d = f.date(from: text) { return d }
+            f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            return f.date(from: text)
+        }
+        guard let incident = date(body["incidentDate"]) else { return (400, json(["error": "incidentDate is required"])) }
+        let half = Double((body["windowHours"] as? Int) ?? 24) * 3600
+        let start = incident.addingTimeInterval(-half), end = incident.addingTimeInterval(half)
+        func on(_ key: String) -> Bool { (body[key] as? Bool) ?? true }
+        let withLocation = on("includeLocation")
+        let spot = Self.spot(of: me)
+        return lock.withLock {
+            guard let person = dataset.user(me) else { return (404, json(["error": "User not found"])) }
+            func inWindow(_ d: Date) -> Bool { d >= start && d <= end }
+            var sosRows: [[String: Any]] = (pastSOS[me] ?? []).filter { inWindow($0.state.triggeredAt) }.map {
+                ["triggeredAt": Self.iso($0.state.triggeredAt), "triggerMethod": $0.state.triggerMethod,
+                 "resolution": $0.state.acknowledgedBy == nil ? "protectedCancelled" : "guardianResolved"]
+            }
+            if let s = sos[me], inWindow(s.triggeredAt) {
+                sosRows.append(["triggeredAt": Self.iso(s.triggeredAt), "triggerMethod": s.triggerMethod, "resolution": NSNull()])
+            }
+            for i in sosRows.indices {
+                sosRows[i]["latitude"] = withLocation ? spot.latitude : NSNull()
+                sosRows[i]["longitude"] = withLocation ? spot.longitude : NSNull()
+            }
+            let checkInRows: [[String: Any]] = checkIns.filter { $0.userId == me && inWindow($0.at) }.map {
+                ["timestamp": Self.iso($0.at), "latitude": withLocation ? spot.latitude : NSNull(),
+                 "longitude": withLocation ? spot.longitude : NSNull(), "note": NSNull()]
+            }
+            let timelineRows: [[String: Any]] = ((extraTimeline[me] ?? []) + (dataset.timelines[me] ?? []))
+                .filter { inWindow($0.timestamp) }.sorted { $0.timestamp < $1.timestamp }
+                .map { ["timestamp": Self.iso($0.timestamp), "type": $0.type.rawValue, "description": $0.description] }
+            var medical: Any = NSNull()
+            if on("includeMedicalCard"), let data = medicalCards[me], let card = try? JSONDecoder().decode(MedicalCardData.self, from: data) {
+                medical = ["bloodType": card.bloodType ?? NSNull(), "allergies": card.allergies.isEmpty ? NSNull() : card.allergies,
+                           "conditions": card.conditions.isEmpty ? NSNull() : card.conditions,
+                           "insuranceProvider": card.insuranceProvider ?? NSNull(),
+                           "policyNumber": (card.insurancePolicyNumber ?? body["policyNumber"] as? String).map { $0 as Any } ?? NSNull()] as [String: Any]
+            }
+            var export: [String: Any] = [
+                "exportId": "EXP-DEMO-\(Int(Date().timeIntervalSince1970))", "personName": person.displayName,
+                "exportedAt": Self.iso(Date()), "incidentDate": Self.iso(incident),
+                "window": ["start": Self.iso(start), "end": Self.iso(end)],
+                "sosEvents": on("includeSOS") ? sosRows : NSNull(),
+                "checkIns": on("includeCheckIns") ? checkInRows : NSNull(),
+                "timeline": on("includeTimeline") ? timelineRows : NSNull(),
+                "medicalSnapshot": medical,
+                "disclaimer": ClaimDisclaimer.full,
+            ]
+            let hashed = (try? JSONSerialization.data(withJSONObject: export, options: [.sortedKeys])) ?? Data()
+            export["contentHash"] = SHA256.hash(data: hashed).map { String(format: "%02x", $0) }.joined()
+            return (200, json(export))
+        }
     }
 
     // MARK: - Falls and the police report (same shapes as safetyEvents.ts / incidentReport.ts)

@@ -154,13 +154,9 @@ struct DemoDataset {
                        comments: [], commentCount: 0, latitude: nil, longitude: nil, locationName: t.shanghai),
         ]
 
+        // Each person's own events. Sarah's Records shows Mom's and Dad's, named, as
+        // the real app does (GET /v1/timeline?personId=); her own timeline is empty.
         let timelines: [String: [TimelineEntry]] = [
-            sarah.id: [
-                entry(6, .enteredSafeZone, t.tlMomHome, t.momAddress),
-                entry(38, .checkIn, t.tlMomCheckedIn),
-                entry(60 * 2, .batteryLow, t.tlDadBattery),
-                entry(60 * 3.5, .checkIn, t.tlDadCheckedIn),
-            ],
             mom.id: [
                 entry(6, .enteredSafeZone, t.tlArrivedHome),
                 entry(38, .checkIn, t.tlCheckedIn),
@@ -168,8 +164,8 @@ struct DemoDataset {
                 entry(60 * 26, .arrivalReport, t.tlArrival, t.station),
             ],
             dad.id: [
-                entry(60 * 2, .batteryLow, t.tlDadBattery),
-                entry(60 * 3.5, .checkIn, t.tlDadCheckedIn),
+                entry(60 * 2, .batteryLow, t.tlBatteryLow),
+                entry(60 * 3.5, .checkIn, t.tlCheckedIn),
             ],
         ]
 
@@ -224,6 +220,10 @@ struct DemoText {
         "Dad's battery is at 17%": "お父さんのバッテリー残量 17%", "Dad checked in": "お父さんから無事の報告",
         "Arrived home": "帰宅しました", "Checked in · I'm safe": "無事を報告しました",
         "Home timer completed": "帰宅タイマー完了", "Arrival reported": "到着を報告しました",
+        "Battery at 17%": "バッテリー残量 17%", "Penicillin": "ペニシリン", "Amlodipine 5 mg": "アムロジピン 5 mg",
+        "High blood pressure": "高血圧", "PICC Health": "PICC健康保険",
+        "Kitchen drawer": "台所の引き出し", "1 tablet every morning": "毎朝1錠",
+        "Takes blood-pressure medicine every morning.": "毎朝、血圧の薬を飲んでいます。",
     ]
 
     var momName: String { pick("Xiulan Chen", "陈秀兰", "Xiulan Chen") }
@@ -255,4 +255,13 @@ struct DemoText {
     var tlCheckedIn: String { pick("Checked in · I'm safe", "报平安", "Nouvelles données") }
     var tlTimerDone: String { pick("Home timer completed", "回家计时已完成", "Minuteur de retour terminé") }
     var tlArrival: String { pick("Arrival reported", "已报到达", "Arrivée signalée") }
+    var tlBatteryLow: String { pick("Battery at 17%", "电量 17%", "Batterie à 17 %") }
+    // Mom's sample medical card
+    var penicillin: String { pick("Penicillin", "青霉素", "Pénicilline") }
+    var amlodipine: String { pick("Amlodipine 5 mg", "氨氯地平 5 mg", "Amlodipine 5 mg") }
+    var medicineShelf: String { pick("Kitchen drawer", "厨房抽屉", "Tiroir de la cuisine") }
+    var everyMorning: String { pick("1 tablet every morning", "每天早上 1 片", "1 comprimé chaque matin") }
+    var highBloodPressure: String { pick("High blood pressure", "高血压", "Hypertension") }
+    var insurer: String { pick("PICC Health", "中国人保健康", "PICC Santé") }
+    var medicalNote: String { pick("Takes blood-pressure medicine every morning.", "每天早上吃降压药。", "Prend son traitement pour la tension chaque matin.") }
 }

@@ -21,6 +21,7 @@ struct EmergencyContactsView: View {
     @AppStorage("custom_emergency_contacts") private var customContactsData: Data = Data()
     @State private var showAddContact = false
     @State private var customContacts: [LocalEmergencyContact] = []
+    @State private var contactToDelete: LocalEmergencyContact?
 
     var body: some View {
         ScrollView {
@@ -68,6 +69,9 @@ struct EmergencyContactsView: View {
         }
         .sheet(isPresented: $showAddContact) {
             AddEmergencyContactView(contacts: $customContacts, countryCode: countryCode)
+        }
+        .confirmDeletingContact($contactToDelete) { contact in
+            customContacts.removeAll { $0.id == contact.id }
         }
         .onAppear {
             loadCustomContacts()
@@ -251,9 +255,11 @@ struct EmergencyContactsView: View {
             }
         }
         .padding(.vertical, 4)
-        .swipeActions(edge: .trailing) {
+        .contentShape(Rectangle())
+        // Not in a List, so swipe actions never fired: long-press, then confirm
+        .contextMenu {
             Button(role: .destructive) {
-                customContacts.remove(at: index)
+                contactToDelete = contact
             } label: {
                 Label(langManager.localized("emergency.contacts.delete"), systemImage: "trash")
             }
@@ -426,6 +432,25 @@ struct ContactPicker: UIViewControllerRepresentable {
 
         func contactPicker(_ picker: CNContactPickerViewController, didSelect contact: CNContact) {
             onSelect(contact)
+        }
+    }
+}
+
+// MARK: - Delete confirmation
+
+extension View {
+    /// Asks before an emergency contact is deleted (one tap used to remove it for good).
+    func confirmDeletingContact(_ pending: Binding<LocalEmergencyContact?>,
+                                onDelete: @escaping (LocalEmergencyContact) -> Void) -> some View {
+        let lm = LanguageManager.shared
+        return alert(String(format: lm.localized("emergencyContact.delete.title"), pending.wrappedValue?.name ?? ""),
+                     isPresented: Binding(get: { pending.wrappedValue != nil },
+                                          set: { if !$0 { pending.wrappedValue = nil } }),
+                     presenting: pending.wrappedValue) { contact in
+            Button(lm.localized("emergencyContact.delete.confirm"), role: .destructive) { onDelete(contact) }
+            Button(lm.localized("emergencyContact.delete.cancel"), role: .cancel) {}
+        } message: { _ in
+            Text(lm.localized("emergencyContact.delete.message"))
         }
     }
 }

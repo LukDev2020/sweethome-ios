@@ -55,10 +55,11 @@ struct HomeTimerView: View {
 
     // MARK: - Setup View
 
+    // Scrolls: the fixed-height layout squeezed (and cut off) the description,
+    // most of all with larger text.
     private var setupView: some View {
+        ScrollView {
         VStack(spacing: 24) {
-            Spacer()
-
             Image(systemName: "house.fill")
                 .font(.scaled(size: 48))
                 .foregroundStyle(safe.opacity(0.6))
@@ -71,6 +72,7 @@ struct HomeTimerView: View {
                 .font(.scaled(size: 14))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
 
             VStack(spacing: 12) {
                 TextField(langManager.localized("homeTimer.label"), text: $label)
@@ -117,14 +119,15 @@ struct HomeTimerView: View {
             .disabled(isLoading)
             .padding(.horizontal, 32)
 
-            Spacer()
-
             Text(langManager.localized("homeTimer.commonScenarios"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary.opacity(0.6))
                 .padding(.bottom, 16)
         }
         .padding(.horizontal, 16)
+        .padding(.top, 24)
+        }
+        .scrollDismissesKeyboard(.immediately)
     }
 
     // MARK: - Active Timer View

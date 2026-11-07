@@ -618,8 +618,7 @@
 "homeTimer.safeArrival" = "Safe Arrival";
 "homeTimer.setEntry" = "Home timer set: %@";
 "homeTimer.setup" = "Set Home Time";
-"homeTimer.setupDesc" = "If you don't close the timer by the set time,
-your guardians will be automatically notified.";
+"homeTimer.setupDesc" = "If you don't close the timer by the set time, your guardians will be automatically notified.";
 "homeTimer.start" = "Start Timer";
 "homeTimer.title" = "Home Timer";
 
@@ -1028,9 +1027,9 @@ your guardians will be automatically notified.";
 "fakecall.delay.30s" = "30s";
 "fakecall.delay.60s" = "60s";
 
-// MARK: - Dead Man's Switch
+// MARK: - Safety Timer (deadman.* keys)
 "deadman.title" = "Safety Timer";
-"deadman.info.title" = "Dead Man's Switch";
+"deadman.info.title" = "How the Safety Timer works";
 "deadman.info.body" = "Start a countdown. If you don't cancel it in time, your guardians are alerted with your location automatically.";
 "deadman.presets" = "Quick Start";
 "deadman.preset.walkingHome" = "Walking Home";
@@ -2339,3 +2338,17 @@ your guardians will be automatically notified.";
 "report.limit.fall" = "Fall detection runs only while the app is open and can miss falls or mistake a dropped phone for one.";
 "report.limit.gaps" = "No data in a period means the phone sent nothing (no signal, off, sharing paused) — not that nothing happened.";
 "report.disclaimer" = "Lantern Care is not an emergency service. In danger, call your local emergency number first.";
+
+// MARK: - Full button test leftovers (Records schedule, contacts, SOS end)
+"emergencyContact.delete.title" = "Delete %@?";
+"emergencyContact.delete.message" = "They will no longer be on your emergency contact list.";
+"emergencyContact.delete.confirm" = "Delete";
+"emergencyContact.delete.cancel" = "Cancel";
+"guardian.alert.sosEnded" = "%@'s SOS has ended";
+"guardian.records.coverage" = "%d of 24 hours covered today";
+"guardian.records.shift.none" = "Not on duty today";
+"guardian.records.shift.awake" = "No set hours · counted while usually awake";
+"guardian.records.shift.gap" = "No one on duty";
+"claim.medicalEmpty" = "No medical card has been filled in yet.";
+"timeline.sosEnded" = "SOS ended";
+"duress.how.step5" = "It also ends an SOS for show: under “End the SOS?” tap “Enter code instead” and type this code. The SOS looks ended on your screen, but your guardians keep getting the alert";

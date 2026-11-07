@@ -424,6 +424,18 @@ struct ClaimMaterialsView: View {
                     if let policy = med.policyNumber, !policy.isEmpty {
                         previewRow(langManager.localized("claim.policyLabel"), value: policy)
                     }
+                    if med.isEmpty {
+                        // The section used to be an empty box
+                        Text(langManager.localized("claim.medicalEmpty"))
+                            .font(.scaled(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            } else if includeMedicalCard {
+                sectionCard(title: langManager.localized("claim.toggleMedical"), count: nil) {
+                    Text(langManager.localized("claim.medicalEmpty"))
+                        .font(.scaled(size: 12))
+                        .foregroundStyle(.secondary)
                 }
             }
 

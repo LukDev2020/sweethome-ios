@@ -68,7 +68,10 @@ final class ExploreModeController: ObservableObject {
     private(set) var coordinator: AppCoordinator?
     private(set) var store: DemoStore?
     private var defaultsSuiteName: String?
+    /// The window the overlay draws in (the app's own, see installOverlayWindow).
     private(set) var overlayWindow: UIWindow?
+    private var overlayView: PassthroughOverlayView?
+    private var overlayHost: UIViewController?
     private var cancellables = Set<AnyCancellable>()
     private var blockedObserver: NSObjectProtocol?
 
@@ -145,8 +148,7 @@ final class ExploreModeController: ObservableObject {
     func exit(setUpRealFamily: Bool = false) {
         guard isActive else { return }
         isActive = false
-        overlayWindow?.isHidden = true
-        overlayWindow = nil
+        removeOverlay()
         modalPoll?.invalidate()
         modalPoll = nil
         overlayRegions = [:]
@@ -404,6 +406,9 @@ final class ExploreModeController: ObservableObject {
         await coordinator.fetchWatchBack()
     }
 
+    /// Battery of the phone the demo is showing (Mom 82 %, Kai…)
+    var personaBatteryLevel: Double? { store?.batteryLevel(of: role.userId) }
+
     // MARK: Coach-mark anchors
 
     func report(anchor id: String, frame: CGRect?) {
@@ -428,52 +433,77 @@ final class ExploreModeController: ObservableObject {
         modalPoll = Timer.scheduledTimer(withTimeInterval: 0.4, repeats: true) { [weak self, weak scene] _ in
             MainActor.assumeIsolated {
                 guard let self, let scene else { return }
-                let appWindow = scene.windows.first { !($0 is PassthroughWindow) && $0.isKeyWindow }
-                    ?? scene.windows.first { !($0 is PassthroughWindow) }
+                let appWindow = scene.windows.first { $0.isKeyWindow } ?? scene.windows.first
                 // A sheet/alert, or the full-screen SOS countdown / fall check (drawn
                 // as overlays, not presented): the tips must not cover their buttons.
                 let presenting = appWindow?.rootViewController?.presentedViewController != nil
                     || self.coordinator?.pendingSOS != nil
                     || self.coordinator?.showFallConfirmation == true
                 if presenting != self.isAppPresentingModal { self.isAppPresentingModal = presenting }
+                self.keepOverlayOnTop()
             }
         }
     }
 
-    // MARK: Overlay window (tips stay above sheets)
+    // MARK: Overlay (tips stay above sheets)
 
+    /// Draws in the app's own window as its top subview. A second UIWindow stopped
+    /// putting SwiftUI updates on screen on iOS 27 (e.g. "Hide tips" only showed after
+    /// the next touch); the app window redraws normally.
     private func installOverlayWindow() {
         guard let scene = UIApplication.shared.connectedScenes
             .compactMap({ $0 as? UIWindowScene })
             .first(where: { $0.activationState == .foregroundActive }) ??
-                UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first
+                UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first,
+              let window = scene.windows.first(where: { $0.isKeyWindow }) ?? scene.windows.first
         else { return }
-        let window = PassthroughWindow(windowScene: scene)
-        window.windowLevel = .normal + 1
-        // Tour cards are designed light (white card, navy text) in either app mode
-        window.overrideUserInterfaceStyle = .light
-        window.interactiveRegions = { [weak self] in
+        let container = PassthroughOverlayView(frame: window.bounds)
+        container.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        container.interactiveRegions = { [weak self] in
             MainActor.assumeIsolated { self.map { Array($0.overlayRegions.values) } ?? [] }
         }
         let host = UIHostingController(rootView: DemoOverlayView().environmentObject(self))
         host.view.backgroundColor = .clear
-        window.rootViewController = host
-        window.isHidden = false
+        // Tour cards are designed light (white card, navy text) in either app mode
+        host.overrideUserInterfaceStyle = .light
+        host.view.frame = container.bounds
+        host.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        container.addSubview(host.view)
+        container.hostView = host.view
+        window.addSubview(container)
+        overlayHost = host
+        overlayView = container
         overlayWindow = window
         startModalPolling(in: scene)
+    }
+
+    private func removeOverlay() {
+        overlayView?.removeFromSuperview()
+        overlayView = nil
+        overlayHost = nil
+        overlayWindow = nil
+    }
+
+    /// Sheets and alerts are added to the window above everything else: put the
+    /// overlay back on top (called by the presentation poll).
+    private func keepOverlayOnTop() {
+        guard let overlayView, let window = overlayView.superview, window.subviews.last !== overlayView else { return }
+        window.bringSubviewToFront(overlayView)
     }
 }
 
 /// Lets touches through everywhere the overlay draws nothing interactive.
-final class PassthroughWindow: UIWindow {
+final class PassthroughOverlayView: UIView {
     var interactiveRegions: () -> [CGRect] = { [] }
+    weak var hostView: UIView?
 
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         guard let hit = super.hitTest(point, with: event) else { return nil }
-        if hit !== rootViewController?.view { return hit }
+        if hit !== self && hit !== hostView { return hit }
         // SwiftUI buttons have no UIView of their own: the hosting view is hit for a
         // button and for empty space alike. Only keep touches inside the regions the
         // overlay reported (tip card, banner, hand-off, checklist).
-        return interactiveRegions().contains { $0.contains(point) } ? hit : nil
+        let inWindow = convert(point, to: nil)
+        return interactiveRegions().contains { $0.contains(inWindow) } ? hit : nil
     }
 }

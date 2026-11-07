@@ -3,9 +3,9 @@ import SwiftUI
 // MARK: - Guardian Records, Schedule & Contacts
 //
 // Combined view with segmented control:
-//   - Timeline: activity log from all protected persons
-//   - Duty Schedule: 24-hour coverage track + shifts
-//   - Contacts: manage guardian circle members + emergency contacts
+//   - Timeline: my own events plus those of everyone I look after (GET /v1/timeline?personId=)
+//   - Duty Schedule: 24-hour coverage track + shifts (GET /v1/guardian/circle)
+//   - Contacts: the guardian circle + emergency contacts
 
 struct GuardianRecordsView: View {
     @EnvironmentObject var coordinator: AppCoordinator
@@ -28,16 +28,27 @@ struct GuardianRecordsView: View {
     // Contacts tab state
     @State private var showInviteSheet = false
     @State private var showAddEmergency = false
-    @State private var editingMember: GuardianMember? = nil
     @State private var guardianMembers: [GuardianMember] = []
+    /// Who looks after the first person I guard, and when (Schedule tab)
+    @State private var scheduleCircle: [Guardian] = []
+    /// Events of the people I look after (their SOS, check-ins…), with their name
+    @State private var personEntries: [TimelineEntry] = []
     @AppStorage("local_emergency_contacts_v2") private var emergencyData: Data = Data()
     @State private var localEmergencyContacts: [LocalEmergencyContact] = []
+    @State private var contactToDelete: LocalEmergencyContact?
 
     private var scheduleSubtitle: String {
         let name = coordinator.protectedPersons.first?.user.displayName ?? langManager.localized("guardian.records.protected.person")
         let city = coordinator.protectedPersons.first?.user.cityName ?? ""
         let dayText = String(format: langManager.localized("guardian.records.person.day"), name)
         return city.isEmpty ? dayText : "\(dayText) · \(String(format: langManager.localized("guardian.records.city.time"), city))"
+    }
+
+    /// My own entries and those of the people I look after, newest first.
+    private var records: [TimelineEntry] {
+        let mine = coordinator.timeline
+        let ids = Set(mine.map(\.id))
+        return (mine + personEntries.filter { !ids.contains($0.id) }).sorted { $0.timestamp > $1.timestamp }
     }
 
     enum RecordTab: String, CaseIterable {
@@ -61,7 +72,11 @@ struct GuardianRecordsView: View {
             .onAppear {
                 loadEmergencyContacts()
                 loadGuardianMembers()
+                Task { await loadFromServer() }
             }
+            .onChange(of: coordinator.protectedPersons.map(\.id)) { Task { await loadFromServer() } }
+            // An SOS started or ended: it belongs in the timeline now
+            .onChange(of: coordinator.guardianSOS.keys.sorted()) { Task { await loadPersonEntries() } }
             .sheet(isPresented: $showInviteSheet) {
                 InviteGuardianSheet()
                     .environmentObject(coordinator)
@@ -72,9 +87,8 @@ struct GuardianRecordsView: View {
                     countryCode: coordinator.currentUser?.countryCode ?? "CN"
                 )
             }
-            .sheet(item: $editingMember) { member in
-                EditGuardianMemberSheet(member: member, members: $guardianMembers)
-                    .environmentObject(coordinator)
+            .confirmDeletingContact($contactToDelete) { contact in
+                localEmergencyContacts.removeAll { $0.id == contact.id }
             }
             .onChange(of: localEmergencyContacts) { saveEmergencyContacts() }
         }
@@ -169,13 +183,13 @@ struct GuardianRecordsView: View {
 
     private var timelineStatBadges: some View {
         HStack(spacing: 16) {
-            statBadge(value: "\(coordinator.timeline.count)", label: langManager.localized("guardian.records.events"), color: ink)
+            statBadge(value: "\(records.count)", label: langManager.localized("guardian.records.events"), color: ink)
             statBadge(
-                value: "\(coordinator.timeline.filter { $0.type == .checkIn }.count)",
+                value: "\(records.filter { $0.type == .checkIn }.count)",
                 label: langManager.localized("guardian.records.checkins"), color: safe
             )
             statBadge(
-                value: "\(coordinator.timeline.filter { $0.type == .sosTriggered }.count)",
+                value: "\(records.filter { $0.type == .sosTriggered }.count)",
                 label: "SOS", color: alert
             )
         }
@@ -202,7 +216,7 @@ struct GuardianRecordsView: View {
     private var timelineListAndExport: some View {
         VStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 0) {
-                if coordinator.timeline.isEmpty {
+                if records.isEmpty {
                     HStack {
                         Spacer()
                         VStack(spacing: 8) {
@@ -220,7 +234,7 @@ struct GuardianRecordsView: View {
                         Spacer()
                     }
                 } else {
-                    ForEach(coordinator.timeline.prefix(30)) { entry in
+                    ForEach(records.prefix(30)) { entry in
                         timelineRow(
                             icon: iconForType(entry.type),
                             iconColor: colorForType(entry.type),
@@ -268,13 +282,13 @@ struct GuardianRecordsView: View {
         VStack(spacing: 12) {
             // Summary
             HStack(spacing: 16) {
-                statBadge(value: "\(coordinator.timeline.count)", label: langManager.localized("guardian.records.events"), color: ink)
+                statBadge(value: "\(records.count)", label: langManager.localized("guardian.records.events"), color: ink)
                 statBadge(
-                    value: "\(coordinator.timeline.filter { $0.type == .checkIn }.count)",
+                    value: "\(records.filter { $0.type == .checkIn }.count)",
                     label: langManager.localized("guardian.records.checkins"), color: safe
                 )
                 statBadge(
-                    value: "\(coordinator.timeline.filter { $0.type == .sosTriggered }.count)",
+                    value: "\(records.filter { $0.type == .sosTriggered }.count)",
                     label: "SOS", color: alert
                 )
             }
@@ -288,7 +302,7 @@ struct GuardianRecordsView: View {
 
             // Timeline list
             VStack(alignment: .leading, spacing: 0) {
-                if coordinator.timeline.isEmpty {
+                if records.isEmpty {
                     HStack {
                         Spacer()
                         VStack(spacing: 8) {
@@ -306,7 +320,7 @@ struct GuardianRecordsView: View {
                         Spacer()
                     }
                 } else {
-                    ForEach(coordinator.timeline.prefix(30)) { entry in
+                    ForEach(records.prefix(30)) { entry in
                         timelineRow(
                             icon: iconForType(entry.type),
                             iconColor: colorForType(entry.type),
@@ -498,17 +512,33 @@ struct GuardianRecordsView: View {
 
     // MARK: - 24h Coverage Track
 
+    /// Today's coverage of the first person I look after, from everyone's duty hours
+    /// (a guardian without set hours counts for their usual waking hours).
+    private var coverage: DutyScheduler.DayCoverage? {
+        guard let person = coordinator.protectedPersons.first, !scheduleCircle.isEmpty else { return nil }
+        return coordinator.dutyScheduler.buildDayCoverage(protectedPerson: person, guardians: scheduleCircle)
+    }
+
     private var coverageTrack: some View {
         VStack(spacing: 5) {
-            GeometryReader { geo in
-                let w = geo.size.width
-                ZStack {
-                    Rectangle().fill(pro.opacity(0.15))
-                    Text(langManager.localized("guardian.records.no.schedule"))
-                        .font(.scaled(size: 12, weight: .medium))
-                        .foregroundStyle(pro)
+            Group {
+                if let coverage {
+                    HStack(spacing: 1) {
+                        ForEach(coverage.slots, id: \.hour) { slot in
+                            Rectangle().fill(slotColor(slot))
+                        }
+                    }
+                    .background(ink.opacity(0.08))
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(String(format: langManager.localized("guardian.records.coverage"), coverage.totalCoveredHours))
+                } else {
+                    ZStack {
+                        Rectangle().fill(pro.opacity(0.15))
+                        Text(langManager.localized("guardian.records.no.schedule"))
+                            .font(.scaled(size: 12, weight: .medium))
+                            .foregroundStyle(pro)
+                    }
                 }
-                .frame(width: w)
             }
             .frame(height: 36)
             .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -525,7 +555,21 @@ struct GuardianRecordsView: View {
                     if hour != "24" { Spacer() }
                 }
             }
+            .accessibilityHidden(true)
+
+            if let coverage {
+                Text(String(format: langManager.localized("guardian.records.coverage"), coverage.totalCoveredHours))
+                    .font(.scaled(size: 12))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityHidden(true)
+            }
         }
+    }
+
+    private func slotColor(_ slot: DutyScheduler.CoverageSlot) -> Color {
+        if slot.isGap { return lamp.opacity(0.35) }
+        return slot.coveredBy.contains { $0.isConfirmed } ? safe : safe.opacity(0.45)
     }
 
     private var todayShiftsPanel: some View {
@@ -533,14 +577,28 @@ struct GuardianRecordsView: View {
             Text(langManager.localized("guardian.records.today.shifts"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            HStack {
-                Spacer()
-                Text(langManager.localized("guardian.records.no.shifts"))
-                    .font(.scaled(size: 13))
-                    .foregroundStyle(.tertiary)
-                Spacer()
+            if let coverage {
+                ForEach(scheduleCircle, id: \.id) { guardian in
+                    let hours = coverage.slots.filter { $0.coveredBy.contains { $0.guardianId == guardian.id } }.map(\.hour)
+                    shiftRow(guardian.user.displayName + (guardian.id == coordinator.currentUser?.id ? " (\(langManager.localized("guardian.records.me")))" : ""),
+                             value: hours.isEmpty ? langManager.localized("guardian.records.shift.none") : Self.hourRanges(hours),
+                             note: guardian.dutySchedule == nil ? langManager.localized("guardian.records.shift.awake") : nil,
+                             isOk: !hours.isEmpty)
+                }
+                ForEach(coverage.gaps, id: \.startHour) { gap in
+                    shiftRow(langManager.localized("guardian.records.shift.gap"),
+                             value: Self.hourRanges(Array(gap.startHour..<gap.endHour)), note: nil, isOk: false)
+                }
+            } else {
+                HStack {
+                    Spacer()
+                    Text(langManager.localized("guardian.records.no.shifts"))
+                        .font(.scaled(size: 13))
+                        .foregroundStyle(.tertiary)
+                    Spacer()
+                }
+                .padding(.vertical, 8)
             }
-            .padding(.vertical, 8)
         }
         .padding(12)
         .background(
@@ -549,15 +607,31 @@ struct GuardianRecordsView: View {
         )
     }
 
-    private func shiftRow(_ label: String, value: String, isOk: Bool) -> some View {
-        HStack {
-            Text(label).font(.scaled(size: 13))
+    /// [8, 9, 10, 20, 21] → "08:00–11:00, 20:00–22:00"
+    static func hourRanges(_ hours: [Int]) -> String {
+        var ranges: [(Int, Int)] = []
+        for h in hours.sorted() {
+            if let last = ranges.last, last.1 == h { ranges[ranges.count - 1].1 = h + 1 } else { ranges.append((h, h + 1)) }
+        }
+        return ranges.map { String(format: "%02d:00–%02d:00", $0.0, $0.1) }.joined(separator: ", ")
+    }
+
+    private func shiftRow(_ label: String, value: String, note: String?, isOk: Bool) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(label).font(.scaled(size: 13))
+                if let note {
+                    Text(note).font(.scaled(size: 11)).foregroundStyle(.tertiary)
+                }
+            }
             Spacer()
             Text(value)
                 .font(.scaled(size: 12))
-                .foregroundStyle(isOk ? safe : .primary)
+                .multilineTextAlignment(.trailing)
+                .foregroundStyle(isOk ? safe : lamp)
         }
         .padding(.vertical, 2)
+        .accessibilityElement(children: .combine)
     }
 
     private var gapHandlingPanel: some View {
@@ -734,43 +808,9 @@ struct GuardianRecordsView: View {
                 .frame(height: 1),
             alignment: .bottom
         )
-        .contentShape(Rectangle())
-        .contextMenu {
-            if !member.isMe {
-                Button {
-                    editingMember = member
-                } label: {
-                    Label(langManager.localized("guardian.records.edit.role"), systemImage: "pencil")
-                }
-                if member.status == .pending {
-                    Button {
-                        resendInvite(member)
-                    } label: {
-                        Label(langManager.localized("guardian.records.resend.invite"), systemImage: "arrow.clockwise")
-                    }
-                }
-                Button(role: .destructive) {
-                    removeMember(member)
-                } label: {
-                    Label(langManager.localized("guardian.records.remove"), systemImage: "person.badge.minus")
-                }
-            }
-        }
-        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            if !member.isMe {
-                Button(role: .destructive) {
-                    removeMember(member)
-                } label: {
-                    Label(langManager.localized("guardian.records.remove"), systemImage: "trash")
-                }
-                Button {
-                    editingMember = member
-                } label: {
-                    Label(langManager.localized("guardian.records.edit"), systemImage: "pencil")
-                }
-                .tint(safe)
-            }
-        }
+        // Guardians can't change or remove each other (only the person can), so
+        // co-guardian rows have no actions: they failed silently before.
+        .accessibilityElement(children: .combine)
     }
 
     private func statusColor(_ status: GuardianMember.Status) -> Color {
@@ -906,9 +946,11 @@ struct GuardianRecordsView: View {
                 .frame(height: 1),
             alignment: .bottom
         )
-        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+        .contentShape(Rectangle())
+        // Not in a List, so swipe actions never fired: long-press, then confirm
+        .contextMenu {
             Button(role: .destructive) {
-                localEmergencyContacts.remove(at: index)
+                contactToDelete = contact
             } label: {
                 Label(langManager.localized("guardian.records.delete"), systemImage: "trash")
             }
@@ -950,60 +992,56 @@ struct GuardianRecordsView: View {
 
     // MARK: - Actions
 
-    private func removeMember(_ member: GuardianMember) {
-        guardianMembers.removeAll { $0.id == member.id }
-        Task {
-            do {
-                let _: EmptyResponse = try await coordinator.apiClient.delete(
-                    "/v1/protected/guardians/\(member.id)"
-                )
-            } catch {
-                #if DEBUG
-                print("[GuardianRecords] Remove member failed: \(error)")
-                #endif
-            }
-        }
-    }
-
-    private func resendInvite(_ member: GuardianMember) {
-        Task {
-            do {
-                let _: EmptyResponse = try await coordinator.apiClient.post(
-                    "/v1/invite/create",
-                    body: CreateInviteRequest(inviterRole: .guardian)
-                )
-            } catch {
-                #if DEBUG
-                print("[GuardianRecords] Resend invite failed: \(error)")
-                #endif
-            }
-        }
-    }
-
     private func loadGuardianMembers() {
-        // If we already have members loaded (e.g. from invite), keep them
-        guard guardianMembers.isEmpty else { return }
+        // Me first, until the circle arrives from the server
+        guard guardianMembers.isEmpty, let user = coordinator.currentUser else { return }
+        guardianMembers = [member(id: user.id, name: user.displayName, city: user.cityName, since: user.createdAt)]
+    }
 
-        // Build from real data: current user + any known guardians
-        var members: [GuardianMember] = []
+    private func member(id: String, name: String, city: String, since: Date) -> GuardianMember {
+        let isMe = id == coordinator.currentUser?.id
+        return GuardianMember(
+            id: id,
+            name: isMe && name.isEmpty ? langManager.localized("guardian.records.me.name") : name,
+            city: city, phone: "", role: .primary, status: .active, isMe: isMe, joinedAt: since)
+    }
 
-        // Add self (the current guardian user)
-        if let user = coordinator.currentUser {
-            members.append(GuardianMember(
-                id: user.id,
-                name: user.displayName.isEmpty ? langManager.localized("guardian.records.me.name") : user.displayName,
-                city: user.cityName,
-                phone: "",
-                role: .primary,
-                status: .active,
-                isMe: true,
-                joinedAt: user.createdAt
-            ))
+    private func loadFromServer() async {
+        await loadCircle()
+        await loadPersonEntries()
+    }
+
+    /// Everyone who looks after the people I look after (each once, me first).
+    private func loadCircle() async {
+        var circles: [[Guardian]] = []
+        for person in coordinator.protectedPersons {
+            circles.append(await coordinator.fetchGuardianCircle(personId: person.id))
         }
+        scheduleCircle = circles.first ?? []
+        var seen = Set<String>()
+        var members: [GuardianMember] = []
+        if let user = coordinator.currentUser {
+            members.append(member(id: user.id, name: user.displayName, city: user.cityName, since: user.createdAt))
+            seen.insert(user.id)
+        }
+        for guardian in circles.flatMap({ $0 }) where seen.insert(guardian.id).inserted {
+            members.append(member(id: guardian.id, name: guardian.user.displayName,
+                                  city: guardian.user.cityName, since: guardian.linkedSince))
+        }
+        if !members.isEmpty { guardianMembers = members }
+    }
 
-        // No demo fallback — show only real linked members
-
-        guardianMembers = members
+    /// Each person's own events (an SOS, a check-in…), named so it's clear whose they are.
+    private func loadPersonEntries() async {
+        var entries: [TimelineEntry] = []
+        for person in coordinator.protectedPersons {
+            let name = person.user.displayName
+            entries += await coordinator.fetchTimeline(of: person.id, limit: 30).map {
+                TimelineEntry(id: $0.id, timestamp: $0.timestamp, type: $0.type,
+                              description: name.isEmpty ? $0.description : "\(name) · \($0.description)", detail: $0.detail)
+            }
+        }
+        personEntries = entries
     }
 
     private func loadEmergencyContacts() {
@@ -1187,104 +1225,6 @@ struct InviteGuardianSheet: View {
                 AppCoordinator.topViewController()?.present(activityVC, animated: true)
                 dismiss()
             }
-        }
-    }
-}
-
-// MARK: - Edit Guardian Member Sheet
-
-struct EditGuardianMemberSheet: View {
-    let member: GuardianMember
-    @Binding var members: [GuardianMember]
-    @EnvironmentObject var coordinator: AppCoordinator
-    @Environment(\.dismiss) var dismiss
-
-    private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
-
-    @State private var selectedRole: GuardianMember.Role = .backup
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section(LanguageManager.shared.localized("member.edit.info")) {
-                    HStack {
-                        Text(LanguageManager.shared.localized("invite.sheet.name"))
-                        Spacer()
-                        Text(member.name)
-                            .foregroundStyle(.secondary)
-                    }
-                    HStack {
-                        Text(LanguageManager.shared.localized("member.edit.city"))
-                        Spacer()
-                        Text(member.city.isEmpty ? LanguageManager.shared.localized("member.edit.unknown") : member.city)
-                            .foregroundStyle(.secondary)
-                    }
-                    HStack {
-                        Text(LanguageManager.shared.localized("member.edit.phone"))
-                        Spacer()
-                        Text(member.phone)
-                            .foregroundStyle(.secondary)
-                    }
-                    HStack {
-                        Text(LanguageManager.shared.localized("member.edit.status"))
-                        Spacer()
-                        Text(member.status.label)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                Section(LanguageManager.shared.localized("member.edit.roleSection")) {
-                    Picker(LanguageManager.shared.localized("invite.sheet.role"), selection: $selectedRole) {
-                        ForEach(GuardianMember.Role.allCases, id: \.self) { role in
-                            Text(role.label).tag(role)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                }
-
-                if member.status == .active {
-                    Section(LanguageManager.shared.localized("member.edit.joinedSection")) {
-                        HStack {
-                            Text(LanguageManager.shared.localized("member.edit.joinedOn"))
-                            Spacer()
-                            Text(member.joinedAt, style: .date)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-            }
-            .navigationTitle(LanguageManager.shared.localized("member.edit.title"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button { dismiss() } label: { Label(LanguageManager.shared.localized("invite.sheet.cancel"), systemImage: "xmark") }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        if let idx = members.firstIndex(where: { $0.id == member.id }) {
-                            members[idx].role = selectedRole
-                        }
-                        Task {
-                            do {
-                                let _: EmptyResponse = try await coordinator.apiClient.put(
-                                    "/v1/protected/guardians/\(member.id)/permissions",
-                                    body: ["role": selectedRole.rawValue]
-                                )
-                            } catch {
-                                #if DEBUG
-                                print("[EditMember] Update role failed: \(error)")
-                                #endif
-                            }
-                        }
-                        dismiss()
-                    } label: {
-                        Label(LanguageManager.shared.localized("member.edit.save"), systemImage: "checkmark")
-                    }
-                    .font(.scaled(size: 14, weight: .medium))
-                    .foregroundStyle(safe)
-                }
-            }
-            .onAppear { selectedRole = member.role }
         }
     }
 }

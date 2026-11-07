@@ -364,6 +364,12 @@ struct ProtectedHomeView: View {
     }
 
     private var toolbarBattery: String {
+        // Explore Mode shows the persona's phone (the simulator has no battery: "--%")
+        if coordinator.isDemo, let demo = ExploreModeController.shared.personaBatteryLevel {
+            return String(format: lang.localized("protected.home.battery"), Int(demo * 100))
+        }
+        // The level reads -1 unless monitoring is on (it is off while heartbeats are)
+        if !UIDevice.current.isBatteryMonitoringEnabled { UIDevice.current.isBatteryMonitoringEnabled = true }
         let level = UIDevice.current.batteryLevel
         if level >= 0 {
             return String(format: lang.localized("protected.home.battery"), Int(level * 100))

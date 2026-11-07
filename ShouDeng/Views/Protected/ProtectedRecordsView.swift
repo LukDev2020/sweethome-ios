@@ -355,10 +355,14 @@ struct ProtectedRecordsView: View {
 
     private func timelineRow(date: String, event: String, isBlurred: Bool) -> some View {
         HStack(alignment: .top) {
+            // One line: "Yesterday" wrapped in the old 50 pt monospaced column
             Text(date)
-                .font(.scaled(size: 12, weight: .medium, design: .monospaced))
+                .font(.scaled(size: 12, weight: .medium))
+                .monospacedDigit()
                 .foregroundStyle(.secondary)
-                .frame(width: 50, alignment: .trailing)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .frame(width: 76, alignment: .trailing)
             Text(event)
                 .font(.scaled(size: 12.5))
                 .lineLimit(2)
@@ -568,6 +572,7 @@ private struct EmergencyContactCardRow: View {
 private struct CustomContactsPanel: View {
     @Binding var contacts: [LocalEmergencyContact]
     let onCall: (String) -> Void
+    @State private var contactToDelete: LocalEmergencyContact?
 
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let borderColor: Color = Color(red: 0.7, green: 0.7, blue: 0.72)
@@ -631,14 +636,13 @@ private struct CustomContactsPanel: View {
             ForEach(items) { contact in
                 EmergencyContactCardRow(
                     contact: contact,
-                    onDelete: {
-                        withAnimation {
-                            contacts.removeAll { $0.id == contact.id }
-                        }
-                    },
+                    onDelete: { contactToDelete = contact },
                     onCall: { onCall(contact.phone) }
                 )
             }
+        }
+        .confirmDeletingContact($contactToDelete) { contact in
+            withAnimation { contacts.removeAll { $0.id == contact.id } }
         }
     }
 }

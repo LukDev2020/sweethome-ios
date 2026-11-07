@@ -618,7 +618,7 @@
 "homeTimer.safeArrival" = "無事に到着";
 "homeTimer.setEntry" = "帰宅タイマーを設定しました：%@";
 "homeTimer.setup" = "帰宅時間を設定";
-"homeTimer.setupDesc" = "設定した時間までにタイマーを止めないと、\n見守る人に自動的に通知されます。";
+"homeTimer.setupDesc" = "設定した時間までにタイマーを止めないと、見守る人に自動的に通知されます。";
 "homeTimer.start" = "タイマーを開始";
 "homeTimer.title" = "帰宅タイマー";
 
@@ -1027,9 +1027,9 @@
 "fakecall.delay.30s" = "30秒";
 "fakecall.delay.60s" = "60秒";
 
-// MARK: - Dead Man's Switch
-"deadman.title" = "安全タイマー";
-"deadman.info.title" = "見守りタイマー";
+// MARK: - Safety Timer (deadman.* keys)
+"deadman.title" = "見守りタイマー";
+"deadman.info.title" = "見守りタイマーのしくみ";
 "deadman.info.body" = "カウントダウンを開始します。時間内にキャンセルしなかった場合、見守る人にあなたの位置情報が自動で通知されます。";
 "deadman.presets" = "クイックスタート";
 "deadman.preset.walkingHome" = "徒歩で帰宅";
@@ -2338,3 +2338,17 @@
 "report.limit.fall" = "転倒検知はアプリ表示中のみ動作し、見逃しや、スマホの落下を転倒と誤ることがあります。";
 "report.limit.gaps" = "データがない期間は、スマホが何も送らなかった（圏外・電源オフ・共有停止）ことを示し、何も起きなかったことを意味しません。";
 "report.disclaimer" = "Lantern Care は緊急通報サービスではありません。危険なときはまず地域の緊急番号に電話してください。";
+
+// MARK: - Full button test leftovers (Records schedule, contacts, SOS end)
+"emergencyContact.delete.title" = "%@ を削除しますか？";
+"emergencyContact.delete.message" = "緊急連絡先のリストから削除されます。";
+"emergencyContact.delete.confirm" = "削除";
+"emergencyContact.delete.cancel" = "キャンセル";
+"guardian.alert.sosEnded" = "%@ さんのSOSは終了しました";
+"guardian.records.coverage" = "今日は24時間中 %d 時間をカバー";
+"guardian.records.shift.none" = "今日は担当なし";
+"guardian.records.shift.awake" = "担当時間の設定なし・普段起きている時間で計算";
+"guardian.records.shift.gap" = "担当者なし";
+"claim.medicalEmpty" = "医療カードはまだ入力されていません。";
+"timeline.sosEnded" = "SOSは終了しました";
+"duress.how.step5" = "SOSを「終了したように見せる」こともできます：「SOS を終了しますか？」で「コードを入力」をタップしてこのコードを入力すると、画面ではSOSが終了したように見えますが、見守る人には通報が続きます";

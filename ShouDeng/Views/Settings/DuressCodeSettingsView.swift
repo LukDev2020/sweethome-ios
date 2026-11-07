@@ -69,6 +69,7 @@ struct DuressCodeSettingsView: View {
                         howItWorksRow("2", text: "duress.how.step2")
                         howItWorksRow("3", text: "duress.how.step3")
                         howItWorksRow("4", text: "duress.how.step4")
+                        howItWorksRow("5", text: "duress.how.step5")
                     }
                     .padding(14)
                     .background(
@@ -239,6 +240,7 @@ struct DuressCodeSettingsView: View {
             Text(langManager.localized(text))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 

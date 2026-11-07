@@ -374,7 +374,7 @@
 "guardian.alert.trigger.voice.command" = "Commande vocale SOS";
 "guardian.alert.trigger.voice.wake" = "Mot de réveil vocal";
 "guardian.alert.trigger.widget" = "SOS via widget";
-"guardian.alert.trigger.deadman" = "Minuterie de sécurité expirée";
+"guardian.alert.trigger.deadman" = "Minuteur de sécurité expiré";
 "guardian.alert.triggered.at" = "Déclenché à";
 "guardian.alert.unknown" = "Inconnu";
 "guardian.billing.180days" = "180 jours";
@@ -618,8 +618,7 @@
 "homeTimer.safeArrival" = "Arrivée en sécurité";
 "homeTimer.setEntry" = "Minuteur de retour réglé : %@";
 "homeTimer.setup" = "Définir l'heure de retour";
-"homeTimer.setupDesc" = "Si vous ne fermez pas le minuteur à temps,
-vos gardiens seront automatiquement notifiés.";
+"homeTimer.setupDesc" = "Si vous ne fermez pas le minuteur à temps, vos gardiens seront automatiquement notifiés.";
 "homeTimer.start" = "Démarrer";
 "homeTimer.title" = "Minuteur de retour";
 
@@ -1028,9 +1027,9 @@ vos gardiens seront automatiquement notifiés.";
 "fakecall.delay.30s" = "30s";
 "fakecall.delay.60s" = "60s";
 
-// MARK: - Dead Man's Switch
+// MARK: - Safety Timer (deadman.* keys)
 "deadman.title" = "Minuteur de sécurité";
-"deadman.info.title" = "Alarme automatique";
+"deadman.info.title" = "Comment fonctionne le minuteur de sécurité";
 "deadman.info.body" = "Lancez un compte à rebours. Si vous ne l'annulez pas à temps, vos gardiens seront alertés avec votre position.";
 "deadman.presets" = "Démarrage rapide";
 "deadman.preset.walkingHome" = "Retour à pied";
@@ -2339,3 +2338,17 @@ vos gardiens seront automatiquement notifiés.";
 "report.limit.fall" = "La détection de chute ne fonctionne qu'app ouverte ; elle peut manquer une chute ou confondre un téléphone tombé.";
 "report.limit.gaps" = "Aucune donnée signifie que le téléphone n'a rien envoyé (pas de réseau, éteint, partage en pause) — pas qu'il ne s'est rien passé.";
 "report.disclaimer" = "Lantern Care n'est pas un service d'urgence. En cas de danger, appelez d'abord le numéro d'urgence local.";
+
+// MARK: - Full button test leftovers (Records schedule, contacts, SOS end)
+"emergencyContact.delete.title" = "Supprimer %@ ?";
+"emergencyContact.delete.message" = "Cette personne ne figurera plus dans vos contacts d'urgence.";
+"emergencyContact.delete.confirm" = "Supprimer";
+"emergencyContact.delete.cancel" = "Annuler";
+"guardian.alert.sosEnded" = "L'alerte SOS de %@ est terminée";
+"guardian.records.coverage" = "%d h sur 24 couvertes aujourd'hui";
+"guardian.records.shift.none" = "Pas de garde aujourd'hui";
+"guardian.records.shift.awake" = "Pas d'horaires fixés · compté pendant ses heures d'éveil";
+"guardian.records.shift.gap" = "Personne de garde";
+"claim.medicalEmpty" = "Aucune fiche médicale n'a encore été remplie.";
+"timeline.sosEnded" = "SOS terminé";
+"duress.how.step5" = "Il permet aussi de terminer un SOS en apparence : dans « Terminer le SOS ? », touchez « Saisir un code » et tapez ce code. Le SOS semble terminé à l'écran, mais vos gardiens continuent de recevoir l'alerte";

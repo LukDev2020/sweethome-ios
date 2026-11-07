@@ -87,11 +87,12 @@ struct FontSizeSheet: View {
                                     Text(level.label)
                                         .font(.system(size: 15, weight: .semibold))
                                         .foregroundStyle(ink)
+                                    // Wraps instead of shrinking: shrunk to one line, "Huge"
+                                    // came out smaller than "Extra Large"
                                     Text(lang.localized("fontScale.sample"))
                                         .font(.system(size: 15 * level.scale))
                                         .foregroundStyle(ink.opacity(0.75))
-                                        .lineLimit(1)
-                                        .minimumScaleFactor(0.6)
+                                        .fixedSize(horizontal: false, vertical: true)
                                 }
                                 Spacer()
                                 if fontScale.level == level {

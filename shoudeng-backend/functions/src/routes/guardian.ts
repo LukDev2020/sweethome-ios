@@ -5,6 +5,7 @@ import { getLatestHeartbeat } from "../services/bigquery";
 import { toIso } from "../services/time";
 import { activeSOSDoc, sosStatus, SOSStatus } from "../services/escalation";
 import { reverseGeocode } from "../services/geocoding";
+import { guardiansOf } from "../services/guardianList";
 
 const router = Router();
 const db = admin.firestore();
@@ -114,6 +115,31 @@ async function loadPersonStatus(
     activeSOS,
   };
 }
+
+/**
+ * GET /v1/guardian/circle?personId=
+ * Everyone who looks after this person (me included) and their duty hours, for the
+ * guardian's Records → Schedule and Contacts. Requires an active guardian link.
+ */
+router.get("/circle", async (req: Request, res: Response) => {
+  const uid = req.uid!;
+  const personId = typeof req.query.personId === "string" ? req.query.personId : "";
+  if (!personId) {
+    res.status(400).json({ error: "personId is required" });
+    return;
+  }
+  try {
+    const link = await db.collection("guardian_links").doc(`${uid}_${personId}`).get();
+    if (!link.exists || link.data()?.status !== "active") {
+      res.status(403).json({ error: "No active guardian link for this person" });
+      return;
+    }
+    res.json(await guardiansOf(personId));
+  } catch (error) {
+    console.error("[Guardian] circle error:", error);
+    res.status(500).json({ error: "Failed to fetch the guardian circle" });
+  }
+});
 
 /**
  * GET /v1/guardian/sos/active?personId=

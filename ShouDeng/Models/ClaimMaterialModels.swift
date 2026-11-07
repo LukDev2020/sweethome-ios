@@ -105,6 +105,12 @@ struct MedicalSnapshot: Codable {
     let conditions: [String]?
     let insuranceProvider: String?
     let policyNumber: String?
+
+    /// Nothing to show (no medical card saved)
+    var isEmpty: Bool {
+        [bloodType, insuranceProvider, policyNumber].allSatisfy { ($0 ?? "").isEmpty }
+            && (allergies ?? []).isEmpty && (conditions ?? []).isEmpty
+    }
 }
 
 // MARK: - Export History

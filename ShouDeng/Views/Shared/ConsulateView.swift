@@ -114,6 +114,7 @@ struct ConsulateView: View {
                 }
             }
             .searchable(text: $searchText, prompt: langManager.localized("consulate.search"))
+            .keepsTitleWhileSearching()
             .navigationTitle(langManager.localized("consulate.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

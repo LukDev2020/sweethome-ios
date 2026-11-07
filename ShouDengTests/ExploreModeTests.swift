@@ -233,8 +233,12 @@ final class ExploreModeTests: XCTestCase {
 
         let posts = try decoder.decode([FamilyPost].self, from: get("/v1/family/posts"))
         XCTAssertEqual(posts.count, 3)
+        // Sarah's own timeline is empty; Mom's (shown in Sarah's Records, named) has the SOS
         let timeline = try decoder.decode(TimelineResponse.self, from: get("/v1/timeline"))
-        XCTAssertEqual(timeline.entries.count, 4)
+        XCTAssertEqual(timeline.entries.count, 0)
+        let momTimeline = try decoder.decode(TimelineResponse.self, from: get("/v1/timeline", ["personId": DemoDataset.momId]))
+        XCTAssertEqual(momTimeline.entries.count, 5)
+        XCTAssertEqual(momTimeline.entries.first?.type, .sosTriggered)
 
         store.currentUserId = DemoDataset.momId
         let guardians = try decoder.decode([Guardian].self, from: get("/v1/protected/guardians"))

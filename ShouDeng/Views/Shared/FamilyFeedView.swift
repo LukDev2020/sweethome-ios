@@ -115,10 +115,11 @@ struct FamilyFeedView: View {
             .background(Color(.systemGroupedBackground))
     }
 
-    /// SOS stays one tap away, just above the composer (never on top of it).
+    /// SOS stays one tap away, just above the composer (never on top of it). While
+    /// typing it steps aside: with the keyboard up it sat over the input.
     @ViewBuilder
     private var sosRow: some View {
-        if let sosAccessory {
+        if let sosAccessory, !isInputFocused {
             HStack {
                 Spacer()
                 sosAccessory
@@ -401,7 +402,8 @@ struct FamilyFeedView: View {
                 .padding(.horizontal, 12)
                 .padding(.bottom, 8)
             }
-            .scrollDismissesKeyboard(.interactively)
+            // Any scroll closes the keyboard (interactive only did on a drag into it)
+            .scrollDismissesKeyboard(.immediately)
             .refreshable {
                 await loadPosts()
             }

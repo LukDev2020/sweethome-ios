@@ -216,3 +216,43 @@ describe("contract: GET /v1/protected/guardians", () => {
     expectMatchesFixture("protected_guardians.json", res.body);
   });
 });
+
+describe("GET /v1/guardian/circle (who else looks after her, and when)", () => {
+  beforeEach(() => {
+    resetFakeAdmin();
+    jest.useFakeTimers({ now: NOW, doNotFake: ["nextTick", "setImmediate", "setTimeout", "setInterval", "queueMicrotask"] });
+    seed("users/mom", { displayName: "Mom", role: "protected", timeZone: "Asia/Shanghai" });
+    seed("users/sarah", { displayName: "Sarah", role: "guardian", timeZone: "America/Toronto", phone: "+14165550101" });
+    seed("users/kevin", { displayName: "Kevin", role: "guardian", timeZone: "Asia/Shanghai", cityName: "Shanghai" });
+    seed("users/stranger", { displayName: "Stranger", role: "guardian" });
+    seed("guardian_links/sarah_mom", { guardianId: "sarah", protectedPersonId: "mom", status: "active" });
+    seed("guardian_links/kevin_mom", { guardianId: "kevin", protectedPersonId: "mom", status: "active" });
+    seed("guardian_links/old_mom", { guardianId: "stranger", protectedPersonId: "mom", status: "revoked" });
+    seed("duty_schedules/k1", { guardianId: "kevin", protectedPersonId: "mom", dayOfWeek: 5, startHour: 8, endHour: 20, isActive: true });
+  });
+  afterEach(() => jest.useRealTimers());
+
+  function app() {
+    const a = express();
+    a.use(express.json());
+    a.use("/v1/guardian", require("../routes/guardian").default);
+    return a;
+  }
+
+  it("lists the person's active guardians with their duty hours, without phone numbers", async () => {
+    const res = await request(app()).get("/v1/guardian/circle?personId=mom").set("Authorization", `Bearer ${tokenFor("sarah")}`);
+    expect(res.status).toBe(200);
+    expect(res.body.map((g: any) => g.id).sort()).toEqual(["kevin", "sarah"]);
+    const kevin = res.body.find((g: any) => g.id === "kevin");
+    expect(kevin.user.cityName).toBe("Shanghai");
+    expect(kevin.dutySchedule.slots[0]).toMatchObject({ startHour: 8, endHour: 20, dayOfWeek: [6] });
+    expect(JSON.stringify(res.body)).not.toContain("+1416");
+  });
+
+  it("needs an active link to the person", async () => {
+    const stranger = await request(app()).get("/v1/guardian/circle?personId=mom").set("Authorization", `Bearer ${tokenFor("stranger")}`);
+    expect(stranger.status).toBe(403);
+    const missing = await request(app()).get("/v1/guardian/circle").set("Authorization", `Bearer ${tokenFor("sarah")}`);
+    expect(missing.status).toBe(400);
+  });
+});

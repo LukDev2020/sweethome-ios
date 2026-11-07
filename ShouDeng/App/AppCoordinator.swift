@@ -902,6 +902,20 @@ final class AppCoordinator: ObservableObject {
         }
     }
 
+    /// Everyone who looks after `personId` (me included) and their duty hours.
+    func fetchGuardianCircle(personId: String) async -> [Guardian] {
+        let id = personId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? personId
+        do {
+            let guardians: [Guardian] = try await apiClient.get("/v1/guardian/circle?personId=\(id)")
+            return guardians
+        } catch {
+            #if DEBUG
+            print("[Coordinator] Failed to fetch guardian circle: \(error)")
+            #endif
+            return []
+        }
+    }
+
     // MARK: - Data Export
 
     /// Everything the server holds about this account, saved as a JSON file to keep or share.
@@ -1772,11 +1786,10 @@ final class AppCoordinator: ObservableObject {
     }
 
     /// The view controller to present system sheets from: the top of the app's own
-    /// window (not the demo overlay window, which lets touches through).
+    /// window.
     static func topViewController() -> UIViewController? {
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-        let window = scenes.flatMap(\.windows).first { $0.isKeyWindow && !($0 is PassthroughWindow) }
-            ?? scenes.flatMap(\.windows).first { !($0 is PassthroughWindow) }
+        let window = scenes.flatMap(\.windows).first { $0.isKeyWindow } ?? scenes.flatMap(\.windows).first
         var top = window?.rootViewController
         while let presented = top?.presentedViewController { top = presented }
         return top
@@ -2015,7 +2028,13 @@ final class AppCoordinator: ObservableObject {
                 // Merge server entries with local-only entries
                 let serverIds = Set(response.entries.map(\.id))
                 let localOnly = timeline.filter { !serverIds.contains($0.id) }
-                var merged = response.entries
+                // The phone notes an SOS the moment it starts and the server records it
+                // too: show it once (the phone's entry, which is in the app's language).
+                var merged = response.entries.filter { server in
+                    !(Self.serverRecordsToo(server.type) && localOnly.contains {
+                        $0.type == server.type && abs($0.timestamp.timeIntervalSince(server.timestamp)) < 120
+                    })
+                }
                 merged.append(contentsOf: localOnly)
                 merged.sort { $0.timestamp > $1.timestamp }
                 self.timeline = Array(merged.prefix(200))
@@ -2027,6 +2046,10 @@ final class AppCoordinator: ObservableObject {
             #endif
             // Keep local timeline on failure
         }
+    }
+
+    private static func serverRecordsToo(_ type: TimelineEntryType) -> Bool {
+        type == .sosTriggered || type == .sosResolved
     }
 
     func addTimelineEntry(type: TimelineEntryType, description: String) {
