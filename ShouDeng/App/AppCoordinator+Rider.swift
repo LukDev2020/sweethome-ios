@@ -12,8 +12,25 @@ extension AppCoordinator {
     /// screen (in the demo: Kai's phone).
     var isRiderMode: Bool {
         guard userRole == .protected_ else { return false }
-        if isDemo { return currentUser?.id == DemoDataset.kaiId }
-        return UserDefaults.standard.string(forKey: HomeStyle.storageKey) == HomeStyle.rider.rawValue
+        return effectiveHomeStyle == HomeStyle.rider.rawValue
+    }
+
+    /// The home style in use: the demo keeps its own (Kai's phone starts on Rider), so
+    /// trying the setting there never changes the real one.
+    var effectiveHomeStyle: String {
+        if isDemo {
+            return demoHomeStyle ?? (currentUser?.id == DemoDataset.kaiId ? HomeStyle.rider.rawValue : HomeStyle.standard.rawValue)
+        }
+        return UserDefaults.standard.string(forKey: HomeStyle.storageKey) ?? HomeStyle.standard.rawValue
+    }
+
+    func setHomeStyle(_ style: HomeStyle) {
+        if isDemo {
+            demoHomeStyle = style.rawValue
+        } else {
+            UserDefaults.standard.set(style.rawValue, forKey: HomeStyle.storageKey)
+        }
+        if style == .rider { liveActivityManager.updateRider(riderCardInfo) } else { liveActivityManager.updateRider(nil) }
     }
 
     var isOnShift: Bool { riderShift != nil }

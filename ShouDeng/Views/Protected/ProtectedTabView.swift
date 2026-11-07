@@ -23,7 +23,7 @@ struct ProtectedTabView: View {
                 DuoTabItem(id: 4, title: lang.localized("tab.settings"), icon: "gearshape",         view: AnyView(ProtectedSettingsView().floatingSOSClearance())),
             ]
         }
-        if homeStyle == HomeStyle.simple.rawValue {
+        if coordinator.effectiveHomeStyle == HomeStyle.simple.rawValue {
             // Simple: three tabs; the home draws its own large SOS
             return [
                 DuoTabItem(id: 0, title: lang.localized("tab.home"),     icon: "shield.fill",       view: AnyView(SimpleProtectedHomeView()), placesOwnAccessory: true),
@@ -50,7 +50,7 @@ struct ProtectedTabView: View {
         )
         // A different set of tabs (rider / simple / standard): build the tab bar anew —
         // reusing it kept the old content of a tab with the same id (blank Crew tab)
-        .id("\(coordinator.isRiderMode)-\(homeStyle)")
+        .id("\(coordinator.effectiveHomeStyle)-\(homeStyle)")
         // One place presents the SOS screen for every trigger path (floating
         // button, home slider, widget, lock screen, dead-man switch…)
         .onChange(of: homeStyle) { _, style in

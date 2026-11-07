@@ -107,7 +107,7 @@ struct SimpleProtectedHomeView: View {
                     .padding(.vertical, 12)
 
                 Button {
-                    homeStyle = HomeStyle.standard.rawValue
+                    coordinator.setHomeStyle(.standard)
                 } label: {
                     Text(lang.localized("simple.switchToStandard"))
                         .font(.scaled(size: 15))
@@ -196,8 +196,11 @@ struct BigSOSButton: View {
 
 /// Settings → Home style: two cards, standard / simple.
 struct HomeStylePanel: View {
+    @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
-    @AppStorage(HomeStyle.storageKey) private var homeStyle = HomeStyle.standard.rawValue
+    @AppStorage(HomeStyle.storageKey) private var storedStyle = HomeStyle.standard.rawValue
+    /// Read so the panel redraws; the demo keeps its own choice
+    private var homeStyle: String { _ = storedStyle; return coordinator.effectiveHomeStyle }
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
 
     var body: some View {
@@ -206,7 +209,7 @@ struct HomeStylePanel: View {
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             ForEach(HomeStyle.allCases, id: \.self) { style in
-                Button { homeStyle = style.rawValue } label: {
+                Button { coordinator.setHomeStyle(style) } label: {
                     HStack(spacing: 10) {
                         Image(systemName: style == .simple ? "textformat.size.larger" : style == .rider ? "bicycle" : "square.grid.2x2")
                             .font(.scaled(size: 18))

@@ -230,7 +230,7 @@ struct ProtectedHomeView: View {
                 guardianList
                     .padding(.top, 20)
                 Button {
-                    UserDefaults.standard.set(HomeStyle.simple.rawValue, forKey: HomeStyle.storageKey)
+                    coordinator.setHomeStyle(.simple)
                 } label: {
                     Text(lang.localized("simple.switchToSimple"))
                         .font(.scaled(size: 14))

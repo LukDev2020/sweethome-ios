@@ -43,6 +43,8 @@ final class AppCoordinator: ObservableObject {
     /// Invite code from a crew QR code / link, waiting to be confirmed
     @Published var pendingCrewCode: String?
     @Published var showBikeReport = false
+    /// Settings → Home screen during the demo (never the real setting); Kai starts on Rider
+    @Published var demoHomeStyle: String?
     /// Street where the rider's SOS started (lock-screen card, SOS screen)
     @Published var riderSOSAddress: String?
     @Published var riderShift: RiderShift? = {
