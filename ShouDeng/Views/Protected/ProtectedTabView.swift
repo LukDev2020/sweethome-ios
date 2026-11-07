@@ -14,6 +14,15 @@ struct ProtectedTabView: View {
     @AppStorage(HomeStyle.storageKey) private var homeStyle = HomeStyle.standard.rawValue
 
     private var tabs: [DuoTabItem] {
+        if coordinator.isRiderMode {
+            // Rider: the home draws its own large SOS; Crew replaces Coverage
+            return [
+                DuoTabItem(id: 0, title: lang.localized("tab.home"),     icon: "bicycle",           view: AnyView(RiderHomeView()), placesOwnAccessory: true),
+                DuoTabItem(id: 5, title: lang.localized("rider.tab.crew"), icon: "person.3.fill",   view: AnyView(CrewView().floatingSOSClearance())),
+                DuoTabItem(id: 1, title: lang.localized("tab.family"),   icon: "heart.text.square", view: AnyView(FamilyFeedView()), placesOwnAccessory: true),
+                DuoTabItem(id: 4, title: lang.localized("tab.settings"), icon: "gearshape",         view: AnyView(ProtectedSettingsView().floatingSOSClearance())),
+            ]
+        }
         if homeStyle == HomeStyle.simple.rawValue {
             // Simple: three tabs; the home draws its own large SOS
             return [
@@ -39,11 +48,30 @@ struct ProtectedTabView: View {
             // Persistent SOS button — always accessible, never covers content
             bottomAccessory: AnyView(FloatingSOSButton())
         )
+        // A different set of tabs (rider / simple / standard): build the tab bar anew —
+        // reusing it kept the old content of a tab with the same id (blank Crew tab)
+        .id("\(coordinator.isRiderMode)-\(homeStyle)")
         // One place presents the SOS screen for every trigger path (floating
         // button, home slider, widget, lock screen, dead-man switch…)
         .onChange(of: homeStyle) { _, style in
-            // Tabs 2 and 3 don't exist in the simple style
+            // Tabs 2 and 3 don't exist in the simple style, tab 3 not in the rider style
             if style == HomeStyle.simple.rawValue, selectedTab == 2 || selectedTab == 3 { selectedTab = 0 }
+            if style == HomeStyle.rider.rawValue, selectedTab == 2 || selectedTab == 3 { selectedTab = 0 }
+            if style != HomeStyle.rider.rawValue, selectedTab == 5 { selectedTab = 0 }
+        }
+        // Rider mode: a crew mate's SOS (push tap), bike report (lock screen), crew QR code
+        .sheet(isPresented: Binding(get: { coordinator.pendingCrewAlertId != nil },
+                                    set: { if !$0 { coordinator.pendingCrewAlertId = nil } })) {
+            CrewAlertView(sosEventId: coordinator.pendingCrewAlertId ?? "")
+                .environmentObject(coordinator)
+        }
+        .sheet(isPresented: $coordinator.showBikeReport) {
+            BikeReportView().environmentObject(coordinator)
+        }
+        .sheet(isPresented: Binding(get: { coordinator.pendingCrewCode != nil && coordinator.isRiderMode },
+                                    set: { if !$0 { coordinator.pendingCrewCode = nil } })) {
+            CrewJoinSheet(initialCode: coordinator.pendingCrewCode ?? "")
+                .environmentObject(coordinator)
         }
         .sheet(isPresented: $coordinator.isSOSScreenPresented) {
             SOSActiveView()

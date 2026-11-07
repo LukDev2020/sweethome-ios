@@ -44,7 +44,7 @@ final class ExploreModeController: ObservableObject {
 
     @Published private(set) var isActive = false
     @Published private(set) var role: DemoRole = .mom
-    @Published private(set) var stepIndex: [DemoRole: Int] = [.mom: 0, .sarah: 0]
+    @Published private(set) var stepIndex: [DemoRole: Int] = [.mom: 0, .sarah: 0, .kai: 0]
     @Published var isTourVisible = true
     @Published var notification: DemoNotification?
     @Published var showHandoff = false
@@ -101,7 +101,7 @@ final class ExploreModeController: ObservableObject {
         self.coordinator = coordinator
 
         learned = []
-        stepIndex = [.mom: 0, .sarah: 0]
+        stepIndex = [.mom: 0, .sarah: 0, .kai: 0]
         isTourVisible = true
         showChecklist = false
         showHandoff = false
@@ -234,7 +234,8 @@ final class ExploreModeController: ObservableObject {
         stepIndex[role] = idx
         if idx >= steps.count {
             isTourVisible = false
-            showChecklist = true
+            // The checklist is the Chen family story; Kai's rider tour just ends
+            showChecklist = role != .kai
         } else {
             enterStep()
         }

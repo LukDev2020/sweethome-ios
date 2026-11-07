@@ -77,6 +77,9 @@ struct SOSStatus: Codable, Equatable {
     var trail: [SOSTrailPoint]? = nil
     /// Where the person said they are heading
     var route: SOSSharedRoute? = nil
+    /// Rider crews: crew mates alerted, and who answered ("I'm going")
+    var crewNotified: Int? = nil
+    var crewResponses: [CrewResponseEntry]? = nil
 }
 
 struct SOSTrailPoint: Codable, Equatable {

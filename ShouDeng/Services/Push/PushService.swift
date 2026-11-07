@@ -39,6 +39,8 @@ final class PushService: NSObject {
     var onCheckInFromNotification: (() -> Void)?
     /// Guardian opened an SOS push (tap or "call"): (protectedPersonId, sosEventId)
     var onOpenSOSAlert: ((String, String?) -> Void)?
+    /// A crew mate's SOS (rider crews) — opens the crew alert screen
+    var onOpenCrewAlert: ((String) -> Void)?
     var onSilentPushReceived: (([AnyHashable: Any]) -> Void)?
     var onCancelPendingSOS: (() -> Void)?
 
@@ -346,6 +348,7 @@ extension PushService: UNUserNotificationCenterDelegate {
                 sosTakenOver: { [weak self] in self?.onSOSTakenOver?($0) },
                 checkIn: { [weak self] in self?.onCheckInFromNotification?() },
                 openSOSAlert: { [weak self] in self?.onOpenSOSAlert?($0, $1) },
+                openCrewAlert: { [weak self] id in DispatchQueue.main.async { self?.onOpenCrewAlert?(id) } },
                 deadManDismiss: { DeadManSwitchService.shared.cancel() },
                 deadManExtend: { DeadManSwitchService.shared.extend(by: .min5) },
                 silentAlarmConfirm: { Task { await SilentAlarmService.shared.confirmCheckIn() } },
@@ -366,6 +369,7 @@ extension PushService {
         var sosTakenOver: (String) -> Void
         var checkIn: () -> Void
         var openSOSAlert: (String, String?) -> Void
+        var openCrewAlert: (String) -> Void = { _ in }
         var deadManDismiss: () -> Void
         var deadManExtend: () -> Void
         var silentAlarmConfirm: () -> Void
@@ -402,6 +406,8 @@ extension PushService {
             handlers.silentAlarmConfirm()
         case actionCancelSOS:
             handlers.cancelPendingSOS()
+        case UNNotificationDefaultActionIdentifier where action == "crew_sos":
+            if let sosId { handlers.openCrewAlert(sosId) }
         case UNNotificationDefaultActionIdentifier:
             if (action == "sos_alert" || action == "sos_acknowledged" || categoryIdentifier == categorySOSAlert),
                let personId {

@@ -1,4 +1,5 @@
 import Foundation
+import CoreLocation
 
 // MARK: - Demo Store
 //
@@ -33,6 +34,14 @@ final class DemoStore {
     private(set) var unhandled: [String] = []
     /// Photos "uploaded" to the family circle, by id (kept in memory only).
     private var media: [String: Data] = [:]
+
+    // Rider demo (Kai's phone): shift, crew, caution spots, crew answers
+    private var kaiOnShift = false
+    private var kaiInCrew = true
+    private var crewName = "CBD night crew"
+    private var cautions: [(id: String, latitude: Double, longitude: Double, note: String, at: Date)] = []
+    /// sosEventId → crew member id → "going" / "cant_help"
+    private var crewAnswers: [String: [String: (response: String, at: Date)]] = [:]
 
     /// Called (on any thread) when demo state changes in a way the other
     /// phone would hear about (check-in, SOS, acknowledge).
@@ -229,8 +238,14 @@ final class DemoStore {
             return (200, json(rows))
 
         case ("GET", "/v1/protected/guardians"):
-            let guardians = lock.withLock { me == DemoDataset.momId ? dataset.guardiansOfMom : [] }
+            let guardians = lock.withLock {
+                me == DemoDataset.momId ? dataset.guardiansOfMom : me == DemoDataset.kaiId ? dataset.guardiansOfKai : []
+            }
             return (200, encode(guardians))
+
+        case ("GET", "/v1/crew"), ("POST", "/v1/crew"), ("POST", "/v1/crew/join"), ("POST", "/v1/crew/leave"),
+             ("POST", "/v1/crew/shift"), ("POST", "/v1/crew/caution"), ("GET", "/v1/crew/alerts"), ("POST", "/v1/crew/respond"):
+            return crewRoute(method: method, path: path, me: me, body: body)
 
         case ("GET", "/v1/family/posts"):
             return (200, encode(feed()))
@@ -327,15 +342,140 @@ final class DemoStore {
             let state: EscalationState = ack != nil ? .frozen
                 : elapsed < 30 ? .hop1_notified : elapsed < 90 ? .hop2_allNotified
                 : elapsed < 120 ? .hop3_voiceCalling : .hop4_shareSent
-            return SOSStatus(
+            let spot = Self.spot(of: personId)
+            var status = SOSStatus(
                 sosEventId: s.sosEventId, protectedPersonId: personId, personName: person.displayName,
                 triggeredAt: s.triggeredAt, triggerMethod: "longPress",
-                latitude: 30.6586, longitude: 104.0647, batteryLevel: s.batteryLevel,
+                latitude: spot.latitude, longitude: spot.longitude, batteryLevel: s.batteryLevel,
                 escalationState: state, nextStep: ack != nil ? nil : "voice1", nextStepAt: nil,
                 guardiansNotified: elapsed < 30 ? 1 : 3, callsPlaced: ack != nil || elapsed < 90 ? 0 : 3,
                 shareLinkSent: ack == nil && elapsed >= 120, noGuardians: false, emergencyContactsNotified: 0,
                 acknowledgedBy: ack, acknowledgedByName: ack.flatMap { dataset.user($0)?.displayName },
                 acknowledgedAt: s.acknowledgedAt, elapsedSeconds: elapsed)
+            if personId == DemoDataset.kaiId {
+                // Kai's crew answers like real riders would: Wei after 6 s, Ahmed after 15 s
+                status.crewNotified = 3
+                var answers: [CrewResponseEntry] = []
+                if elapsed >= 6 {
+                    answers.append(CrewResponseEntry(memberId: DemoDataset.weiId, name: dataset.wei.displayName, response: "going",
+                                                     at: s.triggeredAt.addingTimeInterval(6), distanceM: 220))
+                }
+                if elapsed >= 15 {
+                    answers.append(CrewResponseEntry(memberId: DemoDataset.ahmedId, name: dataset.ahmed.displayName, response: "going",
+                                                     at: s.triggeredAt.addingTimeInterval(15), distanceM: 480))
+                }
+                status.crewResponses = answers
+            }
+            return status
+        }
+    }
+
+    /// Where each demo person's phone is
+    static func spot(of personId: String) -> CLLocationCoordinate2D {
+        switch personId {
+        case DemoDataset.kaiId: return DemoDataset.kaiSpot
+        case DemoDataset.weiId: return DemoDataset.weiSpot
+        case DemoDataset.ahmedId: return DemoDataset.ahmedSpot
+        case DemoDataset.linaId: return DemoDataset.linaSpot
+        default: return CLLocationCoordinate2D(latitude: 30.6586, longitude: 104.0647)
+        }
+    }
+
+    private static func meters(_ a: CLLocationCoordinate2D, _ b: CLLocationCoordinate2D) -> Int {
+        Int(CLLocation(latitude: a.latitude, longitude: a.longitude).distance(from: CLLocation(latitude: b.latitude, longitude: b.longitude)))
+    }
+
+    // MARK: - Rider crew (same shapes as routes/crew.ts)
+
+    private func crewRoute(method: String, path: String, me: String, body: Data?) -> (Int, Data) {
+        let b = bodyObject(body)
+        switch (method, path) {
+        case ("POST", "/v1/crew/shift"):
+            lock.withLock { kaiOnShift = (b["onShift"] as? Bool) ?? false }
+            return (200, json(["success": true]))
+        case ("POST", "/v1/crew"):
+            lock.withLock { kaiInCrew = true; crewName = (b["name"] as? String) ?? crewName }
+            return (201, json(["crew": crewJSON(me: me)]))
+        case ("POST", "/v1/crew/join"):
+            guard ((b["code"] as? String) ?? "").count == 6 else { return (400, json(["error": "invalid code"])) }
+            lock.withLock { kaiInCrew = true }
+            return (200, json(["crew": crewJSON(me: me)]))
+        case ("POST", "/v1/crew/leave"):
+            lock.withLock { kaiInCrew = false }
+            return (200, json(["success": true]))
+        case ("POST", "/v1/crew/caution"):
+            let lat = (b["latitude"] as? Double) ?? DemoDataset.kaiSpot.latitude
+            let lng = (b["longitude"] as? Double) ?? DemoDataset.kaiSpot.longitude
+            let id = "demo-caution-\(Int(Date().timeIntervalSince1970))"
+            lock.withLock { cautions.append((id, lat, lng, (b["note"] as? String) ?? "", Date())) }
+            return (201, json(["id": id]))
+        case ("GET", "/v1/crew/alerts"):
+            return (200, json(["alerts": crewAlertsJSON(me: me)]))
+        case ("POST", "/v1/crew/respond"):
+            let id = (b["sosEventId"] as? String) ?? ""
+            let response = (b["response"] as? String) ?? ""
+            guard ["going", "cant_help"].contains(response) else { return (400, json(["error": "bad response"])) }
+            let found: Bool = lock.withLock {
+                guard sos.values.contains(where: { $0.sosEventId == id }) else { return false }
+                crewAnswers[id, default: [:]][me] = (response, Date())
+                return true
+            }
+            guard found else { return (404, json(["error": "SOS not found or already ended"])) }
+            // The practice SOS ends a little later: "Ahmed is safe"
+            DispatchQueue.global().asyncAfter(deadline: .now() + 25) { [weak self] in self?.resolveSOS(id: id) }
+            return (200, json(["success": true]))
+        default:
+            return (200, json(["crew": crewJSON(me: me)]))
+        }
+    }
+
+    /// The practice crew alert (Crew tab, demo only): Ahmed calls SOS near Kai.
+    func practiceCrewSOS() -> String {
+        triggerSOS(personId: DemoDataset.ahmedId).sosEventId
+    }
+
+    private func crewJSON(me: String) -> Any {
+        lock.withLock {
+            guard me == DemoDataset.kaiId, kaiInCrew else { return NSNull() }
+            let here = DemoDataset.kaiSpot
+            func member(_ u: User, onShift: Bool) -> [String: Any] {
+                let spot = Self.spot(of: u.id)
+                let visible = onShift || u.id == me
+                return ["id": u.id, "name": u.displayName, "initial": u.avatarInitial, "onShift": onShift,
+                        "latitude": visible ? spot.latitude : NSNull(), "longitude": visible ? spot.longitude : NSNull(),
+                        "locationAt": Self.iso(visible ? Date().addingTimeInterval(-40) : nil),
+                        "distanceM": visible && u.id != me ? Self.meters(here, spot) : NSNull()]
+            }
+            return [
+                "id": "demo-crew", "name": crewName, "inviteCode": "K7M2QX", "isOwner": true,
+                "members": [member(dataset.kai, onShift: kaiOnShift), member(dataset.wei, onShift: true),
+                            member(dataset.ahmed, onShift: true), member(dataset.lina, onShift: false)],
+                "cautions": cautions.map { ["id": $0.id, "latitude": $0.latitude, "longitude": $0.longitude,
+                                            "note": $0.note, "createdAt": Self.iso($0.at)] as [String: Any] },
+            ] as [String: Any]
+        }
+    }
+
+    private func crewAlertsJSON(me: String) -> [[String: Any]] {
+        lock.withLock {
+            guard me == DemoDataset.kaiId, kaiInCrew, let s = sos[DemoDataset.ahmedId] else { return [] }
+            let spot = DemoDataset.ahmedSpot
+            let answers = crewAnswers[s.sosEventId] ?? [:]
+            var responses: [[String: Any]] = answers.compactMap { id, a in
+                guard let u = dataset.user(id) else { return nil }
+                return ["memberId": id, "name": u.displayName, "response": a.response, "at": Self.iso(a.at),
+                        "distanceM": Self.meters(Self.spot(of: id), spot)]
+            }
+            if Date().timeIntervalSince(s.triggeredAt) >= 8 {
+                responses.append(["memberId": DemoDataset.weiId, "name": dataset.wei.displayName, "response": "going",
+                                  "at": Self.iso(s.triggeredAt.addingTimeInterval(8)), "distanceM": Self.meters(DemoDataset.weiSpot, spot)])
+            }
+            return [[
+                "sosEventId": s.sosEventId, "riderId": DemoDataset.ahmedId, "riderName": dataset.ahmed.displayName,
+                "triggeredAt": Self.iso(s.triggeredAt), "latitude": spot.latitude, "longitude": spot.longitude,
+                "distanceM": Self.meters(DemoDataset.kaiSpot, spot), "myResponse": answers[me]?.response ?? NSNull(),
+                "responses": responses,
+            ]]
         }
     }
 

@@ -47,6 +47,14 @@ struct DemoRolePickerView: View {
                 roleButton(.sarah, icon: "eye", title: lm.localized("explore.phone.sarah"),
                            detail: lm.localized("explore.picker.sarah.detail"))
 
+                // A separate story: a delivery rider in Melbourne and his crew
+                Text(lm.localized("explore.picker.rider"))
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(ink)
+                    .padding(.top, 6)
+                roleButton(.kai, icon: "bicycle", title: lm.localized("explore.phone.kai"),
+                           detail: lm.localized("explore.picker.kai.detail"))
+
                 Text(lm.localized("explore.picker.footnote"))
                     .font(.footnote)
                     .foregroundStyle(.secondary)

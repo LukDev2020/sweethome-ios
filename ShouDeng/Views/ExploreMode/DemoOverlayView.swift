@@ -214,7 +214,7 @@ private struct DemoTipLayer: View {
         let lm = LanguageManager.shared
         let steps = explore.steps
         let idx = explore.currentStepNumber - 1
-        let phone = lm.localized(explore.role == .mom ? "explore.phone.mom" : "explore.phone.sarah")
+        let phone = lm.localized(explore.role == .mom ? "explore.phone.mom" : explore.role == .kai ? "explore.phone.kai" : "explore.phone.sarah")
         return VStack(alignment: .leading, spacing: 10) {
             Text(String(format: lm.localized("explore.tip.header"), phone, idx + 1, steps.count).uppercased())
                 .font(.caption.weight(.semibold))

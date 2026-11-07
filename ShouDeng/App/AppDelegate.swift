@@ -40,6 +40,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // Lock-screen card buttons (check in, location) run here, without opening the app
         let coordinator = appCoordinator
         LiveActivityActionBridge.handler = { coordinator.processPendingWidgetActions() }
+        // Siri / Shortcuts / Action Button: SOS, start and end a rider shift
+        AppIntentBridge.coordinator = coordinator
         #if DEBUG
         if let kind = UserDefaults.standard.string(forKey: "la-preview") {
             coordinator.liveActivityManager.startPreview(kind)

@@ -9,7 +9,7 @@ import AVFoundation
 // For review before building the real feature.
 
 struct RiderModeMock: View {
-    enum Page: String, CaseIterable { case home = "Home", sos = "SOS", crew = "Crew alert", report = "Bike" }
+    enum Page: String, CaseIterable { case home = "Home", sos = "SOS", crew = "Crew alert", report = "Bike", lock = "Lock" }
     @State private var page: Page = .home
 
     var body: some View {
@@ -27,6 +27,7 @@ struct RiderModeMock: View {
                 case .sos: RiderSOSMock()
                 case .crew: CrewAlertMock()
                 case .report: BikeReportMock()
+                case .lock: RiderLockScreenMock()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -367,6 +368,104 @@ private struct BikeReportMock: View {
         }
         .padding(12)
         .background(RoundedRectangle(cornerRadius: 14).fill(Color(white: 0.97)))
+    }
+}
+// MARK: 5. Lock screen and Dynamic Island
+
+private struct RiderLockScreenMock: View {
+    private func state(sos: Bool) -> ProtectedActivityAttributes.ContentState {
+        var s = ProtectedActivityAttributes.ContentState(
+            status: sos ? .sosActive : .normal, statusText: "", guardians: [],
+            lastCheckIn: Date().addingTimeInterval(-34 * 60), homeTimerDeadline: nil, homeTimerLabel: nil,
+            emergencyPhone: "000", emergencyLabel: "000", bloodType: nil, allergies: [], conditions: [],
+            emergencyNote: nil, emergencyMedications: [])
+        s.rider = RiderCardInfo(shiftStartedAt: Date().addingTimeInterval(-2 * 3600 - 14 * 60),
+                                checkDueAt: Calendar.current.date(bySettingHour: 23, minute: 0, second: 0, of: Date()),
+                                crewOnShiftNearby: 3,
+                                sosAddress: sos ? M.address : nil,
+                                helperName: sos ? "Wei" : nil, helperDistanceM: sos ? 220 : nil)
+        return s
+    }
+
+    var body: some View {
+        GeometryReader { geo in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    item("1 · On shift (rider's phone)", width: geo.size.width - 28) {
+                        ProtectedLockScreenCard(state: state(sos: false), style: .standard)
+                    }
+                    item("2 · SOS (written for whoever picks it up)", width: geo.size.width - 28) {
+                        ProtectedLockScreenCard(state: state(sos: true), style: .standard)
+                    }
+                    item("3 · A crew mate's phone (pushed to their lock screen)", width: geo.size.width - 28) {
+                        CrewLockCardMock()
+                    }
+                    Text("Dynamic Island").font(.caption.weight(.semibold)).foregroundStyle(.white.opacity(0.8))
+                    island(left: "🚲 2:14", right: "3 crew", color: M.safe)
+                    island(left: "⚠ SOS 0:42", right: "Wei 220 m", color: M.alert)
+                }
+                .padding(14)
+            }
+            .background(LinearGradient(colors: [Color(white: 0.25), Color(white: 0.1)], startPoint: .top, endPoint: .bottom))
+        }
+    }
+
+    private func item<V: View>(_ title: String, width: CGFloat, @ViewBuilder _ card: () -> V) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title).font(.caption.weight(.semibold)).foregroundStyle(.white.opacity(0.8))
+            card()
+                .frame(width: width)
+                .background(SharedColors.ink)
+                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .overlay(alignment: .top) {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .stroke(.red.opacity(0.6), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                        .frame(width: width, height: 160)
+                }
+        }
+    }
+
+    private func island(left: String, right: String, color: Color) -> some View {
+        HStack {
+            Text(left).font(.system(size: 13, weight: .semibold)).foregroundStyle(color)
+            Spacer()
+            Text(right).font(.system(size: 13, weight: .semibold)).foregroundStyle(color)
+        }
+        .padding(.horizontal, 18)
+        .frame(width: 300, height: 38)
+        .background(Capsule().fill(.black))
+        .frame(maxWidth: .infinity)
+    }
+}
+
+/// The card a crew mate gets (started remotely by push — the next step after this build).
+private struct CrewLockCardMock: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 7) {
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.white)
+                Text("Kai needs help").font(.system(size: 15, weight: .bold)).foregroundStyle(.white)
+                Spacer()
+                Text("220 m · ~3 min").font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
+            }
+            .padding(.horizontal, 8).frame(height: 26)
+            .background(RoundedRectangle(cornerRadius: 8).fill(M.alert))
+            Label(M.address, systemImage: "mappin.and.ellipse")
+                .font(.system(size: 16, weight: .bold)).foregroundStyle(.white).lineLimit(1).frame(height: 24)
+            Text("Ahmed is going · 000 called").font(.system(size: 13)).foregroundStyle(.white.opacity(0.7)).frame(height: 20)
+            HStack(spacing: 6) {
+                pill("phone.fill", "Call 000", M.alert)
+                pill("figure.run", "I'm going", M.safe)
+                pill("xmark", "Can't", .gray)
+            }
+            .frame(height: 38)
+        }
+        .padding(.horizontal, 14).padding(.vertical, 10)
+    }
+
+    private func pill(_ icon: String, _ title: String, _ color: Color) -> some View {
+        Label(title, systemImage: icon).font(.system(size: 14, weight: .semibold)).foregroundStyle(.white)
+            .frame(maxWidth: .infinity, maxHeight: .infinity).background(Capsule().fill(color))
     }
 }
 #endif

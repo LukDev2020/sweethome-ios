@@ -357,6 +357,8 @@ describe("i18n — iOS Push Action Buttons (FINDING)", () => {
  * identical is probably an untranslated string.
  */
 const SAME_IN_ZH = new Set([
+  // Said in English to an English-speaking emergency operator ("I speak Mandarin")
+  "rider.speak.myLanguage",
   "protected.coverage.rescuePartnerValue", "protected.coverage.localNumberValue",
   "protected.coverage.embassyLineValue", "protected.settings.sos.watch",
   "tracker.type.smarttag", "tracker.type.tile", "tracker.type.airtag",

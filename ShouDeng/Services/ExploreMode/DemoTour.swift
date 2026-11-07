@@ -71,6 +71,19 @@ enum DemoTour {
                       titleKey: "explore.tip.mom.done.title", bodyKey: "explore.tip.mom.done.body",
                       action: .next, completion: nil, teaches: nil),
             ]
+        case .kai:
+            // Rider mode: shift, SOS for riders, the crew
+            return [
+                .init(id: "kai.shift", anchor: nil,
+                      titleKey: "explore.tip.kai.shift.title", bodyKey: "explore.tip.kai.shift.body",
+                      action: .next, completion: nil, teaches: nil),
+                .init(id: "kai.sos", anchor: CoachAnchor.sosButton,
+                      titleKey: "explore.tip.kai.sos.title", bodyKey: "explore.tip.kai.sos.body",
+                      action: .next, completion: nil, teaches: nil),
+                .init(id: "kai.crew", anchor: nil,
+                      titleKey: "explore.tip.kai.crew.title", bodyKey: "explore.tip.kai.crew.body",
+                      action: .next, completion: nil, teaches: nil),
+            ]
         case .sarah:
             return [
                 .init(id: "sarah.dashboard", anchor: CoachAnchor.firstPerson,

@@ -16,15 +16,27 @@ import CoreLocation
 enum DemoRole: String, CaseIterable, Identifiable {
     case mom      // protected person's phone
     case sarah    // guardian's phone
+    case kai      // delivery rider in Melbourne (Rider mode, crew)
 
     var id: String { rawValue }
-    var userId: String { self == .mom ? DemoDataset.momId : DemoDataset.sarahId }
-    var userRole: UserRole { self == .mom ? .protected_ : .guardian }
+    var userId: String {
+        switch self {
+        case .mom: return DemoDataset.momId
+        case .sarah: return DemoDataset.sarahId
+        case .kai: return DemoDataset.kaiId
+        }
+    }
+    var userRole: UserRole { self == .sarah ? .guardian : .protected_ }
+    /// The other side of the Chen family story; Kai's phone has no "other side".
     var other: DemoRole { self == .mom ? .sarah : .mom }
-    /// Where the persona's phone "is" (Chengdu / Toronto) — the demo never reads GPS.
+    var hasOtherSide: Bool { self != .kai }
+    /// Where the persona's phone "is" (Chengdu / Toronto / Melbourne) — the demo never reads GPS.
     var homeCoordinate: CLLocationCoordinate2D {
-        self == .mom ? CLLocationCoordinate2D(latitude: 30.6586, longitude: 104.0647)
-                     : CLLocationCoordinate2D(latitude: 43.6532, longitude: -79.3832)
+        switch self {
+        case .mom: return CLLocationCoordinate2D(latitude: 30.6586, longitude: 104.0647)
+        case .sarah: return CLLocationCoordinate2D(latitude: 43.6532, longitude: -79.3832)
+        case .kai: return DemoDataset.kaiSpot
+        }
     }
 }
 
@@ -34,6 +46,16 @@ struct DemoDataset {
     static let sarahId = "demo_sarah"
     static let kevinId = "demo_kevin"
     static let lucyId = "demo_lucy"
+    // Rider demo (Melbourne CBD)
+    static let kaiId = "demo_kai"
+    static let weiId = "demo_wei"
+    static let ahmedId = "demo_ahmed"
+    static let linaId = "demo_lina"
+    static let meiId = "demo_mei"
+    static let kaiSpot = CLLocationCoordinate2D(latitude: -37.8122, longitude: 144.9687)   // Little Bourke St
+    static let weiSpot = CLLocationCoordinate2D(latitude: -37.8137, longitude: 144.9705)   // ~220 m
+    static let ahmedSpot = CLLocationCoordinate2D(latitude: -37.8098, longitude: 144.9640) // ~500 m
+    static let linaSpot = CLLocationCoordinate2D(latitude: -37.8183, longitude: 144.9568)  // ~1.2 km
 
     let now: Date
     let mom: User
@@ -49,7 +71,15 @@ struct DemoDataset {
     var timelines: [String: [TimelineEntry]]
     let safeZones: [SafeZone]
 
-    var users: [User] { [mom, dad, sarah, kevin, lucy] }
+    // Rider demo
+    let kai: User
+    let wei: User
+    let ahmed: User
+    let lina: User
+    let mei: User
+    let guardiansOfKai: [Guardian]
+
+    var users: [User] { [mom, dad, sarah, kevin, lucy, kai, wei, ahmed, lina, mei] }
 
     func user(_ id: String) -> User? { users.first { $0.id == id } }
 
@@ -143,13 +173,27 @@ struct DemoDataset {
             ],
         ]
 
+        // Rider demo: Kai rides in Melbourne; his crew (Wei, Ahmed, Li Na) are riders too;
+        // his sister Mei in Guangzhou is his guardian.
+        let kai   = user(kaiId,   "Kai Zhang", .protected_, "Australia/Melbourne", "AU", t.melbourne, "+61400000101")
+        let wei   = user(weiId,   "Wei Liu",   .protected_, "Australia/Melbourne", "AU", t.melbourne, "+61400000102")
+        let ahmed = user(ahmedId, "Ahmed Khan", .protected_, "Australia/Melbourne", "AU", t.melbourne, "+61400000103")
+        let lina  = user(linaId,  "Li Na",     .protected_, "Australia/Melbourne", "AU", t.melbourne, "+61400000104")
+        let mei   = user(meiId,   t.meiName,   .guardian,   "Asia/Shanghai",       "CN", t.guangzhou, "+8613800000105")
+        var gMei = guardian(mei, slots: [(0, 24)], rt: 120)
+        gMei.isOnDuty = true
+        let guardiansOfKai = [gMei]
+
         let safeZones = [SafeZone(id: "demo-z1", name: t.home, latitude: 30.6586, longitude: 104.0647, radius: 150,
                                   isAutoSuggested: false, visitFrequency: 30, typicalHours: 19...23)]
 
+        var allTimelines = timelines
+        allTimelines[kai.id] = [entry(60 * 3, .checkIn, t.tlCheckedIn)]
         return DemoDataset(now: now, mom: mom, dad: dad, sarah: sarah, kevin: kevin, lucy: lucy,
                            guardiansOfMom: guardiansOfMom, guardiansOfDad: guardiansOfDad,
                            momPerson: momPerson, dadPerson: dadPerson, posts: posts,
-                           timelines: timelines, safeZones: safeZones)
+                           timelines: allTimelines, safeZones: safeZones,
+                           kai: kai, wei: wei, ahmed: ahmed, lina: lina, mei: mei, guardiansOfKai: guardiansOfKai)
     }
 }
 
@@ -167,6 +211,7 @@ struct DemoText {
 
     /// Japanese copy keyed by the English text (names stay in English, as in French).
     private static let japanese: [String: String] = [
+        "Melbourne": "メルボルン", "Guangzhou": "広州",
         "Chengdu": "成都", "Toronto": "トロント", "Shanghai": "上海", "Paris": "パリ", "Home": "自宅",
         "Jinjiang District, Chengdu": "成都市 錦江区", "People's Park, Chengdu": "成都 人民公園",
         "Chengdu East Station": "成都東駅",
@@ -190,6 +235,9 @@ struct DemoText {
     var toronto: String { pick("Toronto", "多伦多", "Toronto") }
     var shanghai: String { pick("Shanghai", "上海", "Shanghai") }
     var paris: String { pick("Paris", "巴黎", "Paris") }
+    var melbourne: String { pick("Melbourne", "墨尔本", "Melbourne") }
+    var guangzhou: String { pick("Guangzhou", "广州", "Canton") }
+    var meiName: String { pick("Mei Zhang", "张美", "Mei Zhang") }
     var home: String { pick("Home", "家", "Maison") }
     var momAddress: String { pick("Jinjiang District, Chengdu", "成都市锦江区", "District de Jinjiang, Chengdu") }
     var dadAddress: String { pick("People's Park, Chengdu", "成都人民公园", "Parc du Peuple, Chengdu") }

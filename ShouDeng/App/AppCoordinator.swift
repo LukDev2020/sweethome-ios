@@ -35,6 +35,21 @@ final class AppCoordinator: ObservableObject {
     /// Duress code entered to "end" the SOS: the screen closes, the SOS keeps going
     /// Duress code used at "end SOS": the SOS keeps running but nothing on this phone
     /// shows it. Kept across launches so a restart doesn't bring the SOS screen back.
+    // MARK: Rider mode (see AppCoordinator+Rider.swift)
+    @Published var crew: Crew?
+    @Published var crewAlerts: [CrewAlert] = []
+    /// A crew mate's SOS to open (push tap)
+    @Published var pendingCrewAlertId: String?
+    /// Invite code from a crew QR code / link, waiting to be confirmed
+    @Published var pendingCrewCode: String?
+    @Published var showBikeReport = false
+    /// Street where the rider's SOS started (lock-screen card, SOS screen)
+    @Published var riderSOSAddress: String?
+    @Published var riderShift: RiderShift? = {
+        guard let data = UserDefaults.standard.data(forKey: "rider_shift") else { return nil }
+        return try? JSONDecoder().decode(RiderShift.self, from: data)
+    }()
+
     @Published var sosConcealed = UserDefaults.standard.bool(forKey: "sos_concealed") {
         didSet { UserDefaults.standard.set(sosConcealed, forKey: "sos_concealed") }
     }
@@ -621,6 +636,21 @@ final class AppCoordinator: ObservableObject {
             case "share-location":
                 shareCurrentLocation()
                 return
+            case "crew":
+                // shoudeng://crew/join?code=ABC123 (crew QR code)
+                let code = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+                    .queryItems?.first(where: { $0.name == "code" })?.value ?? ""
+                pendingCrewCode = code.uppercased()
+                return
+            case "rider-report":
+                showBikeReport = true
+                return
+            case "call-emergency":
+                // Lock-screen card during an SOS: the call still needs the user's tap
+                if let url = URL(string: "tel:\(localEmergencyNumber)") {
+                    Task { @MainActor in ExternalURL.open(url) }
+                }
+                return
             default:
                 break
             }
@@ -1135,6 +1165,11 @@ final class AppCoordinator: ObservableObject {
         pushService.onCancelPendingSOS = { [weak self] in
             self?.cancelPendingSOS()
         }
+        pushService.onOpenCrewAlert = { [weak self] sosId in
+            guard let self else { return }
+            self.pendingCrewAlertId = sosId
+            Task { await self.refreshCrewAlerts() }
+        }
         pushService.onOpenSOSAlert = { [weak self] personId, _ in
             guard let self else { return }
             self.pendingAlertPersonId = personId
@@ -1269,6 +1304,7 @@ final class AppCoordinator: ObservableObject {
                 emergencyMedications: medInfos,
                 demo: isDemo
             )
+            liveActivityManager.updateRider(riderCardInfo)
         } else {
             // Guardian: show each protected person's status
             let personInfos = protectedPersons.map { pp in
@@ -1449,11 +1485,11 @@ final class AppCoordinator: ObservableObject {
         if !isDemo { locationManager.enterSOSMode() }
 
         // Lock-screen card shows SOS — but a duress / disguise SOS must stay invisible and silent
-        if !method.isSilent && !isDemo {
-            liveActivityManager.triggerSOS(
-                localEmergencyNumber: localEmergencyNumber
-            )
+        // (The demo's rider card — Kai's phone — shows its SOS state too)
+        if !method.isSilent && (!isDemo || isRiderMode) {
+            liveActivityManager.triggerSOS(localEmergencyNumber: localEmergencyNumber, demo: isDemo)
         }
+        if isRiderMode { updateRiderCardForSOS() }
 
         addTimelineEntry(type: .sosTriggered, description: String(format: LanguageManager.shared.localized("timeline.sosTriggered"),
                                                                          LanguageManager.shared.localized("sos.method.\(method.rawValue)")))
@@ -1546,6 +1582,7 @@ final class AppCoordinator: ObservableObject {
                     return
                 }
                 if let sos = response.sos {
+                    if self.isRiderMode { self.liveActivityManager.updateRider(self.riderCardWithAddress) }
                     self.sosDeliveryFailed = false
                     if self.activeSOSEvent?.id != sos.sosEventId {
                         self.applyServerSOSId(sos.sosEventId, forClientId: nil)

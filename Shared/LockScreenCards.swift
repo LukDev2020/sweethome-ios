@@ -41,6 +41,16 @@ struct ProtectedLockScreenCard: View {
     private var accent: Color { st.accent.color }
 
     var body: some View {
+        if let rider = state.rider {
+            // The SOS version has four rows: it keeps the standard size to fit 160 pt
+            RiderLockScreenCard(state: state, rider: rider,
+                                style: state.status == .sosActive ? st.with(textSize: .standard) : st)
+        } else {
+            standardBody
+        }
+    }
+
+    private var standardBody: some View {
         VStack(alignment: .leading, spacing: LockScreenCardStyle.rowSpacing) {
             header
             ForEach(st.visibleSections, id: \.self) { section in
@@ -236,6 +246,144 @@ struct ProtectedLockScreenCard: View {
         case .timerRunning: return st.theme.isLight ? .blue : Color(red: 0.45, green: 0.7, blue: 1)
         case .pendingCheckIn: return SharedColors.warning
         }
+    }
+}
+
+/// Rider mode. On shift: shift time, crew nearby, planned end; SOS · OK · Report.
+/// During an SOS it is written for whoever picks up the phone: the street, who is
+/// coming, "press hard on the wound", and Call 000 / I'm safe (both open the app —
+/// ending an SOS asks for Face ID or the passcode).
+struct RiderLockScreenCard: View {
+    let state: ProtectedActivityAttributes.ContentState
+    let rider: RiderCardInfo
+    let style: LockScreenCardStyle
+
+    private func L(_ key: String) -> String { WidgetDataStore.localized(key) }
+    private var s: CGFloat { style.s }
+    private var primary: Color { style.theme.primary }
+    private var secondary: Color { style.theme.secondary }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: LockScreenCardStyle.rowSpacing) {
+            if state.status == .sosActive { sosBody } else { shiftBody }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, LockScreenCardStyle.verticalPadding)
+    }
+
+    // MARK: On / off shift
+
+    @ViewBuilder
+    private var shiftBody: some View {
+        HStack(spacing: 7 * s) {
+            CardLogo(size: 22 * s)
+            Image(systemName: "bicycle").font(.system(size: 14 * s, weight: .semibold)).foregroundStyle(style.accent.color)
+            if let started = rider.shiftStartedAt {
+                Text(L("la.rider.onShift")).font(.system(size: 15 * s, weight: .bold)).foregroundStyle(primary)
+                Text(started, style: .timer).font(.system(size: 15 * s, weight: .semibold)).monospacedDigit()
+                    .foregroundStyle(primary).lineLimit(1).frame(maxWidth: 70 * s, alignment: .leading)
+            } else {
+                Text(L("la.rider.offShift")).font(.system(size: 15 * s, weight: .bold)).foregroundStyle(primary)
+            }
+            Spacer(minLength: 4)
+            HStack(spacing: 4) {
+                Circle().fill(rider.crewOnShiftNearby > 0 ? SharedColors.safe : SharedColors.offline).frame(width: 8 * s, height: 8 * s)
+                Text(rider.crewOnShiftNearby > 0 ? "\(rider.crewOnShiftNearby)\(L("la.rider.crewNearby"))" : L("la.rider.noCrew"))
+                    .font(.system(size: 13 * s, weight: .semibold)).foregroundStyle(secondary).lineLimit(1).minimumScaleFactor(0.7)
+            }
+        }
+        .frame(height: style.headerHeight)
+
+        HStack(spacing: 12) {
+            row(icon: "clock.badge.checkmark") {
+                if let end = rider.checkDueAt { Text(L("la.rider.checkAt")) + Text(end, style: .time) } else { Text("—") }
+            }
+            row(icon: "checkmark.circle") {
+                if let ci = state.lastCheckIn { Text(L("la.last.checkin") + " ") + Text(ci, style: .time) } else { Text("—") }
+            }
+        }
+        .frame(height: style.height(of: .checkIn))
+
+        HStack(spacing: 6) {
+            Link(destination: URL(string: "shoudeng://sos")!) {
+                button("exclamationmark.triangle.fill", L("la.sos.button"), SharedColors.alert)
+            }
+            Button(intent: LockScreenCheckInIntent()) {
+                button("checkmark.circle.fill", L("la.checkin.button"), SharedColors.safe.opacity(0.9))
+            }
+            .buttonStyle(.plain)
+            Link(destination: URL(string: "shoudeng://rider-report")!) {
+                button("exclamationmark.shield.fill", L("la.rider.report"), style.accent.color)
+            }
+        }
+        .frame(height: style.height(of: .actions))
+    }
+
+    // MARK: SOS — for the rider or a bystander
+
+    @ViewBuilder
+    private var sosBody: some View {
+        HStack(spacing: 7 * s) {
+            Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 15 * s)).foregroundStyle(.white)
+            Text(L("la.sos.active")).font(.system(size: 15 * s, weight: .bold)).foregroundStyle(.white)
+            Spacer(minLength: 4)
+            Group {
+                if let helper = rider.helperName {
+                    Text(helper + L("la.rider.onTheWay")) + Text(rider.helperDistanceM.map { " · \(Self.distance($0))" } ?? "")
+                } else {
+                    Text(L("la.rider.crewAlerted"))
+                }
+            }
+            .font(.system(size: 13 * s, weight: .semibold)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.7)
+        }
+        .padding(.horizontal, 8)
+        .frame(height: style.headerHeight)
+        .background(RoundedRectangle(cornerRadius: 8).fill(SharedColors.alert))
+
+        Label(rider.sosAddress ?? "—", systemImage: "mappin.and.ellipse")
+            .font(.system(size: 17 * s, weight: .bold)).foregroundStyle(primary)
+            .lineLimit(1).minimumScaleFactor(0.7)
+            .frame(height: style.height(of: .medical))
+
+        Text(L("la.rider.helping") + state.emergencyPhone)
+            .font(.system(size: 13 * s, weight: .semibold)).foregroundStyle(SharedColors.alert)
+            .lineLimit(1).minimumScaleFactor(0.7)
+            .frame(height: style.height(of: .latest))
+
+        HStack(spacing: 6) {
+            Link(destination: URL(string: "shoudeng://call-emergency")!) {
+                button("phone.fill", L("la.rider.call") + state.emergencyPhone, SharedColors.alert)
+            }
+            Link(destination: URL(string: "shoudeng://open")!) {
+                button("checkmark.shield.fill", L("la.rider.safe"), SharedColors.safe.opacity(0.9))
+            }
+        }
+        .frame(height: style.height(of: .actions))
+    }
+
+    private func row<V: View>(icon: String, @ViewBuilder value: () -> V) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: icon).font(.system(size: 12 * s)).foregroundStyle(style.accent.color)
+            value().font(.system(size: 14 * s, weight: .semibold)).foregroundStyle(primary).lineLimit(1).minimumScaleFactor(0.7)
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func button(_ icon: String, _ title: String, _ color: Color) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon).font(.system(size: 13 * s, weight: .semibold))
+            Text(title).font(.system(size: 14 * s, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.7)
+        }
+        .foregroundStyle(.white)
+        .frame(maxWidth: .infinity)
+        .frame(height: style.height(of: .actions))
+        .background(color)
+        .clipShape(Capsule())
+    }
+
+    static func distance(_ meters: Int) -> String {
+        meters >= 1000 ? String(format: "%.1f km", Double(meters) / 1000) : "\(max(10, (meters / 10) * 10)) m"
     }
 }
 

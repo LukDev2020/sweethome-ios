@@ -67,15 +67,18 @@ struct DemoBannerView: View {
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 4)
-            Button {
-                explore.switchRole(to: explore.role.other)
-            } label: {
-                Text(lm.localized(explore.role == .mom ? "explore.switch.toSarah" : "explore.switch.toMom"))
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 10).padding(.vertical, 6)
-                    .background(Capsule().fill(Color.inkSolid))
-                    .lineLimit(1)
+            // Kai's rider phone has no "other side" to switch to
+            if explore.role.hasOtherSide {
+                Button {
+                    explore.switchRole(to: explore.role.other)
+                } label: {
+                    Text(lm.localized(explore.role == .mom ? "explore.switch.toSarah" : "explore.switch.toMom"))
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 10).padding(.vertical, 6)
+                        .background(Capsule().fill(Color.inkSolid))
+                        .lineLimit(1)
+                }
             }
             Button(lm.localized("explore.exit")) { explore.exit() }
                 .font(.footnote.weight(.semibold))

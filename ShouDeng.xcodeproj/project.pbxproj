@@ -36,6 +36,7 @@
 		DD4C82603D4B0B8218838586 /* AppLifecycleRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4C8E04ABB40A07C16C56BC /* AppLifecycleRouter.swift */; };
 		7B8394707B2287C3F89699D2 /* BuildChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A662E552423F06178E58DA7A /* BuildChannel.swift */; };
 		BB22CC3300001001 /* TripRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC3300002001 /* TripRecord.swift */; };
+		DD44EE0100000012 /* Rider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD44EE0100000011 /* Rider.swift */; };
 		BB22CC3300001002 /* TripRecordingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC3300002002 /* TripRecordingService.swift */; };
 		B2FE267CF1ADBC58FC73EE86 /* AppleMapsLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05D8D5E956E9740F8D58568C /* AppleMapsLink.swift */; };
 		BB22CC3300001003 /* TripHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC3300002003 /* TripHistoryView.swift */; };
@@ -43,6 +44,7 @@
 		AA11BB2200001001 /* DuressCodeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB2200002001 /* DuressCodeSettingsView.swift */; };
 		AA11BB2200001002 /* SilentAlarmSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB2200002002 /* SilentAlarmSettingsView.swift */; };
 		AA11BB2200001003 /* SilentAlarmService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB2200002003 /* SilentAlarmService.swift */; };
+		DD44EE0100000016 /* RiderIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD44EE0100000015 /* RiderIntents.swift */; };
 		AA11BB2200001004 /* BLETrackerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB2200002004 /* BLETrackerService.swift */; };
 		AA11BB2200001005 /* BLETrackerSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB2200002005 /* BLETrackerSettingsView.swift */; };
 		6381F3B161D54F6CAFF43D6A /* VoiceNoteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331DA921543B4CBF8494F9CB /* VoiceNoteService.swift */; };
@@ -155,6 +157,7 @@
 		9E430D20E87642C220576CA3 /* ShouDengWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E2D380787D5C7576D1DF4B6C /* ShouDengWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A1302B34EE4C90A44A1ED47C /* ShouDengApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5465F763A8A338E12D44592E /* ShouDengApp.swift */; };
 		A22F58C7B33F5DE5F6350346 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCC9F2C44D93C9435463C4A7 /* AppDelegate.swift */; };
+		DD44EE0100000014 /* AppCoordinator+Rider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD44EE0100000013 /* AppCoordinator+Rider.swift */; };
 		A406EE8717C42C064E08EA50 /* GuardianPlanBillingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2045C1ED8DC5B6CCC03AC6C3 /* GuardianPlanBillingView.swift */; };
 		A58C7804D02B22DF2ADD2838 /* HomeTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7E7DF026259086BD8255347 /* HomeTimerView.swift */; };
 		A5963AD625F11CE7952C86C0 /* SharedItineraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD5DECB3D0590E8B19B6BC11 /* SharedItineraryView.swift */; };
@@ -172,6 +175,7 @@
 		C2956C1ABB45EAD50DA58FD9 /* InviteGuardianView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A74BE5139B5DC4EF7E94362 /* InviteGuardianView.swift */; };
 		C443EE3E317212A2697B78C0 /* GlobeMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794BD85D0F41F07ABDBAED46 /* GlobeMapView.swift */; };
 		C5289F9240B30DC097151387 /* ProtectedHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06711676C420190B6BF2FB41 /* ProtectedHomeView.swift */; };
+		DD44EE0100000018 /* RiderViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD44EE0100000017 /* RiderViews.swift */; };
 		C63E9A5C88A8140699F3ED9D /* TripPreflightView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78733745F4A30EAE16699215 /* TripPreflightView.swift */; };
 		C576FDF5D0C715B70C2B72AD /* ClaimMaterialModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07B3F7BF74A7768DF6C5697C /* ClaimMaterialModels.swift */; };
 		C59757EA88DF0C1DF1A90CB4 /* GuardianDutyScheduleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA9F22E2D872D3B7AE014A1 /* GuardianDutyScheduleView.swift */; };
@@ -304,6 +308,7 @@
 		040C57BD82556A18B68CDDE7 /* DismissTimerIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DismissTimerIntent.swift; sourceTree = "<group>"; };
 		0582D01DD1A66B1A20CA595D /* GuardianRecordsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianRecordsView.swift; sourceTree = "<group>"; };
 		06711676C420190B6BF2FB41 /* ProtectedHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtectedHomeView.swift; sourceTree = "<group>"; };
+		DD44EE0100000017 /* RiderViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiderViews.swift; sourceTree = "<group>"; };
 		78733745F4A30EAE16699215 /* TripPreflightView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripPreflightView.swift; sourceTree = "<group>"; };
 		07B3F7BF74A7768DF6C5697C /* ClaimMaterialModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimMaterialModels.swift; sourceTree = "<group>"; };
 		0879BC98D0B4991130725412 /* MedicalCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicalCardView.swift; sourceTree = "<group>"; };
@@ -404,6 +409,7 @@
 		BAA9F22E2D872D3B7AE014A1 /* GuardianDutyScheduleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianDutyScheduleView.swift; sourceTree = "<group>"; };
 		BB252440C67956A6E95C34C2 /* GuardianSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianSettingsView.swift; sourceTree = "<group>"; };
 		BCC9F2C44D93C9435463C4A7 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		DD44EE0100000013 /* AppCoordinator+Rider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppCoordinator+Rider.swift"; sourceTree = "<group>"; };
 		BF7FCEEEEB1FA39016A477FF /* DuoTabItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuoTabItem.swift; sourceTree = "<group>"; };
 		BFCD3BD31A5FBC796E2E2A49 /* ShouDeng.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShouDeng.entitlements; sourceTree = "<group>"; };
 		C0BEFF93B8A9039DB83F17EA /* TrajectoryProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrajectoryProcessorTests.swift; sourceTree = "<group>"; };
@@ -458,6 +464,7 @@
 		DFF29F4226BF4C368B186B83 /* AudioSessionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSessionCoordinator.swift; sourceTree = "<group>"; };
 		331DA921543B4CBF8494F9CB /* VoiceNoteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceNoteService.swift; sourceTree = "<group>"; };
 		BB22CC3300002001 /* TripRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRecord.swift; sourceTree = "<group>"; };
+		DD44EE0100000011 /* Rider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Rider.swift; sourceTree = "<group>"; };
 		BB22CC3300002002 /* TripRecordingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRecordingService.swift; sourceTree = "<group>"; };
 		05D8D5E956E9740F8D58568C /* AppleMapsLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleMapsLink.swift; sourceTree = "<group>"; };
 		BB22CC3300002003 /* TripHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripHistoryView.swift; sourceTree = "<group>"; };
@@ -465,6 +472,7 @@
 		AA11BB2200002001 /* DuressCodeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuressCodeSettingsView.swift; sourceTree = "<group>"; };
 		AA11BB2200002002 /* SilentAlarmSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilentAlarmSettingsView.swift; sourceTree = "<group>"; };
 		AA11BB2200002003 /* SilentAlarmService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilentAlarmService.swift; sourceTree = "<group>"; };
+		DD44EE0100000015 /* RiderIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiderIntents.swift; sourceTree = "<group>"; };
 		AA11BB2200002004 /* BLETrackerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLETrackerService.swift; sourceTree = "<group>"; };
 		AA11BB2200002005 /* BLETrackerSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLETrackerSettingsView.swift; sourceTree = "<group>"; };
 		AE1267A17B7842458F45DF8F /* LocationBatchUploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationBatchUploader.swift; sourceTree = "<group>"; };
@@ -682,6 +690,7 @@
 				A2CBED579613C2FC6F68B5B6 /* ProtectedCoverageView.swift */,
 				219089B647D70FDE60419C11 /* ProtectedGuardianDetailView.swift */,
 				06711676C420190B6BF2FB41 /* ProtectedHomeView.swift */,
+				DD44EE0100000017 /* RiderViews.swift */,
 				CC33DD0100001102 /* SimpleProtectedHomeView.swift */,
 				78733745F4A30EAE16699215 /* TripPreflightView.swift */,
 				D199DA3C341478E8441C8FED /* ProtectedRecordsView.swift */,
@@ -700,6 +709,7 @@
 				090ED02D65906AB2947D49C5 /* Events.swift */,
 				F1C3DE3DA8E9EEE6CEB01B71 /* User.swift */,
 				BB22CC3300002001 /* TripRecord.swift */,
+				DD44EE0100000011 /* Rider.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -1070,6 +1080,7 @@
 				1E4C8E04ABB40A07C16C56BC /* AppLifecycleRouter.swift */,
 				A662E552423F06178E58DA7A /* BuildChannel.swift */,
 				BCC9F2C44D93C9435463C4A7 /* AppDelegate.swift */,
+				DD44EE0100000013 /* AppCoordinator+Rider.swift */,
 				5465F763A8A338E12D44592E /* ShouDengApp.swift */,
 			);
 			path = App;
@@ -1129,6 +1140,7 @@
 			isa = PBXGroup;
 			children = (
 				AA11BB2200002003 /* SilentAlarmService.swift */,
+				DD44EE0100000015 /* RiderIntents.swift */,
 				CC33DD0100001001 /* FakeCallService.swift */,
 				CC33DD0100001002 /* DeadManSwitchService.swift */,
 				CC33DD0100001003 /* DisguiseModeService.swift */,
@@ -1324,6 +1336,7 @@
 				F2E1D0C9B8A7F6E5D4C3B2A1 /* ReactiveLocationService.swift in Sources */,
 				7CEB8F947D0673F08CE4439B /* AppCoordinator.swift in Sources */,
 				A22F58C7B33F5DE5F6350346 /* AppDelegate.swift in Sources */,
+				DD44EE0100000014 /* AppCoordinator+Rider.swift in Sources */,
 				255D788D0378FE97EA28EF51 /* ArrivalReportView.swift in Sources */,
 				F3ECFE963F1129AB9DCD91B0 /* AuthManager.swift in Sources */,
 				515DEBEED36CE6BFDCA41A8C /* BaselineScorer.swift in Sources */,
@@ -1390,6 +1403,7 @@
 				AA11BB2200001001 /* DuressCodeSettingsView.swift in Sources */,
 				AA11BB2200001002 /* SilentAlarmSettingsView.swift in Sources */,
 				AA11BB2200001003 /* SilentAlarmService.swift in Sources */,
+				DD44EE0100000016 /* RiderIntents.swift in Sources */,
 				AA11BB2200001004 /* BLETrackerService.swift in Sources */,
 				AA11BB2200001005 /* BLETrackerSettingsView.swift in Sources */,
 				FD27D57BCFCB4A4640B7864C /* OfflineQueue.swift in Sources */,
@@ -1400,6 +1414,7 @@
 				5BF317DDA31D8A059C33D9FC /* ProtectedCoverageView.swift in Sources */,
 				46FBA23EB18A93044DAF495C /* ProtectedGuardianDetailView.swift in Sources */,
 				C5289F9240B30DC097151387 /* ProtectedHomeView.swift in Sources */,
+				DD44EE0100000018 /* RiderViews.swift in Sources */,
 				C63E9A5C88A8140699F3ED9D /* TripPreflightView.swift in Sources */,
 				40EF71539180883E92FD63B8 /* ProtectedRecordsView.swift in Sources */,
 				0B892C8BFA3A8FE116B892CF /* ProtectedSettingsView.swift in Sources */,
@@ -1419,6 +1434,7 @@
 				47CD6276A165F690D3747109 /* TrajectoryProcessor.swift in Sources */,
 				35159B7DB49900FACD831968 /* User.swift in Sources */,
 				BB22CC3300001001 /* TripRecord.swift in Sources */,
+				DD44EE0100000012 /* Rider.swift in Sources */,
 				BB22CC3300001002 /* TripRecordingService.swift in Sources */,
 				B2FE267CF1ADBC58FC73EE86 /* AppleMapsLink.swift in Sources */,
 				CC33DD0100002001 /* FakeCallService.swift in Sources */,

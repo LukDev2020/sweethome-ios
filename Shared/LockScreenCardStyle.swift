@@ -66,6 +66,12 @@ struct LockScreenCardStyle: Codable, Hashable {
 
     static let standard = LockScreenCardStyle()
 
+    func with(textSize: TextSize) -> LockScreenCardStyle {
+        var copy = self
+        copy.textSize = textSize
+        return copy
+    }
+
     // MARK: Fit (160 pt lock-screen limit)
 
     static let heightLimit: CGFloat = 160

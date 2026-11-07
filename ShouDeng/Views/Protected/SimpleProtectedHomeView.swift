@@ -8,7 +8,8 @@ import SwiftUI
 // both use the same data and the same SOS.
 
 enum HomeStyle: String, CaseIterable {
-    case standard, simple
+    /// rider: delivery / rideshare riders — shift, crew, rider SOS (RiderHomeView)
+    case standard, simple, rider
     static let storageKey = "protected_home_style"
 }
 
@@ -207,7 +208,7 @@ struct HomeStylePanel: View {
             ForEach(HomeStyle.allCases, id: \.self) { style in
                 Button { homeStyle = style.rawValue } label: {
                     HStack(spacing: 10) {
-                        Image(systemName: style == .simple ? "textformat.size.larger" : "square.grid.2x2")
+                        Image(systemName: style == .simple ? "textformat.size.larger" : style == .rider ? "bicycle" : "square.grid.2x2")
                             .font(.scaled(size: 18))
                             .foregroundStyle(safe)
                             .frame(width: 26)

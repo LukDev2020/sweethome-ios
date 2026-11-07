@@ -40,6 +40,8 @@ struct SOSActiveView: View {
                     if status?.noGuardians == true { noGuardiansPanel }
                     guardiansPanel
                     callButtons
+                    // Rider mode: street to read out, "say this to 000", bleeding control, crew
+                    if coordinator.isRiderMode { RiderSOSPanel() }
                     SOSMapPanel()
                     endButton
                 }

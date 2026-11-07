@@ -37,6 +37,8 @@ struct ProtectedActivityAttributes: ActivityAttributes {
         var lastLocationShare: Date? = nil
         /// Settings → Lock screen card (nil: the stored style); a change here redraws the card
         var cardStyle: LockScreenCardStyle? = nil
+        /// Rider mode: the card shows the shift, crew and (during SOS) bystander help
+        var rider: RiderCardInfo? = nil
     }
 
     struct MedInfo: Codable, Hashable {
@@ -61,4 +63,17 @@ struct ProtectedActivityAttributes: ActivityAttributes {
 
     // Static — set once
     var userName: String
+}
+
+/// Rider-mode content of the protected person's lock-screen card.
+struct RiderCardInfo: Codable, Hashable {
+    var shiftStartedAt: Date?
+    /// Planned shift end (the check-in is due 30 min after it)
+    var checkDueAt: Date?
+    var crewOnShiftNearby: Int
+    /// Street to read out during an SOS (looked up when the SOS starts)
+    var sosAddress: String?
+    /// First crew mate who answered "I'm going"
+    var helperName: String?
+    var helperDistanceM: Int?
 }

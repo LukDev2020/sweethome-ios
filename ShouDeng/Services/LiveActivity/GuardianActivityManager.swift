@@ -213,6 +213,17 @@ final class GuardianActivityManager {
         }
     }
 
+    /// Rider mode: shift, crew nearby, who is coming during an SOS (nil: standard card).
+    func updateRider(_ info: RiderCardInfo?) {
+        guard let activity = protectedActivity else { return }
+        Task {
+            var state = activity.content.state
+            guard state.rider != info else { return }
+            state.rider = info
+            await activity.update(.init(state: state, staleDate: Date().addingTimeInterval(600)))
+        }
+    }
+
     /// Settings → Lock screen card changed: redraw both cards with the stored style.
     func restyle() {
         let style = LockScreenCardStyle.stored
@@ -234,8 +245,8 @@ final class GuardianActivityManager {
 
     // MARK: - SOS (both roles)
 
-    func triggerSOS(localEmergencyNumber: String) {
-        guard !ExploreMode.isActive else { return }
+    func triggerSOS(localEmergencyNumber: String, demo: Bool = false) {
+        guard !ExploreMode.isActive || demo else { return }
         if let activity = protectedActivity {
             Task {
                 var state = activity.content.state
