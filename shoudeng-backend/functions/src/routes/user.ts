@@ -9,6 +9,8 @@ import { recordDataTransferConsent, parseConsentRecords, latestConsentVersions }
 import { insertConsentAudit } from "../services/bigquery";
 import { appAccountTokenFor } from "../services/payment";
 
+import { riderProfileUpdates, riderProfileView, ProfileFieldError } from "../services/riderProfile";
+
 const router = Router();
 const db = admin.firestore();
 
@@ -48,6 +50,8 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
       createdAt: data.createdAt.toDate().toISOString(),
       publicKey: data.publicKey || null,
       dataTransferConsentVersion: data.dataTransferConsentVersion || null,
+      // Why they use the app, which home they see, rider setup (survives a new phone)
+      ...riderProfileView(data),
     });
   } catch (error) {
     console.error("[User] get profile error:", error);
@@ -119,6 +123,15 @@ router.put("/me", authMiddleware, async (req: Request, res: Response) => {
     }
     updates.countryCode = countryCode;
   }
+  try {
+    Object.assign(updates, riderProfileUpdates(req.body ?? {}));
+  } catch (e) {
+    if (e instanceof ProfileFieldError) {
+      res.status(400).json({ error: e.message });
+      return;
+    }
+    throw e;
+  }
   if (publicKey !== undefined) {
     if (typeof publicKey !== "string" || publicKey.length > 200) {
       res.status(400).json({ error: "publicKey must be a base64 string of 200 characters or less" });
@@ -128,6 +141,11 @@ router.put("/me", authMiddleware, async (req: Request, res: Response) => {
   }
 
   try {
+    // The first rider setup date stays (the onboarding funnel counts from it)
+    if (updates["riderProfile.onboardedAt"]) {
+      const existing = (await db.collection("users").doc(uid).get()).data()?.riderProfile?.onboardedAt;
+      if (existing) delete updates["riderProfile.onboardedAt"];
+    }
     await db.collection("users").doc(uid).update(updates);
     res.json({ success: true });
   } catch (error) {

@@ -30,6 +30,8 @@ final class DemoStore {
         var metrics: [String: Any]
     }
     private var falls: [String: [DemoFall]] = [:]
+    /// Crews started in the demo's rider setup by someone other than Kai (uid → name)
+    private var ownCrews: [String: String] = [:]
 
     private let lock = NSLock()
     private(set) var dataset: DemoDataset
@@ -558,6 +560,10 @@ final class DemoStore {
                 return true
             }
             return ok ? (200, json(["success": true])) : (403, json(["error": "they don't watch you"]))
+        case ("POST", "/v1/crew") where me != DemoDataset.kaiId:
+            // Anyone trying the rider setup in the demo starts a crew of their own
+            lock.withLock { ownCrews[me] = (b["name"] as? String) ?? "Crew" }
+            return (201, json(["crew": crewJSON(me: me)]))
         case ("POST", "/v1/crew"):
             lock.withLock { kaiInCrew = true; crewName = (b["name"] as? String) ?? crewName }
             return (201, json(["crew": crewJSON(me: me)]))
@@ -601,6 +607,14 @@ final class DemoStore {
 
     private func crewJSON(me: String) -> Any {
         lock.withLock {
+            if me != DemoDataset.kaiId, let name = ownCrews[me], let user = dataset.user(me) {
+                return [
+                    "id": "demo-crew-\(me)", "name": name, "inviteCode": "R4D8NW", "isOwner": true, "myWatcherIds": [] as [String],
+                    "members": [["id": me, "name": user.displayName, "initial": user.avatarInitial, "onShift": false,
+                                 "latitude": NSNull(), "longitude": NSNull(), "locationAt": NSNull(), "distanceM": NSNull()]],
+                    "cautions": [] as [Any],
+                ] as [String: Any]
+            }
             guard me == DemoDataset.kaiId, kaiInCrew else { return NSNull() }
             let here = DemoDataset.kaiSpot
             func member(_ u: User, onShift: Bool) -> [String: Any] {

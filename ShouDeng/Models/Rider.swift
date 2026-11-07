@@ -17,8 +17,9 @@ struct Crew: Codable, Equatable {
     /// Who watches my shifts (crew mates and guardians); the next shift starts with them
     var myWatcherIds: [String]? = nil
 
-    /// Joining link shown as a QR code (the app opens it and fills in the code)
-    var inviteURL: URL { URL(string: "shoudeng://crew/join?code=\(inviteCode)")! }
+    /// Joining link shown as a QR code. A web link (universal link): opens the app when
+    /// installed, otherwise a page with the code and the App Store (web/crew.html)
+    var inviteURL: URL { URL(string: "https://shoudeng.app/crew/\(inviteCode)")! }
 }
 
 struct CrewMember: Codable, Identifiable, Equatable {

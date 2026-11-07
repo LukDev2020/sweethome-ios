@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { markMilestone, noteShiftStarted } from "./riderProfile";
 import { distanceMeters } from "./sosTracking";
 import { activeGuardianIds } from "./sosTracking";
 import {
@@ -60,6 +61,7 @@ export async function createCrew(uid: string, rawName: unknown): Promise<string>
   const ref = db().collection("crews").doc();
   await ref.set({ name, ownerId: uid, memberIds: [uid], inviteCode: newInviteCode(), createdAt: ts(new Date()) });
   await db().collection("users").doc(uid).set({ crewId: ref.id }, { merge: true });
+  await markMilestone(uid, "crew");
   return ref.id;
 }
 
@@ -79,6 +81,7 @@ export async function joinCrew(uid: string, rawCode: unknown): Promise<string> {
     tx.update(crew.ref, { memberIds: [...members, uid] });
     tx.set(db().collection("users").doc(uid), { crewId: crew.id }, { merge: true });
   });
+  await markMilestone(uid, "crew");
   return crew.id;
 }
 
@@ -176,6 +179,7 @@ export async function setShift(
     overdueAlerted: false,
     watcherIds,
   });
+  await noteShiftStarted(uid);
   // Tell watchers who weren't watching before
   const name = ((await db().collection("users").doc(uid).get()).data()?.displayName as string) ?? "";
   await Promise.all(watcherIds.filter((w) => !previous.includes(w))

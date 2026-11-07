@@ -21,6 +21,12 @@ struct DemoRootView: View {
             }
         }
         .sosOverlays(coordinator)
+        // Choosing Rider in the demo shows the same rider setup a real rider gets
+        .fullScreenCover(isPresented: Binding(get: { coordinator.showRiderSetup && coordinator.userRole == .protected_ },
+                                              set: { coordinator.showRiderSetup = $0 })) {
+            RiderSetupView(start: coordinator.riderSetupStartStep)
+                .environmentObject(coordinator)
+        }
         .environmentObject(coordinator)
         // SwiftUI Links (hotlines, consulate…) must not dial anyone from the demo
         .environment(\.openURL, OpenURLAction { url in

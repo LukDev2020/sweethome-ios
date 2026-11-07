@@ -96,6 +96,9 @@ struct LoginView: View {
                     }
                 }
             }
+            if UserDefaults.standard.string(forKey: "signupStep") != nil {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { coordinator.showSignup = true }
+            }
             // Simulator verification: launch with `-devLoginRole guardian|protected`
             if let role = UserDefaults.standard.string(forKey: "devLoginRole") {
                 phone = "6479283746"
@@ -169,6 +172,7 @@ struct LoginView: View {
             Spacer()
             brandArea
                 .padding(.bottom, 36)
+            riderLinkBanner
             loginFormFields
             Spacer()
             Spacer()
@@ -188,10 +192,33 @@ struct LoginView: View {
             VStack(spacing: 0) {
                 loginTopBar
                 Spacer()
+                riderLinkBanner
                 loginFormFields
                 Spacer()
                 Spacer()
             }
+        }
+    }
+
+    /// Arrived from a crew invite / partner link: say what happens after signing in.
+    @ViewBuilder private var riderLinkBanner: some View {
+        if coordinator.pendingCrewCode != nil || coordinator.pendingSignupIntent?.rider == true {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "bicycle")
+                    .font(.scaled(size: 18))
+                    .foregroundStyle(navy)
+                Text(coordinator.pendingCrewCode.map { String(format: lang.localized("login.rider.crew"), $0) }
+                     ?? lang.localized("login.rider.partner"))
+                    .font(.scaled(size: 13))
+                    .foregroundStyle(ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+            }
+            .padding(12)
+            .background(RoundedRectangle(cornerRadius: 12).fill(navy.opacity(0.07)))
+            .padding(.horizontal, 32)
+            .padding(.bottom, 14)
+            .accessibilityIdentifier("login.riderBanner")
         }
     }
 

@@ -74,6 +74,10 @@ struct OrgDashboardView: View {
                 }
                 .padding(.horizontal, 4)
 
+                // Riders who joined through our partner link (totals only)
+                OrgRidersPanel()
+                    .environmentObject(coordinator)
+
                 // Summary cards
                 LazyVGrid(columns: [
                     GridItem(.flexible()),
@@ -443,5 +447,83 @@ struct SendAlertSheet: View {
             print("[Org] send alert error: \(error)")
             #endif
         }
+    }
+}
+
+// MARK: - Riders (partner link)
+
+struct OrgRiderStats: Decodable {
+    let orgName: String
+    let partnerCode: String?
+    let riders: Int
+    let notCounted: Int
+    let activeLast7d: Int
+    let onShiftNow: Int
+    let sosLast30d: Int
+}
+
+struct OrgPartnerCode: Decodable { let code: String; let name: String; let link: String }
+
+/// A delivery platform, union or rider community: the link riders sign up with, and
+/// totals over riders who agreed to be counted — never names or positions.
+struct OrgRidersPanel: View {
+    @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var lang = LanguageManager.shared
+    @State private var stats: OrgRiderStats?
+    @State private var link: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label(lang.localized("org.riders.title"), systemImage: "bicycle")
+                .font(.scaled(size: 15, weight: .semibold))
+            if let stats {
+                HStack(spacing: 8) {
+                    tile("\(stats.riders)", "org.riders.count")
+                    tile("\(stats.activeLast7d)", "org.riders.active")
+                    tile("\(stats.onShiftNow)", "org.riders.onShift")
+                    tile("\(stats.sosLast30d)", "org.riders.sos")
+                }
+                if stats.notCounted > 0 {
+                    Text(String(format: lang.localized("org.riders.notCounted"), stats.notCounted))
+                        .font(.scaled(size: 12)).foregroundStyle(.secondary)
+                }
+            }
+            if let link {
+                ShareLink(item: URL(string: link)!, message: Text(lang.localized("org.riders.shareMessage"))) {
+                    Label(lang.localized("org.riders.share"), systemImage: "square.and.arrow.up")
+                        .font(.scaled(size: 14, weight: .semibold))
+                }
+                Text(link).font(.system(size: 12, design: .monospaced)).foregroundStyle(.secondary).textSelection(.enabled)
+            } else {
+                Button(lang.localized("org.riders.getLink")) { Task { await loadLink() } }
+                    .font(.scaled(size: 14, weight: .semibold))
+            }
+            Text(lang.localized("org.riders.privacy"))
+                .font(.scaled(size: 11)).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color(.secondarySystemBackground)))
+        .task { await loadStats() }
+    }
+
+    private func tile(_ value: String, _ key: String) -> some View {
+        VStack(spacing: 2) {
+            Text(value).font(.scaled(size: 20, weight: .bold))
+            Text(lang.localized(key)).font(.scaled(size: 10)).foregroundStyle(.secondary)
+                .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func loadStats() async {
+        stats = try? await coordinator.apiClient.get("/v1/org/riders")
+        if let code = stats?.partnerCode { link = "https://shoudeng.app/start?for=rider&org=\(code)" }
+    }
+
+    private func loadLink() async {
+        let r: OrgPartnerCode? = try? await coordinator.apiClient.post("/v1/org/partner-code", body: EmptyBody())
+        link = r?.link
     }
 }

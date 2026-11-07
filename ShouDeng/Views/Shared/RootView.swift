@@ -83,6 +83,10 @@ private struct AuthenticatedRootView: View {
                     Group {
                         if biometric.isEnabled && !biometric.isUnlocked {
                             BiometricGateView()
+                        } else if coordinator.showRiderSetup && coordinator.userRole == .protected_ {
+                            // Rider setup: after a rider signs up, a crew / partner link, Settings
+                            RiderSetupView(start: coordinator.riderSetupStartStep)
+                                .environmentObject(coordinator)
                         } else if !setupWizardComplete && coordinator.showSetupWizard {
                             PostSignupWizardView(onComplete: {
                                 setupWizardComplete = true

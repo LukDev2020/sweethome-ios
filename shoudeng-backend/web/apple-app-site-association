@@ -7,7 +7,10 @@
         "paths": [
           "/invite/*",
           "/evidence/*",
-          "/sos/*"
+          "/sos/*",
+          "/crew/*",
+          "/start",
+          "/start/*"
         ]
       }
     ]

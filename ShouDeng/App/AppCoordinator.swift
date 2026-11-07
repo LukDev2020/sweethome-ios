@@ -51,10 +51,21 @@ final class AppCoordinator: ObservableObject {
     @Published var demoSensitiveFall: Bool?
     /// Street where the rider's SOS started (lock-screen card, SOS screen)
     @Published var riderSOSAddress: String?
-    @Published var riderShift: RiderShift? = {
-        guard let data = UserDefaults.standard.data(forKey: "rider_shift") else { return nil }
-        return try? JSONDecoder().decode(RiderShift.self, from: data)
-    }()
+    /// Restored from the real account's storage in init — never in Explore Mode, whose
+    /// shifts must not leak into (or come from) the real app
+    @Published var riderShift: RiderShift?
+    /// Rider onboarding: what the sign-up link / choice asked for (rider, partner code)
+    @Published var pendingSignupIntent: SignupIntent?
+    /// The rider setup flow (after a rider signs up, or Rider chosen in Settings)
+    @Published var showRiderSetup = false
+    /// Step the setup opens at (the "Finish setting up" card jumps to one)
+    var riderSetupStartStep: RiderSetupStep = .ride
+    /// From GET /v1/user/me: rider profile (platforms, partner, milestones, Rider Free)
+    @Published var riderProfile: RiderProfileInfo?
+    /// On-device suggestion card: "Riding for work? Try Rider mode"
+    @Published var showRiderSuggestion = false
+    /// Explore Mode: the rider setup was gone through once (kept in memory only)
+    var demoRiderSetupDone = false
 
     @Published var sosConcealed = UserDefaults.standard.bool(forKey: "sos_concealed") {
         didSet { UserDefaults.standard.set(sosConcealed, forKey: "sos_concealed") }
@@ -190,6 +201,9 @@ final class AppCoordinator: ObservableObject {
         print("[AppCoordinator] API base URL: \(config.baseURL)")
         #endif
         authManager = AuthManager(api: apiClient, defaults: environment.defaults, restore: !environment.isDemo)
+        if !environment.isDemo, let data = UserDefaults.standard.data(forKey: "rider_shift") {
+            riderShift = try? JSONDecoder().decode(RiderShift.self, from: data)
+        }
         // Unit tests drive StoreKit through SKTestSession; the test host must not start
         // listening to the real App Store first (on a fresh simulator that process then
         // never sees the test configuration's products)
@@ -436,6 +450,8 @@ final class AppCoordinator: ObservableObject {
             await syncConsentRecords()
             await fetchWatchBack()
             await fetchUserProfile()
+            // Signed in (not signed up) through a crew / partner link
+            await MainActor.run { self.applyPendingRiderIntent() }
             if userRole == .guardian {
                 await fetchProtectedPersons()
             } else {
@@ -584,6 +600,8 @@ final class AppCoordinator: ObservableObject {
         Task { await fetchWatchBack() }
         // A fall check that ran out while we were suspended: send now
         resumeAutoSOSCheckIfOverdue()
+        // Long cycling stretches on several days: suggest Rider mode (on-device only)
+        evaluateRiderSuggestion()
         // The SOS widget/intent may have fired while we were suspended
         checkWidgetSOSIntent()
         processPendingWidgetActions()
@@ -659,7 +677,7 @@ final class AppCoordinator: ObservableObject {
                 // shoudeng://crew/join?code=ABC123 (crew QR code)
                 let code = URLComponents(url: url, resolvingAgainstBaseURL: false)?
                     .queryItems?.first(where: { $0.name == "code" })?.value ?? ""
-                pendingCrewCode = code.uppercased()
+                if let code = DeepLinkRouter.normalizedCrewCode(code) { handleDeepLinkDestination(.crew(code: code)) }
                 return
             case "rider-report":
                 showBikeReport = true
@@ -688,8 +706,17 @@ final class AppCoordinator: ObservableObject {
         case .loggedIn:
             applyDeepLink(destination)
         default:
-            // Store for after login
-            pendingDeepLink = destination
+            // Rider links choose Rider at sign-up; the crew code waits for the setup
+            switch destination {
+            case .crew(let code):
+                pendingSignupIntent = SignupIntent(rider: true, partnerCode: pendingSignupIntent?.partnerCode)
+                pendingCrewCode = code
+            case .riderStart(let partner):
+                pendingSignupIntent = SignupIntent(rider: true, partnerCode: partner)
+            default:
+                // Store for after login
+                pendingDeepLink = destination
+            }
         }
     }
 
@@ -697,6 +724,10 @@ final class AppCoordinator: ObservableObject {
         switch destination {
         case .invite(let code):
             presentInviteAccept(code: code)
+        case .crew(let code):
+            handleCrewLink(code: code)
+        case .riderStart(let partner):
+            handleRiderStartLink(partnerCode: partner)
         case .evidence:
             // Evidence links are handled by the web view; no in-app routing needed
             break
@@ -725,6 +756,7 @@ final class AppCoordinator: ObservableObject {
             await MainActor.run {
                 self.currentUser = user
                 self.userRole = user.role
+                self.applyServerRiderFields(profile)
                 self.localStore.saveCurrentUser(user)
                 self.localStore.saveUserRole(user.role)
                 self.needsDataTransferConsent = !self.isDemo

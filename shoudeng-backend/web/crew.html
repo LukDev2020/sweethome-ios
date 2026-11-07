@@ -1,0 +1,40 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Join a rider crew — Lantern Care</title>
+<meta name="robots" content="noindex">
+<style>
+body{font:17px -apple-system,system-ui,sans-serif;margin:0;background:#fbf8f1;color:#12203a}
+main{max-width:460px;margin:0 auto;padding:40px 24px;text-align:center}
+h1{font-size:24px;margin:16px 0 8px}p{color:#4b5a70;line-height:1.5}
+.code{font:700 38px ui-monospace,Menlo,monospace;letter-spacing:6px;margin:20px 0;color:#014581}
+a.btn{display:block;margin:12px 0;padding:15px;border-radius:14px;text-decoration:none;font-weight:600}
+.primary{background:#3f8f6e;color:#fff}.secondary{border:1px solid #014581;color:#014581}
+small{color:#7a8596}
+</style></head>
+<body><main>
+<div style="font-size:52px">🚲</div>
+<h1 id="t">You're invited to a rider crew</h1>
+<p id="d">Riders in a crew look out for each other: when one of you calls SOS, the mates nearest are alerted first.</p>
+<div class="code" id="code">——————</div>
+<a class="btn primary" id="open" href="#">Open in Lantern Care</a>
+<a class="btn secondary" id="get" href="#">Get Lantern Care</a>
+<p><small id="s">New to the app? Install it, choose “I deliver or drive for work”, and enter this code.</small></p>
+</main>
+<script>
+// Fill in when the app is on the App Store (e.g. https://apps.apple.com/app/id0000000000)
+var APP_STORE_URL = "";
+var code = (location.pathname.split("/").filter(Boolean)[1] || new URLSearchParams(location.search).get("code") || "")
+  .toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+document.getElementById("code").textContent = code || "——————";
+document.getElementById("open").href = "shoudeng://crew/join?code=" + encodeURIComponent(code);
+var get = document.getElementById("get");
+if (APP_STORE_URL) { get.href = APP_STORE_URL; } else { get.textContent = "Coming soon to the App Store"; get.removeAttribute("href"); }
+if ((navigator.language || "").toLowerCase().startsWith("zh")) {
+  document.getElementById("t").textContent = "邀请你加入骑手车队";
+  document.getElementById("d").textContent = "车队里的骑手互相照应：有人求助时，离得最近的队友最先收到提醒。";
+  document.getElementById("open").textContent = "在守灯中打开";
+  if (APP_STORE_URL) get.textContent = "下载守灯"; else get.textContent = "即将上架 App Store";
+  document.getElementById("s").textContent = "第一次使用？安装后选择「我做外卖或网约车」，再输入这个代码。";
+}
+</script>
+</body></html>

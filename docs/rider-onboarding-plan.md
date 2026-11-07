@@ -1,6 +1,6 @@
 # Rider onboarding: plan
 
-Status: proposal (2026-11-07). Nothing built yet.
+Status: phases 1–3 built (2026-11-07). See "Built" at the end for what shipped and the operator steps left.
 
 ## Problem
 
@@ -132,3 +132,30 @@ Email, Face ID and the family invite from the general wizard move to an **"Finis
 | Lock-screen card on within the first shift | ≥ 60 % |
 | Median rider setup time | ≤ 90 s |
 | New riders arriving through a crew invite (by month 2) | ≥ 30 % |
+
+## Built (2026-11-07)
+
+| Plan item | Where |
+|---|---|
+| Shift state isolated from Explore Mode | `AppCoordinator` (riderShift read/written only for the real account); `RiderOnboardingTests.testDemoNeitherReadsNorWritesTheRealShift` |
+| "I deliver or drive for work" at sign-up | `SignupView` (rider card → protected role + Rider mode + rider setup instead of the general wizard) |
+| Rider setup R1–R7 | `RiderSetupView` (also from Settings → Home screen → Rider, links, the home card) |
+| Rider notice (consent v1.0, logged) | `DisclaimerCopy.RiderDuty`, `ConsentLogger.logRiderDuty` |
+| Home style / use case / rider profile on the server | `PUT/GET /v1/user/me` (`useCase`, `homeStyle`, `riderProfile`), `services/riderProfile.ts` |
+| Milestones (crew, first shift, lock card, setup) | server sets crew / shift ones in `services/crew.ts`; phone reports lockCard / setupDone |
+| Crew invite universal links + web fallback | QR is now `https://shoudeng.app/crew/CODE`; AASA `/crew/*`, `/start*`; `web/crew.html`, `web/start.html` |
+| Partner links + free-plan status | `/start?for=rider&org=CODE`; `POST /v1/org/partner-code`, `GET /v1/org/partner/:code`, `POST …/join {shareStats}`, `GET /v1/org/riders` (totals only); `riderFree` in the profile |
+| Partner dashboard | `OrgRidersPanel` in the organisation dashboard |
+| "Finish setting up" card, forgotten-shift prompt | `RiderHomeView` |
+| Login banner for link arrivals | `LoginView.riderLinkBanner` |
+| Funnel | `npm run rider-funnel [days]` (counts only) |
+| On-device "Riding for work?" suggestion | `RiderSuggestion` (CMMotionActivity, never uploaded), `RiderSuggestionCard` |
+
+Not built: the dual-role "I also ride" for guardians (needs roles phase B, docs/roles/ROLES.md); a guardian opening a crew link is told the link is for the rider.
+
+### Operator steps left
+1. Deploy functions (the new routes): `firebase deploy --only functions`.
+2. Deploy Hosting so the universal links and fallback pages exist: `firebase deploy --only hosting` (serves `web/apple-app-site-association` with `/crew/*` and `/start`).
+3. Put the App Store URL into `APP_STORE_URL` in `web/crew.html` and `web/start.html` once the app is live.
+4. Index: `users` on `riderProfile.onboardedAt` is single-field (automatic) — no composite index needed.
+

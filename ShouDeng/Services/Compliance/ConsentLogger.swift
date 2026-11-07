@@ -99,6 +99,11 @@ final class ConsentLogger {
         log(userId: currentUserId, item: DisclaimerCopy.Terms.consentKey, copyVersion: DisclaimerCopy.Terms.version)
     }
 
+    func logRiderDuty() {
+        log(userId: currentUserId, item: DisclaimerCopy.RiderDuty.consentKey,
+            copyVersion: DisclaimerCopy.RiderDuty.version)
+    }
+
     func logGuardianDuty() {
         log(userId: currentUserId, item: DisclaimerCopy.GuardianDuty.consentKey,
             copyVersion: DisclaimerCopy.GuardianDuty.version)

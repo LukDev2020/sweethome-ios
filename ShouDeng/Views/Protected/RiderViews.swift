@@ -10,7 +10,8 @@ import CoreImage.CIFilterBuiltins
 // rider part of the SOS screen (street to read out, "say this to 000", bleeding control,
 // crew answers). Model and API: Models/Rider.swift, AppCoordinator+Rider.swift.
 
-private enum RC {
+/// Rider colours (rider screens and the rider setup)
+enum RC {
     static let ink = Color.appInk
     static let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     static let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
@@ -39,7 +40,9 @@ struct RiderHomeView: View {
             VStack(alignment: .leading, spacing: 14) {
                 header
                 ForEach(coordinator.crewAlerts) { alert in crewAlertBanner(alert) }
+                if AppCoordinator.shiftLooksForgotten(coordinator.riderShift) { forgottenShiftCard }
                 shiftCard
+                if !coordinator.isDemo && !coordinator.riderChecklist.essentialsDone { finishSetupCard }
                 VStack(spacing: 8) {
                     BigSOSButton()
                         .coachMark(CoachAnchor.sosButton)
@@ -76,6 +79,60 @@ struct RiderHomeView: View {
             Button(lang.localized("rider.shift.end")) { Task { await coordinator.endShift() } }
             Button(lang.localized("common.cancel"), role: .cancel) {}
         }
+    }
+
+    /// Long past its planned end: probably forgotten (the watchers were already told).
+    private var forgottenShiftCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label(lang.localized("rider.forgotten.title"), systemImage: "clock.badge.questionmark")
+                .font(.scaled(size: 16, weight: .bold))
+            Text(lang.localized("rider.forgotten.body"))
+                .font(.scaled(size: 13)).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 10) {
+                Button(lang.localized("rider.shift.end")) { Task { await coordinator.endShift() } }
+                    .buttonStyle(.borderedProminent).tint(RC.alert)
+                Button(lang.localized("rider.forgotten.still")) { showShiftStart = true }
+                    .buttonStyle(.bordered).tint(RC.safe)
+            }
+            .font(.scaled(size: 14, weight: .semibold))
+        }
+        .padding(14)
+        .background(RoundedRectangle(cornerRadius: 16).fill(Color.orange.opacity(0.12)))
+    }
+
+    /// Crew, someone at home, lock-screen card: what still leaves a shift uncovered.
+    private var finishSetupCard: some View {
+        let c = coordinator.riderChecklist
+        let missing: [(String, RiderSetupStep)] = [
+            (c.crew ? nil : ("rider.setup.check.crew", RiderSetupStep.crew)),
+            (c.watcher ? nil : ("rider.setup.check.watcher", RiderSetupStep.home)),
+            (c.lockCard ? nil : ("rider.setup.check.lockCard", RiderSetupStep.sos)),
+        ].compactMap { $0 }
+        return Button { coordinator.beginRiderSetup(at: missing.first?.1 ?? .ride) } label: {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text(lang.localized("rider.finish.title")).font(.scaled(size: 16, weight: .bold)).foregroundStyle(RC.ink)
+                    Spacer()
+                    Text(String(format: lang.localized("rider.finish.count"), c.doneCount, RiderChecklist.total))
+                        .font(.scaled(size: 13)).foregroundStyle(.secondary)
+                }
+                ProgressView(value: Double(c.doneCount), total: Double(RiderChecklist.total)).tint(RC.safe)
+                ForEach(missing, id: \.0) { item in
+                    Label(lang.localized(item.0), systemImage: "circle")
+                        .font(.scaled(size: 14)).foregroundStyle(RC.ink)
+                }
+                if !c.watcher {
+                    Text(lang.localized("rider.finish.noWatcher"))
+                        .font(.scaled(size: 12)).foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(14)
+            .background(RoundedRectangle(cornerRadius: 16).stroke(RC.safe.opacity(0.5)))
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("rider.finishSetup")
     }
 
     private var header: some View {
@@ -227,7 +284,8 @@ struct ShiftStartSheet: View {
                 // Who watches this shift
                 Section {
                     if colleagues.isEmpty {
-                        Label(lang.localized("rider.watch.noCrew"), systemImage: "person.3")
+                        // A crew of one (just started) is not "no crew": invite riders to it
+                        Label(lang.localized(coordinator.crew == nil ? "rider.watch.noCrew" : "rider.watch.noMates"), systemImage: "person.3")
                             .font(.scaled(size: 14)).foregroundStyle(.secondary)
                     }
                     ForEach(colleagues) { m in

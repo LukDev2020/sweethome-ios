@@ -237,6 +237,10 @@ struct UserProfileResponse: Codable {
     let cityName: String
     let createdAt: Date
     var dataTransferConsentVersion: String? = nil
+    // Rider onboarding: why they use the app, which home, rider setup (survives a new phone)
+    var useCase: String? = nil
+    var homeStyle: String? = nil
+    var riderProfile: RiderProfileInfo? = nil
 }
 
 // MARK: - Protected Person Status (guardian polls this)

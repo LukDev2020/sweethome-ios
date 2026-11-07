@@ -200,6 +200,12 @@ struct ProtectedHomeView: View {
                     .padding(.top, 8)
                 }
 
+                if coordinator.showRiderSuggestion {
+                    RiderSuggestionCard()
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+                }
+
                 globeSection
                     .coachMark(CoachAnchor.guardiansGlobe)
                 worldClocks

@@ -209,7 +209,11 @@ struct HomeStylePanel: View {
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             ForEach(HomeStyle.allCases, id: \.self) { style in
-                Button { coordinator.setHomeStyle(style) } label: {
+                Button {
+                    coordinator.setHomeStyle(style)
+                    // First time choosing Rider: the rider setup (crew, someone at home, lock-screen SOS)
+                    if style == .rider && !coordinator.riderSetupDone { coordinator.beginRiderSetup(at: .ride) }
+                } label: {
                     HStack(spacing: 10) {
                         Image(systemName: style == .simple ? "textformat.size.larger" : style == .rider ? "bicycle" : "square.grid.2x2")
                             .font(.scaled(size: 18))

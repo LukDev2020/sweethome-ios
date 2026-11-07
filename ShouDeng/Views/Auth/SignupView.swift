@@ -33,6 +33,8 @@ struct SignupView: View {
     @State private var code = ""
     @State private var displayName = ""
     @State private var selectedRole: UserRole?
+    /// "I deliver or drive for work": a protected person with Rider mode and the rider setup
+    @State private var asRider = false
     @State private var usesInviteCode = false
     @State private var inviteCode = ""
     /// Opened from a login that already verified this number (no second SMS)
@@ -150,9 +152,16 @@ struct SignupView: View {
                 if case .invite(let linkCode) = coordinator.pendingDeepLink {
                     chooseInvite()
                     inviteCode = linkCode
+                } else if coordinator.pendingSignupIntent?.rider == true || coordinator.pendingCrewCode != nil {
+                    // A rider crew / partner link: start as a rider
+                    chooseRider()
                 }
                 checkLockout()
                 applyLanguageForCountry(selectedCountry)
+                #if DEBUG
+                // Simulator screenshots: `-signupStep profile` opens the "How do you want to start?" step
+                if UserDefaults.standard.string(forKey: "signupStep") == "profile" { step = .profile }
+                #endif
             }
             .onChange(of: selectedCountry) { _, newCountry in
                 applyLanguageForCountry(newCountry)
@@ -350,12 +359,18 @@ struct SignupView: View {
                             .font(.scaled(size: 12))
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
-                        startOption(isSelected: selectedRole == .protected_, icon: "shield.fill",
+                        startOption(isSelected: selectedRole == .protected_ && !asRider, icon: "shield.fill",
                                     title: lang.localized("signup.start.protected"),
                                     desc: lang.localized("signup.start.protected.desc")) {
                             chooseRole(.protected_)
                         }
                         .accessibilityIdentifier("signup.start.protected")
+                        startOption(isSelected: asRider, icon: "bicycle",
+                                    title: lang.localized("signup.start.rider"),
+                                    desc: lang.localized("signup.start.rider.desc")) {
+                            chooseRider()
+                        }
+                        .accessibilityIdentifier("signup.start.rider")
                         startOption(isSelected: selectedRole == .guardian, icon: "eye.fill",
                                     title: lang.localized("signup.start.guardian"),
                                     desc: lang.localized("signup.start.guardian.desc")) {
@@ -402,11 +417,19 @@ struct SignupView: View {
 
     private func chooseRole(_ role: UserRole) {
         selectedRole = role
+        asRider = false
+        usesInviteCode = false
+    }
+
+    private func chooseRider() {
+        selectedRole = .protected_
+        asRider = true
         usesInviteCode = false
     }
 
     private func chooseInvite() {
         selectedRole = nil
+        asRider = false
         usesInviteCode = true
     }
 
@@ -504,7 +527,9 @@ struct SignupView: View {
                     dataTransferConsent: DataTransferConsent.version
                 )
                 coordinator.userRole = role
-                coordinator.showSetupWizard = true
+                // Riders get their own setup (crew, someone at home, lock-screen SOS…)
+                coordinator.showSetupWizard = !asRider
+                if !usesInviteCode { coordinator.completeSignup(asRider: asRider) }
                 if usesInviteCode {
                     // The account exists now: confirm and accept the invite right
                     // away. Accepting sets the side the invite gives this account.

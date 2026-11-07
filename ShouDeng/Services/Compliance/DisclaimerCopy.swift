@@ -145,6 +145,13 @@ enum DisclaimerCopy {
         static let consentKey = "guardian.duty"
     }
 
+    /// Riders, once before their first shift: crew mates are volunteers, not responders;
+    /// call the emergency number first (strings rider.duty.*)
+    enum RiderDuty {
+        static let version = "v1.0"
+        static let consentKey = "rider.duty"
+    }
+
     // MARK: - Terms of Service / Privacy Policy acceptance (login screen)
 
     enum Terms {

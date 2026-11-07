@@ -15,7 +15,8 @@
     "test": "jest --config jest.config.js",
     "test:unit": "jest --config jest.config.js --testPathIgnorePatterns e2e",
     "test:e2e": "FIRESTORE_EMULATOR_HOST=localhost:8080 FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 FUNCTIONS_EMULATOR=true jest --config jest.config.js --testPathPattern e2e-bots --runInBand --forceExit",
-    "test:rules": "JAVA_HOME=${JAVA_HOME:-/opt/homebrew/opt/openjdk} PATH=${JAVA_HOME:-/opt/homebrew/opt/openjdk}/bin:$PATH firebase emulators:exec --project demo-shoudeng-rules --only firestore \"jest --config jest.config.js firestore.rules\""
+    "test:rules": "JAVA_HOME=${JAVA_HOME:-/opt/homebrew/opt/openjdk} PATH=${JAVA_HOME:-/opt/homebrew/opt/openjdk}/bin:$PATH firebase emulators:exec --project demo-shoudeng-rules --only firestore \"jest --config jest.config.js firestore.rules\"",
+    "rider-funnel": "npm run build && node scripts/rider-funnel.js"
   },
   "engines": {
     "node": "22"

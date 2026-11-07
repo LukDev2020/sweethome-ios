@@ -2,10 +2,44 @@ import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
 
+import { partnerCodeFor, previewPartner, joinPartner, riderStats, PartnerError } from "../services/partners";
+
 const router = Router();
 const db = admin.firestore();
 
 router.use(authMiddleware);
+
+function partnerFail(res: Response, what: string, e: unknown) {
+  if (e instanceof PartnerError) {
+    res.status(e.status).json({ error: e.message });
+    return;
+  }
+  console.error(`[Org] ${what} failed:`, e);
+  res.status(500).json({ error: `Failed to ${what}` });
+}
+
+/**
+ * Partner links for riders (services/partners.ts)
+ *   POST /v1/org/partner-code            admin: the org's code (+ link)
+ *   GET  /v1/org/partner/:code           a rider signing up: the org's name
+ *   POST /v1/org/partner/:code/join      { shareStats }: link me (and whether I'm counted)
+ *   GET  /v1/org/riders                  admin: totals over riders who agreed
+ */
+router.post("/partner-code", async (req: Request, res: Response) => {
+  try {
+    const r = await partnerCodeFor(req.uid!);
+    res.json({ ...r, link: `https://shoudeng.app/start?for=rider&org=${r.code}` });
+  } catch (e) { partnerFail(res, "create the partner code", e); }
+});
+router.get("/partner/:code", async (req: Request, res: Response) => {
+  try { res.json(await previewPartner(req.params.code)); } catch (e) { partnerFail(res, "find the partner", e); }
+});
+router.post("/partner/:code/join", async (req: Request, res: Response) => {
+  try { res.json(await joinPartner(req.uid!, req.params.code, req.body?.shareStats)); } catch (e) { partnerFail(res, "join the partner", e); }
+});
+router.get("/riders", async (req: Request, res: Response) => {
+  try { res.json(await riderStats(req.uid!)); } catch (e) { partnerFail(res, "load rider totals", e); }
+});
 
 /**
  * POST /v1/org

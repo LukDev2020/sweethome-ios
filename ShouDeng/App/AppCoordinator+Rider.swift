@@ -24,11 +24,16 @@ extension AppCoordinator {
         return UserDefaults.standard.string(forKey: HomeStyle.storageKey) ?? HomeStyle.standard.rawValue
     }
 
-    func setHomeStyle(_ style: HomeStyle) {
+    func setHomeStyle(_ style: HomeStyle, syncToServer: Bool = true) {
         if isDemo {
             demoHomeStyle = style.rawValue
         } else {
             UserDefaults.standard.set(style.rawValue, forKey: HomeStyle.storageKey)
+            // Kept on the account too, so a new phone opens on the same home
+            if syncToServer {
+                let api = apiClient
+                Task { let _: SuccessResponse? = try? await api.put("/v1/user/me", body: HomeStyleUpdate(homeStyle: style.rawValue)) }
+            }
         }
         if style == .rider { liveActivityManager.updateRider(riderCardInfo) } else { liveActivityManager.updateRider(nil) }
         // Simple home → the older-adult fall profile, unless the person chose otherwise
@@ -77,10 +82,13 @@ extension AppCoordinator {
     @MainActor
     private func setRiderShift(_ shift: RiderShift?) {
         riderShift = shift
-        if let shift, let data = try? JSONEncoder().encode(shift) {
-            UserDefaults.standard.set(data, forKey: "rider_shift")
-        } else {
-            UserDefaults.standard.removeObject(forKey: "rider_shift")
+        // The demo keeps its shift in memory only (it used to write the real one)
+        if !isDemo {
+            if let shift, let data = try? JSONEncoder().encode(shift) {
+                UserDefaults.standard.set(data, forKey: "rider_shift")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "rider_shift")
+            }
         }
         liveActivityManager.updateRider(riderCardInfo)
     }
