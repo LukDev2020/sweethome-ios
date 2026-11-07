@@ -2109,3 +2109,18 @@ your guardians will be automatically notified.";
 "rider.watch.youWatch" = "You watch";
 "rider.watch.each" = "Watch each other";
 "rider.watch.back" = "Watch back";
+
+/* Family watch back */
+"watchback.title" = "Watch back";
+"watchback.person.intro" = "Look after the people who look after you. They agree first; their plan covers it — no extra charge.";
+"watchback.guardian.intro" = "Let the people you look after watch over you too: they're alerted if you call SOS and can see your location. Covered by your plan; it takes no seat.";
+"watchback.person.none" = "Not watched back";
+"watchback.person.pending" = "Waiting for %@ to agree…";
+"watchback.person.active" = "You watch over %@ too";
+"watchback.guardian.none" = "Doesn't watch you yet";
+"watchback.guardian.pending" = "%@ would like to watch over you";
+"watchback.guardian.active" = "%@ watches over you too";
+"watchback.guardian.offer" = "Let them";
+"watchback.accept" = "Accept";
+"watchback.decline" = "Decline";
+"watchback.stop" = "Stop";

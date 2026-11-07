@@ -2109,3 +2109,18 @@
 "rider.watch.youWatch" = "你在照看";
 "rider.watch.each" = "互相照看";
 "rider.watch.back" = "也照看 TA";
+
+/* Family watch back */
+"watchback.title" = "互相照看";
+"watchback.person.intro" = "也照看照看你的人。对方同意后生效，由对方的方案承担，不额外收费。";
+"watchback.guardian.intro" = "让你照看的人也能照看你：你求助时 TA 会收到提醒，并能看到你的位置。包含在你的方案内，不占名额。";
+"watchback.person.none" = "尚未互相照看";
+"watchback.person.pending" = "等待 %@ 同意…";
+"watchback.person.active" = "你也在照看 %@";
+"watchback.guardian.none" = "尚未照看你";
+"watchback.guardian.pending" = "%@ 想照看你";
+"watchback.guardian.active" = "%@ 也在照看你";
+"watchback.guardian.offer" = "允许 TA 照看";
+"watchback.accept" = "同意";
+"watchback.decline" = "拒绝";
+"watchback.stop" = "停止";

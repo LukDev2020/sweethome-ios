@@ -1001,3 +1001,137 @@ struct RiderSOSPanel: View {
         }
     }
 }
+
+// MARK: - Family watch back
+
+/// Person cared for: watch back each guardian (ask; they agree). Guardian: let the
+/// people they look after watch them back, answer requests. The carer's plan covers it.
+struct WatchBackPanel: View {
+    @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var lang = LanguageManager.shared
+    @State private var failed = false
+
+    private var isGuardian: Bool { coordinator.userRole == .guardian }
+    private var entries: [WatchBackEntry] {
+        (isGuardian ? coordinator.watchBack?.people : coordinator.watchBack?.guardians) ?? []
+    }
+
+    var body: some View {
+        if !entries.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                Label(lang.localized("watchback.title"), systemImage: "arrow.left.arrow.right")
+                    .font(.scaled(size: 13, weight: .semibold)).foregroundStyle(.secondary)
+                Text(lang.localized(isGuardian ? "watchback.guardian.intro" : "watchback.person.intro"))
+                    .font(.scaled(size: 13)).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                ForEach(entries) { entry in row(entry) }
+                if failed {
+                    Text(lang.localized("rider.crew.failed")).font(.scaled(size: 12)).foregroundStyle(RC.alert)
+                }
+            }
+            .padding(12)
+            .background(RoundedRectangle(cornerRadius: 12).stroke(Color(.separator).opacity(0.3), lineWidth: 1))
+            // While a request waits for an answer, check again every few seconds
+            .task(id: hasPending) {
+                while hasPending && !Task.isCancelled {
+                    try? await Task.sleep(for: .seconds(5))
+                    await coordinator.fetchWatchBack()
+                }
+            }
+        }
+    }
+
+    private var hasPending: Bool { entries.contains { $0.state == "pending" } }
+
+    @ViewBuilder
+    private func row(_ e: WatchBackEntry) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 10) {
+                Text(AvatarInitial.make(for: e.name)).font(.system(size: 13, weight: .bold)).foregroundStyle(.white)
+                    .frame(width: 30, height: 30).background(Circle().fill(e.state == "active" ? RC.safe : .gray))
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(e.name).font(.scaled(size: 15, weight: .semibold))
+                    Text(stateText(e)).font(.scaled(size: 12)).foregroundStyle(e.state == "active" ? RC.safe : .secondary)
+                }
+                Spacer()
+                actions(e)
+            }
+            // Person cared for, watching back: the guardian's status
+            if !isGuardian, e.state == "active", let p = coordinator.protectedPersons.first(where: { $0.id == e.id }) {
+                watchedStatus(p)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    private func stateText(_ e: WatchBackEntry) -> String {
+        switch (isGuardian, e.state) {
+        case (false, "active"): return String(format: lang.localized("watchback.person.active"), e.name)
+        case (false, "pending"): return String(format: lang.localized("watchback.person.pending"), e.name)
+        case (false, _): return lang.localized("watchback.person.none")
+        case (true, "active"): return String(format: lang.localized("watchback.guardian.active"), e.name)
+        case (true, "pending"): return String(format: lang.localized("watchback.guardian.pending"), e.name)
+        default: return lang.localized("watchback.guardian.none")
+        }
+    }
+
+    @ViewBuilder
+    private func actions(_ e: WatchBackEntry) -> some View {
+        Group {
+            switch (isGuardian, e.state) {
+            case (false, "none"):
+                pill(lang.localized("rider.watch.back"), filled: true) { try await coordinator.requestWatchBack(guardianId: e.id) }
+            case (true, "none"):
+                pill(lang.localized("watchback.guardian.offer"), filled: true) { try await coordinator.offerWatchBack(personId: e.id) }
+            case (true, "pending"):
+                HStack(spacing: 6) {
+                    pill(lang.localized("watchback.decline"), filled: false) { try await coordinator.respondWatchBack(personId: e.id, accept: false) }
+                    pill(lang.localized("watchback.accept"), filled: true) { try await coordinator.respondWatchBack(personId: e.id, accept: true) }
+                }
+            case (_, "active"):
+                pill(lang.localized("watchback.stop"), filled: false) { try await coordinator.stopWatchBack(otherId: e.id) }
+            default:
+                EmptyView()
+            }
+        }
+    }
+
+    private func pill(_ title: String, filled: Bool, _ work: @escaping () async throws -> Void) -> some View {
+        Button {
+            Task {
+                failed = false
+                do { try await work() } catch { failed = true }
+            }
+        } label: {
+            Text(title).font(.scaled(size: 13, weight: .semibold))
+                .foregroundStyle(filled ? .white : RC.safe)
+                .padding(.horizontal, 10).padding(.vertical, 6)
+                .background(Capsule().fill(filled ? RC.safe : .clear))
+                .overlay(Capsule().stroke(RC.safe, lineWidth: filled ? 0 : 1))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func watchedStatus(_ p: ProtectedPerson) -> some View {
+        let sos = coordinator.guardianSOS[p.id] != nil || p.activeSOS != nil
+        return Button {
+            if sos { coordinator.pendingAlertPersonId = p.id }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: sos ? "exclamationmark.triangle.fill" : "location.fill")
+                    .foregroundStyle(sos ? RC.alert : RC.safe)
+                Text(sos ? String(format: lang.localized("status.guardian.sos"), p.user.displayName)
+                         : [p.lastKnownLocation?.address ?? p.user.cityName,
+                            p.batteryLevel.map { "\(Int($0 * 100))%" }].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "))
+                    .font(.scaled(size: 13, weight: sos ? .bold : .regular))
+                    .foregroundStyle(sos ? RC.alert : .secondary)
+                    .lineLimit(1)
+                Spacer()
+            }
+            .padding(8)
+            .background(RoundedRectangle(cornerRadius: 10).fill(sos ? RC.alert.opacity(0.1) : Color(.secondarySystemBackground)))
+        }
+        .buttonStyle(.plain)
+        .padding(.leading, 40)
+    }
+}

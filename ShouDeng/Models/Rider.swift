@@ -106,3 +106,24 @@ enum RiderFormat {
         }
     }
 }
+
+// MARK: - Family watch back
+//
+// The person being cared for can look after their guardian too (the guardian agrees).
+// Covered by the carer's plan — it takes no household seat. Server: /v1/watch-back.
+
+struct WatchBackEntry: Codable, Identifiable, Equatable {
+    let id: String
+    let name: String
+    /// "none" | "pending" | "active"
+    let state: String
+}
+
+struct WatchBackOverview: Codable, Equatable {
+    /// My guardians and whether I watch them back
+    let guardians: [WatchBackEntry]
+    /// People I look after and whether they watch me back
+    let people: [WatchBackEntry]
+}
+
+struct WatchBackStateResponse: Decodable { let state: String? }

@@ -393,6 +393,7 @@ final class ExploreModeController: ObservableObject {
             await coordinator.refreshOwnSOSStatus()
         }
         await coordinator.fetchTimeline()
+        await coordinator.fetchWatchBack()
     }
 
     // MARK: Coach-mark anchors

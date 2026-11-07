@@ -65,6 +65,14 @@ struct ProtectedTabView: View {
             CrewAlertView(sosEventId: coordinator.pendingCrewAlertId ?? "")
                 .environmentObject(coordinator)
         }
+        // Watch back: a guardian I watch called SOS
+        .sheet(isPresented: Binding(get: { coordinator.pendingAlertPersonId != nil },
+                                    set: { if !$0 { coordinator.pendingAlertPersonId = nil } })) {
+            if let personId = coordinator.pendingAlertPersonId {
+                NavigationStack { GuardianAlertResponseView(personId: personId) }
+                    .environmentObject(coordinator)
+            }
+        }
         .sheet(isPresented: $coordinator.showBikeReport) {
             BikeReportView().environmentObject(coordinator)
         }

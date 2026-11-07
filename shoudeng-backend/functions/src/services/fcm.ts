@@ -35,6 +35,10 @@ const fcmStrings: Record<string, {
   watchRequestBody: string;
   watchBackTitle: (name: string) => string;
   watchBackBody: string;
+  familyWatchRequestTitle: (name: string) => string;
+  familyWatchRequestBody: string;
+  familyWatchStartedTitle: (name: string) => string;
+  familyWatchStartedBody: string;
 }> = {
   zh: {
     sosTitle: "紧急求助",
@@ -67,6 +71,10 @@ const fcmStrings: Record<string, {
     watchRequestBody: "如果班次超时未结束或发出求助，你会收到提醒。",
     watchBackTitle: (name) => `${name}也开始照看你的班次`,
     watchBackBody: "你们现在互相照看。",
+    familyWatchRequestTitle: (name) => `${name}也想照看你`,
+    familyWatchRequestBody: "同意后，你求助时 TA 也会收到提醒，并能看到你的位置。不额外收费。",
+    familyWatchStartedTitle: (name) => `你现在也能照看${name}了`,
+    familyWatchStartedBody: "TA 求助时你会收到提醒。",
   },
   "zh-Hant": {
     sosTitle: "緊急求助",
@@ -99,6 +107,10 @@ const fcmStrings: Record<string, {
     watchRequestBody: "如果班次超時未結束或發出求助，你會收到提醒。",
     watchBackTitle: (name) => `${name}也開始照看你的班次`,
     watchBackBody: "你們現在互相照看。",
+    familyWatchRequestTitle: (name) => `${name}也想照看你`,
+    familyWatchRequestBody: "同意後，你求助時對方也會收到提醒，並能看到你的位置。不額外收費。",
+    familyWatchStartedTitle: (name) => `你現在也能照看${name}了`,
+    familyWatchStartedBody: "對方求助時你會收到提醒。",
   },
   en: {
     sosTitle: "Emergency SOS",
@@ -131,6 +143,10 @@ const fcmStrings: Record<string, {
     watchRequestBody: "You'll be alerted if they call SOS or the shift runs late.",
     watchBackTitle: (name) => `${name} is watching your shifts too`,
     watchBackBody: "You now look out for each other.",
+    familyWatchRequestTitle: (name) => `${name} would like to watch over you too`,
+    familyWatchRequestBody: "If you agree, they're alerted when you call SOS and can see your location. No extra charge.",
+    familyWatchStartedTitle: (name) => `You can now watch over ${name} too`,
+    familyWatchStartedBody: "You'll be alerted if they call SOS.",
   },
   fr: {
     sosTitle: "SOS Urgence",
@@ -163,6 +179,10 @@ const fcmStrings: Record<string, {
     watchRequestBody: "Vous serez prévenu en cas de SOS ou si le service se prolonge.",
     watchBackTitle: (name) => `${name} veille aussi sur vos services`,
     watchBackBody: "Vous veillez désormais l'un sur l'autre.",
+    familyWatchRequestTitle: (name) => `${name} aimerait aussi veiller sur vous`,
+    familyWatchRequestBody: "Si vous acceptez, cette personne est prévenue en cas de SOS et voit votre position. Sans frais en plus.",
+    familyWatchStartedTitle: (name) => `Vous pouvez aussi veiller sur ${name}`,
+    familyWatchStartedBody: "Vous serez prévenu en cas de SOS.",
   },
   ja: {
     sosTitle: "緊急SOS",
@@ -195,6 +215,10 @@ const fcmStrings: Record<string, {
     watchRequestBody: "SOS やシフトの延長があれば通知します。",
     watchBackTitle: (name) => `${name}さんもあなたのシフトを見守ります`,
     watchBackBody: "お互いに見守る関係になりました。",
+    familyWatchRequestTitle: (name) => `${name}さんもあなたを見守りたいそうです`,
+    familyWatchRequestBody: "同意すると、SOS のときに通知が届き、位置も見えるようになります。追加料金はありません。",
+    familyWatchStartedTitle: (name) => `${name}さんのことも見守れるようになりました`,
+    familyWatchStartedBody: "SOS があれば通知が届きます。",
   },
 };
 
@@ -667,4 +691,16 @@ export async function sendShiftWatchRequest(toId: string, riderName: string, rid
 export async function sendWatchBackNotification(toId: string, name: string): Promise<void> {
   const s = getStrings(await getUserLocale(toId));
   await sendSimple(toId, s.watchBackTitle(name), s.watchBackBody, { action: "watch_back" });
+}
+
+/** The person you look after would like to watch over you too (accept in the app). */
+export async function sendFamilyWatchRequest(toId: string, name: string): Promise<void> {
+  const s = getStrings(await getUserLocale(toId));
+  await sendSimple(toId, s.familyWatchRequestTitle(name), s.familyWatchRequestBody, { action: "watch_back_request" });
+}
+
+/** You can now watch over your guardian too. */
+export async function sendFamilyWatchStarted(toId: string, name: string): Promise<void> {
+  const s = getStrings(await getUserLocale(toId));
+  await sendSimple(toId, s.familyWatchStartedTitle(name), s.familyWatchStartedBody, { action: "watch_back_started" });
 }

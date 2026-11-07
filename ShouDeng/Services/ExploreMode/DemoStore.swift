@@ -37,6 +37,8 @@ final class DemoStore {
 
     // Rider demo (Kai's phone): shift, crew, caution spots, crew answers
     private var kaiOnShift = false
+    /// Family watch back: guardian id → state for Mom ("pending" / "active")
+    private var momWatchesBack: [String: String] = [:]
     /// Who watches whose shifts: Wei and Mei (his sister) watch Kai; Kai watches Ahmed.
     /// Kai doesn't watch Wei yet — "Watch back" on Wei's row.
     private var watchers: [String: [String]] = [
@@ -238,6 +240,17 @@ final class DemoStore {
                 "cityName": u.cityName, "createdAt": Self.iso(u.createdAt),
             ]))
 
+        case ("GET", "/v1/watch-back"), ("POST", "/v1/watch-back/request"), ("POST", "/v1/watch-back/offer"),
+             ("POST", "/v1/watch-back/respond"), ("POST", "/v1/watch-back/stop"):
+            return watchBackRoute(method: method, path: path, me: me, body: body)
+
+        case ("GET", "/v1/guardian/protected-persons") where me == DemoDataset.momId:
+            // Mom watches Sarah back
+            let rows: [[String: Any]] = lock.withLock {
+                momWatchesBack[DemoDataset.sarahId] == "active" ? [statusRow(sarahAsWatched())] : []
+            }
+            return (200, json(rows))
+
         case ("GET", "/v1/guardian/protected-persons"):
             guard me == DemoDataset.sarahId else { return (200, json([])) }
             let rows = lock.withLock { [dataset.momPerson, dataset.dadPerson].map { statusRow($0) } }
@@ -389,6 +402,59 @@ final class DemoStore {
 
     private static func meters(_ a: CLLocationCoordinate2D, _ b: CLLocationCoordinate2D) -> Int {
         Int(CLLocation(latitude: a.latitude, longitude: a.longitude).distance(from: CLLocation(latitude: b.latitude, longitude: b.longitude)))
+    }
+
+    // MARK: - Family watch back (same shapes as routes/watchBack.ts)
+
+    private func watchBackRoute(method: String, path: String, me: String, body: Data?) -> (Int, Data) {
+        let b = bodyObject(body)
+        switch path {
+        case "/v1/watch-back/request" where me == DemoDataset.momId:
+            let gid = (b["guardianId"] as? String) ?? ""
+            lock.withLock { momWatchesBack[gid] = "pending" }
+            // Sarah says yes a few seconds later (in the demo she always agrees)
+            DispatchQueue.global().asyncAfter(deadline: .now() + 4) { [weak self] in
+                self?.lock.withLock { if self?.momWatchesBack[gid] == "pending" { self?.momWatchesBack[gid] = "active" } }
+            }
+            return (200, json(["state": "pending"]))
+        case "/v1/watch-back/offer" where me == DemoDataset.sarahId:
+            if (b["personId"] as? String) == DemoDataset.momId { lock.withLock { momWatchesBack[me] = "active" } }
+            return (200, json(["state": "active"]))
+        case "/v1/watch-back/respond" where me == DemoDataset.sarahId:
+            let accept = (b["accept"] as? Bool) ?? false
+            lock.withLock { momWatchesBack[me] = accept ? "active" : nil }
+            return (200, json(["state": accept ? "active" : "none"]))
+        case "/v1/watch-back/stop":
+            let other = (b["otherId"] as? String) ?? ""
+            lock.withLock { momWatchesBack[me == DemoDataset.momId ? other : me] = nil }
+            return (200, json(["success": true]))
+        default:
+            return (200, json(lock.withLock { watchBackOverview(me: me) }))
+        }
+    }
+
+    private func watchBackOverview(me: String) -> [String: Any] {
+        func entry(_ u: User, _ state: String?) -> [String: Any] { ["id": u.id, "name": u.displayName, "state": state ?? "none"] }
+        switch me {
+        case DemoDataset.momId:
+            return ["guardians": dataset.guardiansOfMom.map { entry($0.user, momWatchesBack[$0.user.id]) }, "people": []]
+        case DemoDataset.sarahId:
+            return ["guardians": [], "people": [entry(dataset.mom, momWatchesBack[me]), entry(dataset.dad, nil)]]
+        default:
+            return ["guardians": [], "people": []]
+        }
+    }
+
+    /// Sarah, as Mom sees her when she watches back (Toronto)
+    private func sarahAsWatched() -> ProtectedPerson {
+        let now = Date()
+        let loc = Location(latitude: 43.6532, longitude: -79.3832, accuracy: 15, altitude: nil, speed: nil,
+                           timestamp: now.addingTimeInterval(-4 * 60), address: DemoText(language: LanguageManager.shared.current).toronto,
+                           isInSafeZone: false, safeZoneName: nil, activityType: .walking)
+        return ProtectedPerson(id: dataset.sarah.id, user: dataset.sarah, guardians: [], protectionLayers: 1,
+                               lastCheckIn: now.addingTimeInterval(-2 * 3600), lastKnownLocation: loc,
+                               batteryLevel: 0.64, batteryState: .unplugged, lastPhoneActivity: now.addingTimeInterval(-3 * 60),
+                               status: .normal)
     }
 
     // MARK: - Rider crew (same shapes as routes/crew.ts)

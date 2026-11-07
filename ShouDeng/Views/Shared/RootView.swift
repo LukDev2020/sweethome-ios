@@ -269,6 +269,13 @@ struct FamilyStatusBar: View {
     }
 
     private var protectedStatus: Status {
+        // Watch back: a guardian I look after called SOS
+        if let sos = coordinator.protectedPersons.first(where: { coordinator.guardianSOS[$0.id] != nil || $0.activeSOS != nil }) {
+            let id = sos.id
+            return Status(level: .urgent, icon: "exclamationmark.triangle.fill",
+                          text: String(format: lang.localized("status.guardian.sos"), sos.user.displayName),
+                          action: { coordinator.pendingAlertPersonId = id })
+        }
         // A duress-concealed SOS must look ended
         if coordinator.activeSOSEvent != nil, !coordinator.sosConcealed {
             return Status(level: .urgent, icon: "sos", text: lang.localized("status.protected.sos"),

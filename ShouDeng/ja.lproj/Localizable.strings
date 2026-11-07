@@ -2108,3 +2108,18 @@
 "rider.watch.youWatch" = "あなたが見守り中";
 "rider.watch.each" = "お互いに見守り";
 "rider.watch.back" = "見守り返す";
+
+/* Family watch back */
+"watchback.title" = "見守り返し";
+"watchback.person.intro" = "見守ってくれる人をあなたも見守れます。相手の同意が必要で、相手のプランに含まれます（追加料金なし）。";
+"watchback.guardian.intro" = "見守っている人にもあなたを見守ってもらえます。SOS 時に通知され、位置も見えます。プランに含まれ、枠は使いません。";
+"watchback.person.none" = "まだ見守っていません";
+"watchback.person.pending" = "%@さんの同意を待っています…";
+"watchback.person.active" = "%@さんのことも見守っています";
+"watchback.guardian.none" = "まだ見守られていません";
+"watchback.guardian.pending" = "%@さんが見守りたいそうです";
+"watchback.guardian.active" = "%@さんもあなたを見守っています";
+"watchback.guardian.offer" = "見守ってもらう";
+"watchback.accept" = "同意";
+"watchback.decline" = "断る";
+"watchback.stop" = "やめる";

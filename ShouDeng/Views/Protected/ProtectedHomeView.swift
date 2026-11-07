@@ -229,6 +229,10 @@ struct ProtectedHomeView: View {
                     .padding(.top, 12)
                 guardianList
                     .padding(.top, 20)
+                // Watch back the guardians (they agree; the carer's plan covers it)
+                WatchBackPanel()
+                    .padding(.horizontal, 16)
+                    .padding(.top, 12)
                 Button {
                     coordinator.setHomeStyle(.simple)
                 } label: {

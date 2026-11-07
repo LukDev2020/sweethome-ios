@@ -63,6 +63,7 @@ import coverageRoutes from "./routes/coverage";
 import tripRoutes from "./routes/trip";
 import emergencyContactRoutes from "./routes/emergencyContacts";
 import crewRoutes from "./routes/crew";
+import watchBackRoutes from "./routes/watchBack";
 import voiceRoutes from "./routes/voice";
 import { createRateLimiter, RATE_LIMITS } from "./middleware/rateLimit";
 
@@ -144,6 +145,8 @@ app.use("/v1/trip", tripRoutes);
 app.use("/v1/emergency-contacts", emergencyContactRoutes);
 // Rider crews: mutual SOS alerts, shifts, caution spots
 app.use("/v1/crew", crewRoutes);
+// Family watch back: the person cared for looks after their guardian too
+app.use("/v1/watch-back", watchBackRoutes);
 
 // --- Health check ---
 app.get("/health", (_req, res) => {

@@ -144,7 +144,10 @@ const db = () => admin.firestore();
 
 async function activeLinks(field: "guardianId" | "protectedPersonId", id: string): Promise<Link[]> {
   const snap = await db().collection("guardian_links").where(field, "==", id).where("status", "==", "active").get();
-  return snap.docs.map((d) => ({ guardianId: d.data().guardianId, protectedPersonId: d.data().protectedPersonId }));
+  // Watch-back links (the person looking after their guardian) are covered by the
+  // carer's plan: they take no seat and change nobody's plan
+  return snap.docs.filter((d) => d.data().watchBack !== true)
+    .map((d) => ({ guardianId: d.data().guardianId, protectedPersonId: d.data().protectedPersonId }));
 }
 
 async function paidPlans(uids: Iterable<string>): Promise<Map<string, PlanId>> {

@@ -1,4 +1,5 @@
 import { Router, Request, Response } from "express";
+import { endWatchBackWith } from "../services/watchBack";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
 import { onDutyGuardians } from "../services/escalation";
@@ -200,6 +201,8 @@ router.delete(
         revokedAt: admin.firestore.Timestamp.now(),
         revokedBy: uid,
       });
+      // Watching that guardian back ends with it
+      await endWatchBackWith(guardianId, uid);
 
       res.json({ success: true });
     } catch (error) {

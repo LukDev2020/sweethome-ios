@@ -181,6 +181,7 @@ struct ProtectedSettingsView: View {
                 emailMissingBanner
                 rolePanel
                 HomeStylePanel()
+                WatchBackPanel()
                 sosTriggerPanel
                 smartDetectionPanel
                 checkInPanel

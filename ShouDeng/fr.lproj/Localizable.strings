@@ -2109,3 +2109,18 @@ vos gardiens seront automatiquement notifiés.";
 "rider.watch.youWatch" = "Vous veillez";
 "rider.watch.each" = "Vous veillez l'un sur l'autre";
 "rider.watch.back" = "Veiller en retour";
+
+/* Family watch back */
+"watchback.title" = "Veiller en retour";
+"watchback.person.intro" = "Veillez aussi sur ceux qui veillent sur vous. Ils acceptent d'abord ; leur abonnement le couvre, sans frais en plus.";
+"watchback.guardian.intro" = "Laissez les personnes dont vous prenez soin veiller aussi sur vous : elles sont prévenues en cas de SOS et voient votre position. Inclus dans votre abonnement, sans place utilisée.";
+"watchback.person.none" = "Pas encore";
+"watchback.person.pending" = "En attente de l'accord de %@…";
+"watchback.person.active" = "Vous veillez aussi sur %@";
+"watchback.guardian.none" = "Ne veille pas encore sur vous";
+"watchback.guardian.pending" = "%@ aimerait veiller sur vous";
+"watchback.guardian.active" = "%@ veille aussi sur vous";
+"watchback.guardian.offer" = "Autoriser";
+"watchback.accept" = "Accepter";
+"watchback.decline" = "Refuser";
+"watchback.stop" = "Arrêter";

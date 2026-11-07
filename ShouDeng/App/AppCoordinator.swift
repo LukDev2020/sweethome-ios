@@ -43,6 +43,8 @@ final class AppCoordinator: ObservableObject {
     /// Invite code from a crew QR code / link, waiting to be confirmed
     @Published var pendingCrewCode: String?
     @Published var showBikeReport = false
+    /// Family watch back (both roles)
+    @Published var watchBack: WatchBackOverview?
     /// Settings → Home screen during the demo (never the real setting); Kai starts on Rider
     @Published var demoHomeStyle: String?
     /// Street where the rider's SOS started (lock-screen card, SOS screen)
@@ -422,6 +424,7 @@ final class AppCoordinator: ObservableObject {
         // Fetch fresh data from server, then restart Live Activity with real data
         Task {
             await syncConsentRecords()
+            await fetchWatchBack()
             await fetchUserProfile()
             if userRole == .guardian {
                 await fetchProtectedPersons()
@@ -567,6 +570,8 @@ final class AppCoordinator: ObservableObject {
         }
         // Flush queued requests (SOS, check-ins, locations) now that we're in front
         Task { await apiClient.flushOfflineQueue() }
+        // Watch back: requests answered / guardians I watch, while we were away
+        Task { await fetchWatchBack() }
         // The SOS widget/intent may have fired while we were suspended
         checkWidgetSOSIntent()
         processPendingWidgetActions()

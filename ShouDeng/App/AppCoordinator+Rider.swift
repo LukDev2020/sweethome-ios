@@ -205,4 +205,50 @@ extension AppCoordinator {
             await MainActor.run { pendingCrewAlertId = id }
         }
     }
+
+    // MARK: Family watch back
+
+    private struct GuardianIdBody: Encodable { let guardianId: String }
+    private struct PersonIdBody: Encodable { let personId: String }
+    private struct RespondBody: Encodable { let personId: String; let accept: Bool }
+    private struct OtherIdBody: Encodable { let otherId: String }
+
+    func fetchWatchBack() async {
+        do {
+            let overview: WatchBackOverview = try await apiClient.get("/v1/watch-back")
+            await MainActor.run { watchBack = overview }
+            // The person cared for sees the guardians they watch back on their home screen
+            if userRole == .protected_, overview.guardians.contains(where: { $0.state == "active" }) {
+                await fetchProtectedPersons()
+            } else if userRole == .protected_ {
+                await MainActor.run { protectedPersons = [] }
+            }
+        } catch {
+            #if DEBUG
+            print("[WatchBack] load failed: \(error)")
+            #endif
+        }
+    }
+
+    /// Person cared for: ask to watch this guardian back (they agree in their app).
+    func requestWatchBack(guardianId: String) async throws {
+        let _: WatchBackStateResponse = try await apiClient.post("/v1/watch-back/request", body: GuardianIdBody(guardianId: guardianId))
+        await fetchWatchBack()
+    }
+
+    /// Guardian: let this person watch over me too.
+    func offerWatchBack(personId: String) async throws {
+        let _: WatchBackStateResponse = try await apiClient.post("/v1/watch-back/offer", body: PersonIdBody(personId: personId))
+        await fetchWatchBack()
+    }
+
+    func respondWatchBack(personId: String, accept: Bool) async throws {
+        let _: WatchBackStateResponse = try await apiClient.post("/v1/watch-back/respond", body: RespondBody(personId: personId, accept: accept))
+        await fetchWatchBack()
+    }
+
+    func stopWatchBack(otherId: String) async throws {
+        let _: SuccessResponse = try await apiClient.post("/v1/watch-back/stop", body: OtherIdBody(otherId: otherId))
+        await fetchWatchBack()
+    }
 }

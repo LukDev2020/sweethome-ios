@@ -160,6 +160,7 @@ struct GuardianSettingsView: View {
                 safetyToolsPanel
                 organizationPanel
                 lockScreenCardPanel
+                WatchBackPanel()
                 securityPanel
                 languagePanel
                 fontSizePanel
