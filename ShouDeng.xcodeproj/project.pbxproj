@@ -213,6 +213,7 @@
 		B31C2969CC6A4B1B9786BAE8 /* ReactionBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78D285E5A8124670ACBD6168 /* ReactionBarView.swift */; };
 		F3DCD539ABF44643B97B26C7 /* LocationShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D406A35BC93841D6B5C20657 /* LocationShareCardView.swift */; };
 		2FC0842B41A54B05BF837FDD /* WeatherCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F14713FC3A945F1BDB7E1C4 /* WeatherCardView.swift */; };
+		DD44EE0100000010 /* RiderModeMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD44EE010000000F /* RiderModeMock.swift */; };
 		26A969A0A650465DBF322EDE /* AQICardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547D595952554712916A1CBB /* AQICardView.swift */; };
 		7FD9111E1828425CAE596D67 /* NearbyMedicalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B71440EA719B4424A9482450 /* NearbyMedicalView.swift */; };
 		A55FEA65AAA9438CAC9E5B19 /* EmergencyYellowPagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0DD42673F884099A22B8D95 /* EmergencyYellowPagesView.swift */; };
@@ -479,6 +480,7 @@
 		78D285E5A8124670ACBD6168 /* ReactionBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionBarView.swift; sourceTree = "<group>"; };
 		D406A35BC93841D6B5C20657 /* LocationShareCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationShareCardView.swift; sourceTree = "<group>"; };
 		0F14713FC3A945F1BDB7E1C4 /* WeatherCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherCardView.swift; sourceTree = "<group>"; };
+		DD44EE010000000F /* RiderModeMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiderModeMock.swift; sourceTree = "<group>"; };
 		547D595952554712916A1CBB /* AQICardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AQICardView.swift; sourceTree = "<group>"; };
 		B71440EA719B4424A9482450 /* NearbyMedicalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbyMedicalView.swift; sourceTree = "<group>"; };
 		B0DD42673F884099A22B8D95 /* EmergencyYellowPagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyYellowPagesView.swift; sourceTree = "<group>"; };
@@ -762,6 +764,7 @@
 				78D285E5A8124670ACBD6168 /* ReactionBarView.swift */,
 				D406A35BC93841D6B5C20657 /* LocationShareCardView.swift */,
 				0F14713FC3A945F1BDB7E1C4 /* WeatherCardView.swift */,
+				DD44EE010000000F /* RiderModeMock.swift */,
 				547D595952554712916A1CBB /* AQICardView.swift */,
 				B71440EA719B4424A9482450 /* NearbyMedicalView.swift */,
 				B0DD42673F884099A22B8D95 /* EmergencyYellowPagesView.swift */,
@@ -1306,6 +1309,7 @@
 				B31C2969CC6A4B1B9786BAE8 /* ReactionBarView.swift in Sources */,
 				F3DCD539ABF44643B97B26C7 /* LocationShareCardView.swift in Sources */,
 				2FC0842B41A54B05BF837FDD /* WeatherCardView.swift in Sources */,
+				DD44EE0100000010 /* RiderModeMock.swift in Sources */,
 				26A969A0A650465DBF322EDE /* AQICardView.swift in Sources */,
 				7FD9111E1828425CAE596D67 /* NearbyMedicalView.swift in Sources */,
 				A55FEA65AAA9438CAC9E5B19 /* EmergencyYellowPagesView.swift in Sources */,

@@ -34,6 +34,8 @@ struct ShouDengApp: App {
                 #if DEBUG
                 // `-la-gallery`: the lock-screen cards, all four states (see LockScreenCards.swift)
                 .overlay { if ProcessInfo.processInfo.arguments.contains("-la-gallery") { LockScreenCardGallery() } }
+                // `-rider-mock`: Rider mode design mock (see RiderModeMock.swift)
+                .overlay { if ProcessInfo.processInfo.arguments.contains("-rider-mock") { RiderModeMock() } }
                 #endif
                 .preferredColorScheme(colorScheme)
                 // Firebase phone-auth reCAPTCHA callback + shoudeng:// deep links
