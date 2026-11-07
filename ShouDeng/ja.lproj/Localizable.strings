@@ -823,7 +823,7 @@
 "protected.settings.checkIn.fourHours" = "4時間";
 "protected.settings.checkIn.overdueThreshold" = "期限超過の判定時間";
 "protected.settings.detection.distress" = "異常音の検知";
-"protected.settings.detection.distressDesc" = "悲鳴や衝突音などの異常な音を検知すると自動でSOSを発信します";
+"protected.settings.detection.distressDesc" = "近くで悲鳴や叫び声がすると「大丈夫？」と確認し、応答がなければ見守る人に通知します";
 "protected.settings.detection.voiceCommand" = "音声コマンドでSOS";
 "protected.settings.detection.voiceCommandDesc" = "「Lantern Care、助けて」と話しかけると自動でSOSを発信します";
 "protected.settings.notification.checkInReminder" = "無事報告のリマインダー";
@@ -2400,7 +2400,7 @@
 "rider.setup.perm.notifications" = "通知";
 "rider.setup.perm.notifications.why" = "近くのクルーが助けを求めたとき、家族が応答したとき。";
 "rider.setup.perm.motion" = "モーション";
-"rider.setup.perm.motion.why" = "衝突・転倒検知：強い転倒の後に動かないと「大丈夫？」と確認します。";
+"rider.setup.perm.motion.why" = "転倒検知：強い転倒の後に動かないと「大丈夫？」と確認します。";
 "rider.setup.perm.allow" = "許可";
 "rider.setup.perm.settings" = "設定へ";
 "rider.setup.plan.title" = "ライダーは無料";

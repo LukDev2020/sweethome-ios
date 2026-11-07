@@ -823,7 +823,7 @@
 "protected.settings.checkIn.fourHours" = "4 heures";
 "protected.settings.checkIn.overdueThreshold" = "Seuil de retard";
 "protected.settings.detection.distress" = "Détection audio de détresse";
-"protected.settings.detection.distressDesc" = "SOS auto sur sons de détresse (cris, chocs)";
+"protected.settings.detection.distressDesc" = "Des cris près du téléphone déclenchent « Ça va ? », puis préviennent vos gardiens";
 "protected.settings.detection.voiceCommand" = "Commande vocale SOS";
 "protected.settings.detection.voiceCommandDesc" = "Dites 'Lantern Care aide-moi' pour SOS auto";
 "protected.settings.notification.checkInReminder" = "Rappel de signalement";

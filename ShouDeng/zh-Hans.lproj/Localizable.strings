@@ -823,7 +823,7 @@
 "protected.settings.checkIn.fourHours" = "4 小时";
 "protected.settings.checkIn.overdueThreshold" = "逾期阈值";
 "protected.settings.detection.distress" = "异常声音检测";
-"protected.settings.detection.distressDesc" = "检测到呼救、碰撞等异常声音自动触发SOS";
+"protected.settings.detection.distressDesc" = "附近有尖叫或呼喊时先问“你还好吗？”，没有回应再通知守护者";
 "protected.settings.detection.voiceCommand" = "语音指令求助";
 "protected.settings.detection.voiceCommandDesc" = "说「守灯救我」自动触发SOS";
 "protected.settings.notification.checkInReminder" = "报平安提醒";
@@ -2400,7 +2400,7 @@
 "rider.setup.perm.notifications" = "通知";
 "rider.setup.perm.notifications.why" = "附近队友需要帮助时，以及家人回复你时。";
 "rider.setup.perm.motion" = "运动与健身";
-"rider.setup.perm.motion.why" = "碰撞和跌倒检测：重摔后一动不动时会问“你还好吗？”。";
+"rider.setup.perm.motion.why" = "跌倒检测：重摔后一动不动时会问“你还好吗？”。";
 "rider.setup.perm.allow" = "允许";
 "rider.setup.perm.settings" = "去设置";
 "rider.setup.plan.title" = "骑手免费";

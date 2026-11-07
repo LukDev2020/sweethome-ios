@@ -33,7 +33,8 @@ final class DistressDetectionService: ObservableObject {
         var distressLabels: Set<String> = [
             "scream", "screaming", "shout", "shouting",
             "crying", "cry", "yell", "yelling",
-            "speech", // Only used with high confidence + specific context
+            // Not "speech": ordinary talking near the phone is classified as speech with
+            // high confidence, and every conversation started an "Are you OK?" countdown
         ]
         var windowDurationSec: Double = 1.5
     }

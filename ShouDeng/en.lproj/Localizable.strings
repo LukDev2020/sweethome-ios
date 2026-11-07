@@ -823,7 +823,7 @@
 "protected.settings.checkIn.fourHours" = "4 hours";
 "protected.settings.checkIn.overdueThreshold" = "Overdue Threshold";
 "protected.settings.detection.distress" = "Audio Distress Detection";
-"protected.settings.detection.distressDesc" = "Auto-SOS on distress sounds (screams, crashes)";
+"protected.settings.detection.distressDesc" = "Screaming or shouting near the phone asks \"Are you OK?\", then alerts your guardians";
 "protected.settings.detection.voiceCommand" = "Voice Command SOS";
 "protected.settings.detection.voiceCommandDesc" = "Say 'Lantern Care help me' to auto-trigger SOS";
 "protected.settings.notification.checkInReminder" = "Check-in Reminder";
@@ -2400,7 +2400,7 @@
 "rider.setup.perm.notifications" = "Notifications";
 "rider.setup.perm.notifications.why" = "When a crew mate nearby needs help, and when your family answers you.";
 "rider.setup.perm.motion" = "Motion";
-"rider.setup.perm.motion.why" = "Crash and fall detection: a hard fall, then no movement, asks \"Are you OK?\".";
+"rider.setup.perm.motion.why" = "Fall detection: a hard fall, then no movement, asks \"Are you OK?\".";
 "rider.setup.perm.allow" = "Allow";
 "rider.setup.perm.settings" = "Settings";
 "rider.setup.plan.title" = "Free for riders";
