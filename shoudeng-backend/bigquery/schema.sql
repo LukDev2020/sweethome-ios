@@ -38,7 +38,8 @@ CREATE TABLE IF NOT EXISTS shoudeng.location_reports (
   is_in_safe_zone BOOL,
   safe_zone_name  STRING,
   row_hash        STRING,
-  ingested_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
+  ingested_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
+  activity_type   STRING             -- "stationary" | "walking" | "running" | "cycling" | "driving" | "unknown"; added 2026-11 (migration: docs/ops/BIGQUERY.md)
 )
 PARTITION BY DATE(timestamp)
 CLUSTER BY user_id;

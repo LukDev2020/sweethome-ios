@@ -27,6 +27,9 @@ struct ProtectedSettingsView: View {
     @AppStorage("sos_silentMode") private var silentMode = false
     @AppStorage("distress_detection_enabled") private var distressDetectionEnabled = false
     @AppStorage("voice_command_enabled") private var voiceCommandEnabled = false
+    /// Read so the fall-profile switch redraws (the value itself is the coordinator's)
+    @AppStorage(AppCoordinator.sensitiveFallKey) private var sensitiveFallStored = false
+    @AppStorage(HomeStyle.storageKey) private var homeStyleStored = HomeStyle.standard.rawValue
     @AppStorage("notif_sos_alerts") private var notifSOS = true
     @AppStorage("notif_checkin_reminder") private var notifCheckin = true
     @AppStorage("notif_family_feed") private var notifFamilyFeed = true
@@ -382,6 +385,15 @@ struct ProtectedSettingsView: View {
                 .accessibilityIdentifier("settings.testFallDetection")
             }
             .padding(.vertical, 2)
+
+            VStack(alignment: .leading, spacing: 2) {
+                toggleRow(langManager.localized("protected.settings.detection.fallSensitive"), isOn: sensitiveFallBinding)
+                    .accessibilityIdentifier("settings.sensitiveFallDetection")
+                Text(langManager.localized("protected.settings.detection.fallSensitiveDesc"))
+                    .font(.scaled(size: 11))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
 
             VStack(alignment: .leading, spacing: 2) {
                 toggleRow(langManager.localized("protected.settings.detection.distress"), isOn: $distressDetectionEnabled)
@@ -1042,6 +1054,13 @@ struct ProtectedSettingsView: View {
         } catch {
             showDeleteError = true
         }
+    }
+
+    private var sensitiveFallBinding: Binding<Bool> {
+        Binding(
+            get: { _ = sensitiveFallStored; _ = homeStyleStored; return coordinator.sensitiveFallDetection },
+            set: { coordinator.setSensitiveFallDetection($0) }
+        )
     }
 
     private func toggleRow(_ label: String, isOn: Binding<Bool>) -> some View {

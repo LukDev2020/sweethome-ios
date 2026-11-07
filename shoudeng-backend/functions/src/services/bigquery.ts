@@ -45,6 +45,29 @@ export async function insertHeartbeat(data: {
   await bigquery.dataset(DATASET).table("heartbeat_signals").insert([row]);
 }
 
+/** The phone's motion tag (Location.ActivityType in the app; CoreMotion says "automotive"). */
+export const LOCATION_ACTIVITY_TYPES = ["stationary", "walking", "running", "cycling", "driving", "unknown"] as const;
+
+/** `activity_type` column value: a known tag, or null — never free text from the client. */
+export function locationActivityType(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const tag = value.trim().toLowerCase();
+  if (tag === "automotive") return "driving";
+  return (LOCATION_ACTIVITY_TYPES as readonly string[]).includes(tag) ? tag : null;
+}
+
+/**
+ * The live table has no activity_type column yet (deployed before
+ * `tools/bigquery/setup.sh` added it): BigQuery rejects the whole row with
+ * "no such field: activity_type".
+ */
+function isMissingActivityColumn(error: unknown): boolean {
+  const e = error as { message?: unknown; errors?: unknown };
+  let text = typeof e?.message === "string" ? e.message : "";
+  try { text += JSON.stringify(e?.errors ?? ""); } catch { /* ignore */ }
+  return /no such field/i.test(text) && text.includes("activity_type");
+}
+
 /**
  * Insert a location report into BigQuery.
  */
@@ -58,6 +81,7 @@ export async function insertLocationReport(data: {
   timestamp: string;
   isInSafeZone?: boolean;
   safeZoneName?: string;
+  activityType?: string;
 }): Promise<void> {
   const row: Record<string, unknown> = {
     id: uuidv4(),
@@ -70,10 +94,23 @@ export async function insertLocationReport(data: {
     speed: data.speed ?? null,
     is_in_safe_zone: data.isInSafeZone ?? null,
     safe_zone_name: data.safeZoneName ?? null,
+    activity_type: locationActivityType(data.activityType),
   };
   row.row_hash = computeRowHash(row);
 
-  await bigquery.dataset(DATASET).table("location_reports").insert([row]);
+  const table = bigquery.dataset(DATASET).table("location_reports");
+  try {
+    await table.insert([row]);
+  } catch (error) {
+    // Migration not run yet: keep the position, lose only the tag (docs/ops/BIGQUERY.md)
+    if (!isMissingActivityColumn(error)) throw error;
+    console.warn("[BigQuery] location_reports has no activity_type column — run tools/bigquery/setup.sh; inserting without it");
+    const withoutActivity = { ...row };
+    delete withoutActivity.activity_type;
+    delete withoutActivity.row_hash;
+    withoutActivity.row_hash = computeRowHash(withoutActivity);
+    await table.insert([withoutActivity]);
+  }
 }
 
 /**

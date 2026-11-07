@@ -44,7 +44,7 @@ beforeAll(async () => {
   });
   await insertLocationReport({
     userId: "u1", timestamp, latitude: 1, longitude: 2, accuracy: 3, altitude: 4, speed: 5,
-    isInSafeZone: true, safeZoneName: "Home",
+    isInSafeZone: true, safeZoneName: "Home", activityType: "walking",
   });
   await insertCheckin({ userId: "u1", timestamp, latitude: 1, longitude: 2, note: "ok" });
   await insertConsentAudit({

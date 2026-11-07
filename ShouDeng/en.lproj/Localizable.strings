@@ -2188,6 +2188,8 @@ your guardians will be automatically notified.";
 "protected.settings.detection.fall" = "Fall detection";
 "protected.settings.detection.fallOn" = "On while the app is open";
 "protected.settings.detection.fallDesc" = "A hard fall followed by lying still asks \"Are you OK?\" for 60 s, then alerts your guardians. iPhone can only watch while Lantern Care is open.";
+"protected.settings.detection.fallSensitive" = "Sensitive fall detection (older adults)";
+"protected.settings.detection.fallSensitiveDesc" = "Also notices a slower slump to the floor and softer falls. On automatically with the \"Simple\" home screen. May ask \"Are you OK?\" a little more often.";
 "report.entry" = "Report for police";
 "report.entry.subtitle" = "Locations, maps, activity, falls and SOS for a chosen period — ready to hand over";
 "report.sheet.title" = "Report for police";

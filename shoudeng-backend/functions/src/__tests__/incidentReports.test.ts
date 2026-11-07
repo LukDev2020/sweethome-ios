@@ -110,6 +110,22 @@ it("a guardian makes a report: merged trail, activity, falls, SOS, gaps — and 
   expect(listDocs("timeline_entries").find((d) => d.data.type === "incidentReport")?.data.userId).toBe("mom");
 });
 
+it("history points keep the phone's motion tag (activity_type), over the speed guess", async () => {
+  // A bus crawling in traffic: cycling speed, but the phone said driving
+  mockHistory = [
+    { timestamp: at(0), latitude: 43.6500, longitude: -79.3800, accuracy: 8, speed: 6, activity_type: "driving" },
+    { timestamp: at(5), latitude: 43.6600, longitude: -79.3700, accuracy: 8, speed: 6, activity_type: "driving" },
+    // Written before the column existed: no tag, speed decides
+    { timestamp: at(10), latitude: 43.6700, longitude: -79.3600, accuracy: 8, speed: 1.3 },
+  ];
+  const r = await as("mom").post("/v1/incident-reports", body({ sections: ["locations", "activity"] }));
+  expect(r.status).toBe(201);
+  const data = JSON.parse(r.body.canonical);
+  const history = data.locations.filter((p: ReportPoint) => p.source === "history");
+  expect(history.map((p: ReportPoint) => p.activity)).toEqual(["driving", "driving", null]);
+  expect(data.activity[0]).toMatchObject({ activity: "driving", start: at(0) });
+});
+
 it("still has a trail when BigQuery is down, and says so", async () => {
   mockHistory = new Error("Not found: Dataset sweethome-b4e82:shoudeng");
   const r = await as("mom").post("/v1/incident-reports", body());

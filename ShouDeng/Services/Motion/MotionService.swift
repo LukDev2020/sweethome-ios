@@ -24,7 +24,13 @@ final class MotionService {
 
     private let motionManager = CMMotionManager()
     private let activityManager = CMMotionActivityManager()
-    private let fallDetector: FallDetector
+    /// Replaced (never mutated) when the profile changes — see setFallDetectorConfig.
+    /// The lock covers the reference only; the detector itself lives on operationQueue.
+    private var _fallDetector: FallDetector
+    private let detectorLock = NSLock()
+    private var fallDetector: FallDetector { detectorLock.withLock { _fallDetector } }
+    /// A profile change waiting for the detector to be idle (operationQueue only)
+    private var pendingFallDetectorConfig: FallDetector.Config?
     private let mlFallClassifier: MLFallClassifier
     private let operationQueue: OperationQueue
 
@@ -42,7 +48,7 @@ final class MotionService {
 
     init(fallDetectorConfig: FallDetector.Config = .youngAdult,
          mlClassifierConfig: MLFallClassifier.Config = MLFallClassifier.Config()) {
-        self.fallDetector = FallDetector(config: fallDetectorConfig)
+        self._fallDetector = FallDetector(config: fallDetectorConfig)
         self.mlFallClassifier = MLFallClassifier(config: mlClassifierConfig)
 
         self.operationQueue = OperationQueue()
@@ -53,25 +59,49 @@ final class MotionService {
         isAccelerometerAvailable = motionManager.isAccelerometerAvailable
         isDeviceMotionAvailable = motionManager.isDeviceMotionAvailable
 
-        setupFallDetectorCallbacks()
+        setupCallbacks(on: _fallDetector)
     }
 
     // MARK: - Setup
 
-    private func setupFallDetectorCallbacks() {
-        fallDetector.onCandidateFall = { [weak self] metrics in
+    private func setupCallbacks(on detector: FallDetector) {
+        detector.onCandidateFall = { [weak self] metrics in
             DispatchQueue.main.async {
                 self?.onFallCandidate?(metrics)
             }
         }
 
-        fallDetector.onStateChange = { [weak self] oldState, newState in
+        detector.onStateChange = { oldState, newState in
             // Log state transitions for debugging and calibration
             #if DEBUG
             print("[MotionService] Fall detector: \(oldState) → \(newState)")
             #endif
-            _ = self  // Silence unused warning
         }
+    }
+
+    // MARK: - Profile
+
+    /// The detector's thresholds (standard, or `.elderly`: softer impacts, a slow slump).
+    /// The new detector is built on the sensor queue, and only once the current one is
+    /// back to monitoring — a fall half-way through the four stages, or waiting for its
+    /// "Are you OK?" answer, is never dropped by a settings change.
+    func setFallDetectorConfig(_ config: FallDetector.Config) {
+        operationQueue.addOperation { [weak self] in
+            self?.pendingFallDetectorConfig = config
+            self?.applyPendingFallDetectorConfig()
+        }
+    }
+
+    /// operationQueue only
+    private func applyPendingFallDetectorConfig() {
+        guard let config = pendingFallDetectorConfig else { return }
+        let current = fallDetector
+        guard current.state == .monitoring else { return }
+        pendingFallDetectorConfig = nil
+        guard current.config != config else { return }
+        let detector = FallDetector(config: config)
+        setupCallbacks(on: detector)
+        detectorLock.withLock { _fallDetector = detector }
     }
 
     // MARK: - Start Foreground Monitoring
@@ -95,7 +125,8 @@ final class MotionService {
             using: .xArbitraryZVertical,
             to: operationQueue
         ) { [weak self] motion, error in
-            guard let motion, error == nil else { return }
+            guard let self, let motion, error == nil else { return }
+            self.applyPendingFallDetectorConfig()
 
             let totalAccel = CMAcceleration(
                 x: motion.userAcceleration.x + motion.gravity.x,
@@ -104,7 +135,7 @@ final class MotionService {
             )
 
             // Feed the four-stage fall detection pipeline
-            self?.fallDetector.feed(
+            self.fallDetector.feed(
                 acceleration: totalAccel,
                 gravity: motion.gravity,
                 userAcceleration: motion.userAcceleration,
@@ -112,7 +143,7 @@ final class MotionService {
             )
 
             // Feed the ML classifier in parallel (shadow mode until model is available)
-            self?.mlFallClassifier.feed(
+            self.mlFallClassifier.feed(
                 acceleration: totalAccel,
                 rotationRate: motion.rotationRate,
                 timestamp: motion.timestamp
@@ -222,8 +253,10 @@ final class MotionService {
     /// The person answered "I'm OK", or the SOS went out: the detector watches again.
     /// (It used to stay "confirmed" after an SOS, so a second fall went unnoticed.)
     func resolveFall(dismissed: Bool) {
-        operationQueue.addOperation { [fallDetector] in
-            fallDetector.resolve(dismissed: dismissed)
+        operationQueue.addOperation { [weak self] in
+            guard let self else { return }
+            self.fallDetector.resolve(dismissed: dismissed)
+            self.applyPendingFallDetectorConfig()
         }
     }
 
@@ -231,9 +264,11 @@ final class MotionService {
     /// the whole chain runs as for a real fall ("Test fall detection", Explore Mode,
     /// the simulator, which has no motion sensors).
     func simulateFall(_ trace: FallSensorTrace = .forwardFall()) {
-        operationQueue.addOperation { [fallDetector] in
-            fallDetector.reset()
-            fallDetector.feed(trace)
+        operationQueue.addOperation { [weak self] in
+            guard let self else { return }
+            self.fallDetector.reset()
+            self.applyPendingFallDetectorConfig()
+            self.fallDetector.feed(trace)
         }
     }
 
@@ -245,5 +280,10 @@ final class MotionService {
 
     var fallDetectorState: FallDetector.State {
         fallDetector.state
+    }
+
+    /// The thresholds the running detector uses
+    var fallDetectorConfig: FallDetector.Config {
+        fallDetector.config
     }
 }

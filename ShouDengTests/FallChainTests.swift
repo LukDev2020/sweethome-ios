@@ -101,4 +101,85 @@ final class FallChainTests: XCTestCase {
         demo.resumeAutoSOSCheckIfOverdue()
         XCTAssertEqual(demo.activeSOSEvent?.triggerMethod, .fallDetection)
     }
+
+    // MARK: Fall profile (Settings → Simple home / "Sensitive fall detection")
+
+    func testTheChosenProfileReachesTheDetector() async throws {
+        await waitUntil { self.demo.motionService.fallDetectorConfig == .youngAdult }
+
+        demo.setHomeStyle(.simple)
+        XCTAssertTrue(demo.sensitiveFallDetection, "Simple home → older-adult profile")
+        await waitUntil { self.demo.motionService.fallDetectorConfig == .elderly }
+
+        demo.setSensitiveFallDetection(false)    // the person's own choice wins
+        await waitUntil { self.demo.motionService.fallDetectorConfig == .youngAdult }
+
+        demo.setHomeStyle(.standard)
+        demo.setSensitiveFallDetection(true)
+        await waitUntil { self.demo.motionService.fallDetectorConfig == .elderly }
+    }
+
+    func testTheDemoNeverChangesTheRealSetting() async throws {
+        let before = UserDefaults.standard.object(forKey: AppCoordinator.sensitiveFallKey) as? Bool
+        demo.setSensitiveFallDetection(before == true ? false : true)
+        XCTAssertEqual(UserDefaults.standard.object(forKey: AppCoordinator.sensitiveFallKey) as? Bool, before)
+    }
+
+    func testSlowSlumpAsksOnlyWithTheSensitiveProfile() async throws {
+        demo.motionService.simulateFall(.slowSlump())
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
+        XCTAssertNil(demo.autoSOSCheck, "standard profile: impact too soft")
+
+        demo.setSensitiveFallDetection(true)
+        demo.motionService.simulateFall(.slowSlump())
+        await waitUntil { self.demo.autoSOSCheck != nil }
+        XCTAssertEqual(demo.autoSOSCheck?.reason, .fall)
+        demo.dismissFallConfirmation()
+    }
+}
+
+/// Switching the profile rebuilds the detector on its own queue — never in the middle
+/// of a fall that is still waiting for its "Are you OK?" answer.
+final class MotionServiceProfileTests: XCTestCase {
+
+    private func waitUntil(_ timeout: TimeInterval = 5, _ condition: @escaping () -> Bool,
+                           file: StaticString = #filePath, line: UInt = #line) {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !condition() && Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.02))
+        }
+        XCTAssertTrue(condition(), "condition not met within \(timeout)s", file: file, line: line)
+    }
+
+    func testStartsWithTheProfileItWasGiven() {
+        XCTAssertEqual(MotionService().fallDetectorConfig, .youngAdult)
+        XCTAssertEqual(MotionService(fallDetectorConfig: .elderly).fallDetectorConfig, .elderly)
+    }
+
+    func testSwitchWaitsForThePendingFallThenApplies() {
+        let service = MotionService()
+        var candidates = 0
+        service.onFallCandidate = { _ in candidates += 1 }
+
+        service.simulateFall(.forwardFall())
+        waitUntil { candidates == 1 }
+        if case .awaitingResponse = service.fallDetectorState {} else {
+            XCTFail("waiting for the answer, got \(service.fallDetectorState)")
+        }
+
+        service.setFallDetectorConfig(.elderly)
+        RunLoop.current.run(until: Date().addingTimeInterval(0.3))
+        XCTAssertEqual(service.fallDetectorConfig, .youngAdult, "the pending fall keeps its detector")
+        if case .awaitingResponse = service.fallDetectorState {} else {
+            XCTFail("the switch dropped the pending fall: \(service.fallDetectorState)")
+        }
+
+        service.resolveFall(dismissed: true)
+        waitUntil { service.fallDetectorConfig == .elderly }
+        XCTAssertEqual(service.fallDetectorState, .monitoring)
+
+        // The new detector reports through the same callback, and catches a slow slump
+        service.simulateFall(.slowSlump())
+        waitUntil { candidates == 2 }
+    }
 }

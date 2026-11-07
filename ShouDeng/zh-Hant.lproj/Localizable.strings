@@ -2188,6 +2188,8 @@
 "protected.settings.detection.fall" = "跌倒檢測";
 "protected.settings.detection.fallOn" = "App 打開時開啓";
 "protected.settings.detection.fallDesc" = "摔倒後一動不動時，會先詢問“你還好嗎？”60 秒，然後通知守護者。iPhone 只能在守燈打開時檢測。";
+"protected.settings.detection.fallSensitive" = "靈敏摔倒偵測（長者）";
+"protected.settings.detection.fallSensitiveDesc" = "也能察覺緩慢癱倒在地和較輕的摔倒。選擇「簡潔版」首頁時自動開啟。可能會稍多詢問「你還好嗎？」。";
 "report.entry" = "報警材料";
 "report.entry.subtitle" = "所選時段的位置、地圖、活動、跌倒和求助記錄——可直接交給警方";
 "report.sheet.title" = "報警材料";

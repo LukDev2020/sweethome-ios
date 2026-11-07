@@ -47,6 +47,8 @@ final class AppCoordinator: ObservableObject {
     @Published var watchBack: WatchBackOverview?
     /// Settings → Home screen during the demo (never the real setting); Kai starts on Rider
     @Published var demoHomeStyle: String?
+    /// Settings → "Sensitive fall detection" during the demo (never the real setting)
+    @Published var demoSensitiveFall: Bool?
     /// Street where the rider's SOS started (lock-screen card, SOS screen)
     @Published var riderSOSAddress: String?
     @Published var riderShift: RiderShift? = {
@@ -1121,7 +1123,8 @@ final class AppCoordinator: ObservableObject {
             #endif
         }
 
-        // Motion → Fall detection
+        // Motion → Fall detection (thresholds from the person's settings)
+        applyFallProfile()
         motionService.onFallCandidate = { [weak self] metrics in
             self?.handleFallCandidate(metrics)
         }

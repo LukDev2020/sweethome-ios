@@ -2187,6 +2187,8 @@
 "protected.settings.detection.fall" = "転倒検知";
 "protected.settings.detection.fallOn" = "アプリ表示中はオン";
 "protected.settings.detection.fallDesc" = "強く転んで動かない状態が続くと、60 秒間「大丈夫ですか？」と確認してから見守る人へ通知します。iPhone では Lantern Care を開いている間だけ検知します。";
+"protected.settings.detection.fallSensitive" = "高感度の転倒検知（高齢の方向け）";
+"protected.settings.detection.fallSensitiveDesc" = "ゆっくり床に崩れ落ちる場合や軽い転倒にも気づきます。ホーム画面を「シンプル」にすると自動でオンになります。「大丈夫ですか？」の確認が少し増えることがあります。";
 "report.entry" = "警察向けの報告書";
 "report.entry.subtitle" = "選んだ期間の位置・地図・行動・転倒・SOS をまとめて警察に渡せます";
 "report.sheet.title" = "警察向けの報告書";

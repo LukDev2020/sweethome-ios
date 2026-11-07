@@ -149,6 +149,36 @@ extension AppCoordinator {
         autoSOSCheckExpired()
     }
 
+    // MARK: - Fall detection profile
+
+    static let sensitiveFallKey = "fall_detection_sensitive"
+
+    /// Settings → "Sensitive fall detection (older adults)": the elderly profile, the only
+    /// one that catches a slow slump to the floor. Until the person sets it, it follows
+    /// the home style: on with Simple. The demo keeps its own choice.
+    var sensitiveFallDetection: Bool {
+        let chosen = isDemo ? demoSensitiveFall : UserDefaults.standard.object(forKey: Self.sensitiveFallKey) as? Bool
+        return chosen ?? (effectiveHomeStyle == HomeStyle.simple.rawValue)
+    }
+
+    func setSensitiveFallDetection(_ on: Bool) {
+        if isDemo {
+            demoSensitiveFall = on
+        } else {
+            UserDefaults.standard.set(on, forKey: Self.sensitiveFallKey)
+        }
+        applyFallProfile()
+    }
+
+    var fallDetectorConfig: FallDetector.Config {
+        sensitiveFallDetection ? .elderly : .youngAdult
+    }
+
+    /// Hands the profile to the detector (rebuilt on the sensor queue once it is idle).
+    func applyFallProfile() {
+        motionService.setFallDetectorConfig(fallDetectorConfig)
+    }
+
     /// Settings → "Test fall detection": a recorded fall through the real detector.
     /// In Explore Mode the whole chain runs (the demo SOS goes nowhere).
     func testFallDetection() {

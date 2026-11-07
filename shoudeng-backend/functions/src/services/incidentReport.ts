@@ -279,7 +279,8 @@ export async function gatherReportData(req: ReportRequest) {
   const raw: ReportPoint[] = [];
   for (const r of history) {
     raw.push({ at: String(r.timestamp), latitude: r.latitude as number, longitude: r.longitude as number,
-      accuracy: n(r.accuracy), speed: n(r.speed), altitude: n(r.altitude), activity: null, source: "history" });
+      accuracy: n(r.accuracy), speed: n(r.speed), altitude: n(r.altitude),
+      activity: typeof r.activity_type === "string" ? r.activity_type : null, source: "history" });
   }
   for (const r of trips) {
     const at = toIso(r.timestamp);

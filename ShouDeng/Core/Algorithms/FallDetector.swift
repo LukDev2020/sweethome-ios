@@ -22,7 +22,7 @@ final class FallDetector {
 
     // MARK: - Configuration
 
-    struct Config {
+    struct Config: Equatable {
         // Stage 1: Free-fall
         var freeFallThresholdG: Double = 0.6
         var freeFallMinDurationMs: Double = 100

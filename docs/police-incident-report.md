@@ -267,8 +267,8 @@ Known limits, stated in the app and in the report:
   - If the dataset is missing, `/location/report` answers "queued for retry", but nothing is actually queued.
   - Reports still get positions from trips, SOS trails, check-ins and falls, and they say which source was unavailable.
   - To do: confirm the dataset and its tables in sweethome-b4e82.
-- **Activity in history.** `activityType` is sent with every location report but never written to BigQuery: `insertLocationReport` drops it. Report activity therefore comes from speed, except for trip points. Adding an `activity_type` column needs a schema migration before the insert can include it.
-- **Elderly fall profile.** The detector has an elderly profile (`Config.elderly`), which is the only one that catches a slow slump. Nothing selects it yet: everyone gets `.youngAdult`. A natural trigger is the Simple home style, or an age band in the profile.
+- **Activity in history.** Done (2026-11): `insertLocationReport` writes the phone's tag to `location_reports.activity_type`, and history points in a report use it (speed only for older rows). The column needs a migration before the deploy: see docs/ops/BIGQUERY.md → Migrations.
+- **Elderly fall profile.** Done (2026-11): the Simple home style selects `Config.elderly`, and Settings → Smart Detection has a "Sensitive fall detection (older adults)" switch; the person's own choice wins over the home style. A profile change waits until the detector is idle (never during a fall waiting for its answer). Still open: an age band in the profile.
 - **Apple Watch.** Continuous fall detection needs `CMFallDetectionManager` and Apple's fall-detection entitlement (phase 3).
 
 ## 9. Legal notes (for counsel review)

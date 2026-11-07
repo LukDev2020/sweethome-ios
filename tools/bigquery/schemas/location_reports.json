@@ -66,5 +66,11 @@
     "mode": "NULLABLE",
     "description": "Server insert time",
     "defaultValueExpression": "CURRENT_TIMESTAMP()"
+  },
+  {
+    "name": "activity_type",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Phone's motion tag at the time: stationary, walking, running, cycling, driving, unknown (null: not sent, or written before this column existed)"
   }
 ]

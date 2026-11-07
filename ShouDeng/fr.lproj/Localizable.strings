@@ -2188,6 +2188,8 @@ vos gardiens seront automatiquement notifiés.";
 "protected.settings.detection.fall" = "Détection de chute";
 "protected.settings.detection.fallOn" = "Active quand l'app est ouverte";
 "protected.settings.detection.fallDesc" = "Une chute violente suivie d'une immobilité affiche « Ça va ? » pendant 60 s, puis prévient vos gardiens. L'iPhone ne surveille que lorsque Lantern Care est ouvert.";
+"protected.settings.detection.fallSensitive" = "Détection de chute sensible (personnes âgées)";
+"protected.settings.detection.fallSensitiveDesc" = "Repère aussi un affaissement lent au sol et les chutes plus douces. Activée automatiquement avec l'accueil « Simplifié ». Peut demander « Ça va ? » un peu plus souvent.";
 "report.entry" = "Rapport pour la police";
 "report.entry.subtitle" = "Positions, cartes, activité, chutes et SOS sur une période — prêt à remettre";
 "report.sheet.title" = "Rapport pour la police";

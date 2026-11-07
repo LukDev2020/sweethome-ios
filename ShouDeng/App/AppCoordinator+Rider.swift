@@ -31,6 +31,8 @@ extension AppCoordinator {
             UserDefaults.standard.set(style.rawValue, forKey: HomeStyle.storageKey)
         }
         if style == .rider { liveActivityManager.updateRider(riderCardInfo) } else { liveActivityManager.updateRider(nil) }
+        // Simple home → the older-adult fall profile, unless the person chose otherwise
+        applyFallProfile()
     }
 
     var isOnShift: Bool { riderShift != nil }
