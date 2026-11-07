@@ -123,6 +123,11 @@ struct RiderHomeView: View {
                     Button(lang.localized("rider.shift.end")) { confirmEnd = true }
                         .font(.scaled(size: 14, weight: .semibold)).foregroundStyle(RC.alert)
                 }
+                let names = coordinator.watcherNames(shift.watcherIds ?? [])
+                if !names.isEmpty {
+                    Label(String(format: lang.localized("rider.watch.by"), names.joined(separator: ", ")), systemImage: "eye.fill")
+                        .font(.scaled(size: 14, weight: .semibold)).foregroundStyle(RC.safe)
+                }
                 Label(String(format: lang.localized("rider.shift.sharing"), coordinator.crew?.members.count ?? 0 > 0
                              ? max(0, (coordinator.crew?.members.count ?? 1) - 1) : 0),
                       systemImage: "location.fill")
@@ -200,10 +205,59 @@ struct ShiftStartSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var hasEnd = true
     @State private var end = Calendar.current.date(byAdding: .hour, value: 4, to: Date()) ?? Date()
+    /// Starts with last shift's watchers
+    @State private var watchers: Set<String> = []
+    @State private var showInviteFamily = false
+    @State private var showCrewTab = false
+
+    private var colleagues: [CrewMember] {
+        (coordinator.crew?.members ?? []).filter { $0.id != coordinator.currentUser?.id }
+    }
+    private var family: [Guardian] { coordinator.myGuardians }
+    private var hasColleague: Bool { colleagues.contains { watchers.contains($0.id) } }
+    private var hasFamily: Bool { family.contains { watchers.contains($0.user.id) } }
+    /// At least one colleague and one family member (where there is one to choose)
+    private var canStart: Bool {
+        (hasColleague || colleagues.isEmpty) && (hasFamily || family.isEmpty) && !watchers.isEmpty
+    }
 
     var body: some View {
         NavigationStack {
             Form {
+                // Who watches this shift
+                Section {
+                    if colleagues.isEmpty {
+                        Label(lang.localized("rider.watch.noCrew"), systemImage: "person.3")
+                            .font(.scaled(size: 14)).foregroundStyle(.secondary)
+                    }
+                    ForEach(colleagues) { m in
+                        watcherRow(id: m.id, name: m.name, initial: m.initial,
+                                   detail: lang.localized(m.onShift ? "rider.shift.on" : "rider.shift.off"), color: RC.safe)
+                    }
+                } header: {
+                    Text(lang.localized("rider.watch.colleagues"))
+                } footer: {
+                    if !colleagues.isEmpty && !hasColleague {
+                        Text(lang.localized("rider.watch.needColleague")).foregroundStyle(RC.alert)
+                    }
+                }
+                Section {
+                    ForEach(family) { g in
+                        watcherRow(id: g.user.id, name: g.user.displayName, initial: g.user.avatarInitial,
+                                   detail: g.user.cityName, color: RC.lamp)
+                    }
+                    Button { showInviteFamily = true } label: {
+                        Label(lang.localized("rider.watch.addFamily"), systemImage: "person.badge.plus")
+                    }
+                } header: {
+                    Text(lang.localized("rider.watch.family"))
+                } footer: {
+                    if !family.isEmpty && !hasFamily {
+                        Text(lang.localized("rider.watch.needFamily")).foregroundStyle(RC.alert)
+                    } else {
+                        Text(lang.localized("rider.watch.footer"))
+                    }
+                }
                 Section {
                     Toggle(lang.localized("rider.shift.plannedEnd"), isOn: $hasEnd).tint(RC.safe)
                     if hasEnd {
@@ -225,14 +279,43 @@ struct ShiftStartSheet: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button(lang.localized("rider.shift.go")) {
                         let plannedEnd = hasEnd ? (end < Date() ? end.addingTimeInterval(86400) : end) : nil
-                        Task { await coordinator.startShift(plannedEnd: plannedEnd) }
+                        Task { await coordinator.startShift(plannedEnd: plannedEnd, watcherIds: Array(watchers)) }
                         dismiss()
                     }
                     .bold()
+                    .disabled(!canStart)
                 }
             }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.large])
+        .onAppear {
+            let last = Set(coordinator.crew?.myWatcherIds ?? [])
+            // Last time's watchers; otherwise the nearest colleague and the on-duty family member
+            watchers = last.isEmpty
+                ? Set([colleagues.filter(\.onShift).min { ($0.distanceM ?? .max) < ($1.distanceM ?? .max) }?.id,
+                       (family.first(where: \.isOnDuty) ?? family.first)?.user.id].compactMap { $0 })
+                : last
+        }
+        .sheet(isPresented: $showInviteFamily) { InviteGuardianSheet().environmentObject(coordinator) }
+    }
+
+    private func watcherRow(id: String, name: String, initial: String, detail: String, color: Color) -> some View {
+        Button {
+            if watchers.contains(id) { watchers.remove(id) } else { watchers.insert(id) }
+        } label: {
+            HStack(spacing: 10) {
+                Text(initial).font(.system(size: 13, weight: .bold)).foregroundStyle(.white)
+                    .frame(width: 30, height: 30).background(Circle().fill(color))
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(name).font(.scaled(size: 15)).foregroundStyle(.primary)
+                    if !detail.isEmpty { Text(detail).font(.scaled(size: 12)).foregroundStyle(.secondary) }
+                }
+                Spacer()
+                Image(systemName: watchers.contains(id) ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 22)).foregroundStyle(watchers.contains(id) ? RC.safe : Color(.tertiaryLabel))
+            }
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -382,8 +465,11 @@ struct CrewView: View {
                             .font(.scaled(size: 12)).foregroundStyle(member.onShift ? RC.safe : .secondary)
                     }
                     Spacer()
-                    if let d = RiderFormat.distance(member.distanceM) {
-                        Text(d).font(.scaled(size: 13)).foregroundStyle(.secondary)
+                    VStack(alignment: .trailing, spacing: 4) {
+                        if let d = RiderFormat.distance(member.distanceM) {
+                            Text(d).font(.scaled(size: 13)).foregroundStyle(.secondary)
+                        }
+                        watchBadge(member)
                     }
                 }
                 .padding(.vertical, 8)
@@ -404,6 +490,35 @@ struct CrewView: View {
             .font(.scaled(size: 14))
             .frame(maxWidth: .infinity)
             .padding(.top, 6)
+    }
+
+    /// "Watches you" / "You watch" / both, and "Watch back" when only they watch you
+    @ViewBuilder
+    private func watchBadge(_ member: CrewMember) -> some View {
+        let watchesMe = member.watchesMe == true
+        let iWatch = member.iWatch == true
+        if watchesMe && iWatch {
+            badge("arrow.left.arrow.right", lang.localized("rider.watch.each"), RC.safe)
+        } else if iWatch {
+            badge("eye", lang.localized("rider.watch.youWatch"), .secondary)
+        } else if watchesMe {
+            HStack(spacing: 6) {
+                badge("eye.fill", lang.localized("rider.watch.watchesYou"), RC.safe)
+                Button {
+                    Task { await run { try await coordinator.watchBack(member) } }
+                } label: {
+                    Text(lang.localized("rider.watch.back"))
+                        .font(.scaled(size: 12, weight: .semibold)).foregroundStyle(.white)
+                        .padding(.horizontal, 8).padding(.vertical, 4)
+                        .background(Capsule().fill(RC.safe))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private func badge(_ icon: String, _ text: String, _ color: Color) -> some View {
+        Label(text, systemImage: icon).font(.scaled(size: 11, weight: .medium)).foregroundStyle(color).lineLimit(1)
     }
 
     // MARK: Helpers

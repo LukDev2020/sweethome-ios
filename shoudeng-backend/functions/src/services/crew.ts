@@ -1,7 +1,10 @@
 import * as admin from "firebase-admin";
 import { distanceMeters } from "./sosTracking";
 import { activeGuardianIds } from "./sosTracking";
-import { sendCrewSOSAlert, sendCrewResponseNotification, sendShiftOverdueNotification } from "./fcm";
+import {
+  sendCrewSOSAlert, sendCrewResponseNotification, sendShiftOverdueNotification,
+  sendShiftWatchRequest, sendWatchBackNotification,
+} from "./fcm";
 
 // ---------------------------------------------------------------------------
 // Rider crews
@@ -14,8 +17,12 @@ import { sendCrewSOSAlert, sendCrewResponseNotification, sendShiftOverdueNotific
 //
 //   crews/{crewId}                { name, ownerId, memberIds[], inviteCode, createdAt }
 //   crews/{crewId}/cautions/{id}  { userId, latitude, longitude, note, createdAt, expiresAt }
-//   rider_shifts/{uid}            active shifts only: { crewId, startedAt, plannedEnd, checkDueAt, overdueAlerted }
-//   users/{uid}.crewId / .riderOnShift
+//   rider_shifts/{uid}            active shifts only: { crewId, startedAt, plannedEnd, checkDueAt, overdueAlerted, watcherIds }
+//   users/{uid}.crewId / .riderOnShift / .riderWatchers (who watches my shifts; the next shift starts with them)
+//
+// Watchers: each shift is watched by at least one crew colleague and one family member
+// (guardian), chosen at shift start; more can be added. Watchers get the "shift not
+// ended" alert. A crew mate who watches you can be watched back in one tap.
 //   sos_events/{id}.crewNotified[] / .crewResponses{uid: {response, at, distanceM}}
 
 export const CREW_MAX_MEMBERS = 12;
@@ -104,8 +111,10 @@ export async function crewView(uid: string, now: Date = new Date()) {
   if (!crew.exists) return null;
   const c = crew.data()!;
   const me = await positionOf(uid);
+  const myWatchers = await watchersOf(uid);
   const members = await Promise.all((c.memberIds as string[]).map(async (id) => {
     const user = (await db().collection("users").doc(id).get()).data() ?? {};
+    const theirWatchers: string[] = Array.isArray(user.riderWatchers) ? user.riderWatchers : [];
     const onShift = user.riderOnShift === true;
     const pos = onShift || id === uid ? await positionOf(id) : null;
     return {
@@ -117,6 +126,10 @@ export async function crewView(uid: string, now: Date = new Date()) {
       longitude: pos?.longitude ?? null,
       locationAt: pos?.at ?? null,
       distanceM: me && pos && id !== uid ? Math.round(distanceMeters(me, pos)) : null,
+      /** watches my shifts */
+      watchesMe: id !== uid && myWatchers.includes(id),
+      /** I watch their shifts */
+      iWatch: id !== uid && theirWatchers.includes(uid),
     };
   }));
   const cautions = await crew.ref.collection("cautions").where("expiresAt", ">", ts(now)).get();
@@ -126,6 +139,7 @@ export async function crewView(uid: string, now: Date = new Date()) {
     inviteCode: c.inviteCode as string,
     isOwner: c.ownerId === uid,
     members,
+    myWatcherIds: myWatchers,
     cautions: cautions.docs.map((d) => ({
       id: d.id,
       latitude: d.data().latitude as number,
@@ -140,21 +154,72 @@ const isCoord = (lat: unknown, lng: unknown) =>
   typeof lat === "number" && typeof lng === "number" && Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
 
 /** Start / end a shift. A planned end is checked SHIFT_GRACE_MS later. */
-export async function setShift(uid: string, onShift: boolean, plannedEnd: unknown, now: Date = new Date()): Promise<void> {
+export async function setShift(
+  uid: string, onShift: boolean, plannedEnd: unknown, now: Date = new Date(), rawWatchers?: unknown
+): Promise<void> {
   const shiftRef = db().collection("rider_shifts").doc(uid);
-  await db().collection("users").doc(uid).set({ riderOnShift: onShift }, { merge: true });
   if (!onShift) {
+    await db().collection("users").doc(uid).set({ riderOnShift: false }, { merge: true });
     await shiftRef.delete();
     return;
   }
+  // Watchers sent with the shift (else the ones from last time); must be crew mates or guardians
+  const watcherIds = rawWatchers === undefined ? await watchersOf(uid) : await validWatchers(uid, rawWatchers);
   const end = typeof plannedEnd === "string" && !Number.isNaN(Date.parse(plannedEnd)) ? new Date(plannedEnd) : null;
+  const previous = await watchersOf(uid);
+  await db().collection("users").doc(uid).set({ riderOnShift: true, riderWatchers: watcherIds }, { merge: true });
   await shiftRef.set({
     crewId: await crewIdOf(uid),
     startedAt: ts(now),
     plannedEnd: end ? ts(end) : null,
     checkDueAt: end ? ts(new Date(end.getTime() + SHIFT_GRACE_MS)) : null,
     overdueAlerted: false,
+    watcherIds,
   });
+  // Tell watchers who weren't watching before
+  const name = ((await db().collection("users").doc(uid).get()).data()?.displayName as string) ?? "";
+  await Promise.all(watcherIds.filter((w) => !previous.includes(w))
+    .map((w) => sendShiftWatchRequest(w, name, uid).catch(() => undefined)));
+}
+
+/** Who watches the rider's shifts (saved with the last shift / watch-backs). */
+export async function watchersOf(uid: string): Promise<string[]> {
+  const w = (await db().collection("users").doc(uid).get()).data()?.riderWatchers;
+  return Array.isArray(w) ? w.filter((x): x is string => typeof x === "string") : [];
+}
+
+/** Keeps only crew mates and active guardians (no strangers); 20 at most. */
+async function validWatchers(uid: string, raw: unknown): Promise<string[]> {
+  if (!Array.isArray(raw)) throw new CrewError(400, "watcherIds must be a list");
+  const crewId = await crewIdOf(uid);
+  const crewMates: string[] = crewId
+    ? (((await db().collection("crews").doc(crewId).get()).data()?.memberIds ?? []) as string[]).filter((m) => m !== uid)
+    : [];
+  const guardians = await activeGuardianIds(uid);
+  const allowed = new Set([...crewMates, ...guardians]);
+  const ids = [...new Set(raw.filter((x): x is string => typeof x === "string"))];
+  const bad = ids.filter((id) => !allowed.has(id));
+  if (bad.length > 0) throw new CrewError(403, "watchers must be crew mates or guardians");
+  return ids.slice(0, 20);
+}
+
+/**
+ * "Watch back": a crew mate who watches my shifts asks to have me watch theirs.
+ * Only allowed when they already watch me (so nobody adds themselves uninvited).
+ */
+export async function watchBack(uid: string, memberId: unknown): Promise<void> {
+  if (typeof memberId !== "string" || !memberId || memberId === uid) throw new CrewError(400, "memberId is required");
+  const crewId = await crewIdOf(uid);
+  if (!crewId || crewId !== (await crewIdOf(memberId))) throw new CrewError(403, "not in your crew");
+  if (!(await watchersOf(uid)).includes(memberId)) throw new CrewError(403, "they don't watch you");
+  const theirs = await watchersOf(memberId);
+  if (!theirs.includes(uid)) {
+    await db().collection("users").doc(memberId).set({ riderWatchers: [...theirs, uid] }, { merge: true });
+    const shift = db().collection("rider_shifts").doc(memberId);
+    if ((await shift.get()).exists) await shift.set({ watcherIds: [...theirs, uid] }, { merge: true });
+  }
+  const name = ((await db().collection("users").doc(uid).get()).data()?.displayName as string) ?? "";
+  await sendWatchBackNotification(memberId, name).catch(() => undefined);
 }
 
 export async function addCaution(uid: string, body: Record<string, unknown>, now: Date = new Date()): Promise<string> {
@@ -276,8 +341,10 @@ export async function checkOverdueShifts(now: Date = new Date()): Promise<number
     const name = ((await db().collection("users").doc(uid).get()).data()?.displayName as string) ?? "";
     const planned = shift.plannedEnd instanceof admin.firestore.Timestamp ? shift.plannedEnd.toDate() : now;
     const minutes = Math.max(1, Math.round((now.getTime() - planned.getTime()) / 60000));
+    // The shift's watchers; a shift without any falls back to the whole crew and all guardians
+    const watchers: string[] = Array.isArray(shift.watcherIds) ? shift.watcherIds : [];
     const crew = shift.crewId ? (await db().collection("crews").doc(shift.crewId).get()).data() : null;
-    const recipients = new Set<string>([
+    const recipients = new Set<string>(watchers.length > 0 ? watchers : [
       ...((crew?.memberIds ?? []) as string[]).filter((m) => m !== uid),
       ...(await activeGuardianIds(uid)),
     ]);

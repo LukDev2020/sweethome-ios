@@ -14,6 +14,8 @@ jest.mock("../services/fcm", () => ({
   sendCrewSOSAlert: jest.fn(async (to: string, ...args: unknown[]) => { mockPushes.push({ kind: "sos", to, args }); return { successCount: 1, failureCount: 0, allFailed: false }; }),
   sendCrewResponseNotification: jest.fn(async (to: string, ...args: unknown[]) => { mockPushes.push({ kind: "response", to, args }); }),
   sendShiftOverdueNotification: jest.fn(async (to: string, ...args: unknown[]) => { mockPushes.push({ kind: "overdue", to, args }); }),
+  sendShiftWatchRequest: jest.fn(async (to: string, ...args: unknown[]) => { mockPushes.push({ kind: "watch", to, args }); }),
+  sendWatchBackNotification: jest.fn(async (to: string, ...args: unknown[]) => { mockPushes.push({ kind: "watchBack", to, args }); }),
 }));
 
 import express from "express";
@@ -164,5 +166,45 @@ describe("shift not ended", () => {
     await as("kai").post("/v1/crew/shift", { onShift: true, plannedEnd: new Date(Date.now() - 31 * 60_000).toISOString() });
     await as("kai").post("/v1/crew/shift", { onShift: false });
     expect(await checkOverdueShifts()).toBe(0);
+  });
+});
+
+describe("shift watchers", () => {
+  it("watchers are crew mates or guardians, are told, and are remembered for the next shift", async () => {
+    await crewOfThree();
+    const res = await as("kai").post("/v1/crew/shift", { onShift: true, watcherIds: ["wei", "mei"] });
+    expect(res.status).toBe(200);
+    expect(readDoc("rider_shifts/kai")!.watcherIds).toEqual(["wei", "mei"]);
+    expect(mockPushes.filter((p) => p.kind === "watch").map((p) => p.to).sort()).toEqual(["mei", "wei"]);
+    expect((await as("kai").post("/v1/crew/shift", { onShift: true, watcherIds: ["stranger"] })).status).toBe(403);
+    await as("kai").post("/v1/crew/shift", { onShift: false });
+    mockPushes.length = 0;
+    await as("kai").post("/v1/crew/shift", { onShift: true });
+    expect(readDoc("rider_shifts/kai")!.watcherIds).toEqual(["wei", "mei"]);
+    expect(mockPushes.filter((p) => p.kind === "watch")).toHaveLength(0);
+  });
+
+  it("an overdue shift alerts only its watchers", async () => {
+    await crewOfThree();
+    await as("kai").post("/v1/crew/shift", { onShift: true, watcherIds: ["wei", "mei"],
+      plannedEnd: new Date(Date.now() - 31 * 60_000).toISOString() });
+    mockPushes.length = 0;
+    await checkOverdueShifts();
+    expect(mockPushes.filter((p) => p.kind === "overdue").map((p) => p.to).sort()).toEqual(["mei", "wei"]);
+  });
+
+  it("the crew view shows who watches whom, and watching back needs to be watched first", async () => {
+    await crewOfThree();
+    await as("kai").post("/v1/crew/shift", { onShift: true, watcherIds: ["wei", "mei"] });
+    const members = (await as("kai").get("/v1/crew")).body.crew.members;
+    expect(members.find((m: { id: string }) => m.id === "wei")).toMatchObject({ watchesMe: true, iWatch: false });
+    expect((await as("kai").get("/v1/crew")).body.crew.myWatcherIds).toEqual(["wei", "mei"]);
+
+    expect((await as("kai").post("/v1/crew/watch-back", { memberId: "ahmed" })).status).toBe(403);
+    expect((await as("kai").post("/v1/crew/watch-back", { memberId: "wei" })).status).toBe(200);
+    expect(readDoc("users/wei")!.riderWatchers).toEqual(["kai"]);
+    expect(mockPushes.find((p) => p.kind === "watchBack")!.to).toBe("wei");
+    const wei = (await as("kai").get("/v1/crew")).body.crew.members.find((m: { id: string }) => m.id === "wei");
+    expect(wei).toMatchObject({ watchesMe: true, iWatch: true });
   });
 });

@@ -31,6 +31,10 @@ const fcmStrings: Record<string, {
   crewResponseBody: (distance: string | null) => string;
   shiftOverdueTitle: (name: string) => string;
   shiftOverdueBody: (minutes: number) => string;
+  watchRequestTitle: (name: string) => string;
+  watchRequestBody: string;
+  watchBackTitle: (name: string) => string;
+  watchBackBody: string;
 }> = {
   zh: {
     sosTitle: "紧急求助",
@@ -59,6 +63,10 @@ const fcmStrings: Record<string, {
     crewResponseBody: (d) => d ? `距你 ${d}` : "车队成员已回应",
     shiftOverdueTitle: (name) => `${name}还没结束班次`,
     shiftOverdueBody: (m) => `计划下班已过 ${m} 分钟，还没有报平安。打个电话确认一下。`,
+    watchRequestTitle: (name) => `${name}请你照看这次班次`,
+    watchRequestBody: "如果班次超时未结束或发出求助，你会收到提醒。",
+    watchBackTitle: (name) => `${name}也开始照看你的班次`,
+    watchBackBody: "你们现在互相照看。",
   },
   "zh-Hant": {
     sosTitle: "緊急求助",
@@ -87,6 +95,10 @@ const fcmStrings: Record<string, {
     crewResponseBody: (d) => d ? `距你 ${d}` : "車隊成員已回應",
     shiftOverdueTitle: (name) => `${name}還沒結束班次`,
     shiftOverdueBody: (m) => `計畫下班已過 ${m} 分鐘，還沒有報平安。打個電話確認一下。`,
+    watchRequestTitle: (name) => `${name}請你照看這次班次`,
+    watchRequestBody: "如果班次超時未結束或發出求助，你會收到提醒。",
+    watchBackTitle: (name) => `${name}也開始照看你的班次`,
+    watchBackBody: "你們現在互相照看。",
   },
   en: {
     sosTitle: "Emergency SOS",
@@ -115,6 +127,10 @@ const fcmStrings: Record<string, {
     crewResponseBody: (d) => d ? `${d} away` : "Your crew answered",
     shiftOverdueTitle: (name) => `${name} hasn't ended their shift`,
     shiftOverdueBody: (m) => `${m} min past the planned end with no check-in. Give them a call.`,
+    watchRequestTitle: (name) => `${name} asked you to watch their shift`,
+    watchRequestBody: "You'll be alerted if they call SOS or the shift runs late.",
+    watchBackTitle: (name) => `${name} is watching your shifts too`,
+    watchBackBody: "You now look out for each other.",
   },
   fr: {
     sosTitle: "SOS Urgence",
@@ -143,6 +159,10 @@ const fcmStrings: Record<string, {
     crewResponseBody: (d) => d ? `À ${d}` : "Votre équipe a répondu",
     shiftOverdueTitle: (name) => `${name} n'a pas terminé son service`,
     shiftOverdueBody: (m) => `${m} min après la fin prévue, sans signe de vie. Appelez pour vérifier.`,
+    watchRequestTitle: (name) => `${name} vous demande de veiller sur son service`,
+    watchRequestBody: "Vous serez prévenu en cas de SOS ou si le service se prolonge.",
+    watchBackTitle: (name) => `${name} veille aussi sur vos services`,
+    watchBackBody: "Vous veillez désormais l'un sur l'autre.",
   },
   ja: {
     sosTitle: "緊急SOS",
@@ -171,6 +191,10 @@ const fcmStrings: Record<string, {
     crewResponseBody: (d) => d ? `${d}先` : "クルーが応答しました",
     shiftOverdueTitle: (name) => `${name}さんのシフトが終わっていません`,
     shiftOverdueBody: (m) => `予定の終了から${m}分過ぎても安否報告がありません。電話で確認してください。`,
+    watchRequestTitle: (name) => `${name}さんがシフトの見守りを頼んでいます`,
+    watchRequestBody: "SOS やシフトの延長があれば通知します。",
+    watchBackTitle: (name) => `${name}さんもあなたのシフトを見守ります`,
+    watchBackBody: "お互いに見守る関係になりました。",
   },
 };
 
@@ -631,4 +655,16 @@ export async function sendShiftOverdueNotification(toId: string, riderName: stri
   await sendSimple(toId, s.shiftOverdueTitle(riderName), s.shiftOverdueBody(minutes), {
     action: "shift_overdue", rider_id: riderId,
   }, { sound: "default", "interruption-level": "time-sensitive" });
+}
+
+/** A rider chose you to watch their shift. */
+export async function sendShiftWatchRequest(toId: string, riderName: string, riderId: string): Promise<void> {
+  const s = getStrings(await getUserLocale(toId));
+  await sendSimple(toId, s.watchRequestTitle(riderName), s.watchRequestBody, { action: "shift_watch", rider_id: riderId });
+}
+
+/** A crew mate now watches your shifts too. */
+export async function sendWatchBackNotification(toId: string, name: string): Promise<void> {
+  const s = getStrings(await getUserLocale(toId));
+  await sendSimple(toId, s.watchBackTitle(name), s.watchBackBody, { action: "watch_back" });
 }

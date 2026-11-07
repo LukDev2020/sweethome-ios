@@ -35,7 +35,8 @@ extension AppCoordinator {
 
     var isOnShift: Bool { riderShift != nil }
 
-    private struct ShiftRequest: Encodable { let onShift: Bool; let plannedEnd: Date? }
+    private struct ShiftRequest: Encodable { let onShift: Bool; let plannedEnd: Date?; var watcherIds: [String]? = nil }
+    private struct MemberRequest: Encodable { let memberId: String }
     private struct NameRequest: Encodable { let name: String }
     private struct CodeRequest: Encodable { let code: String }
     private struct RespondRequest: Encodable { let sosEventId: String; let response: String }
@@ -43,12 +44,15 @@ extension AppCoordinator {
 
     // MARK: Shift
 
-    func startShift(plannedEnd: Date?) async {
-        let shift = RiderShift(startedAt: Date(), plannedEnd: plannedEnd)
+    /// `watcherIds` nil: the watchers from last time (Siri / Shortcuts start)
+    func startShift(plannedEnd: Date?, watcherIds: [String]? = nil) async {
+        let shift = RiderShift(startedAt: Date(), plannedEnd: plannedEnd,
+                               watcherIds: watcherIds ?? crew?.myWatcherIds)
         await MainActor.run { setRiderShift(shift) }
         locationManager.requestSingleLocation()
         do {
-            let _: SuccessResponse = try await apiClient.post("/v1/crew/shift", body: ShiftRequest(onShift: true, plannedEnd: plannedEnd))
+            let _: SuccessResponse = try await apiClient.post("/v1/crew/shift",
+                                                             body: ShiftRequest(onShift: true, plannedEnd: plannedEnd, watcherIds: watcherIds))
         } catch {
             #if DEBUG
             print("[Rider] shift start not sent: \(error)")
@@ -105,6 +109,20 @@ extension AppCoordinator {
         await MainActor.run {
             crew = envelope.crew
             pendingCrewCode = nil
+        }
+    }
+
+    /// Watch the shifts of a crew mate who watches mine.
+    func watchBack(_ member: CrewMember) async throws {
+        let _: SuccessResponse = try await apiClient.post("/v1/crew/watch-back", body: MemberRequest(memberId: member.id))
+        await refreshCrew()
+    }
+
+    /// Names of who watches this shift (crew mates and family)
+    func watcherNames(_ ids: [String]) -> [String] {
+        ids.compactMap { id in
+            crew?.members.first(where: { $0.id == id })?.name
+                ?? myGuardians.first(where: { $0.user.id == id || $0.id == id })?.user.displayName
         }
     }
 

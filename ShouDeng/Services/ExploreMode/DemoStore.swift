@@ -37,6 +37,12 @@ final class DemoStore {
 
     // Rider demo (Kai's phone): shift, crew, caution spots, crew answers
     private var kaiOnShift = false
+    /// Who watches whose shifts: Wei and Mei (his sister) watch Kai; Kai watches Ahmed.
+    /// Kai doesn't watch Wei yet — "Watch back" on Wei's row.
+    private var watchers: [String: [String]] = [
+        DemoDataset.kaiId: [DemoDataset.weiId, DemoDataset.meiId],
+        DemoDataset.ahmedId: [DemoDataset.kaiId],
+    ]
     private var kaiInCrew = true
     private var crewName = "CBD night crew"
     private var cautions: [(id: String, latitude: Double, longitude: Double, note: String, at: Date)] = []
@@ -243,7 +249,7 @@ final class DemoStore {
             }
             return (200, encode(guardians))
 
-        case ("GET", "/v1/crew"), ("POST", "/v1/crew"), ("POST", "/v1/crew/join"), ("POST", "/v1/crew/leave"),
+        case ("GET", "/v1/crew"), ("POST", "/v1/crew"), ("POST", "/v1/crew/join"), ("POST", "/v1/crew/leave"), ("POST", "/v1/crew/watch-back"),
              ("POST", "/v1/crew/shift"), ("POST", "/v1/crew/caution"), ("GET", "/v1/crew/alerts"), ("POST", "/v1/crew/respond"):
             return crewRoute(method: method, path: path, me: me, body: body)
 
@@ -391,8 +397,19 @@ final class DemoStore {
         let b = bodyObject(body)
         switch (method, path) {
         case ("POST", "/v1/crew/shift"):
-            lock.withLock { kaiOnShift = (b["onShift"] as? Bool) ?? false }
+            lock.withLock {
+                kaiOnShift = (b["onShift"] as? Bool) ?? false
+                if kaiOnShift, let ids = b["watcherIds"] as? [String] { watchers[me] = ids }
+            }
             return (200, json(["success": true]))
+        case ("POST", "/v1/crew/watch-back"):
+            let member = (b["memberId"] as? String) ?? ""
+            let ok: Bool = lock.withLock {
+                guard watchers[me, default: []].contains(member) else { return false }
+                if !watchers[member, default: []].contains(me) { watchers[member, default: []].append(me) }
+                return true
+            }
+            return ok ? (200, json(["success": true])) : (403, json(["error": "they don't watch you"]))
         case ("POST", "/v1/crew"):
             lock.withLock { kaiInCrew = true; crewName = (b["name"] as? String) ?? crewName }
             return (201, json(["crew": crewJSON(me: me)]))
@@ -444,10 +461,13 @@ final class DemoStore {
                 return ["id": u.id, "name": u.displayName, "initial": u.avatarInitial, "onShift": onShift,
                         "latitude": visible ? spot.latitude : NSNull(), "longitude": visible ? spot.longitude : NSNull(),
                         "locationAt": Self.iso(visible ? Date().addingTimeInterval(-40) : nil),
-                        "distanceM": visible && u.id != me ? Self.meters(here, spot) : NSNull()]
+                        "distanceM": visible && u.id != me ? Self.meters(here, spot) : NSNull(),
+                        "watchesMe": u.id != me && (watchers[me] ?? []).contains(u.id),
+                        "iWatch": u.id != me && (watchers[u.id] ?? []).contains(me)]
             }
             return [
                 "id": "demo-crew", "name": crewName, "inviteCode": "K7M2QX", "isOwner": true,
+                "myWatcherIds": watchers[me] ?? [],
                 "members": [member(dataset.kai, onShift: kaiOnShift), member(dataset.wei, onShift: true),
                             member(dataset.ahmed, onShift: true), member(dataset.lina, onShift: false)],
                 "cautions": cautions.map { ["id": $0.id, "latitude": $0.latitude, "longitude": $0.longitude,

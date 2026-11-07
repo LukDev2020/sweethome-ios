@@ -14,6 +14,8 @@ struct Crew: Codable, Equatable {
     let isOwner: Bool
     let members: [CrewMember]
     let cautions: [CrewCaution]
+    /// Who watches my shifts (crew mates and guardians); the next shift starts with them
+    var myWatcherIds: [String]? = nil
 
     /// Joining link shown as a QR code (the app opens it and fills in the code)
     var inviteURL: URL { URL(string: "shoudeng://crew/join?code=\(inviteCode)")! }
@@ -28,6 +30,9 @@ struct CrewMember: Codable, Identifiable, Equatable {
     let longitude: Double?
     let locationAt: Date?
     let distanceM: Int?
+    /// They watch my shifts / I watch theirs
+    var watchesMe: Bool? = nil
+    var iWatch: Bool? = nil
 
     var coordinate: CLLocationCoordinate2D? {
         guard let latitude, let longitude else { return nil }
@@ -80,6 +85,8 @@ struct CrewAlertsEnvelope: Decodable { let alerts: [CrewAlert] }
 struct RiderShift: Codable, Equatable {
     let startedAt: Date
     let plannedEnd: Date?
+    /// Crew mates and family watching this shift
+    var watcherIds: [String]? = nil
 }
 
 enum RiderFormat {

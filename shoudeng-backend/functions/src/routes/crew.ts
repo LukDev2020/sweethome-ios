@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { authMiddleware } from "../middleware/auth";
 import {
-  createCrew, joinCrew, leaveCrew, crewView, setShift, addCaution, respondToCrewSOS, crewAlerts, CrewError,
+  createCrew, joinCrew, leaveCrew, crewView, setShift, addCaution, respondToCrewSOS, crewAlerts, watchBack, CrewError,
 } from "../services/crew";
 
 /**
@@ -10,7 +10,8 @@ import {
  *   POST /v1/crew            { name }       create (you become the owner)
  *   POST /v1/crew/join       { code }       join with the invite code
  *   POST /v1/crew/leave
- *   POST /v1/crew/shift      { onShift, plannedEnd? }
+ *   POST /v1/crew/shift      { onShift, plannedEnd?, watcherIds? }   watchers: crew mates + guardians
+ *   POST /v1/crew/watch-back { memberId }   watch a crew mate who watches you
  *   POST /v1/crew/caution    { latitude, longitude, note? }   "bike tampered with here"
  *   GET  /v1/crew/alerts     open SOS events of crew mates
  *   POST /v1/crew/respond    { sosEventId, response: going | cant_help }
@@ -54,8 +55,13 @@ router.post("/shift", async (req: Request, res: Response) => {
     res.status(400).json({ error: "onShift (boolean) is required" });
     return;
   }
-  try { await setShift(req.uid!, req.body.onShift, req.body.plannedEnd); res.json({ success: true }); }
+  try { await setShift(req.uid!, req.body.onShift, req.body.plannedEnd, new Date(), req.body.watcherIds); res.json({ success: true }); }
   catch (e) { fail(res, e, "update shift"); }
+});
+
+router.post("/watch-back", async (req: Request, res: Response) => {
+  try { await watchBack(req.uid!, req.body?.memberId); res.json({ success: true }); }
+  catch (e) { fail(res, e, "watch back"); }
 });
 
 router.post("/caution", async (req: Request, res: Response) => {
