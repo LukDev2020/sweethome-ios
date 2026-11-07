@@ -24,6 +24,13 @@ const fcmStrings: Record<string, {
   sosSafeBody: string;
   routeTitle: (name: string) => string;
   routeBody: (place: string, mode: string) => string;
+  crewSosTitle: (name: string) => string;
+  crewSosBody: (distance: string | null) => string;
+  crewGoingTitle: (name: string) => string;
+  crewCantTitle: (name: string) => string;
+  crewResponseBody: (distance: string | null) => string;
+  shiftOverdueTitle: (name: string) => string;
+  shiftOverdueBody: (minutes: number) => string;
 }> = {
   zh: {
     sosTitle: "紧急求助",
@@ -45,6 +52,13 @@ const fcmStrings: Record<string, {
     sosSafeBody: "她自己结束了求助。",
     routeTitle: (name) => `${name}正在前往`,
     routeBody: (place, mode) => `${place}（${mode === "driving" ? "开车" : mode === "transit" ? "公共交通" : "步行"}）· 打开守灯查看路线和实时位置`,
+    crewSosTitle: (name) => `${name}需要帮助`,
+    crewSosBody: (d) => `${d ? "距你 " + d + "，" : ""}先拨打急救电话，安全的话再过去帮忙`,
+    crewGoingTitle: (name) => `${name}正在赶来`,
+    crewCantTitle: (name) => `${name}无法过来`,
+    crewResponseBody: (d) => d ? `距你 ${d}` : "车队成员已回应",
+    shiftOverdueTitle: (name) => `${name}还没结束班次`,
+    shiftOverdueBody: (m) => `计划下班已过 ${m} 分钟，还没有报平安。打个电话确认一下。`,
   },
   "zh-Hant": {
     sosTitle: "緊急求助",
@@ -66,6 +80,13 @@ const fcmStrings: Record<string, {
     sosSafeBody: "她自己結束了求助。",
     routeTitle: (name) => `${name}正在前往`,
     routeBody: (place, mode) => `${place}（${mode === "driving" ? "開車" : mode === "transit" ? "大眾運輸" : "步行"}）· 打開守燈查看路線和即時位置`,
+    crewSosTitle: (name) => `${name}需要幫助`,
+    crewSosBody: (d) => `${d ? "距你 " + d + "，" : ""}先撥打緊急電話，安全的話再過去幫忙`,
+    crewGoingTitle: (name) => `${name}正在趕來`,
+    crewCantTitle: (name) => `${name}無法過來`,
+    crewResponseBody: (d) => d ? `距你 ${d}` : "車隊成員已回應",
+    shiftOverdueTitle: (name) => `${name}還沒結束班次`,
+    shiftOverdueBody: (m) => `計畫下班已過 ${m} 分鐘，還沒有報平安。打個電話確認一下。`,
   },
   en: {
     sosTitle: "Emergency SOS",
@@ -87,6 +108,13 @@ const fcmStrings: Record<string, {
     sosSafeBody: "They ended the SOS themselves.",
     routeTitle: (name) => `${name} is heading to`,
     routeBody: (place, mode) => `${place} (${mode === "driving" ? "driving" : mode === "transit" ? "public transport" : "on foot"}) · open Lantern Care for the route and live location`,
+    crewSosTitle: (name) => `${name} needs help`,
+    crewSosBody: (d) => `${d ? d + " away · " : ""}Call emergency services first, then go only if it's safe`,
+    crewGoingTitle: (name) => `${name} is on the way`,
+    crewCantTitle: (name) => `${name} can't come`,
+    crewResponseBody: (d) => d ? `${d} away` : "Your crew answered",
+    shiftOverdueTitle: (name) => `${name} hasn't ended their shift`,
+    shiftOverdueBody: (m) => `${m} min past the planned end with no check-in. Give them a call.`,
   },
   fr: {
     sosTitle: "SOS Urgence",
@@ -108,6 +136,13 @@ const fcmStrings: Record<string, {
     sosSafeBody: "La personne a mis fin au SOS elle-même.",
     routeTitle: (name) => `${name} se rend à`,
     routeBody: (place, mode) => `${place} (${mode === "driving" ? "en voiture" : mode === "transit" ? "en transports" : "à pied"}) · ouvrez Lantern Care pour l'itinéraire et la position en direct`,
+    crewSosTitle: (name) => `${name} a besoin d'aide`,
+    crewSosBody: (d) => `${d ? "À " + d + " · " : ""}Appelez d'abord les secours, puis allez-y seulement si c'est sûr`,
+    crewGoingTitle: (name) => `${name} arrive`,
+    crewCantTitle: (name) => `${name} ne peut pas venir`,
+    crewResponseBody: (d) => d ? `À ${d}` : "Votre équipe a répondu",
+    shiftOverdueTitle: (name) => `${name} n'a pas terminé son service`,
+    shiftOverdueBody: (m) => `${m} min après la fin prévue, sans signe de vie. Appelez pour vérifier.`,
   },
   ja: {
     sosTitle: "緊急SOS",
@@ -129,6 +164,13 @@ const fcmStrings: Record<string, {
     sosSafeBody: "本人がSOSを終了しました。",
     routeTitle: (name) => `${name}さんが向かっています`,
     routeBody: (place, mode) => `${place}（${mode === "driving" ? "車" : mode === "transit" ? "公共交通" : "徒歩"}）· Lantern Care でルートと現在地を確認できます`,
+    crewSosTitle: (name) => `${name}さんが助けを求めています`,
+    crewSosBody: (d) => `${d ? d + "先 · " : ""}まず緊急番号に電話し、安全な場合のみ向かってください`,
+    crewGoingTitle: (name) => `${name}さんが向かっています`,
+    crewCantTitle: (name) => `${name}さんは行けません`,
+    crewResponseBody: (d) => d ? `${d}先` : "クルーが応答しました",
+    shiftOverdueTitle: (name) => `${name}さんのシフトが終わっていません`,
+    shiftOverdueBody: (m) => `予定の終了から${m}分過ぎても安否報告がありません。電話で確認してください。`,
   },
 };
 
@@ -546,5 +588,47 @@ export async function sendSOSRouteNotification(
   const s = getStrings(await getUserLocale(guardianId));
   await sendSimple(guardianId, s.routeTitle(personName), s.routeBody(place, mode), {
     action: "sos_route", sos_id: sosEventId, person_id: protectedPersonId,
+  }, { sound: "default", "interruption-level": "time-sensitive" });
+}
+
+/** "1.2 km" / "350 m" */
+export function formatDistance(meters: number | null): string | null {
+  if (meters === null || !Number.isFinite(meters)) return null;
+  return meters >= 1000 ? `${(meters / 1000).toFixed(1)} km` : `${Math.max(10, Math.round(meters / 10) * 10)} m`;
+}
+
+/** A crew mate called SOS: Critical (when allowed) like a guardian's SOS alert. */
+export async function sendCrewSOSAlert(
+  memberId: string, riderName: string, distanceM: number | null,
+  info: { sosEventId: string; riderId: string; latitude?: number; longitude?: number }
+): Promise<PushResult> {
+  const s = getStrings(await getUserLocale(memberId));
+  const title = s.crewSosTitle(riderName);
+  const body = s.crewSosBody(formatDistance(distanceM));
+  const critical = await isNotifEnabled(memberId, "sosCriticalAlerts");
+  return sendSimple(memberId, title, body, {
+    action: "crew_sos", sos_id: info.sosEventId, rider_id: info.riderId, rider_name: riderName,
+    ...(typeof info.latitude === "number" && typeof info.longitude === "number" && {
+      lat: String(info.latitude), lng: String(info.longitude),
+    }),
+  }, sosApsPayload(title, body, critical));
+}
+
+/** "Wei is on the way · 220 m away" to the rider who called SOS. */
+export async function sendCrewResponseNotification(
+  riderId: string, memberName: string, response: "going" | "cant_help", distanceM: number | null, sosEventId: string
+): Promise<void> {
+  const s = getStrings(await getUserLocale(riderId));
+  const title = response === "going" ? s.crewGoingTitle(memberName) : s.crewCantTitle(memberName);
+  await sendSimple(riderId, title, s.crewResponseBody(formatDistance(distanceM)), {
+    action: "crew_response", sos_id: sosEventId,
+  }, { sound: "default", "interruption-level": "time-sensitive" });
+}
+
+/** A shift ran past its planned end with no check-in. */
+export async function sendShiftOverdueNotification(toId: string, riderName: string, minutes: number, riderId: string): Promise<void> {
+  const s = getStrings(await getUserLocale(toId));
+  await sendSimple(toId, s.shiftOverdueTitle(riderName), s.shiftOverdueBody(minutes), {
+    action: "shift_overdue", rider_id: riderId,
   }, { sound: "default", "interruption-level": "time-sensitive" });
 }

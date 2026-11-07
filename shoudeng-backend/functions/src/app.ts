@@ -62,6 +62,7 @@ import widgetRoutes from "./routes/widget";
 import coverageRoutes from "./routes/coverage";
 import tripRoutes from "./routes/trip";
 import emergencyContactRoutes from "./routes/emergencyContacts";
+import crewRoutes from "./routes/crew";
 import voiceRoutes from "./routes/voice";
 import { createRateLimiter, RATE_LIMITS } from "./middleware/rateLimit";
 
@@ -141,6 +142,8 @@ app.use("/v1/trip", tripRoutes);
 
 // Personal emergency contacts (SMS fallback when there are no guardians)
 app.use("/v1/emergency-contacts", emergencyContactRoutes);
+// Rider crews: mutual SOS alerts, shifts, caution spots
+app.use("/v1/crew", crewRoutes);
 
 // --- Health check ---
 app.get("/health", (_req, res) => {

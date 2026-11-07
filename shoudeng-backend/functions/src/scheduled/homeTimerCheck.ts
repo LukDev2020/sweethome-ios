@@ -1,5 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import { checkOverdueShifts } from "../services/crew";
 
 const db = admin.firestore();
 
@@ -10,6 +11,12 @@ const db = admin.firestore();
 export const checkHomeTimerExpiry = functions.pubsub
   .schedule("every 1 minutes")
   .onRun(async () => {
+    // Rider shifts past their planned end without a check-in (same 1-minute cadence)
+    try {
+      await checkOverdueShifts();
+    } catch (error) {
+      console.error("[Crew] shift check failed:", error);
+    }
     try {
       const now = admin.firestore.Timestamp.now();
 

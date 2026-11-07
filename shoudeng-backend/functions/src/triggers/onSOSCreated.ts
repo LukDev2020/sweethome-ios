@@ -1,3 +1,4 @@
+import { alertCrewOfSOS } from "../services/crew";
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { initialEscalationFields, runEscalationInline } from "../services/escalation";
@@ -28,6 +29,9 @@ export const onSOSCreated = functions
         escalationSent: data.escalationSent ?? {},
       });
     }
+
+    // A rider's crew mates are alerted straight away (nearest first), alongside guardians
+    await alertCrewOfSOS(sosId, data);
 
     // Leave headroom under the 300 s function timeout
     await runEscalationInline(sosId, 270_000);

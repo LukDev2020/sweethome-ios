@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { crewResponsesFor } from "./crew";
 import {
   sendSOSAlert,
   sendSOSAcknowledgedToGuardian,
@@ -507,6 +508,9 @@ export interface SOSStatus {
   trail: { latitude: number; longitude: number; at: string }[];
   /** Where the person said they are heading, if they shared a route */
   route: { name: string; latitude: number; longitude: number; mode: string; sharedAt: string } | null;
+  /** Rider crews: how many crew mates were alerted, and who answered */
+  crewNotified: number;
+  crewResponses: { memberId: string; name: string; response: string; at: string | null; distanceM: number | null }[];
 }
 
 export async function sosStatus(
@@ -548,6 +552,8 @@ export async function sosStatus(
     locationUpdatedAt: toIso(d.locationUpdatedAt),
     trail: Array.isArray(d.trail) ? d.trail : [],
     route: d.route ?? null,
+    crewNotified: Array.isArray(d.crewNotified) ? d.crewNotified.length : 0,
+    crewResponses: d.crewResponses ? await crewResponsesFor(d) : [],
   };
 }
 
