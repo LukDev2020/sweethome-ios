@@ -172,6 +172,8 @@ export interface ProtectedPersonStatus {
   timeZoneId: string | null;
   countryCode: string | null;
   cityName: string | null;
+  /** So "Call now" can dial them (family who look after them already know it) */
+  phone: string | null;
   activeSOS?: SOSStatus | null;
 }
 
@@ -237,6 +239,7 @@ export async function buildPersonStatus(input: {
     timeZoneId: user.timeZone ?? null,
     countryCode: user.countryCode ?? null,
     cityName: user.cityName ?? null,
+    phone: typeof user.phone === "string" && user.phone ? user.phone : null,
   };
 }
 

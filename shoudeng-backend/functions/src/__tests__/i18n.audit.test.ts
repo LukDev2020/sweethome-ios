@@ -365,6 +365,8 @@ const SAME_IN_ZH = new Set([
 ]);
 const SAME_IN_FR = new Set([
   ...SAME_IN_ZH,
+  // "1 min", "+5 min" are French too
+  "fake_call_delay_60s", "dms.action.extend5",
   // SOS mode: "Code", "Police", "Standard", "Satellite" and "%d min · %@" are French too
   "sosmode.end.codePlaceholder", "sosmode.cat.police", "sosmode.style.standard", "sosmode.style.satellite",
   "sosmode.route.summary",

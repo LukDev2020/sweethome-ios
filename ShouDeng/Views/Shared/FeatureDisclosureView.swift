@@ -87,7 +87,9 @@ struct FeatureDisclosureView: View {
                 }
             } else {
                 // Single button
-                let buttonText = LanguageManager.shared.localized(feature == .sos ? "disclosure.button.sendSOS" : "disclosure.button.understood")
+                // The SOS notice appears when the SOS button is first pressed; this only closes
+                // it ("send SOS" here read as if it sent one). Sending still needs the full hold.
+                let buttonText = LanguageManager.shared.localized("disclosure.button.understood")
                 Button {
                     ConsentLogger.shared.logFeatureDisclosure(feature, granted: true)
                     onAcknowledge(true)

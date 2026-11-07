@@ -376,10 +376,18 @@ final class ExploreModeController: ObservableObject {
         }
     }
 
+    /// "Not started in the demo: the safety timer". Shown as a short alert from the app's
+    /// own window: the overlay window's banner didn't always redraw (iOS 27), so pressing
+    /// Start on a blocked feature seemed to do nothing.
     private func showBlocked(_ feature: String?) {
-        blockedFeature = feature ?? "feature"
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
-            self?.blockedFeature = nil
+        let name = DemoOverlayView.featureName(feature ?? "feature")
+        let message = String(format: LanguageManager.shared.localized("explore.blocked"), name)
+        guard let top = AppCoordinator.topViewController(), !(top is UIAlertController) else { return }
+        let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: LanguageManager.shared.localized("common.ok"), style: .cancel))
+        top.present(alert, animated: true)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { [weak alert] in
+            if alert?.presentingViewController != nil { alert?.dismiss(animated: true) }
         }
     }
 

@@ -495,10 +495,7 @@ struct PostSignupWizardView: View {
                     let av = UIActivityViewController(activityItems: [
                         String(format: lang.localized("wizard.invite.shareMessage"), code)
                     ], applicationActivities: nil)
-                    if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                       let root = scene.windows.first?.rootViewController {
-                        root.present(av, animated: true)
-                    }
+                    AppCoordinator.topViewController()?.present(av, animated: true)
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "square.and.arrow.up")

@@ -123,6 +123,20 @@ struct ProtectedRecordsView: View {
                         .foregroundStyle(.tertiary)
                         .multilineTextAlignment(.center)
                         .padding(.bottom, 24)
+
+                    if !DisclaimerCopy.EscalationChannels.phoneEnabled {
+
+                        // SMS is off: contacts without the app are not alerted — say so
+
+                        Label(langManager.localized("protected.records.contactsNoSMS"), systemImage: "exclamationmark.triangle")
+
+                            .font(.scaled(size: 12))
+
+                            .foregroundStyle(.orange)
+
+                            .fixedSize(horizontal: false, vertical: true)
+
+                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
@@ -198,6 +212,13 @@ struct ProtectedRecordsView: View {
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
                     .padding(.bottom, 24)
+                if !DisclaimerCopy.EscalationChannels.phoneEnabled {
+                    // SMS is off: contacts without the app are not alerted — say so
+                    Label(langManager.localized("protected.records.contactsNoSMS"), systemImage: "exclamationmark.triangle")
+                        .font(.scaled(size: 12))
+                        .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
             .padding(.horizontal, 16)
             .padding(.top, 4)

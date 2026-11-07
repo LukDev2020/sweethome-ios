@@ -16,6 +16,7 @@
     "timeZoneId": "Asia/Shanghai",
     "countryCode": "CN",
     "cityName": "Chengdu",
+    "phone": null,
     "activeSOS": null
   },
   {
@@ -35,6 +36,7 @@
     "timeZoneId": "America/Toronto",
     "countryCode": "CA",
     "cityName": "Toronto",
+    "phone": null,
     "activeSOS": null
   }
 ]

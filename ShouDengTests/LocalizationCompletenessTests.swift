@@ -219,6 +219,20 @@ final class JapaneseTests: XCTestCase {
 /// literal-key scan above; a mismatch shows the raw key on screen (the guardian
 /// Records tabs showed "guardian.records.tab.timeline").
 final class DynamicLocalizationKeyTests: XCTestCase {
+    /// NSLocalizedString reads the phone's language, not the app's, and its keys escape
+    /// the checks above — Fake Call, the safety timer and route risk showed raw keys
+    /// like "dms.notification.expired.title". Everything goes through LanguageManager.
+    func testNoNSLocalizedStringInTheApp() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        let dir = root.appendingPathComponent("ShouDeng")
+        let files = FileManager.default.enumerator(at: dir, includingPropertiesForKeys: nil)!
+            .compactMap { $0 as? URL }.filter { $0.pathExtension == "swift" }
+        XCTAssertGreaterThan(files.count, 100)
+        let offenders: [String] = try files.filter { try String(contentsOf: $0, encoding: .utf8).contains("NSLocalizedString(") }
+            .map { $0.lastPathComponent }
+        XCTAssertEqual(offenders, [])
+    }
+
     func testEveryRuntimeBuiltKeyExistsInEveryLanguage() throws {
         var keys: [String] = []
         keys += ["timeline", "schedule", "contacts"].map { "guardian.records.tab.\($0)" }

@@ -1178,10 +1178,7 @@ struct InviteGuardianSheet: View {
                     activityItems: [String(format: LanguageManager.shared.localized("invite.sheet.protectShareText"), inviteLink)],
                     applicationActivities: nil
                 )
-                if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                   let root = scene.windows.first?.rootViewController {
-                    root.present(activityVC, animated: true)
-                }
+                AppCoordinator.topViewController()?.present(activityVC, animated: true)
                 dismiss()
             }
         }

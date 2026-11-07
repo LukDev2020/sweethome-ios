@@ -13,6 +13,7 @@ import Combine
 //   - Each contact shows: avatar, name, city, local time, duty status
 
 struct ProtectedHomeView: View {
+    @State private var locationSent = false
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
     @State private var isSOSPressed = false
@@ -686,12 +687,15 @@ struct ProtectedHomeView: View {
 
     private var sendLocationButton: some View {
         Button {
-            shareMyLocation()
+            coordinator.sendLocationToGuardians()
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            withAnimation { locationSent = true }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) { withAnimation { locationSent = false } }
         } label: {
             HStack(spacing: 6) {
-                Image(systemName: "location.fill")
+                Image(systemName: locationSent ? "checkmark.circle.fill" : "location.fill")
                     .font(.scaled(size: 12))
-                Text(lang.localized("protected.home.sendLocation"))
+                Text(lang.localized(locationSent ? "home.locationSent" : "protected.home.sendLocation"))
                     .font(.scaled(size: 13, weight: .medium))
             }
             .foregroundStyle(safe)
@@ -704,6 +708,12 @@ struct ProtectedHomeView: View {
                     .stroke(safe.opacity(0.15), lineWidth: 1)
             )
         }
+        // Long press: send a Maps link with any app instead
+        .contextMenu {
+            Button { shareMyLocation() } label: {
+                Label(lang.localized("home.shareMapsLink"), systemImage: "square.and.arrow.up")
+            }
+        }
     }
 
     private func shareMyLocation() {
@@ -713,10 +723,7 @@ struct ProtectedHomeView: View {
         let mapURL = "https://maps.apple.com/?ll=\(lat),\(lng)&q=\(coordinator.currentUser?.displayName ?? lang.localized("protected.home.myLocation"))"
         let items: [Any] = [mapURL]
         let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)
-        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let root = scene.windows.first?.rootViewController {
-            root.present(ac, animated: true)
-        }
+        AppCoordinator.topViewController()?.present(ac, animated: true)
     }
 
     private static func coordForCity(_ city: String) -> CLLocationCoordinate2D {

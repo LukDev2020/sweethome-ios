@@ -33,10 +33,10 @@ enum RiskLevel: String, Codable {
 
     var localizedLabel: String {
         switch self {
-        case .safe:    return NSLocalizedString("route_risk_safe",    comment: "Risk level: safe")
-        case .caution: return NSLocalizedString("route_risk_caution", comment: "Risk level: caution")
-        case .warning: return NSLocalizedString("route_risk_warning", comment: "Risk level: warning")
-        case .danger:  return NSLocalizedString("route_risk_danger",  comment: "Risk level: danger")
+        case .safe:    return LanguageManager.shared.localized("route_risk_safe")
+        case .caution: return LanguageManager.shared.localized("route_risk_caution")
+        case .warning: return LanguageManager.shared.localized("route_risk_warning")
+        case .danger:  return LanguageManager.shared.localized("route_risk_danger")
         }
     }
 }
@@ -67,11 +67,11 @@ enum RiskFactor {
 
     var label: String {
         switch self {
-        case .timeOfDay:   return NSLocalizedString("risk_factor_time",      comment: "")
-        case .routeLength: return NSLocalizedString("risk_factor_length",    comment: "")
-        case .isolatedArea:return NSLocalizedString("risk_factor_isolated",  comment: "")
-        case .poorLighting:return NSLocalizedString("risk_factor_lighting",  comment: "")
-        case .highTraffic: return NSLocalizedString("risk_factor_traffic",   comment: "")
+        case .timeOfDay:   return LanguageManager.shared.localized("risk_factor_time")
+        case .routeLength: return LanguageManager.shared.localized("risk_factor_length")
+        case .isolatedArea:return LanguageManager.shared.localized("risk_factor_isolated")
+        case .poorLighting:return LanguageManager.shared.localized("risk_factor_lighting")
+        case .highTraffic: return LanguageManager.shared.localized("risk_factor_traffic")
         }
     }
 }
@@ -392,51 +392,27 @@ final class RouteRiskService: ObservableObject {
         for factor in factors {
             switch factor {
             case .timeOfDay(let r) where r >= 0.30:
-                tips.append(NSLocalizedString(
-                    "tip_night_travel",
-                    comment: "Tip: traveling at night — consider sharing live location with a guardian"
-                ))
-                tips.append(NSLocalizedString(
-                    "tip_well_lit_roads",
-                    comment: "Tip: consider well-lit main roads"
-                ))
+                tips.append(LanguageManager.shared.localized("tip_night_travel"))
+                tips.append(LanguageManager.shared.localized("tip_well_lit_roads"))
 
             case .timeOfDay(let r) where r >= 0.15:
-                tips.append(NSLocalizedString(
-                    "tip_dusk_dawn",
-                    comment: "Tip: dusk/dawn — stay on main roads and share your route"
-                ))
+                tips.append(LanguageManager.shared.localized("tip_dusk_dawn"))
 
             case .isolatedArea(let r) where r > 0.5:
                 if isWalking {
-                    tips.append(NSLocalizedString(
-                        "tip_isolated_walking",
-                        comment: "Tip: isolated route — consider a busier pedestrian path"
-                    ))
+                    tips.append(LanguageManager.shared.localized("tip_isolated_walking"))
                 } else {
-                    tips.append(NSLocalizedString(
-                        "tip_isolated_driving",
-                        comment: "Tip: isolated road — keep phone charged and fuel tank full"
-                    ))
+                    tips.append(LanguageManager.shared.localized("tip_isolated_driving"))
                 }
 
             case .poorLighting(let r) where r > 0.3:
-                tips.append(NSLocalizedString(
-                    "tip_poor_lighting",
-                    comment: "Tip: low commercial density on this route — carry a flashlight"
-                ))
+                tips.append(LanguageManager.shared.localized("tip_poor_lighting"))
 
             case .routeLength(let r) where r > 0.25:
-                tips.append(NSLocalizedString(
-                    "tip_long_route",
-                    comment: "Tip: long route — schedule a check-in reminder"
-                ))
+                tips.append(LanguageManager.shared.localized("tip_long_route"))
 
             case .highTraffic(let r) where r > 0.10:
-                tips.append(NSLocalizedString(
-                    "tip_high_traffic_safe",
-                    comment: "Tip: busy roads detected on this route — they provide additional safety"
-                ))
+                tips.append(LanguageManager.shared.localized("tip_high_traffic_safe"))
 
             default:
                 break
@@ -449,20 +425,14 @@ final class RouteRiskService: ObservableObject {
         }) {
             let index = safePoint.offset + 1   // 1-based for user display
             let tip = String(
-                format: NSLocalizedString(
-                    "tip_safe_waypoint",
-                    comment: "Tip: police station / hospital nearby at waypoint %d"
-                ),
+                format: LanguageManager.shared.localized("tip_safe_waypoint"),
                 index
             )
             tips.append(tip)
         }
 
         if overallRisk < 0.25 {
-            tips.append(NSLocalizedString(
-                "tip_route_safe",
-                comment: "Tip: this route looks safe — enjoy your journey"
-            ))
+            tips.append(LanguageManager.shared.localized("tip_route_safe"))
         }
 
         return Array(Set(tips))   // deduplicate while preserving content

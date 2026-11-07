@@ -29,11 +29,11 @@ enum FakeCallDelay: Int, CaseIterable, Identifiable, Codable {
 
     var displayName: String {
         switch self {
-        case .instant: return NSLocalizedString("fake_call_delay_instant", comment: "Instant")
-        case .five:    return NSLocalizedString("fake_call_delay_5s",      comment: "5 seconds")
-        case .fifteen: return NSLocalizedString("fake_call_delay_15s",     comment: "15 seconds")
-        case .thirty:  return NSLocalizedString("fake_call_delay_30s",     comment: "30 seconds")
-        case .sixty:   return NSLocalizedString("fake_call_delay_60s",     comment: "1 minute")
+        case .instant: return LanguageManager.shared.localized("fake_call_delay_instant")
+        case .five:    return LanguageManager.shared.localized("fake_call_delay_5s")
+        case .fifteen: return LanguageManager.shared.localized("fake_call_delay_15s")
+        case .thirty:  return LanguageManager.shared.localized("fake_call_delay_30s")
+        case .sixty:   return LanguageManager.shared.localized("fake_call_delay_60s")
         }
     }
 
@@ -57,7 +57,7 @@ final class FakeCallService: NSObject, ObservableObject {
     // MARK: - Persisted Settings
 
     // Settings stored in Keychain to prevent discovery via device backup inspection
-    @Published var callerName: String = KeychainHelper.shared.read("fc_cn") ?? "妈妈" {
+    @Published var callerName: String = KeychainHelper.shared.read("fc_cn") ?? LanguageManager.shared.localized("fakecall.defaultCaller") {
         didSet { KeychainHelper.shared.save("fc_cn", value: callerName) }
     }
 
@@ -219,7 +219,7 @@ final class FakeCallService: NSObject, ObservableObject {
         // Show a local notification that mimics an incoming call banner
         let content = UNMutableNotificationContent()
         content.title = callerName
-        content.body  = NSLocalizedString("fake_call_incoming_body", comment: "Incoming call")
+        content.body  = LanguageManager.shared.localized("fake_call_incoming_body")
         content.sound = .defaultRingtone
         content.categoryIdentifier = "FAKE_CALL_INCOMING"
 
@@ -353,12 +353,12 @@ final class FakeCallService: NSObject, ObservableObject {
     static func registerNotificationCategory() {
         let answerAction = UNNotificationAction(
             identifier: "FAKE_CALL_ANSWER",
-            title: NSLocalizedString("fake_call_answer", comment: "Answer"),
+            title: LanguageManager.shared.localized("fake_call_answer"),
             options: [.foreground]
         )
         let declineAction = UNNotificationAction(
             identifier: "FAKE_CALL_DECLINE",
-            title: NSLocalizedString("fake_call_decline", comment: "Decline"),
+            title: LanguageManager.shared.localized("fake_call_decline"),
             options: [.destructive]
         )
         _ = (answerAction, declineAction)
@@ -368,12 +368,12 @@ final class FakeCallService: NSObject, ObservableObject {
     static func notificationCategories() -> Set<UNNotificationCategory> {
         let answerAction = UNNotificationAction(
             identifier: "FAKE_CALL_ANSWER",
-            title: NSLocalizedString("fake_call_answer", comment: "Answer"),
+            title: LanguageManager.shared.localized("fake_call_answer"),
             options: [.foreground]
         )
         let declineAction = UNNotificationAction(
             identifier: "FAKE_CALL_DECLINE",
-            title: NSLocalizedString("fake_call_decline", comment: "Decline"),
+            title: LanguageManager.shared.localized("fake_call_decline"),
             options: [.destructive]
         )
         return [UNNotificationCategory(

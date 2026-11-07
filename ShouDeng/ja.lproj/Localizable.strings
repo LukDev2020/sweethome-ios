@@ -1224,7 +1224,7 @@
 "org.typeLabor" = "人材派遣";
 "org.typeOther" = "その他";
 "org.typeUniversity" = "大学";
-"protected.records.contactsHint" = "＋をタップして、緊急時にメッセージを送れる人を追加してください";
+"protected.records.contactsHint" = "＋をタップして、緊急時にすぐ電話できる人を追加してください";
 "protected.records.customContacts" = "自分の緊急連絡先";
 "protected.records.delete" = "削除";
 "protected.records.noContacts" = "緊急連絡先はまだありません";
@@ -1282,9 +1282,9 @@
 
 /* Guardian SOS response (W2-d/e) */
 "guardian.alert.noActiveSOS" = "現在、進行中のSOSはありません。";
-"guardian.alert.youAreHandling" = "あなたが対応中です — ほかの家族にも伝わり、自動発信は停止しました";
+"guardian.alert.youAreHandling" = "あなたが対応中です — ほかの家族にも伝わり、追加の通知は停止しました";
 "guardian.alert.acknowledged" = "対応済み";
-"guardian.alert.ackHint" = "あなたが対応中であることをほかの家族に伝え、自動発信を停止します";
+"guardian.alert.ackHint" = "あなたが対応中であることをほかの家族に伝え、追加の通知を停止します";
 "guardian.alert.markSafe" = "%@は無事 — SOSを終了";
 "guardian.alert.sosLocation" = "SOS発信時の位置";
 
@@ -1337,7 +1337,7 @@
 "explore.tip.sarah.dashboard.title" = "家族の様子がひと目でわかります";
 "explore.tip.sarah.dashboard.body" = "1枚のカードが、あなたが見守る1人を表します。緑色はすべて正常という意味です。その人がいる都市、現地時刻、最後の無事報告、見守る人の人数が表示されます。カードをタップすると詳細を確認できます。";
 "explore.tip.sarah.respond.title" = "2回のタップで対応";
-"explore.tip.sarah.respond.body" = "お母さんのカードが「要確認」に移動します。カードを開くと、お母さんの居場所を確認したり、電話をかけたりできます。「対応します」を押すと、KevinとLucyにあなたが対応中であることが伝わり、自動発信が停止します。";
+"explore.tip.sarah.respond.body" = "お母さんのカードが「要確認」に移動します。カードを開くと、お母さんの居場所を確認したり、電話をかけたりできます。「対応します」を押すと、KevinとLucyにあなたが対応中であることが伝わり、追加の通知も止まります。";
 "explore.tip.sarah.ack.title" = "対応します";
 "explore.tip.sarah.ack.body" = "ワンタップで、あなたが対応中であることをほかの家族に伝え、自動の追加通知を停止します。お母さんの無事が確認できたら、SOSを終了してください。";
 "explore.tip.sarah.coverage.title" = "誰がいつ起きているか";
@@ -2123,3 +2123,45 @@
 "watchback.accept" = "同意";
 "watchback.decline" = "断る";
 "watchback.stop" = "やめる";
+
+/* Fake call, safety timer, route risk (were untranslated keys) */
+"fakecall.defaultCaller" = "お母さん";
+"fake_call_delay_instant" = "今すぐ";
+"fake_call_delay_5s" = "5 秒";
+"fake_call_delay_15s" = "15 秒";
+"fake_call_delay_30s" = "30 秒";
+"fake_call_delay_60s" = "1 分";
+"fake_call_incoming_body" = "着信";
+"fake_call_answer" = "応答";
+"fake_call_decline" = "拒否";
+"dms.notification.warning60.title" = "セーフティタイマー";
+"dms.notification.warning60.body" = "残り 60 秒。無事ならタップしてください。";
+"dms.notification.warning30.title" = "セーフティタイマー";
+"dms.notification.warning30.body" = "残り 30 秒！無事ならタップしてください。";
+"dms.notification.expired.title" = "SOS を送信しました";
+"dms.notification.expired.body" = "セーフティタイマーが切れたため、家族に通知しました。";
+"dms.action.dismiss" = "無事です — 取り消す";
+"dms.action.extend5" = "+5 分";
+"route_risk_safe" = "リスク低";
+"route_risk_caution" = "注意";
+"route_risk_warning" = "リスク高め";
+"route_risk_danger" = "リスク高";
+"risk_factor_time" = "時間帯";
+"risk_factor_length" = "ルートの長さ";
+"risk_factor_isolated" = "人通りの少ない場所";
+"risk_factor_lighting" = "明るさ";
+"risk_factor_traffic" = "交通量";
+"tip_night_travel" = "夜間の移動です。家族に現在地を共有しましょう。";
+"tip_well_lit_roads" = "明るい大通りを選びましょう。";
+"tip_dusk_dawn" = "明け方・夕方です。大通りを使い、ルートを共有しましょう。";
+"tip_isolated_walking" = "人通りの少ないルートです。にぎやかな歩道の方が安全かもしれません。";
+"tip_isolated_driving" = "人通りの少ない道路です。スマホの充電と燃料を十分に。";
+"tip_poor_lighting" = "沿道に店が少なく暗いかもしれません。ライトを持ちましょう。";
+"tip_long_route" = "長いルートです。安否報告のリマインダーを設定しましょう。";
+"tip_high_traffic_safe" = "にぎやかな道路が多く、比較的安全です。";
+"tip_safe_waypoint" = "経由地 %d の近くに警察か病院があります。";
+"tip_route_safe" = "このルートは安全そうです。気をつけて。";
+"home.shareMapsLink" = "マップのリンクを共有…";
+"home.locationSent" = "見守る人に位置を送信しました";
+"common.ok" = "OK";
+"protected.records.contactsNoSMS" = "これらの連絡先へのSMSはまだ有効になっていないため、SOS 時に自動では通知されません。Lantern Care の見守る人には通知されます。";

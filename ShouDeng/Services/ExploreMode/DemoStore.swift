@@ -575,6 +575,7 @@ final class DemoStore {
             "batteryState": p.batteryState.rawValue, "lastCheckIn": Self.iso(p.lastCheckIn),
             "lastPhoneActivity": Self.iso(p.lastPhoneActivity), "protectionLayers": p.protectionLayers,
             "timeZoneId": p.user.timeZone.identifier, "countryCode": p.user.countryCode, "cityName": p.user.cityName,
+            "phone": p.user.phone ?? NSNull(),
         ]
         // Caller holds `lock`
         if let s = sos[p.id], let person = dataset.user(p.id) {

@@ -1225,7 +1225,7 @@
 "org.typeLabor" = "劳务派遣";
 "org.typeOther" = "其他";
 "org.typeUniversity" = "高校";
-"protected.records.contactsHint" = "点击 + 添加紧急时可联系的人";
+"protected.records.contactsHint" = "点击 + 添加紧急时可快速拨打的人";
 "protected.records.customContacts" = "我的紧急联系人";
 "protected.records.delete" = "删除";
 "protected.records.noContacts" = "还没有紧急联系人";
@@ -1283,9 +1283,9 @@
 
 /* Guardian SOS response (W2-d/e) */
 "guardian.alert.noActiveSOS" = "当前没有进行中的求助。";
-"guardian.alert.youAreHandling" = "由你处理——其他家人已知晓，自动呼叫已停止";
+"guardian.alert.youAreHandling" = "由你处理——其他家人已知晓，后续提醒已停止";
 "guardian.alert.acknowledged" = "已接手";
-"guardian.alert.ackHint" = "告诉其他家人由你处理，并停止自动呼叫";
+"guardian.alert.ackHint" = "告诉其他家人由你处理，并停止后续提醒";
 "guardian.alert.markSafe" = "%@ 已安全——结束求助";
 "guardian.alert.sosLocation" = "求助时位置";
 
@@ -1338,7 +1338,7 @@
 "explore.tip.sarah.dashboard.title" = "家人状况一目了然";
 "explore.tip.sarah.dashboard.body" = "每张卡片代表一位你守护的人。绿色表示一切正常。你能看到所在城市、当地时间、最近报平安时间以及有几位守护者。点卡片查看详情。";
 "explore.tip.sarah.respond.title" = "两步响应求助";
-"explore.tip.sarah.respond.body" = "妈妈的卡片跳到“需关注”。打开即可看到她的位置、给她打电话，或点“我来处理”，让 Kevin 和 Lucy 知道由你处理，自动呼叫也会停止。";
+"explore.tip.sarah.respond.body" = "妈妈的卡片跳到“需关注”。打开即可看到她的位置、给她打电话，或点“我来处理”，让 Kevin 和 Lucy 知道由你处理，后续提醒也会停止。";
 "explore.tip.sarah.ack.title" = "我来处理";
 "explore.tip.sarah.ack.body" = "点一下即可告诉其他家人由你处理，并停止后续的自动提醒。妈妈安全后再结束求助。";
 "explore.tip.sarah.coverage.title" = "谁在什么时候醒着";
@@ -2124,3 +2124,45 @@
 "watchback.accept" = "同意";
 "watchback.decline" = "拒绝";
 "watchback.stop" = "停止";
+
+/* Fake call, safety timer, route risk (were untranslated keys) */
+"fakecall.defaultCaller" = "妈妈";
+"fake_call_delay_instant" = "立即";
+"fake_call_delay_5s" = "5 秒";
+"fake_call_delay_15s" = "15 秒";
+"fake_call_delay_30s" = "30 秒";
+"fake_call_delay_60s" = "1 分钟";
+"fake_call_incoming_body" = "来电";
+"fake_call_answer" = "接听";
+"fake_call_decline" = "拒绝";
+"dms.notification.warning60.title" = "安全计时";
+"dms.notification.warning60.body" = "还剩 60 秒。安全的话请点一下。";
+"dms.notification.warning30.title" = "安全计时";
+"dms.notification.warning30.body" = "还剩 30 秒！安全的话请点一下。";
+"dms.notification.expired.title" = "已发出求助";
+"dms.notification.expired.body" = "安全计时已到期，已通知你的家人。";
+"dms.action.dismiss" = "我安全——取消";
+"dms.action.extend5" = "+5 分钟";
+"route_risk_safe" = "低风险";
+"route_risk_caution" = "注意";
+"route_risk_warning" = "风险较高";
+"route_risk_danger" = "高风险";
+"risk_factor_time" = "时段";
+"risk_factor_length" = "路线长度";
+"risk_factor_isolated" = "偏僻路段";
+"risk_factor_lighting" = "照明";
+"risk_factor_traffic" = "车流";
+"tip_night_travel" = "夜间出行——把实时位置分享给家人。";
+"tip_well_lit_roads" = "尽量走灯光明亮的大路。";
+"tip_dusk_dawn" = "黄昏或清晨——走大路，并分享你的路线。";
+"tip_isolated_walking" = "路段较偏僻——人多的人行道可能更安全。";
+"tip_isolated_driving" = "道路偏僻——保持手机有电、油量充足。";
+"tip_poor_lighting" = "沿途商铺少，可能较暗，带上手电。";
+"tip_long_route" = "路线较长——设一个报平安提醒。";
+"tip_high_traffic_safe" = "沿途道路繁忙，相对更安全。";
+"tip_safe_waypoint" = "第 %d 个途经点附近有警局或医院。";
+"tip_route_safe" = "这条路线看起来很安全——一路顺利。";
+"home.shareMapsLink" = "分享地图链接…";
+"home.locationSent" = "已把位置发给守护者";
+"common.ok" = "好";
+"protected.records.contactsNoSMS" = "目前尚未开通短信，SOS 时不会自动通知这些联系人；守灯里的守护者会收到提醒。";

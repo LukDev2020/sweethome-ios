@@ -933,6 +933,7 @@ final class AppCoordinator: ObservableObject {
                         displayName: p.displayName,
                         role: .protected_,
                         avatarInitial: AvatarInitial.make(for: p.displayName),
+                        phone: p.phone,
                         timeZone: p.timeZoneId.flatMap { TimeZone(identifier: $0) } ?? .current,
                         countryCode: p.countryCode ?? "",
                         cityName: p.cityName ?? p.locationAddress ?? "",
@@ -1746,6 +1747,27 @@ final class AppCoordinator: ObservableObject {
     // MARK: - Check-In
 
     /// Share current location via system share sheet (triggered from Lock Screen card)
+    /// "Send my location to guardians": a fresh fix goes to the family (same as the
+    /// lock-screen card's Location button) and shows in the timeline.
+    func sendLocationToGuardians() {
+        if !isDemo {
+            locationManager.requestSingleLocation()
+            liveActivityManager.updateProtectedLocationShared()
+        }
+        addTimelineEntry(type: .checkIn, description: LanguageManager.shared.localized("home.locationSent"))
+    }
+
+    /// The view controller to present system sheets from: the top of the app's own
+    /// window (not the demo overlay window, which lets touches through).
+    static func topViewController() -> UIViewController? {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let window = scenes.flatMap(\.windows).first { $0.isKeyWindow && !($0 is PassthroughWindow) }
+            ?? scenes.flatMap(\.windows).first { !($0 is PassthroughWindow) }
+        var top = window?.rootViewController
+        while let presented = top?.presentedViewController { top = presented }
+        return top
+    }
+
     func shareCurrentLocation() {
         guard let loc = locationManager.bestAvailableLocation else { return }
         let lat = loc.coordinate.latitude
@@ -1755,10 +1777,7 @@ final class AppCoordinator: ObservableObject {
         let mapURL = "https://maps.apple.com/?ll=\(lat),\(lng)&q=\(query)"
         let items: [Any] = [mapURL]
         let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)
-        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let root = scene.windows.first?.rootViewController {
-            root.present(ac, animated: true)
-        }
+        Self.topViewController()?.present(ac, animated: true)
     }
 
     func performCheckIn(note: String? = nil) {

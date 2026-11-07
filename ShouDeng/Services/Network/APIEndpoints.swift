@@ -260,11 +260,13 @@ struct ProtectedPersonStatusResponse: Codable {
     var countryCode: String?
     var cityName: String?
     var activeSOS: SOSStatus?
+    /// For "Call now" (was missing: the button could never dial)
+    var phone: String?
 
     private enum CodingKeys: String, CodingKey {
         case personId, displayName, status, latitude, longitude, locationTimestamp, locationAddress
         case locationAccuracy, batteryLevel, batteryState, lastCheckIn, lastPhoneActivity
-        case protectionLayers, timeZoneId, countryCode, cityName, activeSOS
+        case protectionLayers, timeZoneId, countryCode, cityName, activeSOS, phone
     }
 
     /// Only `personId` is required. A malformed optional field (e.g. a timestamp the
@@ -288,6 +290,7 @@ struct ProtectedPersonStatusResponse: Codable {
         countryCode = c.lossy(String.self, .countryCode)
         cityName = c.lossy(String.self, .cityName)
         activeSOS = c.lossy(SOSStatus.self, .activeSOS)
+        phone = c.lossy(String.self, .phone)
     }
 }
 

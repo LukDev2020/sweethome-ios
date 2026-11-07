@@ -384,8 +384,8 @@ final class DeadManSwitchService: ObservableObject {
             sentNotification60 = true
             postImmediateNotification(
                 identifier: "dms_warning_60",
-                title: NSLocalizedString("dms.notification.warning60.title", value: "Dead Man's Switch", comment: ""),
-                body:  NSLocalizedString("dms.notification.warning60.body",  value: "60 seconds remaining. Tap to dismiss.", comment: ""),
+                title: LanguageManager.shared.localized("dms.notification.warning60.title"),
+                body:  LanguageManager.shared.localized("dms.notification.warning60.body"),
                 categoryIdentifier: "DMS_WARNING"
             )
         }
@@ -395,8 +395,8 @@ final class DeadManSwitchService: ObservableObject {
             sentNotification30 = true
             postImmediateNotification(
                 identifier: "dms_warning_30",
-                title: NSLocalizedString("dms.notification.warning30.title", value: "Dead Man's Switch", comment: ""),
-                body:  NSLocalizedString("dms.notification.warning30.body",  value: "30 seconds remaining! Tap to cancel.", comment: ""),
+                title: LanguageManager.shared.localized("dms.notification.warning30.title"),
+                body:  LanguageManager.shared.localized("dms.notification.warning30.body"),
                 categoryIdentifier: "DMS_WARNING"
             )
             AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
@@ -413,8 +413,8 @@ final class DeadManSwitchService: ObservableObject {
             sentNotification0 = true
             postImmediateNotification(
                 identifier: "dms_expired",
-                title: NSLocalizedString("dms.notification.expired.title", value: "SOS Triggered", comment: ""),
-                body:  NSLocalizedString("dms.notification.expired.body",  value: "Dead Man's Switch expired. Emergency alert sent to guardians.", comment: ""),
+                title: LanguageManager.shared.localized("dms.notification.expired.title"),
+                body:  LanguageManager.shared.localized("dms.notification.expired.body"),
                 categoryIdentifier: "DMS_EXPIRED"
             )
         }
@@ -525,20 +525,20 @@ final class DeadManSwitchService: ObservableObject {
             (
                 60,
                 "dms_sched_60",
-                NSLocalizedString("dms.notification.warning60.title", value: "Dead Man's Switch", comment: ""),
-                NSLocalizedString("dms.notification.warning60.body",  value: "60 seconds remaining. Tap to dismiss.", comment: "")
+                LanguageManager.shared.localized("dms.notification.warning60.title"),
+                LanguageManager.shared.localized("dms.notification.warning60.body")
             ),
             (
                 30,
                 "dms_sched_30",
-                NSLocalizedString("dms.notification.warning30.title", value: "Dead Man's Switch", comment: ""),
-                NSLocalizedString("dms.notification.warning30.body",  value: "30 seconds remaining! Tap to cancel.", comment: "")
+                LanguageManager.shared.localized("dms.notification.warning30.title"),
+                LanguageManager.shared.localized("dms.notification.warning30.body")
             ),
             (
                 0,
                 "dms_sched_0",
-                NSLocalizedString("dms.notification.expired.title", value: "SOS Triggered", comment: ""),
-                NSLocalizedString("dms.notification.expired.body",  value: "Dead Man's Switch expired. Emergency alert sent to guardians.", comment: "")
+                LanguageManager.shared.localized("dms.notification.expired.title"),
+                LanguageManager.shared.localized("dms.notification.expired.body")
             ),
         ]
 
@@ -727,12 +727,12 @@ final class DeadManSwitchService: ObservableObject {
     static func notificationCategories() -> Set<UNNotificationCategory> {
         let dismissAction = UNNotificationAction(
             identifier: "DMS_DISMISS",
-            title: NSLocalizedString("dms.action.dismiss", value: "I'm Safe — Cancel", comment: ""),
+            title: LanguageManager.shared.localized("dms.action.dismiss"),
             options: [.foreground]
         )
         let extendAction = UNNotificationAction(
             identifier: "DMS_EXTEND_5",
-            title: NSLocalizedString("dms.action.extend5", value: "+5 min", comment: ""),
+            title: LanguageManager.shared.localized("dms.action.extend5"),
             options: []
         )
 
