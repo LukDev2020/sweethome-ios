@@ -65,6 +65,8 @@ import emergencyContactRoutes from "./routes/emergencyContacts";
 import crewRoutes from "./routes/crew";
 import watchBackRoutes from "./routes/watchBack";
 import voiceRoutes from "./routes/voice";
+import safetyEventRoutes from "./routes/safetyEvents";
+import incidentReportRoutes from "./routes/incidentReports";
 import { createRateLimiter, RATE_LIMITS } from "./middleware/rateLimit";
 
 // --- Mount Routes ---
@@ -147,6 +149,10 @@ app.use("/v1/emergency-contacts", emergencyContactRoutes);
 app.use("/v1/crew", crewRoutes);
 // Family watch back: the person cared for looks after their guardian too
 app.use("/v1/watch-back", watchBackRoutes);
+// Detected falls (and the server-side SOS when the phone never answers)
+app.use("/v1/safety-events", safetyEventRoutes);
+// Incident reports for police: data + hashes, sealed files, public verify
+app.use("/v1/incident-reports", incidentReportRoutes);
 
 // --- Health check ---
 app.get("/health", (_req, res) => {

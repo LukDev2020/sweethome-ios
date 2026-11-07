@@ -1,6 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { checkOverdueShifts } from "../services/crew";
+import { escalateUnansweredFalls } from "../services/safetyEvents";
 
 const db = admin.firestore();
 
@@ -16,6 +17,12 @@ export const checkHomeTimerExpiry = functions.pubsub
       await checkOverdueShifts();
     } catch (error) {
       console.error("[Crew] shift check failed:", error);
+    }
+    // A detected fall the phone never answered (locked face-down, app killed, battery dead)
+    try {
+      await escalateUnansweredFalls();
+    } catch (error) {
+      console.error("[Fall] unanswered fall check failed:", error);
     }
     try {
       const now = admin.firestore.Timestamp.now();

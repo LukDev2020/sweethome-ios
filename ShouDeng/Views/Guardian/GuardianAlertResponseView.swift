@@ -140,6 +140,11 @@ struct GuardianAlertResponseView: View {
 
                 // Scene info
                 sceneInfoPanel
+
+                // For the police: everything about the last 24 h, ready to hand over
+                IncidentReportButton(personId: person?.user.id ?? personId, compact: true)
+                    .environmentObject(coordinator)
+                    .padding(.bottom, 16)
             }
             .padding(.horizontal, 16)
         }

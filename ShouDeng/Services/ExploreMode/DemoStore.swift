@@ -1,5 +1,6 @@
 import Foundation
 import CoreLocation
+import CryptoKit
 
 // MARK: - Demo Store
 //
@@ -17,7 +18,18 @@ final class DemoStore {
         var batteryLevel: Double
         var acknowledgedBy: String?
         var acknowledgedAt: Date?
+        var triggerMethod = "longPress"
     }
+
+    /// Falls the demo detected ("Try fall detection"), for the police report
+    struct DemoFall {
+        var clientEventId: String
+        var detectedAt: Date
+        var outcome: String
+        var respondedAfterSec: Double?
+        var metrics: [String: Any]
+    }
+    private var falls: [String: [DemoFall]] = [:]
 
     private let lock = NSLock()
     private(set) var dataset: DemoDataset
@@ -82,11 +94,12 @@ final class DemoStore {
     }
 
     @discardableResult
-    func triggerSOS(personId: String, at date: Date = Date()) -> SOSState {
+    func triggerSOS(personId: String, at date: Date = Date(), method: String = "longPress") -> SOSState {
         let state: SOSState = lock.withLock {
             if let existing = sos[personId] { return existing }
             let new = SOSState(sosEventId: "demo-sos-\(Int(date.timeIntervalSince1970))", personId: personId,
-                               triggeredAt: date, batteryLevel: personId == DemoDataset.dadId ? 0.17 : 0.82)
+                               triggeredAt: date, batteryLevel: personId == DemoDataset.dadId ? 0.17 : 0.82,
+                               triggerMethod: method)
             sos[personId] = new
             if personId == DemoDataset.momId { dataset.momPerson.status = .alert }
             return new
@@ -321,7 +334,7 @@ final class DemoStore {
                                "timestamp": Self.iso(Date()), "guardiansNotified": 3]))
 
         case ("POST", "/v1/sos/trigger"):
-            let s = triggerSOS(personId: me)
+            let s = triggerSOS(personId: me, method: (bodyObject(body)["triggerMethod"] as? String) ?? "longPress")
             return (201, json(["sosEventId": s.sosEventId, "escalationState": "initiated"]))
 
         case ("POST", "/v1/sos/acknowledge"):
@@ -333,6 +346,12 @@ final class DemoStore {
             let id = (body.flatMap { try? JSONSerialization.jsonObject(with: $0) } as? [String: Any])?["sosEventId"] as? String ?? ""
             resolveSOS(id: id)
             return (200, json(["success": true, "sosEventId": id]))
+
+        case ("POST", "/v1/safety-events/fall"):
+            return (200, json(recordFall(personId: me, body: bodyObject(body))))
+
+        case ("POST", "/v1/incident-reports"):
+            return demoIncidentReport(by: me, body: bodyObject(body))
 
         case ("POST", _), ("PUT", _), ("DELETE", _):
             // Telemetry, preferences, profile edits… accepted and kept on the phone
@@ -364,7 +383,7 @@ final class DemoStore {
             let spot = Self.spot(of: personId)
             var status = SOSStatus(
                 sosEventId: s.sosEventId, protectedPersonId: personId, personName: person.displayName,
-                triggeredAt: s.triggeredAt, triggerMethod: "longPress",
+                triggeredAt: s.triggeredAt, triggerMethod: s.triggerMethod,
                 latitude: spot.latitude, longitude: spot.longitude, batteryLevel: s.batteryLevel,
                 escalationState: state, nextStep: ack != nil ? nil : "voice1", nextStepAt: nil,
                 guardiansNotified: elapsed < 30 ? 1 : 3, callsPlaced: ack != nil || elapsed < 90 ? 0 : 3,
@@ -583,7 +602,7 @@ final class DemoStore {
             row["status"] = "alert"
             row["activeSOS"] = [
                 "sosEventId": s.sosEventId, "protectedPersonId": p.id, "personName": person.displayName,
-                "triggeredAt": Self.iso(s.triggeredAt), "triggerMethod": "longPress",
+                "triggeredAt": Self.iso(s.triggeredAt), "triggerMethod": s.triggerMethod,
                 "latitude": 30.6586, "longitude": 104.0647, "batteryLevel": s.batteryLevel,
                 "escalationState": s.acknowledgedBy == nil ? "hop2_allNotified" : "frozen",
                 "nextStep": NSNull(), "nextStepAt": NSNull(), "guardiansNotified": 3, "callsPlaced": 0,
@@ -594,5 +613,130 @@ final class DemoStore {
             ] as [String: Any]
         }
         return row
+    }
+
+    // MARK: - Falls and the police report (same shapes as safetyEvents.ts / incidentReport.ts)
+
+    private func recordFall(personId: String, body: [String: Any]) -> [String: Any] {
+        let id = body["clientEventId"] as? String ?? UUID().uuidString
+        let outcome = body["outcome"] as? String ?? "pending"
+        lock.withLock {
+            var list = falls[personId] ?? []
+            if let i = list.firstIndex(where: { $0.clientEventId == id }) {
+                if list[i].outcome == "pending" { list[i].outcome = outcome }
+                list[i].respondedAfterSec = body["respondedAfterSec"] as? Double ?? list[i].respondedAfterSec
+            } else {
+                list.append(DemoFall(clientEventId: id, detectedAt: Date(), outcome: outcome,
+                                     respondedAfterSec: body["respondedAfterSec"] as? Double,
+                                     metrics: body["metrics"] as? [String: Any] ?? [:]))
+            }
+            falls[personId] = list
+        }
+        return ["outcome": outcome, "sosEventId": NSNull()]
+    }
+
+    /// A believable afternoon for the person (home → walk → park → on the way back),
+    /// plus whatever the visitor did: SOS, falls, check-ins. Hashed like the server does.
+    private func demoIncidentReport(by me: String, body: [String: Any]) -> (Int, Data) {
+        let personId = body["personId"] as? String ?? me
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let now = Date()
+        let start = (body["windowStart"] as? String).flatMap { iso.date(from: $0) ?? ISO8601DateFormatter().date(from: $0) } ?? now.addingTimeInterval(-86400)
+        let end = min(now, (body["windowEnd"] as? String).flatMap { iso.date(from: $0) ?? ISO8601DateFormatter().date(from: $0) } ?? now)
+        guard let person = lock.withLock({ dataset.user(personId) }), let reporter = lock.withLock({ dataset.user(me) }) else {
+            return (403, json(["error": "Only the person or their guardian can make this report"]))
+        }
+        let base = Self.spot(of: personId)
+        func at(_ minutesAgo: Double) -> Date { now.addingTimeInterval(-minutesAgo * 60) }
+        // (minutes ago, north m, east m, speed m/s, activity)
+        let path: [(Double, Double, Double, Double, String?)] = [
+            (175, 0, 0, 0, "stationary"), (160, 2, 1, 0, "stationary"), (145, 1, -2, 0, "stationary"),
+            (130, 60, 40, 1.3, "walking"), (125, 180, 120, 1.4, "walking"), (120, 320, 210, 1.3, "walking"),
+            (115, 450, 330, 1.2, "walking"), (110, 560, 470, 1.4, "walking"), (105, 640, 610, 1.3, "walking"),
+            (95, 650, 620, 0.1, "stationary"), (80, 655, 615, 0, "stationary"), (65, 648, 624, 0, "stationary"),
+            (50, 600, 560, 1.2, "walking"), (45, 520, 470, 1.3, "walking"), (40, 470, 400, 1.1, "walking"),
+            (12, 470, 400, 0, nil),
+        ]
+        var points: [[String: Any]] = []
+        for (ago, n, e, v, act) in path {
+            let t = at(ago)
+            guard t >= start, t <= end else { continue }
+            let lat = base.latitude + n / 111_000, lon = base.longitude + e / (111_000 * cos(base.latitude * .pi / 180))
+            points.append(["at": iso.string(from: t), "latitude": lat, "longitude": lon, "accuracy": act == nil ? 35 : 9,
+                           "speed": v, "altitude": NSNull(), "activity": act ?? NSNull(), "source": "history"])
+        }
+        let (sosState, demoFalls) = lock.withLock { (sos[personId], falls[personId] ?? []) }
+        var sosList: [[String: Any]] = []
+        if let s = sosState, s.triggeredAt >= start {
+            let p: [String: Any] = ["at": iso.string(from: s.triggeredAt), "latitude": base.latitude + 470 / 111_000,
+                                    "longitude": base.longitude + 400 / (111_000 * cos(base.latitude * .pi / 180)),
+                                    "accuracy": 12, "speed": NSNull(), "altitude": NSNull(), "activity": NSNull(), "source": "sos"]
+            points.append(p)
+            sosList.append(["id": s.sosEventId, "triggeredAt": iso.string(from: s.triggeredAt), "triggerMethod": s.triggerMethod,
+                            "latitude": p["latitude"]!, "longitude": p["longitude"]!, "batteryLevel": s.batteryLevel,
+                            "escalationState": s.acknowledgedBy == nil ? "hop2_allNotified" : "frozen",
+                            "acknowledgedBy": s.acknowledgedBy.flatMap { dataset.user($0)?.displayName } ?? NSNull(),
+                            "acknowledgedAt": s.acknowledgedAt.map { iso.string(from: $0) } ?? NSNull(),
+                            "resolvedAt": NSNull(), "resolution": NSNull(), "trail": [] as [Any]])
+        }
+        let fallLat: Double = base.latitude + 470 / 111_000
+        let fallLon: Double = base.longitude + 400 / (111_000 * cos(base.latitude * .pi / 180))
+        let fallList: [[String: Any]] = demoFalls.filter { $0.detectedAt >= start }.map { f in
+            var row: [String: Any] = ["detectedAt": iso.string(from: f.detectedAt), "latitude": fallLat, "longitude": fallLon]
+            row["accuracy"] = 12
+            row["batteryLevel"] = 0.82
+            row["metrics"] = f.metrics
+            row["outcome"] = f.outcome
+            row["respondedAfterSec"] = f.respondedAfterSec.map { $0 as Any } ?? NSNull()
+            row["sosEventId"] = NSNull()
+            return row
+        }
+        points.sort { ($0["at"] as! String) < ($1["at"] as! String) }
+        let checkinAt = at(95)
+        let checkins: [[String: Any]] = checkinAt >= start ? [["at": iso.string(from: checkinAt), "latitude": points.first?["latitude"] ?? base.latitude,
+                                                              "longitude": points.first?["longitude"] ?? base.longitude, "note": NSNull()]] : []
+        var activity: [[String: Any]] = []
+        for p in points {
+            let act = (p["activity"] as? String) ?? "unknown"
+            if var last = activity.last, last["activity"] as? String == act || act == "unknown" {
+                last["end"] = p["at"]; last["points"] = (last["points"] as! Int) + 1
+                activity[activity.count - 1] = last
+            } else {
+                activity.append(["activity": act, "start": p["at"]!, "end": p["at"]!, "distanceMeters": act == "walking" ? 1150 : 0, "points": 1])
+            }
+        }
+        var gaps: [[String: Any]] = []
+        var prev = start
+        for p in points.compactMap({ ($0["at"] as? String).flatMap { iso.date(from: $0) } }) + [end] {
+            if p.timeIntervalSince(prev) > 1800 {
+                gaps.append(["from": iso.string(from: prev), "to": iso.string(from: p), "minutes": Int(p.timeIntervalSince(prev) / 60)])
+            }
+            prev = p
+        }
+        let reportId = "R-DEMO\(String(format: "%04X", Int.random(in: 0..<65536)))"
+        let alphabet = Array("ABCDEFGHJKMNPQRSTUVWXYZ23456789")
+        let code = String((0..<8).map { _ in alphabet.randomElement()! })
+        let report: [String: Any] = [
+            "reportId": reportId, "verifyCode": code, "generatedAt": iso.string(from: now),
+            "generator": "Lantern Care incident report v1 (Explore Mode — sample data)",
+            "purpose": body["purpose"] as? String ?? "other", "caseNumber": body["caseNumber"] as? String ?? NSNull(),
+            "sections": body["sections"] as? [String] ?? [],
+            "reporter": ["id": me, "name": reporter.displayName, "role": me == personId ? "self" : "guardian"],
+            "person": ["id": personId, "name": person.displayName, "phone": person.phone.map { $0 as Any } ?? NSNull(), "timeZone": person.timeZone.identifier],
+            "window": ["start": iso.string(from: start), "end": iso.string(from: end)],
+            "sources": ["locationHistory": "ok", "sos": "ok", "falls": "ok", "trips": "ok", "checkins": "ok"],
+            "summary": ["lastKnown": points.last.map { $0 as Any } ?? NSNull(), "lastCheckIn": checkins.last.map { $0 as Any } ?? NSNull(),
+                        "lastBattery": ["at": iso.string(from: at(10)), "level": 0.82, "state": "unplugged"],
+                        "counts": ["points": points.count, "sos": sosList.count, "falls": fallList.count, "checkins": checkins.count],
+                        "thinned": false],
+            "locations": points, "activity": activity, "gaps": gaps, "falls": fallList, "sos": sosList,
+            "checkins": checkins, "events": [] as [Any],
+            "battery": [["at": iso.string(from: at(10)), "level": 0.82, "state": "unplugged"]],
+        ]
+        guard let data = try? JSONSerialization.data(withJSONObject: report, options: [.sortedKeys, .withoutEscapingSlashes]),
+              let canonical = String(data: data, encoding: .utf8) else { return (500, json(["error": "demo report"])) }
+        let hash = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+        return (201, json(["reportId": reportId, "verifyCode": code, "dataSha256": hash, "canonical": canonical]))
     }
 }

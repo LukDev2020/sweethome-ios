@@ -39,6 +39,12 @@ const fcmStrings: Record<string, {
   familyWatchRequestBody: string;
   familyWatchStartedTitle: (name: string) => string;
   familyWatchStartedBody: string;
+  /** A guardian made a police report about this person (transparency) */
+  incidentReportTitle: (name: string) => string;
+  incidentReportBody: string;
+  /** A fall was detected and they tapped "I'm OK" (to guardians) */
+  fallDismissedTitle: (name: string) => string;
+  fallDismissedBody: string;
 }> = {
   zh: {
     sosTitle: "紧急求助",
@@ -75,6 +81,10 @@ const fcmStrings: Record<string, {
     familyWatchRequestBody: "同意后，你求助时 TA 也会收到提醒，并能看到你的位置。不额外收费。",
     familyWatchStartedTitle: (name) => `你现在也能照看${name}了`,
     familyWatchStartedBody: "TA 求助时你会收到提醒。",
+    incidentReportTitle: (name) => `${name}生成了一份报警材料`,
+    incidentReportBody: "其中包含你在所选时段的位置记录。可在「记录」中查看。",
+    fallDismissedTitle: (name) => `${name}的手机检测到一次跌倒`,
+    fallDismissedBody: "TA 已确认自己没事。",
   },
   "zh-Hant": {
     sosTitle: "緊急求助",
@@ -111,6 +121,10 @@ const fcmStrings: Record<string, {
     familyWatchRequestBody: "同意後，你求助時對方也會收到提醒，並能看到你的位置。不額外收費。",
     familyWatchStartedTitle: (name) => `你現在也能照看${name}了`,
     familyWatchStartedBody: "對方求助時你會收到提醒。",
+    incidentReportTitle: (name) => `${name}產生了一份報警資料`,
+    incidentReportBody: "其中包含你在所選時段的位置紀錄。可在「紀錄」中查看。",
+    fallDismissedTitle: (name) => `${name}的手機偵測到一次跌倒`,
+    fallDismissedBody: "對方已確認自己沒事。",
   },
   en: {
     sosTitle: "Emergency SOS",
@@ -147,6 +161,10 @@ const fcmStrings: Record<string, {
     familyWatchRequestBody: "If you agree, they're alerted when you call SOS and can see your location. No extra charge.",
     familyWatchStartedTitle: (name) => `You can now watch over ${name} too`,
     familyWatchStartedBody: "You'll be alerted if they call SOS.",
+    incidentReportTitle: (name) => `${name} created a police report about you`,
+    incidentReportBody: "It includes your location history for the chosen period. See Records.",
+    fallDismissedTitle: (name) => `${name}'s phone detected a fall`,
+    fallDismissedBody: "They confirmed they're OK.",
   },
   fr: {
     sosTitle: "SOS Urgence",
@@ -183,6 +201,10 @@ const fcmStrings: Record<string, {
     familyWatchRequestBody: "Si vous acceptez, cette personne est prévenue en cas de SOS et voit votre position. Sans frais en plus.",
     familyWatchStartedTitle: (name) => `Vous pouvez aussi veiller sur ${name}`,
     familyWatchStartedBody: "Vous serez prévenu en cas de SOS.",
+    incidentReportTitle: (name) => `${name} a créé un rapport pour la police vous concernant`,
+    incidentReportBody: "Il contient votre historique de position pour la période choisie. Voir Historique.",
+    fallDismissedTitle: (name) => `Le téléphone de ${name} a détecté une chute`,
+    fallDismissedBody: "Cette personne a confirmé qu'elle va bien.",
   },
   ja: {
     sosTitle: "緊急SOS",
@@ -219,6 +241,10 @@ const fcmStrings: Record<string, {
     familyWatchRequestBody: "同意すると、SOS のときに通知が届き、位置も見えるようになります。追加料金はありません。",
     familyWatchStartedTitle: (name) => `${name}さんのことも見守れるようになりました`,
     familyWatchStartedBody: "SOS があれば通知が届きます。",
+    incidentReportTitle: (name) => `${name}さんが警察向けの報告書を作成しました`,
+    incidentReportBody: "選んだ期間のあなたの位置記録が含まれます。「記録」で確認できます。",
+    fallDismissedTitle: (name) => `${name}さんのスマホが転倒を検知しました`,
+    fallDismissedBody: "ご本人が大丈夫だと確認しました。",
   },
 };
 
@@ -703,4 +729,16 @@ export async function sendFamilyWatchRequest(toId: string, name: string): Promis
 export async function sendFamilyWatchStarted(toId: string, name: string): Promise<void> {
   const s = getStrings(await getUserLocale(toId));
   await sendSimple(toId, s.familyWatchStartedTitle(name), s.familyWatchStartedBody, { action: "watch_back_started" });
+}
+
+/** Transparency: the person is told whenever someone makes a police report about them. */
+export async function sendIncidentReportCreated(toId: string, reporterName: string): Promise<void> {
+  const s = getStrings(await getUserLocale(toId));
+  await sendSimple(toId, s.incidentReportTitle(reporterName), s.incidentReportBody, { action: "incident_report_created" });
+}
+
+/** A detected fall that the person dismissed: guardians still hear about it, quietly. */
+export async function sendFallDismissed(toId: string, personName: string): Promise<void> {
+  const s = getStrings(await getUserLocale(toId));
+  await sendSimple(toId, s.fallDismissedTitle(personName), s.fallDismissedBody, { action: "fall_dismissed" });
 }

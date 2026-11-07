@@ -1,6 +1,5 @@
 import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
-import { v4 as uuidv4 } from "uuid";
 import { authMiddleware } from "../middleware/auth";
 import { createRateLimiter, RATE_LIMITS } from "../middleware/rateLimit";
 import { sendSOSResolvedNotification, sendSOSEndedByPersonNotification, sendSOSRouteNotification } from "../services/fcm";
@@ -8,11 +7,11 @@ import { parseRoute, activeGuardianIds } from "../services/sosTracking";
 import {
   acknowledgeSOS,
   activeSOSDoc,
-  initialEscalationFields,
   RESOLUTIONS,
   Resolution,
   sosStatus,
 } from "../services/escalation";
+import { createSOSEvent } from "../services/sosTrigger";
 
 /**
  * SOS routes. This router is mounted at both /v1/sos and /v1 (for the legacy
@@ -25,8 +24,6 @@ import {
  */
 const router = Router();
 const db = admin.firestore();
-
-const CLIENT_ID_RE = /^[A-Za-z0-9-]{8,64}$/;
 
 /**
  * POST /v1/sos/trigger
@@ -57,63 +54,16 @@ router.post("/trigger", authMiddleware, createRateLimiter(RATE_LIMITS.sosTrigger
     return;
   }
 
-  const clientId = typeof clientSOSId === "string" && CLIENT_ID_RE.test(clientSOSId) ? clientSOSId : null;
-  const sosId = uuidv4();
-  const now = admin.firestore.Timestamp.now();
-
   try {
-    const existingEvent = await db.runTransaction(async (tx) => {
-      const activeSnapshot = await tx.get(
-        db.collection("sos_events")
-          .where("protectedPersonId", "==", protectedPersonId)
-          .where("resolvedAt", "==", null)
-          .limit(1)
-      );
-
-      if (!activeSnapshot.empty) {
-        const doc = activeSnapshot.docs[0];
-        // Remember this device-side id too, so a later resolve sent with it maps here
-        if (clientId) {
-          tx.update(doc.ref, { clientSOSIds: admin.firestore.FieldValue.arrayUnion(clientId) });
-        }
-        return { sosEventId: doc.id, escalationState: doc.data().escalationState };
-      }
-
-      tx.set(db.collection("sos_events").doc(sosId), {
-        protectedPersonId,
-        triggeredAt: now,
-        createdAt: now,
-        triggerMethod: typeof triggerMethod === "string" ? triggerMethod.slice(0, 40) : "longPress",
-        latitude: typeof latitude === "number" ? latitude : null,
-        longitude: typeof longitude === "number" ? longitude : null,
-        accuracy: null,
-        batteryLevel: typeof batteryLevel === "number" && batteryLevel >= 0 ? batteryLevel : null,
-        resolvedAt: null,
-        resolvedBy: null,
-        resolution: null,
-        acknowledgedBy: null,
-        clientSOSIds: clientId ? [clientId] : [],
-        clientTriggeredAt: typeof clientTriggeredAt === "string" ? clientTriggeredAt.slice(0, 40) : null,
-        ...initialEscalationFields(now),
-      });
-      return null;
+    const result = await createSOSEvent({
+      personId: protectedPersonId,
+      triggerMethod, latitude, longitude, batteryLevel, clientSOSId, clientTriggeredAt,
     });
-
-    if (existingEvent) {
-      res.json({ ...existingEvent, message: "SOS already active" });
+    if (!result.created) {
+      res.json({ sosEventId: result.sosEventId, escalationState: result.escalationState, message: "SOS already active" });
       return;
     }
-
-    // Add timeline entry (informational, outside transaction is acceptable)
-    await db.collection("timeline_entries").add({
-      userId: protectedPersonId,
-      timestamp: now,
-      type: "sosTriggered",
-      description: `SOS triggered (${triggerMethod || "longPress"})`,
-      detail: null,
-    });
-
-    res.status(201).json({ sosEventId: sosId, escalationState: "initiated" });
+    res.status(201).json({ sosEventId: result.sosEventId, escalationState: "initiated" });
   } catch (error) {
     console.error("[SOS] trigger error:", error);
     res.status(500).json({ error: "Failed to trigger SOS" });

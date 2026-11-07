@@ -61,6 +61,14 @@ final class AppCoordinator: ObservableObject {
     @Published var pendingAlertPersonId: String?
     @Published var showFallConfirmation = false
     @Published var fallConfirmationDeadline: Date?
+    /// The "Are you OK?" check after a detected fall / distress sound / voice command
+    @Published var autoSOSCheck: AutoSOSCheck?
+    var autoSOSWork: DispatchWorkItem?
+    var autoSOSBackgroundTask: UIBackgroundTaskIdentifier = .invalid
+    /// The server holds this fall as pending, so it sends the SOS if this phone can't
+    var autoSOSServerArmed = false
+    /// The next detected fall is the user's "Test fall detection" (nothing is sent)
+    var fallTestArmed = false
     /// Manual SOS waiting out its cancel window (see requestSOS).
     @Published var pendingSOS: PendingSOS?
     @Published var currentRiskScores: [String: BaselineScorer.RiskScore] = [:]
@@ -572,6 +580,8 @@ final class AppCoordinator: ObservableObject {
         Task { await apiClient.flushOfflineQueue() }
         // Watch back: requests answered / guardians I watch, while we were away
         Task { await fetchWatchBack() }
+        // A fall check that ran out while we were suspended: send now
+        resumeAutoSOSCheckIfOverdue()
         // The SOS widget/intent may have fired while we were suspended
         checkWidgetSOSIntent()
         processPendingWidgetActions()
@@ -1112,12 +1122,8 @@ final class AppCoordinator: ObservableObject {
         }
 
         // Motion → Fall detection
-        motionService.onFallCandidate = { [weak self] in
-            self?.handleFallCandidate()
-        }
-
-        motionService.onFallConfirmed = { [weak self] in
-            self?.handleFallConfirmed()
+        motionService.onFallCandidate = { [weak self] metrics in
+            self?.handleFallCandidate(metrics)
         }
 
         // Motion → Activity type → Location manager
@@ -1445,6 +1451,10 @@ final class AppCoordinator: ObservableObject {
     /// so they get the cancel window; only duress and already-confirmed
     /// automatic triggers come here directly.
     func triggerSOS(method: SOSTriggerMethod = .longPress) {
+        triggerSOS(method: method, clientSOSId: nil)
+    }
+
+    func triggerSOS(method: SOSTriggerMethod, clientSOSId: String?) {
         // authManager is the source of truth: currentUser can still be nil after a
         // locked background relaunch (BLE button, widget, dead-man switch).
         guard let userId = authManager.currentUserId ?? currentUser?.id, !userId.isEmpty else {
@@ -1460,7 +1470,8 @@ final class AppCoordinator: ObservableObject {
         UIDevice.current.isBatteryMonitoringEnabled = true
         let rawBattery = UIDevice.current.batteryLevel
         let battery: Double? = rawBattery >= 0 ? Double(rawBattery) : nil
-        let localId = UUID().uuidString
+        // A fall check passes its id on, so the server joins this SOS with its own fallback
+        let localId = clientSOSId ?? UUID().uuidString
         let now = Date()
         let sosEvent = SOSEvent(
             id: localId,
@@ -1904,59 +1915,23 @@ final class AppCoordinator: ObservableObject {
         // Live Activity is updated via startLiveActivityIfNeeded / sync calls
     }
 
-    private func handleFallCandidate() {
-        #if DEBUG
-        print("[Coordinator] Fall candidate detected — showing confirmation dialog")
-        #endif
-        // Show 60-second confirmation dialog. If user doesn't dismiss,
-        // FallDetector transitions to .confirmed → handleFallConfirmed() → SOS
-        fallConfirmationDeadline = Date().addingTimeInterval(60)
-        showFallConfirmation = true
-
-        // Play haptic + audio alert
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(.warning)
-    }
-
-    func dismissFallConfirmation() {
-        showFallConfirmation = false
-        fallConfirmationDeadline = nil
-        motionService.userDismissedFallAlert()
-    }
-
-    private func handleFallConfirmed() {
-        showFallConfirmation = false
-        fallConfirmationDeadline = nil
-        triggerSOS(method: .fallDetection)
+    private func handleFallCandidate(_ metrics: FallDetector.FallMetrics) {
+        let isTest = fallTestArmed
+        fallTestArmed = false
+        // Already in an SOS: nothing to ask
+        if activeSOSEvent != nil, !isTest {
+            motionService.resolveFall(dismissed: false)
+            return
+        }
+        beginAutoSOSCheck(reason: .fall, metrics: metrics, isTest: isTest)
     }
 
     private func handleDistressDetected() {
-        // Same countdown flow as fall detection — give user 60 sec to dismiss
-        fallConfirmationDeadline = Date().addingTimeInterval(60)
-        showFallConfirmation = true
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(.warning)
-        // If user doesn't dismiss within 60 sec, trigger SOS
-        DispatchQueue.main.asyncAfter(deadline: .now() + 60) { [weak self] in
-            guard let self, self.showFallConfirmation else { return }
-            self.showFallConfirmation = false
-            self.fallConfirmationDeadline = nil
-            self.triggerSOS(method: .audioDistress)
-        }
+        beginAutoSOSCheck(reason: .distressSound)
     }
 
     private func handleVoiceSOSCommand(phrase: String) {
-        // Voice commands trigger the same confirmation countdown
-        fallConfirmationDeadline = Date().addingTimeInterval(60)
-        showFallConfirmation = true
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(.warning)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 60) { [weak self] in
-            guard let self, self.showFallConfirmation else { return }
-            self.showFallConfirmation = false
-            self.fallConfirmationDeadline = nil
-            self.triggerSOS(method: .voiceCommand)
-        }
+        beginAutoSOSCheck(reason: .voiceCommand)
     }
 
     /// Guardian tapped "I've got it" on the SOS push: tell the server (which stops

@@ -71,6 +71,7 @@
 		200345B07833AF52AF83CBD3 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 8B635249A9903421E869B475 /* FirebaseAuth */; };
 		21BA95AD01814D13B9031F71 /* GuardianLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10FF63580E6B1EBBA0C953C8 /* GuardianLiveActivity.swift */; };
 		2257501DE7132A8762D8E0F3 /* Events.swift in Sources */ = {isa = PBXBuildFile; fileRef = 090ED02D65906AB2947D49C5 /* Events.swift */; };
+		0DC867A3C511929E7A865B9F /* IncidentReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDFEA407AD4C1AC280E4F499 /* IncidentReport.swift */; };
 		23C37917DA8CF259C7E01CC3 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 997CD81ED07E07D1FF5E0291 /* RootView.swift */; };
 		677E73FA0575ADEAD0D6846C /* InviteAcceptSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89579B5CCAA0703ADE2717B3 /* InviteAcceptSheet.swift */; };
 		255D788D0378FE97EA28EF51 /* ArrivalReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8475EAA6250AF5D1F6FAE334 /* ArrivalReportView.swift */; };
@@ -88,6 +89,8 @@
 		3917D763BCD59FF3CB69955D /* GuardianActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E1C1E117AC143584838AA4 /* GuardianActivityAttributes.swift */; };
 		3AB9D0B1A1EC566225F07308 /* WidgetHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB28CB4A33522FB7D99598E /* WidgetHelpers.swift */; };
 		3E0C585AFE1F2B803B314040 /* FallDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 996A66596F591B7AE6D3A71D /* FallDetectorTests.swift */; };
+		FC0482F81DF357DE0AB3DB85 /* FallChainTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E9F9CD348A825FFD768CF7B /* FallChainTests.swift */; };
+		4DE95AAFCF85983765B8077F /* FallScenarioTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CDE927FC42B2680AA19A99 /* FallScenarioTests.swift */; };
 		3E4669140446EDFCEE02344D /* TrajectoryProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0BEFF93B8A9039DB83F17EA /* TrajectoryProcessorTests.swift */; };
 		40EF71539180883E92FD63B8 /* ProtectedRecordsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D199DA3C341478E8441C8FED /* ProtectedRecordsView.swift */; };
 		41A00CCAAED5F20C14441CDC /* GuardianMemberDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3AAC199D8ECB3D24D78FCB1 /* GuardianMemberDetailView.swift */; };
@@ -134,6 +137,7 @@
 		72311B032AFAD5E4C43442AA /* ShouDengWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B67AB48387F3263CABF4FE /* ShouDengWidgetBundle.swift */; };
 		791C1055A0D240706A687AD6 /* CountryCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6FB12D36F67ADB24BA2DDD5 /* CountryCode.swift */; };
 		7CEB8F947D0673F08CE4439B /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9B16BBF77C02115152E9C88 /* AppCoordinator.swift */; };
+		B7853876E83E1B94800D56FD /* AppCoordinator+AutoSOSCheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7699F2AA59357429247EA19 /* AppCoordinator+AutoSOSCheck.swift */; };
 		7D9761B4731755AF8D1F6F8C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 870E1E566CD6F0CB6F1D7BF4 /* InfoPlist.strings */; };
 		83EB2936CCAAB952FCE2D393 /* PushService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6204076B52EBEA3054AA0985 /* PushService.swift */; };
 		85D32E8D7B8E0F1943CB35A4 /* GuardianTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37E2174A14C8BD5D344A7E54 /* GuardianTabView.swift */; };
@@ -147,10 +151,13 @@
 		95E63CBC0DD80AA34C3D78DE /* DegradationBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50C6D87FF7D442419388289E /* DegradationBannerView.swift */; };
 		A2CC960BEFC13B6C6ADB4B0A /* SatelliteModeBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F0D4AD417631C9711484689 /* SatelliteModeBanner.swift */; };
 		1D3A62E82477160F39B737F3 /* FallConfirmationOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC436035E3303BA9628E4C7F /* FallConfirmationOverlay.swift */; };
+		E80D1F1EAF7828099B68024A /* IncidentReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B008D4B543083DD9A6457D /* IncidentReportView.swift */; };
 		95ECC029485F8F4C3BBB96DD /* GuardianRecordsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0582D01DD1A66B1A20CA595D /* GuardianRecordsView.swift */; };
 		96A2973D8E8E4D03F87C9086 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC4B7AE0AE047907119F8E5 /* APIClient.swift */; };
 		556DDCA4DDC1014674F404A8 /* SatelliteDataPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB44F8E91D1F8F00BFF6F99F /* SatelliteDataPolicy.swift */; };
 		987EA4563028AC5BDB0BDEE8 /* ClaimPDFGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F70A5DDA0A5E4325411CBE4 /* ClaimPDFGenerator.swift */; };
+		10014F15C1EA28FA0D6B06CA /* ReportPDF.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4D503C7E41320F776BBF70C /* ReportPDF.swift */; };
+		57E22AFBFF459B6244D78435 /* IncidentReportBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4C6B309634188E0FB79D9BB /* IncidentReportBuilder.swift */; };
 		99541A8CAB47148212819EA3 /* APIEndpoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC3B8E4A971D9B9EDE21F15 /* APIEndpoints.swift */; };
 		423DF0C81DF8D448EC50A5F7 /* FamilyFeedSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020103B129FA2C5559005243 /* FamilyFeedSync.swift */; };
 		9CB0FF8A248F056D774B567D /* LanguageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90B997F6B5ED8D73AF5B4F8 /* LanguageManager.swift */; };
@@ -194,6 +201,7 @@
 		EC0D89B9FAD05A6E383EF86A /* BiometricGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92B52C788B48B35EC3D49ABF /* BiometricGateView.swift */; };
 		ECEF9510D4F244AA95E5401A /* EscalationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46A040C15853E6D3C1C57AD9 /* EscalationEngine.swift */; };
 		ED58D0933C87B251E8F7BD1D /* FallDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D922CFCBCCE8F87BD686AD8 /* FallDetector.swift */; };
+		5CA365379A127CE547FCE011 /* FallSensorTrace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52E7C29A89AD1E8E3D6D00C5 /* FallSensorTrace.swift */; };
 		F0FFEA124608CCCA60504A62 /* AdaptiveLocationManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19BF856E4785D6ABD573F691 /* AdaptiveLocationManagerTests.swift */; };
 		B3C4D5E6F7A8B9C0D1E2F3A4 /* ReactiveLocationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5D6E7F8A9B0C1D2E3F4A5B6 /* ReactiveLocationServiceTests.swift */; };
 		F3ECFE963F1129AB9DCD91B0 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E138FA50B18713B668BAA89 /* AuthManager.swift */; };
@@ -313,6 +321,7 @@
 		07B3F7BF74A7768DF6C5697C /* ClaimMaterialModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimMaterialModels.swift; sourceTree = "<group>"; };
 		0879BC98D0B4991130725412 /* MedicalCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicalCardView.swift; sourceTree = "<group>"; };
 		090ED02D65906AB2947D49C5 /* Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Events.swift; sourceTree = "<group>"; };
+		DDFEA407AD4C1AC280E4F499 /* IncidentReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncidentReport.swift; sourceTree = "<group>"; };
 		094B7B9328E458ED644D623F /* ProtectedWidgetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtectedWidgetViews.swift; sourceTree = "<group>"; };
 		0FF7D56256DE548ED29CCF50 /* FamilyFeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyFeedView.swift; sourceTree = "<group>"; };
 		10FF63580E6B1EBBA0C953C8 /* GuardianLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianLiveActivity.swift; sourceTree = "<group>"; };
@@ -331,6 +340,8 @@
 		28DD19C64B3FA4AFF3D91214 /* ProtectedTimerWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtectedTimerWidget.swift; sourceTree = "<group>"; };
 		2E138FA50B18713B668BAA89 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
 		2F70A5DDA0A5E4325411CBE4 /* ClaimPDFGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimPDFGenerator.swift; sourceTree = "<group>"; };
+		E4D503C7E41320F776BBF70C /* ReportPDF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportPDF.swift; sourceTree = "<group>"; };
+		C4C6B309634188E0FB79D9BB /* IncidentReportBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncidentReportBuilder.swift; sourceTree = "<group>"; };
 		2FC2559DEFD8D966B804EC79 /* ClaimMaterialTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimMaterialTests.swift; sourceTree = "<group>"; };
 		31619A304E944F8752AA75E9 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		323C5F3CDB46FE9F3750B9AA /* GuardianHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianHomeView.swift; sourceTree = "<group>"; };
@@ -346,6 +357,7 @@
 		3C38041E8CCB6EAE0ECF2D4F /* AuthManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManagerTests.swift; sourceTree = "<group>"; };
 		3D4BC3608A17EB87F1339C43 /* LegalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalView.swift; sourceTree = "<group>"; };
 		3D922CFCBCCE8F87BD686AD8 /* FallDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallDetector.swift; sourceTree = "<group>"; };
+		52E7C29A89AD1E8E3D6D00C5 /* FallSensorTrace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallSensorTrace.swift; sourceTree = "<group>"; };
 		43D8A8B0CD131E9E09E02BF6 /* GuardianAlertResponseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianAlertResponseView.swift; sourceTree = "<group>"; };
 		DD44EE010000000B /* GuardianDutyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianDutyView.swift; sourceTree = "<group>"; };
 		469769F9EBCDCFC54433843A /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -356,6 +368,7 @@
 		50C6D87FF7D442419388289E /* DegradationBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DegradationBannerView.swift; sourceTree = "<group>"; };
 		0F0D4AD417631C9711484689 /* SatelliteModeBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatelliteModeBanner.swift; sourceTree = "<group>"; };
 		EC436035E3303BA9628E4C7F /* FallConfirmationOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallConfirmationOverlay.swift; sourceTree = "<group>"; };
+		13B008D4B543083DD9A6457D /* IncidentReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncidentReportView.swift; sourceTree = "<group>"; };
 		525930DD8BF30E7421491576 /* HotlineCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotlineCardView.swift; sourceTree = "<group>"; };
 		52F330C107DBD7227EB0831B /* EmergencyContactsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyContactsView.swift; sourceTree = "<group>"; };
 		5465F763A8A338E12D44592E /* ShouDengApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShouDengApp.swift; sourceTree = "<group>"; };
@@ -390,6 +403,8 @@
 		92B52C788B48B35EC3D49ABF /* BiometricGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricGateView.swift; sourceTree = "<group>"; };
 		96C48470EB56FBDBE742EDEB /* TimerTimelineProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerTimelineProvider.swift; sourceTree = "<group>"; };
 		996A66596F591B7AE6D3A71D /* FallDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallDetectorTests.swift; sourceTree = "<group>"; };
+		1E9F9CD348A825FFD768CF7B /* FallChainTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallChainTests.swift; sourceTree = "<group>"; };
+		94CDE927FC42B2680AA19A99 /* FallScenarioTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallScenarioTests.swift; sourceTree = "<group>"; };
 		997CD81ED07E07D1FF5E0291 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		89579B5CCAA0703ADE2717B3 /* InviteAcceptSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteAcceptSheet.swift; sourceTree = "<group>"; };
 		9BEAFFBD653265D29795FC10 /* ProtectedSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtectedSettingsView.swift; sourceTree = "<group>"; };
@@ -440,6 +455,7 @@
 		B2C3D4E5F6070002 /* FontScaleManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontScaleManager.swift; sourceTree = "<group>"; };
 		E90B997F6B5ED8D73AF5B4F8 /* LanguageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageManager.swift; sourceTree = "<group>"; };
 		E9B16BBF77C02115152E9C88 /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
+		B7699F2AA59357429247EA19 /* AppCoordinator+AutoSOSCheck.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppCoordinator+AutoSOSCheck.swift"; sourceTree = "<group>"; };
 		EC9967501D760330EF89D308 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		EE01C7E451FF10AFE25F1C12 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		4741144445244397B9894FC4 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -613,6 +629,15 @@
 			path = Insurance;
 			sourceTree = "<group>";
 		};
+		5EB0A7C1D2E3F40516273849 /* Reports */ = {
+			isa = PBXGroup;
+			children = (
+				E4D503C7E41320F776BBF70C /* ReportPDF.swift */,
+				C4C6B309634188E0FB79D9BB /* IncidentReportBuilder.swift */,
+			);
+			path = Reports;
+			sourceTree = "<group>";
+		};
 		27B49AFC2D6692EA076043E7 /* Organization */ = {
 			isa = PBXGroup;
 			children = (
@@ -650,6 +675,7 @@
 				A712E5F358C98E30E885D96E /* Diagnostics */,
 				ADEB07AC98828EDF7DC5B8EC /* Escalation */,
 				2584567DDD765D644ED0C417 /* Insurance */,
+				5EB0A7C1D2E3F40516273849 /* Reports */,
 				F1B701F788B9889DD64303E4 /* LiveActivity */,
 				96CBEBED557E67E5211C30B1 /* Localization */,
 				632F2EFA5DEF1367F909B2AB /* Location */,
@@ -707,6 +733,7 @@
 				07B3F7BF74A7768DF6C5697C /* ClaimMaterialModels.swift */,
 				F6FB12D36F67ADB24BA2DDD5 /* CountryCode.swift */,
 				090ED02D65906AB2947D49C5 /* Events.swift */,
+				DDFEA407AD4C1AC280E4F499 /* IncidentReport.swift */,
 				F1C3DE3DA8E9EEE6CEB01B71 /* User.swift */,
 				BB22CC3300002001 /* TripRecord.swift */,
 				DD44EE0100000011 /* Rider.swift */,
@@ -788,6 +815,7 @@
 				52F330C107DBD7227EB0831B /* EmergencyContactsView.swift */,
 				FEFD93DE7D272B9E6D75E3E9 /* EmergencyTextCardView.swift */,
 				EC436035E3303BA9628E4C7F /* FallConfirmationOverlay.swift */,
+				13B008D4B543083DD9A6457D /* IncidentReportView.swift */,
 				0FF7D56256DE548ED29CCF50 /* FamilyFeedView.swift */,
 				C180202B726745C4D4136747 /* FeatureDisclosureView.swift */,
 				794BD85D0F41F07ABDBAED46 /* GlobeMapView.swift */,
@@ -950,6 +978,8 @@
 				C7EB063E62540D4BB03A491D /* DutySchedulerTests.swift */,
 				EE810FC84014C69B9D77A58F /* EscalationEngineTests.swift */,
 				996A66596F591B7AE6D3A71D /* FallDetectorTests.swift */,
+				1E9F9CD348A825FFD768CF7B /* FallChainTests.swift */,
+				94CDE927FC42B2680AA19A99 /* FallScenarioTests.swift */,
 				620C1D30F15D6704D1D48506 /* LocalStoreTests.swift */,
 				232C5CB09F4889DBED05B084 /* ModelTests.swift */,
 				8C24BFDE9F552166FDF0BA0C /* OfflineQueueTests.swift */,
@@ -1058,6 +1088,7 @@
 				F2FC646F35FAFF4899339BE7 /* AdaptiveLocationManager.swift */,
 				C4B372E0DD08D48F4588BBEA /* BaselineScorer.swift */,
 				3D922CFCBCCE8F87BD686AD8 /* FallDetector.swift */,
+				52E7C29A89AD1E8E3D6D00C5 /* FallSensorTrace.swift */,
 				F1C499DEA1B2756F167118B7 /* TrajectoryProcessor.swift */,
 			);
 			path = Algorithms;
@@ -1077,6 +1108,7 @@
 			isa = PBXGroup;
 			children = (
 				E9B16BBF77C02115152E9C88 /* AppCoordinator.swift */,
+				B7699F2AA59357429247EA19 /* AppCoordinator+AutoSOSCheck.swift */,
 				1E4C8E04ABB40A07C16C56BC /* AppLifecycleRouter.swift */,
 				A662E552423F06178E58DA7A /* BuildChannel.swift */,
 				BCC9F2C44D93C9435463C4A7 /* AppDelegate.swift */,
@@ -1335,6 +1367,7 @@
 				F4098E23D57249FA9DBC132D /* AdaptiveLocationManager.swift in Sources */,
 				F2E1D0C9B8A7F6E5D4C3B2A1 /* ReactiveLocationService.swift in Sources */,
 				7CEB8F947D0673F08CE4439B /* AppCoordinator.swift in Sources */,
+				B7853876E83E1B94800D56FD /* AppCoordinator+AutoSOSCheck.swift in Sources */,
 				A22F58C7B33F5DE5F6350346 /* AppDelegate.swift in Sources */,
 				DD44EE0100000014 /* AppCoordinator+Rider.swift in Sources */,
 				255D788D0378FE97EA28EF51 /* ArrivalReportView.swift in Sources */,
@@ -1346,6 +1379,8 @@
 				C576FDF5D0C715B70C2B72AD /* ClaimMaterialModels.swift in Sources */,
 				639980C1ABB6AC215AB6A086 /* ClaimMaterialsView.swift in Sources */,
 				987EA4563028AC5BDB0BDEE8 /* ClaimPDFGenerator.swift in Sources */,
+				10014F15C1EA28FA0D6B06CA /* ReportPDF.swift in Sources */,
+				57E22AFBFF459B6244D78435 /* IncidentReportBuilder.swift in Sources */,
 				0A520BDDFC2C9F526CAEB9EC /* ConsentLogger.swift in Sources */,
 				AF92E9F1A99C0FD92B75DBBE /* ConsulateView.swift in Sources */,
 				080054E8DA343B6945EEB577 /* SubscriptionGateView.swift in Sources */,
@@ -1356,6 +1391,7 @@
 				95E63CBC0DD80AA34C3D78DE /* DegradationBannerView.swift in Sources */,
 				A2CC960BEFC13B6C6ADB4B0A /* SatelliteModeBanner.swift in Sources */,
 				1D3A62E82477160F39B737F3 /* FallConfirmationOverlay.swift in Sources */,
+				E80D1F1EAF7828099B68024A /* IncidentReportView.swift in Sources */,
 				1FFC21FC4A9668A19E8B74BF /* DeviceHealthMonitor.swift in Sources */,
 				DD16C5FC22EDFB93E09F94F1 /* DisclaimerCopy.swift in Sources */,
 				A8BF8DAEADB38E48DC2844CA /* DuoAdaptiveTabContainer.swift in Sources */,
@@ -1365,7 +1401,9 @@
 				0C1536421573BD9FE11F0A4A /* EmergencyTextCardView.swift in Sources */,
 				ECEF9510D4F244AA95E5401A /* EscalationEngine.swift in Sources */,
 				2257501DE7132A8762D8E0F3 /* Events.swift in Sources */,
+				0DC867A3C511929E7A865B9F /* IncidentReport.swift in Sources */,
 				ED58D0933C87B251E8F7BD1D /* FallDetector.swift in Sources */,
+				5CA365379A127CE547FCE011 /* FallSensorTrace.swift in Sources */,
 				B712A85CDBFC03DA14F23067 /* FamilyFeedView.swift in Sources */,
 				677EF24901E9EE3C564AA7E2 /* FeatureDisclosureView.swift in Sources */,
 				C443EE3E317212A2697B78C0 /* GlobeMapView.swift in Sources */,
@@ -1501,6 +1539,8 @@
 				42EB6C1D6EF94947A335FBD7 /* DutySchedulerTests.swift in Sources */,
 				C62234B70752947FCA30189A /* EscalationEngineTests.swift in Sources */,
 				3E0C585AFE1F2B803B314040 /* FallDetectorTests.swift in Sources */,
+				FC0482F81DF357DE0AB3DB85 /* FallChainTests.swift in Sources */,
+				4DE95AAFCF85983765B8077F /* FallScenarioTests.swift in Sources */,
 				55ED22F5D2C5A01AD86F979B /* LocalStoreTests.swift in Sources */,
 				55B3FA5666AEEBB98BD2FC7A /* ModelTests.swift in Sources */,
 				34EA733F874C92ED1E5DCA81 /* OfflineQueueTests.swift in Sources */,

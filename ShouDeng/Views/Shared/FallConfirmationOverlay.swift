@@ -1,18 +1,23 @@
 import SwiftUI
 import UIKit
 
-/// Full-screen overlay shown when a fall is detected.
-/// Displays a 60-second countdown. If user taps "I'm Fine", the fall is dismissed.
-/// If the countdown expires, FallDetector auto-escalates to SOS.
+/// Full-screen "Are you OK?" after a detected fall, distress sound or voice command.
+/// "I'm OK" dismisses; "Send SOS now" (hurt but conscious) or the end of the countdown
+/// sends the SOS (AppCoordinator+AutoSOSCheck). A test shows a banner and sends nothing.
 struct FallConfirmationOverlay: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
 
     @StateObject private var countdownTimer = FallCountdownTimer()
 
+    private var reason: AutoSOSReason { coordinator.autoSOSCheck?.reason ?? .fall }
+    private var isTest: Bool { coordinator.autoSOSCheck?.isTest ?? false }
+    private var total: Int { Int((coordinator.autoSOSCheck?.duration ?? 60).rounded()) }
+
     var body: some View {
         ZStack {
-            Color.black.opacity(0.85)
+            // Nearly opaque: the screen behind must not compete with "Are you OK?"
+            Color.black.opacity(0.94)
                 .ignoresSafeArea()
 
             // Kept clear of the iPhone Duo fold (right half when unfolded)
@@ -26,12 +31,21 @@ struct FallConfirmationOverlay: View {
                         .foregroundColor(.red)
                         .symbolEffect(.pulse, options: .repeating)
 
-                    Text(lang.localized("fall.detected.title"))
+                    if isTest {
+                        Text(lang.localized("fallTest.banner"))
+                            .font(.scaled(size: 13, weight: .semibold))
+                            .foregroundColor(.black)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 5)
+                            .background(Capsule().fill(Color.yellow))
+                    }
+
+                    Text(lang.localized(reason.titleKey))
                         .font(.scaled(size: 28, weight: .bold))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
 
-                    Text(lang.localized("fall.detected.subtitle"))
+                    Text(lang.localized(reason.subtitleKey))
                         .font(.scaled(size: 16))
                         .foregroundColor(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
@@ -44,7 +58,7 @@ struct FallConfirmationOverlay: View {
                             .frame(width: 120, height: 120)
 
                         Circle()
-                            .trim(from: 0, to: CGFloat(countdownTimer.timeRemaining) / 60.0)
+                            .trim(from: 0, to: CGFloat(countdownTimer.timeRemaining) / CGFloat(max(total, 1)))
                             .stroke(Color.red, style: StrokeStyle(lineWidth: 8, lineCap: .round))
                             .frame(width: 120, height: 120)
                             .rotationEffect(.degrees(-90))
@@ -55,11 +69,26 @@ struct FallConfirmationOverlay: View {
                             .foregroundColor(.white)
                     }
 
-                    Text(lang.localized("fall.sos.countdown"))
+                    Text(lang.localized(isTest ? "fallTest.countdown" : "fall.sos.countdown"))
                         .font(.scaled(size: 14))
                         .foregroundColor(.white.opacity(0.6))
 
                     Spacer()
+
+                    // Hurt but conscious: don't make them wait
+                    Button {
+                        countdownTimer.stop()
+                        coordinator.autoSOSCheckExpired(byPerson: true)
+                    } label: {
+                        Text(lang.localized("autosos.sendNow"))
+                            .font(.scaled(size: 17, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(Color.red)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                    }
+                    .padding(.horizontal, 32)
 
                     // "I'm Fine" button
                     Button {

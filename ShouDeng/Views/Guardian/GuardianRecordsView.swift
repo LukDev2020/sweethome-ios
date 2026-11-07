@@ -280,6 +280,12 @@ struct GuardianRecordsView: View {
             }
             .padding(.horizontal, 16)
 
+            if !coordinator.protectedPersons.isEmpty {
+                IncidentReportButton()
+                    .environmentObject(coordinator)
+                    .padding(.horizontal, 16)
+            }
+
             // Timeline list
             VStack(alignment: .leading, spacing: 0) {
                 if coordinator.timeline.isEmpty {

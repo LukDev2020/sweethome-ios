@@ -88,6 +88,8 @@ struct ProtectedRecordsView: View {
                     .padding(.top, 8)
 
                     timelineSection
+                    IncidentReportButton(personId: coordinator.currentUser?.id)
+                        .environmentObject(coordinator)
                     exportPanel
                     upsellCard
                 }
@@ -160,6 +162,9 @@ struct ProtectedRecordsView: View {
                 .padding(.top, 8)
 
                 timelineSection
+
+                IncidentReportButton(personId: coordinator.currentUser?.id)
+                    .environmentObject(coordinator)
 
                 // Emergency Yellow Pages
                 Text(langManager.localized("yp_title", fallback: "Emergency Yellow Pages"))

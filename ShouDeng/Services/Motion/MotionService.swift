@@ -34,8 +34,8 @@ final class MotionService {
     private(set) var currentActivity: CMMotionActivity?
 
     // Callbacks
-    var onFallCandidate: (() -> Void)?
-    var onFallConfirmed: (() -> Void)?
+    /// All four stages passed: ask "Are you OK?" (the countdown is the coordinator's)
+    var onFallCandidate: ((FallDetector.FallMetrics) -> Void)?
     var onActivityChange: ((CMMotionActivity) -> Void)?
 
     // MARK: - Init
@@ -59,15 +59,9 @@ final class MotionService {
     // MARK: - Setup
 
     private func setupFallDetectorCallbacks() {
-        fallDetector.onCandidateFall = { [weak self] _ in
+        fallDetector.onCandidateFall = { [weak self] metrics in
             DispatchQueue.main.async {
-                self?.onFallCandidate?()
-            }
-        }
-
-        fallDetector.onConfirmedFall = { [weak self] in
-            DispatchQueue.main.async {
-                self?.onFallConfirmed?()
+                self?.onFallCandidate?(metrics)
             }
         }
 
@@ -223,15 +217,23 @@ final class MotionService {
         }
     }
 
-    // MARK: - User Actions
+    // MARK: - Outcome
 
-    /// User tapped "I'm fine" during fall confirmation dialog
-    func userDismissedFallAlert() {
-        fallDetector.userDismissed()
+    /// The person answered "I'm OK", or the SOS went out: the detector watches again.
+    /// (It used to stay "confirmed" after an SOS, so a second fall went unnoticed.)
+    func resolveFall(dismissed: Bool) {
+        operationQueue.addOperation { [fallDetector] in
+            fallDetector.resolve(dismissed: dismissed)
+        }
+    }
 
-        // Short delay, then reset to monitoring
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            self?.fallDetector.reset()
+    /// Replays a recorded movement through the real detector, on the sensor queue —
+    /// the whole chain runs as for a real fall ("Test fall detection", Explore Mode,
+    /// the simulator, which has no motion sensors).
+    func simulateFall(_ trace: FallSensorTrace = .forwardFall()) {
+        operationQueue.addOperation { [fallDetector] in
+            fallDetector.reset()
+            fallDetector.feed(trace)
         }
     }
 

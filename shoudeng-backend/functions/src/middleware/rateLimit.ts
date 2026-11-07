@@ -50,6 +50,9 @@ export const RATE_LIMITS = {
   // Telemetry: 120 per minute (heartbeats at 12/hr + location bursts)
   telemetry: { name: "telemetry", windowMs: 60 * 1000, maxRequests: 120 },
 
+  // Incident reports: heavy (BigQuery + Firestore over up to 7 days), rarely needed
+  incidentReport: { name: "incidentReport", windowMs: 60 * 60 * 1000, maxRequests: 10 },
+
   // Public Twilio callbacks, per caller IP
   webhook: { name: "webhook", windowMs: 60 * 1000, maxRequests: 120 },
 } as const;

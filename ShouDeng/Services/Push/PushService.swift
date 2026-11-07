@@ -20,6 +20,7 @@ final class PushService: NSObject {
     static let categoryHandoff = "DUTY_HANDOFF"
     static let categorySOSPending = "SOS_PENDING"
     static let pendingSOSNoticeId = "sos_pending_notice"
+    static let autoSOSNoticeId = "auto_sos_check_notice"
 
     // Actions
     static let actionTakenOver = "ACTION_TAKEN_OVER"
@@ -248,6 +249,24 @@ final class PushService: NSObject {
             trigger: nil
         )
         UNUserNotificationCenter.current().add(request)
+    }
+
+    /// "Fall detected — are you OK?" while the app isn't in front: opening the app
+    /// shows the check with its countdown.
+    func fireAutoSOSNotice(reason: AutoSOSReason, seconds: Int) {
+        let lang = LanguageManager.shared
+        let content = UNMutableNotificationContent()
+        content.title = lang.localized(reason.titleKey)
+        content.body = String(format: lang.localized("autosos.notice.body"), seconds)
+        content.sound = .default
+        content.interruptionLevel = .timeSensitive
+        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: Self.autoSOSNoticeId, content: content, trigger: nil))
+    }
+
+    func removeAutoSOSNotice() {
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: [Self.autoSOSNoticeId])
+        center.removeDeliveredNotifications(withIdentifiers: [Self.autoSOSNoticeId])
     }
 
     func removePendingSOSNotice() {

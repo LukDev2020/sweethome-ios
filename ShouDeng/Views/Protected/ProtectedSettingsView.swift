@@ -359,6 +359,30 @@ struct ProtectedSettingsView: View {
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
 
+            // Fall detection: always on while the app is open (no switch), and testable
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Label(langManager.localized("protected.settings.detection.fall"), systemImage: "figure.fall")
+                        .font(.scaled(size: 13))
+                    Spacer()
+                    Text(langManager.localized("protected.settings.detection.fallOn"))
+                        .font(.scaled(size: 12))
+                        .foregroundStyle(.secondary)
+                }
+                Text(langManager.localized("protected.settings.detection.fallDesc"))
+                    .font(.scaled(size: 11))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button {
+                    coordinator.testFallDetection()
+                } label: {
+                    Label(langManager.localized(coordinator.isDemo ? "fallTest.tryButton" : "fallTest.button"), systemImage: "play.circle")
+                        .font(.scaled(size: 13, weight: .medium))
+                }
+                .accessibilityIdentifier("settings.testFallDetection")
+            }
+            .padding(.vertical, 2)
+
             VStack(alignment: .leading, spacing: 2) {
                 toggleRow(langManager.localized("protected.settings.detection.distress"), isOn: $distressDetectionEnabled)
                 Text(langManager.localized("protected.settings.detection.distressDesc"))
