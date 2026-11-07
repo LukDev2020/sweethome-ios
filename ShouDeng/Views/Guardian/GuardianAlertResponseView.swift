@@ -371,14 +371,22 @@ struct GuardianAlertResponseView: View {
                         ? String(format: langManager.localized("sos.status.guardiansNotified"), notified)
                         : langManager.localized("guardian.alert.notifying"),
                     state: step1State)
-            stepRow(number: "2", title: langManager.localized("sos.status.linkTitle"),
-                    detail: langManager.localized(sos?.shareLinkSent == true ? "sos.status.linkSent" : "sos.status.linkNext"),
-                    state: step2State)
-            stepRow(number: "3", title: langManager.localized("sos.status.callsTitle"),
-                    detail: acknowledged
-                        ? langManager.localized("sos.status.callsStopped")
-                        : (calls > 0 ? String(format: langManager.localized("sos.status.calling"), calls) : langManager.localized("sos.status.callsNext")),
-                    state: step3State)
+            if DisclaimerCopy.EscalationChannels.phoneEnabled {
+                stepRow(number: "2", title: langManager.localized("sos.status.linkTitle"),
+                        detail: langManager.localized(sos?.shareLinkSent == true ? "sos.status.linkSent" : "sos.status.linkNext"),
+                        state: step2State)
+                stepRow(number: "3", title: langManager.localized("sos.status.callsTitle"),
+                        detail: acknowledged
+                            ? langManager.localized("sos.status.callsStopped")
+                            : (calls > 0 ? String(format: langManager.localized("sos.status.calling"), calls) : langManager.localized("sos.status.callsNext")),
+                        state: step3State)
+            } else {
+                // Texts and calls are off (push only): show only what really happens
+                let everyoneAlerted = acknowledged || tick.timeIntervalSince(sos?.triggeredAt ?? tick) >= 30
+                stepRow(number: "2", title: langManager.localized("sos.status.allTitle"),
+                        detail: langManager.localized(everyoneAlerted ? "sos.status.allSent" : "sos.status.allNext"),
+                        state: everyoneAlerted ? .done : .live)
+            }
         }
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(

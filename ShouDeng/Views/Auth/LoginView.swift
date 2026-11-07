@@ -44,6 +44,9 @@ struct LoginView: View {
     @State private var failedAttempts = 0
     @State private var isLocked = false
     @State private var showFontPicker = false
+    /// Terms of Service / Privacy Policy agreed (current version) — required for a code
+    @AppStorage("terms_accepted_version") private var termsVersion = ""
+    private var termsAccepted: Bool { termsVersion == DisclaimerCopy.Terms.version }
 
     private enum Field { case phone, code }
     @FocusState private var focusedField: Field?
@@ -432,6 +435,12 @@ struct LoginView: View {
                 .padding(.horizontal, 32)
             }
 
+            if !codeSent {
+                TermsAgreementRow(tint: navy)
+                    .padding(.horizontal, 32)
+                    .padding(.top, 14)
+            }
+
             // Action button
             Button {
                 Task { await handleAction() }
@@ -527,7 +536,7 @@ struct LoginView: View {
     private var buttonDisabled: Bool {
         if isLoading { return true }
         if codeSent { return code.count < 4 }
-        return phone.count < 4 || countdown > 0
+        return phone.count < 4 || countdown > 0 || !termsAccepted
     }
 
     // MARK: - Actions

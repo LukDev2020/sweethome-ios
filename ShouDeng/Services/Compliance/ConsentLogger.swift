@@ -94,6 +94,16 @@ final class ConsentLogger {
         )
     }
 
+    /// Login screen: "I've read and agree to the Terms of Service and Privacy Policy"
+    func logTermsAccepted() {
+        log(userId: currentUserId, item: DisclaimerCopy.Terms.consentKey, copyVersion: DisclaimerCopy.Terms.version)
+    }
+
+    func logGuardianDuty() {
+        log(userId: currentUserId, item: DisclaimerCopy.GuardianDuty.consentKey,
+            copyVersion: DisclaimerCopy.GuardianDuty.version)
+    }
+
     func logDegradation(_ warningId: String) {
         log(
             userId: currentUserId,
@@ -117,6 +127,30 @@ final class ConsentLogger {
                 guard let lineData = line.data(using: .utf8) else { return nil }
                 return try? decoder.decode(ConsentRecord.self, from: lineData)
             }
+    }
+
+    // MARK: - Upload
+    //
+    // The file on the phone is lost with the phone; every record is also sent to the
+    // server (POST /v1/user/consent) once signed in. Records logged before sign-in
+    // (the first-launch screens) go up with the first account that signs in.
+
+    private let uploadedKey = "consent_log_uploaded_count"
+
+    /// Records not on the server yet, and the count to mark once they are.
+    func pendingUpload() -> (records: [ConsentRecord], total: Int) {
+        let all = allRecords()
+        let done = min(UserDefaults.standard.integer(forKey: uploadedKey), all.count)
+        return (Array(all[done...]), all.count)
+    }
+
+    func markUploaded(upTo total: Int) {
+        UserDefaults.standard.set(total, forKey: uploadedKey)
+    }
+
+    /// Writes still queued must reach the file before it is read for upload.
+    func flush() {
+        queue.sync {}
     }
 
     // MARK: - Private

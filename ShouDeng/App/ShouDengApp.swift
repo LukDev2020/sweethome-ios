@@ -6,6 +6,7 @@ struct ShouDengApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("onboardingComplete") private var onboardingComplete = false
+    @AppStorage("onboarding_copy_version") private var onboardingCopyVersion = ""
     @AppStorage("app_dark_mode") private var darkModeEnabled = false
     /// Set by RootView while login / Face ID / setup wizard is on screen
     @AppStorage("ui_light_only_screen") private var lightOnlyScreen = false
@@ -16,7 +17,8 @@ struct ShouDengApp: App {
     /// otherwise — the demo included — the in-app dark mode setting.
     private var colorScheme: ColorScheme {
         if explore.isActive { return darkModeEnabled ? .dark : .light }
-        let onboarding = !onboardingComplete || ProcessInfo.processInfo.arguments.contains("-show-onboarding")
+        let onboarding = !onboardingComplete || onboardingCopyVersion != DisclaimerCopy.Onboarding.version
+            || ProcessInfo.processInfo.arguments.contains("-show-onboarding")
         if onboarding { return .dark }
         return darkModeEnabled && !lightOnlyScreen ? .dark : .light
     }

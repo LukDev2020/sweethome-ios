@@ -5,14 +5,17 @@ import SwiftUI
 // From revised plan, section 5.3:
 //   - One concept per screen, not a single large popup
 //   - Button text "我明白了" not "确定"
-//   - Cannot be skipped
-//   - Each tap logs consent with copy version
+//   - Cannot be skipped (a new copy version is shown again, without Skip)
+//   - Each tap logs consent with copy version (sent to the server after sign-in)
 
 struct OnboardingView: View {
     @State private var showDemoPicker = false
     @Binding var isComplete: Bool
     @ObservedObject private var lang = LanguageManager.shared
     @AppStorage("hasCompletedOnboardingOnce") private var hasCompletedOnce = false
+    @AppStorage("onboarding_copy_version") private var acceptedVersion = ""
+    /// Skipping is only for replaying screens already confirmed — not a new version
+    private var canSkip: Bool { hasCompletedOnce && acceptedVersion == DisclaimerCopy.Onboarding.version }
     @State private var currentPage = UserDefaults.standard.integer(forKey: "debug_onboarding_page")
     @Environment(\.horizontalSizeClass) private var sizeClass
 
@@ -105,7 +108,7 @@ struct OnboardingView: View {
 
     private var onboardingTopBar: some View {
         HStack {
-            if hasCompletedOnce {
+            if canSkip {
                 Button {
                     skipToHome()
                 } label: {
@@ -226,8 +229,9 @@ struct OnboardingView: View {
                     currentPage += 1
                 }
             } else {
-                // Mark disclaimers accepted; services start after login
+                // Mark disclaimers accepted (this version); services start after login
                 hasCompletedOnce = true
+                acceptedVersion = DisclaimerCopy.Onboarding.version
                 withAnimation {
                     isComplete = true
                 }

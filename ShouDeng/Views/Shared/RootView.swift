@@ -35,6 +35,11 @@ struct RootView: View {
 private struct AuthenticatedRootView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @AppStorage("onboardingComplete") private var onboardingComplete = false
+    /// Version of the three disclaimer screens last confirmed; a new version shows them again
+    @AppStorage("onboarding_copy_version") private var onboardingCopyVersion = ""
+    // Read so the cover closes as soon as either is confirmed
+    @AppStorage("guardian_duty_version") private var guardianDutyVersion = ""
+    @AppStorage("terms_accepted_version") private var termsAcceptedVersion = ""
     @AppStorage("setupWizardComplete") private var setupWizardComplete = false
     @AppStorage("app_dark_mode") private var darkModeEnabled = false
     @AppStorage("ui_light_only_screen") private var lightOnlyScreen = false
@@ -61,7 +66,7 @@ private struct AuthenticatedRootView: View {
             } else
             if ProcessInfo.processInfo.arguments.contains("-show-onboarding") {
                 OnboardingView(isComplete: $onboardingComplete)
-            } else if !onboardingComplete {
+            } else if !onboardingComplete || onboardingCopyVersion != DisclaimerCopy.Onboarding.version {
                 // D-05: Disclaimer onboarding before any auth/login
                 OnboardingView(isComplete: $onboardingComplete)
                     .transition(.opacity)
@@ -122,6 +127,13 @@ private struct AuthenticatedRootView: View {
                             .sheet(isPresented: $showBiometricPrompt) {
                                 BiometricEnablePromptView(isPresented: $showBiometricPrompt)
                             }
+                            // Terms not agreed to (accounts from before the checkbox, or a
+                            // Terms update), then a guardian's duties — once per version
+                            .fullScreenCover(isPresented: complianceBinding, onDismiss: {
+                                Task { await coordinator.syncConsentRecords() }
+                            }) {
+                                ComplianceGateView().environmentObject(coordinator)
+                            }
                             .onAppear {
                                 // After login, offer biometric setup if available (skip if wizard already handled it)
                                 if biometric.isAvailable && !biometric.hasShownPrompt && !biometric.isEnabled && setupWizardComplete {
@@ -154,6 +166,16 @@ private struct AuthenticatedRootView: View {
         guard case .loggedIn = coordinator.authState else { return true }
         if biometric.isEnabled && !biometric.isUnlocked { return true }
         return !setupWizardComplete && coordinator.showSetupWizard
+    }
+
+    private var complianceBinding: Binding<Bool> {
+        Binding(
+            get: {
+                _ = (guardianDutyVersion, termsAcceptedVersion) // re-evaluate when either changes
+                return ComplianceGateView.isNeeded(role: coordinator.userRole, isDemo: coordinator.isDemo)
+            },
+            set: { _ in } // closes when everything needed is confirmed
+        )
     }
 
     private var inviteSheetBinding: Binding<Bool> {

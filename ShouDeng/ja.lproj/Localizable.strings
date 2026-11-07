@@ -1329,7 +1329,7 @@
 "explore.tip.mom.guardians.title" = "3人の見守る人、3つのタイムゾーン";
 "explore.tip.mom.guardians.body" = "トロントのSarah、上海のKevin、パリのLucyが1日を分担して見守っているので、あなたが必要なときはたいてい誰かが起きています。";
 "explore.tip.mom.sos.title" = "SOSを練習しましょう";
-"explore.tip.mom.sos.body" = "赤いボタンを3秒間長押ししてください。実際の緊急時には、見守る人にまず通知が届き、次にSMS、そして誰かが応答するまで電話がかかります。デモでは実際には誰にも通知されません。Sarahに表示される画面をそのまま確認できます。";
+"explore.tip.mom.sos.body" = "赤いボタンを3秒間長押ししてください。実際の緊急時には、まず当番の見守る人に通知が届き、応答がなければすべての見守る人に届きます。デモでは実際には誰にも通知されません。Sarahに表示される画面をそのまま確認できます。";
 "explore.tip.mom.tracking.title" = "居場所を誰に見せるかはあなたが決められます";
 "explore.tip.mom.tracking.body" = "プライバシーを守りたいときは、いつでも最大4時間まで共有を一時停止できます。SOSを発信すると、共有は必ず再開されます。";
 "explore.tip.mom.done.title" = "以上がお母さんの画面です";
@@ -1339,7 +1339,7 @@
 "explore.tip.sarah.respond.title" = "2回のタップで対応";
 "explore.tip.sarah.respond.body" = "お母さんのカードが「要確認」に移動します。カードを開くと、お母さんの居場所を確認したり、電話をかけたりできます。「対応します」を押すと、KevinとLucyにあなたが対応中であることが伝わり、自動発信が停止します。";
 "explore.tip.sarah.ack.title" = "対応します";
-"explore.tip.sarah.ack.body" = "ワンタップで、あなたが対応中であることをほかの家族に伝え、自動のSMSと電話を停止します。お母さんの無事が確認できたら、SOSを終了してください。";
+"explore.tip.sarah.ack.body" = "ワンタップで、あなたが対応中であることをほかの家族に伝え、自動の追加通知を停止します。お母さんの無事が確認できたら、SOSを終了してください。";
 "explore.tip.sarah.coverage.title" = "誰がいつ起きているか";
 "explore.tip.sarah.coverage.body" = "当番表では、お母さんの1日のうちそれぞれが担当している時間帯と、誰も担当していない空白の時間帯を確認できます。";
 "explore.tip.sarah.records.title" = "保険請求用の記録";
@@ -1976,3 +1976,19 @@
 "lsc.demoNote" = "デモ：ロック画面に陳家のサンプルカードが表示されます。デモを終了すると消えます。";
 "lsc.row.madeRoom" = "スペースを空けるため「%@」をオフにしました。";
 "lsc.rows.hint" = "カードに入るのは約 3 行です。1 行をオンにすると別の行がオフになることがあります。";
+
+/* Disclaimers v2, Terms agreement, guardian duties */
+"duty.title" = "見守りを始める前に";
+"duty.point.alerts" = "通知が遅れたり届かなかったりすることがあります（電源オフや圏外など）。Lantern Care は緊急サービスの代わりにはなりません。危険だと思ったら、相手がいる地域の緊急番号に電話してください。";
+"duty.point.notResponder" = "あなたは家族であり、救助の専門家ではありません。Lantern Care が誰かを現場に派遣することもありません。電話する、様子を確かめる、近くの人に頼むなど、できる範囲で対応してください。";
+"duty.point.consent" = "見守られることに同意した人だけを見守ってください。何を共有するかは相手が決め、いつでも共有を一時停止したり、あなたを外したりできます。";
+"duty.button" = "わかりました";
+"terms.agree" = "利用規約とプライバシーポリシーを読み、同意します。";
+"terms.read" = "内容を読む";
+"terms.update.title" = "利用規約を更新しました";
+"terms.update.body" = "緊急時に Lantern Care ができること・できないことを、よりわかりやすく説明しています。読んで同意のうえ、引き続きご利用ください。";
+"terms.update.required" = "チェックを入れると続けられます。";
+"terms.update.thanks" = "ありがとうございます。";
+"sos.status.allTitle" = "すべての見守る人に通知";
+"sos.status.allNext" = "30 秒以内に応答がなければ送信";
+"sos.status.allSent" = "すべての見守る人に送信済み";

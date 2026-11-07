@@ -5,7 +5,8 @@ import { createRateLimiter, RATE_LIMITS } from "../middleware/rateLimit";
 import { isValidTimeZone } from "../services/localTime";
 import { normalizeLocale } from "../services/locale";
 import { eraseAccount, exportAccount } from "../services/accountData";
-import { recordDataTransferConsent } from "../services/consent";
+import { recordDataTransferConsent, parseConsentRecords, latestConsentVersions } from "../services/consent";
+import { insertConsentAudit } from "../services/bigquery";
 import { appAccountTokenFor } from "../services/payment";
 
 const router = Router();
@@ -163,11 +164,46 @@ router.put("/notification-preferences", authMiddleware, async (req: Request, res
 
 /**
  * POST /v1/user/consent
- * Record consent shown in the app. Currently: { type: "cross_border_transfer", version }.
+ * Record consent shown in the app. Two shapes:
+ *  - { type: "cross_border_transfer", version } — the data-location prompt
+ *  - { records: [{ item, copyVersion, action, at, appVersion, locale, deviceId }] } —
+ *    taps logged on the phone (first-launch disclaimers, Terms agreement, feature
+ *    disclosures, guardian duties), up to 100 per call. Kept in consent_audit, which
+ *    account deletion keeps on purpose; the latest versions are also on the user doc.
  */
 router.post("/consent", authMiddleware, async (req: Request, res: Response) => {
   const uid = req.uid!;
-  const { type, version } = req.body ?? {};
+  const body = req.body ?? {};
+
+  if (Array.isArray(body.records)) {
+    const records = parseConsentRecords(body.records);
+    if (!records) {
+      res.status(400).json({ error: "records must be 1–100 valid consent records" });
+      return;
+    }
+    try {
+      await Promise.all(records.map((r) => insertConsentAudit({
+        userId: uid,
+        consentType: r.item,
+        action: r.action,
+        grantedTo: "lantern-care",
+        detail: `copy ${r.copyVersion}; shown ${r.at}; app ${r.appVersion}; locale ${r.locale}`,
+        deviceInfo: r.deviceId,
+      })));
+      const latest = latestConsentVersions(records);
+      if (Object.keys(latest).length > 0) {
+        await db.collection("users").doc(uid).set(latest, { merge: true });
+      }
+      res.json({ success: true, recorded: records.length });
+    } catch (error) {
+      // The phone keeps the records and sends them again
+      console.error("[User] consent records error:", error);
+      res.status(500).json({ error: "Failed to record consent" });
+    }
+    return;
+  }
+
+  const { type, version } = body;
   if (type !== "cross_border_transfer" || typeof version !== "string" || version.length === 0 || version.length > 20) {
     res.status(400).json({ error: "type must be cross_border_transfer and version a short string" });
     return;

@@ -1330,7 +1330,7 @@
 "explore.tip.mom.guardians.title" = "三位守护者，三个时区";
 "explore.tip.mom.guardians.body" = "Sarah 在多伦多，Kevin 在上海，Lucy 在巴黎，轮流照看，你需要时通常总有人醒着。";
 "explore.tip.mom.sos.title" = "练习一次求助";
-"explore.tip.mom.sos.body" = "按住红色按钮 3 秒。真实紧急情况下，守护者会先收到提醒，然后是短信，再是电话，直到有人回应。体验中不会真的通知任何人——你会看到 Sarah 看到的一切。";
+"explore.tip.mom.sos.body" = "按住红色按钮 3 秒。真实紧急情况下，值班守护者会先收到提醒，无人回应时再通知所有守护者。体验中不会真的通知任何人——你会看到 Sarah 看到的一切。";
 "explore.tip.mom.tracking.title" = "你决定谁能看到你的位置";
 "explore.tip.mom.tracking.body" = "需要隐私时可暂停共享最多 4 小时。发出求助时会自动恢复。";
 "explore.tip.mom.done.title" = "这就是妈妈这边";
@@ -1340,7 +1340,7 @@
 "explore.tip.sarah.respond.title" = "两步响应求助";
 "explore.tip.sarah.respond.body" = "妈妈的卡片跳到“需关注”。打开即可看到她的位置、给她打电话，或点“我来处理”，让 Kevin 和 Lucy 知道由你处理，自动呼叫也会停止。";
 "explore.tip.sarah.ack.title" = "我来处理";
-"explore.tip.sarah.ack.body" = "点一下即可告诉其他家人由你处理，并停止自动短信和电话。妈妈安全后再结束求助。";
+"explore.tip.sarah.ack.body" = "点一下即可告诉其他家人由你处理，并停止后续的自动提醒。妈妈安全后再结束求助。";
 "explore.tip.sarah.coverage.title" = "谁在什么时候醒着";
 "explore.tip.sarah.coverage.body" = "排班表显示每个人负责妈妈一天中的哪些时段，以及没人照看的空档。";
 "explore.tip.sarah.records.title" = "保险理赔材料";
@@ -1977,3 +1977,19 @@
 "lsc.demoNote" = "演示：锁屏会显示陈家的示例卡片，退出演示时自动移除。";
 "lsc.row.madeRoom" = "为腾出空间，已关闭「%@」。";
 "lsc.rows.hint" = "卡片大约能放三行；打开一行时可能会关闭另一行。";
+
+/* Disclaimers v2, Terms agreement, guardian duties */
+"duty.title" = "守护家人之前";
+"duty.point.alerts" = "提醒可能延迟甚至收不到——例如手机关机或没有信号。守灯不能替代紧急服务：如果你认为对方有危险，请拨打对方所在地的紧急号码。";
+"duty.point.notResponder" = "你是家人，不是专业救援人员；守灯也不会派人到场救助。尽你所能就好——打电话、确认情况，或请身边的人帮忙。";
+"duty.point.consent" = "只守护同意被守护的人。分享什么由对方决定，对方可以随时暂停共享或移除你。";
+"duty.button" = "我明白了";
+"terms.agree" = "我已阅读并同意《服务条款》和《隐私政策》。";
+"terms.read" = "查看条款";
+"terms.update.title" = "服务条款已更新";
+"terms.update.body" = "新版条款更清楚地说明了守灯在紧急情况下能做什么、不能做什么。请阅读并同意后继续使用。";
+"terms.update.required" = "勾选后即可继续。";
+"terms.update.thanks" = "谢谢。";
+"sos.status.allTitle" = "通知所有守护者";
+"sos.status.allNext" = "30 秒内无人回应时发送";
+"sos.status.allSent" = "已发给所有守护者";

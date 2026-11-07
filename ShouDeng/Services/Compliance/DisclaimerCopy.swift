@@ -11,7 +11,10 @@ enum DisclaimerCopy {
     // MARK: - Onboarding (3 screens)
 
     enum Onboarding {
-        static let version = "v1.1"
+        /// Bump when the wording changes: everyone sees the screens again (RootView).
+        /// v2.0: matches the app — sharing stops immediately (there is no 6-hour delay),
+        /// lists everything family can see, warns that detection can miss or misfire.
+        static let version = "v2.0"
 
         struct Screen {
             let id: String
@@ -36,26 +39,27 @@ enum DisclaimerCopy {
             }
         }
 
+        // Shown before sign-in, so written for both the person looked after and family.
         private static let screensZh: [Screen] = [
             Screen(
                 id: "onboard.not_emergency",
                 icon: "exclamationmark.triangle",
                 title: "守灯不是紧急服务",
-                body: "遇到危险时，请优先拨打当地紧急号码。\n\n守灯的作用是通知你的家人和联系人，无法替代警方、消防或急救。我们会尽力送达通知，但无法保证网络、设备或对方一定能及时响应。",
+                body: "遇到危险时，请先拨打当地紧急号码。\n\n守灯只负责通知你选定的家人，无法替代警察、消防或急救。通知可能延迟或失败——例如手机关机、没有信号或关闭了通知——我们也无法保证有人及时回应。",
                 buttonTitle: "我明白了"
             ),
             Screen(
                 id: "onboard.scope",
-                icon: "eye.slash",
-                title: "我们只看安全需要的",
-                body: "家人可以看到你的位置、电量和是否在线。\n\n他们看不到你的聊天记录、相册、通话记录，也看不到任何其他应用的内容。\n\n这些内容我们同样不会收集。",
+                icon: "eye",
+                title: "家人能看到什么",
+                body: "被守护的人与自己选定的家人分享：位置（SOS 期间还有行动路线）、电量、报平安记录，以及在家庭动态里发的内容。\n\n聊天记录、相册、通话记录和其他应用的内容永远看不到——守灯也无法访问这些。",
                 buttonTitle: "继续"
             ),
             Screen(
                 id: "onboard.control",
                 icon: "hand.raised",
                 title: "控制权在你手里",
-                body: "你随时可以关闭任何一项共享。\n\n关闭后延迟 6 小时生效——这是为了防止在胁迫下被要求当场关闭。如果你处于安全环境，6 小时后共享将彻底停止。",
+                body: "共享可以随时暂停（最长 4 小时），家人也可以随时移除，立即生效。\n\n跌倒、语音和声音检测都是可选功能，可能漏报或误报，也不是医疗器械。",
                 buttonTitle: "开始使用"
             ),
         ]
@@ -65,21 +69,21 @@ enum DisclaimerCopy {
                 id: "onboard.not_emergency",
                 icon: "exclamationmark.triangle",
                 title: "Lantern Care Is Not an Emergency Service",
-                body: "In an emergency, always call your local emergency number first.\n\nLantern Care notifies your family and contacts — it cannot replace police, fire, or medical services. We do our best to deliver notifications, but cannot guarantee network, device, or recipient availability.",
+                body: "In danger, always call your local emergency number first.\n\nLantern Care alerts the family members you choose; it cannot replace police, fire or ambulance. Alerts can be late or fail — for example if a phone is off, has no signal or has notifications turned off — and we can't guarantee that anyone responds.",
                 buttonTitle: "I Understand"
             ),
             Screen(
                 id: "onboard.scope",
-                icon: "eye.slash",
-                title: "We Only See What Safety Requires",
-                body: "Your family can see your location, battery level, and online status.\n\nThey cannot see your messages, photos, call history, or any other app content.\n\nWe do not collect that information either.",
+                icon: "eye",
+                title: "What Family Members Can See",
+                body: "The person being looked after shares with the family members they choose: their location (and their path during an SOS), battery, check-ins, and what they post in the family circle.\n\nNever their messages, photo library, calls or other apps — Lantern Care can't access those.",
                 buttonTitle: "Continue"
             ),
             Screen(
                 id: "onboard.control",
                 icon: "hand.raised",
                 title: "You Are in Control",
-                body: "You can turn off any sharing at any time.\n\nChanges take effect after a 6-hour delay — this prevents someone from forcing you to disable sharing on the spot. If you are safe, sharing will fully stop after 6 hours.",
+                body: "Sharing can be paused for up to 4 hours, and a family member can be removed at any time — it takes effect right away.\n\nFall, voice and sound detection are optional. They can miss an event or go off by mistake, and they are not medical devices.",
                 buttonTitle: "Get Started"
             ),
         ]
@@ -89,21 +93,21 @@ enum DisclaimerCopy {
                 id: "onboard.not_emergency",
                 icon: "exclamationmark.triangle",
                 title: "Lantern Care は緊急通報サービスではありません",
-                body: "危険なときは、まず現地の緊急番号（日本では救急・消防 119、警察 110）に電話してください。\n\nLantern Care はご家族や連絡先に知らせるためのアプリで、警察・消防・救急の代わりにはなりません。通知が届くよう最善を尽くしますが、通信環境や端末、相手がすぐに対応できることは保証できません。",
+                body: "危険なときは、まず現地の緊急番号（日本では救急・消防 119、警察 110）に電話してください。\n\nLantern Care はあなたが選んだ家族に知らせるアプリで、警察・消防・救急の代わりにはなりません。電源が切れている、圏外、通知がオフなどの理由で通知が遅れたり届かなかったりすることがあり、誰かが必ず応答するとは保証できません。",
                 buttonTitle: "わかりました"
             ),
             Screen(
                 id: "onboard.scope",
-                icon: "eye.slash",
-                title: "見えるのは安全に必要な情報だけ",
-                body: "ご家族に見えるのは、あなたの位置、バッテリー残量、オンライン状態です。\n\nメッセージ、写真、通話履歴、その他のアプリの内容は見えません。\n\n私たちもそれらの情報は収集しません。",
+                icon: "eye",
+                title: "家族に見えるもの",
+                body: "見守られる人は、自分で選んだ家族と次の情報を共有します：位置（SOS 中は移動ルートも）、バッテリー残量、安否報告、家族の共有スペースへの投稿。\n\nメッセージ、写真ライブラリ、通話履歴、その他のアプリの内容は見えません。Lantern Care もそれらにはアクセスできません。",
                 buttonTitle: "次へ"
             ),
             Screen(
                 id: "onboard.control",
                 icon: "hand.raised",
                 title: "決めるのはあなたです",
-                body: "共有はいつでもオフにできます。\n\n変更は 6 時間後に反映されます。その場で誰かに共有をやめさせられることを防ぐためです。安全であれば、6 時間後に共有は完全に停止します。",
+                body: "共有はいつでも一時停止（最長 4 時間）でき、家族はいつでも外せます。どちらもすぐに反映されます。\n\n転倒・音声・音の検知は任意の機能です。見逃しや誤作動があり、医療機器ではありません。",
                 buttonTitle: "はじめる"
             ),
         ]
@@ -113,24 +117,49 @@ enum DisclaimerCopy {
                 id: "onboard.not_emergency",
                 icon: "exclamationmark.triangle",
                 title: "Lantern Care n'est pas un service d'urgence",
-                body: "En cas de danger, appelez d'abord le numéro d'urgence local.\n\nLantern Care prévient votre famille et vos contacts — il ne remplace ni la police, ni les pompiers, ni les secours. Nous faisons de notre mieux pour transmettre les notifications, mais ne pouvons garantir la disponibilité du réseau, de l'appareil ou du destinataire.",
+                body: "En cas de danger, appelez toujours d'abord le numéro d'urgence local.\n\nLantern Care prévient les proches que vous choisissez ; il ne remplace ni la police, ni les pompiers, ni les secours. Une alerte peut arriver en retard ou échouer — téléphone éteint, sans réseau ou notifications désactivées, par exemple — et nous ne pouvons pas garantir que quelqu'un réponde.",
                 buttonTitle: "Je comprends"
             ),
             Screen(
                 id: "onboard.scope",
-                icon: "eye.slash",
-                title: "Nous ne voyons que le nécessaire",
-                body: "Votre famille peut voir votre position, le niveau de batterie et votre statut en ligne.\n\nElle ne peut pas voir vos messages, photos, historique d'appels, ni le contenu d'aucune autre application.\n\nNous ne collectons pas non plus ces informations.",
+                icon: "eye",
+                title: "Ce que voient les proches",
+                body: "La personne protégée partage avec les proches qu'elle choisit : sa position (et son trajet pendant un SOS), sa batterie, ses signes de vie et ce qu'elle publie dans le cercle familial.\n\nJamais ses messages, sa photothèque, ses appels ni ses autres applications — Lantern Care n'y a pas accès.",
                 buttonTitle: "Continuer"
             ),
             Screen(
                 id: "onboard.control",
                 icon: "hand.raised",
                 title: "Vous gardez le contrôle",
-                body: "Vous pouvez désactiver tout partage à tout moment.\n\nLes changements prennent effet après un délai de 6 heures — cela empêche quiconque de vous forcer à désactiver le partage sur-le-champ. Si vous êtes en sécurité, le partage cessera complètement après 6 heures.",
+                body: "Le partage peut être mis en pause (jusqu'à 4 heures) et un proche retiré à tout moment, avec effet immédiat.\n\nLa détection de chute, de voix et de sons est facultative. Elle peut manquer un événement ou se déclencher par erreur, et ce n'est pas un dispositif médical.",
                 buttonTitle: "Commencer"
             ),
         ]
+    }
+
+    // MARK: - Guardian responsibilities (after sign-in, guardian role)
+
+    /// One screen a guardian confirms once per version (texts in Localizable "duty.*").
+    enum GuardianDuty {
+        static let version = "v1.0"
+        static let consentKey = "guardian.duty"
+    }
+
+    // MARK: - Terms of Service / Privacy Policy acceptance (login screen)
+
+    enum Terms {
+        /// The date of the Terms of Service text in LegalView; bump to ask again.
+        static let version = "2026-11-06"
+        static let consentKey = "terms.accept"
+    }
+
+    // MARK: - Escalation channels
+
+    /// SMS and voice calls go through Twilio, which is switched off for now: an SOS
+    /// reaches guardians by push only. While false the app must not describe text or
+    /// call steps as happening. Turn on together with the Twilio secrets.
+    enum EscalationChannels {
+        static let phoneEnabled = false
     }
 
     // MARK: - Feature Disclosures (per-feature, first use)

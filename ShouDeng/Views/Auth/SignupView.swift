@@ -39,6 +39,8 @@ struct SignupView: View {
     @State private var phoneVerifiedByLogin = false
     @State private var agreedToDataTransfer = false
     @State private var step: Step = .phone
+    @AppStorage("terms_accepted_version") private var termsVersion = ""
+    private var termsAccepted: Bool { termsVersion == DisclaimerCopy.Terms.version }
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var countdown = 0
@@ -262,6 +264,7 @@ struct SignupView: View {
                     RoundedRectangle(cornerRadius: 10)
                         .stroke(Color(.separator).opacity(0.4), lineWidth: 1)
                 )
+                TermsAgreementRow(tint: ink)
             }
             .padding(.horizontal, 32)
 
@@ -452,7 +455,7 @@ struct SignupView: View {
     private var buttonDisabled: Bool {
         if isLoading { return true }
         switch step {
-        case .phone: return phone.count < 4 || countdown > 0
+        case .phone: return phone.count < 4 || countdown > 0 || !termsAccepted
         case .code: return code.count < 4
         case .profile:
             return !SignupProfileGate.canFinish(name: displayName, selectedRole: selectedRole,

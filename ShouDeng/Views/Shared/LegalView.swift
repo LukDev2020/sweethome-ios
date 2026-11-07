@@ -210,15 +210,23 @@ enum LegalCopy {
         .body("如您对隐私政策有任何疑问，请联系：\nprivacy@shoudeng.app"),
         .divider,
         .title("服务条款"),
-        .updated("最后更新：2026 年 10 月 31 日"),
+        .updated("最后更新：2026 年 11 月 6 日"),
         .header("一、服务描述"),
-        .body("守灯是一款个人安全守护应用，为被守护者和守护者提供紧急求助、位置共享、跌倒检测等安全功能。本应用不替代 \(sos) 等专业紧急服务。"),
-        .header("二、免责声明"),
-        .body("守灯作为辅助安全工具，不保证在所有情况下都能成功发送警报。网络故障、设备损坏、电量耗尽等因素可能影响服务可用性。在紧急情况下，请务必同时拨打当地急救电话 \(sos)。"),
-        .header("三、订阅与付费"),
+        .body("守灯是一款个人安全应用，为被守护者和守护者提供紧急求助通知、位置共享、报平安、跌倒检测等功能。守灯不是紧急服务，不替代 \(sos) 等专业紧急服务。"),
+        .header("二、不作保证"),
+        .body("守灯按现状提供。我们会尽力送达通知，但不保证每条通知都能发出、及时送达、被看到或得到回应。通知依赖手机开机、电量、网络、系统权限（定位、通知、实时活动等）以及 Apple、Google 和运营商等第三方服务，任何一项出问题都可能导致延迟或失败。位置可能不准确。跌倒、语音和声音检测是可选功能，可能漏报或误报，不是医疗器械。遇到危险时，请务必先拨打 \(sos)。"),
+        .header("三、守护者"),
+        .body("守护者是用户自己选择的家人或朋友，不是专业救援人员。守灯不会派人到场救助，也不代表任何守护者承诺随时回应。守护者应在力所能及的范围内提供帮助，认为有人身危险时应拨打当地紧急号码。"),
+        .header("四、知情同意与合法使用"),
+        .body("只能在对方同意的情况下守护对方或查看对方的位置。禁止在他人不知情或不同意的情况下使用守灯追踪他人；为未成年人或无行为能力人使用本应用的，须由依法有权代其同意的人决定。违反本条的账号可能被暂停或注销。"),
+        .header("五、责任限制"),
+        .body("在法律允许的最大范围内，对于因通知未能发出、送达、被看到或得到回应，位置或检测不准确，服务中断，或第三方服务故障所造成的任何损失或伤害，以及任何间接、附带或后果性损失，守灯及其运营方不承担责任。在法律允许的范围内，我们对您的全部责任以您在此前 12 个月内为本服务支付的金额为限。本条不排除或限制依法不得排除或限制的责任，也不影响您作为消费者依法享有的权利。"),
+        .header("六、订阅与付费"),
         .body("付费订阅通过 Apple App Store 处理。订阅自动续费，可在 Apple ID 设置中随时取消。取消后当前付费周期内仍可使用付费功能。"),
-        .header("四、账号与数据"),
+        .header("七、账号与数据"),
         .body("您有责任保管好账号安全。注销账号将永久删除所有相关数据，此操作不可撤销。"),
+        .header("八、条款变更"),
+        .body("我们可能更新本条款。重要变更会在应用内请您重新阅读并同意；不同意的，您可以停止使用并注销账号。"),
     ]}
 
     private static func english(_ sos: String) -> [Block] {[
@@ -250,15 +258,23 @@ enum LegalCopy {
         .body("Questions about this policy? Email privacy@shoudeng.app"),
         .divider,
         .title("Terms of Service"),
-        .updated("Last updated: October 31, 2026"),
+        .updated("Last updated: November 6, 2026"),
         .header("1. The service"),
-        .body("Lantern Care is a personal safety app that gives protected people and their guardians SOS alerts, location sharing, fall detection and related features. It does not replace emergency services such as \(sos)."),
-        .header("2. Disclaimer"),
-        .body("Lantern Care is a supporting safety tool and cannot guarantee that every alert is delivered. Network outages, device damage, a flat battery and other factors can affect it. In an emergency, always call \(sos) as well."),
-        .header("3. Subscriptions"),
+        .body("Lantern Care is a personal safety app that gives the people being looked after and their guardians SOS alerts, location sharing, check-ins, fall detection and related features. Lantern Care is not an emergency service and does not replace emergency services such as \(sos)."),
+        .header("2. No guarantee"),
+        .body("Lantern Care is provided as is. We do our best to deliver alerts, but we do not guarantee that any alert is sent, delivered on time, seen or acted on. Alerts depend on phones being on and charged, network coverage, permissions (location, notifications, Live Activities) and third-party services such as Apple, Google and mobile carriers; a problem with any of them can delay or stop an alert. Locations can be inaccurate. Fall, voice and sound detection are optional, can miss events or trigger by mistake, and are not medical devices. In danger, always call \(sos) first."),
+        .header("3. Guardians"),
+        .body("Guardians are family members or friends chosen by the user, not professional responders. Lantern Care does not send anyone to help and does not promise that any guardian will respond. Guardians help as far as they reasonably can and should call the local emergency number if they believe someone is in danger."),
+        .header("4. Consent and lawful use"),
+        .body("Only look after someone, or view their location, with their agreement. Do not use Lantern Care to track anyone without their knowledge or consent. Use for a minor or a person who cannot consent must be decided by someone legally entitled to consent for them. We may suspend or close accounts that break this rule."),
+        .header("5. Limitation of liability"),
+        .body("To the fullest extent permitted by law, Lantern Care and its operator are not liable for any loss or harm arising from an alert not being sent, delivered, seen or acted on, from inaccurate location or detection, from interruptions of the service, or from the failure of third-party services, nor for any indirect, incidental or consequential loss. Where the law allows a cap, our total liability to you is limited to the amount you paid for the service in the 12 months before the claim. Nothing in these terms excludes or limits liability that cannot be excluded or limited by law, or your rights as a consumer."),
+        .header("6. Subscriptions"),
         .body("Paid subscriptions are handled by the Apple App Store and renew automatically. You can cancel at any time in your Apple ID settings; paid features remain available until the end of the current period."),
-        .header("4. Your account"),
+        .header("7. Your account"),
         .body("You are responsible for keeping your account secure. Deleting your account permanently erases all associated data and cannot be undone."),
+        .header("8. Changes"),
+        .body("We may update these terms. For important changes we will ask you in the app to read and agree again; if you don't agree, you can stop using the service and delete your account."),
     ]}
 
     private static func japanese(_ sos: String) -> [Block] {[
@@ -290,15 +306,23 @@ enum LegalCopy {
         .body("本ポリシーに関するお問い合わせ：privacy@shoudeng.app"),
         .divider,
         .title("利用規約"),
-        .updated("最終更新日：2026年10月31日"),
+        .updated("最終更新日：2026年11月6日"),
         .header("1. サービス内容"),
-        .body("Lantern Care は、見守られる人と見守る人のための個人向け安全アプリです。SOS 通知、位置共有、転倒検知などの機能を提供します。\(sos) などの緊急通報サービスの代わりにはなりません。"),
-        .header("2. 免責事項"),
-        .body("Lantern Care は安全を補助するツールであり、すべての通知が確実に届くことを保証するものではありません。通信障害、端末の故障、バッテリー切れなどにより利用できない場合があります。緊急時は、必ず \(sos) にも電話してください。"),
-        .header("3. サブスクリプション"),
+        .body("Lantern Care は、見守られる人と見守る人のための個人向け安全アプリです。SOS 通知、位置共有、安否報告、転倒検知などの機能を提供します。Lantern Care は緊急通報サービスではなく、\(sos) などの緊急サービスの代わりにはなりません。"),
+        .header("2. 保証の否認"),
+        .body("Lantern Care は現状のまま提供されます。通知が届くよう最善を尽くしますが、通知が送信される、時間どおりに届く、確認される、または対応されることを保証するものではありません。通知は端末の電源やバッテリー、通信環境、権限（位置情報・通知・ライブアクティビティ）、Apple・Google・通信事業者などの第三者サービスに依存し、いずれかに問題があると遅延または失敗することがあります。位置情報が不正確な場合があります。転倒・音声・音の検知は任意の機能で、見逃しや誤作動があり、医療機器ではありません。危険なときは、必ず先に \(sos) に電話してください。"),
+        .header("3. 見守る人"),
+        .body("見守る人は利用者が選んだ家族や友人であり、救助の専門家ではありません。Lantern Care は誰かを現場に派遣することはなく、見守る人が必ず応答することも約束しません。見守る人は合理的にできる範囲で手助けし、危険があると考えた場合は現地の緊急番号に電話してください。"),
+        .header("4. 同意と適法な利用"),
+        .body("相手の同意がある場合にのみ、見守りや位置の確認を行ってください。本人に知らせず、または同意なく Lantern Care で人を追跡することは禁止です。未成年者や同意能力のない人のための利用は、法律上その人に代わって同意できる人が判断してください。違反したアカウントは停止または削除されることがあります。"),
+        .header("5. 責任の制限"),
+        .body("法律で認められる最大限の範囲で、Lantern Care およびその運営者は、通知が送信・配信・確認・対応されなかったこと、位置情報や検知の不正確さ、サービスの中断、第三者サービスの障害から生じた損失や損害、ならびに間接的・付随的・結果的な損失について責任を負いません。上限を設けることが認められる場合、当社の責任の総額は、請求前 12 か月間にお支払いいただいた金額を上限とします。本規約は、法律上除外または制限できない責任や、消費者としての権利を除外・制限するものではありません。"),
+        .header("6. サブスクリプション"),
         .body("有料サブスクリプションは Apple の App Store で処理され、自動更新されます。Apple アカウントの設定からいつでも解約でき、解約後も現在の期間が終わるまで有料機能を利用できます。"),
-        .header("4. アカウント"),
+        .header("7. アカウント"),
         .body("アカウントの安全な管理はご自身の責任となります。アカウントを削除すると関連するすべてのデータが完全に消去され、元に戻すことはできません。"),
+        .header("8. 規約の変更"),
+        .body("本規約は更新されることがあります。重要な変更については、アプリ内で改めてお読みいただき同意をお願いします。同意されない場合は、利用を中止しアカウントを削除できます。"),
     ]}
 
     private static func french(_ sos: String) -> [Block] {[
@@ -330,15 +354,23 @@ enum LegalCopy {
         .body("Une question sur cette politique ? Écrivez à privacy@shoudeng.app"),
         .divider,
         .title("Conditions d'utilisation"),
-        .updated("Dernière mise à jour : 31 octobre 2026"),
+        .updated("Dernière mise à jour : 6 novembre 2026"),
         .header("1. Le service"),
-        .body("Lantern Care est une app de sécurité personnelle qui offre aux personnes protégées et à leurs proches des alertes SOS, le partage de position, la détection de chute et des fonctions associées. Elle ne remplace pas les services d'urgence comme le \(sos)."),
-        .header("2. Avertissement"),
-        .body("Lantern Care est un outil d'appoint et ne peut garantir que chaque alerte soit transmise. Une panne de réseau, un appareil endommagé, une batterie vide ou d'autres facteurs peuvent l'en empêcher. En cas d'urgence, appelez toujours aussi le \(sos)."),
-        .header("3. Abonnements"),
+        .body("Lantern Care est une app de sécurité personnelle qui offre aux personnes protégées et à leurs proches des alertes SOS, le partage de position, les signes de vie, la détection de chute et des fonctions associées. Lantern Care n'est pas un service d'urgence et ne remplace pas les services d'urgence comme le \(sos)."),
+        .header("2. Absence de garantie"),
+        .body("Lantern Care est fourni en l'état. Nous faisons de notre mieux pour transmettre les alertes, mais ne garantissons pas qu'une alerte soit envoyée, reçue à temps, vue ou suivie d'effet. Les alertes dépendent d'un téléphone allumé et chargé, du réseau, des autorisations (position, notifications, Activités en direct) et de services tiers comme Apple, Google et les opérateurs ; un problème avec l'un d'eux peut retarder ou empêcher une alerte. La position peut être imprécise. La détection de chute, de voix et de sons est facultative, peut manquer un événement ou se déclencher par erreur, et n'est pas un dispositif médical. En cas de danger, appelez toujours d'abord le \(sos)."),
+        .header("3. Les gardiens"),
+        .body("Les gardiens sont des proches choisis par l'utilisateur, pas des secouristes. Lantern Care n'envoie personne sur place et ne promet pas qu'un gardien répondra. Les gardiens aident dans la mesure du raisonnable et appellent le numéro d'urgence local s'ils pensent qu'une personne est en danger."),
+        .header("4. Consentement et usage licite"),
+        .body("Ne veillez sur une personne, ou ne consultez sa position, qu'avec son accord. N'utilisez pas Lantern Care pour suivre quelqu'un à son insu ou sans son consentement. L'usage pour un mineur ou une personne qui ne peut consentir relève de la personne légalement habilitée à consentir pour elle. Nous pouvons suspendre ou fermer les comptes qui enfreignent cette règle."),
+        .header("5. Limitation de responsabilité"),
+        .body("Dans toute la mesure permise par la loi, Lantern Care et son exploitant ne sont pas responsables des pertes ou dommages résultant d'une alerte non envoyée, non reçue, non vue ou non suivie d'effet, d'une position ou d'une détection inexacte, d'une interruption du service ou de la défaillance de services tiers, ni des pertes indirectes, accessoires ou consécutives. Lorsque la loi permet un plafond, notre responsabilité totale envers vous est limitée aux sommes payées pour le service au cours des 12 mois précédant la réclamation. Rien dans ces conditions n'exclut ni ne limite une responsabilité qui ne peut l'être en vertu de la loi, ni vos droits de consommateur."),
+        .header("6. Abonnements"),
         .body("Les abonnements payants sont gérés par l'App Store d'Apple et se renouvellent automatiquement. Vous pouvez résilier à tout moment dans les réglages de votre identifiant Apple ; les fonctions payantes restent disponibles jusqu'à la fin de la période en cours."),
-        .header("4. Votre compte"),
+        .header("7. Votre compte"),
         .body("Vous êtes responsable de la sécurité de votre compte. La suppression du compte efface définitivement toutes les données associées et ne peut pas être annulée."),
+        .header("8. Modifications"),
+        .body("Nous pouvons mettre à jour ces conditions. Pour toute modification importante, nous vous demanderons dans l'app de les relire et de les accepter ; si vous refusez, vous pouvez cesser d'utiliser le service et supprimer votre compte."),
     ]}
 }
 
@@ -442,5 +474,59 @@ struct DataLocationView: View {
         .navigationTitle(lang.localized("settings.data.storageLocation"))
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showPolicy) { PrivacyPolicyView().environmentObject(coordinator) }
+    }
+}
+
+// MARK: - Terms agreement (login / sign-up)
+
+/// "I've read and agree to the Terms of Service and Privacy Policy" — required before
+/// a code is sent, so every account has agreed to the current Terms. The tap is logged
+/// (ConsentLogger) and sent to the server after sign-in.
+struct TermsAgreementRow: View {
+    @EnvironmentObject private var coordinator: AppCoordinator
+    @ObservedObject private var lang = LanguageManager.shared
+    @AppStorage("terms_accepted_version") private var acceptedVersion = ""
+    @State private var showTerms = false
+    var tint: Color = Color(red: 1/255, green: 69/255, blue: 129/255)
+
+    static var isAccepted: Bool {
+        UserDefaults.standard.string(forKey: "terms_accepted_version") == DisclaimerCopy.Terms.version
+    }
+
+    private var accepted: Bool { acceptedVersion == DisclaimerCopy.Terms.version }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Button {
+                if accepted {
+                    acceptedVersion = ""
+                } else {
+                    acceptedVersion = DisclaimerCopy.Terms.version
+                    ConsentLogger.shared.logTermsAccepted()
+                }
+            } label: {
+                Image(systemName: accepted ? "checkmark.square.fill" : "square")
+                    .font(.scaled(size: 20))
+                    .foregroundStyle(tint)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(lang.localized("terms.agree"))
+            .accessibilityAddTraits(accepted ? .isSelected : [])
+            VStack(alignment: .leading, spacing: 4) {
+                Text(lang.localized("terms.agree"))
+                    .font(.scaled(size: 13))
+                    .foregroundStyle(tint)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button(lang.localized("terms.read")) { showTerms = true }
+                    .font(.scaled(size: 13, weight: .semibold))
+                    .foregroundStyle(tint)
+                    .underline()
+                    .buttonStyle(.plain)
+            }
+            Spacer(minLength: 0)
+        }
+        .sheet(isPresented: $showTerms) {
+            PrivacyPolicyView().environmentObject(coordinator)
+        }
     }
 }

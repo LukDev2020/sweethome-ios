@@ -1330,7 +1330,7 @@
 "explore.tip.mom.guardians.title" = "三位守護者，三個時區";
 "explore.tip.mom.guardians.body" = "Sarah 在多倫多，Kevin 在上海，Lucy 在巴黎，輪流照看，你需要時通常總有人醒著。";
 "explore.tip.mom.sos.title" = "練習一次求助";
-"explore.tip.mom.sos.body" = "按住紅色按鈕 3 秒。真實緊急情況下，守護者會先收到提醒，然後是簡訊，再是電話，直到有人回應。體驗中不會真的通知任何人——你會看到 Sarah 看到的一切。";
+"explore.tip.mom.sos.body" = "按住紅色按鈕 3 秒。真實緊急情況下，值班守護者會先收到提醒，無人回應時再通知所有守護者。體驗中不會真的通知任何人——你會看到 Sarah 看到的一切。";
 "explore.tip.mom.tracking.title" = "你決定誰能看到你的位置";
 "explore.tip.mom.tracking.body" = "需要隱私時可暫停共享最多 4 小時。發出求助時會自動恢復。";
 "explore.tip.mom.done.title" = "這就是媽媽這邊";
@@ -1340,7 +1340,7 @@
 "explore.tip.sarah.respond.title" = "兩步響應求助";
 "explore.tip.sarah.respond.body" = "媽媽的卡片跳到“需關注”。開啟即可看到她的位置、給她打電話，或點“我來處理”，讓 Kevin 和 Lucy 知道由你處理，自動呼叫也會停止。";
 "explore.tip.sarah.ack.title" = "我來處理";
-"explore.tip.sarah.ack.body" = "點一下即可告訴其他家人由你處理，並停止自動簡訊和電話。媽媽安全後再結束求助。";
+"explore.tip.sarah.ack.body" = "點一下即可告訴其他家人由你處理，並停止後續的自動提醒。媽媽安全後再結束求助。";
 "explore.tip.sarah.coverage.title" = "誰在什麼時候醒著";
 "explore.tip.sarah.coverage.body" = "排班表顯示每個人負責媽媽一天中的哪些時段，以及沒人照看的空檔。";
 "explore.tip.sarah.records.title" = "保險理賠材料";
@@ -1977,3 +1977,19 @@
 "lsc.demoNote" = "示範：鎖定畫面會顯示陳家的示範卡片，離開示範時自動移除。";
 "lsc.row.madeRoom" = "為騰出空間，已關閉「%@」。";
 "lsc.rows.hint" = "卡片大約能放三行；打開一行時可能會關閉另一行。";
+
+/* Disclaimers v2, Terms agreement, guardian duties */
+"duty.title" = "守護家人之前";
+"duty.point.alerts" = "提醒可能延遲甚至收不到——例如手機關機或沒有訊號。守燈不能替代緊急服務：如果你認為對方有危險，請撥打對方所在地的緊急號碼。";
+"duty.point.notResponder" = "你是家人，不是專業救援人員；守燈也不會派人到場救助。盡你所能就好——打電話、確認情況，或請身邊的人幫忙。";
+"duty.point.consent" = "只守護同意被守護的人。分享什麼由對方決定，對方可以隨時暫停分享或移除你。";
+"duty.button" = "我明白了";
+"terms.agree" = "我已閱讀並同意《服務條款》和《隱私政策》。";
+"terms.read" = "查看條款";
+"terms.update.title" = "服務條款已更新";
+"terms.update.body" = "新版條款更清楚地說明了守燈在緊急情況下能做什麼、不能做什麼。請閱讀並同意後繼續使用。";
+"terms.update.required" = "勾選後即可繼續。";
+"terms.update.thanks" = "謝謝。";
+"sos.status.allTitle" = "通知所有守護者";
+"sos.status.allNext" = "30 秒內無人回應時傳送";
+"sos.status.allSent" = "已傳給所有守護者";

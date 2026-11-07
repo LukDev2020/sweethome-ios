@@ -404,6 +404,7 @@ final class AppCoordinator: ObservableObject {
 
         // Fetch fresh data from server, then restart Live Activity with real data
         Task {
+            await syncConsentRecords()
             await fetchUserProfile()
             if userRole == .guardian {
                 await fetchProtectedPersons()
@@ -466,6 +467,11 @@ final class AppCoordinator: ObservableObject {
 
     private func onLogout() {
         if !isDemo { liveActivityManager.endAllActivities() }
+        if !isDemo {
+            // The next person to sign in on this phone agrees for themselves
+            UserDefaults.standard.removeObject(forKey: "terms_accepted_version")
+            UserDefaults.standard.removeObject(forKey: "guardian_duty_version")
+        }
         if !isDemo {
             let storeKit = storeKitManager
             Task { @MainActor in storeKit.setAccount(nil) }
@@ -791,6 +797,47 @@ final class AppCoordinator: ObservableObject {
             body: ["type": "cross_border_transfer", "version": DataTransferConsent.version]
         )
         await MainActor.run { needsDataTransferConsent = false }
+    }
+
+    // MARK: - Consent records → server
+
+    private struct ConsentUpload: Encodable {
+        struct Entry: Encodable {
+            let item: String
+            let copyVersion: String
+            let action: String
+            let at: Date
+            let appVersion: String
+            let locale: String
+            let deviceId: String
+        }
+        let records: [Entry]
+    }
+
+    /// Sends consent taps logged on this phone (first-launch screens, Terms, feature
+    /// disclosures, guardian duties) to the account, 100 at a time. Kept for retry.
+    func syncConsentRecords() async {
+        guard !isDemo, case .loggedIn = authState else { return }
+        ConsentLogger.shared.flush()
+        let pending = ConsentLogger.shared.pendingUpload()
+        guard !pending.records.isEmpty else { return }
+        var sent = pending.total - pending.records.count
+        for chunk in stride(from: 0, to: pending.records.count, by: 100).map({ Array(pending.records[$0..<min($0 + 100, pending.records.count)]) }) {
+            let body = ConsentUpload(records: chunk.map {
+                .init(item: $0.item, copyVersion: $0.copyVersion, action: $0.action, at: $0.timestamp,
+                      appVersion: $0.appVersion, locale: $0.locale, deviceId: $0.deviceId)
+            })
+            do {
+                let _: SuccessResponse = try await apiClient.post("/v1/user/consent", body: body)
+                sent += chunk.count
+                ConsentLogger.shared.markUploaded(upTo: sent)
+            } catch {
+                #if DEBUG
+                print("[Consent] upload failed, will retry: \(error)")
+                #endif
+                return
+            }
+        }
     }
 
     // MARK: - Member Timeline
