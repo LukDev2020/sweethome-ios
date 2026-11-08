@@ -102,6 +102,14 @@ final class AppCoordinator: ObservableObject {
     /// Login verified this number but found no account: signup opens at the
     /// profile step and reuses that verification (no second SMS).
     @Published var signupPhoneVerified = false
+    /// Sign in with Alipay: sent to Alipay, waiting for the person to come back
+    @Published var alipayWaiting = false
+    /// The Alipay round trip connects Alipay to this account (Settings) instead of signing in
+    var alipayConnecting = false
+    /// Last Apple / Alipay problem, shown where the person started it
+    @Published var identitySignInError: String?
+    /// Settings → Sign-in methods: Alipay was just connected
+    @Published var alipayJustConnected = false
     @Published var timeline: [TimelineEntry] = []
     @Published var familyPosts: [FamilyPost] = []
     /// The last family-circle refresh failed (the feed shows cached posts or an error).
@@ -598,6 +606,8 @@ final class AppCoordinator: ObservableObject {
 
     func sceneDidBecomeActive() {
         heartbeatService.appDidBecomeActive()
+        // Back from the Alipay app without its "back to the app" link: check once
+        if alipayWaiting { Task { await finishAlipaySignIn(quiet: true) } }
         guard case .loggedIn = authState else { return }
         // Fall detection runs while the app is open, for the person being protected
         // (matches NSMotionUsageDescription)
@@ -688,6 +698,10 @@ final class AppCoordinator: ObservableObject {
                 let code = URLComponents(url: url, resolvingAgainstBaseURL: false)?
                     .queryItems?.first(where: { $0.name == "code" })?.value ?? ""
                 if let code = DeepLinkRouter.normalizedCrewCode(code) { handleDeepLinkDestination(.crew(code: code)) }
+                return
+            case "auth":
+                // shoudeng://auth/alipay?state=… — Alipay's page sends the person back
+                if url.path == "/alipay" { Task { await finishAlipaySignIn(quiet: false) } }
                 return
             case "rider-report":
                 showBikeReport = true
@@ -792,6 +806,12 @@ final class AppCoordinator: ObservableObject {
     /// one picked in the consulate screen, else the profile country, else the device region.
     var localEmergencyNumber: String {
         RegionalEmergencyInfo.forCountry(emergencyCountryCode).primaryNumber
+    }
+
+    /// Danger from a person (threats, being followed): police, where that differs
+    /// from the ambulance number (China: 110, not 120)
+    var localPoliceNumber: String {
+        RegionalEmergencyInfo.forCountry(emergencyCountryCode).policeNumber
     }
 
     /// The country whose emergency numbers apply: the hotline the person picked, else

@@ -387,6 +387,12 @@ export const fakeDb = {
     return result;
   },
   getAll: async (...refs: FakeDocRef[]) => Promise.all(refs.map((r) => r.get())),
+  /** The doc and everything under it (subcollections) */
+  recursiveDelete: async (ref: FakeDocRef) => {
+    for (const p of [...store.keys()]) {
+      if (p === ref.path || p.startsWith(ref.path + "/")) store.delete(p);
+    }
+  },
 };
 
 const firestoreFn: any = () => fakeDb;

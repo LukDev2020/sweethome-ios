@@ -92,6 +92,15 @@ final class LanguageManager: ObservableObject {
         bundle.localizedString(forKey: key, value: nil, table: nil)
     }
 
+    /// A count in a sentence: "1 family member" / "3 family members". Uses `key.one`
+    /// for one (French: 0 and 1) when that string exists, else `key`.
+    func localized(_ key: String, count: Int) -> String {
+        let singular = current == .french ? count <= 1 : count == 1
+        let one = "\(key).one"
+        let format = singular ? bundle.localizedString(forKey: one, value: nil, table: nil) : one
+        return String(format: format == one ? localized(key) : format, count)
+    }
+
     func localized(_ key: String, fallback: String) -> String {
         let result = bundle.localizedString(forKey: key, value: fallback, table: nil)
         return result == key ? fallback : result

@@ -98,7 +98,7 @@ struct GuardianHomeView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     // Only show duty text when there are protected persons
                     if !coordinator.protectedPersons.isEmpty {
-                        Text(String(format: lang.localized("guardian.home.guarding.count"), coordinator.protectedPersons.count))
+                        Text(lang.localized("guardian.home.guarding.count", count: coordinator.protectedPersons.count))
                             .font(.scaled(size: 12))
                             .foregroundStyle(safe)
                     } else {
@@ -194,7 +194,7 @@ struct GuardianHomeView: View {
                         Spacer()
                         Group {
                             if !coordinator.protectedPersons.isEmpty {
-                                Text(String(format: lang.localized("guardian.home.guarding.count"), coordinator.protectedPersons.count))
+                                Text(lang.localized("guardian.home.guarding.count", count: coordinator.protectedPersons.count))
                             } else {
                                 Text(lang.localized("guardian.home.shoudeng"))
                             }
@@ -393,7 +393,7 @@ struct GuardianHomeView: View {
             if let c = coordinator.currentUser?.cityName, !c.isEmpty { cities.append(c) }
             for person in coordinator.protectedPersons { if !person.user.cityName.isEmpty && !cities.contains(person.user.cityName) { cities.append(person.user.cityName) } }
             let totalFamily = coordinator.protectedPersons.count
-            familyText = String(format: lang.localized("guardian.home.guarding.count"), totalFamily)
+            familyText = lang.localized("guardian.home.guarding.count", count: totalFamily)
             subtitleText = cities.isEmpty
                 ? lang.localized("guardian.home.guarding")
                 : cities.prefix(3).joined(separator: " · ")

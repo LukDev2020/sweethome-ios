@@ -74,7 +74,23 @@ export async function createSOSEvent(input: SOSTriggerInput): Promise<SOSTrigger
     return null;
   });
 
-  if (existing) return { ...existing, created: false };
+  // "I've crashed — hurt": the crash report may have reached the server first
+  const linkCrash = async (sosEventId: string) => {
+    if (method !== "crashReport" || !clientId) return;
+    const crash = db.collection("safety_events").doc(`${personId}_${clientId}`);
+    try {
+      const snap = await crash.get();
+      if (snap.exists && !snap.data()?.sosEventId) await crash.update({ sosEventId });
+    } catch (error) {
+      console.warn("[SOS] crash report link failed:", (error as Error).message);
+    }
+  };
+
+  if (existing) {
+    await linkCrash(existing.sosEventId);
+    return { ...existing, created: false };
+  }
+  await linkCrash(sosId);
 
   // Informational, outside the transaction
   await db.collection("timeline_entries").add({

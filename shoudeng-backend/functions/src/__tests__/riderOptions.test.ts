@@ -193,4 +193,21 @@ describe("crash reports", () => {
     expect(mockPushes).toEqual([]);
     expect((await as("kai").post("/v1/safety-events/crash", { clientEventId: "x" })).status).toBe(400);
   });
+
+  it("hurt: linked to the SOS the phone sent with the same id, whichever arrives first", async () => {
+    const { createSOSEvent } = require("../services/sosTrigger");
+    // SOS first, then the report
+    const first = await createSOSEvent({ personId: "kai", triggerMethod: "crashReport", clientSOSId: "crash-0003" });
+    await as("kai").post("/v1/safety-events/crash", { clientEventId: "crash-0003", hurt: true });
+    expect(readDoc("safety_events/kai_crash-0003")?.sosEventId).toBe(first.sosEventId);
+    // Report first, then the SOS (it joins the open SOS and links the report)
+    await as("kai").post("/v1/safety-events/crash", { clientEventId: "crash-0004", hurt: true });
+    expect(readDoc("safety_events/kai_crash-0004")?.sosEventId).toBeNull();
+    const second = await createSOSEvent({ personId: "kai", triggerMethod: "crashReport", clientSOSId: "crash-0004" });
+    expect(readDoc("safety_events/kai_crash-0004")?.sosEventId).toBe(second.sosEventId);
+    // Someone else's SOS with that id is never linked
+    await createSOSEvent({ personId: "wei", triggerMethod: "crashReport", clientSOSId: "crash-0005" });
+    await as("kai").post("/v1/safety-events/crash", { clientEventId: "crash-0005", hurt: true });
+    expect(readDoc("safety_events/kai_crash-0005")?.sosEventId).toBeNull();
+  });
 });

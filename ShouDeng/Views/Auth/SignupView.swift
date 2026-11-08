@@ -39,6 +39,8 @@ struct SignupView: View {
     @State private var inviteCode = ""
     /// Opened from a login that already verified this number (no second SMS)
     @State private var phoneVerifiedByLogin = false
+    /// Came from Sign in with Apple / Alipay: no phone step, that account is the sign-in
+    @State private var identity: PendingIdentity?
     @State private var agreedToDataTransfer = false
     @State private var step: Step = .phone
     @AppStorage("terms_accepted_version") private var termsVersion = ""
@@ -126,7 +128,11 @@ struct SignupView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button { dismiss() } label: { Label(lang.localized("signup.back"), systemImage: "chevron.backward") }
+                    Button {
+                        // Changed their mind: forget the Apple / Alipay sign-in
+                        if identity != nil { coordinator.authManager.cancelPendingIdentity() }
+                        dismiss()
+                    } label: { Label(lang.localized("signup.back"), systemImage: "chevron.backward") }
                 }
             }
             .sheet(isPresented: $showCountryPicker) {
@@ -148,6 +154,12 @@ struct SignupView: View {
                     step = .profile
                 }
                 coordinator.signupPhoneVerified = false
+                // Apple / Alipay verified this person: straight to the profile
+                if !phoneVerifiedByLogin, let pending = coordinator.authManager.pendingIdentity {
+                    identity = pending
+                    if displayName.isEmpty, let name = pending.suggestedName { displayName = name }
+                    step = .profile
+                }
                 // Opened from an invite link: that path is chosen and the code filled in
                 if case .invite(let linkCode) = coordinator.pendingDeepLink {
                     chooseInvite()
@@ -308,6 +320,32 @@ struct SignupView: View {
                                 .font(.scaled(size: 13))
                                 .foregroundStyle(ink2)
                                 .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(10)
+                        .background(RoundedRectangle(cornerRadius: 8).fill(safe.opacity(0.08)))
+                    }
+
+                    if let identity {
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundStyle(safe)
+                                Text(lang.localized(identity.provider == .apple ? "signup.identity.apple" : "signup.identity.alipay"))
+                                    .font(.scaled(size: 13))
+                                    .foregroundStyle(ink2)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            // Already a phone account: connect instead of a second account
+                            Button {
+                                coordinator.connectPendingIdentityByPhone()
+                            } label: {
+                                Text(lang.localized("signup.identity.haveAccount"))
+                                    .font(.scaled(size: 12.5, weight: .medium))
+                                    .foregroundStyle(lamp)
+                                    .multilineTextAlignment(.leading)
+                            }
+                            .accessibilityIdentifier("signup.identity.haveAccount")
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(10)

@@ -3,7 +3,8 @@ import UIKit
 
 // MARK: - Login View
 //
-// Phone + verification code login flow with international country code picker.
+// Phone + verification code login flow with international country code picker,
+// plus Sign in with Apple / Alipay (IdentitySignInViews.swift).
 // Design follows the lighthouse design system:
 //   navy #014581, blue #3D9AC0, cream #FCF2DA, bg #FBF8F1, ink #0E2B4A
 //
@@ -468,6 +469,10 @@ struct LoginView: View {
                     .padding(.top, 14)
             }
 
+            PendingIdentitySlot(auth: coordinator.authManager)
+                .padding(.horizontal, 32)
+                .padding(.top, 12)
+
             // Action button
             Button {
                 Task { await handleAction() }
@@ -496,6 +501,13 @@ struct LoginView: View {
             .disabled(buttonDisabled)
             .padding(.horizontal, 32)
             .padding(.top, 16)
+
+            // Sign in with Apple / Alipay (not while a phone code is on its way)
+            if !codeSent {
+                IdentitySignInButtons(termsAccepted: termsAccepted)
+                    .padding(.horizontal, 32)
+                    .padding(.top, 14)
+            }
 
             demoEntry
                 .padding(.horizontal, 32)
@@ -711,6 +723,17 @@ struct LoginView: View {
                     countdownTimer?.invalidate()
                 }
             }
+        }
+    }
+}
+
+/// "Sign in with your phone to connect Apple / Alipay" while one is waiting
+private struct PendingIdentitySlot: View {
+    @ObservedObject var auth: AuthManager
+
+    var body: some View {
+        if let pending = auth.pendingIdentity {
+            PendingIdentityLinkBanner(pending: pending)
         }
     }
 }

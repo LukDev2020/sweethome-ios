@@ -87,6 +87,7 @@
 		35159B7DB49900FACD831968 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C3DE3DA8E9EEE6CEB01B71 /* User.swift */; };
 		36066D7A4E9FAA28FD533C5E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E14F7CAC5E00568391DDDD13 /* PrivacyInfo.xcprivacy */; };
 		36E61D1756A635AC2E9CE3C6 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31619A304E944F8752AA75E9 /* LoginView.swift */; };
+		BE83BE89816E70F2B72C0810 /* IdentitySignInViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 418A5E40C8D4C64CE125589C /* IdentitySignInViews.swift */; };
 		3917D763BCD59FF3CB69955D /* GuardianActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E1C1E117AC143584838AA4 /* GuardianActivityAttributes.swift */; };
 		3AB9D0B1A1EC566225F07308 /* WidgetHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB28CB4A33522FB7D99598E /* WidgetHelpers.swift */; };
 		3E0C585AFE1F2B803B314040 /* FallDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 996A66596F591B7AE6D3A71D /* FallDetectorTests.swift */; };
@@ -123,6 +124,7 @@
 				A1B2C3D4E5F60001B0000002 /* ConsentLoggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60001A0000002 /* ConsentLoggerTests.swift */; };
 				A1B2C3D4E5F60001B0000003 /* KeychainHelperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60001A0000003 /* KeychainHelperTests.swift */; };
 		5E1BA1B8E61306352C819EA8 /* AuthManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C38041E8CCB6EAE0ECF2D4F /* AuthManagerTests.swift */; };
+		F49C3B6B905C232E7083DA3E /* IdentitySignInTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 283410D1B012013890AF29D9 /* IdentitySignInTests.swift */; };
 		5EB4D8C3B5424318A166AA9B /* CrashReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C2AFD6DEC7BB6A319D0C0A1 /* CrashReporter.swift */; };
 		61586C8E3D663CC027C5804E /* GuardianAlertResponseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43D8A8B0CD131E9E09E02BF6 /* GuardianAlertResponseView.swift */; };
 		DD44EE010000000C /* GuardianDutyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD44EE010000000B /* GuardianDutyView.swift */; };
@@ -141,6 +143,7 @@
 		791C1055A0D240706A687AD6 /* CountryCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6FB12D36F67ADB24BA2DDD5 /* CountryCode.swift */; };
 		7CEB8F947D0673F08CE4439B /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9B16BBF77C02115152E9C88 /* AppCoordinator.swift */; };
 		19346CFAC17FEEE51E087788 /* AppCoordinator+RiderSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 990C2267C46BBE90320E5BB2 /* AppCoordinator+RiderSettings.swift */; };
+		1249FC612A824C8544DB0993 /* AppCoordinator+IdentitySignIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CC508DC45803980BB79A86B /* AppCoordinator+IdentitySignIn.swift */; };
 		93B93121E8675298599F7341 /* AppCoordinator+RiderOnboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 816328D1CA081D5AF81300FD /* AppCoordinator+RiderOnboarding.swift */; };
 		B7853876E83E1B94800D56FD /* AppCoordinator+AutoSOSCheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7699F2AA59357429247EA19 /* AppCoordinator+AutoSOSCheck.swift */; };
 		7D9761B4731755AF8D1F6F8C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 870E1E566CD6F0CB6F1D7BF4 /* InfoPlist.strings */; };
@@ -212,6 +215,7 @@
 		F0FFEA124608CCCA60504A62 /* AdaptiveLocationManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19BF856E4785D6ABD573F691 /* AdaptiveLocationManagerTests.swift */; };
 		B3C4D5E6F7A8B9C0D1E2F3A4 /* ReactiveLocationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5D6E7F8A9B0C1D2E3F4A5B6 /* ReactiveLocationServiceTests.swift */; };
 		F3ECFE963F1129AB9DCD91B0 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E138FA50B18713B668BAA89 /* AuthManager.swift */; };
+		BA8A5AADDCA87BBDFFE6CD26 /* IdentitySignIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A215297D71E2ABC9728DCE0 /* IdentitySignIn.swift */; };
 		F4098E23D57249FA9DBC132D /* AdaptiveLocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2FC646F35FAFF4899339BE7 /* AdaptiveLocationManager.swift */; };
 		F2E1D0C9B8A7F6E5D4C3B2A1 /* ReactiveLocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* ReactiveLocationService.swift */; };
 		F75C7ACC811E097653758D19 /* DutyScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8653AAB32EF5A2540EA607 /* DutyScheduler.swift */; };
@@ -348,11 +352,13 @@
 		284B21E6768A3FB61D56C283 /* GuardianStatusWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianStatusWidget.swift; sourceTree = "<group>"; };
 		28DD19C64B3FA4AFF3D91214 /* ProtectedTimerWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtectedTimerWidget.swift; sourceTree = "<group>"; };
 		2E138FA50B18713B668BAA89 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
+		5A215297D71E2ABC9728DCE0 /* IdentitySignIn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentitySignIn.swift; sourceTree = "<group>"; };
 		2F70A5DDA0A5E4325411CBE4 /* ClaimPDFGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimPDFGenerator.swift; sourceTree = "<group>"; };
 		E4D503C7E41320F776BBF70C /* ReportPDF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportPDF.swift; sourceTree = "<group>"; };
 		C4C6B309634188E0FB79D9BB /* IncidentReportBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncidentReportBuilder.swift; sourceTree = "<group>"; };
 		2FC2559DEFD8D966B804EC79 /* ClaimMaterialTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimMaterialTests.swift; sourceTree = "<group>"; };
 		31619A304E944F8752AA75E9 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		418A5E40C8D4C64CE125589C /* IdentitySignInViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentitySignInViews.swift; sourceTree = "<group>"; };
 		323C5F3CDB46FE9F3750B9AA /* GuardianHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianHomeView.swift; sourceTree = "<group>"; };
 		325580AA75684B4486819630 /* ShouDengWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShouDengWidgets.entitlements; sourceTree = "<group>"; };
 		3466851E2976AD062984576F /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
@@ -364,6 +370,7 @@
 				A1B2C3D4E5F60001A0000002 /* ConsentLoggerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsentLoggerTests.swift; sourceTree = "<group>"; };
 				A1B2C3D4E5F60001A0000003 /* KeychainHelperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelperTests.swift; sourceTree = "<group>"; };
 		3C38041E8CCB6EAE0ECF2D4F /* AuthManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManagerTests.swift; sourceTree = "<group>"; };
+		283410D1B012013890AF29D9 /* IdentitySignInTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentitySignInTests.swift; sourceTree = "<group>"; };
 		3D4BC3608A17EB87F1339C43 /* LegalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalView.swift; sourceTree = "<group>"; };
 		3D922CFCBCCE8F87BD686AD8 /* FallDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallDetector.swift; sourceTree = "<group>"; };
 		52E7C29A89AD1E8E3D6D00C5 /* FallSensorTrace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallSensorTrace.swift; sourceTree = "<group>"; };
@@ -467,6 +474,7 @@
 		E90B997F6B5ED8D73AF5B4F8 /* LanguageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageManager.swift; sourceTree = "<group>"; };
 		E9B16BBF77C02115152E9C88 /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
 		990C2267C46BBE90320E5BB2 /* AppCoordinator+RiderSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppCoordinator+RiderSettings.swift"; sourceTree = "<group>"; };
+		8CC508DC45803980BB79A86B /* AppCoordinator+IdentitySignIn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppCoordinator+IdentitySignIn.swift"; sourceTree = "<group>"; };
 		816328D1CA081D5AF81300FD /* AppCoordinator+RiderOnboarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppCoordinator+RiderOnboarding.swift"; sourceTree = "<group>"; };
 		B7699F2AA59357429247EA19 /* AppCoordinator+AutoSOSCheck.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppCoordinator+AutoSOSCheck.swift"; sourceTree = "<group>"; };
 		EC9967501D760330EF89D308 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -773,6 +781,7 @@
 				92B52C788B48B35EC3D49ABF /* BiometricGateView.swift */,
 				ABAFCCA942C4FA62E1F96326 /* CountryCodePicker.swift */,
 				31619A304E944F8752AA75E9 /* LoginView.swift */,
+				418A5E40C8D4C64CE125589C /* IdentitySignInViews.swift */,
 				A1B2C3D4E5F60002 /* PostSignupWizardView.swift */,
 				E56310453259DD87FAE127E5 /* SignupView.swift */,
 			);
@@ -983,6 +992,7 @@
 				DAEC4525DF40C4476C125A50 /* ContractFixtureTests.swift */,
 				4065FDD0413EBFDA074642D7 /* AppLifecycleTests.swift */,
 				3C38041E8CCB6EAE0ECF2D4F /* AuthManagerTests.swift */,
+				283410D1B012013890AF29D9 /* IdentitySignInTests.swift */,
 				A1B2C3D4E5F60001A0000003 /* KeychainHelperTests.swift */,
 				A1B2C3D4E5F60001A0000002 /* ConsentLoggerTests.swift */,
 				A1B2C3D4E5F60001A0000001 /* StoreKitGatingTests.swift */,
@@ -1117,6 +1127,7 @@
 			isa = PBXGroup;
 			children = (
 				2E138FA50B18713B668BAA89 /* AuthManager.swift */,
+				5A215297D71E2ABC9728DCE0 /* IdentitySignIn.swift */,
 				68764C1C0E094033245E945F /* BiometricAuthManager.swift */,
 				6D380C2024773F6C6EF07A8B /* KeychainHelper.swift */,
 			);
@@ -1128,6 +1139,7 @@
 			children = (
 				E9B16BBF77C02115152E9C88 /* AppCoordinator.swift */,
 				990C2267C46BBE90320E5BB2 /* AppCoordinator+RiderSettings.swift */,
+				8CC508DC45803980BB79A86B /* AppCoordinator+IdentitySignIn.swift */,
 				816328D1CA081D5AF81300FD /* AppCoordinator+RiderOnboarding.swift */,
 				B7699F2AA59357429247EA19 /* AppCoordinator+AutoSOSCheck.swift */,
 				1E4C8E04ABB40A07C16C56BC /* AppLifecycleRouter.swift */,
@@ -1389,12 +1401,14 @@
 				F2E1D0C9B8A7F6E5D4C3B2A1 /* ReactiveLocationService.swift in Sources */,
 				7CEB8F947D0673F08CE4439B /* AppCoordinator.swift in Sources */,
 				19346CFAC17FEEE51E087788 /* AppCoordinator+RiderSettings.swift in Sources */,
+				1249FC612A824C8544DB0993 /* AppCoordinator+IdentitySignIn.swift in Sources */,
 				93B93121E8675298599F7341 /* AppCoordinator+RiderOnboarding.swift in Sources */,
 				B7853876E83E1B94800D56FD /* AppCoordinator+AutoSOSCheck.swift in Sources */,
 				A22F58C7B33F5DE5F6350346 /* AppDelegate.swift in Sources */,
 				DD44EE0100000014 /* AppCoordinator+Rider.swift in Sources */,
 				255D788D0378FE97EA28EF51 /* ArrivalReportView.swift in Sources */,
 				F3ECFE963F1129AB9DCD91B0 /* AuthManager.swift in Sources */,
+				BA8A5AADDCA87BBDFFE6CD26 /* IdentitySignIn.swift in Sources */,
 				515DEBEED36CE6BFDCA41A8C /* BaselineScorer.swift in Sources */,
 				10BFCDC335240E578147024D /* BiometricAuthManager.swift in Sources */,
 				26B5474E833EFF0C9F8872EB /* BiometricEnablePromptView.swift in Sources */,
@@ -1451,6 +1465,7 @@
 				D7F04B6716FF3FA38A53A700 /* LocalStore.swift in Sources */,
 				175D400D8703ED57ED5DBB50 /* LocationCardView.swift in Sources */,
 				36E61D1756A635AC2E9CE3C6 /* LoginView.swift in Sources */,
+				BE83BE89816E70F2B72C0810 /* IdentitySignInViews.swift in Sources */,
 				E0C9BC98A1A4AAC92553E211 /* MedicalCardView.swift in Sources */,
 				C0B0BE414A87C5344A38B4E4 /* MotionService.swift in Sources */,
 				A2F1E0D9C8B7A6F5E4D3C2B1 /* MLFallClassifier.swift in Sources */,
@@ -1553,6 +1568,7 @@
 				F0FFEA124608CCCA60504A62 /* AdaptiveLocationManagerTests.swift in Sources */,
 				B3C4D5E6F7A8B9C0D1E2F3A4 /* ReactiveLocationServiceTests.swift in Sources */,
 				5E1BA1B8E61306352C819EA8 /* AuthManagerTests.swift in Sources */,
+				F49C3B6B905C232E7083DA3E /* IdentitySignInTests.swift in Sources */,
 				A1B2C3D4E5F60001B0000003 /* KeychainHelperTests.swift in Sources */,
 				A1B2C3D4E5F60001B0000002 /* ConsentLoggerTests.swift in Sources */,
 				A1B2C3D4E5F60001B0000001 /* StoreKitGatingTests.swift in Sources */,

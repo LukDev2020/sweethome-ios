@@ -293,7 +293,7 @@ describe("Performance — Checkin Dual-Write", () => {
 
   it("heartbeat BigQuery failure is non-fatal", () => {
     // Heartbeats should not fail the request if BigQuery is down
-    expect(telemetrySource).toContain("Queued for retry");
+    expect(telemetrySource).toContain("Heartbeat not stored");
   });
 });
 

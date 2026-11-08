@@ -8,6 +8,8 @@ import { eraseAccount, exportAccount } from "../services/accountData";
 import { recordDataTransferConsent, parseConsentRecords, latestConsentVersions } from "../services/consent";
 import { insertConsentAudit } from "../services/bigquery";
 import { appAccountTokenFor } from "../services/payment";
+import { identitiesOf } from "../services/identity";
+import { revokeAppleSignIn } from "../services/appleSignIn";
 
 import { riderProfileUpdates, riderProfileView, ProfileFieldError } from "../services/riderProfile";
 
@@ -248,14 +250,29 @@ router.post("/delete", authMiddleware, createRateLimiter(RATE_LIMITS.accountDele
   const uid = req.uid!;
 
   try {
+    // Apple requires revoking the person's Sign in with Apple (before the links go)
+    const identities = await identitiesOf(uid);
+    for (const identity of identities) {
+      if (identity.provider === "apple") await revokeAppleSignIn(identity.subject);
+    }
+
     // Everything except consent_audit and evidence_holds (see services/accountData.ts)
     const { bigQueryComplete } = await eraseAccount(uid);
 
-    // Delete Firebase Auth account
-    try {
-      await admin.auth().deleteUser(uid);
-    } catch (authError) {
-      console.warn(`[User] Failed to delete auth account for ${uid}:`, authError);
+    // Delete the Firebase Auth account (accounts created by phone; Apple / Alipay
+    // accounts have none, and a phone added to them has its own Firebase uid)
+    const phoneUids = [uid];
+    for (const identity of identities) {
+      if (identity.provider === "phone") phoneUids.push(identity.subject);
+    }
+    for (const authUid of phoneUids) {
+      try {
+        await admin.auth().deleteUser(authUid);
+      } catch (authError) {
+        if ((authError as { code?: string }).code !== "auth/user-not-found") {
+          console.warn(`[User] Failed to delete auth account for ${uid}:`, authError);
+        }
+      }
     }
 
     if (!bigQueryComplete) {

@@ -88,6 +88,26 @@ it("other insert errors are not swallowed", async () => {
   expect(mockInserted).toHaveLength(0);
 });
 
+describe("a location BigQuery couldn't store", () => {
+  const app = express();
+  app.use(express.json());
+  app.use("/v1", require("../routes/telemetry").default);
+  const report = () => request(app).post("/v1/location/report").set("Authorization", `Bearer ${tokenFor("u1")}`)
+    .send({ ...base, latitude: 1, longitude: 2 });
+
+  it("BigQuery busy → 503, so the phone's queue sends it again", async () => {
+    mockInsertError = Object.assign(new Error("Service unavailable"), { code: 503 });
+    expect((await report()).status).toBe(503);
+  });
+
+  it("no dataset → not retried forever, and not called 'queued' either", async () => {
+    mockInsertError = new Error("Not found: Dataset sweethome-b4e82:shoudeng");
+    const r = await report();
+    expect(r.status).toBe(200);
+    expect(r.body.warning).toBe("Location not stored");
+  });
+});
+
 describe("routes pass the phone's tag through", () => {
   const app = express();
   app.use(express.json());

@@ -2546,3 +2546,42 @@
 "rider.crash.later" = "Pain can show up hours later. If you start to feel unwell, use SOS.";
 "rider.crash.timeline.hurt" = "Crash reported — hurt, SOS sent";
 "rider.crash.timeline.ok" = "Crash reported — not hurt";
+
+/* Sign in with Apple / Alipay, sign-in methods */
+"auth.identity.or" = "or";
+"auth.alipay.signIn" = "Sign in with Alipay";
+"auth.alipay.waiting" = "Waiting for Alipay…";
+"auth.alipay.checkAgain" = "I've confirmed — check again";
+"auth.alipay.cancel" = "Cancel";
+"auth.apple.failed" = "Couldn't sign in with Apple. Please try again.";
+"auth.alipay.unavailable" = "Alipay sign-in isn't available right now. Use your phone number or Apple.";
+"auth.alipay.notConfirmed" = "Alipay didn't confirm the sign-in. Please try again.";
+"auth.link.elsewhere" = "This sign-in is already connected to another Lantern Care account.";
+"auth.phone.hasAccount" = "This number already has its own Lantern Care account. Sign in with it instead.";
+"auth.identity.expired" = "That took too long. Please start again.";
+"auth.link.byPhone.apple" = "Sign in with your phone number to connect Apple to your account.";
+"auth.link.byPhone.alipay" = "Sign in with your phone number to connect Alipay to your account.";
+"auth.methods.title" = "Sign-in methods";
+"auth.methods.phone" = "Phone number";
+"auth.methods.notAdded" = "Not added";
+"auth.methods.addPhone" = "Add phone number";
+"auth.methods.connected" = "Connected";
+"auth.methods.alipay" = "Alipay";
+"auth.methods.connect" = "Connect";
+"auth.methods.phoneWhy" = "With a phone number, SOS texts and calls can reach you when push notifications don't, and you can sign in with it.";
+"auth.methods.footer" = "Any of these opens the same account.";
+"auth.methods.loadFailed" = "Couldn't load your sign-in methods. Check your connection.";
+"signup.identity.apple" = "Signed in with Apple. Finish your profile to create your account.";
+"signup.identity.alipay" = "Signed in with Alipay. Finish your profile to create your account.";
+"signup.identity.haveAccount" = "Already have an account with a phone number? Sign in with it to connect.";
+
+/* Singular forms ("1 family member"), see LanguageManager.localized(_:count:) */
+"sos.status.guardiansNotified.one" = "%d family member alerted";
+"status.protected.guarded.one" = "%d family member is watching over you";
+"sosmode.sharing.one" = "Sharing your location with %d family member";
+"tracking.banner.sharing.one" = "Sharing with %d guardian";
+"protected.home.guardianCount.one" = "%d guardian";
+"guardian.home.guarding.count.one" = "Guarding %d person";
+"records.peopleCount.one" = "%d person";
+"rider.crash.sentCount.one" = "%d person was told where you are.";
+"org.alertNotified.one" = "%d member notified";

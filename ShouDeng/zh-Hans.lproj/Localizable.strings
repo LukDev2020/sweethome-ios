@@ -2546,3 +2546,42 @@
 "rider.crash.later" = "疼痛可能几小时后才出现。如果感到不适，请使用求助。";
 "rider.crash.timeline.hurt" = "报告车祸——受伤，已求助";
 "rider.crash.timeline.ok" = "报告车祸——未受伤";
+
+/* Sign in with Apple / Alipay, sign-in methods */
+"auth.identity.or" = "或";
+"auth.alipay.signIn" = "支付宝登录";
+"auth.alipay.waiting" = "正在等待支付宝确认…";
+"auth.alipay.checkAgain" = "我已确认，再查一次";
+"auth.alipay.cancel" = "取消";
+"auth.apple.failed" = "Apple 登录失败，请重试。";
+"auth.alipay.unavailable" = "暂时无法使用支付宝登录，请使用手机号或 Apple 登录。";
+"auth.alipay.notConfirmed" = "支付宝未确认此次登录，请重试。";
+"auth.link.elsewhere" = "该登录方式已绑定另一个守灯账号。";
+"auth.phone.hasAccount" = "该手机号已有自己的守灯账号，请直接用它登录。";
+"auth.identity.expired" = "操作超时，请重新开始。";
+"auth.link.byPhone.apple" = "用手机号登录，即可把 Apple 账号绑定到你的账号。";
+"auth.link.byPhone.alipay" = "用手机号登录，即可把支付宝绑定到你的账号。";
+"auth.methods.title" = "登录方式";
+"auth.methods.phone" = "手机号";
+"auth.methods.notAdded" = "未添加";
+"auth.methods.addPhone" = "添加手机号";
+"auth.methods.connected" = "已绑定";
+"auth.methods.alipay" = "支付宝";
+"auth.methods.connect" = "绑定";
+"auth.methods.phoneWhy" = "添加手机号后，推送收不到时求助短信和电话也能找到你，还可以用它登录。";
+"auth.methods.footer" = "以上任一方式都能登录同一个账号。";
+"auth.methods.loadFailed" = "无法加载登录方式，请检查网络。";
+"signup.identity.apple" = "已通过 Apple 验证。填写资料即可创建账号。";
+"signup.identity.alipay" = "已通过支付宝验证。填写资料即可创建账号。";
+"signup.identity.haveAccount" = "已经用手机号注册过？用手机号登录即可绑定。";
+
+/* Singular forms ("1 family member"), see LanguageManager.localized(_:count:) */
+"sos.status.guardiansNotified.one" = "已通知 %d 位家人";
+"status.protected.guarded.one" = "正在被 %d 位家人守护";
+"sosmode.sharing.one" = "正在向 %d 位家人共享你的位置";
+"tracking.banner.sharing.one" = "正与 %d 位守护者共享";
+"protected.home.guardianCount.one" = "%d 位守护者";
+"guardian.home.guarding.count.one" = "守护 %d 人";
+"records.peopleCount.one" = "%d 人";
+"rider.crash.sentCount.one" = "已告诉 %d 人你的位置。";
+"org.alertNotified.one" = "已通知 %d 名成员";

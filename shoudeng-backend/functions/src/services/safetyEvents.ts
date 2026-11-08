@@ -211,13 +211,20 @@ export async function reportCrash(uid: string, body: Record<string, unknown>): P
   const now = admin.firestore.Timestamp.now();
   const note = typeof body.note === "string" ? body.note.trim().slice(0, 500) : null;
   const vehicle = typeof body.vehicle === "string" ? body.vehicle.slice(0, 20) : null;
+  // Hurt: the SOS this phone sent with the same id (if it arrived first; otherwise
+  // the SOS links itself to this report when it does)
+  let sosEventId = typeof body.sosEventId === "string" ? body.sosEventId.slice(0, 64) : null;
+  if (body.hurt && !sosEventId) {
+    const sos = await db().collection("sos_events").where("clientSOSIds", "array-contains", clientEventId).get();
+    sosEventId = sos.docs.find((d) => d.data().protectedPersonId === uid)?.id ?? null;
+  }
   await docRef.set({
     userId: uid, type: "crash", clientEventId,
     detectedAt: now, receivedAt: now,
     latitude: num(body.latitude, -90, 90), longitude: num(body.longitude, -180, 180), accuracy: num(body.accuracy, 0, 100_000),
     hurt: body.hurt, note, vehicle,
     outcome: body.hurt ? "sos" : "reported",
-    sosEventId: typeof body.sosEventId === "string" ? body.sosEventId.slice(0, 64) : null,
+    sosEventId,
     updatedAt: now,
   });
   await db().collection("timeline_entries").add({

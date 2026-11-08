@@ -367,6 +367,8 @@ const SAME_IN_FR = new Set([
   ...SAME_IN_ZH,
   // "1 min", "+5 min" are French too
   "fake_call_delay_60s", "dms.action.extend5",
+  // A brand name
+  "auth.methods.alipay",
     // Incident report: same words in French
     "report.hours", "report.minutes", "report.col.distance", "report.fall.impact", "report.h.locations", "report.col.position", "report.col.source",
     // Rider onboarding: same word in French

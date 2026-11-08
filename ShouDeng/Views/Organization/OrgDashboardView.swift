@@ -388,7 +388,7 @@ struct SendAlertSheet: View {
                         .foregroundStyle(.green)
                     Text(LanguageManager.shared.localized("org.alertSent"))
                         .font(.scaled(size: 18, weight: .bold))
-                    Text(String(format: LanguageManager.shared.localized("org.alertNotified"), result.sentCount))
+                    Text(LanguageManager.shared.localized("org.alertNotified", count: result.sentCount))
                         .foregroundStyle(.secondary)
                     Button(LanguageManager.shared.localized("org.done")) {
                         onSent()

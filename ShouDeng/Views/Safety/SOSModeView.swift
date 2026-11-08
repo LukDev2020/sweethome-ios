@@ -135,7 +135,7 @@ struct SOSActiveView: View {
         if ended { return lang.localized("sosmode.ended.detail") }
         if status == nil { return lang.localized("sos.status.sending") }
         let count = max(status?.guardiansNotified ?? 0, coordinator.myGuardians.count)
-        return String(format: lang.localized("sosmode.sharing"), count)
+        return lang.localized("sosmode.sharing", count: count)
     }
 
     static func elapsed(from start: Date, to now: Date) -> String {

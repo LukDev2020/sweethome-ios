@@ -3,37 +3,16 @@ import { recordDataTransferConsent } from "../services/consent";
 import * as admin from "firebase-admin";
 import { Timestamp } from "firebase-admin/firestore";
 import jwt from "jsonwebtoken";
+import { authMiddleware } from "../middleware/auth";
+import { generateTokens, getJwtSecret, readSignupToken, signupTokenFor, VerifiedIdentity } from "../services/session";
+import { identitiesOf, linkIdentity, LinkResult, userForIdentity, userForPhoneSignIn } from "../services/identity";
+import { AppleSignInError, keepAppleRefreshToken, verifyAppleIdentityToken } from "../services/appleSignIn";
+import {
+  alipayEnabled, callbackPage, completeAlipayLogin, handleAlipayCallback, startAlipayLogin,
+} from "../services/alipayAuth";
 
 const router = Router();
 const db = admin.firestore();
-
-function getJwtSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (secret) return secret;
-  const isDev = process.env.FUNCTIONS_EMULATOR === "true" || !!process.env.JEST_WORKER_ID;
-  if (!isDev) {
-    throw new Error("JWT_SECRET environment variable is required in production");
-  }
-  return "shoudeng-dev-jwt-secret-do-not-use-in-prod";
-}
-const ACCESS_TOKEN_EXPIRY = "1h";
-const REFRESH_TOKEN_EXPIRY = "30d";
-
-/**
- * Generate JWT access and refresh tokens for a user.
- */
-function generateTokens(uid: string): {
-  accessToken: string;
-  refreshToken: string;
-} {
-  const accessToken = jwt.sign({ uid, type: "access" }, getJwtSecret(), {
-    expiresIn: ACCESS_TOKEN_EXPIRY,
-  });
-  const refreshToken = jwt.sign({ uid, type: "refresh" }, getJwtSecret(), {
-    expiresIn: REFRESH_TOKEN_EXPIRY,
-  });
-  return { accessToken, refreshToken };
-}
 
 /**
  * Decode Firebase idToken. In emulator mode, decodes JWT payload directly
@@ -235,10 +214,12 @@ router.post("/send-code", async (req: Request, res: Response) => {
 
 /**
  * POST /v1/auth/login
- * Verify Firebase ID token and return session JWT tokens.
+ * Verify a Firebase phone ID token and return session JWT tokens.
+ * `linkToken` (optional): an Apple / Alipay sign-in that found no account — the
+ * person signed in with their phone instead, so connect it to this account.
  */
 router.post("/login", async (req: Request, res: Response) => {
-  const { idToken } = req.body;
+  const { idToken, linkToken } = req.body;
 
   if (!idToken) {
     res.status(400).json({ error: "ID token is required" });
@@ -246,16 +227,31 @@ router.post("/login", async (req: Request, res: Response) => {
   }
 
   try {
-    const { uid } = await decodeIdToken(idToken);
+    const { uid: phoneUid } = await decodeIdToken(idToken);
 
-    // Check if user exists in Firestore
-    const userDoc = await db.collection("users").doc(uid).get();
-    if (!userDoc.exists) {
+    // An account created by phone, or an Apple / Alipay account this number was added to
+    const uid = await userForPhoneSignIn(phoneUid);
+    if (!uid) {
       res.status(404).json({ error: "User not found. Please sign up first." });
       return;
     }
 
-    const userData = userDoc.data()!;
+    let linked: string | undefined;
+    if (linkToken !== undefined) {
+      const identity = readSignupToken(linkToken);
+      if (!identity) {
+        res.status(400).json({ error: "Sign-in to connect has expired. Try again.", code: "LINK_EXPIRED" });
+        return;
+      }
+      const result = await linkVerifiedIdentity(uid, identity);
+      if (result === "linkedElsewhere") {
+        res.status(409).json(LINKED_ELSEWHERE);
+        return;
+      }
+      linked = identity.provider;
+    }
+
+    const userData = (await db.collection("users").doc(uid).get()).data()!;
     const tokens = generateTokens(uid);
 
     res.json({
@@ -263,9 +259,222 @@ router.post("/login", async (req: Request, res: Response) => {
       userId: uid,
       displayName: userData.displayName,
       role: userData.role,
+      ...(linked ? { linked } : {}),
     });
   } catch (error) {
     console.error("[Auth] login error:", error);
+    res.status(401).json({ error: "Invalid credentials" });
+  }
+});
+
+const LINKED_ELSEWHERE = {
+  error: "This sign-in is already connected to another Lantern Care account.",
+  code: "IDENTITY_LINKED_ELSEWHERE",
+};
+
+async function linkVerifiedIdentity(uid: string, identity: VerifiedIdentity): Promise<LinkResult> {
+  const result = await linkIdentity(uid, identity.provider, identity.subject,
+    identity.email ? { email: identity.email } : {});
+  if (result === "linked") {
+    await db.collection("users").doc(uid).set({
+      authProviders: admin.firestore.FieldValue.arrayUnion(identity.provider),
+      updatedAt: Timestamp.now(),
+    }, { merge: true });
+  }
+  return result;
+}
+
+/** An Apple / Alipay identity was verified: sign in, or hand back a signup token. */
+async function signInWithIdentity(res: Response, identity: VerifiedIdentity): Promise<void> {
+  const uid = await userForIdentity(identity.provider, identity.subject);
+  const user = uid ? await db.collection("users").doc(uid).get() : null;
+  if (uid && user?.exists) {
+    const data = user.data()!;
+    res.json({
+      status: "signedIn",
+      ...generateTokens(uid),
+      userId: uid,
+      displayName: data.displayName,
+      role: data.role,
+    });
+    return;
+  }
+  res.json({
+    status: "signupRequired",
+    signupToken: signupTokenFor(identity),
+    displayName: identity.name ?? null,
+    email: identity.email ?? null,
+  });
+}
+
+/**
+ * GET /v1/auth/providers — which sign-in buttons the app shows.
+ */
+router.get("/providers", (_req: Request, res: Response) => {
+  res.json({ phone: true, apple: true, alipay: alipayEnabled() });
+});
+
+/**
+ * POST /v1/auth/apple
+ * { identityToken, rawNonce, authorizationCode?, fullName? } from Sign in with Apple.
+ */
+router.post("/apple", async (req: Request, res: Response) => {
+  const { identityToken, rawNonce, authorizationCode, fullName } = req.body;
+  if (typeof identityToken !== "string" || typeof rawNonce !== "string") {
+    res.status(400).json({ error: "identityToken and rawNonce are required" });
+    return;
+  }
+  try {
+    const apple = await verifyAppleIdentityToken(identityToken, rawNonce);
+    // Kept for revoking this sign-in if the account is deleted (never blocks sign-in)
+    await keepAppleRefreshToken(apple.sub, authorizationCode);
+    const name = typeof fullName === "string" && fullName.trim() ? fullName.trim().slice(0, 40) : undefined;
+    await signInWithIdentity(res, { provider: "apple", subject: apple.sub, email: apple.email, name });
+  } catch (error) {
+    if (error instanceof AppleSignInError) {
+      console.warn("[Auth] Apple sign-in rejected:", error.message);
+      res.status(error.retryable ? 503 : 401).json({ error: "Apple sign-in could not be verified", code: "APPLE_INVALID" });
+      return;
+    }
+    console.error("[Auth] Apple sign-in error:", error);
+    res.status(500).json({ error: "Apple sign-in failed" });
+  }
+});
+
+/**
+ * POST /v1/auth/alipay/start → { state, secret, authUrl, alipayAppUrl }
+ */
+router.post("/alipay/start", async (_req: Request, res: Response) => {
+  if (!alipayEnabled()) {
+    res.status(503).json({ error: "Alipay sign-in is not available", code: "ALIPAY_UNAVAILABLE" });
+    return;
+  }
+  try {
+    res.json(await startAlipayLogin());
+  } catch (error) {
+    console.error("[Auth] Alipay start error:", error);
+    res.status(500).json({ error: "Alipay sign-in failed" });
+  }
+});
+
+/**
+ * GET /v1/auth/alipay/callback?auth_code&state — Alipay sends the person here.
+ */
+router.get("/alipay/callback", async (req: Request, res: Response) => {
+  const state = typeof req.query.state === "string" ? req.query.state : "";
+  let outcome: "done" | "expired" | "failed" = "failed";
+  try {
+    outcome = await handleAlipayCallback(state, req.query.auth_code);
+  } catch (error) {
+    console.error("[Auth] Alipay callback error:", error);
+  }
+  res.status(200).type("html").send(callbackPage(outcome, state));
+});
+
+/**
+ * POST /v1/auth/alipay/complete { state, secret }
+ * 202 while Alipay hasn't answered yet; then signed in or a signup token.
+ */
+router.post("/alipay/complete", async (req: Request, res: Response) => {
+  try {
+    const result = await completeAlipayLogin(req.body?.state, req.body?.secret);
+    if (!result) {
+      res.status(404).json({ error: "Unknown sign-in", code: "ALIPAY_UNKNOWN" });
+      return;
+    }
+    if (result.status === "pending") {
+      res.status(202).json({ status: "pending" });
+      return;
+    }
+    if (result.status === "failed") {
+      res.status(400).json({ error: "Alipay didn't confirm the sign-in", code: "ALIPAY_DENIED", reason: result.reason });
+      return;
+    }
+    await signInWithIdentity(res, { provider: "alipay", subject: result.user.subject, name: result.user.nickName });
+  } catch (error) {
+    console.error("[Auth] Alipay complete error:", error);
+    res.status(500).json({ error: "Alipay sign-in failed" });
+  }
+});
+
+/**
+ * GET /v1/auth/methods — this account's sign-in methods (Settings).
+ */
+router.get("/methods", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const uid = req.uid!;
+    const [user, identities] = await Promise.all([db.collection("users").doc(uid).get(), identitiesOf(uid)]);
+    const providers = new Set(identities.map((i) => i.provider));
+    const phone = user.data()?.phone || null;
+    res.json({ phone, apple: providers.has("apple"), alipay: providers.has("alipay") });
+  } catch (error) {
+    console.error("[Auth] methods error:", error);
+    res.status(500).json({ error: "Failed to load sign-in methods" });
+  }
+});
+
+/**
+ * POST /v1/auth/link { signupToken } — connect Apple / Alipay to the signed-in account.
+ */
+router.post("/link", authMiddleware, async (req: Request, res: Response) => {
+  const identity = readSignupToken(req.body?.signupToken);
+  if (!identity) {
+    res.status(400).json({ error: "Sign-in to connect has expired. Try again.", code: "LINK_EXPIRED" });
+    return;
+  }
+  try {
+    const result = await linkVerifiedIdentity(req.uid!, identity);
+    if (result === "linkedElsewhere") {
+      res.status(409).json(LINKED_ELSEWHERE);
+      return;
+    }
+    res.json({ success: true, provider: identity.provider });
+  } catch (error) {
+    console.error("[Auth] link error:", error);
+    res.status(500).json({ error: "Failed to connect sign-in" });
+  }
+});
+
+/**
+ * POST /v1/auth/link-phone { idToken } — add a verified phone number to an Apple /
+ * Alipay account, so texts and calls reach this person and they can sign in by phone.
+ */
+router.post("/link-phone", authMiddleware, async (req: Request, res: Response) => {
+  const { idToken } = req.body;
+  if (!idToken) {
+    res.status(400).json({ error: "ID token is required" });
+    return;
+  }
+  const uid = req.uid!;
+  try {
+    const { uid: phoneUid, phone } = await decodeIdToken(idToken);
+    if (!phone) {
+      res.status(400).json({ error: "Not a phone sign-in" });
+      return;
+    }
+    const owner = await userForPhoneSignIn(phoneUid);
+    if (owner && owner !== uid) {
+      res.status(409).json({
+        error: "This number already has its own Lantern Care account.",
+        code: "PHONE_HAS_ACCOUNT",
+      });
+      return;
+    }
+    if (owner !== uid) {
+      const result = await linkIdentity(uid, "phone", phoneUid, { phone });
+      if (result === "linkedElsewhere") {
+        res.status(409).json({ error: "This number is connected to another account.", code: "PHONE_HAS_ACCOUNT" });
+        return;
+      }
+    }
+    await db.collection("users").doc(uid).set({
+      phone,
+      authProviders: admin.firestore.FieldValue.arrayUnion("phone"),
+      updatedAt: Timestamp.now(),
+    }, { merge: true });
+    res.json({ success: true, phone });
+  } catch (error) {
+    console.error("[Auth] link-phone error:", error);
     res.status(401).json({ error: "Invalid credentials" });
   }
 });
@@ -276,13 +485,13 @@ router.post("/login", async (req: Request, res: Response) => {
  * Accepts optional countryCode from client for accurate geo assignment.
  */
 router.post("/signup", async (req: Request, res: Response) => {
-  const { idToken, displayName, role, countryCode: clientCountryCode, email, dataTransferConsent } =
+  const { idToken, signupToken, displayName, role, countryCode: clientCountryCode, email, dataTransferConsent } =
     req.body;
 
-  if (!idToken || !displayName || !role) {
+  if ((!idToken && !signupToken) || !displayName || !role) {
     res
       .status(400)
-      .json({ error: "idToken, displayName, and role are required" });
+      .json({ error: "idToken (or signupToken), displayName, and role are required" });
     return;
   }
 
@@ -292,18 +501,36 @@ router.post("/signup", async (req: Request, res: Response) => {
   }
 
   try {
-    const { uid, phone } = await decodeIdToken(idToken);
-
-    // Check if user already exists
-    const existing = await db.collection("users").doc(uid).get();
-    if (existing.exists) {
-      res.status(409).json({ error: "User already exists" });
-      return;
+    // Phone: the account id is the phone sign-in's Firebase uid (as before).
+    // Apple / Alipay: a new id, and the verified identity is linked to it.
+    let uid: string;
+    let phone = "";
+    let identity: VerifiedIdentity | null = null;
+    if (signupToken) {
+      identity = readSignupToken(signupToken);
+      if (!identity) {
+        res.status(400).json({ error: "Sign-in expired. Please start again.", code: "SIGNUP_EXPIRED" });
+        return;
+      }
+      if (await userForIdentity(identity.provider, identity.subject)) {
+        res.status(409).json({ error: "User already exists" });
+        return;
+      }
+      uid = db.collection("users").doc().id;
+    } else {
+      const decoded = await decodeIdToken(idToken);
+      uid = decoded.uid;
+      phone = decoded.phone;
+      // An account of its own, or a number already added to an Apple / Alipay account
+      if (await userForPhoneSignIn(uid)) {
+        res.status(409).json({ error: "User already exists" });
+        return;
+      }
     }
 
     const now = Timestamp.now();
     const avatarInitial = displayName.charAt(0);
-    const detectedCountry = clientCountryCode || countryFromPhone(phone);
+    const detectedCountry = clientCountryCode || (phone ? countryFromPhone(phone) : "US");
     const detectedTimezone = timezoneFromCountry(detectedCountry);
 
     const userDoc: Record<string, unknown> = {
@@ -319,7 +546,10 @@ router.post("/signup", async (req: Request, res: Response) => {
     };
     if (email && typeof email === "string" && email.includes("@")) {
       userDoc.email = email;
+    } else if (identity?.email) {
+      userDoc.email = identity.email;
     }
+    userDoc.authProviders = [identity ? identity.provider : "phone"];
     // Explicit consent to storage and processing in the United States (shown at sign-up)
     const consentVersion = typeof dataTransferConsent === "string" ? dataTransferConsent.slice(0, 20) : null;
     if (consentVersion) {
@@ -328,6 +558,16 @@ router.post("/signup", async (req: Request, res: Response) => {
     }
 
     await db.collection("users").doc(uid).set(userDoc);
+    if (identity) {
+      const linked = await linkIdentity(uid, identity.provider, identity.subject,
+        identity.email ? { email: identity.email } : {});
+      if (linked === "linkedElsewhere") {
+        // Two sign-ups raced with the same Apple / Alipay account: keep the first
+        await db.collection("users").doc(uid).delete();
+        res.status(409).json({ error: "User already exists" });
+        return;
+      }
+    }
 
     if (consentVersion) {
       await recordDataTransferConsent(uid, consentVersion, "signup");
@@ -366,6 +606,12 @@ router.post("/refresh", async (req: Request, res: Response) => {
     };
     if (payload.type !== "refresh") {
       res.status(401).json({ error: "Invalid refresh token" });
+      return;
+    }
+    // A deleted account's refresh token must not keep minting sessions
+    const user = await db.collection("users").doc(payload.uid).get();
+    if (!user.exists) {
+      res.status(401).json({ error: "Account no longer exists" });
       return;
     }
 

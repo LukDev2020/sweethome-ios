@@ -417,7 +417,7 @@ struct RiderSetupView: View {
                 ForEach(["volunteers", "emergency", "phone"], id: \.self) { p in
                     HStack(alignment: .top, spacing: 8) {
                         Text("•")
-                        Text(String(format: lang.localized("rider.duty.\(p)"), coordinator.localEmergencyNumber))
+                        Text(String(format: lang.localized("rider.duty.\(p)"), coordinator.localPoliceNumber))
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .font(.scaled(size: 14))

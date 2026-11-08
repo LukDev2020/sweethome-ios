@@ -983,9 +983,9 @@ struct BikeReportView: View {
                             if let url = URL(string: "tel:\(number)") { ExternalURL.open(url) }
                         }
                     }
-                    row("exclamationmark.triangle.fill", String(format: lang.localized("rider.bike.threat"), coordinator.localEmergencyNumber),
+                    row("exclamationmark.triangle.fill", String(format: lang.localized("rider.bike.threat"), coordinator.localPoliceNumber),
                         "rider.bike.threatDetail", rawTitle: true) {
-                        if let url = URL(string: "tel:\(coordinator.localEmergencyNumber)") { ExternalURL.open(url) }
+                        if let url = URL(string: "tel:\(coordinator.localPoliceNumber)") { ExternalURL.open(url) }
                     }
                     if failed {
                         Text(lang.localized("rider.bike.crewFailed")).font(.scaled(size: 12)).foregroundStyle(.secondary)

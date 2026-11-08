@@ -2546,3 +2546,42 @@
 "rider.crash.later" = "La douleur peut apparaître des heures après. Si vous vous sentez mal, utilisez le SOS.";
 "rider.crash.timeline.hurt" = "Accident signalé — blessé, SOS envoyé";
 "rider.crash.timeline.ok" = "Accident signalé — pas blessé";
+
+/* Sign in with Apple / Alipay, sign-in methods */
+"auth.identity.or" = "ou";
+"auth.alipay.signIn" = "Se connecter avec Alipay";
+"auth.alipay.waiting" = "En attente d'Alipay…";
+"auth.alipay.checkAgain" = "J'ai confirmé — vérifier";
+"auth.alipay.cancel" = "Annuler";
+"auth.apple.failed" = "Connexion avec Apple impossible. Réessayez.";
+"auth.alipay.unavailable" = "La connexion Alipay n'est pas disponible pour l'instant. Utilisez votre numéro ou Apple.";
+"auth.alipay.notConfirmed" = "Alipay n'a pas confirmé la connexion. Réessayez.";
+"auth.link.elsewhere" = "Cette connexion est déjà liée à un autre compte Lantern Care.";
+"auth.phone.hasAccount" = "Ce numéro a déjà son propre compte Lantern Care. Connectez-vous avec lui.";
+"auth.identity.expired" = "Délai dépassé. Recommencez.";
+"auth.link.byPhone.apple" = "Connectez-vous avec votre numéro pour lier Apple à votre compte.";
+"auth.link.byPhone.alipay" = "Connectez-vous avec votre numéro pour lier Alipay à votre compte.";
+"auth.methods.title" = "Méthodes de connexion";
+"auth.methods.phone" = "Numéro de téléphone";
+"auth.methods.notAdded" = "Non ajouté";
+"auth.methods.addPhone" = "Ajouter un numéro";
+"auth.methods.connected" = "Connecté";
+"auth.methods.alipay" = "Alipay";
+"auth.methods.connect" = "Connecter";
+"auth.methods.phoneWhy" = "Avec un numéro, les SMS et appels SOS vous joignent quand les notifications ne passent pas, et vous pouvez vous connecter avec.";
+"auth.methods.footer" = "Chacune ouvre le même compte.";
+"auth.methods.loadFailed" = "Impossible de charger vos méthodes de connexion. Vérifiez la connexion.";
+"signup.identity.apple" = "Connecté avec Apple. Complétez votre profil pour créer votre compte.";
+"signup.identity.alipay" = "Connecté avec Alipay. Complétez votre profil pour créer votre compte.";
+"signup.identity.haveAccount" = "Vous avez déjà un compte avec un numéro ? Connectez-vous avec pour les lier.";
+
+/* Singular forms ("1 family member"), see LanguageManager.localized(_:count:) */
+"sos.status.guardiansNotified.one" = "%d proche alerté";
+"status.protected.guarded.one" = "%d proche veille sur vous";
+"sosmode.sharing.one" = "Position partagée avec %d proche";
+"tracking.banner.sharing.one" = "Partagé avec %d gardien";
+"protected.home.guardianCount.one" = "%d gardien";
+"guardian.home.guarding.count.one" = "Veille sur %d personne";
+"records.peopleCount.one" = "%d personne";
+"rider.crash.sentCount.one" = "%d personne sait où vous êtes.";
+"org.alertNotified.one" = "%d membre prévenu";

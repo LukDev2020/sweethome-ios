@@ -294,7 +294,7 @@ struct FamilyStatusBar: View {
                           action: { coordinator.presentInviteAccept() })
         }
         return Status(level: .calm, icon: "shield.fill",
-                      text: String(format: lang.localized("status.protected.guarded"), count))
+                      text: lang.localized("status.protected.guarded", count: count))
     }
 
     var body: some View {

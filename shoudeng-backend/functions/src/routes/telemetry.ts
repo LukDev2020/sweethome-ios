@@ -83,10 +83,17 @@ router.post("/heartbeat", authMiddleware, telemetryLimit, async (req: Request, r
     res.json({ success: true });
   } catch (error) {
     console.error("[Telemetry] heartbeat insert error:", error);
-    // Don't fail the request — heartbeats are best-effort
-    res.json({ success: true, warning: "Queued for retry" });
+    // Don't fail the request — heartbeats are best-effort (non-fatal; the next one follows)
+    res.json({ success: true, warning: "Heartbeat not stored" });
   }
 });
+
+/** BigQuery down or overloaded (retry helps) vs. a missing table or rejected row (it doesn't) */
+function bigQueryErrorIsTransient(error: unknown): boolean {
+  const e = error as { code?: unknown; name?: string; message?: string };
+  if (e?.name === "PartialFailureError" || /not found/i.test(e?.message ?? "")) return false;
+  return !(e?.code === 404 || e?.code === 400 || e?.code === 403);
+}
 
 /**
  * POST /v1/location/report
@@ -155,7 +162,13 @@ router.post("/location/report", authMiddleware, telemetryLimit, async (req: Requ
     res.json({ success: true });
   } catch (error) {
     console.error("[Telemetry] location insert error:", error);
-    res.json({ success: true, warning: "Queued for retry" });
+    if (bigQueryErrorIsTransient(error)) {
+      // The phone keeps the report in its offline queue and sends it again
+      res.status(503).json({ error: "Location not stored yet, retry later", retryable: true });
+    } else {
+      // Missing table / rejected row: retrying the same report can't help
+      res.json({ success: true, warning: "Location not stored" });
+    }
   }
 });
 

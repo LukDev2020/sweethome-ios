@@ -2546,3 +2546,42 @@
 "rider.crash.later" = "痛みは数時間後に出ることがあります。具合が悪くなったら SOS を使ってください。";
 "rider.crash.timeline.hurt" = "事故を報告 — けがあり、SOS 送信";
 "rider.crash.timeline.ok" = "事故を報告 — けがなし";
+
+/* Sign in with Apple / Alipay, sign-in methods */
+"auth.identity.or" = "または";
+"auth.alipay.signIn" = "Alipay でサインイン";
+"auth.alipay.waiting" = "Alipay の確認を待っています…";
+"auth.alipay.checkAgain" = "確認しました・もう一度確認";
+"auth.alipay.cancel" = "キャンセル";
+"auth.apple.failed" = "Apple でサインインできませんでした。もう一度お試しください。";
+"auth.alipay.unavailable" = "現在 Alipay でサインインできません。電話番号か Apple をお使いください。";
+"auth.alipay.notConfirmed" = "Alipay でサインインが確認されませんでした。もう一度お試しください。";
+"auth.link.elsewhere" = "このサインイン方法は別の Lantern Care アカウントに連携済みです。";
+"auth.phone.hasAccount" = "この番号にはすでに Lantern Care アカウントがあります。その番号でサインインしてください。";
+"auth.identity.expired" = "時間切れです。最初からやり直してください。";
+"auth.link.byPhone.apple" = "電話番号でサインインすると、Apple をアカウントに連携できます。";
+"auth.link.byPhone.alipay" = "電話番号でサインインすると、Alipay をアカウントに連携できます。";
+"auth.methods.title" = "サインイン方法";
+"auth.methods.phone" = "電話番号";
+"auth.methods.notAdded" = "未追加";
+"auth.methods.addPhone" = "電話番号を追加";
+"auth.methods.connected" = "連携済み";
+"auth.methods.alipay" = "Alipay";
+"auth.methods.connect" = "連携";
+"auth.methods.phoneWhy" = "電話番号があれば、プッシュ通知が届かないときも SOS の SMS や電話が届き、サインインにも使えます。";
+"auth.methods.footer" = "どれでも同じアカウントにサインインできます。";
+"auth.methods.loadFailed" = "サインイン方法を読み込めませんでした。接続を確認してください。";
+"signup.identity.apple" = "Apple で確認できました。プロフィールを入力してアカウントを作成します。";
+"signup.identity.alipay" = "Alipay で確認できました。プロフィールを入力してアカウントを作成します。";
+"signup.identity.haveAccount" = "電話番号のアカウントをお持ちですか？その番号でサインインして連携します。";
+
+/* Singular forms ("1 family member"), see LanguageManager.localized(_:count:) */
+"sos.status.guardiansNotified.one" = "%d人の家族に通知しました";
+"status.protected.guarded.one" = "%d人の家族が見守っています";
+"sosmode.sharing.one" = "%d 人の家族に位置情報を共有中";
+"tracking.banner.sharing.one" = "%d人の見守る人と共有中";
+"protected.home.guardianCount.one" = "見守る人 %d人";
+"guardian.home.guarding.count.one" = "%d人を見守り中";
+"records.peopleCount.one" = "%d人";
+"rider.crash.sentCount.one" = "%d 人にあなたの位置を知らせました。";
+"org.alertNotified.one" = "%d人のメンバーに通知しました";

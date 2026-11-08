@@ -71,7 +71,13 @@ import { createRateLimiter, RATE_LIMITS } from "./middleware/rateLimit";
 
 // --- Mount Routes ---
 // Phase 1: Auth & Users
-app.use("/v1/auth", createRateLimiter(RATE_LIMITS.auth, (req) => req.ip || "unknown"), authRoutes);
+// Sign-in attempts: 5/min per IP. Session refresh, the provider list and Alipay's
+// return trip carry no guessable secret, and many people share one carrier IP
+// (CGNAT), so they get the general limit instead.
+const authLimiter = createRateLimiter(RATE_LIMITS.auth, (req) => req.ip || "unknown");
+const authLightLimiter = createRateLimiter(RATE_LIMITS.general, (req) => req.ip || "unknown");
+const LIGHT_AUTH_PATHS = new Set(["/refresh", "/providers", "/alipay/callback", "/alipay/complete", "/methods"]);
+app.use("/v1/auth", (req, res, next) => (LIGHT_AUTH_PATHS.has(req.path) ? authLightLimiter : authLimiter)(req, res, next), authRoutes);
 app.use("/v1/user", userRoutes);
 
 // Phase 2: Relationships & Core Data

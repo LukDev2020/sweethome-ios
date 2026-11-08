@@ -35,13 +35,15 @@ firebase functions:secrets:set GOOGLE_MAPS_API_KEY --project sweethome-b4e82
 | `TWILIO_ACCOUNT_SID` | Twilio Console → Account Info → Account SID (`AC…`) | SOS SMS, SOS voice calls |
 | `TWILIO_AUTH_TOKEN` | Twilio Console → Account Info → Auth Token | Same, plus verifying Twilio's webhook signatures (`/v1/voice-callback`, `/v1/webhooks/twilio/call-status`) |
 | `GOOGLE_MAPS_API_KEY` | Google Cloud Console → APIs & Services → Credentials; key restricted to the **Geocoding API** | Reverse-geocoding addresses for guardians / evidence |
+| `APPLE_SIWA_PRIVATE_KEY` | Contents of the Sign in with Apple key file (`AuthKey_XXXX.p8`, see §4) | Revoking a person's Sign in with Apple when they delete their account (App Review 5.1.1(v)) |
+| `ALIPAY_PRIVATE_KEY` | Your app's RSA2 private key from Alipay's key tool (see §5) | Sign in with Alipay |
 
 Which functions bind them (`firebase deploy` grants each function's service account
 `secretAccessor` automatically):
 
 | Function | Secrets |
 |---|---|
-| `api` | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `GOOGLE_MAPS_API_KEY` |
+| `api` | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `GOOGLE_MAPS_API_KEY`, `APPLE_SIWA_PRIVATE_KEY`, `ALIPAY_PRIVATE_KEY` |
 | `onSOSCreated` (Firestore trigger) | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` |
 | `advanceEscalations` (every minute) | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` |
 
@@ -54,6 +56,18 @@ printf disabled | firebase functions:secrets:set GOOGLE_MAPS_API_KEY --data-file
 ```
 
 (The same works for the Twilio secrets, but then SOS reaches guardians by push only.)
+
+**New since Sign in with Apple / Alipay:** the next deploy needs `APPLE_SIWA_PRIVATE_KEY` and
+`ALIPAY_PRIVATE_KEY` to exist. Until you have the keys, store `disabled` (Apple sign-in still
+works; account deletion just can't revoke it; the Alipay button stays hidden):
+
+```bash
+printf disabled | firebase functions:secrets:set APPLE_SIWA_PRIVATE_KEY --data-file - --project sweethome-b4e82
+```
+
+```bash
+printf disabled | firebase functions:secrets:set ALIPAY_PRIVATE_KEY --data-file - --project sweethome-b4e82
+```
 
 **Rotating a secret:** run the same `secrets:set` command again, then redeploy the functions
 so running instances pick up the new version:
@@ -128,6 +142,42 @@ firebase functions:log --project sweethome-b4e82 --lines 200
   function instance; SOS still went out by push).
 - `[Twilio] Call CA… placed` / `[SMS] SOS SMS sent` mean Twilio works. The SOS document's
   `escalationLog` shows each channel (`push`, `sms_fallback`, `voice`, `push_voice_unavailable`, …).
+
+## 4. Sign in with Apple
+
+Sign-in itself needs no secret: the server checks Apple's signed token against Apple's public
+keys (`services/appleSignIn.ts`). What needs setting up:
+
+1. **App ID capability** — Apple Developer → Certificates, IDs & Profiles → Identifiers →
+   `com.shoudeng.app` → tick **Sign in with Apple** → Save. (Or open the project in Xcode once,
+   signed in: Signing & Capabilities picks up the new entitlement.) Without it the build
+   can't be signed with the `com.apple.developer.applesignin` entitlement.
+2. **Key for revocation** — Keys → **+** → name it, tick **Sign in with Apple** → Configure →
+   primary App ID `com.shoudeng.app` → Register → download `AuthKey_<KEYID>.p8` (once only).
+   ```bash
+   firebase functions:secrets:set APPLE_SIWA_PRIVATE_KEY --data-file AuthKey_KEYID.p8 --project sweethome-b4e82
+   ```
+   and in `functions/.env`: `APPLE_SIWA_KEY_ID=<KEYID>` (team: `APPLE_TEAM_ID`, default `B98QT5LTWZ`).
+
+## 5. Sign in with Alipay (支付宝登录)
+
+Off until all three values are set; `GET /v1/auth/providers` then reports `alipay: true` and the
+app shows the button. Needs an Alipay Open Platform (支付宝开放平台) account with enterprise
+verification.
+
+1. open.alipay.com → create an app (网页/移动应用), add the product **获取会员信息** (user info),
+   and submit it for review.
+2. 开发设置 → 接口加签方式: **公钥** mode, RSA2. Generate a key pair with Alipay's key tool, upload
+   the app public key, and copy **支付宝公钥** (Alipay's public key).
+3. 开发设置 → 授权回调地址: `https://us-central1-sweethome-b4e82.cloudfunctions.net/api/v1/auth/alipay/callback`
+   (or set `ALIPAY_REDIRECT_URI` if you serve the API from another domain).
+4. Secret: `firebase functions:secrets:set ALIPAY_PRIVATE_KEY --project sweethome-b4e82` (paste
+   the app private key — bare base64 or PEM, PKCS#8 or PKCS#1). `functions/.env`:
+   `ALIPAY_APP_ID=<APPID>` and `ALIPAY_PUBLIC_KEY=<支付宝公钥>`.
+
+**Mainland China:** the Alipay page sends the person back to this API's callback, and the app
+talks to this API; both are Google addresses, blocked on mainland networks. Alipay sign-in
+works for people outside the mainland (or roaming) until the API is reachable from China.
 
 ## Behaviour when something is missing
 

@@ -48,6 +48,15 @@ export const ttlCleanup = functions.pubsub
         console.log(`[TTL] Removed expired evidence hold ${doc.id}`);
       }
 
+      // Sign in with Alipay round trips nobody finished (10 minutes each)
+      const staleAlipay = await db
+        .collection("alipay_logins")
+        .where("expiresAt", "<", admin.firestore.Timestamp.now())
+        .get();
+      for (const doc of staleAlipay.docs) {
+        await doc.ref.delete();
+      }
+
       // Clean up expired invite codes
       const expiredInvites = await db
         .collection("invites")

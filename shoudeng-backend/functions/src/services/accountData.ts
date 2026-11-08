@@ -230,6 +230,7 @@ export async function eraseAccount(uid: string): Promise<{ bigQueryComplete: boo
     deleteWhere(db.collection("sos_events").where("protectedPersonId", "==", uid)), // + voice_notes
     deleteWhere(db.collection("family_posts").where("authorId", "==", uid)), // + comments
     deleteWhere(db.collection(SUBSCRIPTION_OWNERS).where("uid", "==", uid)), // frees the Apple subscription
+    deleteWhere(db.collection("auth_identities").where("uid", "==", uid)),   // Apple / Alipay / added phone
   ]);
 
   try {

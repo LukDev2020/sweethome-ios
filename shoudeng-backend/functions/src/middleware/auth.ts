@@ -1,15 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { getJwtSecret } from "../services/session";
 
-function getJwtSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (secret) return secret;
-  const isDev = process.env.FUNCTIONS_EMULATOR === "true" || !!process.env.JEST_WORKER_ID;
-  if (!isDev) {
-    throw new Error("JWT_SECRET environment variable is required in production");
-  }
-  return "shoudeng-dev-jwt-secret-do-not-use-in-prod";
-}
 
 // Extend Express Request with authenticated user info
 declare global {

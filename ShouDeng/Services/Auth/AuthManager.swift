@@ -6,11 +6,12 @@ import FirebaseAuth
 
 // MARK: - Auth Manager
 //
-// Manages authentication state: phone OTP login, signup, token refresh, logout.
-// Uses Firebase Phone Auth for OTP verification, then exchanges the Firebase
-// idToken with our backend for app-level session tokens.
+// Manages authentication state: phone OTP login, Sign in with Apple, Sign in with
+// Alipay, signup, token refresh, logout. Phone numbers are verified by Firebase
+// Phone Auth; Apple and Alipay by our server (IdentitySignIn.swift). Every method
+// ends with our backend's own session tokens.
 //
-// Flow:
+// Phone flow:
 //   1. requestCode(phone:) → Firebase sends SMS, stores verificationID
 //   2. verifyCode(code:) → Firebase verifies OTP, returns idToken
 //   3. login/signup → sends idToken to backend, gets app tokens
@@ -50,6 +51,38 @@ final class AuthManager: ObservableObject {
     /// account) and signup can go straight to the profile step.
     var hasVerifiedPhone: Bool { verifiedIdToken != nil }
 
+    /// Apple / Alipay sign-in the server verified with no account yet: signup uses
+    /// it, or a phone sign-in connects it to the existing account.
+    @Published var pendingIdentity: PendingIdentity?
+
+    /// The Alipay round trip in progress (state + the secret only this phone knows).
+    /// Kept in the keychain for its 10 minutes: iOS may close the app while the
+    /// person is in the Alipay app, and Alipay's "back" link then relaunches it.
+    private(set) var pendingAlipay: AlipayStartResponse? {
+        didSet { if persistsSession { Self.storePendingAlipay(pendingAlipay) } }
+    }
+    private let persistsSession: Bool
+    private static let pendingAlipayAccount = "alipay_pending_signin"
+    private static let pendingAlipayLifetime: TimeInterval = 10 * 60
+
+    private struct StoredAlipay: Codable {
+        let start: AlipayStartResponse
+        let savedAt: Date
+    }
+
+    private static func storePendingAlipay(_ start: AlipayStartResponse?) {
+        let value = start.flatMap { try? JSONEncoder().encode(StoredAlipay(start: $0, savedAt: Date())) }
+            .flatMap { String(data: $0, encoding: .utf8) } ?? ""
+        KeychainHelper.shared.save(pendingAlipayAccount, value: value)
+    }
+
+    private static func loadPendingAlipay() -> AlipayStartResponse? {
+        guard let raw = KeychainHelper.shared.read(pendingAlipayAccount), !raw.isEmpty,
+              let stored = try? JSONDecoder().decode(StoredAlipay.self, from: Data(raw.utf8)),
+              Date().timeIntervalSince(stored.savedAt) < pendingAlipayLifetime else { return nil }
+        return stored.start
+    }
+
     /// M5 fix: prevent concurrent token refresh calls
     private var isRefreshing = false
     private var refreshContinuations: [CheckedContinuation<Void, Error>] = []
@@ -64,8 +97,10 @@ final class AuthManager: ObservableObject {
         self.api = api
         self.phoneAuth = phoneAuth
         self.defaults = defaults
+        self.persistsSession = restore
         if restore {
             restoreSession()
+            pendingAlipay = Self.loadPendingAlipay()
         } else {
             state = .loggedOut
         }
@@ -148,12 +183,25 @@ final class AuthManager: ObservableObject {
         // Verify OTP with Firebase -> get idToken
         let idToken = try await phoneAuth.signIn(verificationID: vid, verificationCode: code)
 
-        // Exchange idToken with our backend
+        // Exchange idToken with our backend (connecting a pending Apple / Alipay sign-in)
         do {
-            let response: AuthResponse = try await api.post(
-                "/v1/auth/login",
-                body: LoginWithTokenRequest(idToken: idToken)
-            )
+            let response: AuthResponse
+            if let pending = pendingIdentity {
+                do {
+                    response = try await api.postReportingCode(
+                        "/v1/auth/login",
+                        body: LoginLinkingRequest(idToken: idToken, linkToken: pending.signupToken)
+                    )
+                } catch let error as APIServerError {
+                    throw IdentitySignInError.from(error)
+                }
+                await MainActor.run { self.pendingIdentity = nil }
+            } else {
+                response = try await api.post(
+                    "/v1/auth/login",
+                    body: LoginWithTokenRequest(idToken: idToken)
+                )
+            }
             handleAuthResponse(response)
         } catch {
             #if DEBUG
@@ -176,6 +224,23 @@ final class AuthManager: ObservableObject {
 
     func signup(displayName: String, role: String, countryCode: String,
                 dataTransferConsent: String? = nil) async throws {
+        // Apple / Alipay: the server's signup token stands in for a verified phone
+        if verifiedIdToken == nil, let pending = pendingIdentity {
+            let response: AuthResponse
+            do {
+                response = try await api.postReportingCode(
+                    "/v1/auth/signup",
+                    body: SignupWithIdentityRequest(signupToken: pending.signupToken, displayName: displayName,
+                                                    role: role, countryCode: countryCode,
+                                                    dataTransferConsent: dataTransferConsent)
+                )
+            } catch {
+                throw IdentitySignInError.from(error)
+            }
+            handleAuthResponse(response)
+            await MainActor.run { self.pendingIdentity = nil }
+            return
+        }
         guard let idToken = verifiedIdToken else {
             throw AuthError.noVerificationID
         }
@@ -193,6 +258,150 @@ final class AuthManager: ObservableObject {
         )
         handleAuthResponse(response)
         verifiedIdToken = nil
+        // Came from Apple / Alipay, then signed up with a phone number: connect it too
+        if let pending = pendingIdentity {
+            let _: EmptyResponse? = try? await api.postReportingCode("/v1/auth/link",
+                                                                     body: SignupTokenRequest(signupToken: pending.signupToken))
+            await MainActor.run { self.pendingIdentity = nil }
+        }
+    }
+
+    // MARK: - Sign in with Apple / Alipay
+
+    /// Which buttons to show (Alipay only once the server has its keys)
+    func providers() async -> AuthProvidersResponse? {
+        try? await api.get("/v1/auth/providers")
+    }
+
+    @MainActor
+    func signInWithApple(identityToken: String, rawNonce: String, authorizationCode: String?,
+                         fullName: String?) async throws -> IdentityOutcome {
+        do {
+            let response: IdentitySignInResponse = try await api.postReportingCode(
+                "/v1/auth/apple",
+                body: AppleSignInRequest(identityToken: identityToken, rawNonce: rawNonce,
+                                         authorizationCode: authorizationCode, fullName: fullName)
+            )
+            return try accept(response, provider: .apple)
+        } catch APIError.unauthorized {
+            throw IdentitySignInError.appleFailed
+        } catch {
+            throw IdentitySignInError.from(error)
+        }
+    }
+
+    @MainActor
+    func startAlipaySignIn() async throws -> AlipayStartResponse {
+        do {
+            let start: AlipayStartResponse = try await api.postReportingCode("/v1/auth/alipay/start", body: EmptyBody())
+            pendingAlipay = start
+            return start
+        } catch APIError.serverError(503) {
+            throw IdentitySignInError.alipayUnavailable
+        } catch {
+            throw IdentitySignInError.from(error)
+        }
+    }
+
+    /// Back from Alipay: signed in, a profile to fill in, or still waiting for Alipay.
+    /// `connecting`: Settings → connect Alipay to the signed-in account instead.
+    @MainActor
+    func completeAlipaySignIn(connecting: Bool = false) async throws -> IdentityOutcome {
+        guard let pending = pendingAlipay else { throw IdentitySignInError.alipayNotConfirmed }
+        do {
+            let response: IdentitySignInResponse = try await api.postReportingCode(
+                "/v1/auth/alipay/complete",
+                body: AlipayCompleteRequest(state: pending.state, secret: pending.secret)
+            )
+            if response.status == "pending" { return .waiting }
+            pendingAlipay = nil
+            guard connecting else { return try accept(response, provider: .alipay) }
+            try await link(response)
+            return .signedIn
+        } catch let error as APIServerError {
+            // Declined, expired or unknown: this round trip is over
+            pendingAlipay = nil
+            throw IdentitySignInError.from(error)
+        }
+    }
+
+    @MainActor
+    func cancelAlipaySignIn() {
+        pendingAlipay = nil
+    }
+
+    @MainActor
+    func cancelPendingIdentity() {
+        pendingIdentity = nil
+    }
+
+    @MainActor
+    private func accept(_ response: IdentitySignInResponse, provider: PendingIdentity.Provider) throws -> IdentityOutcome {
+        if let auth = response.authResponse {
+            pendingIdentity = nil
+            handleAuthResponse(auth)
+            return .signedIn
+        }
+        guard response.status == "signupRequired", let token = response.signupToken else {
+            throw provider == .apple ? IdentitySignInError.appleFailed : IdentitySignInError.alipayNotConfirmed
+        }
+        let pending = PendingIdentity(provider: provider, signupToken: token,
+                                      suggestedName: response.displayName, email: response.email)
+        pendingIdentity = pending
+        return .signupRequired(pending)
+    }
+
+    // MARK: - Sign-in methods (Settings)
+
+    func signInMethods() async throws -> SignInMethodsResponse {
+        try await api.get("/v1/auth/methods")
+    }
+
+    /// Settings → connect Apple to the signed-in account
+    @MainActor
+    func connectApple(identityToken: String, rawNonce: String, authorizationCode: String?) async throws {
+        let response: IdentitySignInResponse
+        do {
+            response = try await api.postReportingCode(
+                "/v1/auth/apple",
+                body: AppleSignInRequest(identityToken: identityToken, rawNonce: rawNonce,
+                                         authorizationCode: authorizationCode, fullName: nil)
+            )
+        } catch {
+            throw IdentitySignInError.from(error)
+        }
+        try await link(response)
+    }
+
+    /// Connect a verified Apple / Alipay sign-in to the signed-in account
+    @MainActor
+    private func link(_ response: IdentitySignInResponse) async throws {
+        if response.status == "signedIn" {
+            // It already opens an account: this one, or another
+            if response.userId == currentUserId { return }
+            throw IdentitySignInError.linkedElsewhere
+        }
+        guard let token = response.signupToken else { throw IdentitySignInError.expired }
+        do {
+            let _: EmptyResponse = try await api.postReportingCode("/v1/auth/link", body: SignupTokenRequest(signupToken: token))
+        } catch {
+            throw IdentitySignInError.from(error)
+        }
+    }
+
+    /// Add a phone number to an Apple / Alipay account: Firebase checks the code,
+    /// the server attaches the number (texts and calls reach this person; they
+    /// can sign in with it too).
+    func linkPhone(code: String) async throws -> String? {
+        guard let vid = verificationID else { throw AuthError.noVerificationID }
+        let idToken = try await phoneAuth.signIn(verificationID: vid, verificationCode: code)
+        do {
+            let response: LinkPhoneResponse = try await api.postReportingCode("/v1/auth/link-phone",
+                                                                             body: LinkPhoneRequest(idToken: idToken))
+            return response.phone
+        } catch {
+            throw IdentitySignInError.from(error)
+        }
     }
 
     // MARK: - Token Refresh
@@ -263,6 +472,8 @@ final class AuthManager: ObservableObject {
         api.setAccessToken(nil)
         verificationID = nil
         verifiedIdToken = nil
+        pendingAlipay = nil
+        DispatchQueue.main.async { self.pendingIdentity = nil }
         defaults.removeObject(forKey: "currentUserId")
         state = .loggedOut
 

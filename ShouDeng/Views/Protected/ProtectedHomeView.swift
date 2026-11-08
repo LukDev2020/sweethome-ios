@@ -427,7 +427,7 @@ struct ProtectedHomeView: View {
             var cities = [String]()
             if let c = coordinator.currentUser?.cityName, !c.isEmpty { cities.append(c) }
             for g in coordinator.myGuardians { if !g.user.cityName.isEmpty && !cities.contains(g.user.cityName) { cities.append(g.user.cityName) } }
-            layersText = String(format: lang.localized("protected.home.guardianCount"), coordinator.myGuardians.count)
+            layersText = lang.localized("protected.home.guardianCount", count: coordinator.myGuardians.count)
             subtitleText = cities.isEmpty
                 ? lang.localized("protected.home.guarding")
                 : cities.prefix(3).joined(separator: " · ")
@@ -834,7 +834,7 @@ struct ProtectedHomeView: View {
                             Text("·")
                                 .font(.scaled(size: 11))
                                 .foregroundStyle(.white.opacity(0.35))
-                            Text(String(format: lang.localized("tracking.banner.sharing", fallback: "Sharing with %d guardians"), guardianCount))
+                            Text(lang.localized("tracking.banner.sharing", count: guardianCount))
                                 .font(.scaled(size: 11))
                                 .foregroundStyle(.white.opacity(0.55))
                         }

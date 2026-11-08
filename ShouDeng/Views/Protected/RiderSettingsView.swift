@@ -182,7 +182,11 @@ struct RiderSettingsView: View {
                         Spacer()
                         Image(systemName: on ? "checkmark.circle.fill" : "circle").foregroundStyle(on ? RC.safe : Color(.tertiaryLabel))
                     }
+                    .contentShape(Rectangle())
                 }
+                // Plain: the List's button tint turned the whole row green
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(on ? .isSelected : [])
             }
             Toggle(L("rider.settings.card.timer"), isOn: Binding(get: { s.showShiftTimer }, set: { v in set { $0.showShiftTimer = v } })).tint(RC.safe)
             Toggle(L("rider.settings.card.watchers"), isOn: Binding(get: { s.showWatchers }, set: { v in set { $0.showWatchers = v } })).tint(RC.safe)
@@ -406,7 +410,7 @@ struct CrashReportView: View {
             Label(L("rider.crash.sent"), systemImage: "checkmark.seal.fill")
                 .font(.scaled(size: 20, weight: .bold)).foregroundStyle(RC.safe)
             if case .some(.some(let n)) = sent {
-                Text(String(format: L("rider.crash.sentCount"), n)).font(.scaled(size: 15))
+                Text(lang.localized("rider.crash.sentCount", count: n)).font(.scaled(size: 15))
             } else {
                 Text(L("rider.crash.queued")).font(.scaled(size: 15)).foregroundStyle(.secondary)
             }

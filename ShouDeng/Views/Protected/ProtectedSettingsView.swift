@@ -182,6 +182,7 @@ struct ProtectedSettingsView: View {
                     .padding(.top, 8)
                 profilePanel
                 emailMissingBanner
+                PhoneMissingBanner()
                 rolePanel
                 HomeStylePanel()
                 WatchBackPanel()
@@ -225,6 +226,7 @@ struct ProtectedSettingsView: View {
                         .padding(.top, 8)
                     profilePanel
                     emailMissingBanner
+                    PhoneMissingBanner()
                     rolePanel
                     HomeStylePanel()
                     sosTriggerPanel
@@ -604,6 +606,9 @@ struct ProtectedSettingsView: View {
             Text(langManager.localized("settings.security"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
+
+            // Phone, Apple, Alipay: the ways into this account
+            SignInMethodsRow(tint: safe)
 
             if BiometricAuthManager.shared.isAvailable {
                 HStack {

@@ -376,7 +376,7 @@ struct GuardianAlertResponseView: View {
 
             stepRow(number: "1", title: langManager.localized("guardian.alert.step1.title"),
                     detail: notified > 0
-                        ? String(format: langManager.localized("sos.status.guardiansNotified"), notified)
+                        ? langManager.localized("sos.status.guardiansNotified", count: notified)
                         : langManager.localized("guardian.alert.notifying"),
                     state: step1State)
             if DisclaimerCopy.EscalationChannels.phoneEnabled {

@@ -2546,3 +2546,42 @@
 "rider.crash.later" = "疼痛可能幾小時後才出現。如果感到不適，請使用求助。";
 "rider.crash.timeline.hurt" = "報告車禍——受傷，已求助";
 "rider.crash.timeline.ok" = "報告車禍——未受傷";
+
+/* Sign in with Apple / Alipay, sign-in methods */
+"auth.identity.or" = "或";
+"auth.alipay.signIn" = "支付寶登錄";
+"auth.alipay.waiting" = "正在等待支付寶確認…";
+"auth.alipay.checkAgain" = "我已確認，再查一次";
+"auth.alipay.cancel" = "取消";
+"auth.apple.failed" = "Apple 登錄失敗，請重試。";
+"auth.alipay.unavailable" = "暫時無法使用支付寶登錄，請使用手機號或 Apple 登錄。";
+"auth.alipay.notConfirmed" = "支付寶未確認此次登錄，請重試。";
+"auth.link.elsewhere" = "該登錄方式已綁定另一個守燈賬號。";
+"auth.phone.hasAccount" = "該手機號已有自己的守燈賬號，請直接用它登錄。";
+"auth.identity.expired" = "操作超時，請重新開始。";
+"auth.link.byPhone.apple" = "用手機號登錄，即可把 Apple 賬號綁定到你的賬號。";
+"auth.link.byPhone.alipay" = "用手機號登錄，即可把支付寶綁定到你的賬號。";
+"auth.methods.title" = "登錄方式";
+"auth.methods.phone" = "手機號";
+"auth.methods.notAdded" = "未添加";
+"auth.methods.addPhone" = "添加手機號";
+"auth.methods.connected" = "已綁定";
+"auth.methods.alipay" = "支付寶";
+"auth.methods.connect" = "綁定";
+"auth.methods.phoneWhy" = "添加手機號後，推送收不到時求助短信和電話也能找到你，還可以用它登錄。";
+"auth.methods.footer" = "以上任一方式都能登錄同一個賬號。";
+"auth.methods.loadFailed" = "無法加載登錄方式，請檢查網絡。";
+"signup.identity.apple" = "已通過 Apple 驗證。填寫資料即可創建賬號。";
+"signup.identity.alipay" = "已通過支付寶驗證。填寫資料即可創建賬號。";
+"signup.identity.haveAccount" = "已經用手機號註冊過？用手機號登錄即可綁定。";
+
+/* Singular forms ("1 family member"), see LanguageManager.localized(_:count:) */
+"sos.status.guardiansNotified.one" = "已通知 %d 位家人";
+"status.protected.guarded.one" = "正在被 %d 位家人守護";
+"sosmode.sharing.one" = "正在向 %d 位家人分享你的位置";
+"tracking.banner.sharing.one" = "正與 %d 位守護者共享";
+"protected.home.guardianCount.one" = "%d 位守護者";
+"guardian.home.guarding.count.one" = "守護 %d 人";
+"records.peopleCount.one" = "%d 人";
+"rider.crash.sentCount.one" = "已告訴 %d 人你的位置。";
+"org.alertNotified.one" = "已通知 %d 名成員";

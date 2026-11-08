@@ -155,6 +155,7 @@ struct GuardianSettingsView: View {
                     .padding(.top, 8)
                 profilePanel
                 emailMissingBanner
+                PhoneMissingBanner()
                 rolePanel
                 subscriptionPanel
                 safetyToolsPanel
@@ -192,6 +193,7 @@ struct GuardianSettingsView: View {
                         .padding(.top, 8)
                     profilePanel
                     emailMissingBanner
+                    PhoneMissingBanner()
                     rolePanel
                     subscriptionPanel
                     Spacer().frame(height: 24)
@@ -569,6 +571,9 @@ struct GuardianSettingsView: View {
             Text(langManager.localized("settings.security"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
+
+            // Phone, Apple, Alipay: the ways into this account
+            SignInMethodsRow(tint: safe)
 
             if BiometricAuthManager.shared.isAvailable {
                 HStack {

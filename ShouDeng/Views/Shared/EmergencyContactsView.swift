@@ -473,6 +473,8 @@ struct EmergencyNumber {
     let icon: String
     let color: Color
     let note: String?
+    /// Which service ("police", "ambulance", "all", …)
+    var key: String? = nil
 }
 
 struct RegionalEmergencyInfo {
@@ -485,6 +487,12 @@ struct RegionalEmergencyInfo {
     /// The number shown on SOS screens and the hotline card.
     var primaryNumber: String { numbers.first?.number ?? "112" }
 
+    /// "If you're in danger / threatened": the police where they have their own
+    /// number (China 110, Japan 110, France 17…), else the one emergency number.
+    var policeNumber: String {
+        numbers.first { $0.key == "police" || $0.key == "ambulancePolice" }?.number ?? primaryNumber
+    }
+
     /// Markets the app is offered in (App Store availability) plus places family
     /// members often are. Unknown regions fall back to 112 (works from most mobiles).
     static let supportedRegions = ["US", "CA", "HK", "MO", "TW", "SG", "AU", "NZ", "MY", "TH", "PH", "JP",
@@ -492,7 +500,7 @@ struct RegionalEmergencyInfo {
 
     private static func n(_ key: String, _ number: String, _ icon: String, _ color: Color) -> EmergencyNumber {
         EmergencyNumber(label: LanguageManager.shared.localized("emergency.svc.\(key)"), number: number,
-                        icon: icon, color: color, note: nil)
+                        icon: icon, color: color, note: nil, key: key)
     }
     private static let all = "staroflife.fill", amb = "cross.case.fill", pol = "shield.fill",
                        fire = "flame.fill", line = "phone.fill"
