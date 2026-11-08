@@ -37,6 +37,7 @@
 		7B8394707B2287C3F89699D2 /* BuildChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A662E552423F06178E58DA7A /* BuildChannel.swift */; };
 		BB22CC3300001001 /* TripRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC3300002001 /* TripRecord.swift */; };
 		DD44EE0100000012 /* Rider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD44EE0100000011 /* Rider.swift */; };
+		C3C1F19404F659FA019487D2 /* RiderSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE8FA0C777CF17B3172FFD0E /* RiderSettings.swift */; };
 		BB22CC3300001002 /* TripRecordingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC3300002002 /* TripRecordingService.swift */; };
 		B2FE267CF1ADBC58FC73EE86 /* AppleMapsLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05D8D5E956E9740F8D58568C /* AppleMapsLink.swift */; };
 		BB22CC3300001003 /* TripHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC3300002003 /* TripHistoryView.swift */; };
@@ -91,6 +92,7 @@
 		3E0C585AFE1F2B803B314040 /* FallDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 996A66596F591B7AE6D3A71D /* FallDetectorTests.swift */; };
 		FC0482F81DF357DE0AB3DB85 /* FallChainTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E9F9CD348A825FFD768CF7B /* FallChainTests.swift */; };
 		70662C551AE43C5F36F41C8B /* RiderOnboardingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 239096EA3490092D44B0D181 /* RiderOnboardingTests.swift */; };
+		C454763124ECC0E802B8ED57 /* RiderSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 970E6CBBE3C47FE416789667 /* RiderSettingsTests.swift */; };
 		4DE95AAFCF85983765B8077F /* FallScenarioTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CDE927FC42B2680AA19A99 /* FallScenarioTests.swift */; };
 		3E4669140446EDFCEE02344D /* TrajectoryProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0BEFF93B8A9039DB83F17EA /* TrajectoryProcessorTests.swift */; };
 		40EF71539180883E92FD63B8 /* ProtectedRecordsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D199DA3C341478E8441C8FED /* ProtectedRecordsView.swift */; };
@@ -138,6 +140,7 @@
 		72311B032AFAD5E4C43442AA /* ShouDengWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B67AB48387F3263CABF4FE /* ShouDengWidgetBundle.swift */; };
 		791C1055A0D240706A687AD6 /* CountryCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6FB12D36F67ADB24BA2DDD5 /* CountryCode.swift */; };
 		7CEB8F947D0673F08CE4439B /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9B16BBF77C02115152E9C88 /* AppCoordinator.swift */; };
+		19346CFAC17FEEE51E087788 /* AppCoordinator+RiderSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 990C2267C46BBE90320E5BB2 /* AppCoordinator+RiderSettings.swift */; };
 		93B93121E8675298599F7341 /* AppCoordinator+RiderOnboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 816328D1CA081D5AF81300FD /* AppCoordinator+RiderOnboarding.swift */; };
 		B7853876E83E1B94800D56FD /* AppCoordinator+AutoSOSCheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7699F2AA59357429247EA19 /* AppCoordinator+AutoSOSCheck.swift */; };
 		7D9761B4731755AF8D1F6F8C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 870E1E566CD6F0CB6F1D7BF4 /* InfoPlist.strings */; };
@@ -185,6 +188,7 @@
 		C443EE3E317212A2697B78C0 /* GlobeMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794BD85D0F41F07ABDBAED46 /* GlobeMapView.swift */; };
 		C5289F9240B30DC097151387 /* ProtectedHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06711676C420190B6BF2FB41 /* ProtectedHomeView.swift */; };
 		DD44EE0100000018 /* RiderViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD44EE0100000017 /* RiderViews.swift */; };
+		B95CC9CD8B358F93DAE1DDDF /* RiderSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B0EDC951BBE8EFAEF2D7042 /* RiderSettingsView.swift */; };
 		B154F81DA39497C902FFA029 /* RiderSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76E05482553D2E33FC06A1FB /* RiderSetupView.swift */; };
 		C63E9A5C88A8140699F3ED9D /* TripPreflightView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78733745F4A30EAE16699215 /* TripPreflightView.swift */; };
 		C576FDF5D0C715B70C2B72AD /* ClaimMaterialModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07B3F7BF74A7768DF6C5697C /* ClaimMaterialModels.swift */; };
@@ -320,6 +324,7 @@
 		0582D01DD1A66B1A20CA595D /* GuardianRecordsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianRecordsView.swift; sourceTree = "<group>"; };
 		06711676C420190B6BF2FB41 /* ProtectedHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtectedHomeView.swift; sourceTree = "<group>"; };
 		DD44EE0100000017 /* RiderViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiderViews.swift; sourceTree = "<group>"; };
+		7B0EDC951BBE8EFAEF2D7042 /* RiderSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiderSettingsView.swift; sourceTree = "<group>"; };
 		76E05482553D2E33FC06A1FB /* RiderSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiderSetupView.swift; sourceTree = "<group>"; };
 		78733745F4A30EAE16699215 /* TripPreflightView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripPreflightView.swift; sourceTree = "<group>"; };
 		07B3F7BF74A7768DF6C5697C /* ClaimMaterialModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimMaterialModels.swift; sourceTree = "<group>"; };
@@ -409,6 +414,7 @@
 		996A66596F591B7AE6D3A71D /* FallDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallDetectorTests.swift; sourceTree = "<group>"; };
 		1E9F9CD348A825FFD768CF7B /* FallChainTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallChainTests.swift; sourceTree = "<group>"; };
 		239096EA3490092D44B0D181 /* RiderOnboardingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiderOnboardingTests.swift; sourceTree = "<group>"; };
+		970E6CBBE3C47FE416789667 /* RiderSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiderSettingsTests.swift; sourceTree = "<group>"; };
 		94CDE927FC42B2680AA19A99 /* FallScenarioTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallScenarioTests.swift; sourceTree = "<group>"; };
 		997CD81ED07E07D1FF5E0291 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		89579B5CCAA0703ADE2717B3 /* InviteAcceptSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteAcceptSheet.swift; sourceTree = "<group>"; };
@@ -460,6 +466,7 @@
 		B2C3D4E5F6070002 /* FontScaleManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontScaleManager.swift; sourceTree = "<group>"; };
 		E90B997F6B5ED8D73AF5B4F8 /* LanguageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageManager.swift; sourceTree = "<group>"; };
 		E9B16BBF77C02115152E9C88 /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
+		990C2267C46BBE90320E5BB2 /* AppCoordinator+RiderSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppCoordinator+RiderSettings.swift"; sourceTree = "<group>"; };
 		816328D1CA081D5AF81300FD /* AppCoordinator+RiderOnboarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppCoordinator+RiderOnboarding.swift"; sourceTree = "<group>"; };
 		B7699F2AA59357429247EA19 /* AppCoordinator+AutoSOSCheck.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppCoordinator+AutoSOSCheck.swift"; sourceTree = "<group>"; };
 		EC9967501D760330EF89D308 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -487,6 +494,7 @@
 		331DA921543B4CBF8494F9CB /* VoiceNoteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceNoteService.swift; sourceTree = "<group>"; };
 		BB22CC3300002001 /* TripRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRecord.swift; sourceTree = "<group>"; };
 		DD44EE0100000011 /* Rider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Rider.swift; sourceTree = "<group>"; };
+		CE8FA0C777CF17B3172FFD0E /* RiderSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiderSettings.swift; sourceTree = "<group>"; };
 		BB22CC3300002002 /* TripRecordingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRecordingService.swift; sourceTree = "<group>"; };
 		05D8D5E956E9740F8D58568C /* AppleMapsLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleMapsLink.swift; sourceTree = "<group>"; };
 		BB22CC3300002003 /* TripHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripHistoryView.swift; sourceTree = "<group>"; };
@@ -723,6 +731,7 @@
 				219089B647D70FDE60419C11 /* ProtectedGuardianDetailView.swift */,
 				06711676C420190B6BF2FB41 /* ProtectedHomeView.swift */,
 				DD44EE0100000017 /* RiderViews.swift */,
+				7B0EDC951BBE8EFAEF2D7042 /* RiderSettingsView.swift */,
 				76E05482553D2E33FC06A1FB /* RiderSetupView.swift */,
 				CC33DD0100001102 /* SimpleProtectedHomeView.swift */,
 				78733745F4A30EAE16699215 /* TripPreflightView.swift */,
@@ -744,6 +753,7 @@
 				F1C3DE3DA8E9EEE6CEB01B71 /* User.swift */,
 				BB22CC3300002001 /* TripRecord.swift */,
 				DD44EE0100000011 /* Rider.swift */,
+				CE8FA0C777CF17B3172FFD0E /* RiderSettings.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -987,6 +997,7 @@
 				996A66596F591B7AE6D3A71D /* FallDetectorTests.swift */,
 				1E9F9CD348A825FFD768CF7B /* FallChainTests.swift */,
 				239096EA3490092D44B0D181 /* RiderOnboardingTests.swift */,
+				970E6CBBE3C47FE416789667 /* RiderSettingsTests.swift */,
 				94CDE927FC42B2680AA19A99 /* FallScenarioTests.swift */,
 				620C1D30F15D6704D1D48506 /* LocalStoreTests.swift */,
 				232C5CB09F4889DBED05B084 /* ModelTests.swift */,
@@ -1116,6 +1127,7 @@
 			isa = PBXGroup;
 			children = (
 				E9B16BBF77C02115152E9C88 /* AppCoordinator.swift */,
+				990C2267C46BBE90320E5BB2 /* AppCoordinator+RiderSettings.swift */,
 				816328D1CA081D5AF81300FD /* AppCoordinator+RiderOnboarding.swift */,
 				B7699F2AA59357429247EA19 /* AppCoordinator+AutoSOSCheck.swift */,
 				1E4C8E04ABB40A07C16C56BC /* AppLifecycleRouter.swift */,
@@ -1376,6 +1388,7 @@
 				F4098E23D57249FA9DBC132D /* AdaptiveLocationManager.swift in Sources */,
 				F2E1D0C9B8A7F6E5D4C3B2A1 /* ReactiveLocationService.swift in Sources */,
 				7CEB8F947D0673F08CE4439B /* AppCoordinator.swift in Sources */,
+				19346CFAC17FEEE51E087788 /* AppCoordinator+RiderSettings.swift in Sources */,
 				93B93121E8675298599F7341 /* AppCoordinator+RiderOnboarding.swift in Sources */,
 				B7853876E83E1B94800D56FD /* AppCoordinator+AutoSOSCheck.swift in Sources */,
 				A22F58C7B33F5DE5F6350346 /* AppDelegate.swift in Sources */,
@@ -1463,6 +1476,7 @@
 				46FBA23EB18A93044DAF495C /* ProtectedGuardianDetailView.swift in Sources */,
 				C5289F9240B30DC097151387 /* ProtectedHomeView.swift in Sources */,
 				DD44EE0100000018 /* RiderViews.swift in Sources */,
+				B95CC9CD8B358F93DAE1DDDF /* RiderSettingsView.swift in Sources */,
 				B154F81DA39497C902FFA029 /* RiderSetupView.swift in Sources */,
 				C63E9A5C88A8140699F3ED9D /* TripPreflightView.swift in Sources */,
 				40EF71539180883E92FD63B8 /* ProtectedRecordsView.swift in Sources */,
@@ -1484,6 +1498,7 @@
 				35159B7DB49900FACD831968 /* User.swift in Sources */,
 				BB22CC3300001001 /* TripRecord.swift in Sources */,
 				DD44EE0100000012 /* Rider.swift in Sources */,
+				C3C1F19404F659FA019487D2 /* RiderSettings.swift in Sources */,
 				BB22CC3300001002 /* TripRecordingService.swift in Sources */,
 				B2FE267CF1ADBC58FC73EE86 /* AppleMapsLink.swift in Sources */,
 				CC33DD0100002001 /* FakeCallService.swift in Sources */,
@@ -1552,6 +1567,7 @@
 				3E0C585AFE1F2B803B314040 /* FallDetectorTests.swift in Sources */,
 				FC0482F81DF357DE0AB3DB85 /* FallChainTests.swift in Sources */,
 				70662C551AE43C5F36F41C8B /* RiderOnboardingTests.swift in Sources */,
+				C454763124ECC0E802B8ED57 /* RiderSettingsTests.swift in Sources */,
 				4DE95AAFCF85983765B8077F /* FallScenarioTests.swift in Sources */,
 				55ED22F5D2C5A01AD86F979B /* LocalStoreTests.swift in Sources */,
 				55B3FA5666AEEBB98BD2FC7A /* ModelTests.swift in Sources */,

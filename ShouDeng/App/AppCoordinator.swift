@@ -66,6 +66,12 @@ final class AppCoordinator: ObservableObject {
     @Published var showRiderSuggestion = false
     /// Explore Mode: the rider setup was gone through once (kept in memory only)
     var demoRiderSetupDone = false
+    /// Settings → Rider (in memory only in Explore Mode)
+    @Published var riderSettings = RiderSettings()
+    /// "I've crashed" (rider home, lock-screen card, shoudeng://rider-crash)
+    @Published var showCrashReport = false
+    /// A shift template's "Start your shift?" reminder was opened
+    @Published var pendingShiftTemplateId: String?
 
     @Published var sosConcealed = UserDefaults.standard.bool(forKey: "sos_concealed") {
         didSet { UserDefaults.standard.set(sosConcealed, forKey: "sos_concealed") }
@@ -203,6 +209,10 @@ final class AppCoordinator: ObservableObject {
         authManager = AuthManager(api: apiClient, defaults: environment.defaults, restore: !environment.isDemo)
         if !environment.isDemo, let data = UserDefaults.standard.data(forKey: "rider_shift") {
             riderShift = try? JSONDecoder().decode(RiderShift.self, from: data)
+        }
+        if !environment.isDemo, let data = UserDefaults.standard.data(forKey: RiderSettings.storageKey),
+           let saved = try? JSONDecoder().decode(RiderSettings.self, from: data) {
+            riderSettings = saved.sanitized()
         }
         // Unit tests drive StoreKit through SKTestSession; the test host must not start
         // listening to the real App Store first (on a fresh simulator that process then
@@ -681,6 +691,10 @@ final class AppCoordinator: ObservableObject {
                 return
             case "rider-report":
                 showBikeReport = true
+                return
+            case "rider-crash":
+                // Lock-screen card "Crash" button
+                showCrashReport = true
                 return
             case "call-emergency":
                 // Lock-screen card during an SOS: the call still needs the user's tap
@@ -1228,6 +1242,8 @@ final class AppCoordinator: ObservableObject {
         pushService.onCancelPendingSOS = { [weak self] in
             self?.cancelPendingSOS()
         }
+        pushService.onShiftStillOk = { [weak self] in self?.confirmStillOk() }
+        pushService.onShiftTemplate = { [weak self] id in self?.pendingShiftTemplateId = id }
         pushService.onOpenCrewAlert = { [weak self] sosId in
             guard let self else { return }
             self.pendingCrewAlertId = sosId
@@ -1432,7 +1448,7 @@ final class AppCoordinator: ObservableObject {
         switch method {
         case .longPress, .widgetTap, .bluetoothButton, .watchQuickAction:
             return 5
-        case .duressPassword, .fallDetection, .voiceWakeWord, .audioDistress, .voiceCommand, .deadManSwitch:
+        case .duressPassword, .fallDetection, .voiceWakeWord, .audioDistress, .voiceCommand, .deadManSwitch, .crashReport:
             return 0
         }
     }
@@ -1446,7 +1462,8 @@ final class AppCoordinator: ObservableObject {
             return
         }
         guard pendingSOS == nil else { return }
-        let seconds = Self.sosCancelWindow(for: method)
+        // Riders choose theirs (Settings → Rider); never under 3 s for a screen hold
+        let seconds = (isRiderMode ? riderSettings.cancelWindow(for: method) : nil) ?? Self.sosCancelWindow(for: method)
         guard seconds > 0 else {
             triggerSOS(method: method)
             return

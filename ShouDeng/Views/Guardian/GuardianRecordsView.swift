@@ -443,6 +443,7 @@ struct GuardianRecordsView: View {
         case .silentAlarmConfirmed: return "checkmark.circle.fill"
         case .silentAlarmMissed, .silentAlarmEscalated: return "bell.badge.fill"
         case .voiceNote: return "waveform"
+        case .crashReported: return "car.side.rear.and.collision.and.car.side.front"
         case .other: return "circle.fill"
         }
     }
@@ -450,7 +451,7 @@ struct GuardianRecordsView: View {
     private func colorForType(_ type: TimelineEntryType) -> Color {
         switch type {
         case .checkIn, .sosResolved, .enteredSafeZone: return safe
-        case .sosTriggered, .fallDetected, .silentAlarmEscalated: return alert
+        case .sosTriggered, .fallDetected, .silentAlarmEscalated, .crashReported: return alert
         case .missedCheckIn, .batteryLow, .leftSafeZone, .bleSeparation, .silentAlarmMissed: return lamp
         default: return .secondary
         }

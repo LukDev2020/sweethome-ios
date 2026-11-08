@@ -277,11 +277,13 @@ struct RiderLockScreenCard: View {
     private var shiftBody: some View {
         HStack(spacing: 7 * s) {
             CardLogo(size: 22 * s)
-            Image(systemName: "bicycle").font(.system(size: 14 * s, weight: .semibold)).foregroundStyle(style.accent.color)
+            Image(systemName: rider.vehicleSymbol ?? "bicycle").font(.system(size: 14 * s, weight: .semibold)).foregroundStyle(style.accent.color)
             if let started = rider.shiftStartedAt {
                 Text(L("la.rider.onShift")).font(.system(size: 15 * s, weight: .bold)).foregroundStyle(primary)
-                Text(started, style: .timer).font(.system(size: 15 * s, weight: .semibold)).monospacedDigit()
-                    .foregroundStyle(primary).lineLimit(1).frame(maxWidth: 70 * s, alignment: .leading)
+                if rider.showTimer ?? true {
+                    Text(started, style: .timer).font(.system(size: 15 * s, weight: .semibold)).monospacedDigit()
+                        .foregroundStyle(primary).lineLimit(1).frame(maxWidth: 70 * s, alignment: .leading)
+                }
             } else {
                 Text(L("la.rider.offShift")).font(.system(size: 15 * s, weight: .bold)).foregroundStyle(primary)
             }
@@ -298,23 +300,22 @@ struct RiderLockScreenCard: View {
             row(icon: "clock.badge.checkmark") {
                 if let end = rider.checkDueAt { Text(L("la.rider.checkAt")) + Text(end, style: .time) } else { Text("—") }
             }
-            row(icon: "checkmark.circle") {
-                if let ci = state.lastCheckIn { Text(L("la.last.checkin") + " ") + Text(ci, style: .time) } else { Text("—") }
+            if let names = rider.watcherNames, !names.isEmpty {
+                row(icon: "eye.fill") { Text(names.joined(separator: ", ")) }
+            } else {
+                row(icon: "checkmark.circle") {
+                    if let ci = state.lastCheckIn { Text(L("la.last.checkin") + " ") + Text(ci, style: .time) } else { Text("—") }
+                }
             }
         }
         .frame(height: style.height(of: .checkIn))
 
+        // SOS always first; the other two are the rider's choice (Settings → Rider)
         HStack(spacing: 6) {
             Link(destination: URL(string: "shoudeng://sos")!) {
                 button("exclamationmark.triangle.fill", L("la.sos.button"), SharedColors.alert)
             }
-            Button(intent: LockScreenCheckInIntent()) {
-                button("checkmark.circle.fill", L("la.checkin.button"), SharedColors.safe.opacity(0.9))
-            }
-            .buttonStyle(.plain)
-            Link(destination: URL(string: "shoudeng://rider-report")!) {
-                button("exclamationmark.shield.fill", L("la.rider.report"), style.accent.color)
-            }
+            ForEach(Self.chosenButtons(rider.buttons), id: \.self) { choice in actionButton(choice) }
         }
         .frame(height: style.height(of: .actions))
     }
@@ -359,6 +360,38 @@ struct RiderLockScreenCard: View {
             }
         }
         .frame(height: style.height(of: .actions))
+    }
+
+    /// Two of ok | report | crash | location; anything else falls back to OK + Report
+    static func chosenButtons(_ raw: [String]?) -> [String] {
+        let known = ["ok", "report", "crash", "location"]
+        var out: [String] = []
+        for b in raw ?? [] where known.contains(b) && !out.contains(b) { out.append(b) }
+        for b in ["ok", "report"] where out.count < 2 && !out.contains(b) { out.append(b) }
+        return Array(out.prefix(2))
+    }
+
+    @ViewBuilder
+    private func actionButton(_ choice: String) -> some View {
+        switch choice {
+        case "ok":
+            Button(intent: LockScreenCheckInIntent()) {
+                button("checkmark.circle.fill", L("la.checkin.button"), SharedColors.safe.opacity(0.9))
+            }
+            .buttonStyle(.plain)
+        case "crash":
+            Link(destination: URL(string: "shoudeng://rider-crash")!) {
+                button("car.side.rear.and.collision.and.car.side.front", L("la.rider.crash"), SharedColors.warning)
+            }
+        case "location":
+            Link(destination: URL(string: "shoudeng://share-location")!) {
+                button("location.fill", L("la.location.button"), style.accent.color)
+            }
+        default:
+            Link(destination: URL(string: "shoudeng://rider-report")!) {
+                button("exclamationmark.shield.fill", L("la.rider.report"), style.accent.color)
+            }
+        }
     }
 
     private func row<V: View>(icon: String, @ViewBuilder value: () -> V) -> some View {

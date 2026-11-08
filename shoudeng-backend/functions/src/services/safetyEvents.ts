@@ -1,7 +1,8 @@
 import * as admin from "firebase-admin";
 import { createSOSEvent, CLIENT_ID_RE } from "./sosTrigger";
 import { activeGuardianIds } from "./sosTracking";
-import { sendFallDismissed } from "./fcm";
+import { sendFallDismissed, sendCrashReported } from "./fcm";
+import { watchersOf, crewIdOf } from "./crew";
 
 // ---------------------------------------------------------------------------
 // Safety events: detected falls
@@ -193,6 +194,53 @@ export async function escalateUnansweredFalls(now = Date.now()): Promise<number>
   return escalated;
 }
 
+// ---------------------------------------------------------------------------
+// Crash reports (riders) — reported by the person, not detected
+// ---------------------------------------------------------------------------
+//
+// "I've crashed": hurt → the phone sends an SOS (crashReport) and records it here;
+// not hurt → the shift's watchers and guardians (and, if they chose, the crew on
+// shift) are told, with the place. Kept for incident reports and insurance.
+
+export async function reportCrash(uid: string, body: Record<string, unknown>): Promise<{ id: string; notified: number }> {
+  const clientEventId = body.clientEventId;
+  if (typeof clientEventId !== "string" || !CLIENT_ID_RE.test(clientEventId)) throw new SafetyEventError(400, "clientEventId is required");
+  if (typeof body.hurt !== "boolean") throw new SafetyEventError(400, "hurt (boolean) is required");
+  const docRef = ref(uid, clientEventId);
+  if ((await docRef.get()).exists) return { id: docRef.id, notified: 0 };   // a retry
+  const now = admin.firestore.Timestamp.now();
+  const note = typeof body.note === "string" ? body.note.trim().slice(0, 500) : null;
+  const vehicle = typeof body.vehicle === "string" ? body.vehicle.slice(0, 20) : null;
+  await docRef.set({
+    userId: uid, type: "crash", clientEventId,
+    detectedAt: now, receivedAt: now,
+    latitude: num(body.latitude, -90, 90), longitude: num(body.longitude, -180, 180), accuracy: num(body.accuracy, 0, 100_000),
+    hurt: body.hurt, note, vehicle,
+    outcome: body.hurt ? "sos" : "reported",
+    sosEventId: typeof body.sosEventId === "string" ? body.sosEventId.slice(0, 64) : null,
+    updatedAt: now,
+  });
+  await db().collection("timeline_entries").add({
+    userId: uid, timestamp: now, type: "crashReported",
+    description: body.hurt ? "Crash reported — hurt, SOS sent" : "Crash reported — not hurt",
+    detail: note,
+  });
+  if (body.hurt) return { id: docRef.id, notified: 0 };   // the SOS does the alerting
+
+  const recipients = new Set<string>([...(await watchersOf(uid)), ...(await activeGuardianIds(uid))]);
+  if (body.notifyCrew === true) {
+    const crewId = await crewIdOf(uid);
+    const crew = crewId ? (await db().collection("crews").doc(crewId).get()).data() : null;
+    for (const m of (crew?.memberIds ?? []) as string[]) {
+      if (m !== uid && (await db().collection("users").doc(m).get()).data()?.riderOnShift === true) recipients.add(m);
+    }
+  }
+  recipients.delete(uid);
+  const name = ((await db().collection("users").doc(uid).get()).data()?.displayName as string) ?? "";
+  await Promise.all([...recipients].map((to) => sendCrashReported(to, name, uid).catch(() => undefined)));
+  return { id: docRef.id, notified: recipients.size };
+}
+
 /** Falls in a window, oldest first (incident reports). */
 export async function fallsBetween(uid: string, start: Date, end: Date) {
   const snap = await db().collection("safety_events")
@@ -201,5 +249,6 @@ export async function fallsBetween(uid: string, start: Date, end: Date) {
     .where("detectedAt", "<=", admin.firestore.Timestamp.fromDate(end))
     .orderBy("detectedAt", "asc")
     .get();
-  return snap.docs.map((d) => d.data());
+  // Crash reports live here too; they reach the report through the timeline
+  return snap.docs.map((d) => d.data()).filter((d) => (d.type ?? "fall") === "fall");
 }

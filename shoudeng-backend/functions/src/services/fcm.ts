@@ -29,6 +29,15 @@ const fcmStrings: Record<string, {
   crewGoingTitle: (name: string) => string;
   crewCantTitle: (name: string) => string;
   crewResponseBody: (distance: string | null) => string;
+  /** Night-shift check, to the rider */
+  stillOkTitle: string;
+  stillOkBody: string;
+  /** No answer to "Still OK?", to the shift's watchers */
+  stillOkMissedTitle: (name: string) => string;
+  stillOkMissedBody: string;
+  /** A rider reported a crash and isn't hurt */
+  crashReportedTitle: (name: string) => string;
+  crashReportedBody: string;
   shiftOverdueTitle: (name: string) => string;
   shiftOverdueBody: (minutes: number) => string;
   watchRequestTitle: (name: string) => string;
@@ -71,6 +80,12 @@ const fcmStrings: Record<string, {
     crewGoingTitle: (name) => `${name}正在赶来`,
     crewCantTitle: (name) => `${name}无法过来`,
     crewResponseBody: (d) => d ? `距你 ${d}` : "车队成员已回应",
+    stillOkTitle: "还好吗？",
+    stillOkBody: "点开回复“我没事”。10 分钟内没有回应会通知关注你的人。",
+    stillOkMissedTitle: (name) => `${name}没有回应“还好吗？”`,
+    stillOkMissedBody: "请尝试联系对方。",
+    crashReportedTitle: (name) => `${name}报告了一次车祸`,
+    crashReportedBody: "对方说没有受伤。点开查看位置。",
     shiftOverdueTitle: (name) => `${name}还没结束班次`,
     shiftOverdueBody: (m) => `计划下班已过 ${m} 分钟，还没有报平安。打个电话确认一下。`,
     watchRequestTitle: (name) => `${name}请你照看这次班次`,
@@ -111,6 +126,12 @@ const fcmStrings: Record<string, {
     crewGoingTitle: (name) => `${name}正在趕來`,
     crewCantTitle: (name) => `${name}無法過來`,
     crewResponseBody: (d) => d ? `距你 ${d}` : "車隊成員已回應",
+    stillOkTitle: "還好嗎？",
+    stillOkBody: "點開回覆「我沒事」。10 分鐘內沒有回應會通知關注你的人。",
+    stillOkMissedTitle: (name) => `${name}沒有回應「還好嗎？」`,
+    stillOkMissedBody: "請嘗試聯絡對方。",
+    crashReportedTitle: (name) => `${name}報告了一次車禍`,
+    crashReportedBody: "對方說沒有受傷。點開查看位置。",
     shiftOverdueTitle: (name) => `${name}還沒結束班次`,
     shiftOverdueBody: (m) => `計畫下班已過 ${m} 分鐘，還沒有報平安。打個電話確認一下。`,
     watchRequestTitle: (name) => `${name}請你照看這次班次`,
@@ -151,6 +172,12 @@ const fcmStrings: Record<string, {
     crewGoingTitle: (name) => `${name} is on the way`,
     crewCantTitle: (name) => `${name} can't come`,
     crewResponseBody: (d) => d ? `${d} away` : "Your crew answered",
+    stillOkTitle: "Still OK?",
+    stillOkBody: "Tap to answer \"I'm OK\". No answer in 10 minutes and your watchers are told.",
+    stillOkMissedTitle: (name) => `${name} didn't answer "Still OK?"`,
+    stillOkMissedBody: "Try to reach them.",
+    crashReportedTitle: (name) => `${name} reported a crash`,
+    crashReportedBody: "They say they're not hurt. Tap to see where.",
     shiftOverdueTitle: (name) => `${name} hasn't ended their shift`,
     shiftOverdueBody: (m) => `${m} min past the planned end with no check-in. Give them a call.`,
     watchRequestTitle: (name) => `${name} asked you to watch their shift`,
@@ -191,6 +218,12 @@ const fcmStrings: Record<string, {
     crewGoingTitle: (name) => `${name} arrive`,
     crewCantTitle: (name) => `${name} ne peut pas venir`,
     crewResponseBody: (d) => d ? `À ${d}` : "Votre équipe a répondu",
+    stillOkTitle: "Toujours OK ?",
+    stillOkBody: "Touchez pour répondre « Ça va ». Sans réponse en 10 minutes, vos proches sont prévenus.",
+    stillOkMissedTitle: (name) => `${name} n'a pas répondu à « Toujours OK ? »`,
+    stillOkMissedBody: "Essayez de le joindre.",
+    crashReportedTitle: (name) => `${name} a signalé un accident`,
+    crashReportedBody: "Pas de blessure selon lui. Touchez pour voir où.",
     shiftOverdueTitle: (name) => `${name} n'a pas terminé son service`,
     shiftOverdueBody: (m) => `${m} min après la fin prévue, sans signe de vie. Appelez pour vérifier.`,
     watchRequestTitle: (name) => `${name} vous demande de veiller sur son service`,
@@ -231,6 +264,12 @@ const fcmStrings: Record<string, {
     crewGoingTitle: (name) => `${name}さんが向かっています`,
     crewCantTitle: (name) => `${name}さんは行けません`,
     crewResponseBody: (d) => d ? `${d}先` : "クルーが応答しました",
+    stillOkTitle: "大丈夫ですか？",
+    stillOkBody: "タップして「無事」と答えてください。10 分以内に応答がないと見守る人に通知します。",
+    stillOkMissedTitle: (name) => `${name}さんが「大丈夫？」に応答しません`,
+    stillOkMissedBody: "連絡を取ってみてください。",
+    crashReportedTitle: (name) => `${name}さんが事故を報告しました`,
+    crashReportedBody: "けがはないそうです。タップして場所を確認。",
     shiftOverdueTitle: (name) => `${name}さんのシフトが終わっていません`,
     shiftOverdueBody: (m) => `予定の終了から${m}分過ぎても安否報告がありません。電話で確認してください。`,
     watchRequestTitle: (name) => `${name}さんがシフトの見守りを頼んでいます`,
@@ -705,6 +744,27 @@ export async function sendShiftOverdueNotification(toId: string, riderName: stri
   await sendSimple(toId, s.shiftOverdueTitle(riderName), s.shiftOverdueBody(minutes), {
     action: "shift_overdue", rider_id: riderId,
   }, { sound: "default", "interruption-level": "time-sensitive" });
+}
+
+/** "Still OK?" during a night shift (to the rider). */
+export async function sendShiftStillOk(toId: string): Promise<void> {
+  const s = getStrings(await getUserLocale(toId));
+  await sendSimple(toId, s.stillOkTitle, s.stillOkBody, { action: "shift_still_ok" },
+    { sound: "default", "interruption-level": "time-sensitive" });
+}
+
+/** The rider didn't answer "Still OK?" (to the shift's watchers). */
+export async function sendShiftStillOkMissed(toId: string, riderName: string, riderId: string): Promise<void> {
+  const s = getStrings(await getUserLocale(toId));
+  await sendSimple(toId, s.stillOkMissedTitle(riderName), s.stillOkMissedBody, { action: "shift_still_ok_missed", rider_id: riderId },
+    { sound: "default", "interruption-level": "time-sensitive" });
+}
+
+/** A rider reported a crash and isn't hurt (watchers, guardians, crew if they chose). */
+export async function sendCrashReported(toId: string, riderName: string, riderId: string): Promise<void> {
+  const s = getStrings(await getUserLocale(toId));
+  await sendSimple(toId, s.crashReportedTitle(riderName), s.crashReportedBody, { action: "crash_reported", rider_id: riderId },
+    { sound: "default", "interruption-level": "time-sensitive" });
 }
 
 /** A rider chose you to watch their shift. */

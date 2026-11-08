@@ -35,6 +35,7 @@ enum SOSTriggerMethod: String, Codable {
     case voiceCommand        // On-device speech recognition ("救命", "help")
     case widgetTap           // One-tap SOS from home screen widget (SafeTap)
     case deadManSwitch       // Countdown timer expired without user dismissal
+    case crashReport         // Rider tapped "I've crashed" and said they're hurt
 
     /// Must not make sound or show anything on this phone (attacker may be watching).
     var isSilent: Bool { self == .duressPassword }
@@ -125,6 +126,8 @@ enum TimelineEntryType: String, Codable {
     case silentAlarmMissed = "silent_alarm_missed"
     case silentAlarmEscalated = "silent_alarm_escalated"
     case voiceNote
+    /// A rider reported a crash (safetyEvents.ts reportCrash)
+    case crashReported
     /// Any type this build doesn't know yet — shown generically instead of
     /// failing the whole timeline decode.
     case other

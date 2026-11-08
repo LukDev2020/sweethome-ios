@@ -42,6 +42,9 @@ final class PushService: NSObject {
     var onOpenSOSAlert: ((String, String?) -> Void)?
     /// A crew mate's SOS (rider crews) — opens the crew alert screen
     var onOpenCrewAlert: ((String) -> Void)?
+    /// Rider: "Still OK?" answered by opening it; a shift template reminder opened
+    var onShiftStillOk: (() -> Void)?
+    var onShiftTemplate: ((String) -> Void)?
     var onSilentPushReceived: (([AnyHashable: Any]) -> Void)?
     var onCancelPendingSOS: (() -> Void)?
 
@@ -373,7 +376,9 @@ extension PushService: UNUserNotificationCenterDelegate {
                 silentAlarmConfirm: { Task { await SilentAlarmService.shared.confirmCheckIn() } },
                 cancelPendingSOS: { [weak self] in
                     DispatchQueue.main.async { self?.onCancelPendingSOS?() }
-                }
+                },
+                shiftStillOk: { [weak self] in DispatchQueue.main.async { self?.onShiftStillOk?() } },
+                shiftTemplate: { [weak self] id in DispatchQueue.main.async { self?.onShiftTemplate?(id) } }
             )
         )
 
@@ -394,6 +399,10 @@ extension PushService {
         var silentAlarmConfirm: () -> Void
         /// "Cancel" on the notification shown during the SOS cancel window.
         var cancelPendingSOS: () -> Void = {}
+        /// Rider: opening "Still OK?" answers it
+        var shiftStillOk: () -> Void = {}
+        /// Rider: "Start your shift?" (a saved shift's reminder) → the shift sheet
+        var shiftTemplate: (String) -> Void = { _ in }
     }
 
     /// Routes a notification response to the right service. Previously only the
@@ -427,6 +436,10 @@ extension PushService {
             handlers.cancelPendingSOS()
         case UNNotificationDefaultActionIdentifier where action == "crew_sos":
             if let sosId { handlers.openCrewAlert(sosId) }
+        case UNNotificationDefaultActionIdentifier where action == "shift_still_ok":
+            handlers.shiftStillOk()
+        case UNNotificationDefaultActionIdentifier where action == "shift_template":
+            if let id = userInfo["template_id"] as? String { handlers.shiftTemplate(id) }
         case UNNotificationDefaultActionIdentifier:
             if (action == "sos_alert" || action == "sos_acknowledged" || categoryIdentifier == categorySOSAlert),
                let personId {

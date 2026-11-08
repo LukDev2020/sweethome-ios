@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { authMiddleware } from "../middleware/auth";
 import { createRateLimiter, RATE_LIMITS } from "../middleware/rateLimit";
-import { reportFall, SafetyEventError } from "../services/safetyEvents";
+import { reportFall, reportCrash, SafetyEventError } from "../services/safetyEvents";
 
 /**
  * Safety events (see services/safetyEvents.ts).
@@ -11,6 +11,9 @@ import { reportFall, SafetyEventError } from "../services/safetyEvents";
  *       metrics?: { peakImpactG, freeFallMs, orientationChangeDeg, stillnessVariance, detector },
  *       respondedAfterSec?, sosEventId? }
  *     → { outcome, sosEventId }   (the outcome the server holds)
+ *   POST /v1/safety-events/crash
+ *     { clientEventId, hurt, latitude?, longitude?, accuracy?, note?, vehicle?, notifyCrew?, sosEventId? }
+ *     → { id, notified }   hurt: the phone sends the SOS; not hurt: watchers are told
  */
 const router = Router();
 router.use(authMiddleware);
@@ -25,6 +28,19 @@ router.post("/fall", createRateLimiter(RATE_LIMITS.telemetry), async (req: Reque
     }
     console.error("[Fall] report failed:", e);
     res.status(500).json({ error: "Failed to record the fall" });
+  }
+});
+
+router.post("/crash", createRateLimiter(RATE_LIMITS.telemetry), async (req: Request, res: Response) => {
+  try {
+    res.status(201).json(await reportCrash(req.uid!, req.body ?? {}));
+  } catch (e) {
+    if (e instanceof SafetyEventError) {
+      res.status(e.status).json({ error: e.message });
+      return;
+    }
+    console.error("[Crash] report failed:", e);
+    res.status(500).json({ error: "Failed to record the crash" });
   }
 });
 

@@ -482,6 +482,7 @@ struct GuardianAlertResponseView: View {
         case .voiceCommand: return langManager.localized("guardian.alert.trigger.voice.command")
         case .widgetTap: return langManager.localized("guardian.alert.trigger.widget")
         case .deadManSwitch: return langManager.localized("guardian.alert.trigger.deadman")
+        case .crashReport: return langManager.localized("guardian.alert.trigger.crashReport")
         }
     }
 

@@ -370,7 +370,7 @@ const SAME_IN_FR = new Set([
     // Incident report: same words in French
     "report.hours", "report.minutes", "report.col.distance", "report.fall.impact", "report.h.locations", "report.col.position", "report.col.source",
     // Rider onboarding: same word in French
-    "rider.setup.perm.notifications",
+    "rider.setup.perm.notifications", "rider.settings.minutes",
   // SOS mode: "Code", "Police", "Standard", "Satellite" and "%d min · %@" are French too
   "sosmode.end.codePlaceholder", "sosmode.cat.police", "sosmode.style.standard", "sosmode.style.satellite",
   "sosmode.route.summary",

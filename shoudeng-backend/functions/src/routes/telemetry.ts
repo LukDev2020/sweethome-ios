@@ -1,4 +1,5 @@
 import { recordSOSLocation } from "../services/sosTracking";
+import { confirmStillOk } from "../services/crew";
 import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
@@ -223,6 +224,8 @@ router.post("/checkin", authMiddleware, telemetryLimit, async (req: Request, res
       console.error("[Telemetry] check-in push failed (non-fatal):", pushError);
     }
 
+    // A check-in also answers a rider's "Still OK?"
+    await confirmStillOk(userId).catch(() => undefined);
     res.json({
       checkInId,
       timestamp: now.toISOString(),

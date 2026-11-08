@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { authMiddleware } from "../middleware/auth";
 import {
   createCrew, joinCrew, leaveCrew, crewView, setShift, addCaution, respondToCrewSOS, crewAlerts, watchBack, CrewError,
+  setPrefs, confirmStillOk,
 } from "../services/crew";
 
 /**
@@ -10,9 +11,11 @@ import {
  *   POST /v1/crew            { name }       create (you become the owner)
  *   POST /v1/crew/join       { code }       join with the invite code
  *   POST /v1/crew/leave
- *   POST /v1/crew/shift      { onShift, plannedEnd?, watcherIds? }   watchers: crew mates + guardians
+ *   POST /v1/crew/shift      { onShift, plannedEnd?, watcherIds?, graceMinutes?, stillOkEveryMin?, stillOkFromHour?, stillOkToHour? }
+ *   POST /v1/crew/shift/ok   "Still OK?" answered
+ *   PUT  /v1/crew/prefs      { offShiftAlerts?, alertRadiusKm?, crewPrecision? }
  *   POST /v1/crew/watch-back { memberId }   watch a crew mate who watches you
- *   POST /v1/crew/caution    { latitude, longitude, note? }   "bike tampered with here"
+ *   POST /v1/crew/caution    { latitude, longitude, note?, ttlHours? (2 | 12 | 24) }   "bike tampered with here"
  *   GET  /v1/crew/alerts     open SOS events of crew mates
  *   POST /v1/crew/respond    { sosEventId, response: going | cant_help }
  */
@@ -55,8 +58,20 @@ router.post("/shift", async (req: Request, res: Response) => {
     res.status(400).json({ error: "onShift (boolean) is required" });
     return;
   }
-  try { await setShift(req.uid!, req.body.onShift, req.body.plannedEnd, new Date(), req.body.watcherIds); res.json({ success: true }); }
-  catch (e) { fail(res, e, "update shift"); }
+  try {
+    const { graceMinutes, stillOkEveryMin, stillOkFromHour, stillOkToHour } = req.body;
+    await setShift(req.uid!, req.body.onShift, req.body.plannedEnd, new Date(), req.body.watcherIds,
+      { graceMinutes, stillOkEveryMin, stillOkFromHour, stillOkToHour });
+    res.json({ success: true });
+  } catch (e) { fail(res, e, "update shift"); }
+});
+
+router.post("/shift/ok", async (req: Request, res: Response) => {
+  try { res.json({ success: true, answered: await confirmStillOk(req.uid!) }); } catch (e) { fail(res, e, "confirm"); }
+});
+
+router.put("/prefs", async (req: Request, res: Response) => {
+  try { res.json({ prefs: await setPrefs(req.uid!, req.body ?? {}) }); } catch (e) { fail(res, e, "save rider settings"); }
 });
 
 router.post("/watch-back", async (req: Request, res: Response) => {

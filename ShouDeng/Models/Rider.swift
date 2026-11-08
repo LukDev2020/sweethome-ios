@@ -16,6 +16,8 @@ struct Crew: Codable, Equatable {
     let cautions: [CrewCaution]
     /// Who watches my shifts (crew mates and guardians); the next shift starts with them
     var myWatcherIds: [String]? = nil
+    /// Settings → Rider, as the server holds them
+    var myPrefs: RiderCrewPrefs? = nil
 
     /// Joining link shown as a QR code. A web link (universal link): opens the app when
     /// installed, otherwise a page with the code and the App Store (web/crew.html)
@@ -34,6 +36,8 @@ struct CrewMember: Codable, Identifiable, Equatable {
     /// They watch my shifts / I watch theirs
     var watchesMe: Bool? = nil
     var iWatch: Bool? = nil
+    /// They chose to show the crew an approximate position (~200 m)
+    var approximate: Bool? = nil
 
     var coordinate: CLLocationCoordinate2D? {
         guard let latitude, let longitude else { return nil }

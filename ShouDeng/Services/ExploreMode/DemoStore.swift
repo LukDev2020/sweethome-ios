@@ -412,6 +412,10 @@ final class DemoStore {
             resolveSOS(id: id)
             return (200, json(["success": true, "sosEventId": id]))
 
+        case ("POST", "/v1/safety-events/crash"):
+            // Not hurt: the shift's watchers and family hear about it (in the demo: told, not sent)
+            return (201, json(["id": "demo-crash", "notified": 3]))
+
         case ("POST", "/v1/safety-events/fall"):
             return (200, json(recordFall(personId: me, body: bodyObject(body))))
 

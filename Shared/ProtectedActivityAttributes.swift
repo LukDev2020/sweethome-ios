@@ -76,4 +76,10 @@ struct RiderCardInfo: Codable, Hashable {
     /// First crew mate who answered "I'm going"
     var helperName: String?
     var helperDistanceM: Int?
+    // Settings → Rider (optional: older cards decode without them)
+    /// Buttons after SOS: ok | report | crash | location
+    var buttons: [String]? = nil
+    var showTimer: Bool? = nil
+    var watcherNames: [String]? = nil
+    var vehicleSymbol: String? = nil
 }

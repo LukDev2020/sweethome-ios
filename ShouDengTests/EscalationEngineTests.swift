@@ -115,7 +115,7 @@ final class CriticalAlertClaimsTests: XCTestCase {
     func testDuressAndAlreadyConfirmedTriggersSkipTheWindow() {
         // Duress must stay instant and silent; fall / voice / distress sound /
         // safety timer already had their own countdown before reaching here.
-        for method in [SOSTriggerMethod.duressPassword, .fallDetection, .voiceWakeWord, .audioDistress, .voiceCommand, .deadManSwitch] {
+        for method in [SOSTriggerMethod.duressPassword, .fallDetection, .voiceWakeWord, .audioDistress, .voiceCommand, .deadManSwitch, .crashReport] {
             XCTAssertEqual(AppCoordinator.sosCancelWindow(for: method), 0, "\(method)")
         }
     }

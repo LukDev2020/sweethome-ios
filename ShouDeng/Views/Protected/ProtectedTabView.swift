@@ -76,6 +76,10 @@ struct ProtectedTabView: View {
         .sheet(isPresented: $coordinator.showBikeReport) {
             BikeReportView().environmentObject(coordinator)
         }
+        // "I've crashed": rider home, lock-screen card
+        .sheet(isPresented: $coordinator.showCrashReport) {
+            CrashReportView().environmentObject(coordinator)
+        }
         .sheet(isPresented: Binding(get: { coordinator.pendingCrewCode != nil && coordinator.isRiderMode && !coordinator.showRiderSetup },
                                     set: { if !$0 { coordinator.pendingCrewCode = nil } })) {
             CrewJoinSheet(initialCode: coordinator.pendingCrewCode ?? "")

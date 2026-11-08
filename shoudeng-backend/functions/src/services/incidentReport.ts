@@ -222,7 +222,7 @@ const KEY_EVENT_TYPES = new Set([
   "checkIn", "sosTriggered", "sosResolved", "enteredSafeZone", "leftSafeZone", "missedCheckIn", "batteryLow",
   "phoneInactive", "fallDetected", "homeTimerSet", "homeTimerDismissed", "homeTimerExpired", "arrivalReport",
   "trackingPaused", "trackingResumed", "ble_separation", "silent_alarm_confirmed", "silent_alarm_missed",
-  "silent_alarm_escalated",
+  "silent_alarm_escalated", "crashReported",
 ]);
 
 async function nameOf(uid: string | null | undefined): Promise<string | null> {

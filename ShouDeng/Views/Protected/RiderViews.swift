@@ -28,6 +28,9 @@ struct RiderHomeView: View {
     @State private var showHandsFree = false
     @State private var showInvite = false
     @State private var confirmEnd = false
+    @State private var showSettings = false
+    @State private var customReport: String?
+    @State private var templateForShift: ShiftTemplate?
 
     /// Every guardian lives in another country: nobody can be there in minutes
     private var needsLocalContact: Bool {
@@ -52,8 +55,16 @@ struct RiderHomeView: View {
                 .padding(.vertical, 4)
                 handsFreeRow
                 Text(lang.localized("rider.quick")).font(.scaled(size: 13, weight: .semibold)).foregroundStyle(.secondary)
+                quickAction("car.side.rear.and.collision.and.car.side.front", lang.localized("rider.crash.title"),
+                            lang.localized("rider.crash.short"), RC.alert) {
+                    coordinator.showCrashReport = true
+                }
+                .accessibilityIdentifier("rider.crash.open")
                 quickAction("exclamationmark.shield", lang.localized("rider.bike.title"), lang.localized("rider.bike.short"), RC.lamp) {
                     coordinator.showBikeReport = true
+                }
+                ForEach(coordinator.riderSettings.customReports, id: \.self) { r in
+                    quickAction("exclamationmark.bubble", r, lang.localized("rider.report.customShort"), RC.lamp) { customReport = r }
                 }
                 if needsLocalContact {
                     quickAction("person.2.badge.plus", lang.localized("rider.local.title"), lang.localized("rider.local.detail"), RC.safe) {
@@ -73,6 +84,17 @@ struct RiderHomeView: View {
             }
         }
         .sheet(isPresented: $showShiftStart) { ShiftStartSheet().environmentObject(coordinator) }
+        .sheet(item: $templateForShift) { t in ShiftStartSheet(template: t).environmentObject(coordinator) }
+        .sheet(isPresented: $showSettings) { RiderSettingsView().environmentObject(coordinator) }
+        .sheet(item: Binding(get: { customReport.map(IdentifiedReport.init) }, set: { customReport = $0?.title })) { r in
+            BikeReportView(customTitle: r.title).environmentObject(coordinator)
+        }
+        // "Start your shift?" reminder opened
+        .onChange(of: coordinator.pendingShiftTemplateId, initial: true) { _, id in
+            guard let id, !coordinator.isOnShift else { coordinator.pendingShiftTemplateId = nil; return }
+            templateForShift = coordinator.riderSettings.templates.first { $0.id == id }
+            coordinator.pendingShiftTemplateId = nil
+        }
         .sheet(isPresented: $showHandsFree) { HandsFreeSheet() }
         .sheet(isPresented: $showInvite) { InviteGuardianSheet().environmentObject(coordinator) }
         .confirmationDialog(lang.localized("rider.shift.endConfirm"), isPresented: $confirmEnd, titleVisibility: .visible) {
@@ -144,7 +166,13 @@ struct RiderHomeView: View {
                     .font(.scaled(size: 14)).foregroundStyle(.secondary)
             }
             Spacer()
-            Image(systemName: "bicycle").font(.system(size: 28)).foregroundStyle(RC.safe)
+            Image(systemName: coordinator.riderSettings.vehicle.symbol).font(.system(size: 28)).foregroundStyle(RC.safe)
+            Button { showSettings = true } label: {
+                Image(systemName: "slider.horizontal.3").font(.system(size: 20)).foregroundStyle(RC.ink)
+                    .frame(width: 40, height: 40)
+            }
+            .accessibilityLabel(lang.localized("rider.settings.title"))
+            .accessibilityIdentifier("rider.settings.open")
         }
     }
 
@@ -208,6 +236,23 @@ struct RiderHomeView: View {
                         .background(RoundedRectangle(cornerRadius: 14).fill(RC.safe))
                 }
                 .buttonStyle(.plain)
+                if !coordinator.riderSettings.templates.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(coordinator.riderSettings.templates) { t in
+                                Button { templateForShift = t } label: {
+                                    VStack(alignment: .leading, spacing: 1) {
+                                        Text(t.name).font(.scaled(size: 13, weight: .semibold))
+                                        Text(t.timeRange).font(.scaled(size: 11)).foregroundStyle(.secondary)
+                                    }
+                                    .padding(.horizontal, 12).padding(.vertical, 8)
+                                    .background(Capsule().fill(Color(.secondarySystemBackground)))
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                }
                 Text(lang.localized("rider.shift.why")).font(.scaled(size: 12)).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -260,6 +305,9 @@ struct ShiftStartSheet: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
     @Environment(\.dismiss) private var dismiss
+    /// Started from a saved shift: its end time and watchers
+    var template: ShiftTemplate? = nil
+    @State private var savedAsTemplate = false
     @State private var hasEnd = true
     @State private var end = Calendar.current.date(byAdding: .hour, value: 4, to: Date()) ?? Date()
     /// Starts with last shift's watchers
@@ -325,6 +373,23 @@ struct ShiftStartSheet: View {
                     Text(lang.localized(hasEnd ? "rider.shift.endFooter" : "rider.shift.noEndFooter"))
                 }
                 Section {
+                    Button {
+                        let c = Calendar.current.dateComponents([.hour, .minute], from: Date())
+                        let e = Calendar.current.dateComponents([.hour, .minute], from: end)
+                        let t = ShiftTemplate(name: String(format: lang.localized("rider.template.defaultName"),
+                                                           Date().formatted(date: .omitted, time: .shortened)),
+                                              startHour: c.hour ?? 0, startMinute: c.minute ?? 0,
+                                              endHour: hasEnd ? (e.hour ?? 0) : ((c.hour ?? 0) + 4) % 24, endMinute: hasEnd ? (e.minute ?? 0) : (c.minute ?? 0),
+                                              weekdays: [], watcherIds: Array(watchers), remind: false)
+                        coordinator.updateRiderSettings { $0.templates.append(t) }
+                        savedAsTemplate = true
+                    } label: {
+                        Label(lang.localized(savedAsTemplate ? "rider.template.saved" : "rider.template.saveThis"),
+                              systemImage: savedAsTemplate ? "checkmark" : "square.and.arrow.down")
+                    }
+                    .disabled(savedAsTemplate || template != nil || coordinator.riderSettings.templates.count >= RiderSettings.maxTemplates)
+                }
+                Section {
                     Label(lang.localized("rider.shift.shares"), systemImage: "location.fill")
                     Label(lang.localized("rider.shift.cardNote"), systemImage: "lock.rectangle.stack")
                 }
@@ -347,6 +412,13 @@ struct ShiftStartSheet: View {
         }
         .presentationDetents([.large])
         .onAppear {
+            if let template {
+                end = template.plannedEnd()
+                hasEnd = true
+                let known = Set(colleagues.map(\.id) + family.map(\.user.id))
+                let chosen = Set(template.watcherIds).intersection(known)
+                if !chosen.isEmpty { watchers = chosen; return }
+            }
             let last = Set(coordinator.crew?.myWatcherIds ?? [])
             // Last time's watchers; otherwise the nearest colleague and the on-duty family member
             watchers = last.isEmpty
@@ -862,10 +934,18 @@ struct CrewAlertView: View {
 
 // MARK: - Bike tampered with
 
+/// The rider's own report types (Settings → Rider) open this with their title
+struct IdentifiedReport: Identifiable {
+    let title: String
+    var id: String { title }
+}
+
 struct BikeReportView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
     @Environment(\.dismiss) private var dismiss
+    /// A report type the rider added (nil: "Bike tampered with?")
+    var customTitle: String? = nil
     @State private var logged: Date?
     @State private var failed = false
 
@@ -888,9 +968,11 @@ struct BikeReportView: View {
 
                     row("mappin.and.ellipse", "rider.bike.log", logged == nil ? "rider.bike.logDetail" : "rider.bike.logged") {
                         Task {
-                            coordinator.addTimelineEntry(type: .arrivalReport, description: lang.localized("rider.bike.timeline"))
+                            coordinator.addTimelineEntry(type: .arrivalReport, description: customTitle.map {
+                                String(format: lang.localized("rider.report.timeline"), $0)
+                            } ?? lang.localized("rider.bike.timeline"))
                             do {
-                                if coordinator.crew != nil { try await coordinator.addCaution(note: lang.localized("rider.bike.caution")) }
+                                if coordinator.crew != nil { try await coordinator.addCaution(note: customTitle ?? lang.localized("rider.bike.caution")) }
                                 logged = Date()
                             } catch { failed = true; logged = Date() }
                         }
@@ -911,7 +993,7 @@ struct BikeReportView: View {
                 }
                 .padding(16)
             }
-            .navigationTitle(lang.localized("rider.bike.title"))
+            .navigationTitle(customTitle ?? lang.localized("rider.bike.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(lang.localized("common.done")) { dismiss() } } }
         }

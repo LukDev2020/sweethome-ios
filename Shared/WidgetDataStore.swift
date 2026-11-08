@@ -121,7 +121,7 @@ enum WidgetDataStore {
         "la.location.sent": "家族に位置を送信しました", "la.blood": "血液型 ", "la.meds": "常備薬 ",
         "la.slot.empty": "未登録", "la.open.app": "アプリを開く", "la.persons.none": "家族はまだいません",
         "la.rider.onShift": "勤務中", "la.rider.offShift": "勤務外", "la.rider.crewNearby": " 人のクルーが近く",
-        "la.rider.noCrew": "クルーはまだいません", "la.rider.checkAt": "終了 ", "la.rider.report": "報告",
+        "la.rider.noCrew": "クルーはまだいません", "la.rider.checkAt": "終了 ", "la.rider.report": "報告", "la.rider.crash": "事故",
         "la.rider.helping": "手当て中？傷口を強く押さえて · 電話 ", "la.rider.onTheWay": "さんが向かっています",
         "la.rider.crewAlerted": "クルーに通知済み", "la.rider.call": "電話 ", "la.rider.safe": "無事です",
     ]
@@ -178,6 +178,7 @@ enum WidgetDataStore {
         case "la.rider.noCrew":   return isZh ? "还没有车队" : isFr ? "Pas encore d'équipe" : "No crew yet"
         case "la.rider.checkAt":  return isZh ? "下班 " : isFr ? "Fin " : "Ends "
         case "la.rider.report":   return isZh ? "报告" : isFr ? "Signaler" : "Report"
+        case "la.rider.crash":    return isZh ? "车祸" : isFr ? "Accident" : "Crash"
         case "la.rider.helping":  return isZh ? "在帮忙？用力按住伤口 · 拨打 " : isFr ? "Vous aidez ? Appuyez fort sur la plaie · appelez le " : "Helping? Press hard on the wound · call "
         case "la.rider.onTheWay": return isZh ? " 正在赶来" : isFr ? " arrive" : " on the way"
         case "la.rider.crewAlerted": return isZh ? "已通知车队" : isFr ? "Équipe prévenue" : "Crew alerted"

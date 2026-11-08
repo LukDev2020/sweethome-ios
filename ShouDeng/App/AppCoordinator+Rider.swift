@@ -42,12 +42,21 @@ extension AppCoordinator {
 
     var isOnShift: Bool { riderShift != nil }
 
-    private struct ShiftRequest: Encodable { let onShift: Bool; let plannedEnd: Date?; var watcherIds: [String]? = nil }
+    private struct ShiftRequest: Encodable {
+        let onShift: Bool
+        let plannedEnd: Date?
+        var watcherIds: [String]? = nil
+        // Settings → Rider: late-shift alert, night "Still OK?" check
+        var graceMinutes: Int? = nil
+        var stillOkEveryMin: Int? = nil
+        var stillOkFromHour: Int? = nil
+        var stillOkToHour: Int? = nil
+    }
     private struct MemberRequest: Encodable { let memberId: String }
     private struct NameRequest: Encodable { let name: String }
     private struct CodeRequest: Encodable { let code: String }
     private struct RespondRequest: Encodable { let sosEventId: String; let response: String }
-    private struct CautionRequest: Encodable { let latitude: Double; let longitude: Double; let note: String }
+    private struct CautionRequest: Encodable { let latitude: Double; let longitude: Double; let note: String; var ttlHours: Int? = nil }
 
     // MARK: Shift
 
@@ -58,8 +67,14 @@ extension AppCoordinator {
         await MainActor.run { setRiderShift(shift) }
         locationManager.requestSingleLocation()
         do {
-            let _: SuccessResponse = try await apiClient.post("/v1/crew/shift",
-                                                             body: ShiftRequest(onShift: true, plannedEnd: plannedEnd, watcherIds: watcherIds))
+            let s = riderSettings
+            let still = s.stillOkEveryMin > 0
+            let _: SuccessResponse = try await apiClient.post("/v1/crew/shift", body: ShiftRequest(
+                onShift: true, plannedEnd: plannedEnd, watcherIds: watcherIds,
+                graceMinutes: s.graceMinutes,
+                stillOkEveryMin: still ? s.stillOkEveryMin : nil,
+                stillOkFromHour: still ? s.stillOkFromHour : nil,
+                stillOkToHour: still ? s.stillOkToHour : nil))
         } catch {
             #if DEBUG
             print("[Rider] shift start not sent: \(error)")
@@ -100,6 +115,7 @@ extension AppCoordinator {
             let envelope: CrewEnvelope = try await apiClient.get("/v1/crew")
             await MainActor.run {
                 crew = envelope.crew
+                applyServerCrewPrefs(envelope.crew?.myPrefs)
                 liveActivityManager.updateRider(riderCardInfo)
             }
         } catch {
@@ -145,7 +161,8 @@ extension AppCoordinator {
     func addCaution(note: String) async throws {
         guard let here = locationManager.bestAvailableLocation?.coordinate else { throw APIError.validation("no location yet") }
         let _: [String: String] = try await apiClient.post("/v1/crew/caution",
-                                                           body: CautionRequest(latitude: here.latitude, longitude: here.longitude, note: note))
+                                                           body: CautionRequest(latitude: here.latitude, longitude: here.longitude, note: note,
+                                                                                ttlHours: riderSettings.cautionHours))
         await refreshCrew()
     }
 
@@ -174,13 +191,18 @@ extension AppCoordinator {
     var riderCardInfo: RiderCardInfo? {
         guard isRiderMode else { return nil }
         let goingName = ownSOSStatus?.crewResponses?.first(where: \.isGoing)
+        let s = riderSettings
         return RiderCardInfo(
             shiftStartedAt: riderShift?.startedAt,
             checkDueAt: riderShift?.plannedEnd,
             crewOnShiftNearby: crew?.members.filter { $0.onShift && ($0.distanceM ?? .max) <= 1000 }.count ?? 0,
             sosAddress: nil,
             helperName: goingName?.name,
-            helperDistanceM: goingName?.distanceM
+            helperDistanceM: goingName?.distanceM,
+            buttons: s.lockButtons.map(\.rawValue),
+            showTimer: s.showShiftTimer,
+            watcherNames: s.showWatchers ? watcherNames(riderShift?.watcherIds ?? []) : nil,
+            vehicleSymbol: s.vehicle.symbol
         )
     }
 

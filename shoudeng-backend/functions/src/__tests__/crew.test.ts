@@ -118,6 +118,8 @@ describe("shift and map", () => {
 describe("SOS → crew", () => {
   it("alerts the other members nearest first and records who answered", async () => {
     await crewOfThree();
+    // Crew mates on shift always hear a crew SOS (off shift only if they chose to: riderOptions.test.ts)
+    for (const id of ["wei", "ahmed"]) seed(`users/${id}`, { ...readDoc(`users/${id}`), riderOnShift: true });
     seed("sos_events/s1", { protectedPersonId: "kai", triggeredAt: ts(Date.now()), resolvedAt: null,
       latitude: -37.8125, longitude: 144.9685, escalationState: "initiated", escalationLog: [] });
     const count = await alertCrewOfSOS("s1", readDoc("sos_events/s1")!);

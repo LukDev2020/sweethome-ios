@@ -202,6 +202,7 @@ struct HomeStylePanel: View {
     /// Read so the panel redraws; the demo keeps its own choice
     private var homeStyle: String { _ = storedStyle; return coordinator.effectiveHomeStyle }
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
+    @State private var showRiderSettings = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -234,8 +235,26 @@ struct HomeStylePanel: View {
                 }
                 .buttonStyle(.settingsRow)
             }
+            riderSettingsRow
         }
         .padding(12)
         .background(RoundedRectangle(cornerRadius: 12).stroke(Color(.separator).opacity(0.3), lineWidth: 1))
+        .sheet(isPresented: $showRiderSettings) { RiderSettingsView().environmentObject(coordinator) }
+    }
+
+    /// Rider settings, under the Rider choice when it is on
+    @ViewBuilder private var riderSettingsRow: some View {
+        if homeStyle == HomeStyle.rider.rawValue {
+            Button { showRiderSettings = true } label: {
+                HStack {
+                    Label(lang.localized("rider.settings.title"), systemImage: "slider.horizontal.3").font(.scaled(size: 14))
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.scaled(size: 12)).foregroundStyle(.tertiary)
+                }
+                .padding(.vertical, 4)
+            }
+            .buttonStyle(.settingsRow)
+            .accessibilityIdentifier("settings.riderSettings")
+        }
     }
 }
