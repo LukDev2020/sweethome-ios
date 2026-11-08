@@ -1651,6 +1651,14 @@ final class AppCoordinator: ObservableObject {
         Task { await refreshOwnSOSStatus() }
     }
 
+    /// The server has the current SOS: it answered the trigger (its id replaced
+    /// ours), reported a status, or moved it past "initiated". Until then the SOS
+    /// screen offers texting the guardians directly (SOSTextFallback).
+    var sosReachedServer: Bool {
+        guard let event = activeSOSEvent else { return false }
+        return ownSOSStatus != nil || event.id != event.clientSOSId || event.escalationState != .initiated
+    }
+
     private var hasQueuedSOSTrigger: Bool {
         offlineQueue.peekAll().contains { $0.path == "/v1/sos/trigger" }
     }

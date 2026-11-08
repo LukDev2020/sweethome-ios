@@ -2585,3 +2585,17 @@
 "records.peopleCount.one" = "%d person";
 "rider.crash.sentCount.one" = "%d person was told where you are.";
 "org.alertNotified.one" = "%d member notified";
+
+/* SOS text-message fallback */
+"sos.text.title" = "Your SOS hasn't reached the server yet";
+"sos.text.detail" = "Your guardians may not know yet. Text them directly — this works on any mobile network. The app keeps trying to send the SOS too.";
+"sos.text.button" = "Text my guardians";
+"sos.text.tapSend" = "Messages opens with your guardians' numbers and your location filled in. Your iPhone can't send it for you — tap Send.";
+"sos.text.noNumbers" = "No guardian phone numbers are saved on this phone — choose who to text in Messages.";
+"sos.text.cannotSend" = "This device can't send text messages. Call instead.";
+"sos.text.demoNote" = "Demo: nothing is sent. In a real SOS this opens Messages with your guardians' numbers and your location.";
+"sos.text.sent" = "Text sent. The SOS will also reach the app as soon as there's a connection.";
+"sos.sms.head" = "SOS from %@. I need help.";
+"sos.sms.headNoName" = "SOS. I need help.";
+"sos.sms.location" = "Location: %1$@ (%2$@)";
+"sos.sms.noLocation" = "Location unknown (%@)";

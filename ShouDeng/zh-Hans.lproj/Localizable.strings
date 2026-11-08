@@ -2585,3 +2585,17 @@
 "records.peopleCount.one" = "%d 人";
 "rider.crash.sentCount.one" = "已告诉 %d 人你的位置。";
 "org.alertNotified.one" = "已通知 %d 名成员";
+
+/* SOS text-message fallback */
+"sos.text.title" = "SOS 还没送达服务器";
+"sos.text.detail" = "你的守护者可能还不知道。直接发短信告诉他们——任何手机网络都能发。App 也会继续尝试发送 SOS。";
+"sos.text.button" = "短信通知守护者";
+"sos.text.tapSend" = "将打开“信息”，已填好守护者的号码和你的位置。iPhone 无法替你自动发送——请点“发送”。";
+"sos.text.noNumbers" = "这台手机上没有保存守护者的电话号码——请在“信息”中选择收件人。";
+"sos.text.cannotSend" = "此设备无法发送短信，请改为拨打电话。";
+"sos.text.demoNote" = "演示模式：不会发送任何内容。真实 SOS 时，这里会打开“信息”，并填好守护者的号码和你的位置。";
+"sos.text.sent" = "短信已发送。网络恢复后，SOS 也会送达 App。";
+"sos.sms.head" = "%@ 发出 SOS：我需要帮助。";
+"sos.sms.headNoName" = "SOS：我需要帮助。";
+"sos.sms.location" = "位置：%1$@（%2$@）";
+"sos.sms.noLocation" = "位置未知（%@）";
