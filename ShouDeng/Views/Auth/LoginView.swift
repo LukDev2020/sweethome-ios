@@ -695,7 +695,7 @@ struct LoginView: View {
     }
 
     private func openSupport() {
-        if let url = URL(string: "mailto:support@shoudeng.app?subject=Account%20Locked") {
+        if let url = URL(string: "mailto:omniwebb2024@gmail.com?subject=Account%20Locked") {
             ExternalURL.open(url)
         }
     }

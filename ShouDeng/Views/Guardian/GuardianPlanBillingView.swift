@@ -562,7 +562,7 @@ struct GuardianPlanBillingView: View {
             }
             Spacer(minLength: 0)
             Button {
-                if let url = URL(string: "mailto:support@shoudeng.app?subject=Organization%20plan") {
+                if let url = URL(string: "mailto:omniwebb2024@gmail.com?subject=Organization%20plan") {
                     ExternalURL.open(url)
                 }
             } label: {

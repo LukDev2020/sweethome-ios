@@ -9,7 +9,7 @@
 ## English
 
 ### 1. Who We Are
-Lantern Care is operated by Vela Care Technology (15407168 Canada Inc.), Ontario, Canada. Contact: privacy@shoudeng.app
+Lantern Care is operated by Vela Care Technology (15407168 Canada Inc.), Ontario, Canada. Contact: omniwebb2024@gmail.com
 
 ### 2. What We Collect and Why
 
@@ -68,7 +68,7 @@ We will notify you of material changes via in-app notification and update the ve
 ## Francais
 
 ### 1. Qui sommes-nous
-Lantern Care est exploite par Vela Care Technology (15407168 Canada Inc.), Ontario, Canada. Contact : privacy@shoudeng.app
+Lantern Care est exploite par Vela Care Technology (15407168 Canada Inc.), Ontario, Canada. Contact : omniwebb2024@gmail.com
 
 ### 2. Donnees collectees et finalites
 
@@ -93,7 +93,7 @@ Lantern Care est exploite par Vela Care Technology (15407168 Canada Inc.), Ontar
 ## 中文
 
 ### 1. 我们是谁
-守灯由 Vela Care Technology (15407168 Canada Inc.) 运营，位于加拿大安大略省。联系方式：privacy@shoudeng.app
+守灯由 Vela Care Technology (15407168 Canada Inc.) 运营，位于加拿大安大略省。联系方式：omniwebb2024@gmail.com
 
 ### 2. 我们收集什么数据以及为什么
 
