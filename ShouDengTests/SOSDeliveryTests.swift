@@ -1,5 +1,6 @@
 import XCTest
 import UserNotifications
+import CoreLocation
 @testable import ShouDeng
 
 /// W2-i: offline SOS delivery, queue ownership, retries, refresh re-entrancy.
@@ -361,5 +362,72 @@ final class SafetyPathTests: XCTestCase {
         XCTAssertEqual(MedicalCardCache.load()?.bloodType, "A+")
         MedicalCardCache.clear()
         XCTAssertNil(MedicalCardCache.load())
+    }
+
+    // MARK: - Text fallback (server unreachable)
+
+    func testTextFallbackOffersAfterFailureOrSilenceAndHidesOnceServerAnswers() {
+        let t0 = Date()
+        func offer(ended: Bool = false, reached: Bool = false, failed: Bool = false, after s: TimeInterval) -> Bool {
+            SOSTextFallback.shouldOffer(ended: ended, reachedServer: reached, deliveryFailed: failed,
+                                        triggeredAt: t0, now: t0.addingTimeInterval(s))
+        }
+        XCTAssertFalse(offer(after: 3), "still waiting for the first answer")
+        XCTAssertTrue(offer(failed: true, after: 3), "delivery failed: offer at once")
+        XCTAssertFalse(offer(after: 14.9))
+        XCTAssertTrue(offer(after: SOSTextFallback.waitForServer), "no answer after 15 s")
+        XCTAssertFalse(offer(reached: true, failed: true, after: 60), "server answered: hide it")
+        XCTAssertFalse(offer(ended: true, failed: true, after: 60), "SOS ended: hide it")
+        XCTAssertFalse(SOSTextFallback.shouldOffer(ended: false, reachedServer: false, deliveryFailed: false,
+                                                   triggeredAt: nil, now: t0))
+    }
+
+    func testTextFallbackRecipientsSkipEmptyAndDuplicateNumbers() {
+        XCTAssertEqual(SOSTextFallback.recipients(["+1 514-555-0101", nil, "  ", "+15145550101", " +86 138 0000 0000 "]),
+                       ["+1 514-555-0101", "+86 138 0000 0000"])
+        XCTAssertEqual(SOSTextFallback.recipients([]), [])
+    }
+
+    private let englishSMS: [String: String] = [
+        "sos.sms.head": "SOS from %@. I need help.",
+        "sos.sms.headNoName": "SOS. I need help.",
+        "sos.sms.location": "Location: %1$@ (%2$@)",
+        "sos.sms.noLocation": "Location unknown (%@)",
+    ]
+
+    func testTextFallbackMessageBodyHasNameMapLinkAndTimeWithZone() {
+        let shanghai = TimeZone(identifier: "Asia/Shanghai")!
+        let time = Date(timeIntervalSince1970: 1_794_117_900) // 2026-11-08 06:05 UTC = 14:05 in Shanghai
+        let body = SOSTextFallback.messageBody(name: " Mei Chen ",
+                                               coordinate: CLLocationCoordinate2D(latitude: 31.2304, longitude: 121.4737),
+                                               at: time, locale: Locale(identifier: "fr"), timeZone: shanghai,
+                                               localize: { self.englishSMS[$0] ?? $0 })
+        XCTAssertTrue(body.hasPrefix("SOS from Mei Chen. I need help. Location: https://maps.apple.com/?ll=31.23040,121.47370 ("), body)
+        XCTAssertTrue(body.contains("14:05"), body)
+        XCTAssertTrue(body.contains("UTC+8") || body.contains("GMT+8"), body)
+        XCTAssertTrue(body.hasSuffix(")"), body)
+        XCTAssertFalse(body.contains("%"), body)
+        XCTAssertLessThan(body.count, 160, "fits one text in English")
+    }
+
+    func testTextFallbackMessageBodyWithoutNameOrLocation() {
+        let body = SOSTextFallback.messageBody(name: "", coordinate: nil, at: Date(), locale: Locale(identifier: "en_US"),
+                                               timeZone: .current, localize: { self.englishSMS[$0] ?? $0 })
+        XCTAssertTrue(body.hasPrefix("SOS. I need help. Location unknown ("), body)
+        let zero = SOSTextFallback.messageBody(name: "Mei", coordinate: CLLocationCoordinate2D(latitude: 0, longitude: 0),
+                                               at: Date(), locale: Locale(identifier: "en_US"), timeZone: .current,
+                                               localize: { self.englishSMS[$0] ?? $0 })
+        XCTAssertTrue(zero.contains("Location unknown"), "0,0 is no fix")
+    }
+
+    func testTextFallbackStringsExistInEveryLanguage() {
+        for lang in ["en", "zh-Hans", "zh-Hant", "fr", "ja"] {
+            let bundle = Bundle(path: Bundle(for: AppCoordinator.self).path(forResource: lang, ofType: "lproj")!)!
+            let body = SOSTextFallback.messageBody(name: "Mei", coordinate: CLLocationCoordinate2D(latitude: 31.2, longitude: 121.4),
+                                                   at: Date(), locale: Locale(identifier: lang), timeZone: .current,
+                                                   localize: { bundle.localizedString(forKey: $0, value: nil, table: nil) })
+            XCTAssertTrue(body.contains("Mei") && body.contains("https://maps.apple.com/?ll=31.20000,121.40000"), "\(lang): \(body)")
+            XCTAssertFalse(body.contains("sos.sms"), "\(lang): \(body)")
+        }
     }
 }

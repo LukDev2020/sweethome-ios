@@ -2546,3 +2546,15 @@
 "rider.crash.later" = "La douleur peut apparaître des heures après. Si vous vous sentez mal, utilisez le SOS.";
 "rider.crash.timeline.hurt" = "Accident signalé — blessé, SOS envoyé";
 "rider.crash.timeline.ok" = "Accident signalé — pas blessé";
+"sos.text.title" = "Votre SOS n'a pas encore atteint le serveur";
+"sos.text.detail" = "Vos gardiens ne sont peut-être pas encore prévenus. Envoyez-leur un SMS : cela fonctionne sur tout réseau mobile. L'app continue aussi d'envoyer le SOS.";
+"sos.text.button" = "Texter mes gardiens";
+"sos.text.tapSend" = "Messages s'ouvre avec les numéros de vos gardiens et votre position. L'iPhone ne peut pas l'envoyer à votre place : touchez Envoyer.";
+"sos.text.noNumbers" = "Aucun numéro de gardien n'est enregistré sur ce téléphone : choisissez le destinataire dans Messages.";
+"sos.text.cannotSend" = "Cet appareil ne peut pas envoyer de SMS. Appelez plutôt.";
+"sos.text.demoNote" = "Démo : rien n'est envoyé. Lors d'un vrai SOS, Messages s'ouvre avec les numéros de vos gardiens et votre position.";
+"sos.text.sent" = "SMS envoyé. Le SOS arrivera aussi dès que la connexion reviendra.";
+"sos.sms.head" = "SOS de %@. J'ai besoin d'aide.";
+"sos.sms.headNoName" = "SOS. J'ai besoin d'aide.";
+"sos.sms.location" = "Position : %1$@ (%2$@)";
+"sos.sms.noLocation" = "Position inconnue (%@)";

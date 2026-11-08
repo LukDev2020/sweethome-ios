@@ -2546,3 +2546,15 @@
 "rider.crash.later" = "痛みは数時間後に出ることがあります。具合が悪くなったら SOS を使ってください。";
 "rider.crash.timeline.hurt" = "事故を報告 — けがあり、SOS 送信";
 "rider.crash.timeline.ok" = "事故を報告 — けがなし";
+"sos.text.title" = "SOSがまだサーバーに届いていません";
+"sos.text.detail" = "見守る人はまだ気づいていないかもしれません。SMSで直接知らせてください（どの携帯電話回線でも送れます）。アプリもSOSの送信を続けます。";
+"sos.text.button" = "見守る人にSMSを送る";
+"sos.text.tapSend" = "「メッセージ」が開き、見守る人の番号と現在地が入力されます。iPhoneが自動で送ることはできないので、「送信」をタップしてください。";
+"sos.text.noNumbers" = "この端末には見守る人の電話番号が保存されていません。「メッセージ」で宛先を選んでください。";
+"sos.text.cannotSend" = "この端末はSMSを送信できません。電話をかけてください。";
+"sos.text.demoNote" = "デモ：何も送信されません。実際のSOSでは、見守る人の番号と現在地が入った「メッセージ」が開きます。";
+"sos.text.sent" = "SMSを送信しました。接続が戻ればSOSもアプリに届きます。";
+"sos.sms.head" = "%@からのSOS：助けが必要です。";
+"sos.sms.headNoName" = "SOS：助けが必要です。";
+"sos.sms.location" = "現在地：%1$@（%2$@）";
+"sos.sms.noLocation" = "現在地不明（%@）";
