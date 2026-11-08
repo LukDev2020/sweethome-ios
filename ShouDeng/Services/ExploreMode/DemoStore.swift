@@ -83,7 +83,8 @@ final class DemoStore {
     init(dataset: DemoDataset, currentUserId: String) {
         self.dataset = dataset
         self._currentUserId = currentUserId
-        let t = DemoText(language: LanguageManager.shared.current)
+        // The family's language, not the app's (the same in the app; tests build English families)
+        let t = DemoText(language: dataset.language)
         let momCard = MedicalCardData(bloodType: "A+", allergies: [t.penicillin],
                                       medicationItems: [MedicationItem(id: "demo-med-1", name: t.amlodipine,
                                                                        storageLocation: t.medicineShelf, dosage: t.everyMorning)],
@@ -537,7 +538,7 @@ final class DemoStore {
     private func sarahAsWatched() -> ProtectedPerson {
         let now = Date()
         let loc = Location(latitude: 43.6532, longitude: -79.3832, accuracy: 15, altitude: nil, speed: nil,
-                           timestamp: now.addingTimeInterval(-4 * 60), address: DemoText(language: LanguageManager.shared.current).toronto,
+                           timestamp: now.addingTimeInterval(-4 * 60), address: DemoText(language: dataset.language).toronto,
                            isInSafeZone: false, safeZoneName: nil, activityType: .walking)
         return ProtectedPerson(id: dataset.sarah.id, user: dataset.sarah, guardians: [], protectionLayers: 1,
                                lastCheckIn: now.addingTimeInterval(-2 * 3600), lastKnownLocation: loc,

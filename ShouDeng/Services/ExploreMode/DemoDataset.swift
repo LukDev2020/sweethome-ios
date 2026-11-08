@@ -78,6 +78,8 @@ struct DemoDataset {
     let lina: User
     let mei: User
     let guardiansOfKai: [Guardian]
+    /// The language the sample family's texts are in (the demo store's medical card follows it)
+    let language: AppLanguage
 
     var users: [User] { [mom, dad, sarah, kevin, lucy, kai, wei, ahmed, lina, mei] }
 
@@ -189,7 +191,8 @@ struct DemoDataset {
                            guardiansOfMom: guardiansOfMom, guardiansOfDad: guardiansOfDad,
                            momPerson: momPerson, dadPerson: dadPerson, posts: posts,
                            timelines: allTimelines, safeZones: safeZones,
-                           kai: kai, wei: wei, ahmed: ahmed, lina: lina, mei: mei, guardiansOfKai: guardiansOfKai)
+                           kai: kai, wei: wei, ahmed: ahmed, lina: lina, mei: mei, guardiansOfKai: guardiansOfKai,
+                           language: language)
     }
 }
 
