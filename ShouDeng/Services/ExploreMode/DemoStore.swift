@@ -113,6 +113,89 @@ final class DemoStore {
         extraTimeline[personId, default: []].insert(entry, at: 0)
     }
 
+    // MARK: - Members added in the demo ("Add a family member")
+    //
+    // Only a name and a side. They join the sample family in this store (family
+    // lists, map, practice SOS) and go when the demo ends. No phone number, so
+    // nothing could be texted or called; no invite is created.
+
+    struct AddedMember: Equatable {
+        let id: String
+        let name: String
+        let role: UserRole
+        let latitude: Double
+        let longitude: Double
+    }
+
+    private var added: [AddedMember] = []
+
+    /// Everyone added in this demo, in the order they were added.
+    var addedMembers: [AddedMember] { lock.withLock { added } }
+
+    static let maxAddedMembers = 6
+
+    /// Adds a person to the sample family. nil when the name is empty or the demo is full.
+    @discardableResult
+    func addMember(name: String, role: UserRole, now: Date = Date()) -> AddedMember? {
+        let trimmed = String(name.trimmingCharacters(in: .whitespacesAndNewlines).prefix(40))
+        guard !trimmed.isEmpty else { return nil }
+        return lock.withLock {
+            guard added.count < Self.maxAddedMembers else { return nil }
+            let n = added.count + 1
+            let id = "demo_added_\(n)"
+            // Near the family's home in Chengdu (about 1-2 km), a different spot for each
+            let home = Self.spot(of: DemoDataset.momId)
+            let angle = Double(n) * 2.4
+            let radius = 0.009 + 0.003 * Double(n % 3)
+            let member = AddedMember(id: id, name: trimmed, role: role,
+                                     latitude: home.latitude + radius * cos(angle),
+                                     longitude: home.longitude + radius * sin(angle))
+            let t = DemoText(language: dataset.language)
+            let user = User(id: id, displayName: trimmed, role: role, avatarInitial: AvatarInitial.make(for: trimmed),
+                            avatarLocalPath: nil, phone: nil, email: nil, timeZone: dataset.mom.timeZone,
+                            countryCode: dataset.mom.countryCode, cityName: t.chengdu, createdAt: now)
+            dataset.addedUsers.append(user)
+            switch role {
+            case .guardian:
+                // Looks out for Mom: in her circle, told about her check-ins and practice SOS
+                let g = Guardian(id: id, user: user, permissions: .defaultPermissions, isOnDuty: false,
+                                 dutySchedule: DutySchedule(guardianId: id, slots: []), averageResponseTime: 120,
+                                 linkedSince: now)
+                dataset.guardiansOfMom.append(g)
+                dataset.momPerson.guardians.append(g)
+            case .protected_:
+                // Sarah and Kevin look out for them, as for Dad
+                let location = Location(latitude: member.latitude, longitude: member.longitude, accuracy: 20,
+                                        altitude: nil, speed: nil, timestamp: now, address: t.chengdu,
+                                        isInSafeZone: false, safeZoneName: nil, activityType: .stationary)
+                dataset.addedPersons.append(ProtectedPerson(
+                    id: id, user: user, guardians: dataset.guardiansOfDad, protectionLayers: dataset.guardiansOfDad.count,
+                    lastCheckIn: now, lastKnownLocation: location, batteryLevel: nil, batteryState: .unknown,
+                    lastPhoneActivity: now, status: .normal))
+            }
+            added.append(member)
+            return member
+        }
+    }
+
+    /// Caller holds `lock`. The guardians who would hear from `personId`.
+    private func guardiansUnlocked(of personId: String) -> [Guardian] {
+        switch personId {
+        case DemoDataset.momId: return dataset.guardiansOfMom
+        case DemoDataset.dadId: return dataset.guardiansOfDad
+        case DemoDataset.kaiId: return dataset.guardiansOfKai
+        default: return dataset.addedPersons.first { $0.id == personId }?.guardians ?? []
+        }
+    }
+
+    /// Caller holds `lock`. Where a person's phone is (added people near the family's home).
+    private func spotUnlocked(of personId: String) -> CLLocationCoordinate2D {
+        if let m = added.first(where: { $0.id == personId }) {
+            return CLLocationCoordinate2D(latitude: m.latitude, longitude: m.longitude)
+        }
+        return Self.spot(of: personId)
+    }
+
     // MARK: - Mutations (also used by the scenario engine)
 
     func setDadBattery(_ level: Double) {
@@ -136,6 +219,7 @@ final class DemoStore {
                                triggerMethod: method)
             sos[personId] = new
             if personId == DemoDataset.momId { dataset.momPerson.status = .alert }
+            if let i = dataset.addedPersons.firstIndex(where: { $0.id == personId }) { dataset.addedPersons[i].status = .alert }
             let lm = LanguageManager.shared
             noteOnTimeline(personId, .sosTriggered, String(format: lm.localized("timeline.sosTriggered"),
                                                            lm.localized("sos.method.\(method)")), at: date)
@@ -169,6 +253,7 @@ final class DemoStore {
                 sos[key] = nil
                 pastSOS[key, default: []].append((ended, Date()))
                 if key == DemoDataset.momId { dataset.momPerson.status = .normal }
+                if let i = dataset.addedPersons.firstIndex(where: { $0.id == key }) { dataset.addedPersons[i].status = .normal }
                 noteOnTimeline(key, .sosResolved, LanguageManager.shared.localized("timeline.sosEnded"))
             }
             return key
@@ -309,15 +394,14 @@ final class DemoStore {
 
         case ("GET", "/v1/guardian/protected-persons"):
             guard me == DemoDataset.sarahId else { return (200, json([])) }
-            let rows = lock.withLock { [dataset.momPerson, dataset.dadPerson].map { statusRow($0) } }
+            let rows = lock.withLock { ([dataset.momPerson, dataset.dadPerson] + dataset.addedPersons).map { statusRow($0) } }
             return (200, json(rows))
 
         case ("GET", "/v1/guardian/circle"):
             // Same rule as the server: only someone who looks after the person
             let personId = query["personId"] ?? ""
             let circle: [Guardian]? = lock.withLock {
-                let guardians = personId == DemoDataset.momId ? dataset.guardiansOfMom
-                    : personId == DemoDataset.dadId ? dataset.guardiansOfDad : []
+                let guardians = personId == DemoDataset.kaiId ? [] : guardiansUnlocked(of: personId)
                 return guardians.contains { $0.id == me } ? guardians : nil
             }
             guard let circle else { return (403, json(["error": "No active guardian link for this person"])) }
@@ -396,8 +480,9 @@ final class DemoStore {
         case ("POST", "/v1/checkin"):
             let note = (body.flatMap { try? JSONSerialization.jsonObject(with: $0) } as? [String: Any])?["note"] as? String
             recordCheckIn(userId: me, note: note)
+            let told = lock.withLock { guardiansUnlocked(of: me).count }
             return (200, json(["checkInId": "demo-ci-\(Int(Date().timeIntervalSince1970))",
-                               "timestamp": Self.iso(Date()), "guardiansNotified": 3]))
+                               "timestamp": Self.iso(Date()), "guardiansNotified": told]))
 
         case ("POST", "/v1/sos/trigger"):
             let s = triggerSOS(personId: me, method: (bodyObject(body)["triggerMethod"] as? String) ?? "longPress")
@@ -450,13 +535,14 @@ final class DemoStore {
             let state: EscalationState = ack != nil ? .frozen
                 : elapsed < 30 ? .hop1_notified : elapsed < 90 ? .hop2_allNotified
                 : elapsed < 120 ? .hop3_voiceCalling : .hop4_shareSent
-            let spot = Self.spot(of: personId)
+            let spot = spotUnlocked(of: personId)
+            let circle = max(1, guardiansUnlocked(of: personId).count)
             var status = SOSStatus(
                 sosEventId: s.sosEventId, protectedPersonId: personId, personName: person.displayName,
                 triggeredAt: s.triggeredAt, triggerMethod: s.triggerMethod,
                 latitude: spot.latitude, longitude: spot.longitude, batteryLevel: s.batteryLevel,
                 escalationState: state, nextStep: ack != nil ? nil : "voice1", nextStepAt: nil,
-                guardiansNotified: elapsed < 30 ? 1 : 3, callsPlaced: ack != nil || elapsed < 90 ? 0 : 3,
+                guardiansNotified: elapsed < 30 ? 1 : circle, callsPlaced: ack != nil || elapsed < 90 ? 0 : circle,
                 shareLinkSent: ack == nil && elapsed >= 120, noGuardians: false, emergencyContactsNotified: 0,
                 acknowledgedBy: ack, acknowledgedByName: ack.flatMap { dataset.user($0)?.displayName },
                 acknowledgedAt: s.acknowledgedAt, elapsedSeconds: elapsed)
@@ -685,9 +771,10 @@ final class DemoStore {
             row["activeSOS"] = [
                 "sosEventId": s.sosEventId, "protectedPersonId": p.id, "personName": person.displayName,
                 "triggeredAt": Self.iso(s.triggeredAt), "triggerMethod": s.triggerMethod,
-                "latitude": 30.6586, "longitude": 104.0647, "batteryLevel": s.batteryLevel,
+                "latitude": spotUnlocked(of: p.id).latitude, "longitude": spotUnlocked(of: p.id).longitude,
+                "batteryLevel": s.batteryLevel,
                 "escalationState": s.acknowledgedBy == nil ? "hop2_allNotified" : "frozen",
-                "nextStep": NSNull(), "nextStepAt": NSNull(), "guardiansNotified": 3, "callsPlaced": 0,
+                "nextStep": NSNull(), "nextStepAt": NSNull(), "guardiansNotified": guardiansUnlocked(of: p.id).count, "callsPlaced": 0,
                 "shareLinkSent": false, "noGuardians": false, "emergencyContactsNotified": 0,
                 "acknowledgedBy": s.acknowledgedBy ?? NSNull(),
                 "acknowledgedByName": s.acknowledgedBy.flatMap { dataset.user($0)?.displayName } ?? NSNull(),

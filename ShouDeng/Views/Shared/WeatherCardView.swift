@@ -23,6 +23,19 @@ final class LiveWeatherStore: ObservableObject {
     private static var cache: [String: (weather: Weather, at: Date)] = [:]
     private struct TimedOut: Error {}
 
+    private static func cacheKey(_ location: CLLocation) -> String {
+        String(format: "%.2f,%.2f", location.coordinate.latitude, location.coordinate.longitude)
+    }
+
+    /// Drops the cached weather for a place (Explore Mode forgets a real fix this way).
+    static func forget(_ location: CLLocation) {
+        cache[cacheKey(location)] = nil
+    }
+
+    static func isCached(_ location: CLLocation) -> Bool {
+        cache[cacheKey(location)] != nil
+    }
+
     /// `locate` is asked again while there is no fix yet (first launch, permission
     /// just granted): the card used to give up, or wait forever, without one.
     func load(locate: () -> CLLocation?, language: String) async {
@@ -38,7 +51,7 @@ final class LiveWeatherStore: ObservableObject {
         guard let location else { state = .unavailable("no location"); return }
 
         async let placeName = Self.placeName(for: location, language: language)
-        let key = String(format: "%.2f,%.2f", location.coordinate.latitude, location.coordinate.longitude)
+        let key = Self.cacheKey(location)
         if let hit = Self.cache[key], Date().timeIntervalSince(hit.at) < 30 * 60 {
             state = .loaded(hit.weather)
         } else {
@@ -104,6 +117,14 @@ struct WeatherCardView: View {
     let locate: () -> CLLocation?
     /// Fallback place name ("成都") when the location can't be looked up
     var placeName: String = ""
+    /// A small button in the card's lower-left corner (Explore Mode: "Use my location")
+    var cornerAction: CornerAction?
+
+    struct CornerAction {
+        let title: String
+        let systemImage: String
+        let action: () -> Void
+    }
     /// Rounded location when the card appeared; a move of ~1 km reloads
     @State private var locationKey = "none"
     @ObservedObject private var lang = LanguageManager.shared
@@ -122,6 +143,7 @@ struct WeatherCardView: View {
                         .foregroundColor(.white.opacity(0.8))
                 }
                 .frame(maxWidth: .infinity, minHeight: 90)
+                .padding(.bottom, cornerAction == nil ? 0 : 20)
             case .unavailable(let reason):
                 VStack(spacing: 8) {
                     if !shownPlace.isEmpty {
@@ -154,6 +176,7 @@ struct WeatherCardView: View {
                     #endif
                 }
                 .frame(maxWidth: .infinity, minHeight: 70)
+                .padding(.bottom, cornerAction == nil ? 0 : 26)
             case .loaded(let weather):
                 content(weather)
             }
@@ -165,6 +188,7 @@ struct WeatherCardView: View {
         )
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .overlay(alignment: .bottomTrailing) { attributionMark }
+        .overlay(alignment: .bottomLeading) { cornerButton }
         .task(id: locationKey) {
             await store.load(locate: locate, language: lang.current.rawValue)
         }
@@ -256,6 +280,23 @@ struct WeatherCardView: View {
         let style = Measurement<UnitTemperature>.FormatStyle(width: unit ? .abbreviated : .narrow, locale: locale,
                                                              usage: .weather, numberFormatStyle: .number.precision(.fractionLength(0)))
         return value.formatted(style)
+    }
+
+    @ViewBuilder
+    private var cornerButton: some View {
+        if let cornerAction {
+            Button(action: cornerAction.action) {
+                Label(cornerAction.title, systemImage: cornerAction.systemImage)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+                    .padding(.horizontal, 9).padding(.vertical, 4)
+                    .background(Capsule().fill(Color.white.opacity(0.22)))
+            }
+            .buttonStyle(.plain)
+            .padding(6)
+            .accessibilityIdentifier("weather.cornerAction")
+        }
     }
 
     // MARK: Attribution (required by Apple)

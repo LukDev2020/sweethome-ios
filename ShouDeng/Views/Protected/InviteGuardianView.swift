@@ -28,6 +28,15 @@ struct InviteGuardianView: View {
     @State private var errorMessage: String?
 
     var body: some View {
+        if coordinator.isDemo {
+            // The demo creates no invite and texts nobody: the person joins the sample family
+            DemoAddMemberView(defaultRole: invitesGuardian ? .guardian : .protected_)
+        } else {
+            realBody
+        }
+    }
+
+    private var realBody: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {

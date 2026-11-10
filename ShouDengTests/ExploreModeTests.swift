@@ -1,5 +1,6 @@
 import XCTest
 import Security
+import CoreLocation
 @testable import ShouDeng
 
 /// Explore Mode merge gates:
@@ -30,9 +31,12 @@ final class ExploreModeTests: XCTestCase {
 
     override func tearDown() async throws {
         ExploreModeController.shared.exit()
+        ExploreModeController.shared.clearInviteHandoff()
+        ExploreModeController.shared.locator = DeviceDemoLocator()
         URLProtocol.unregisterClass(EscapeRecorder.self)
         EscapeRecorder.onRequest = nil
         APIClient.requestObserver = nil
+        DemoURLProtocol.bodyObserver = nil
         try await super.tearDown()
     }
 
@@ -186,6 +190,14 @@ final class ExploreModeTests: XCTestCase {
         MedicalCardCache.save(MedicalCardData(bloodType: "O-"))
         WidgetDataStore.write(.empty)
         WidgetDataStore.writeLanguage("fr")
+        // The real touches: the person's own location (map + weather) and a typed-in member
+        explore.locator = FakeLocator(.success(Self.realFix))
+        let r1 = await explore.showRealLocation()
+        XCTAssertNil(r1)
+        let r2 = await explore.useMyLocationForWeather()
+        XCTAssertNil(r2)
+        XCTAssertNotNil(explore.addMember(name: "Grandma Wu", role: .guardian))
+        XCTAssertNotNil(explore.addMember(name: "Uncle Bo", role: .protected_))
         explore.switchRole(to: .sarah)
         await waitUntil { demo.userRole == .guardian }
         demo.syncWidgetState()
@@ -198,6 +210,191 @@ final class ExploreModeTests: XCTestCase {
         XCTAssertEqual(after.keychain, before.keychain, "keychain changed")
         XCTAssertEqual(after.appGroup, before.appGroup, "App Group defaults changed")
         XCTAssertEqual(KeychainHelper.shared.read("sa_win"), "45")
+
+        // Nothing of the demo is left in memory either
+        XCTAssertNil(explore.realLocation)
+        XCTAssertNil(explore.weatherLocation)
+        XCTAssertEqual(explore.addedMembers, [])
+        XCTAssertEqual(explore.inviteHandoff, [], "names only carry over with \"Invite your real family\"")
+        XCTAssertNil(explore.store)
+        XCTAssertNil(DemoURLProtocol.store)
+        // A new demo starts with the sample family only, back in Chengdu
+        explore.start(role: .mom)
+        let again = try XCTUnwrap(explore.coordinator)
+        XCTAssertEqual(explore.store?.addedMembers, [])
+        XCTAssertEqual(again.locationManager.bestAvailableLocation?.coordinate.latitude ?? 0, DemoRole.mom.homeCoordinate.latitude, accuracy: 1e-6)
+        explore.exit()
+    }
+
+    // MARK: - 4. Real touches
+
+    /// A spot far from every sample city (Montréal), so it is easy to look for.
+    static let realFix = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 45.508765, longitude: -73.554321),
+                                    altitude: 30, horizontalAccuracy: 15, verticalAccuracy: 10, timestamp: Date())
+
+    func testRealLocationNeverLeavesTheDevice() async throws {
+        var carried: [String] = []
+        DemoURLProtocol.bodyObserver = { [weak self] key, body in
+            guard let body, let text = String(data: body, encoding: .utf8), text.contains("45.5087") else { return }
+            self?.lock.withLock { carried.append(key) }
+        }
+        let explore = ExploreModeController.shared
+        explore.locator = FakeLocator(.success(Self.realFix))
+        explore.start(role: .mom)
+        let demo = try XCTUnwrap(explore.coordinator)
+        await waitUntil { demo.currentUser?.id == DemoDataset.momId }
+
+        // Before agreeing: the sample family's city, never the device
+        XCTAssertEqual(demo.locationManager.bestAvailableLocation?.coordinate.latitude ?? 0, 30.6586, accuracy: 1e-4)
+
+        // The weather's fix is for the weather only: Mom's pin stays in Chengdu
+        let r3 = await explore.useMyLocationForWeather()
+        XCTAssertNil(r3)
+        XCTAssertEqual(explore.weatherLocation?.coordinate.latitude ?? 0, 45.508765, accuracy: 1e-6)
+        XCTAssertEqual(demo.locationManager.bestAvailableLocation?.coordinate.latitude ?? 0, 30.6586, accuracy: 1e-4)
+
+        // "Show me where I really am": her own pin and share location use the fix
+        let r4 = await explore.showRealLocation()
+        XCTAssertNil(r4)
+        XCTAssertEqual(demo.locationManager.bestAvailableLocation?.coordinate.latitude ?? 0, 45.508765, accuracy: 1e-6)
+        XCTAssertEqual(demo.locationService.currentLocation?.longitude ?? 0, -73.554321, accuracy: 1e-6)
+
+        // Everything that would send a position
+        demo.performCheckIn()
+        demo.sendLocationToGuardians()
+        demo.triggerSOS(method: .longPress)
+        await waitUntil { explore.store?.activeSOS(for: DemoDataset.momId) != nil }
+        try? await Task.sleep(nanoseconds: 800_000_000)
+
+        // Sarah's phone (the demo's "server" side) still has Mom in Chengdu
+        explore.switchRole(to: .sarah)
+        await waitUntil { demo.protectedPersons.contains { $0.id == DemoDataset.momId } }
+        let mom = try XCTUnwrap(demo.protectedPersons.first { $0.id == DemoDataset.momId })
+        XCTAssertEqual(mom.lastKnownLocation?.latitude ?? 0, 30.6586, accuracy: 1e-3)
+        XCTAssertEqual(demo.locationManager.bestAvailableLocation?.coordinate.latitude ?? 0,
+                       DemoRole.sarah.homeCoordinate.latitude, accuracy: 1e-6, "Sarah's phone is in Toronto")
+        let sarahView = try XCTUnwrap(explore.store?.respond(method: "GET", path: "/v1/guardian/protected-persons", query: [:], body: nil))
+        XCTAssertFalse(String(decoding: sarahView.1, as: UTF8.self).contains("45.5087"))
+
+        // Back on Mom's phone she is where the person really is
+        explore.switchRole(to: .mom)
+        XCTAssertEqual(demo.locationManager.bestAvailableLocation?.coordinate.latitude ?? 0, 45.508765, accuracy: 1e-6)
+        explore.stopRealLocation()
+        XCTAssertEqual(demo.locationManager.bestAvailableLocation?.coordinate.latitude ?? 0, 30.6586, accuracy: 1e-4)
+
+        explore.exit()
+        XCTAssertNil(explore.realLocation)
+        XCTAssertNil(explore.weatherLocation)
+        XCTAssertFalse(LiveWeatherStore.isCached(Self.realFix))
+
+        // Every request was answered on the phone; none went to a real host
+        XCTAssertEqual(DemoURLProtocol.violations, [], "requests aimed at a real host")
+        XCTAssertEqual(escaped, [], "requests that bypassed DemoURLProtocol")
+        XCTAssertTrue(DemoURLProtocol.handled.contains("POST /v1/checkin"))
+        // The check-in carried the fix, and DemoURLProtocol (on the phone) is what got it
+        XCTAssertTrue(lock.withLock { carried }.contains("POST /v1/checkin"), "\(lock.withLock { carried })")
+    }
+
+    func testLocationRefusedKeepsTheSampleCity() async throws {
+        let explore = ExploreModeController.shared
+        explore.locator = FakeLocator(.failure(DemoLocateError.denied))
+        explore.start(role: .mom)
+        let demo = try XCTUnwrap(explore.coordinator)
+        let refused = await explore.showRealLocation()
+        XCTAssertEqual(refused, .denied)
+        let weatherRefused = await explore.useMyLocationForWeather()
+        XCTAssertEqual(weatherRefused, .denied)
+        XCTAssertNil(explore.realLocation)
+        XCTAssertNil(explore.weatherLocation)
+        XCTAssertEqual(demo.locationManager.bestAvailableLocation?.coordinate.latitude ?? 0, 30.6586, accuracy: 1e-4)
+    }
+
+    func testMemberAddedInTheDemoAppearsInDemoStoreResponses() throws {
+        let store = DemoStore(dataset: DemoDataset.build(now: Date(), language: .english), currentUserId: DemoDataset.sarahId)
+        let decoder = APIClient(config: .init(baseURL: DemoURLProtocol.baseURL), offlineQueue: OfflineQueue(fileURL: nil)).decoder
+        func get(_ path: String, _ query: [String: String] = [:]) throws -> Data {
+            let r = try XCTUnwrap(store.respond(method: "GET", path: path, query: query, body: nil), path)
+            XCTAssertEqual(r.0, 200, path)
+            return r.1
+        }
+
+        XCTAssertNil(store.addMember(name: "   ", role: .guardian), "a name is needed")
+
+        // Someone to protect: on Sarah's family list, near the family's home in Chengdu
+        let uncle = try XCTUnwrap(store.addMember(name: "  Uncle Bo ", role: .protected_))
+        XCTAssertEqual(uncle.name, "Uncle Bo")
+        let persons = try decoder.decode([ProtectedPersonStatusResponse].self, from: get("/v1/guardian/protected-persons"))
+        let row = try XCTUnwrap(persons.first { $0.personId == uncle.id })
+        XCTAssertEqual(persons.count, 3)
+        XCTAssertEqual(row.displayName, "Uncle Bo")
+        XCTAssertNil(row.phone, "no number: nothing could be texted or called")
+        let home = CLLocation(latitude: 30.6586, longitude: 104.0647)
+        let spot = CLLocation(latitude: try XCTUnwrap(row.latitude), longitude: try XCTUnwrap(row.longitude))
+        XCTAssertLessThan(spot.distance(from: home), 3000)
+        XCTAssertGreaterThan(spot.distance(from: home), 300, "not on top of Mom's pin")
+        let circle = try decoder.decode([Guardian].self, from: get("/v1/guardian/circle", ["personId": uncle.id]))
+        XCTAssertEqual(circle.map(\.id), [DemoDataset.sarahId, DemoDataset.kevinId])
+
+        // ...who can send a practice SOS that Sarah receives
+        store.triggerSOS(personId: uncle.id)
+        let active = try decoder.decode(ActiveSOSResponse.self, from: get("/v1/guardian/sos/active", ["personId": uncle.id]))
+        XCTAssertTrue(active.active)
+        XCTAssertEqual(active.sos?.personName, "Uncle Bo")
+        XCTAssertEqual(active.sos?.latitude ?? 0, spot.coordinate.latitude, accuracy: 1e-9)
+        let alerting = try decoder.decode([ProtectedPersonStatusResponse].self, from: get("/v1/guardian/protected-persons"))
+        XCTAssertEqual(alerting.first { $0.personId == uncle.id }?.status, .alert)
+
+        // A guardian: in Mom's circle, told about her check-in and her practice SOS
+        let grandma = try XCTUnwrap(store.addMember(name: "Grandma Wu", role: .guardian))
+        store.currentUserId = DemoDataset.momId
+        let guardians = try decoder.decode([Guardian].self, from: get("/v1/protected/guardians"))
+        XCTAssertEqual(guardians.map(\.id), [DemoDataset.sarahId, DemoDataset.kevinId, DemoDataset.lucyId, grandma.id])
+        XCTAssertEqual(guardians.last?.user.displayName, "Grandma Wu")
+        XCTAssertNil(guardians.last?.user.phone)
+        let checkIn = try XCTUnwrap(store.respond(method: "POST", path: "/v1/checkin", query: [:], body: Data("{}".utf8)))
+        let told = try JSONSerialization.jsonObject(with: checkIn.1) as? [String: Any]
+        XCTAssertEqual(told?["guardiansNotified"] as? Int, 4)
+        store.triggerSOS(personId: DemoDataset.momId)
+        let momSOS = try XCTUnwrap(store.sosStatus(personId: DemoDataset.momId, now: Date().addingTimeInterval(45)))
+        XCTAssertEqual(momSOS.guardiansNotified, 4)
+
+        // The demo stays small
+        for i in 0..<10 { store.addMember(name: "Cousin \(i)", role: .guardian) }
+        XCTAssertEqual(store.addedMembers.count, DemoStore.maxAddedMembers)
+    }
+
+    func testAddedPersonOnTheGuardianPhoneAndTheInviteHandoff() async throws {
+        let explore = ExploreModeController.shared
+        explore.start(role: .sarah)
+        let demo = try XCTUnwrap(explore.coordinator)
+        await waitUntil { demo.protectedPersons.count == 2 }
+
+        let uncle = try XCTUnwrap(explore.addMember(name: "Uncle Bo", role: .protected_))
+        explore.addMember(name: "Grandma Wu", role: .guardian)
+        await waitUntil { demo.protectedPersons.contains { $0.id == uncle.id && $0.user.displayName == "Uncle Bo" } }
+
+        // His practice SOS reaches Sarah's phone
+        explore.practiceSOS(from: uncle.id)
+        await waitUntil { demo.guardianSOS[uncle.id] != nil }
+        XCTAssertEqual(explore.notification?.action, .openAlert(personId: uncle.id))
+
+        // "Ready to invite your real family?" → the names (and sides) go to sign-up, in memory
+        var signupOpened = false
+        let previous = explore.onSetUpRealFamily
+        explore.onSetUpRealFamily = { signupOpened = true }
+        defer { explore.onSetUpRealFamily = previous }
+        explore.inviteRealFamily()
+        XCTAssertFalse(ExploreMode.isActive)
+        XCTAssertTrue(signupOpened)
+        XCTAssertEqual(explore.inviteHandoff, [DemoInvitee(name: "Uncle Bo", role: .protected_),
+                                               DemoInvitee(name: "Grandma Wu", role: .guardian)])
+        // A guardian's invite makes me the protected one, and the other way round
+        XCTAssertEqual(explore.inviteHandoff.map(\.inviterRole), [.guardian, .protected_])
+        XCTAssertEqual(DemoURLProtocol.violations, [])
+        XCTAssertEqual(escaped, [])
+        XCTAssertFalse(DemoURLProtocol.handled.contains { $0.contains("/v1/invite") }, "no invite was created")
+        explore.clearInviteHandoff()
+        XCTAssertEqual(explore.inviteHandoff, [])
     }
 
     // MARK: - 3. Fixture round trip
@@ -256,6 +453,14 @@ final class ExploreModeTests: XCTestCase {
         let lastCheckIn = try? XCTUnwrap(zh.momPerson.lastCheckIn)
         XCTAssertEqual(lastCheckIn.map { now.timeIntervalSince($0) } ?? 0, 38 * 60, accuracy: 1)
     }
+}
+
+/// Hands out a fixed "real" location (or refuses), instead of the device's.
+@MainActor
+final class FakeLocator: DemoLocating {
+    let result: Result<CLLocation, Error>
+    init(_ result: Result<CLLocation, Error>) { self.result = result }
+    func locateOnce() async throws -> CLLocation { try result.get() }
 }
 
 /// Records anything that goes through URLSession.shared / default protocol stack.

@@ -78,6 +78,20 @@ final class ExploreModeController: ObservableObject {
     /// Set by the app: opens real sign-up after the demo ends.
     var onSetUpRealFamily: (() -> Void)?
 
+    // MARK: Real touches (opt-in, on this phone only)
+
+    /// "Show me where I really am": one real fix, used as Mom's own position on her phone.
+    @Published private(set) var realLocation: CLLocation?
+    /// The weather card's "Use my location": one real fix, used only for the weather.
+    @Published private(set) var weatherLocation: CLLocation?
+    /// People added with "Add a family member" (mirrors the demo store).
+    @Published private(set) var addedMembers: [DemoStore.AddedMember] = []
+    /// Names to invite for real, kept only when the person leaves the demo with
+    /// "Invite your real family"; the post-signup wizard's invite step reads them.
+    @Published private(set) var inviteHandoff: [DemoInvitee] = []
+    /// Reads the device's location once (tests put a fake here).
+    var locator: DemoLocating = DeviceDemoLocator()
+
     // MARK: Lifecycle
 
     func start(role: DemoRole) {
@@ -111,7 +125,11 @@ final class ExploreModeController: ObservableObject {
         notification = nil
         self.role = role
         isActive = true
-        coordinator.beginDemoPersona(userId: role.userId, role: role.userRole, location: role.homeCoordinate)
+        realLocation = nil
+        weatherLocation = nil
+        addedMembers = []
+        inviteHandoff = []
+        coordinator.beginDemoPersona(userId: role.userId, role: role.userRole, location: personaLocation(role))
 
         blockedObserver = NotificationCenter.default.addObserver(
             forName: ExploreMode.blockedFeatureNotification, object: nil, queue: .main
@@ -129,7 +147,7 @@ final class ExploreModeController: ObservableObject {
         role = newRole
         store.currentUserId = newRole.userId
         notification = nil
-        coordinator.beginDemoPersona(userId: newRole.userId, role: newRole.userRole, location: newRole.homeCoordinate)
+        coordinator.beginDemoPersona(userId: newRole.userId, role: newRole.userRole, location: personaLocation(newRole))
         if newRole == .mom, let own = store.sosStatus(personId: DemoDataset.momId) {
             coordinator.adoptDemoOwnSOS(own)
         }
@@ -158,6 +176,14 @@ final class ExploreModeController: ObservableObject {
         cancellables.removeAll()
         // The demo's sample lock-screen card goes with it
         coordinator?.liveActivityManager.endAllActivities()
+        // Names go to the real sign-up only when the person asked for it; the real
+        // location and the weather's fix are forgotten either way.
+        inviteHandoff = setUpRealFamily
+            ? (store?.addedMembers ?? []).map { DemoInvitee(name: $0.name, role: $0.role) } : []
+        for fix in [realLocation, weatherLocation].compactMap({ $0 }) { LiveWeatherStore.forget(fix) }
+        realLocation = nil
+        weatherLocation = nil
+        addedMembers = []
         coordinator = nil
         store = nil
         DemoURLProtocol.store = nil
@@ -165,6 +191,93 @@ final class ExploreModeController: ObservableObject {
         anchorFrames = [:]
         presentedSheet = nil
         if setUpRealFamily { onSetUpRealFamily?() }
+    }
+
+    // MARK: Real touches
+
+    /// Where the persona's phone is: Mom's is where the person really is once they
+    /// chose "Show me where I really am"; everyone else stays in the sample family's city.
+    func personaLocation(_ role: DemoRole) -> CLLocationCoordinate2D {
+        if role == .mom, let realLocation { return realLocation.coordinate }
+        return role.homeCoordinate
+    }
+
+    /// One fix for Mom's own pin and "share location". Call after the person agreed.
+    @discardableResult
+    func showRealLocation() async -> DemoLocateError? {
+        guard isActive else { return .failed }
+        do {
+            let fix = try await locator.locateOnce()
+            guard isActive else { return .failed }   // left the demo meanwhile
+            realLocation = fix
+            applyPersonaLocation()
+            return nil
+        } catch {
+            return error as? DemoLocateError ?? .failed
+        }
+    }
+
+    /// Back to the sample family's city.
+    func stopRealLocation() {
+        if let realLocation { LiveWeatherStore.forget(realLocation) }
+        realLocation = nil
+        applyPersonaLocation()
+    }
+
+    /// One fix used only for the weather card. Call after the person agreed.
+    @discardableResult
+    func useMyLocationForWeather() async -> DemoLocateError? {
+        guard isActive else { return .failed }
+        do {
+            let fix = try await locator.locateOnce()
+            guard isActive else { return .failed }
+            weatherLocation = fix
+            return nil
+        } catch {
+            return error as? DemoLocateError ?? .failed
+        }
+    }
+
+    func stopWeatherLocation() {
+        if let weatherLocation { LiveWeatherStore.forget(weatherLocation) }
+        weatherLocation = nil
+    }
+
+    /// Puts the current persona where personaLocation says, without reloading the phone.
+    private func applyPersonaLocation() {
+        guard let coordinator else { return }
+        let coordinate = personaLocation(role)
+        let fix = role == .mom ? realLocation : nil
+        coordinator.locationService.currentLocation = coordinate
+        coordinator.locationService.lastUpdateTime = fix?.timestamp ?? Date()
+        coordinator.locationManager.demoLocation = fix
+            ?? CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        // The home screen reads the location manager (not published): redraw it
+        coordinator.objectWillChange.send()
+    }
+
+    /// "Add a family member": the person joins the sample family on this phone.
+    @discardableResult
+    func addMember(name: String, role memberRole: UserRole) -> DemoStore.AddedMember? {
+        guard let store, let member = store.addMember(name: name, role: memberRole) else { return nil }
+        addedMembers = store.addedMembers
+        Task { await refreshCurrentPhone() }
+        return member
+    }
+
+    /// A practice SOS from someone added as protected: it reaches Sarah's phone.
+    func practiceSOS(from personId: String) {
+        store?.triggerSOS(personId: personId)
+    }
+
+    /// Leaving for the real sign-up from the "Ready to invite your real family?" card.
+    func inviteRealFamily() {
+        exit(setUpRealFamily: true)
+    }
+
+    /// The wizard used (or dismissed) the names from the demo.
+    func clearInviteHandoff() {
+        inviteHandoff = []
     }
 
     // MARK: Isolation
@@ -310,8 +423,16 @@ final class ExploreModeController: ObservableObject {
                    String(format: lm.localized("explore.notif.homeSafe.body"), t.chengdu, time, t.sarahName, t.kevinName, t.lucyName),
                    .none)
             if currentStep?.completion == .homeSafe { advance() }
-        case .sosTriggered(let personId):
-            guard personId == DemoDataset.momId else { return }
+        case .sosTriggered(let personId) where personId != DemoDataset.momId:
+            // Someone added in the demo pressed a practice SOS
+            guard let member = addedMembers.first(where: { $0.id == personId }) else { return }
+            if role == .sarah {
+                notify(String(format: lm.localized("explore.notif.sos.title"), member.name),
+                       String(format: lm.localized("explore.notif.sos.body"), t.chengdu, 82),
+                       .openAlert(personId: personId))
+            }
+            Task { await refreshCurrentPhone() }
+        case .sosTriggered:
             if role == .mom {
                 learn(.practiceSOS)
                 // Let the SOS screen sink in, then hand off to Toronto
@@ -354,8 +475,8 @@ final class ExploreModeController: ObservableObject {
     func tapNotification() {
         guard let n = notification else { return }
         notification = nil
-        if case .openAlert = n.action {
-            openMomAlert()
+        if case .openAlert(let personId) = n.action {
+            openAlert(personId: personId)
             if currentStep?.id == "sarah.respond" { advance() }
         }
     }
@@ -363,10 +484,14 @@ final class ExploreModeController: ObservableObject {
     /// Present Mom's alert screen on Sarah's phone. Deferred a beat so it also
     /// works right after a side switch, when the guardian tabs are just appearing.
     private func openMomAlert() {
-        Task { await coordinator?.fetchGuardianSOS(personId: DemoDataset.momId) }
+        openAlert(personId: DemoDataset.momId)
+    }
+
+    private func openAlert(personId: String) {
+        Task { await coordinator?.fetchGuardianSOS(personId: personId) }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             guard let self, self.isActive, self.role == .sarah else { return }
-            self.coordinator?.pendingAlertPersonId = DemoDataset.momId
+            self.coordinator?.pendingAlertPersonId = personId
         }
     }
 
@@ -398,6 +523,9 @@ final class ExploreModeController: ObservableObject {
         if role == .sarah {
             await coordinator.fetchProtectedPersons()
             await coordinator.fetchGuardianSOS(personId: DemoDataset.momId)
+            for member in addedMembers where member.role == .protected_ {
+                await coordinator.fetchGuardianSOS(personId: member.id)
+            }
         } else {
             await coordinator.fetchGuardians()
             await coordinator.refreshOwnSOSStatus()
