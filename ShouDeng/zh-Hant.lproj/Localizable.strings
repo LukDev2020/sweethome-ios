@@ -2599,3 +2599,7 @@
 "sos.sms.headNoName" = "SOS：我需要幫助。";
 "sos.sms.location" = "位置：%1$@（%2$@）";
 "sos.sms.noLocation" = "位置未知（%@）";
+
+/* Login: mainland-China networks (Hong Kong relay, docs/ops/CHINA-RELAY.md) */
+"auth.china.hint.appleAlipay" = "在中國大陸網路下，可能無法用簡訊驗證碼登入。建議使用 Apple 或支付寶登入。";
+"auth.china.hint.apple" = "在中國大陸網路下，可能無法用簡訊驗證碼登入。建議使用 Apple 登入。";

@@ -2599,3 +2599,7 @@
 "sos.sms.headNoName" = "SOS：助けが必要です。";
 "sos.sms.location" = "現在地：%1$@（%2$@）";
 "sos.sms.noLocation" = "現在地不明（%@）";
+
+/* Login: mainland-China networks (Hong Kong relay, docs/ops/CHINA-RELAY.md) */
+"auth.china.hint.appleAlipay" = "中国本土のネットワークでは、SMS の確認コードでサインインできないことがあります。Apple または Alipay でサインインしてください。";
+"auth.china.hint.apple" = "中国本土のネットワークでは、SMS の確認コードでサインインできないことがあります。Apple でサインインしてください。";

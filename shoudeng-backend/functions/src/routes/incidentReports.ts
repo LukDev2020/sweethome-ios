@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { authMiddleware } from "../middleware/auth";
 import { createRateLimiter, RATE_LIMITS } from "../middleware/rateLimit";
-import { publicApiBaseUrl } from "../services/twilio";
+import { publicLinkBaseUrl } from "../services/twilio";
 import {
   createIncidentReport, sealIncidentReport, listIncidentReports, verifyIncidentReport, IncidentReportError,
 } from "../services/incidentReport";
@@ -25,7 +25,7 @@ function fail(res: Response, what: string, e: unknown) {
   res.status(500).json({ error: `Failed to ${what}` });
 }
 
-const verifyUrl = (code: string) => `${publicApiBaseUrl()}/v1/incident-reports/verify?code=${code}`;
+const verifyUrl = (code: string) => `${publicLinkBaseUrl()}/v1/incident-reports/verify?code=${code}`;
 
 function esc(s: unknown): string {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));

@@ -187,10 +187,13 @@ final class AppCoordinator: ObservableObject {
         var sessionConfiguration: URLSessionConfiguration
         var offlineQueue: OfflineQueue
         var defaults: UserDefaults
+        /// Hong Kong relay for mainland-China networks; nil = none (Explore Mode, tests).
+        var relayBaseURL: String? = nil
 
         static func live() -> Environment {
             Environment(isDemo: false, baseURL: AppCoordinator.resolveBaseURL(),
-                        sessionConfiguration: .default, offlineQueue: OfflineQueue(), defaults: .standard)
+                        sessionConfiguration: .default, offlineQueue: OfflineQueue(), defaults: .standard,
+                        relayBaseURL: AppCoordinator.resolveRelayURL())
         }
     }
 
@@ -208,11 +211,13 @@ final class AppCoordinator: ObservableObject {
         defaults.register(defaults: ["lockscreen_card_enabled": !environment.isDemo])
 
         let config = APIClient.Config(
-            baseURL: environment.baseURL
+            baseURL: environment.baseURL,
+            relayBaseURL: environment.relayBaseURL
         )
-        apiClient = APIClient(config: config, offlineQueue: offlineQueue, sessionConfiguration: environment.sessionConfiguration)
+        apiClient = APIClient(config: config, offlineQueue: offlineQueue, sessionConfiguration: environment.sessionConfiguration,
+                              defaults: environment.defaults)
         #if DEBUG
-        print("[AppCoordinator] API base URL: \(config.baseURL)")
+        print("[AppCoordinator] API base URL: \(config.baseURL), relay: \(apiClient.route.relay ?? "none")")
         #endif
         authManager = AuthManager(api: apiClient, defaults: environment.defaults, restore: !environment.isDemo)
         if !environment.isDemo, let data = UserDefaults.standard.data(forKey: "rider_shift") {
@@ -361,6 +366,21 @@ final class AppCoordinator: ObservableObject {
         #else
         return "https://us-central1-sweethome-b4e82.cloudfunctions.net/api"
         #endif
+    }
+
+    /// Info.plist API_RELAY_URL: the Hong Kong relay (https://api.<domain>, no /api),
+    /// used when the primary can't be reached (docs/ops/CHINA-RELAY.md). Empty = off.
+    static func resolveRelayURL() -> String? {
+        #if DEBUG
+        // Local verification: launch with `-apiRelayURL http://127.0.0.1:PORT`
+        if let override = UserDefaults.standard.string(forKey: "apiRelayURL"), !override.isEmpty {
+            return override
+        }
+        #endif
+        guard let value = Bundle.main.infoDictionary?["API_RELAY_URL"] as? String else { return nil }
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        // An unexpanded build setting ("$(API_RELAY_URL)") counts as unset
+        return trimmed.isEmpty || trimmed.hasPrefix("$(") ? nil : trimmed
     }
 
     // MARK: - Restore Local State

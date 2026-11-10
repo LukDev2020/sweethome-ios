@@ -6,7 +6,7 @@ import {
   sendSOSAcknowledgedToProtected,
 } from "./fcm";
 import { sendSOSSms, sendEmergencyContactSms, hasAppInstalled } from "./sms";
-import { initiateVoiceCall, publicApiBaseUrl } from "./twilio";
+import { initiateVoiceCall, publicLinkBaseUrl } from "./twilio";
 import { reserveSms, recordSms, reserveVoiceMinute, releaseVoiceMinute } from "./fairUse";
 import { createShareToken } from "./evidence";
 import { localTime, onDutyAt } from "./localTime";
@@ -360,7 +360,7 @@ async function createEmergencyShareUrl(personId: string): Promise<string> {
     createdBy: "system_escalation",
     expiresInHours: 48,
   });
-  return `${publicApiBaseUrl()}/v1/evidence/share/${token}`;
+  return `${publicLinkBaseUrl()}/v1/evidence/share/${token}`;
 }
 
 /**
