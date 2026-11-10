@@ -2,7 +2,7 @@ import { alertCrewOfSOS } from "../services/crew";
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { initialEscalationFields, runEscalationInline } from "../services/escalation";
-import { TWILIO_SECRETS } from "../config/params";
+import { SOS_SECRETS } from "../config/params";
 
 /**
  * Firestore trigger: a new SOS event starts the escalation state machine
@@ -12,7 +12,7 @@ import { TWILIO_SECRETS } from "../config/params";
  * step claims make re-delivery harmless.
  */
 export const onSOSCreated = functions
-  .runWith({ timeoutSeconds: 300, memory: "512MB", secrets: TWILIO_SECRETS })
+  .runWith({ timeoutSeconds: 300, memory: "512MB", secrets: SOS_SECRETS })
   .firestore.document("sos_events/{sosId}")
   .onCreate(async (snapshot, context) => {
     const sosId = context.params.sosId;

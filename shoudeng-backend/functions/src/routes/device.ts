@@ -1,6 +1,8 @@
 import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
+import { isSendableDeviceToken } from "../services/apns";
+import { sendPushToUser } from "../services/push";
 
 const router = Router();
 const db = admin.firestore();
@@ -10,6 +12,7 @@ router.use(authMiddleware);
 /**
  * POST /v1/device/token
  * Register or update an APNs device token for push notifications.
+ * Sent straight to Apple by services/apns.ts (not FCM: the app has no Firebase Messaging).
  */
 router.post("/token", async (req: Request, res: Response) => {
   const uid = req.uid!;
@@ -17,6 +20,11 @@ router.post("/token", async (req: Request, res: Response) => {
 
   if (!token || !platform) {
     res.status(400).json({ error: "token and platform are required" });
+    return;
+  }
+  // Raw APNs device token (hex). It goes into the APNs request path, so nothing else.
+  if (!isSendableDeviceToken(token)) {
+    res.status(400).json({ error: "token must be an APNs device token" });
     return;
   }
 
@@ -31,7 +39,8 @@ router.post("/token", async (req: Request, res: Response) => {
         userId: uid,
         token,
         platform,
-        environment: environment || "production",
+        // "development" = Xcode debug build (APNs sandbox); TestFlight / App Store = production.
+        environment: environment === "development" || environment === "sandbox" ? "development" : "production",
         updatedAt: admin.firestore.Timestamp.now(),
       });
 
@@ -126,36 +135,20 @@ router.post("/ble-separation", async (req: Request, res: Response) => {
       .where("status", "==", "active")
       .get();
 
-    const notifications: Promise<admin.messaging.MessagingDevicesResponse>[] = [];
-    for (const link of links.docs) {
-      const guardianId = link.data().guardianId;
-      const tokens = await db.collection("device_tokens")
-        .where("userId", "==", guardianId)
-        .get();
-
-      for (const tokenDoc of tokens.docs) {
-        const token = tokenDoc.data().token;
-        if (token) {
-          notifications.push(
-            admin.messaging().sendToDevice(token, {
-              notification: {
-                title: "分离提醒",
-                body: `蓝牙标签「${tagName}」已超出范围`,
-              },
-              data: {
-                type: "ble_separation",
-                tagName,
-                protectedPersonId: uid,
-                ...(latitude ? { latitude: String(latitude) } : {}),
-                ...(longitude ? { longitude: String(longitude) } : {}),
-              },
-            })
-          );
-        }
-      }
-    }
-
-    await Promise.all(notifications);
+    const data: Record<string, string> = {
+      type: "ble_separation",
+      tagName,
+      protectedPersonId: uid,
+      ...(latitude ? { latitude: String(latitude) } : {}),
+      ...(longitude ? { longitude: String(longitude) } : {}),
+    };
+    await Promise.all(links.docs.map((link) => sendPushToUser(link.data().guardianId, {
+      notification: {
+        title: "分离提醒",
+        body: `蓝牙标签「${tagName}」已超出范围`,
+      },
+      data,
+    }, "BLE separation")));
 
     // Log timeline entry
     await db.collection("users").doc(uid).collection("timeline").add({

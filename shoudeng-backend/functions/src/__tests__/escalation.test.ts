@@ -78,7 +78,7 @@ function seedFamily(opts: { guardians?: boolean } = {}) {
   });
 }
 
-const pushTargets = () => sentMessages.map((m) => m.tokens).flat();
+const pushTargets = () => sentMessages.map((m) => m.token);
 const sos = () => readDoc("sos_events/sos1")!;
 
 beforeEach(() => {
@@ -96,8 +96,8 @@ describe("hop 1 — on-duty guardian in the PROTECTED PERSON's time zone", () =>
     const r = await advanceEscalation("sos1", at(0));
     expect(r.ran).toBe("hop1");
     expect(pushTargets()).toEqual(["tok-kevin"]);
-    expect(sentMessages[0].notification.body).toContain("23%");
-    expect(sentMessages[0].data).toMatchObject({ action: "sos_alert", sos_id: "sos1", person_id: "mom" });
+    expect(sentMessages[0].payload.aps.alert.body).toContain("23%");
+    expect(sentMessages[0].payload).toMatchObject({ action: "sos_alert", sos_id: "sos1", person_id: "mom" });
     expect(sos().escalationState).toBe("hop1_notified");
     expect(sos().escalationNextStep).toBe("hop2");
     expect(sos().escalationNextAt.toMillis()).toBe(at(30).getTime());
@@ -114,13 +114,13 @@ describe("hop 1 — on-duty guardian in the PROTECTED PERSON's time zone", () =>
   it("time-sensitive by default; critical only when the entitlement flag is on", async () => {
     seedFamily();
     await advanceEscalation("sos1", at(0));
-    expect(sentMessages[0].apns.payload.aps["interruption-level"]).toBe("time-sensitive");
+    expect(sentMessages[0].payload.aps["interruption-level"]).toBe("time-sensitive");
     process.env.CRITICAL_ALERTS_ENABLED = "true";
     resetFakeAdmin();
     seedFamily();
     await advanceEscalation("sos1", at(0));
-    expect(sentMessages[0].apns.payload.aps["interruption-level"]).toBe("critical");
-    expect(sentMessages[0].apns.payload.aps.sound).toMatchObject({ critical: true, name: "sos_alert.caf" });
+    expect(sentMessages[0].payload.aps["interruption-level"]).toBe("critical");
+    expect(sentMessages[0].payload.aps.sound).toMatchObject({ critical: 1, name: "sos_alert.caf" });
   });
 });
 
@@ -215,11 +215,11 @@ describe("acknowledge (\"I've got it\")", () => {
     expect(r).toEqual({ status: "acknowledged", acknowledgedBy: "sarah", alreadyAcknowledged: false });
     expect(sos().escalationState).toBe("frozen");
     expect(sos().escalationNextStep).toBeNull();
-    const byToken = Object.fromEntries(sentMessages.map((m) => [m.tokens[0], m]));
+    const byToken = Object.fromEntries(sentMessages.map((m) => [m.token, m]));
     expect(Object.keys(byToken).sort()).toEqual(["tok-kevin", "tok-lucy", "tok-mom"]);
-    expect(byToken["tok-kevin"].notification.body).toContain("Sarah"); // zh copy names Sarah
-    expect(byToken["tok-lucy"].notification.body).toMatch(/Sarah gère le SOS de Mom/);
-    expect(byToken["tok-mom"].data.action).toBe("sos_acknowledged");
+    expect(byToken["tok-kevin"].payload.aps.alert.body).toContain("Sarah"); // zh copy names Sarah
+    expect(byToken["tok-lucy"].payload.aps.alert.body).toMatch(/Sarah gère le SOS de Mom/);
+    expect(byToken["tok-mom"].payload.action).toBe("sos_acknowledged");
 
     // Nothing else is sent afterwards
     sentMessages.length = 0;

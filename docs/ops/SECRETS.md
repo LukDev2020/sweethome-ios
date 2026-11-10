@@ -30,6 +30,10 @@ firebase functions:secrets:set TWILIO_AUTH_TOKEN --project sweethome-b4e82
 firebase functions:secrets:set GOOGLE_MAPS_API_KEY --project sweethome-b4e82
 ```
 
+```bash
+firebase functions:secrets:set APNS_AUTH_KEY --data-file AuthKey_KEYID.p8 --project sweethome-b4e82
+```
+
 | Secret | Value | Used by |
 |---|---|---|
 | `TWILIO_ACCOUNT_SID` | Twilio Console → Account Info → Account SID (`AC…`) | SOS SMS, SOS voice calls |
@@ -37,15 +41,17 @@ firebase functions:secrets:set GOOGLE_MAPS_API_KEY --project sweethome-b4e82
 | `GOOGLE_MAPS_API_KEY` | Google Cloud Console → APIs & Services → Credentials; key restricted to the **Geocoding API** | Reverse-geocoding addresses for guardians / evidence |
 | `APPLE_SIWA_PRIVATE_KEY` | Contents of the Sign in with Apple key file (`AuthKey_XXXX.p8`, see §4) | Revoking a person's Sign in with Apple when they delete their account (App Review 5.1.1(v)) |
 | `ALIPAY_PRIVATE_KEY` | Your app's RSA2 private key from Alipay's key tool (see §5) | Sign in with Alipay |
+| `APNS_AUTH_KEY` | Contents of the APNs auth key file (`AuthKey_XXXX.p8`, see §6) | **Every push notification**, SOS alerts included (sent straight to Apple, not through FCM) |
 
 Which functions bind them (`firebase deploy` grants each function's service account
 `secretAccessor` automatically):
 
 | Function | Secrets |
 |---|---|
-| `api` | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `GOOGLE_MAPS_API_KEY`, `APPLE_SIWA_PRIVATE_KEY`, `ALIPAY_PRIVATE_KEY` |
-| `onSOSCreated` (Firestore trigger) | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` |
-| `advanceEscalations` (every minute) | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` |
+| `api` | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `APNS_AUTH_KEY`, `GOOGLE_MAPS_API_KEY`, `APPLE_SIWA_PRIVATE_KEY`, `ALIPAY_PRIVATE_KEY` |
+| `onSOSCreated` (Firestore trigger) | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `APNS_AUTH_KEY` |
+| `advanceEscalations` (every minute) | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `APNS_AUTH_KEY` |
+| `checkHeartbeatMissing`, `checkCheckinOverdue`, `checkHomeTimerExpiry`, `checkSilentAlarms` | `APNS_AUTH_KEY` |
 
 `firebase deploy` **refuses to deploy** (or, in an interactive terminal, asks for the value)
 while a bound secret doesn't exist in Secret Manager. If you don't have a Google Maps key yet
@@ -67,6 +73,14 @@ printf disabled | firebase functions:secrets:set APPLE_SIWA_PRIVATE_KEY --data-f
 
 ```bash
 printf disabled | firebase functions:secrets:set ALIPAY_PRIVATE_KEY --data-file - --project sweethome-b4e82
+```
+
+**New since direct APNs push:** the next deploy needs `APNS_AUTH_KEY` to exist (and
+`APNS_KEY_ID=` in `functions/.env`, see §2). Until you have the key, store `disabled` — no push
+is sent at all then, and SOS reaches guardians by SMS and calls only:
+
+```bash
+printf disabled | firebase functions:secrets:set APNS_AUTH_KEY --data-file - --project sweethome-b4e82
 ```
 
 **Rotating a secret:** run the same `secrets:set` command again, then redeploy the functions
@@ -103,7 +117,9 @@ APPLE_ALLOW_SANDBOX=true
 # APPLE_ENVIRONMENT — not read by the code on release/1.0-integration (environments are
 # handled by Production-then-Sandbox above). Leave it out unless the payment code starts using it.
 
-# --- Push ---
+# --- Push (APNs, §6) ---
+# Key ID of the APNs auth key; its .p8 is the APNS_AUTH_KEY secret. Empty = no push.
+APNS_KEY_ID=
 # "true" only after Apple grants the Critical Alerts entitlement (docs/critical-alerts-entitlement-application.md).
 CRITICAL_ALERTS_ENABLED=false
 
@@ -121,6 +137,8 @@ PUBLIC_API_BASE_URL=
 | `APPLE_APP_ID` | `process.env` | `services/payment.ts` | Production App Store notifications answered 401 (Apple retries) |
 | `APPLE_ALLOW_SANDBOX` | `process.env` | `services/payment.ts` | `true` |
 | `APPLE_ENVIRONMENT` | — | not read (see above) | — |
+| `APNS_KEY_ID` | `defineString` | `services/apns.ts` | No push notifications (SOS: SMS + calls only) |
+| `APPLE_TEAM_ID` | `defineString` | `services/apns.ts`, `services/appleSignIn.ts` | `B98QT5LTWZ` |
 | `CRITICAL_ALERTS_ENABLED` | `process.env` | `services/fcm.ts` | Time-sensitive SOS pushes |
 | `PUBLIC_API_BASE_URL` | `process.env` | `services/twilio.ts`, `services/escalation.ts` | Default cloudfunctions.net URL |
 | `JWT_SECRET` | `process.env` | `middleware/auth.ts`, `routes/auth.ts` | API refuses to sign/verify tokens |
@@ -139,7 +157,11 @@ firebase functions:log --project sweethome-b4e82 --lines 200
 ```
 
 - `[Config] … disabled — not configured: …` means a value is still missing (logged once per
-  function instance; SOS still went out by push).
+  function instance). If it names `APNS_*`, no push went out and SOS used SMS / calls.
+- `[Push] SOS alert sent to <guardian>: 1 success, 0 failure` means Apple accepted the push.
+  `[Push] … failed (403 InvalidProviderToken)` = wrong key / key ID / team;
+  `(400 DeviceTokenNotForTopic)` = the key isn't allowed for `com.shoudeng.app`;
+  `[Push] removed … token` = Apple said the phone's token is dead (the app re-registers on next launch).
 - `[Twilio] Call CA… placed` / `[SMS] SOS SMS sent` mean Twilio works. The SOS document's
   `escalationLog` shows each channel (`push`, `sms_fallback`, `voice`, `push_voice_unavailable`, …).
 
@@ -179,9 +201,37 @@ verification.
 talks to this API; both are Google addresses, blocked on mainland networks. Alipay sign-in
 works for people outside the mainland (or roaming) until the API is reachable from China.
 
+## 6. Push notifications (APNs)
+
+The app registers its raw APNs device token (`POST /v1/device/token`; it has no Firebase
+Messaging), so the backend sends straight to Apple over HTTP/2 with token auth
+(`services/apns.ts`). Firebase Cloud Messaging is not used: it can't deliver to raw APNs
+tokens, and it is blocked on mainland-China networks while APNs is not.
+
+1. Apple Developer → Certificates, IDs & Profiles → **Keys** → **+** → name it (e.g.
+   "Lantern APNs"), tick **Apple Push Notifications service (APNs)** → Configure →
+   environment **Sandbox & Production**, key restriction **Team Scoped (All Topics)** or the
+   topic `com.shoudeng.app` → Save → Continue → Register → **Download** `AuthKey_<KEYID>.p8`
+   (Apple lets you download it once; keep it somewhere safe, outside the repo). Note the Key ID.
+   (A key that already has Sign in with Apple can also get APNs ticked — then the same `.p8`
+   and Key ID are used for both.)
+2. Store the key and its ID:
+   ```bash
+   firebase functions:secrets:set APNS_AUTH_KEY --data-file AuthKey_KEYID.p8 --project sweethome-b4e82
+   ```
+   and in `functions/.env`: `APNS_KEY_ID=<KEYID>` (team: `APPLE_TEAM_ID`, default `B98QT5LTWZ`).
+3. Deploy, then raise a real SOS from a TestFlight build to a guardian's phone and check the
+   log lines in §3.
+
+Environments: the app sends `environment: "development"` from Xcode debug builds (APNs
+sandbox) and `"production"` from TestFlight / App Store builds. If Apple answers
+`BadDeviceToken`, the other environment is tried once and the stored value corrected. Tokens
+Apple reports as `Unregistered` (410), or bad on both hosts, are deleted.
+
 ## Behaviour when something is missing
 
-Nothing throws. SMS returns "not sent" (push is the primary channel; SMS is only the fallback
+Nothing throws. Without `APNS_AUTH_KEY` / `APNS_KEY_ID` no push is sent and SOS counts as
+"push failed", so guardians get the SMS fallback and calls. SMS returns "not sent" (push is the primary channel; SMS is only the fallback
 when push fails or a guardian has no app), each voice round is replaced by an SOS push reminder
 (`push_voice_unavailable`), emergency contacts without the app get no text, and addresses are
 left out of geocoded views. One `[Config]` error per instance names the missing keys.

@@ -180,7 +180,7 @@ describe("heartbeat-missing check parses BigQuery timestamps", () => {
     const { sentMessages } = require("./helpers/fakeAdmin");
     expect(await checkUser("mom", "Mom", now)).toBe(true);
     expect(sentMessages).toHaveLength(1);
-    expect(sentMessages[0].notification.body).toContain("60 minutes");
+    expect(sentMessages[0].payload.aps.alert.body).toContain("60 minutes");
     // Second run for the same silence → no duplicate alert
     expect(await checkUser("mom", "Mom", now)).toBe(false);
     expect(sentMessages).toHaveLength(1);

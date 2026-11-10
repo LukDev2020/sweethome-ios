@@ -1,5 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import { sendPushToUser } from "../services/push";
+import { PUSH_SECRETS } from "../config/params";
 
 import { localTime } from "../services/localTime";
 
@@ -10,7 +12,9 @@ const db = admin.firestore();
  * checks if a check-in was due and not confirmed within the window.
  * If consecutiveMisses >= gracePeriodMisses, escalates to guardians.
  */
-export const checkSilentAlarms = functions.pubsub
+export const checkSilentAlarms = functions
+  .runWith({ secrets: PUSH_SECRETS })
+  .pubsub
   .schedule("every 5 minutes")
   .onRun(async () => {
     const now = new Date();
@@ -82,25 +86,10 @@ export const checkSilentAlarms = functions.pubsub
   });
 
 async function sendCheckInPush(userId: string): Promise<void> {
-  const tokensSnapshot = await db
-    .collection("device_tokens")
-    .where("userId", "==", userId)
-    .get();
-
-  const tokens = tokensSnapshot.docs.map((d) => d.data().token);
-  if (tokens.length === 0) return;
-
-  try {
-    await admin.messaging().sendEachForMulticast({
-      tokens,
-      data: { action: "silent_alarm_checkin" },
-      apns: {
-        payload: { aps: { "content-available": 1 } },
-      },
-    });
-  } catch (err) {
-    console.error(`[SilentAlarm] Failed to send check-in push to ${userId}:`, err);
-  }
+  await sendPushToUser(userId, {
+    data: { action: "silent_alarm_checkin" },
+    aps: { "content-available": 1 },
+  }, "silent alarm check-in");
 }
 
 async function escalateToGuardians(userId: string): Promise<void> {
@@ -120,29 +109,16 @@ async function escalateToGuardians(userId: string): Promise<void> {
 
   for (const linkDoc of linksSnapshot.docs) {
     const guardianId = linkDoc.data().guardianId;
-    const tokensSnapshot = await db
-      .collection("device_tokens")
-      .where("userId", "==", guardianId)
-      .get();
-
-    const tokens = tokensSnapshot.docs.map((d) => d.data().token);
-    if (tokens.length === 0) continue;
-
-    try {
-      await admin.messaging().sendEachForMulticast({
-        tokens,
-        notification: {
-          title: "沉默报警触发",
-          body: `${userName}连续多次未确认安全签到，请立即确认其状况。`,
-        },
-        data: {
-          action: "silent_alarm_escalation",
-          protectedPersonId: userId,
-        },
-      });
-    } catch (err) {
-      console.error(`[SilentAlarm] Failed to notify guardian ${guardianId}:`, err);
-    }
+    await sendPushToUser(guardianId, {
+      notification: {
+        title: "沉默报警触发",
+        body: `${userName}连续多次未确认安全签到，请立即确认其状况。`,
+      },
+      data: {
+        action: "silent_alarm_escalation",
+        protectedPersonId: userId,
+      },
+    }, "silent alarm escalation");
   }
 
   // Log escalation

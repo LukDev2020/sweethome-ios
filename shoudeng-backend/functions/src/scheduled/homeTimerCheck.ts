@@ -1,5 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import { sendPushToUser } from "../services/push";
+import { PUSH_SECRETS } from "../config/params";
 import { checkOverdueShifts, checkStillOk } from "../services/crew";
 import { escalateUnansweredFalls } from "../services/safetyEvents";
 
@@ -9,7 +11,9 @@ const db = admin.firestore();
  * Scheduled function: runs every 1 minute.
  * Checks for expired home timers and sends escalation notifications to guardians.
  */
-export const checkHomeTimerExpiry = functions.pubsub
+export const checkHomeTimerExpiry = functions
+  .runWith({ secrets: PUSH_SECRETS })
+  .pubsub
   .schedule("every 1 minutes")
   .onRun(async () => {
     // Rider shifts past their planned end without a check-in (same 1-minute cadence)
@@ -74,42 +78,21 @@ export const checkHomeTimerExpiry = functions.pubsub
 
         for (const linkDoc of linksSnapshot.docs) {
           const guardianId = linkDoc.data().guardianId;
-
-          const tokenSnapshot = await db
-            .collection("device_tokens")
-            .where("userId", "==", guardianId)
-            .get();
-
-          const tokens = tokenSnapshot.docs.map((d) => d.data().token);
-          if (tokens.length > 0) {
-            try {
-              await admin.messaging().sendEachForMulticast({
-                tokens,
-                notification: {
-                  title: "回家计时超时",
-                  body: `${userName}设置的「${timer.label}」计时已到期，但未关闭`,
-                },
-                apns: {
-                  headers: { "apns-priority": "10" },
-                  payload: {
-                    aps: {
-                      sound: "default",
-                      "interruption-level": "time-sensitive",
-                    },
-                  },
-                },
-                data: {
-                  action: "home_timer_expired",
-                  userId,
-                },
-              });
-            } catch (e) {
-              console.error(
-                `[HomeTimer] Failed to notify guardian ${guardianId}:`,
-                e
-              );
-            }
-          }
+          await sendPushToUser(guardianId, {
+            notification: {
+              title: "回家计时超时",
+              body: `${userName}设置的「${timer.label}」计时已到期，但未关闭`,
+            },
+            priority: 10,
+            aps: {
+              sound: "default",
+              "interruption-level": "time-sensitive",
+            },
+            data: {
+              action: "home_timer_expired",
+              userId,
+            },
+          }, "home timer expired");
         }
 
         console.log(

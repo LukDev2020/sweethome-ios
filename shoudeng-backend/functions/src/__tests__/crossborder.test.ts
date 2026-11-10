@@ -154,13 +154,17 @@ describe("Cross-Border — SMS Delivery for +86", () => {
   });
 });
 
-describe("Cross-Border — FCM/APNs Pathway", () => {
-  it("FCM uses APNs headers for iOS delivery", () => {
-    expect(fcmSource).toContain("apns-priority");
-    expect(fcmSource).toContain("apns-push-type");
+describe("Cross-Border — APNs Pathway", () => {
+  const apnsSource = readSource("services/apns.ts");
+
+  it("push goes straight to Apple (APNs is reachable from mainland China; FCM isn't)", () => {
+    expect(apnsSource).toContain('production: "https://api.push.apple.com"');
+    expect(apnsSource).toContain("apns-priority");
+    expect(apnsSource).toContain("apns-push-type");
+    expect(fcmSource).not.toContain("messaging()");
   });
 
-  it("FCM sends content-available for background push (heartbeat wake)", () => {
+  it("sends content-available for background push (heartbeat wake)", () => {
     expect(fcmSource).toContain('"content-available"');
     expect(fcmSource).toContain("heartbeat_wake");
   });

@@ -253,9 +253,18 @@ describe("Performance — iOS Adaptive Location Intervals", () => {
   });
 });
 
-describe("Performance — FCM Multicast", () => {
-  it("uses sendEachForMulticast (handles up to 500 tokens)", () => {
-    expect(fcmSource).toContain("sendEachForMulticast");
+describe("Performance — APNs push", () => {
+  const pushSource = readSource("services/push.ts");
+  const apnsSource = readSource("services/apns.ts");
+
+  it("sends to all of a user's devices in parallel", () => {
+    expect(pushSource).toContain("Promise.all(devices.map((d) => sendApns(");
+  });
+
+  it("reuses one HTTP/2 connection per APNs host and one JWT for 40 minutes", () => {
+    expect(apnsSource).toContain("http2.connect(origin)");
+    expect(apnsSource).toContain("sessions.get(origin)");
+    expect(apnsSource).toContain("const JWT_REUSE_SECONDS = 40 * 60");
   });
 
   it("logs success and failure counts", () => {

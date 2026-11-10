@@ -1,5 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import { PUSH_SECRETS } from "../config/params";
 import { getLatestHeartbeat, bqTimestampToIso } from "../services/bigquery";
 import { sendHeartbeatMissingAlert } from "../services/fcm";
 
@@ -13,7 +14,9 @@ const HEARTBEAT_MISSING_THRESHOLD_MIN = 30;
  * Checks for protected persons whose heartbeat is missing beyond threshold.
  * Sends alert to their guardians.
  */
-export const checkHeartbeatMissing = functions.pubsub
+export const checkHeartbeatMissing = functions
+  .runWith({ secrets: PUSH_SECRETS })
+  .pubsub
   .schedule("every 5 minutes")
   .onRun(async () => {
     console.log("[Scheduled] Running heartbeat missing check");

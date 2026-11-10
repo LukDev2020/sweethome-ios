@@ -13,6 +13,8 @@
  */
 import * as fs from "fs";
 import * as path from "path";
+import * as crypto from "crypto";
+import { __setApnsTransportForTests, __resetApnsForTests } from "../../services/apns";
 
 // ---------------------------------------------------------------------------
 // Timestamp / FieldValue
@@ -341,21 +343,44 @@ class FakeTransaction extends FakeWriteBatch {
 // Messaging / Auth
 // ---------------------------------------------------------------------------
 
-export const sentMessages: any[] = [];
+/**
+ * Push goes straight to Apple (services/apns.ts). Every APNs request is recorded:
+ * `{ token, environment, headers, payload }` where payload is the JSON body
+ * (`payload.aps.alert.body`, data keys like `payload.action` at the top level).
+ * Tokens in `failingTokens` get 410 Unregistered.
+ */
+export interface SentPush {
+  token: string;
+  environment: "production" | "sandbox";
+  headers: Record<string, string>;
+  payload: any;
+}
+export const sentMessages: SentPush[] = [];
 export const failingTokens = new Set<string>();
 
-const messaging = {
-  sendEachForMulticast: async (msg: any) => {
-    sentMessages.push(clone(msg));
-    const responses = (msg.tokens as string[]).map((t) =>
-      failingTokens.has(t)
-        ? { success: false, error: { code: "messaging/registration-token-not-registered" } }
-        : { success: true, messageId: `m_${sentMessages.length}` });
-    const successCount = responses.filter((r) => r.success).length;
-    return { successCount, failureCount: responses.length - successCount, responses };
-  },
-  send: async (msg: any) => { sentMessages.push(clone(msg)); return `m_${sentMessages.length}`; },
-};
+/** A throwaway P-256 key so the real JWT signing runs in every test. */
+export const testApnsKey = crypto.generateKeyPairSync("ec", { namedCurve: "P-256" })
+  .privateKey.export({ type: "pkcs8", format: "pem" }).toString();
+
+function installFakeApns() {
+  process.env.APNS_AUTH_KEY = testApnsKey;
+  process.env.APNS_KEY_ID = "TESTKEY123";
+  __resetApnsForTests();
+  __setApnsTransportForTests(async (req) => {
+    const token = req.path.replace("/3/device/", "");
+    if (failingTokens.has(token)) {
+      return { status: 410, headers: {}, body: JSON.stringify({ reason: "Unregistered", timestamp: Date.now() }) };
+    }
+    sentMessages.push({
+      token,
+      environment: req.origin.includes("sandbox") ? "sandbox" : "production",
+      headers: req.headers,
+      payload: JSON.parse(req.body),
+    });
+    return { status: 200, headers: { "apns-id": `apns-${sentMessages.length}` }, body: "" };
+  });
+}
+installFakeApns();
 
 /** Map of bearer token -> uid accepted by verifyIdToken. */
 export const validTokens = new Map<string, string>();
@@ -404,7 +429,6 @@ export const fakeAdminModule = {
   initializeApp: () => ({}),
   apps: [{}],
   firestore: firestoreFn,
-  messaging: () => messaging,
   auth: () => auth,
   storage: () => ({
     bucket: () => ({
@@ -427,6 +451,7 @@ export function resetFakeAdmin() {
   savedFiles.clear();
   sentMessages.length = 0;
   failingTokens.clear();
+  installFakeApns();
   validTokens.clear();
   autoId = 0;
   enforceIndexes = true;
