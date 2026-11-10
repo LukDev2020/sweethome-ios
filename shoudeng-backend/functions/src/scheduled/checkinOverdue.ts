@@ -1,5 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import { PUSH_SECRETS } from "../config/params";
 import { sendCheckinReminder } from "../services/fcm";
 
 const db = admin.firestore();
@@ -12,7 +13,9 @@ const CHECKIN_OVERDUE_HOURS = 8;
  * Checks for protected persons who haven't checked in within threshold.
  * Sends reminder to their guardians.
  */
-export const checkCheckinOverdue = functions.pubsub
+export const checkCheckinOverdue = functions
+  .runWith({ secrets: PUSH_SECRETS })
+  .pubsub
   .schedule("every 15 minutes")
   .onRun(async () => {
     console.log("[Scheduled] Running check-in overdue check");

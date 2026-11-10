@@ -164,7 +164,7 @@ describe("escalation over the allowance falls back to push, never blocks the SOS
     await runAll();
     expect(mockCalls).toHaveLength(0);
     expect(channels().filter((c) => c === "push_fair_use_limit")).toHaveLength(6);
-    const pushes = sentMessages.filter((m) => m.data?.action === "sos_alert").length;
+    const pushes = sentMessages.filter((m) => m.payload.action === "sos_alert").length;
     expect(pushes).toBeGreaterThanOrEqual(6 + 2); // hop1/hop2 pushes + one per skipped call
     expect(sos().fairUseLimited).toBe(true);
     expect(sos().escalationState).toBe("exhausted");

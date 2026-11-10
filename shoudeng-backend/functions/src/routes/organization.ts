@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
+import { sendPushToUser } from "../services/push";
 
 import { partnerCodeFor, previewPartner, joinPartner, riderStats, PartnerError } from "../services/partners";
 
@@ -326,43 +327,26 @@ router.post("/alert", async (req: Request, res: Response) => {
       }
 
       // Send push notification
-      const tokenSnapshot = await db
-        .collection("device_tokens")
-        .where("userId", "==", member.userId)
-        .get();
-
-      const tokens = tokenSnapshot.docs.map((d) => d.data().token);
-      if (tokens.length > 0) {
-        try {
-          await admin.messaging().sendEachForMulticast({
-            tokens,
-            notification: { title, body },
-            apns: {
-              headers: {
-                "apns-priority": severity === "critical" ? "10" : "5",
-              },
-              payload: {
-                aps: {
-                  sound: "default",
-                  // Critical Alerts are reserved for personal SOS alerts;
-                  // urgent organization broadcasts are Time Sensitive.
-                  "interruption-level":
-                    severity === "critical"
-                      ? "time-sensitive"
-                      : "active",
-                },
-              },
-            },
-            data: {
-              action: "org_alert",
-              alertId: alertRef.id,
-              orgId,
-            },
-          });
-          sentCount++;
-        } catch {
-          // Continue on individual send failure
-        }
+      const pushed = await sendPushToUser(member.userId, {
+        notification: { title, body },
+        priority: severity === "critical" ? 10 : 5,
+        aps: {
+          sound: "default",
+          // Critical Alerts are reserved for personal SOS alerts;
+          // urgent organization broadcasts are Time Sensitive.
+          "interruption-level":
+            severity === "critical"
+              ? "time-sensitive"
+              : "active",
+        },
+        data: {
+          action: "org_alert",
+          alertId: alertRef.id,
+          orgId,
+        },
+      }, "org alert");
+      if (!pushed.allFailed) {
+        sentCount++;
       }
 
       // Create a roll call entry for tracking responses

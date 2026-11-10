@@ -24,7 +24,11 @@ import {
   reportMissingConfig,
   __resetConfigReportsForTests,
   TWILIO_SECRETS,
+  PUSH_SECRETS,
+  SOS_SECRETS,
   API_SECRETS,
+  apnsConfig,
+  missingApnsParams,
 } from "../config/params";
 import { sendSOSSms, sendEmergencyContactSms, __setSmsClientForTests } from "../services/sms";
 import { initiateVoiceCall, verifyTwilioSignature, __setTwilioClientForTests } from "../services/twilio";
@@ -98,6 +102,33 @@ describe("twilioConfig()", () => {
   });
 });
 
+describe("apnsConfig()", () => {
+  const prev = { key: process.env.APNS_AUTH_KEY, id: process.env.APNS_KEY_ID };
+  afterEach(() => {
+    process.env.APNS_AUTH_KEY = prev.key;
+    process.env.APNS_KEY_ID = prev.id;
+    delete process.env.APPLE_TEAM_ID;
+  });
+
+  it("team B98QT5LTWZ and topic com.shoudeng.app by default", () => {
+    process.env.APNS_AUTH_KEY = "-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----";
+    process.env.APNS_KEY_ID = " ABC123DEFG ";
+    expect(apnsConfig()).toEqual({
+      teamId: "B98QT5LTWZ",
+      keyId: "ABC123DEFG",
+      privateKey: "-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----",
+      topic: "com.shoudeng.app",
+    });
+    expect(missingApnsParams()).toEqual([]);
+  });
+
+  it("\"disabled\" / unset means push is off", () => {
+    process.env.APNS_AUTH_KEY = "disabled";
+    delete process.env.APNS_KEY_ID;
+    expect(missingApnsParams()).toEqual(["APNS_KEY_ID", "APNS_AUTH_KEY"]);
+  });
+});
+
 describe("missing configuration is reported once", () => {
   it("reportMissingConfig logs one error per feature", () => {
     reportMissingConfig("SMS", ["TWILIO_AUTH_TOKEN"], "Push only.");
@@ -168,25 +199,110 @@ describe("configured values reach Twilio", () => {
 });
 
 describe("secrets are bound to the functions that use them", () => {
+  const cleanups: (() => void)[] = [];
+  const afterThis = (fn: () => void) => cleanups.push(fn);
+  afterEach(() => { while (cleanups.length) cleanups.pop()!(); });
+
   const secretNames = (fn: unknown) =>
     ((fn as { __endpoint?: { secretEnvironmentVariables?: { key: string }[] } }).__endpoint
       ?.secretEnvironmentVariables ?? []).map((s) => s.key).sort();
 
-  it("onSOSCreated and advanceEscalations get the Twilio secrets", () => {
+  it("onSOSCreated and advanceEscalations get the Twilio secrets and the APNs key", () => {
     const prev = process.env.GCLOUD_PROJECT;
     process.env.GCLOUD_PROJECT = "demo-test"; // firestore triggers resolve the database path
     try {
-      const twilio = TWILIO_SECRETS.map((s) => s.name).sort();
-      expect(secretNames(require("../triggers/onSOSCreated").onSOSCreated)).toEqual(twilio);
-      expect(secretNames(require("../scheduled/escalationCheck").advanceEscalations)).toEqual(twilio);
+      const sos = SOS_SECRETS.map((s) => s.name).sort();
+      expect(sos).toEqual(["APNS_AUTH_KEY", ...TWILIO_SECRETS.map((s) => s.name)].sort());
+      expect(secretNames(require("../triggers/onSOSCreated").onSOSCreated)).toEqual(sos);
+      expect(secretNames(require("../scheduled/escalationCheck").advanceEscalations)).toEqual(sos);
     } finally {
       if (prev === undefined) delete process.env.GCLOUD_PROJECT;
       else process.env.GCLOUD_PROJECT = prev;
     }
   });
 
-  it("api gets Twilio + Google Maps", () => {
+  it("api gets Twilio + APNs + Google Maps + Apple / Alipay sign-in", () => {
+    expect(API_SECRETS.map((s) => s.name)).toContain("APNS_AUTH_KEY");
     expect(secretNames(require("../index").api)).toEqual(API_SECRETS.map((s) => s.name).sort());
+  });
+
+  it("the scheduled checks that push get the APNs key", () => {
+    const prev = process.env.GCLOUD_PROJECT;
+    process.env.GCLOUD_PROJECT = "demo-test"; // scheduled functions resolve their topic
+    afterThis(() => {
+      if (prev === undefined) delete process.env.GCLOUD_PROJECT;
+      else process.env.GCLOUD_PROJECT = prev;
+    });
+    const push = PUSH_SECRETS.map((s) => s.name);
+    expect(push).toEqual(["APNS_AUTH_KEY"]);
+    expect(secretNames(require("../scheduled/heartbeatCheck").checkHeartbeatMissing)).toEqual(push);
+    expect(secretNames(require("../scheduled/checkinOverdue").checkCheckinOverdue)).toEqual(push);
+    expect(secretNames(require("../scheduled/homeTimerCheck").checkHomeTimerExpiry)).toEqual(push);
+    expect(secretNames(require("../scheduled/silentAlarmCheck").checkSilentAlarms)).toEqual(push);
+  });
+
+  it("every deployed function that can reach services/push binds APNS_AUTH_KEY", () => {
+    // Walk the local import graph from each exported function's module.
+    const srcRoot = path.join(__dirname, "..");
+    const importsOf = (file: string): string[] => {
+      const src = fs.readFileSync(file, "utf8");
+      const out: string[] = [];
+      for (const m of src.matchAll(/(?:from|require\()\s*"(\.[^"]+)"/g)) {
+        const base = path.resolve(path.dirname(file), m[1]);
+        for (const cand of [`${base}.ts`, path.join(base, "index.ts")]) {
+          if (fs.existsSync(cand)) { out.push(cand); break; }
+        }
+      }
+      return out;
+    };
+    const reaches = (entry: string, target: string): boolean => {
+      const seen = new Set<string>();
+      const stack = [entry];
+      while (stack.length) {
+        const f = stack.pop()!;
+        if (f === target) return true;
+        if (seen.has(f)) continue;
+        seen.add(f);
+        stack.push(...importsOf(f));
+      }
+      return false;
+    };
+    const pushModule = path.join(srcRoot, "services", "push.ts");
+    const prev = process.env.GCLOUD_PROJECT;
+    process.env.GCLOUD_PROJECT = "demo-test";
+    try {
+      const index = require("../index");
+      const modules: Record<string, string> = { api: path.join(srcRoot, "app.ts") };
+      for (const m of fs.readFileSync(path.join(srcRoot, "index.ts"), "utf8")
+        .matchAll(/export \{ (\w+) \} from "\.\/([^"]+)"/g)) {
+        modules[m[1]] = path.join(srcRoot, `${m[2]}.ts`);
+      }
+      const unbound = Object.entries(modules)
+        .filter(([, file]) => reaches(file, pushModule))
+        .filter(([name]) => !secretNames(index[name]).includes("APNS_AUTH_KEY"))
+        .map(([name]) => name);
+      expect(Object.keys(modules).length).toBeGreaterThanOrEqual(9);
+      expect(unbound).toEqual([]);
+    } finally {
+      if (prev === undefined) delete process.env.GCLOUD_PROJECT;
+      else process.env.GCLOUD_PROJECT = prev;
+    }
+  });
+
+  it("nothing sends through Firebase Cloud Messaging (the app registers raw APNs tokens)", () => {
+    const offenders: string[] = [];
+    const walk = (dir: string) => {
+      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        const p = path.join(dir, e.name);
+        if (e.isDirectory()) {
+          if (e.name !== "__tests__") walk(p);
+        } else if (p.endsWith(".ts") && /\.messaging\(\)/.test(fs.readFileSync(p, "utf8"))) {
+          offenders.push(path.relative(path.join(__dirname, ".."), p));
+        }
+      }
+    };
+    walk(path.join(__dirname, ".."));
+    expect(offenders).toEqual([]);
   });
 
   it("no source file reads functions.config() (Runtime Config shuts down March 2027)", () => {

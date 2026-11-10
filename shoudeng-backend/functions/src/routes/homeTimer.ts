@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
+import { sendPushToUser } from "../services/push";
 
 const router = Router();
 const db = admin.firestore();
@@ -136,17 +137,13 @@ router.post("/dismiss", async (req: Request, res: Response) => {
 
     for (const linkDoc of linksSnapshot.docs) {
       const guardianId = linkDoc.data().guardianId;
-      const tokens = await getTokensForUser(guardianId);
-      if (tokens.length > 0) {
-        await admin.messaging().sendEachForMulticast({
-          tokens,
-          notification: {
-            title: "已安全到达",
-            body: `${userName}已关闭回家计时器`,
-          },
-          data: { action: "home_timer_dismissed" },
-        });
-      }
+      await sendPushToUser(guardianId, {
+        notification: {
+          title: "已安全到达",
+          body: `${userName}已关闭回家计时器`,
+        },
+        data: { action: "home_timer_dismissed" },
+      }, "home timer dismissed");
     }
 
     res.json({ success: true });
@@ -208,24 +205,20 @@ router.post("/expire", async (req: Request, res: Response) => {
 
     for (const linkDoc of linksSnapshot.docs) {
       const guardianId = linkDoc.data().guardianId;
-      const tokens = await getTokensForUser(guardianId);
-      if (tokens.length > 0) {
-        await admin.messaging().sendEachForMulticast({
-          tokens,
-          notification: {
-            title: "回家计时器超时",
-            body,
-          },
-          data: {
-            action: "home_timer_expired",
-            protectedPersonId: uid,
-            destination: destination || "",
-            routeNotes: routeNotes || "",
-            lastLatitude: String(timerData.latitude || ""),
-            lastLongitude: String(timerData.longitude || ""),
-          },
-        });
-      }
+      await sendPushToUser(guardianId, {
+        notification: {
+          title: "回家计时器超时",
+          body,
+        },
+        data: {
+          action: "home_timer_expired",
+          protectedPersonId: uid,
+          destination: destination || "",
+          routeNotes: routeNotes || "",
+          lastLatitude: String(timerData.latitude || ""),
+          lastLongitude: String(timerData.longitude || ""),
+        },
+      }, "home timer expired");
     }
 
     res.json({ success: true });
@@ -272,13 +265,5 @@ router.get("/guardian", async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to get timers" });
   }
 });
-
-async function getTokensForUser(userId: string): Promise<string[]> {
-  const snapshot = await db
-    .collection("device_tokens")
-    .where("userId", "==", userId)
-    .get();
-  return snapshot.docs.map((doc) => doc.data().token);
-}
 
 export default router;

@@ -151,7 +151,7 @@ describe("SOS trigger / resolve", () => {
     const safe = await request(app).post("/v1/sos/resolve").set(auth("sarah"))
       .send({ sosEventId: t.body.sosEventId, resolution: "guardianConfirmedSafe" });
     expect(safe.status).toBe(200);
-    expect(sentMessages.some((m) => m.tokens.includes("tok-mom") && m.data.action === "sos_resolved")).toBe(true);
+    expect(sentMessages.some((m) => m.token === "tok-mom" && m.payload.action === "sos_resolved")).toBe(true);
   });
 
   it("GET /v1/sos/active reflects real escalation state for the person", async () => {
@@ -173,7 +173,7 @@ describe("POST /v1/sos/acknowledge", () => {
     const ok = await request(app).post("/v1/sos/acknowledge").set(auth("sarah")).send({ sosEventId: id });
     expect(ok.body).toMatchObject({ success: true, acknowledgedBy: "sarah", alreadyAcknowledged: false });
     expect(readDoc(`sos_events/${id}`)!.escalationState).toBe("frozen");
-    expect(sentMessages.map((m) => m.tokens[0]).sort()).toEqual(["tok-kevin", "tok-mom"]);
+    expect(sentMessages.map((m) => m.token).sort()).toEqual(["tok-kevin", "tok-mom"]);
     // "Mom is safe" is still the separate close action
     await request(app).post("/v1/sos/resolve").set(auth("sarah")).send({ sosEventId: id, resolution: "guardianConfirmedSafe" });
     expect((await request(app).post("/v1/sos/acknowledge").set(auth("kevin")).send({ sosEventId: id })).status).toBe(409);
@@ -229,10 +229,10 @@ describe("Home Safe → guardians", () => {
     const res = await request(app).post("/v1/checkin").set(auth("mom")).send({ userId: "mom" });
     expect(res.status).toBe(200);
     expect(res.body.guardiansNotified).toBe(2);
-    const toSarah = sentMessages.find((m) => m.tokens[0] === "tok-sarah")!;
-    expect(toSarah.notification.title).toBe("Mom is home safe");
-    expect(toSarah.notification.body).toMatch(/^Chengdu · \d{2}:\d{2}$/);
-    expect(toSarah.data).toMatchObject({ action: "checkin_safe", person_id: "mom" });
+    const toSarah = sentMessages.find((m) => m.token === "tok-sarah")!;
+    expect(toSarah.payload.aps.alert.title).toBe("Mom is home safe");
+    expect(toSarah.payload.aps.alert.body).toMatch(/^Chengdu · \d{2}:\d{2}$/);
+    expect(toSarah.payload).toMatchObject({ action: "checkin_safe", person_id: "mom" });
 
     const again = await request(app).post("/v1/checkin").set(auth("mom")).send({ userId: "mom" });
     expect(again.body.guardiansNotified).toBe(0);
@@ -245,7 +245,7 @@ describe("Home Safe → guardians", () => {
     seed("users/kevin", { displayName: "Kevin", notificationPrefs: { checkinReminder: false } });
     const res = await request(app).post("/v1/checkin").set(auth("mom")).send({ userId: "mom" });
     expect(res.body.guardiansNotified).toBe(1);
-    expect(sentMessages.map((m) => m.tokens[0])).toEqual(["tok-sarah"]);
+    expect(sentMessages.map((m) => m.token)).toEqual(["tok-sarah"]);
   });
 });
 

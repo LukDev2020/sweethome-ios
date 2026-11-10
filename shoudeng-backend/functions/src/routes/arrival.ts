@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
+import { sendPushToUser } from "../services/push";
 
 const router = Router();
 const db = admin.firestore();
@@ -58,20 +59,16 @@ router.post("/", async (req: Request, res: Response) => {
 
     for (const linkDoc of linksSnapshot.docs) {
       const guardianId = linkDoc.data().guardianId;
-      const tokens = await getTokensForUser(guardianId);
-      if (tokens.length > 0) {
-        await admin.messaging().sendEachForMulticast({
-          tokens,
-          notification: {
-            title: "到达报告",
-            body: `${userName}已安全到达${placeName ? "「" + placeName + "」" : ""}`,
-          },
-          data: {
-            action: "arrival_report",
-            reportId,
-          },
-        });
-      }
+      await sendPushToUser(guardianId, {
+        notification: {
+          title: "到达报告",
+          body: `${userName}已安全到达${placeName ? "「" + placeName + "」" : ""}`,
+        },
+        data: {
+          action: "arrival_report",
+          reportId,
+        },
+      }, "arrival report");
     }
 
     res.status(201).json({ success: true, reportId });
@@ -149,13 +146,5 @@ router.get("/recent", async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to fetch recent reports" });
   }
 });
-
-async function getTokensForUser(userId: string): Promise<string[]> {
-  const snapshot = await db
-    .collection("device_tokens")
-    .where("userId", "==", userId)
-    .get();
-  return snapshot.docs.map((doc) => doc.data().token);
-}
 
 export default router;

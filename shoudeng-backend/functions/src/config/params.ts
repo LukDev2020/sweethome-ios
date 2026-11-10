@@ -5,8 +5,9 @@
  * Secrets live in Cloud Secret Manager and are only visible to functions that list
  * them in runWith({ secrets }). Plain values come from functions/.env.
  *
- * Unset (or the value "disabled") never throws: SMS / voice calls / geocoding are
- * skipped, one clear error is logged per instance, and SOS still goes out by push.
+ * Unset (or the value "disabled") never throws: push / SMS / voice calls / geocoding
+ * are skipped and one clear error is logged per instance. SOS uses whichever of push,
+ * SMS and calls is configured (no push → SMS fallback).
  */
 import { defineSecret, defineString } from "firebase-functions/params";
 
@@ -17,6 +18,8 @@ export const GOOGLE_MAPS_API_KEY = defineSecret("GOOGLE_MAPS_API_KEY");
 export const APPLE_SIWA_PRIVATE_KEY = defineSecret("APPLE_SIWA_PRIVATE_KEY");
 /** Alipay app private key (RSA2): signs calls to Alipay for "Sign in with Alipay" */
 export const ALIPAY_PRIVATE_KEY = defineSecret("ALIPAY_PRIVATE_KEY");
+/** APNs auth key (.p8 contents, Apple Developer → Keys → APNs): every push notification, SOS included */
+export const APNS_AUTH_KEY = defineSecret("APNS_AUTH_KEY");
 
 /** Twilio number (E.164) for SOS voice calls, and for SMS unless TWILIO_SMS_FROM is set. */
 export const TWILIO_FROM_NUMBER = defineString("TWILIO_FROM_NUMBER", {
@@ -35,6 +38,10 @@ export const APPLE_SIWA_KEY_ID = defineString("APPLE_SIWA_KEY_ID", {
 export const APPLE_TEAM_ID = defineString("APPLE_TEAM_ID", {
   description: "Apple Developer Team ID; empty = B98QT5LTWZ",
 });
+/** Key ID of APNS_AUTH_KEY (Apple Developer → Keys) */
+export const APNS_KEY_ID = defineString("APNS_KEY_ID", {
+  description: "Key ID of the APNs auth key (Apple Developer → Certificates, IDs & Profiles → Keys); empty = no push",
+});
 /** Alipay Open Platform app id (支付宝开放平台 → 应用 → APPID) */
 export const ALIPAY_APP_ID = defineString("ALIPAY_APP_ID", {
   description: "Alipay Open Platform APPID for Sign in with Alipay; empty = Alipay sign-in off",
@@ -50,8 +57,14 @@ export const ALIPAY_REDIRECT_URI = defineString("ALIPAY_REDIRECT_URI", {
 
 /** Bind to every function that sends SMS / places calls / verifies Twilio webhooks. */
 export const TWILIO_SECRETS = [TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN];
-/** The `api` function also reverse-geocodes and signs people in with Apple and Alipay. */
-export const API_SECRETS = [...TWILIO_SECRETS, GOOGLE_MAPS_API_KEY, APPLE_SIWA_PRIVATE_KEY, ALIPAY_PRIVATE_KEY];
+/** Bind to every function that sends push notifications (services/push.ts → APNs). */
+export const PUSH_SECRETS = [APNS_AUTH_KEY];
+/** SOS functions (onSOSCreated, advanceEscalations): push, SMS and calls. */
+export const SOS_SECRETS = [...TWILIO_SECRETS, ...PUSH_SECRETS];
+/** The `api` function also pushes, reverse-geocodes and signs people in with Apple and Alipay. */
+export const API_SECRETS = [
+  ...TWILIO_SECRETS, ...PUSH_SECRETS, GOOGLE_MAPS_API_KEY, APPLE_SIWA_PRIVATE_KEY, ALIPAY_PRIVATE_KEY,
+];
 
 type Param = { name: string; value(): string };
 
@@ -109,6 +122,33 @@ export function appleSignInConfig(): AppleSignInConfig {
     keyId: read(APPLE_SIWA_KEY_ID),
     privateKey: read(APPLE_SIWA_PRIVATE_KEY),
   };
+}
+
+/** The app's bundle ID: the APNs topic of every alert and background push. */
+export const APNS_TOPIC = "com.shoudeng.app";
+
+export interface ApnsConfig {
+  teamId: string;
+  keyId?: string;
+  privateKey?: string;
+  topic: string;
+}
+
+export function apnsConfig(): ApnsConfig {
+  return {
+    teamId: read(APPLE_TEAM_ID) ?? "B98QT5LTWZ",
+    keyId: read(APNS_KEY_ID),
+    privateKey: read(APNS_AUTH_KEY),
+    topic: APNS_TOPIC,
+  };
+}
+
+/** Names of the APNs params still missing ([] = push is on). */
+export function missingApnsParams(cfg = apnsConfig()): string[] {
+  const missing: string[] = [];
+  if (!cfg.keyId) missing.push(APNS_KEY_ID.name);
+  if (!cfg.privateKey) missing.push(APNS_AUTH_KEY.name);
+  return missing;
 }
 
 export interface AlipayConfig {

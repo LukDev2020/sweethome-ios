@@ -8,9 +8,13 @@
 import express from "express";
 import request from "supertest";
 
+import * as crypto from "crypto";
+import { __setApnsTransportForTests, __resetApnsForTests, ApnsTransportRequest } from "../services/apns";
+
 const mockUsers: Record<string, any> = {};
-const mockSend = jest.fn();
 const mockUpdate = jest.fn();
+/** APNs requests, as sent to Apple */
+const sent: ApnsTransportRequest[] = [];
 
 jest.mock("firebase-admin", () => {
   const collection = jest.fn((name: string) => ({
@@ -23,7 +27,7 @@ jest.mock("firebase-admin", () => {
     })),
     where: jest.fn(() => ({
       get: jest.fn(async () => ({
-        docs: name === "device_tokens" ? [{ data: () => ({ token: "tok-1" }) }] : [],
+        docs: name === "device_tokens" ? [{ ref: {}, data: () => ({ token: "a1b2c3d4", environment: "production" }) }] : [],
       })),
       limit: jest.fn(() => ({ get: jest.fn(async () => ({ docs: [] })) })),
     })),
@@ -34,7 +38,6 @@ jest.mock("firebase-admin", () => {
   return {
     firestore,
     initializeApp: jest.fn(),
-    messaging: jest.fn(() => ({ sendEachForMulticast: mockSend })),
   };
 });
 
@@ -49,9 +52,24 @@ jest.mock("../middleware/rateLimit", () => ({
 import { sendSOSAlert } from "../services/fcm";
 
 function lastAps() {
-  const message = mockSend.mock.calls[mockSend.mock.calls.length - 1][0];
-  return message.apns.payload.aps;
+  return JSON.parse(sent[sent.length - 1].body).aps;
 }
+
+beforeAll(() => {
+  process.env.APNS_AUTH_KEY = crypto.generateKeyPairSync("ec", { namedCurve: "P-256" })
+    .privateKey.export({ type: "pkcs8", format: "pem" }).toString();
+  process.env.APNS_KEY_ID = "TESTKEY123";
+  __resetApnsForTests();
+  __setApnsTransportForTests(async (req) => {
+    sent.push(req);
+    return { status: 200, headers: {}, body: "" };
+  });
+});
+afterAll(() => {
+  __setApnsTransportForTests(null);
+  delete process.env.APNS_AUTH_KEY;
+  delete process.env.APNS_KEY_ID;
+});
 
 describe("SOS push: Critical Alerts only with guardian consent", () => {
   // Critical alerts also need Apple's entitlement, switched on server-side.
@@ -68,7 +86,7 @@ describe("SOS push: Critical Alerts only with guardian consent", () => {
 
   beforeEach(() => {
     for (const k of Object.keys(mockUsers)) delete mockUsers[k];
-    mockSend.mockResolvedValue({ successCount: 1, failureCount: 0, responses: [{}] });
+    sent.length = 0;
   });
 
   it("sends a critical alert with the critical sound dictionary when the guardian opted in", async () => {
@@ -76,7 +94,9 @@ describe("SOS push: Critical Alerts only with guardian consent", () => {
     await sendSOSAlert("g-on", "Ann", "sos-1");
     const aps = lastAps();
     expect(aps["interruption-level"]).toBe("critical");
-    expect(aps.sound).toEqual({ critical: true, name: "sos_alert.caf", volume: 1.0 });
+    // APNs wants the integer 1 (firebase-admin used to convert true)
+    expect(aps.sound).toEqual({ critical: 1, name: "sos_alert.caf", volume: 1.0 });
+    expect(sent[0].headers).toMatchObject({ "apns-priority": "10", "apns-push-type": "alert" });
   });
 
   it("treats guardians without a stored choice (linked before the setting existed) as opted in", async () => {

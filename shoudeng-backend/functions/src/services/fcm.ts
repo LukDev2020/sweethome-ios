@@ -1,5 +1,11 @@
+/**
+ * Push notification content (per-locale strings, payloads) for every alert the
+ * backend sends. Delivery goes straight to Apple (services/push.ts → services/apns.ts);
+ * the name is historical — FCM can't deliver to the raw APNs tokens the app registers.
+ */
 import { normalizeLocale } from "./locale";
 import * as admin from "firebase-admin";
+import { sendPushToUser, PushResult } from "./push";
 
 const db = admin.firestore();
 
@@ -312,24 +318,13 @@ export function sosApsPayload(title: string, body: string, guardianOptedIn = tru
   const critical = criticalAlertsEnabled() && guardianOptedIn;
   return {
     // A critical alert needs the sound dictionary (critical: 1 in the APNs payload;
-    // firebase-admin converts `true` to 1).
+    // services/push.ts converts `true` to 1).
     sound: critical ? { critical: true, name: "sos_alert.caf", volume: 1.0 } : "sos_alert.caf",
     "interruption-level": critical ? "critical" : "time-sensitive",
     "relevance-score": 1.0,
     category: "SOS_ALERT",
     alert: { title, body },
   };
-}
-
-/**
- * Get all device tokens for a user.
- */
-async function getTokensForUser(userId: string): Promise<string[]> {
-  const snapshot = await db
-    .collection("device_tokens")
-    .where("userId", "==", userId)
-    .get();
-  return snapshot.docs.map((doc) => doc.data().token);
 }
 
 /**
@@ -355,18 +350,7 @@ async function isNotifEnabled(
   return prefs[prefKey] === true;
 }
 
-/**
- * Send SOS critical alert to a guardian.
- */
-/**
- * Result of a push send attempt. Used by callers to decide whether
- * to fall back to SMS.
- */
-export interface PushResult {
-  successCount: number;
-  failureCount: number;
-  allFailed: boolean;
-}
+export type { PushResult };
 
 export interface SOSAlertDetails {
   protectedPersonId?: string;
@@ -376,6 +360,9 @@ export interface SOSAlertDetails {
   longitude?: number | null;
 }
 
+/**
+ * Send SOS critical alert to a guardian.
+ */
 export async function sendSOSAlert(
   guardianId: string,
   protectedPersonName: string,
@@ -388,12 +375,6 @@ export async function sendSOSAlert(
       : detailsOrLocation ?? {};
   // SOS alerts ignore the sosAlerts preference on purpose: a guardian cannot
   // opt out of being told that someone they protect is calling for help.
-  const tokens = await getTokensForUser(guardianId);
-  if (tokens.length === 0) {
-    console.warn(`[FCM] No tokens for guardian ${guardianId}`);
-    return { successCount: 0, failureCount: 0, allFailed: true };
-  }
-
   const locale = await getUserLocale(guardianId);
   const s = getStrings(locale);
   const battery = typeof details.batteryLevel === "number" && details.batteryLevel >= 0
@@ -405,16 +386,11 @@ export async function sendSOSAlert(
   // them off in the app; without consent the SOS is sent as Time Sensitive.
   const critical = await isNotifEnabled(guardianId, "sosCriticalAlerts");
 
-  const message: admin.messaging.MulticastMessage = {
-    tokens,
+  const result = await sendPushToUser(guardianId, {
     notification: { title: s.sosTitle, body },
-    apns: {
-      headers: {
-        "apns-priority": "10",
-        "apns-push-type": "alert",
-      },
-      payload: { aps: sosApsPayload(s.sosTitle, body, critical) as admin.messaging.Aps },
-    },
+    pushType: "alert",
+    priority: 10,
+    aps: sosApsPayload(s.sosTitle, body, critical),
     data: {
       action: "sos_alert",
       sos_id: sosEventId,
@@ -426,44 +402,15 @@ export async function sendSOSAlert(
         lng: String(details.longitude),
       }),
     },
-  };
-
-  try {
-    const response = await admin.messaging().sendEachForMulticast(message);
+  }, "SOS alert");
+  if (result.successCount + result.failureCount === 0) {
+    console.warn(`[Push] No device registered for guardian ${guardianId}`);
+  } else {
     console.log(
-      `[FCM] SOS alert sent to ${guardianId}: ${response.successCount} success, ${response.failureCount} failure`
+      `[Push] SOS alert sent to ${guardianId}: ${result.successCount} success, ${result.failureCount} failure`
     );
-
-    // Clean up invalid tokens (unregistered, invalid argument)
-    const invalidTokenErrors = ["messaging/registration-token-not-registered", "messaging/invalid-argument"];
-    const tokensToRemove: string[] = [];
-    response.responses.forEach((resp, idx) => {
-      if (resp.error && invalidTokenErrors.includes(resp.error.code)) {
-        tokensToRemove.push(tokens[idx]);
-      }
-    });
-    if (tokensToRemove.length > 0) {
-      const batch = db.batch();
-      for (const badToken of tokensToRemove) {
-        const snap = await db.collection("device_tokens")
-          .where("token", "==", badToken)
-          .limit(1)
-          .get();
-        snap.docs.forEach((doc) => batch.delete(doc.ref));
-      }
-      await batch.commit();
-      console.log(`[FCM] Cleaned up ${tokensToRemove.length} invalid tokens for ${guardianId}`);
-    }
-
-    return {
-      successCount: response.successCount,
-      failureCount: response.failureCount,
-      allFailed: response.successCount === 0,
-    };
-  } catch (error) {
-    console.error(`[FCM] Failed to send SOS alert to ${guardianId}:`, error);
-    return { successCount: 0, failureCount: tokens.length, allFailed: true };
   }
+  return result;
 }
 
 /**
@@ -475,36 +422,22 @@ export async function sendCheckinReminder(
 ): Promise<void> {
   if (!(await isNotifEnabled(guardianId, "checkinOverdue"))) return;
 
-  const tokens = await getTokensForUser(guardianId);
-  if (tokens.length === 0) return;
-
   const locale = await getUserLocale(guardianId);
   const s = getStrings(locale);
 
-  const message: admin.messaging.MulticastMessage = {
-    tokens,
+  await sendPushToUser(guardianId, {
     notification: {
       title: s.checkinTitle,
       body: s.checkinBody(protectedPersonName),
     },
-    apns: {
-      payload: {
-        aps: {
-          sound: "default",
-          category: "CHECKIN_REMINDER",
-        },
-      },
+    aps: {
+      sound: "default",
+      category: "CHECKIN_REMINDER",
     },
     data: {
       action: "checkin_reminder",
     },
-  };
-
-  try {
-    await admin.messaging().sendEachForMulticast(message);
-  } catch (error) {
-    console.error(`[FCM] Failed to send checkin reminder:`, error);
-  }
+  }, "check-in reminder");
 }
 
 /**
@@ -517,67 +450,37 @@ export async function sendHeartbeatMissingAlert(
 ): Promise<void> {
   if (!(await isNotifEnabled(guardianId, "checkinOverdue"))) return;
 
-  const tokens = await getTokensForUser(guardianId);
-  if (tokens.length === 0) return;
-
   const locale = await getUserLocale(guardianId);
   const s = getStrings(locale);
 
-  const message: admin.messaging.MulticastMessage = {
-    tokens,
+  await sendPushToUser(guardianId, {
     notification: {
       title: s.heartbeatTitle,
       body: s.heartbeatBody(protectedPersonName, lastSeenMinutes),
     },
-    apns: {
-      payload: {
-        aps: {
-          sound: "default",
-        },
-      },
+    aps: {
+      sound: "default",
     },
     data: {
       action: "heartbeat_missing",
     },
-  };
-
-  try {
-    await admin.messaging().sendEachForMulticast(message);
-  } catch (error) {
-    console.error(`[FCM] Failed to send heartbeat alert:`, error);
-  }
+  }, "heartbeat alert");
 }
 
 /**
  * Send silent push to wake the iOS app for heartbeat.
  */
 export async function sendSilentPush(userId: string): Promise<void> {
-  const tokens = await getTokensForUser(userId);
-  if (tokens.length === 0) return;
-
-  const message: admin.messaging.MulticastMessage = {
-    tokens,
-    apns: {
-      headers: {
-        "apns-priority": "5",
-        "apns-push-type": "background",
-      },
-      payload: {
-        aps: {
-          "content-available": 1,
-        },
-      },
+  await sendPushToUser(userId, {
+    pushType: "background",
+    priority: 5,
+    aps: {
+      "content-available": 1,
     },
     data: {
       action: "heartbeat_wake",
     },
-  };
-
-  try {
-    await admin.messaging().sendEachForMulticast(message);
-  } catch (error) {
-    console.error(`[FCM] Failed to send silent push:`, error);
-  }
+  }, "silent push");
 }
 
 /**
@@ -587,14 +490,10 @@ export async function sendSOSResolvedNotification(
   protectedPersonId: string,
   resolvedByName: string
 ): Promise<void> {
-  const tokens = await getTokensForUser(protectedPersonId);
-  if (tokens.length === 0) return;
-
   const locale = await getUserLocale(protectedPersonId);
   const s = getStrings(locale);
 
-  const message: admin.messaging.MulticastMessage = {
-    tokens,
+  await sendPushToUser(protectedPersonId, {
     notification: {
       title: s.resolvedTitle,
       body: s.resolvedBody(resolvedByName),
@@ -602,13 +501,7 @@ export async function sendSOSResolvedNotification(
     data: {
       action: "sos_resolved",
     },
-  };
-
-  try {
-    await admin.messaging().sendEachForMulticast(message);
-  } catch (error) {
-    console.error(`[FCM] Failed to send SOS resolved notification:`, error);
-  }
+  }, "SOS resolved");
 }
 
 async function sendSimple(
@@ -618,20 +511,11 @@ async function sendSimple(
   data: Record<string, string>,
   aps: Record<string, unknown> = { sound: "default" }
 ): Promise<PushResult> {
-  const tokens = await getTokensForUser(userId);
-  if (tokens.length === 0) return { successCount: 0, failureCount: 0, allFailed: true };
-  try {
-    const r = await admin.messaging().sendEachForMulticast({
-      tokens,
-      notification: { title, body },
-      apns: { payload: { aps: { ...aps, alert: { title, body } } as admin.messaging.Aps } },
-      data,
-    });
-    return { successCount: r.successCount, failureCount: r.failureCount, allFailed: r.successCount === 0 };
-  } catch (error) {
-    console.error(`[FCM] push to ${userId} failed:`, error);
-    return { successCount: 0, failureCount: tokens.length, allFailed: true };
-  }
+  return sendPushToUser(userId, {
+    notification: { title, body },
+    aps: { ...aps, alert: { title, body } },
+    data,
+  }, data.action ?? "push");
 }
 
 /**
