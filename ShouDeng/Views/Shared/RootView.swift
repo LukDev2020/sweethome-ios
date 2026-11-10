@@ -48,6 +48,7 @@ private struct AuthenticatedRootView: View {
     @ObservedObject private var langManager = LanguageManager.shared
     @ObservedObject private var disguiseService = DisguiseModeService.shared
     @State private var showBiometricPrompt = false
+    @ObservedObject private var explore = ExploreModeController.shared
 
     var body: some View {
         Group {
@@ -87,7 +88,7 @@ private struct AuthenticatedRootView: View {
                             // Rider setup: after a rider signs up, a crew / partner link, Settings
                             RiderSetupView(start: coordinator.riderSetupStartStep)
                                 .environmentObject(coordinator)
-                        } else if !setupWizardComplete && coordinator.showSetupWizard {
+                        } else if showsSetupWizard {
                             PostSignupWizardView(onComplete: {
                                 setupWizardComplete = true
                                 coordinator.showSetupWizard = false
@@ -169,7 +170,13 @@ private struct AuthenticatedRootView: View {
     private var onLightOnlyScreen: Bool {
         guard case .loggedIn = coordinator.authState else { return true }
         if biometric.isEnabled && !biometric.isUnlocked { return true }
-        return !setupWizardComplete && coordinator.showSetupWizard
+        return showsSetupWizard
+    }
+
+    /// After sign-up. Also on a phone that finished the wizard for an earlier account,
+    /// when the person left the demo to invite the people they added there.
+    private var showsSetupWizard: Bool {
+        coordinator.showSetupWizard && (!setupWizardComplete || !explore.inviteHandoff.isEmpty)
     }
 
     private var complianceBinding: Binding<Bool> {

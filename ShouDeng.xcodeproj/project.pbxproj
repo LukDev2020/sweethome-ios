@@ -19,7 +19,9 @@
 		17ECF3A6FC58B3A276C95C92 /* DemoRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9305BFD75950E5EF0503BBE /* DemoRootView.swift */; };
 		20FAC7ED25D49535DDFDDC8B /* DemoOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC88907315AE4325D456BDF0 /* DemoOverlayView.swift */; };
 		7B5C5ECEE97787F50A6FE3A0 /* CoachMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52B4FFFA94FB10A87D810AEC /* CoachMark.swift */; };
+		34DFA3FDD630696D1C0C707C /* DemoRealTouchesViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCD782E269B296E100C67CE2 /* DemoRealTouchesViews.swift */; };
 		57751E65320E1E419A71D91A /* DemoTour.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B41826B4852652FD44A068C /* DemoTour.swift */; };
+		B79A812241363A1A3BDE880B /* DemoRealLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F07AC7F83D80D6DAF81A2EB1 /* DemoRealLocation.swift */; };
 		C9E5F56F75A833C33C8E26F6 /* ExploreModeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B78EE84BB9C7DA50C7D1BFAA /* ExploreModeController.swift */; };
 		5B12446347424F3CEB49562F /* DemoURLProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9274CF934236E48FCA92CA03 /* DemoURLProtocol.swift */; };
 		9670FF61047FD433AFD35013 /* DemoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43FD6EE4E7A713241060E95B /* DemoStore.swift */; };
@@ -309,7 +311,9 @@
 		B9305BFD75950E5EF0503BBE /* DemoRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoRootView.swift; sourceTree = "<group>"; };
 		FC88907315AE4325D456BDF0 /* DemoOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoOverlayView.swift; sourceTree = "<group>"; };
 		52B4FFFA94FB10A87D810AEC /* CoachMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachMark.swift; sourceTree = "<group>"; };
+		DCD782E269B296E100C67CE2 /* DemoRealTouchesViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoRealTouchesViews.swift; sourceTree = "<group>"; };
 		5B41826B4852652FD44A068C /* DemoTour.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoTour.swift; sourceTree = "<group>"; };
+		F07AC7F83D80D6DAF81A2EB1 /* DemoRealLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoRealLocation.swift; sourceTree = "<group>"; };
 		B78EE84BB9C7DA50C7D1BFAA /* ExploreModeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreModeController.swift; sourceTree = "<group>"; };
 		9274CF934236E48FCA92CA03 /* DemoURLProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoURLProtocol.swift; sourceTree = "<group>"; };
 		43FD6EE4E7A713241060E95B /* DemoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoStore.swift; sourceTree = "<group>"; };
@@ -577,6 +581,7 @@
 				B9305BFD75950E5EF0503BBE /* DemoRootView.swift */,
 				FC88907315AE4325D456BDF0 /* DemoOverlayView.swift */,
 				52B4FFFA94FB10A87D810AEC /* CoachMark.swift */,
+				DCD782E269B296E100C67CE2 /* DemoRealTouchesViews.swift */,
 			);
 			path = ExploreMode;
 			sourceTree = "<group>";
@@ -585,6 +590,7 @@
 			isa = PBXGroup;
 			children = (
 				5B41826B4852652FD44A068C /* DemoTour.swift */,
+				F07AC7F83D80D6DAF81A2EB1 /* DemoRealLocation.swift */,
 				B78EE84BB9C7DA50C7D1BFAA /* ExploreModeController.swift */,
 				9274CF934236E48FCA92CA03 /* DemoURLProtocol.swift */,
 				43FD6EE4E7A713241060E95B /* DemoStore.swift */,
@@ -1375,7 +1381,9 @@
 				17ECF3A6FC58B3A276C95C92 /* DemoRootView.swift in Sources */,
 				20FAC7ED25D49535DDFDDC8B /* DemoOverlayView.swift in Sources */,
 				7B5C5ECEE97787F50A6FE3A0 /* CoachMark.swift in Sources */,
+				34DFA3FDD630696D1C0C707C /* DemoRealTouchesViews.swift in Sources */,
 				57751E65320E1E419A71D91A /* DemoTour.swift in Sources */,
+				B79A812241363A1A3BDE880B /* DemoRealLocation.swift in Sources */,
 				C9E5F56F75A833C33C8E26F6 /* ExploreModeController.swift in Sources */,
 				5B12446347424F3CEB49562F /* DemoURLProtocol.swift in Sources */,
 				9670FF61047FD433AFD35013 /* DemoStore.swift in Sources */,

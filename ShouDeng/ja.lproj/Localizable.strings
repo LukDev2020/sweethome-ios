@@ -2603,3 +2603,40 @@
 /* Login: mainland-China networks (Hong Kong relay, docs/ops/CHINA-RELAY.md) */
 "auth.china.hint.appleAlipay" = "中国本土のネットワークでは、SMS の確認コードでサインインできないことがあります。Apple または Alipay でサインインしてください。";
 "auth.china.hint.apple" = "中国本土のネットワークでは、SMS の確認コードでサインインできないことがあります。Apple でサインインしてください。";
+
+/* Explore Mode: real weather, real location, add a family member (kept on the phone) */
+"explore.weather.useMine" = "現在地を使う";
+"explore.weather.backTo" = "%@に戻す";
+"explore.location.weather.title" = "今いる場所の天気を表示しますか？";
+"explore.location.weather.body" = "Lantern Care は Apple の天気から天気を取得するためだけに、現在地を一度だけ取得します。位置情報はこの端末に残り、Lantern Care には送信されず、デモを終了すると消去されます。";
+"explore.location.map.title" = "実際の現在地を表示しますか？";
+"explore.location.map.body" = "地図上のあなた自身のピンと現在地の送信に、今いる場所を使います。Lantern Care は現在地を一度だけ取得します。位置情報はこの端末に残り（デモでは何も送信されません）、デモを終了すると消去されます。";
+"explore.location.continue" = "続ける";
+"explore.location.notNow" = "今はしない";
+"explore.location.denied.title" = "位置情報がオフです";
+"explore.location.denied.body" = "今いる場所を使うには、設定で Lantern Care の位置情報を許可してください。デモはサンプル家族の街のまま続けられます。";
+"explore.location.openSettings" = "設定を開く";
+"explore.location.failed.title" = "現在地を取得できません";
+"explore.location.failed.body" = "今は現在地を取得できません。デモはサンプル家族の街のまま続けられます。";
+"explore.realLocation.show" = "実際の現在地を表示";
+"explore.realLocation.on" = "ピンは実際の現在地です · この端末のみ";
+"explore.realLocation.off" = "%@に戻す";
+"explore.member.title" = "家族を追加";
+"explore.member.subtitle" = "あなたの家族の名前で試してみましょう。この端末の中でだけサンプル家族に加わります。SMS や招待は送信されません。";
+"explore.member.namePlaceholder" = "名前（例：おばあちゃん）";
+"explore.member.role" = "役割";
+"explore.member.role.guardianHint" = "%@を見守り、練習用のSOSを受け取ります。";
+"explore.member.role.protectedHint" = "%@が見守ります。家族リストと地図に表示されます。";
+"explore.member.add" = "サンプル家族に追加";
+"explore.member.added" = "%@がサンプル家族に加わりました";
+"explore.member.added.guardian" = "%1$@が%2$@を見守るようになりました。見守りの輪に入り、練習用のSOSを受け取ります。";
+"explore.member.added.protected" = "%1$@が%2$@の家族リストと地図に表示されます（%3$@の近く）。";
+"explore.member.practiceSOS" = "%@から練習用のSOSを送ってみる";
+"explore.member.nothingSent" = "何も送信されません。名前はこの端末に残り、デモを終了すると消去されます。";
+"explore.bridge.title" = "本当の家族を招待しますか？";
+"explore.bridge.body" = "アカウントを作成すると、招待のステップで%@への招待をすぐに作れます。";
+"explore.bridge.later" = "デモを続ける";
+"wizard.invite.fromDemo" = "デモで追加した人";
+"wizard.invite.forName" = "%@への招待を作成";
+"wizard.invite.sendTo" = "%@に送る";
+"wizard.invite.shareMessage.named" = "%1$@さん、こんにちは！家族の安全のために Lantern Care を使っています。この招待コードで参加してね：%2$@";

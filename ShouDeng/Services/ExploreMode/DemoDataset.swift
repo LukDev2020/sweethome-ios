@@ -63,7 +63,8 @@ struct DemoDataset {
     let sarah: User
     let kevin: User
     let lucy: User
-    let guardiansOfMom: [Guardian]
+    /// `var`: a guardian added in the demo ("Add a family member") joins Mom's circle
+    var guardiansOfMom: [Guardian]
     let guardiansOfDad: [Guardian]
     var momPerson: ProtectedPerson
     var dadPerson: ProtectedPerson
@@ -81,7 +82,12 @@ struct DemoDataset {
     /// The language the sample family's texts are in (the demo store's medical card follows it)
     let language: AppLanguage
 
-    var users: [User] { [mom, dad, sarah, kevin, lucy, kai, wei, ahmed, lina, mei] }
+    /// People typed in during this demo ("Add a family member"), in memory only
+    var addedUsers: [User] = []
+    /// Added protected people: on Sarah's family list and map, near the family's home
+    var addedPersons: [ProtectedPerson] = []
+
+    var users: [User] { [mom, dad, sarah, kevin, lucy, kai, wei, ahmed, lina, mei] + addedUsers }
 
     func user(_ id: String) -> User? { users.first { $0.id == id } }
 

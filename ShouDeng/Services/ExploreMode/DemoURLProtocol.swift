@@ -26,6 +26,9 @@ final class DemoURLProtocol: URLProtocol {
     /// Requests aimed anywhere other than the demo host — must stay empty.
     static var violations: [String] { lock.withLock { _violations } }
 
+    /// Test hook: every request the demo answers, with its body ("POST /v1/checkin").
+    nonisolated(unsafe) static var bodyObserver: ((String, Data?) -> Void)?
+
     static func resetLog() {
         lock.withLock {
             _handled = []
@@ -59,6 +62,7 @@ final class DemoURLProtocol: URLProtocol {
 
         let key = "\(method) \(path)"
         Self.lock.withLock { Self._handled.append(key) }
+        Self.bodyObserver?(key, body)
 
         let response: (Int, Data)
         if let store = Self.store {

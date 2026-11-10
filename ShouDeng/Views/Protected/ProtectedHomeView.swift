@@ -218,6 +218,11 @@ struct ProtectedHomeView: View {
 
                 locationCard
                     .padding(.top, 10)
+                if coordinator.isDemo {
+                    DemoRealLocationRow()
+                        .padding(.horizontal, 16)
+                        .padding(.top, 6)
+                }
                 tripRecordingSection
                     .padding(.horizontal, 16)
                     .padding(.top, 6)
@@ -318,6 +323,11 @@ struct ProtectedHomeView: View {
                 VStack(spacing: 0) {
                     locationCard
                         .padding(.top, 10)
+                    if coordinator.isDemo {
+                        DemoRealLocationRow()
+                            .padding(.horizontal, 16)
+                            .padding(.top, 6)
+                    }
                     sendLocationButton
                         .padding(.horizontal, 16)
                         .padding(.top, 6)
@@ -613,6 +623,9 @@ struct ProtectedHomeView: View {
             focusedPinId: $mapFocusId,
             locationService: coordinator.locationService
         )
+        // Demo: "Show me where I really am" moves Mom's pin — re-center the map and its
+        // address on the new spot (the card stops following after its first camera move)
+        .id(coordinator.isDemo ? String(format: "demo-%.4f,%.4f", myCoord.latitude, myCoord.longitude) : "live")
     }
 
     // MARK: - Trip Recording Section
@@ -740,6 +753,7 @@ struct ProtectedHomeView: View {
 
     private static func coordForCity(_ city: String) -> CLLocationCoordinate2D {
         switch city {
+        case "成都", "Chengdu": return CLLocationCoordinate2D(latitude: 30.67, longitude: 104.07)
         case "多伦多", "Toronto": return CLLocationCoordinate2D(latitude: 43.65, longitude: -79.38)
         case "上海", "Shanghai": return CLLocationCoordinate2D(latitude: 31.23, longitude: 121.47)
         case "悉尼", "Sydney": return CLLocationCoordinate2D(latitude: -33.87, longitude: 151.21)

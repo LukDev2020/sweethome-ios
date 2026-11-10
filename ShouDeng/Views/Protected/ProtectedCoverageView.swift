@@ -19,6 +19,9 @@ struct ProtectedCoverageView: View {
     private let offWhiteBg = Color.paper(251, 248, 241, elevated: true)
     private let paneBorder = Color(red: 1/255, green: 69/255, blue: 129/255).opacity(0.13)
 
+    @ObservedObject private var explore = ExploreModeController.shared
+    /// Explore Mode: the explanation before the weather may use the real location
+    @State private var locationPrompt: DemoLocationPrompt?
     @State private var smsDowngrade = true
     @State private var lowPowerSaving = true
 
@@ -48,6 +51,30 @@ struct ProtectedCoverageView: View {
         }
         .navigationTitle(langManager.localized("protected.coverage.title"))
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    // MARK: Explore Mode weather ("Use my location")
+
+    private var usesRealLocationInDemo: Bool {
+        coordinator.isDemo && (explore.weatherLocation != nil || explore.realLocation != nil)
+    }
+
+    private var demoWeatherKey: String {
+        guard coordinator.isDemo else { return "real" }
+        let fix = explore.weatherLocation ?? explore.realLocation
+        return fix.map { String(format: "%.3f,%.3f", $0.coordinate.latitude, $0.coordinate.longitude) } ?? "sample"
+    }
+
+    private var demoWeatherAction: WeatherCardView.CornerAction? {
+        guard coordinator.isDemo, explore.isActive, explore.realLocation == nil else { return nil }
+        if explore.weatherLocation != nil {
+            let city = DemoText(language: langManager.current).chengdu
+            return .init(title: String(format: langManager.localized("explore.weather.backTo"), city),
+                         systemImage: "arrow.uturn.backward") { explore.stopWeatherLocation() }
+        }
+        return .init(title: langManager.localized("explore.weather.useMine"), systemImage: "location") {
+            locationPrompt = .weather
+        }
     }
 
     private var sampleDataBanner: some View {
@@ -85,9 +112,16 @@ struct ProtectedCoverageView: View {
 
                 // Live weather where the person is (Apple WeatherKit)
                 sectionHeader(langManager.localized("coverage_weather", fallback: "Weather"))
-                WeatherCardView(locate: { [coordinator] in coordinator.locationManager.bestAvailableLocation },
-                                placeName: cityName.isEmpty ? countryName : cityName)
+                WeatherCardView(locate: { [coordinator, explore] in
+                                    (coordinator.isDemo ? explore.weatherLocation : nil)
+                                        ?? coordinator.locationManager.bestAvailableLocation
+                                },
+                                placeName: usesRealLocationInDemo ? "" : (cityName.isEmpty ? countryName : cityName),
+                                cornerAction: demoWeatherAction)
+                    // A new place (the person's own, or back to the sample city) reloads the card
+                    .id(demoWeatherKey)
                     .onAppear { coordinator.locationManager.requestSingleLocation() }
+                    .demoLocationConsent($locationPrompt)
 
                 if showsSampleCards {
                     AQICardView(value: 32, label: "Good")

@@ -13,6 +13,8 @@ import StoreKit
 struct PostSignupWizardView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
+    /// People typed in during the demo ("Add a family member"), ready to invite
+    @ObservedObject private var explore = ExploreModeController.shared
     let onComplete: () -> Void
 
     @State private var currentStep = 0
@@ -68,6 +70,11 @@ struct PostSignupWizardView: View {
             // Pre-fill city from country code
             if let country = coordinator.signupCountry {
                 cityName = defaultCity(for: country.isoCode)
+            }
+            // Came from the demo's "Invite your real family": open at the invite step
+            if !explore.inviteHandoff.isEmpty && currentStep == 0 {
+                lockedRole = coordinator.userRole
+                currentStep = totalSteps - 1
             }
         }
     }
@@ -401,9 +408,18 @@ struct PostSignupWizardView: View {
     // Both roles get both options: create a code (the invite carries my side)
     // or enter someone else's code (the shared InviteAcceptSheet decides).
 
+    @ViewBuilder
     private var inviteStep: some View {
+        if explore.inviteHandoff.isEmpty {
+            inviteStepContent
+        } else {
+            ScrollView { inviteStepContent.padding(.top, 8) }
+        }
+    }
+
+    private var inviteStepContent: some View {
         VStack(spacing: 16) {
-            Spacer()
+            if explore.inviteHandoff.isEmpty { Spacer() }
 
             Image(systemName: wizardRole == .guardian ? "person.badge.plus" : "person.2.wave.2")
                 .font(.scaled(size: 48))
@@ -430,7 +446,10 @@ struct PostSignupWizardView: View {
                 }
             }
 
-            if wizardRole == .guardian {
+            if !explore.inviteHandoff.isEmpty {
+                demoInvitees
+                enterCodeButton(prominent: false)
+            } else if wizardRole == .guardian {
                 enterCodeButton(prominent: true)
                 generateInviteButton
             } else {
@@ -438,8 +457,103 @@ struct PostSignupWizardView: View {
                 enterCodeButton(prominent: false)
             }
 
-            Spacer()
+            if explore.inviteHandoff.isEmpty { Spacer() }
         }
+    }
+
+    // MARK: Names from the demo
+    //
+    // Each person typed in the demo gets their own code, made for their side (a
+    // guardian's invite makes me the protected one, and the other way round), and a
+    // message that greets them by name. Nothing was sent from the demo.
+
+    @State private var demoCodes: [String: String] = [:]
+    @State private var demoLoadingId: String?
+    @State private var demoErrorId: String?
+
+    private var demoInvitees: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(lang.localized("wizard.invite.fromDemo"))
+                .font(.scaled(size: 13, weight: .semibold))
+                .foregroundStyle(.secondary)
+            ForEach(explore.inviteHandoff) { invitee in
+                demoInviteeRow(invitee)
+            }
+        }
+        .padding(.horizontal, 8)
+    }
+
+    private func demoInviteeRow(_ invitee: DemoInvitee) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(invitee.name)
+                    .font(.scaled(size: 16, weight: .semibold))
+                    .foregroundStyle(ink)
+                Spacer()
+                Text(lang.localized(invitee.role == .guardian ? "signup.role.guardian" : "signup.role.protected"))
+                    .font(.scaled(size: 12))
+                    .foregroundStyle(.secondary)
+            }
+            if let code = demoCodes[invitee.id] {
+                HStack {
+                    Text(code)
+                        .font(.scaled(size: 20, weight: .bold, design: .monospaced))
+                        .foregroundStyle(navy)
+                    Spacer()
+                    Button {
+                        let av = UIActivityViewController(activityItems: [
+                            String(format: lang.localized("wizard.invite.shareMessage.named"), invitee.name, code)
+                        ], applicationActivities: nil)
+                        AppCoordinator.topViewController()?.present(av, animated: true)
+                    } label: {
+                        Label(String(format: lang.localized("wizard.invite.sendTo"), invitee.name), systemImage: "square.and.arrow.up")
+                            .font(.scaled(size: 14, weight: .medium))
+                            .foregroundStyle(cream)
+                            .padding(.horizontal, 12).padding(.vertical, 8)
+                            .background(RoundedRectangle(cornerRadius: 10).fill(navy))
+                    }
+                }
+                Text(lang.localized("wizard.invite.validFor"))
+                    .font(.scaled(size: 11))
+                    .foregroundStyle(.tertiary)
+            } else {
+                Button {
+                    Task { await generateCode(for: invitee) }
+                } label: {
+                    HStack(spacing: 6) {
+                        if demoLoadingId == invitee.id { ProgressView().tint(cream) }
+                        Text(String(format: lang.localized("wizard.invite.forName"), invitee.name))
+                    }
+                    .font(.scaled(size: 14, weight: .medium))
+                    .foregroundStyle(cream)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 11)
+                    .background(RoundedRectangle(cornerRadius: 10).fill(navy))
+                }
+                .disabled(demoLoadingId != nil)
+                .accessibilityIdentifier("wizard.invite.forName")
+                if demoErrorId == invitee.id {
+                    Text(lang.localized("wizard.invite.error.generate"))
+                        .font(.scaled(size: 12))
+                        .foregroundStyle(.red)
+                }
+            }
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 12).stroke(navy.opacity(0.2), lineWidth: 1))
+    }
+
+    private func generateCode(for invitee: DemoInvitee) async {
+        demoLoadingId = invitee.id
+        demoErrorId = nil
+        do {
+            let response: CreateInviteResponse = try await coordinator.apiClient.post(
+                "/v1/invite/create", body: CreateInviteRequest(inviterRole: invitee.inviterRole))
+            demoCodes[invitee.id] = response.code
+        } catch {
+            demoErrorId = invitee.id
+        }
+        demoLoadingId = nil
     }
 
     /// The role the last steps were laid out for. Accepting an invite in the
@@ -682,6 +796,7 @@ struct PostSignupWizardView: View {
         }
 
         isLoading = false
+        explore.clearInviteHandoff()
         onComplete()
     }
 
