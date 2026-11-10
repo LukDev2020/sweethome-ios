@@ -9,6 +9,7 @@ import Foundation
 //   - JSON encode/decode with iso8601 dates
 //   - Typed errors for UI consumption
 //   - Persist-first offline queue for requests that must eventually arrive
+//   - Failover to the Hong Kong relay on transport failures (BaseURLFailover)
 
 final class APIClient {
 
@@ -20,6 +21,13 @@ final class APIClient {
         var maxRetries: Int = 1
         /// SOS requests fail over to the queue fast instead of waiting ~61 s.
         var sosTimeoutInterval: TimeInterval = 8
+        /// Relay base URL (Info.plist API_RELAY_URL); nil/empty = no relay.
+        var relayBaseURL: String? = nil
+        /// SOS goes out on the other route too if the first hasn't answered by then
+        /// (at once if the first fails in transit). The server dedupes the trigger.
+        var sosHedgeDelay: TimeInterval = 2.5
+        /// Timeout of the background GET /health route checks.
+        var routeCheckTimeout: TimeInterval = 10
     }
 
     private let config: Config
@@ -33,6 +41,8 @@ final class APIClient {
         set { tokenLock.withLock { _accessToken = newValue } }
     }
     let offlineQueue: OfflineQueue
+    /// Primary ↔ relay: which base requests go to.
+    let route: BaseURLFailover
 
     /// Called when a 401 is received. The closure should attempt a token refresh
     /// and return true if the token was refreshed successfully.
@@ -53,9 +63,11 @@ final class APIClient {
 
     /// - Parameter sessionConfiguration: inject a configuration with custom
     ///   `protocolClasses` (Explore Mode's DemoURLProtocol, tests).
-    init(config: Config, offlineQueue: OfflineQueue, sessionConfiguration: URLSessionConfiguration = .default) {
+    init(config: Config, offlineQueue: OfflineQueue, sessionConfiguration: URLSessionConfiguration = .default,
+         defaults: UserDefaults = .standard) {
         self.config = config
         self.offlineQueue = offlineQueue
+        self.route = BaseURLFailover(primary: config.baseURL, relay: config.relayBaseURL, defaults: defaults)
 
         let sessionConfig = sessionConfiguration
         sessionConfig.timeoutIntervalForRequest = config.timeoutInterval
@@ -174,24 +186,132 @@ final class APIClient {
         let itemId = offlineQueue.enqueue(OfflineQueue.Item(
             method: "POST", path: path, body: bodyData, ownerId: currentOwnerId?()
         ))
-        guard let data = await sendQueuedNow(itemId: itemId, path: path, body: bodyData, timeout: config.sosTimeoutInterval)
-        else { return nil }
+        let data: Data?
+        if route.relay != nil {
+            data = await sendSOSOnBothRoutes(itemId: itemId, path: path, body: bodyData)
+        } else {
+            data = await sendQueuedNow(itemId: itemId, path: path, body: bodyData, timeout: config.sosTimeoutInterval)
+        }
+        guard let data else { return nil }
         return try? decoder.decode(T.self, from: data)
+    }
+
+    private enum SOSAttempt {
+        case delivered(Data)
+        /// The server answered without accepting it (4xx/5xx; the queue keeps or drops it).
+        case answered
+        case failedInTransit
+        case hedgeTimer
+    }
+
+    /// SOS never waits on a slow or blocked primary: the preferred route starts at
+    /// once, the other one after `sosHedgeDelay` — or as soon as the first fails in
+    /// transit. The first 2xx wins. Sending twice is safe: the server keeps one active
+    /// SOS per person and dedupes by clientSOSId.
+    private func sendSOSOnBothRoutes(itemId: String, path: String, body: Data) async -> Data? {
+        let first = route.current
+        guard let second = route.alternate(to: first) else { return nil }
+        let timeout = config.sosTimeoutInterval
+        let hedge = config.sosHedgeDelay
+
+        let attempt: (String) async -> SOSAttempt = { [self] base in
+            do {
+                let (data, http) = try await self.sendSOSOnce(base: base, path: path, body: body, timeout: timeout)
+                switch Self.disposition(for: http.statusCode) {
+                case .delivered:
+                    self.offlineQueue.removeItems(withIds: [itemId])
+                    return .delivered(data)
+                case .drop:
+                    self.offlineQueue.removeItems(withIds: [itemId])
+                    return .answered
+                case .keep, .stopFlush:
+                    return .answered
+                }
+            } catch {
+                return .failedInTransit
+            }
+        }
+
+        return await withTaskGroup(of: (String?, SOSAttempt).self) { group in
+            group.addTask { (first, await attempt(first)) }
+            group.addTask {
+                try? await Task.sleep(nanoseconds: UInt64(hedge * 1_000_000_000))
+                return (nil, .hedgeTimer)
+            }
+            var secondStarted = false
+            var firstFailedInTransit = false
+            var anyAnswer = false
+            var pending = 1
+            func startSecond() {
+                guard !secondStarted else { return }
+                secondStarted = true
+                pending += 1
+                group.addTask { (second, await attempt(second)) }
+            }
+            for await (base, outcome) in group {
+                switch outcome {
+                case .hedgeTimer:
+                    // The first route answered already (e.g. 5xx): the server is reachable
+                    if !anyAnswer { startSecond() }
+                    continue
+                case .delivered(let data):
+                    group.cancelAll()
+                    if base == second {
+                        if firstFailedInTransit {
+                            route.failedInTransit(on: first, thenAnswered: second)
+                        } else {
+                            // The first route was only slow (or blocked by a black hole): find out
+                            checkRoutesInBackground(afterFailure: true)
+                        }
+                    }
+                    return data
+                case .answered:
+                    anyAnswer = true
+                case .failedInTransit:
+                    if base == first {
+                        firstFailedInTransit = true
+                        startSecond()
+                    }
+                }
+                pending -= 1
+                // Nothing in flight, and nothing more to start
+                if pending == 0 && (secondStarted || anyAnswer) { break }
+            }
+            group.cancelAll()
+            return nil
+        }
+    }
+
+    /// One SOS attempt on `base` (with the one refresh-and-retry on 401).
+    private func sendSOSOnce(base: String, path: String, body: Data, timeout: TimeInterval) async throws -> (Data, HTTPURLResponse) {
+        var request = try buildRawRequest(path: path, method: "POST", base: base)
+        request.httpBody = body
+        request.timeoutInterval = timeout
+        var (data, response) = try await session.data(for: request)
+        if (response as? HTTPURLResponse)?.statusCode == 401, let refresh = onUnauthorized, await refresh() {
+            var retry = try buildRawRequest(path: path, method: "POST", base: base)
+            retry.httpBody = body
+            retry.timeoutInterval = timeout
+            (data, response) = try await session.data(for: retry)
+        }
+        guard let http = response as? HTTPURLResponse else { throw APIError.unknown }
+        return (data, http)
     }
 
     /// Sends one queued item. Removes it from the queue when the server accepted
     /// it or permanently rejected it; returns the response body on 2xx.
     private func sendQueuedNow(itemId: String, path: String, body: Data, timeout: TimeInterval?) async -> Data? {
         do {
+            // Queued items are resent until delivered anyway: failing over is safe
             var request = try buildRawRequest(path: path, method: "POST")
             request.httpBody = body
             if let timeout { request.timeoutInterval = timeout }
-            var (data, response) = try await session.data(for: request)
+            var (data, response) = try await send(request, resendIfAmbiguous: true)
             if (response as? HTTPURLResponse)?.statusCode == 401, let refresh = onUnauthorized, await refresh() {
                 var retry = try buildRawRequest(path: path, method: "POST")
                 retry.httpBody = body
                 if let timeout { retry.timeoutInterval = timeout }
-                (data, response) = try await session.data(for: retry)
+                (data, response) = try await send(retry, resendIfAmbiguous: true)
             }
             guard let http = response as? HTTPURLResponse else { return nil }
             switch Self.disposition(for: http.statusCode) {
@@ -251,13 +371,13 @@ final class APIClient {
             do {
                 var request = try buildRawRequest(path: item.path, method: item.method)
                 request.httpBody = item.body
-                var (_, response) = try await session.data(for: request)
+                var (_, response) = try await send(request, resendIfAmbiguous: true)
                 if (response as? HTTPURLResponse)?.statusCode == 401, !didRefreshToken, let refresh = onUnauthorized {
                     didRefreshToken = true
                     if await refresh() {
                         var retry = try buildRawRequest(path: item.path, method: item.method)
                         retry.httpBody = item.body
-                        (_, response) = try await session.data(for: retry)
+                        (_, response) = try await send(retry, resendIfAmbiguous: true)
                     }
                 }
                 guard let http = response as? HTTPURLResponse else { continue }
@@ -299,7 +419,11 @@ final class APIClient {
     nonisolated(unsafe) static var requestObserver: ((URLRequest) -> Void)?
 
     func buildRawRequest(path: String, method: String) throws -> URLRequest {
-        guard let url = URL(string: config.baseURL + path) else {
+        try buildRawRequest(path: path, method: method, base: route.current)
+    }
+
+    func buildRawRequest(path: String, method: String, base: String) throws -> URLRequest {
+        guard let url = URL(string: base + path) else {
             throw APIError.invalidURL
         }
         defer { if let observer = Self.requestObserver { observer(URLRequest(url: url)) } }
@@ -316,6 +440,73 @@ final class APIClient {
         return request
     }
 
+    // MARK: - Route failover
+
+    private func send(_ request: URLRequest, resendIfAmbiguous: Bool) async throws -> (Data, URLResponse) {
+        var tried = false
+        return try await send(request, resendIfAmbiguous: resendIfAmbiguous, triedOtherRoute: &tried)
+    }
+
+    /// Sends `request` on the current route; on a transport failure, once more on the
+    /// other route — if the request certainly never arrived, or `resendIfAmbiguous`.
+    private func send(_ request: URLRequest, resendIfAmbiguous: Bool,
+                      triedOtherRoute: inout Bool) async throws -> (Data, URLResponse) {
+        // Built before the route changed (e.g. a 401 retry): use the current one
+        var request = request
+        if let base = route.base(of: request.url), base != route.current,
+           let moved = route.rebased(request, to: route.current) {
+            request = moved
+        }
+        let base = route.base(of: request.url)
+        do {
+            let result = try await session.data(for: request)
+            if let base, base == route.relay { checkRoutesInBackground(afterFailure: false) }
+            return result
+        } catch {
+            let failure = BaseURLFailover.classify(error)
+            guard let base, let other = route.alternate(to: base),
+                  failure == .neverSent || failure == .ambiguous else { throw error }
+            guard failure == .neverSent || resendIfAmbiguous,
+                  let moved = route.rebased(request, to: other) else {
+                // Not resent: find out which route works for the next request
+                checkRoutesInBackground(afterFailure: true)
+                throw error
+            }
+            triedOtherRoute = true
+            let result = try await session.data(for: moved)
+            // A gateway error is the relay answering without reaching the backend
+            if let status = (result.1 as? HTTPURLResponse)?.statusCode, !Self.isGatewayError(status) {
+                route.failedInTransit(on: base, thenAnswered: other)
+            }
+            return result
+        }
+    }
+
+    /// GET /health on both routes (in the background) and prefer the one that answers.
+    /// After a failure at most once a minute; while on the relay at most hourly.
+    func checkRoutesInBackground(afterFailure: Bool) {
+        guard let relay = route.relay, route.claimCheck(afterFailure: afterFailure) else { return }
+        let primary = route.primary
+        Task.detached(priority: .utility) { [weak self] in
+            guard let self else { return }
+            async let p = self.answersHealth(primary)
+            async let r = self.answersHealth(relay)
+            let (primaryAnswered, relayAnswered) = await (p, r)
+            self.route.recordCheck(primaryAnswered: primaryAnswered, relayAnswered: relayAnswered)
+        }
+    }
+
+    static func isGatewayError(_ status: Int) -> Bool { [502, 503, 504].contains(status) }
+
+    /// Route checks run without the access token.
+    func answersHealth(_ base: String) async -> Bool {
+        guard let url = URL(string: base + "/health") else { return false }
+        var request = URLRequest(url: url)
+        request.timeoutInterval = config.routeCheckTimeout
+        guard let (_, response) = try? await session.data(for: request) else { return false }
+        return (response as? HTTPURLResponse)?.statusCode == 200
+    }
+
     private static func isIdempotent(_ request: URLRequest) -> Bool {
         ["GET", "PUT", "DELETE", "HEAD"].contains(request.httpMethod ?? "GET")
     }
@@ -324,11 +515,15 @@ final class APIClient {
                                        reportsErrorCode: Bool = false) async throws -> T {
         let data: Data
         let response: URLResponse
+        var triedOtherRoute = false
         do {
-            (data, response) = try await session.data(for: request)
+            // A POST whose fate is unknown is not resent (it may have been applied)
+            (data, response) = try await send(request, resendIfAmbiguous: Self.isIdempotent(request),
+                                              triedOtherRoute: &triedOtherRoute)
         } catch {
             // Transport error: the server may or may not have applied a POST.
-            if Self.isIdempotent(request), attempt < config.maxRetries {
+            // Trying the other route already was the retry.
+            if Self.isIdempotent(request), attempt < config.maxRetries, !triedOtherRoute {
                 try await Task.sleep(nanoseconds: 1_000_000_000)
                 return try await execute(request, attempt: attempt + 1, allowRefresh: allowRefresh,
                                          reportsErrorCode: reportsErrorCode)

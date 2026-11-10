@@ -16,6 +16,9 @@ struct IdentitySignInButtons: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
     let termsAccepted: Bool
+    /// Mainland-China network likely (+86 chosen, or the app is on the relay):
+    /// phone codes need Google's servers there, so point to Apple / Alipay.
+    var recommendForChina = false
 
     @State private var rawNonce = ""
     @State private var alipayAvailable = false
@@ -26,6 +29,24 @@ struct IdentitySignInButtons: View {
                 Rectangle().fill(line).frame(height: 1)
                 Text(lang.localized("auth.identity.or")).font(.scaled(size: 12)).foregroundStyle(ink3)
                 Rectangle().fill(line).frame(height: 1)
+            }
+
+            if recommendForChina {
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "info.circle")
+                        .font(.scaled(size: 13))
+                        .foregroundStyle(navy.opacity(0.7))
+                    Text(lang.localized(alipayAvailable ? "auth.china.hint.appleAlipay" : "auth.china.hint.apple"))
+                        .font(.scaled(size: 12.5))
+                        .foregroundStyle(navy.opacity(0.85))
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(navy.opacity(0.06)))
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("login.chinaHint")
             }
 
             SignInWithAppleButton(.signIn) { request in

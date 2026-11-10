@@ -49,6 +49,11 @@ struct LoginView: View {
     @AppStorage("terms_accepted_version") private var termsVersion = ""
     private var termsAccepted: Bool { termsVersion == DisclaimerCopy.Terms.version }
 
+    /// +86 chosen, or the server is only reachable through the Hong Kong relay
+    private var recommendChinaSignIn: Bool {
+        selectedCountry.isoCode == "CN" || coordinator.apiClient.route.isUsingRelay
+    }
+
     private enum Field { case phone, code }
     @FocusState private var focusedField: Field?
 
@@ -504,7 +509,7 @@ struct LoginView: View {
 
             // Sign in with Apple / Alipay (not while a phone code is on its way)
             if !codeSent {
-                IdentitySignInButtons(termsAccepted: termsAccepted)
+                IdentitySignInButtons(termsAccepted: termsAccepted, recommendForChina: recommendChinaSignIn)
                     .padding(.horizontal, 32)
                     .padding(.top, 14)
             }

@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { UPLOAD_JSON_LIMIT } from "./routes/family";
+import { trustProxy } from "./config/relay";
 
 // The Express API, separate from index.ts so tests can mount the full app
 // (exact production middleware order) without the Cloud Functions wrappers.
@@ -27,9 +28,10 @@ app.use("/v1/family/upload", (err: any, _req: express.Request, res: express.Resp
 app.use(express.json());
 // Twilio posts application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: false }));
-// Behind Google's front end: trust exactly one proxy hop so req.ip is the
-// client address Google saw (X-Forwarded-For entries further left are spoofable).
-app.set("trust proxy", 1);
+// Behind Google's front end: trust one proxy hop so req.ip is the client address
+// Google saw (X-Forwarded-For entries further left are spoofable) — plus, when that
+// address is our Hong Kong relay (TRUSTED_RELAY_IPS), the one the relay saw.
+app.set("trust proxy", trustProxy);
 
 // --- Route Imports ---
 import authRoutes from "./routes/auth";

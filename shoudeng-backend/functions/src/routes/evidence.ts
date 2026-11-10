@@ -9,7 +9,7 @@ import {
 } from "../services/evidence";
 import { queryLocations, queryHeartbeats } from "../services/bigquery";
 import { uploadEvidenceBundle, uploadGpxTrack } from "../services/storage";
-import { publicApiBaseUrl } from "../services/twilio";
+import { publicLinkBaseUrl } from "../services/twilio";
 import { toIso } from "../services/time";
 import { createRateLimiter, RATE_LIMITS } from "../middleware/rateLimit";
 
@@ -131,7 +131,7 @@ router.post("/share", authMiddleware, async (req: Request, res: Response) => {
       expiresInHours: hours,
     });
 
-    const shareUrl = `${publicApiBaseUrl()}/v1/evidence/share/${token}`;
+    const shareUrl = `${publicLinkBaseUrl()}/v1/evidence/share/${token}`;
     res.json({ token, shareUrl, expiresInHours: hours });
   } catch (error) {
     console.error("[Evidence] share creation error:", error);

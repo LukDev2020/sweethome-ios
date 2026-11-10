@@ -2599,3 +2599,7 @@
 "sos.sms.headNoName" = "SOS. I need help.";
 "sos.sms.location" = "Location: %1$@ (%2$@)";
 "sos.sms.noLocation" = "Location unknown (%@)";
+
+/* Login: mainland-China networks (Hong Kong relay, docs/ops/CHINA-RELAY.md) */
+"auth.china.hint.appleAlipay" = "On mainland China networks, signing in with a text-message code may not work. Use Sign in with Apple or Alipay instead.";
+"auth.china.hint.apple" = "On mainland China networks, signing in with a text-message code may not work. Use Sign in with Apple instead.";

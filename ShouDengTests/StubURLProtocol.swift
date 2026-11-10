@@ -5,6 +5,7 @@ import Foundation
 final class StubURLProtocol: URLProtocol {
     struct Recorded {
         let method: String
+        let host: String
         let path: String
         let body: Data?
         let timeout: TimeInterval
@@ -13,14 +14,22 @@ final class StubURLProtocol: URLProtocol {
 
     nonisolated(unsafe) static var handler: ((URLRequest) throws -> (Int, Data))?
     nonisolated(unsafe) static var requests: [Recorded] = []
+    /// Seconds before the answer (or failure) arrives; nil/0 = at once. A cancelled
+    /// request never gets its late answer.
+    nonisolated(unsafe) static var delay: ((URLRequest) -> TimeInterval)?
     private static let lock = NSLock()
+    private let stateLock = NSLock()
+    private var stopped = false
 
     static func reset() {
         lock.withLock {
             handler = nil
+            delay = nil
             requests = []
         }
     }
+
+    static var recorded: [Recorded] { lock.withLock { requests } }
 
     static func session() -> URLSessionConfiguration {
         let config = URLSessionConfiguration.ephemeral
@@ -49,12 +58,22 @@ final class StubURLProtocol: URLProtocol {
         Self.lock.withLock {
             Self.requests.append(Recorded(
                 method: request.httpMethod ?? "GET",
+                host: request.url?.host ?? "",
                 path: path,
                 body: body,
                 timeout: request.timeoutInterval,
                 authorization: request.value(forHTTPHeaderField: "Authorization")
             ))
         }
+        let wait = Self.lock.withLock { Self.delay }?(request) ?? 0
+        guard wait > 0 else { return answer(body: body) }
+        DispatchQueue.global().asyncAfter(deadline: .now() + wait) { [self] in
+            guard !stateLock.withLock({ stopped }) else { return }
+            answer(body: body)
+        }
+    }
+
+    private func answer(body: Data?) {
         guard let handler = Self.lock.withLock({ Self.handler }) else {
             client?.urlProtocol(self, didFailWithError: URLError(.notConnectedToInternet))
             return
@@ -73,5 +92,7 @@ final class StubURLProtocol: URLProtocol {
         }
     }
 
-    override func stopLoading() {}
+    override func stopLoading() {
+        stateLock.withLock { stopped = true }
+    }
 }

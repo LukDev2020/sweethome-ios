@@ -47,6 +47,19 @@ export function publicApiBaseUrl(): string {
 }
 
 /**
+ * Base URL for links people open in a browser (evidence share, incident-report
+ * verification). Set PUBLIC_LINK_BASE_URL to the Hong Kong relay
+ * (https://api.<domain>, docs/ops/CHINA-RELAY.md) so the links also open on
+ * mainland-China networks; empty = publicApiBaseUrl().
+ * Twilio webhooks deliberately stay on publicApiBaseUrl() (Google directly):
+ * Twilio is in the US, and SOS calls must not depend on the relay being up.
+ */
+export function publicLinkBaseUrl(): string {
+  const v = process.env.PUBLIC_LINK_BASE_URL?.trim();
+  return v ? v.replace(/\/$/, "") : publicApiBaseUrl();
+}
+
+/**
  * Verify X-Twilio-Signature: base64(HMAC-SHA1(authToken, url + sorted(key+value))).
  * `path` is the request path *inside* the api function (req.originalUrl).
  */
