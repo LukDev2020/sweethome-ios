@@ -1,5 +1,5 @@
 /* Login */
-"app.name" = "Lantern Care";
+"app.name" = "Beaconify";
 "app.tagline" = "家族を見守る、ひとつの灯り";
 "login.phone.placeholder" = "電話番号";
 "login.code.placeholder" = "認証コード";
@@ -21,7 +21,7 @@
 /* Login - Security */
 "login.reset" = "最初からやり直す";
 "login.locked.title" = "アカウントがロックされました";
-"login.locked.message" = "認証に失敗した回数が上限に達しました。Lantern Careチームまでお問い合わせください。";
+"login.locked.message" = "認証に失敗した回数が上限に達しました。Beaconifyチームまでお問い合わせください。";
 "login.locked.contact" = "サポートに問い合わせる";
 "login.attempts.warning" = "残り%d回";
 
@@ -54,7 +54,7 @@
 "tab.settings" = "設定";
 
 /* Navigation */
-"nav.title" = "Lantern Care";
+"nav.title" = "Beaconify";
 "nav.you.are.here" = "現在地";
 
 /* Home View - Protected */
@@ -102,7 +102,7 @@
 "sos.send.anyway" = "このまま送信";
 "sos.invite.first" = "先に見守る人を招待";
 "sos.active" = "SOS発信中";
-"sos.triggered" = "Lantern CareのSOSが発信されました";
+"sos.triggered" = "BeaconifyのSOSが発信されました";
 
 /* Live Activity */
 "la.normal" = "通常";
@@ -494,11 +494,11 @@
 "guardian.home.consulate" = "領事館";
 "guardian.home.emergency.text" = "緊急メッセージ";
 "guardian.home.family.location" = "家族の位置情報";
-"guardian.home.footer.note" = "Lantern Careは家族に通知するサービスであり、緊急通報の代わりにはなりません";
+"guardian.home.footer.note" = "Beaconifyは家族に通知するサービスであり、緊急通報の代わりにはなりません";
 "guardian.home.guardian.role" = "見守る人";
 "guardian.home.guarding" = "見守り中";
 "guardian.home.guarding.count" = "%d人を見守り中";
-"guardian.home.invite.description" = "家族をLantern Careに招待しましょう";
+"guardian.home.invite.description" = "家族をBeaconifyに招待しましょう";
 "guardian.home.invite.family" = "家族を招待";
 "guardian.home.layers.count" = "%d層の見守り";
 "guardian.home.me" = "自分";
@@ -509,7 +509,7 @@
 "guardian.home.no.protected" = "見守られる人はまだいません";
 "guardian.home.org.dashboard" = "組織ダッシュボード";
 "guardian.home.protection" = "見守り";
-"guardian.home.shoudeng" = "Lantern Care";
+"guardian.home.shoudeng" = "Beaconify";
 "guardian.home.sos.active" = "SOS発信中";
 "guardian.home.time.afternoon" = "午後";
 "guardian.home.time.dawn" = "早朝";
@@ -630,9 +630,9 @@
 "invite.howToUse" = "使い方";
 "invite.me" = "自分";
 "invite.share" = "共有";
-"invite.shareText" = "%@さんから、Lantern Careの見守る人として招待されました。Lantern Careアプリで招待コード「%@」を入力してください（24時間有効）。";
+"invite.shareText" = "%@さんから、Beaconifyの見守る人として招待されました。Beaconifyアプリで招待コード「%@」を入力してください（24時間有効）。";
 "invite.step1" = "信頼できる家族や友人にコードを送信します";
-"invite.step2" = "相手がLantern Careアプリでコードを入力します";
+"invite.step2" = "相手がBeaconifyアプリでコードを入力します";
 "invite.step3" = "つながった後も、権限の変更や解除はいつでも行えます";
 "invite.subtitle" = "家族を見守る人として招待しましょう";
 "invite.title" = "見守る人を招待";
@@ -738,7 +738,7 @@
 "protected.coverage.title" = "カバー範囲";
 "protected.coverage.weakNetwork" = "電波が弱い環境";
 "protected.home.afternoon" = "午後";
-"protected.home.appName" = "Lantern Care";
+"protected.home.appName" = "Beaconify";
 "protected.home.battery" = "バッテリー %d%%";
 "protected.home.cancelSOS" = "SOSをキャンセル";
 "protected.home.checkIn" = "無事を知らせる";
@@ -755,7 +755,7 @@
 "protected.home.guardianCount" = "見守る人 %d人";
 "protected.home.guarding" = "見守り中";
 "protected.home.imHere" = "ここにいます";
-"protected.home.inviteDescription" = "家族をLantern Careに招待しましょう";
+"protected.home.inviteDescription" = "家族をBeaconifyに招待しましょう";
 "protected.home.inviteFamily" = "家族を招待";
 "protected.home.inviteNew" = "新しい見守る人を招待";
 "protected.home.lateNight" = "深夜";
@@ -825,7 +825,7 @@
 "protected.settings.detection.distress" = "異常音の検知";
 "protected.settings.detection.distressDesc" = "近くで悲鳴や叫び声がすると「大丈夫？」と確認し、応答がなければ見守る人に通知します";
 "protected.settings.detection.voiceCommand" = "音声コマンドでSOS";
-"protected.settings.detection.voiceCommandDesc" = "「Lantern Care、助けて」と話しかけると自動でSOSを発信します";
+"protected.settings.detection.voiceCommandDesc" = "「Beaconify、助けて」と話しかけると自動でSOSを発信します";
 "protected.settings.notification.checkInReminder" = "無事報告のリマインダー";
 "protected.settings.role.needsApproval" = "相手の承認が必要";
 "protected.settings.role.protected" = "見守られる人";
@@ -872,7 +872,7 @@
 "settings.email.addTitle" = "メールアドレスを追加";
 "settings.fontsize.hint" = "文字サイズの変更はすべての画面にすぐに反映されます";
 "settings.fontsize.sample" = "あ";
-"settings.legal.about" = "Lantern Careについて";
+"settings.legal.about" = "Beaconifyについて";
 "settings.legal.privacyAndTerms" = "プライバシーポリシーと利用規約";
 "settings.notification.familyFeed" = "家族の最新情報";
 "settings.notification.sos" = "緊急SOS";
@@ -916,7 +916,7 @@
 "claim.networkError" = "ネットワークエラーが発生しました。もう一度お試しください";
 "claim.referenceChecklist" = "参考チェックリスト：%@";
 "claim.sharePDF" = "PDFを共有";
-"claim.velaProvides" = "Lantern Careは、保険請求に使える検証済みの安全データを提供します";
+"claim.velaProvides" = "Beaconifyは、保険請求に使える検証済みの安全データを提供します";
 
 // MARK: - Duress Code (additional)
 "duress.cancel" = "キャンセル";
@@ -1358,7 +1358,7 @@
 "explore.handoff.body" = "%2$@の現地時刻は%1$@です。お母さんからの通知と位置情報が、たった今彼女のiPhoneに届きました。彼女に何が表示されているのか、そしてどのように段階的な通知を止めるのかを見てみましょう。";
 "explore.handoff.cta" = "%@のiPhoneを見る →";
 "explore.handoff.footnote" = "デモ · 実際の通知は送信されていません";
-"explore.notif.source" = "Lantern Care · デモ";
+"explore.notif.source" = "Beaconify · デモ";
 "explore.notif.hint" = "通知を開きます";
 "explore.notif.sos.title" = "🆘 %@が助けを求めています";
 "explore.notif.sos.body" = "%@からのSOS · バッテリー %d%%";
@@ -1431,7 +1431,7 @@
 "wizard.city.subtitle" = "現地時刻と緊急サービスの情報を表示するために使用します。";
 "wizard.city.placeholder" = "例：トロント、上海";
 "wizard.biometric.title" = "%@でログインしますか？";
-"wizard.biometric.subtitle" = "次回Lantern Careを開いたときに、認証コードを入力せずにすぐにログインできます。\nこの設定はいつでも「設定」でオフにできます。";
+"wizard.biometric.subtitle" = "次回Beaconifyを開いたときに、認証コードを入力せずにすぐにログインできます。\nこの設定はいつでも「設定」でオフにできます。";
 "wizard.biometric.enable" = "%@を使用";
 "wizard.biometric.skip" = "今はしない";
 "wizard.plan.title" = "プランを選択";
@@ -1440,12 +1440,12 @@
 "wizard.invite.guardian.title" = "見守る相手を追加";
 "wizard.invite.guardian.subtitle" = "見守る相手から届いた招待コードを入力するか、\nコードを作成して相手に送ってください。";
 "wizard.invite.protected.title" = "見守る人を招待";
-"wizard.invite.protected.subtitle" = "招待コードを作成して家族と共有しましょう。\n家族はLantern Careで、あなたの見守る人として参加できます。";
+"wizard.invite.protected.subtitle" = "招待コードを作成して家族と共有しましょう。\n家族はBeaconifyで、あなたの見守る人として参加できます。";
 "wizard.invite.codePlaceholder" = "招待コードを入力";
 "wizard.invite.linked" = "連携が完了しました";
 "wizard.invite.confirm" = "コードを確認";
 "wizard.invite.validFor" = "有効期限：24時間";
-"wizard.invite.shareMessage" = "家族の安全を守るためにLantern Careを使っています。この招待コードで参加してください：%@";
+"wizard.invite.shareMessage" = "家族の安全を守るためにBeaconifyを使っています。この招待コードで参加してください：%@";
 "wizard.invite.share" = "コードを共有";
 "wizard.invite.generate" = "招待コードを作成";
 "wizard.invite.error.invalid" = "この招待コードは無効か、有効期限が切れています。";
@@ -1467,11 +1467,11 @@
 
 /* Feature disclosures (first use) */
 "disclosure.sos.title" = "SOSを送信する前に";
-"disclosure.sos.body" = "SOSを送信すると、あなたが選んだ連絡先に通知されます。\n\n危険な状況にある場合は、%@ にも電話してください。Lantern Care があなたに代わって緊急通報することはありません。";
+"disclosure.sos.body" = "SOSを送信すると、あなたが選んだ連絡先に通知されます。\n\n危険な状況にある場合は、%@ にも電話してください。Beaconify があなたに代わって緊急通報することはありません。";
 "disclosure.location.title" = "位置情報を共有";
 "disclosure.location.body" = "オンにすると、あなたが選んだ家族は、あなたが最後に送信した位置情報を見ることができます。\n\n位置情報には毎回時刻が記録されるため、家族に見えるのは「数分前にどこにいたか」であり、リアルタイムの追跡ではありません。";
 "disclosure.trajectory.title" = "移動履歴";
-"disclosure.trajectory.body" = "オンにすると、Lantern Care は過去7日間の移動ルートを保存し、緊急時にあなたがどこへ向かった可能性があるかを家族が判断できるようにします。\n\n普段、家族に見えるのは最新の位置情報だけで、移動ルートは表示されません。直近2時間の移動ルートが家族に表示されるのは、あなたがSOSを送信したときだけです。";
+"disclosure.trajectory.body" = "オンにすると、Beaconify は過去7日間の移動ルートを保存し、緊急時にあなたがどこへ向かった可能性があるかを家族が判断できるようにします。\n\n普段、家族に見えるのは最新の位置情報だけで、移動ルートは表示されません。直近2時間の移動ルートが家族に表示されるのは、あなたがSOSを送信したときだけです。";
 "disclosure.fallDetection.title" = "転倒検知";
 "disclosure.fallDetection.body" = "転倒検知は、iPhoneのセンサーによる推定に基づいています。医療機器ではなく、いかなる規制当局の認証も受けていません。\n\n実際の転倒を検知できないことや、日常の動作で誤って作動することがあります。唯一の安全対策として頼らないでください。";
 "disclosure.emergencyAudio.title" = "SOS中の録音";
@@ -1559,7 +1559,7 @@
 "invite.sheet.errorBody" = "招待を作成できませんでした。接続を確認して、もう一度お試しください。";
 "invite.sheet.ok" = "OK";
 "invite.sheet.cancel" = "キャンセル";
-"invite.sheet.shareText" = "Lantern Care の見守りグループに参加してください：%@";
+"invite.sheet.shareText" = "Beaconify の見守りグループに参加してください：%@";
 "member.edit.title" = "メンバーを編集";
 "member.edit.info" = "メンバー情報";
 "member.edit.city" = "都市";
@@ -1622,8 +1622,8 @@
 "claim.provides.flight_delay" = "共有された旅程の便名と実際の発着時刻";
 "claim.provides.lost_luggage" = "旅程の記録\n写真の撮影日時";
 "claim.provides.traffic_accident" = "大使館への連絡記録\n事故発生場所";
-"claim.disclaimer.full" = "このエクスポートは、ユーザーのデバイス上の記録と Lantern Care のサーバーログに基づくもので、ユーザーご自身の参考用です。Lantern Care は、これらの記録の正確性、完全性、または特定目的への適合性について、明示または黙示を問わずいかなる保証も行わず、その利用によって生じたいかなる結果についても責任を負いません。";
-"claim.disclaimer.pdfHeader" = "この書類は、Lantern Care アプリがユーザーのデバイス上の記録から自動的にエクスポートしたものです。参考用であり、証明書や法的文書ではありません。";
+"claim.disclaimer.full" = "このエクスポートは、ユーザーのデバイス上の記録と Beaconify のサーバーログに基づくもので、ユーザーご自身の参考用です。Beaconify は、これらの記録の正確性、完全性、または特定目的への適合性について、明示または黙示を問わずいかなる保証も行わず、その利用によって生じたいかなる結果についても責任を負いません。";
+"claim.disclaimer.pdfHeader" = "この書類は、Beaconify アプリがユーザーのデバイス上の記録から自動的にエクスポートしたものです。参考用であり、証明書や法的文書ではありません。";
 "claim.disclaimer.checklistNote" = "このチェックリストは参考用です。必要な書類は、ご契約の保険約款によって決まります。";
 "claim.disclaimer.limitations" = "位置情報の精度はデバイスや周囲の環境に左右され、座標にずれが生じる場合があります\n時刻はデバイスの時計に基づいており、第三者のタイムスタンプ機関による認証は受けていません\nこれらの記録は、病院、警察、航空会社などが発行する正式な書類の代わりにはなりません\nユーザーはエクスポート前に、特定の記録を含めるか除外するかを選択できます";
 "claim.pdf.title" = "保険金請求の参考資料";
@@ -1651,14 +1651,14 @@
 "claim.pdf.insurerRequires" = "保険会社から通常求められる書類（ご自身で取得してください）：";
 "claim.pdf.deviceHas" = "デバイスの記録に含まれるもの：";
 "claim.pdf.dataNotes" = "このデータについて";
-"claim.pdf.footer" = "Lantern Care からエクスポート · 参考用";
+"claim.pdf.footer" = "Beaconify からエクスポート · 参考用";
 "claim.pdf.listSeparator" = "、";
 
 /* Data location consent (2026-10-31) */
 "consent.transfer.checkbox" = "私のデータが米国（Google Cloud、Twilio）で保存・処理されることに同意します。";
 "consent.transfer.readPolicy" = "プライバシーポリシーを読む";
 "consent.transfer.title" = "データは米国に保存されます";
-"consent.transfer.body" = "SOS の送信、家族との位置共有、記録の保存のため、Lantern Care はあなたのデータを米国の Google Cloud（us-central1）に保存します。緊急 SMS と電話は、同じく米国の Twilio を通じて送信されます。米国の個人情報保護制度はお住まいの国・地域と異なります。同意しますか？";
+"consent.transfer.body" = "SOS の送信、家族との位置共有、記録の保存のため、Beaconify はあなたのデータを米国の Google Cloud（us-central1）に保存します。緊急 SMS と電話は、同じく米国の Twilio を通じて送信されます。米国の個人情報保護制度はお住まいの国・地域と異なります。同意しますか？";
 "consent.transfer.agree" = "同意する";
 "consent.transfer.decline" = "同意しない";
 "consent.transfer.failed" = "保存できませんでした。接続を確認してもう一度お試しください。";
@@ -1674,10 +1674,10 @@
 "invite.protect.subtitle" = "あなたが見守る家族を招待しましょう";
 "invite.protect.step1" = "見守りたい家族にコードを送信します";
 "invite.protect.step3" = "相手が同意してから連携が始まり、相手はいつでも解除できます";
-"invite.protect.shareText" = "%@さんがLantern Careであなたを見守りたいと考えています。Lantern Careアプリで招待コード「%@」を入力してください（24時間有効）。";
+"invite.protect.shareText" = "%@さんがBeaconifyであなたを見守りたいと考えています。Beaconifyアプリで招待コード「%@」を入力してください（24時間有効）。";
 "invite.sheet.protectTitle" = "見守る相手を招待";
 "invite.sheet.protectFooter" = "招待リンクの有効期限は24時間です。相手が同意するまで位置情報は表示されません。";
-"invite.sheet.protectShareText" = "Lantern Careであなたを見守らせてください。こちらから参加できます：%@";
+"invite.sheet.protectShareText" = "Beaconifyであなたを見守らせてください。こちらから参加できます：%@";
 "wizard.invite.enterCode" = "招待コードを入力";
 "wizard.invite.haveCode" = "招待コードを持っています";
 "signup.start.title" = "どのように始めますか？";
@@ -1724,7 +1724,7 @@
 "invite.error.planLimit.theirs" = "相手のプランで見守れるのは%d人までです。";
 "invite.error.planLimit.theirsFull" = "相手のプランは上限に達しています。";
 "invite.error.planLimit.tellThem" = "相手にアップグレードを依頼";
-"invite.error.planLimit.shareText" = "Lantern Careであなたとつながろうとしましたが、プランの上限に達していました。設定 → プランからアップグレードしてもらえますか？";
+"invite.error.planLimit.shareText" = "Beaconifyであなたとつながろうとしましたが、プランの上限に達していました。設定 → プランからアップグレードしてもらえますか？";
 "invite.error.guardianLimit.yours" = "ご家族のプランは見守る人がすでに %d 人です。アップグレードすると追加できます。";
 "invite.error.guardianLimit.theirs" = "このご家族のプランは見守る人がすでに %d 人です。";
 "invite.error.guardianLimit.full" = "このご家族のプランは見守る人の枠がいっぱいです。";
@@ -1810,7 +1810,7 @@
 "store.legal.intro" = "%1$@：%2$@、その後 %3$@。購入確定時にApple IDに請求されます。現在の期間終了の24時間前までに解約しない限り、自動更新されます。App Storeのアカウント設定で管理・解約できます。";
 "store.link.terms" = "利用規約（EULA）";
 "store.link.privacy" = "プライバシーポリシー";
-"store.error.ownedByOtherAccount" = "このApp Storeサブスクリプションは別のLantern Careアカウントに紐づいています。そのアカウントでサインインしてご利用ください。";
+"store.error.ownedByOtherAccount" = "このApp Storeサブスクリプションは別のBeaconifyアカウントに紐づいています。そのアカウントでサインインしてご利用ください。";
 
 /* UX pass 2026-11-05 */
 "notif.checkinReminder.title" = "無事報告のリマインダー";
@@ -1971,22 +1971,22 @@
 "lsc.row.actions" = "SOS・元気です・位置 ボタン";
 "lsc.reset" = "初期設定に戻す";
 "lsc.sample.latest" = "Sarah：もう家に着いた？";
-"weather.noLocation" = "現在地を取得できません。設定で Lantern Care の位置情報を許可してください。";
-"lsc.disabledInSettings" = "iOS の設定で Lantern Care のライブアクティビティがオフのため、カードを表示できません。タップして設定を開きます。";
+"weather.noLocation" = "現在地を取得できません。設定で Beaconify の位置情報を許可してください。";
+"lsc.disabledInSettings" = "iOS の設定で Beaconify のライブアクティビティがオフのため、カードを表示できません。タップして設定を開きます。";
 "lsc.demoNote" = "デモ：ロック画面に陳家のサンプルカードが表示されます。デモを終了すると消えます。";
 "lsc.row.madeRoom" = "スペースを空けるため「%@」をオフにしました。";
 "lsc.rows.hint" = "カードに入るのは約 3 行です。1 行をオンにすると別の行がオフになることがあります。";
 
 /* Disclaimers v2, Terms agreement, guardian duties */
 "duty.title" = "見守りを始める前に";
-"duty.point.alerts" = "通知が遅れたり届かなかったりすることがあります（電源オフや圏外など）。Lantern Care は緊急サービスの代わりにはなりません。危険だと思ったら、相手がいる地域の緊急番号に電話してください。";
-"duty.point.notResponder" = "あなたは家族であり、救助の専門家ではありません。Lantern Care が誰かを現場に派遣することもありません。電話する、様子を確かめる、近くの人に頼むなど、できる範囲で対応してください。";
+"duty.point.alerts" = "通知が遅れたり届かなかったりすることがあります（電源オフや圏外など）。Beaconify は緊急サービスの代わりにはなりません。危険だと思ったら、相手がいる地域の緊急番号に電話してください。";
+"duty.point.notResponder" = "あなたは家族であり、救助の専門家ではありません。Beaconify が誰かを現場に派遣することもありません。電話する、様子を確かめる、近くの人に頼むなど、できる範囲で対応してください。";
 "duty.point.consent" = "見守られることに同意した人だけを見守ってください。何を共有するかは相手が決め、いつでも共有を一時停止したり、あなたを外したりできます。";
 "duty.button" = "わかりました";
 "terms.agree" = "利用規約とプライバシーポリシーを読み、同意します。";
 "terms.read" = "内容を読む";
 "terms.update.title" = "利用規約を更新しました";
-"terms.update.body" = "緊急時に Lantern Care ができること・できないことを、よりわかりやすく説明しています。読んで同意のうえ、引き続きご利用ください。";
+"terms.update.body" = "緊急時に Beaconify ができること・できないことを、よりわかりやすく説明しています。読んで同意のうえ、引き続きご利用ください。";
 "terms.update.required" = "チェックを入れると続けられます。";
 "terms.update.thanks" = "ありがとうございます。";
 "sos.status.allTitle" = "すべての見守る人に通知";
@@ -2025,11 +2025,11 @@
 "rider.shift.go" = "開始";
 "rider.handsfree.title" = "画面を見ずに SOS";
 "rider.handsfree.action" = "アクションボタン";
-"rider.handsfree.action.how" = "iPhone 15 Pro 以降：設定 → アクションボタン → ショートカット → Lantern Care → SOS。押すと SOS のカウントダウンが始まります。";
+"rider.handsfree.action.how" = "iPhone 15 Pro 以降：設定 → アクションボタン → ショートカット → Beaconify → SOS。押すと SOS のカウントダウンが始まります。";
 "rider.handsfree.handlebar" = "ハンドルボタン";
 "rider.handsfree.handlebar.how" = "設定 → Bluetooth トラッカーで緊急ボタンをペアリングし、ハンドルに取り付けます。手袋のままでも押せます。";
-"rider.handsfree.siri" = "「Lantern Care SOS」";
-"rider.handsfree.siri.how" = "「Hey Siri、Lantern Care SOS」と話しかけます。シフトの開始・終了も Siri でできます。";
+"rider.handsfree.siri" = "「Beaconify SOS」";
+"rider.handsfree.siri.how" = "「Hey Siri、Beaconify SOS」と話しかけます。シフトの開始・終了も Siri でできます。";
 "rider.handsfree.medicalId" = "メディカル ID";
 "rider.handsfree.medicalId.how" = "ヘルスケア App でメディカル ID を入力すると、救急隊がロック画面から確認できます。";
 "rider.crew.why" = "クルーは互いに見守る数人のライダーです。誰かが SOS を出すと、近くのメンバーに最初に届きます。1 分の距離のことも多いです。";
@@ -2051,7 +2051,7 @@
 "rider.crew.failed" = "できませんでした。接続を確認してもう一度お試しください。";
 "rider.crew.inviteHow" = "ライダーはカメラでこのコードを読み取るか、ライダーモード → クルーでコードを入力します。";
 "rider.crew.share" = "招待を共有";
-"rider.crew.shareText" = "Lantern Care のクルー「%@」に参加してね：コード %@ — %@";
+"rider.crew.shareText" = "Beaconify のクルー「%@」に参加してね：コード %@ — %@";
 "rider.crew.joinTitle" = "このクルーに参加しますか？";
 "rider.crew.joinNote" = "メンバーが SOS を出すと通知が届き、勤務中はメンバーの地図にあなたが表示されます。";
 "rider.crew.answers" = "クルーの応答";
@@ -2165,7 +2165,7 @@
 "home.shareMapsLink" = "マップのリンクを共有…";
 "home.locationSent" = "見守る人に位置を送信しました";
 "common.ok" = "OK";
-"protected.records.contactsNoSMS" = "これらの連絡先へのSMSはまだ有効になっていないため、SOS 時に自動では通知されません。Lantern Care の見守る人には通知されます。";
+"protected.records.contactsNoSMS" = "これらの連絡先へのSMSはまだ有効になっていないため、SOS 時に自動では通知されません。Beaconify の見守る人には通知されます。";
 
 /* Fall check + incident report for police */
 "autosos.fall.title" = "転倒を検知しました";
@@ -2174,7 +2174,7 @@
 "autosos.distressSound.subtitle" = "助けを呼ぶ声のようでした。大丈夫なら下で取り消してください。そうでなければ見守る人に通知します。";
 "autosos.voiceCommand.title" = "助けを求める声を認識しました";
 "autosos.voiceCommand.subtitle" = "カウントダウン終了時に見守る人へ通知します。間違いなら取り消してください。";
-"autosos.notice.body" = "Lantern Care を開くと取り消せます。%d 秒後に見守る人へ通知します。";
+"autosos.notice.body" = "Beaconify を開くと取り消せます。%d 秒後に見守る人へ通知します。";
 "autosos.sendNow" = "助けが必要 — 今すぐ SOS";
 "timeline.autosos.dismissed" = "転倒を検知 — 無事を確認";
 "fallTest.banner" = "テスト — 何も送信されません";
@@ -2187,7 +2187,7 @@
 "fallTest.result.sensors" = "検知内容：衝撃 %.1f g · 落下 %d ミリ秒 · 体の向き %d° 変化。";
 "protected.settings.detection.fall" = "転倒検知";
 "protected.settings.detection.fallOn" = "アプリ表示中はオン";
-"protected.settings.detection.fallDesc" = "強く転んで動かない状態が続くと、60 秒間「大丈夫ですか？」と確認してから見守る人へ通知します。iPhone では Lantern Care を開いている間だけ検知します。";
+"protected.settings.detection.fallDesc" = "強く転んで動かない状態が続くと、60 秒間「大丈夫ですか？」と確認してから見守る人へ通知します。iPhone では Beaconify を開いている間だけ検知します。";
 "protected.settings.detection.fallSensitive" = "高感度の転倒検知（高齢の方向け）";
 "protected.settings.detection.fallSensitiveDesc" = "ゆっくり床に崩れ落ちる場合や軽い転倒にも気づきます。ホーム画面を「シンプル」にすると自動でオンになります。「大丈夫ですか？」の確認が少し増えることがあります。";
 "report.entry" = "警察向けの報告書";
@@ -2246,7 +2246,7 @@
 "report.reporter.guardian" = "見守る人";
 "report.field.generated" = "作成日時";
 "report.field.timeZone" = "表示時刻の時間帯";
-"report.cover.notice" = "Lantern Care が本人のスマホから送られた情報をもとに作成しました。位置には表示の精度分の誤差があり、スマホが置き忘れられたり電源が切られることもあります。スマホの記録であり、本人がその場所にいた証明ではありません。";
+"report.cover.notice" = "Beaconify が本人のスマホから送られた情報をもとに作成しました。位置には表示の精度分の誤差があり、スマホが置き忘れられたり電源が切られることもあります。スマホの記録であり、本人がその場所にいた証明ではありません。";
 "report.h.summary" = "概要";
 "report.field.lastKnown" = "最後の位置";
 "report.none" = "この期間はなし";
@@ -2331,14 +2331,14 @@
 "report.source.fall" = "転倒";
 "report.locations.sampled" = "%d / %d 件を表示。すべての位置は locations.csv と track.gpx にあります。";
 "report.h.integrity" = "ファイルの照合";
-"report.integrity.body" = "報告書の作成時に、各ファイルの SHA-256 指紋を Lantern Care に登録しました。下のアドレスを照合コードで開くと登録済みの指紋が表示されるので、ファイル自体の指紋（macOS/Linux：shasum -a 256 ファイル、Windows：certutil -hashfile ファイル SHA256）と比べてください。値が違えばファイルは変更されています。";
+"report.integrity.body" = "報告書の作成時に、各ファイルの SHA-256 指紋を Beaconify に登録しました。下のアドレスを照合コードで開くと登録済みの指紋が表示されるので、ファイル自体の指紋（macOS/Linux：shasum -a 256 ファイル、Windows：certutil -hashfile ファイル SHA256）と比べてください。値が違えばファイルは変更されています。";
 "report.integrity.url" = "照合先";
 "report.h.limits" = "この記録でわからないこと";
 "report.limit.accuracy" = "位置の精度は表示の半径までです。屋内や高層ビルの間では数百メートルずれることがあります。";
 "report.limit.phone" = "これはスマホの位置です。置き忘れ・持ち去り・電源オフの可能性があります。";
 "report.limit.fall" = "転倒検知はアプリ表示中のみ動作し、見逃しや、スマホの落下を転倒と誤ることがあります。";
 "report.limit.gaps" = "データがない期間は、スマホが何も送らなかった（圏外・電源オフ・共有停止）ことを示し、何も起きなかったことを意味しません。";
-"report.disclaimer" = "Lantern Care は緊急通報サービスではありません。危険なときはまず地域の緊急番号に電話してください。";
+"report.disclaimer" = "Beaconify は緊急通報サービスではありません。危険なときはまず地域の緊急番号に電話してください。";
 
 // MARK: - Full button test leftovers (Records schedule, contacts, SOS end)
 "emergencyContact.delete.title" = "%@ を削除しますか？";
@@ -2358,7 +2358,7 @@
 "signup.start.rider" = "配達やライドシェアの仕事をしている";
 "signup.start.rider.desc" = "シフト、互いに見守るライダーのクルー、路上向けの SOS。ライダーは無料。";
 "login.rider.crew" = "ライダークルー %@ に招待されています。ログインまたは登録すると参加できます。";
-"login.rider.partner" = "ライダー向け Lantern Care：ログインまたは登録して設定を始めましょう。";
+"login.rider.partner" = "ライダー向け Beaconify：ログインまたは登録して設定を始めましょう。";
 "rider.link.guardian.title" = "クルーはライダー向けです";
 "rider.link.guardian.body" = "このリンクはライダー本人用です。本人に転送し、本人のスマホで開いて参加してもらってください。";
 "rider.setup.progress" = "%d / %d";
@@ -2414,7 +2414,7 @@
 "rider.setup.plan.more" = "見守る家族の追加や長い履歴は、いつでも設定からファミリープランで。";
 "rider.duty.title" = "最初のシフトの前に";
 "rider.duty.volunteers" = "クルーはボランティアで、救急隊ではありません。忙しかったり遠かったりして助けられないこともあります。";
-"rider.duty.emergency" = "危険なときはまず %@ に電話してください。Lantern Care は緊急通報サービスではありません。";
+"rider.duty.emergency" = "危険なときはまず %@ に電話してください。Beaconify は緊急通報サービスではありません。";
 "rider.duty.phone" = "通知にはスマホの電池と電波が必要です。";
 "rider.duty.agree" = "理解しました";
 "rider.setup.agreeFirst" = "先に「理解しました」をチェック";
@@ -2446,7 +2446,7 @@
 "org.riders.onShift" = "勤務中";
 "org.riders.sos" = "SOS（30 日）";
 "org.riders.notCounted" = "ほかに %d 人が参加していますが、集計に含めない設定です。";
-"org.riders.shareMessage" = "Lantern Care：ライダー無料の安全サービス。近くのクルー、ロック画面から SOS。";
+"org.riders.shareMessage" = "Beaconify：ライダー無料の安全サービス。近くのクルー、ロック画面から SOS。";
 "org.riders.share" = "ライダー登録リンクを共有";
 "org.riders.getLink" = "ライダー登録リンクを取得";
 "org.riders.privacy" = "同意したライダーの合計のみ。名前・位置・個別の出来事は表示されません。";
@@ -2556,8 +2556,8 @@
 "auth.apple.failed" = "Apple でサインインできませんでした。もう一度お試しください。";
 "auth.alipay.unavailable" = "現在 Alipay でサインインできません。電話番号か Apple をお使いください。";
 "auth.alipay.notConfirmed" = "Alipay でサインインが確認されませんでした。もう一度お試しください。";
-"auth.link.elsewhere" = "このサインイン方法は別の Lantern Care アカウントに連携済みです。";
-"auth.phone.hasAccount" = "この番号にはすでに Lantern Care アカウントがあります。その番号でサインインしてください。";
+"auth.link.elsewhere" = "このサインイン方法は別の Beaconify アカウントに連携済みです。";
+"auth.phone.hasAccount" = "この番号にはすでに Beaconify アカウントがあります。その番号でサインインしてください。";
 "auth.identity.expired" = "時間切れです。最初からやり直してください。";
 "auth.link.byPhone.apple" = "電話番号でサインインすると、Apple をアカウントに連携できます。";
 "auth.link.byPhone.alipay" = "電話番号でサインインすると、Alipay をアカウントに連携できます。";
@@ -2608,13 +2608,13 @@
 "explore.weather.useMine" = "現在地を使う";
 "explore.weather.backTo" = "%@に戻す";
 "explore.location.weather.title" = "今いる場所の天気を表示しますか？";
-"explore.location.weather.body" = "Lantern Care は Apple の天気から天気を取得するためだけに、現在地を一度だけ取得します。位置情報はこの端末に残り、Lantern Care には送信されず、デモを終了すると消去されます。";
+"explore.location.weather.body" = "Beaconify は Apple の天気から天気を取得するためだけに、現在地を一度だけ取得します。位置情報はこの端末に残り、Beaconify には送信されず、デモを終了すると消去されます。";
 "explore.location.map.title" = "実際の現在地を表示しますか？";
-"explore.location.map.body" = "地図上のあなた自身のピンと現在地の送信に、今いる場所を使います。Lantern Care は現在地を一度だけ取得します。位置情報はこの端末に残り（デモでは何も送信されません）、デモを終了すると消去されます。";
+"explore.location.map.body" = "地図上のあなた自身のピンと現在地の送信に、今いる場所を使います。Beaconify は現在地を一度だけ取得します。位置情報はこの端末に残り（デモでは何も送信されません）、デモを終了すると消去されます。";
 "explore.location.continue" = "続ける";
 "explore.location.notNow" = "今はしない";
 "explore.location.denied.title" = "位置情報がオフです";
-"explore.location.denied.body" = "今いる場所を使うには、設定で Lantern Care の位置情報を許可してください。デモはサンプル家族の街のまま続けられます。";
+"explore.location.denied.body" = "今いる場所を使うには、設定で Beaconify の位置情報を許可してください。デモはサンプル家族の街のまま続けられます。";
 "explore.location.openSettings" = "設定を開く";
 "explore.location.failed.title" = "現在地を取得できません";
 "explore.location.failed.body" = "今は現在地を取得できません。デモはサンプル家族の街のまま続けられます。";
@@ -2639,4 +2639,4 @@
 "wizard.invite.fromDemo" = "デモで追加した人";
 "wizard.invite.forName" = "%@への招待を作成";
 "wizard.invite.sendTo" = "%@に送る";
-"wizard.invite.shareMessage.named" = "%1$@さん、こんにちは！家族の安全のために Lantern Care を使っています。この招待コードで参加してね：%2$@";
+"wizard.invite.shareMessage.named" = "%1$@さん、こんにちは！家族の安全のために Beaconify を使っています。この招待コードで参加してね：%2$@";

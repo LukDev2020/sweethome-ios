@@ -1445,7 +1445,7 @@
 "wizard.invite.linked" = "守護關係已建立";
 "wizard.invite.confirm" = "確認邀請碼";
 "wizard.invite.validFor" = "24小時內有效";
-"wizard.invite.shareMessage" = "我在用守燈(Lantern Care)守護家人安全，請輸入邀請碼加入：%@";
+"wizard.invite.shareMessage" = "我在用守燈(Beaconify)守護家人安全，請輸入邀請碼加入：%@";
 "wizard.invite.share" = "分享邀請碼";
 "wizard.invite.generate" = "生成邀請碼";
 "wizard.invite.error.invalid" = "邀請碼無效或已過期";
@@ -1559,7 +1559,7 @@
 "invite.sheet.errorBody" = "邀請建立失敗，請檢查網路連線後重試。";
 "invite.sheet.ok" = "好";
 "invite.sheet.cancel" = "取消";
-"invite.sheet.shareText" = "加入守燈(Lantern Care)守護圈：%@";
+"invite.sheet.shareText" = "加入守燈(Beaconify)守護圈：%@";
 "member.edit.title" = "編輯成員";
 "member.edit.info" = "成員資訊";
 "member.edit.city" = "城市";

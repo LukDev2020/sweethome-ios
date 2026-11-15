@@ -158,7 +158,9 @@ extension AppCoordinator {
     /// the home style: on with Simple. The demo keeps its own choice.
     var sensitiveFallDetection: Bool {
         let chosen = isDemo ? demoSensitiveFall : UserDefaults.standard.object(forKey: Self.sensitiveFallKey) as? Bool
-        return chosen ?? (effectiveHomeStyle == HomeStyle.simple.rawValue)
+        // The older-adult profile when the person chose the simple home, not merely
+        // because it's the default for everyone who hasn't chosen
+        return chosen ?? (chosenHomeStyle == HomeStyle.simple.rawValue)
     }
 
     func setSensitiveFallDetection(_ on: Bool) {

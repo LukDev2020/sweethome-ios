@@ -74,8 +74,8 @@ describe("twilioConfig()", () => {
   });
 
   it("TWILIO_SMS_FROM overrides the SMS sender only", () => {
-    setEnv({ ...configured, TWILIO_SMS_FROM: "Lantern" });
-    expect(twilioConfig()).toMatchObject({ voiceFrom: "+15550001111", smsFrom: "Lantern" });
+    setEnv({ ...configured, TWILIO_SMS_FROM: "Beaconify" });
+    expect(twilioConfig()).toMatchObject({ voiceFrom: "+15550001111", smsFrom: "Beaconify" });
   });
 
   it("treats unset, empty and \"disabled\" as not configured", () => {

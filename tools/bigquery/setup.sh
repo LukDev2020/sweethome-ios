@@ -68,7 +68,7 @@ if exists --dataset "$PROJECT:$DATASET"; then
   fi
 else
   run "${BQ[@]}" --location="$LOCATION" mk --dataset \
-    --description "Lantern Care / 守灯 history: heartbeats, locations, check-ins, consent audit" \
+    --description "Beaconify / 守灯 history: heartbeats, locations, check-ins, consent audit" \
     "$PROJECT:$DATASET"
 fi
 

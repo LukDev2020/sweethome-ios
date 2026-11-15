@@ -397,7 +397,7 @@ export async function createIncidentReport(uid: string, body: Record<string, unk
     reportId,
     verifyCode: code,
     generatedAt: now.toDate().toISOString(),
-    generator: "Lantern Care incident report v1",
+    generator: "Beaconify incident report v1",
     purpose: req.purpose,
     caseNumber: req.caseNumber,
     sections: req.sections,

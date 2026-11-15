@@ -1,18 +1,18 @@
 # App Store Metadata — fr-CA
 
 ## Nom de l'application
-Lantern Care — Securite familiale
+Beaconify — Securite familiale
 
 ## Sous-titre
 Une lumière qui veille sur votre famille
 
 ## Description
-Lantern Care est un outil de notification de securite familiale qui aide vos proches a savoir ou vous etes et a vous joindre quand c'est important.
+Beaconify est un outil de notification de securite familiale qui aide vos proches a savoir ou vous etes et a vous joindre quand c'est important.
 
 **Comment ca marche :**
 - Les personnes protegees partagent leur position avec les membres de la famille qu'elles choisissent
 - Les gardiens recoivent des signaux de securite et des notifications de check-in
-- En cas de probleme, Lantern Care notifie votre famille par notification push, SMS et appel vocal — en escaladant jusqu'a ce que quelqu'un reponde
+- En cas de probleme, Beaconify notifie votre famille par notification push, SMS et appel vocal — en escaladant jusqu'a ce que quelqu'un reponde
 
 **Fonctionnalites principales :**
 - Alerte SOS avec escalade multi-niveaux (push, SMS, appel vocal)
@@ -23,8 +23,8 @@ Lantern Care est un outil de notification de securite familiale qui aide vos pro
 - Repertoire de numeros consulaires pour les voyageurs
 - Cercle familial avec planification des gardes
 
-**Ce que Lantern Care n'est PAS :**
-Lantern Care n'est pas un service d'urgence. En cas de danger, appelez toujours votre numero d'urgence local en premier (911 en Amerique du Nord). Lantern Care previent votre famille — il n'envoie pas de secours.
+**Ce que Beaconify n'est PAS :**
+Beaconify n'est pas un service d'urgence. En cas de danger, appelez toujours votre numero d'urgence local en premier (911 en Amerique du Nord). Beaconify previent votre famille — il n'envoie pas de secours.
 
 ## Mots-cles
 famille,securite,SOS,gardien,aine,chute,detection,urgence,contact,notification,aidant,localisation

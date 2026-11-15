@@ -268,7 +268,7 @@ router.post("/login", async (req: Request, res: Response) => {
 });
 
 const LINKED_ELSEWHERE = {
-  error: "This sign-in is already connected to another Lantern Care account.",
+  error: "This sign-in is already connected to another Beaconify account.",
   code: "IDENTITY_LINKED_ELSEWHERE",
 };
 
@@ -455,7 +455,7 @@ router.post("/link-phone", authMiddleware, async (req: Request, res: Response) =
     const owner = await userForPhoneSignIn(phoneUid);
     if (owner && owner !== uid) {
       res.status(409).json({
-        error: "This number already has its own Lantern Care account.",
+        error: "This number already has its own Beaconify account.",
         code: "PHONE_HAS_ACCOUNT",
       });
       return;

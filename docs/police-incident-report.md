@@ -1,7 +1,7 @@
 # Incident Report for Police — and a fall chain that cannot lose an SOS
 
 Status: design + phase 1 implementation (2026-11-07)
-Owner: Lantern Care / 守灯 iOS + backend
+Owner: Beaconify / 守灯 iOS + backend
 
 Two pieces, built together because the second feeds the first:
 
@@ -61,7 +61,7 @@ covered by a published law-enforcement request policy (see §8).
 ## 3. What is in the report
 
 ```
-LanternCare_Report_<name>_<yyyyMMdd-HHmm>/
+Beaconify_Report_<name>_<yyyyMMdd-HHmm>/
   report.pdf          human-readable, in the reporter's language
   map-overview.png    whole trail; start, last known position, SOS and fall markers
   map-last-known.png  ~600 m around the last known position

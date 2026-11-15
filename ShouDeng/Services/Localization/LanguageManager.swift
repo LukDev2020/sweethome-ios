@@ -35,7 +35,7 @@ enum AppLanguage: String, CaseIterable {
         switch self {
         case .chinese: return "守灯"
         case .traditionalChinese: return "守燈"
-        case .english, .french, .japanese: return "Lantern Care"
+        case .english, .french, .japanese: return "Beaconify"
         }
     }
 

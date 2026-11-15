@@ -1,17 +1,17 @@
-CFBundleDisplayName = "Lantern Care";
-CFBundleName = "Lantern Care";
+CFBundleDisplayName = "Beaconify";
+CFBundleName = "Beaconify";
 
 /* Localisation — Toujours */
-NSLocationAlwaysAndWhenInUseUsageDescription = "Lantern Care partage votre position avec les membres de la famille que vous choisissez, afin qu'ils puissent vous joindre en cas d'urgence. La position est aussi utilisee pour les notifications de zone securisee. Le partage ne commence qu'apres votre acceptation dans l'application.";
+NSLocationAlwaysAndWhenInUseUsageDescription = "Beaconify partage votre position avec les membres de la famille que vous choisissez, afin qu'ils puissent vous joindre en cas d'urgence. La position est aussi utilisee pour les notifications de zone securisee. Le partage ne commence qu'apres votre acceptation dans l'application.";
 
 /* Localisation — En cours d'utilisation */
-NSLocationWhenInUseUsageDescription = "Lantern Care utilise votre position pour afficher ou vous etes sur la carte et pour l'envoyer aux membres de votre famille choisis lors d'un SOS. Utilise uniquement apres votre consentement dans l'application.";
+NSLocationWhenInUseUsageDescription = "Beaconify utilise votre position pour afficher ou vous etes sur la carte et pour l'envoyer aux membres de votre famille choisis lors d'un SOS. Utilise uniquement apres votre consentement dans l'application.";
 
 /* Capteurs de mouvement */
-NSMotionUsageDescription = "Lantern Care utilise les capteurs de mouvement pour détecter une chute possible lorsque l'application est ouverte. En cas de chute, vous avez 60 secondes pour annuler l'alerte avant que votre famille soit prévenue.";
+NSMotionUsageDescription = "Beaconify utilise les capteurs de mouvement pour détecter une chute possible lorsque l'application est ouverte. En cas de chute, vous avez 60 secondes pour annuler l'alerte avant que votre famille soit prévenue.";
 
 /* Face ID */
-NSFaceIDUsageDescription = "Lantern Care utilise Face ID pour verifier votre identite et proteger l'acces a vos donnees de securite familiale.";
+NSFaceIDUsageDescription = "Beaconify utilise Face ID pour verifier votre identite et proteger l'acces a vos donnees de securite familiale.";
 
 /* Microphone */
 NSMicrophoneUsageDescription = "Pendant un SOS actif, le microphone peut enregistrer l'audio ambiant pour aider vos proches a evaluer la situation. L'enregistrement ne demarre que si vous avez active cette option et que la loi locale le permet.";
@@ -21,5 +21,5 @@ NSPhotoLibraryUsageDescription = "Partagez des photos avec les membres de votre 
 
 /* Contacts */
 NSContactsUsageDescription = "Accedez a vos contacts pour ajouter rapidement des coordonnees d'urgence. Les donnees de contact ne sont pas envoyees a nos serveurs.";
-NSBluetoothAlwaysUsageDescription = "Lantern Care se connecte à votre bouton d'alerte et à vos balises Bluetooth pour déclencher un SOS et détecter un objet oublié. Le Bluetooth n'est utilisé qu'après l'appairage d'un appareil dans Réglages.";
+NSBluetoothAlwaysUsageDescription = "Beaconify se connecte à votre bouton d'alerte et à vos balises Bluetooth pour déclencher un SOS et détecter un objet oublié. Le Bluetooth n'est utilisé qu'après l'appairage d'un appareil dans Réglages.";
 NSSpeechRecognitionUsageDescription = "Les commandes vocales vous permettent de déclencher un SOS sans les mains en disant « help » ou « 救命 ». La reconnaissance se fait entièrement sur votre appareil.";

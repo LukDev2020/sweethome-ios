@@ -68,15 +68,15 @@ enum DisclaimerCopy {
             Screen(
                 id: "onboard.not_emergency",
                 icon: "exclamationmark.triangle",
-                title: "Lantern Care Is Not an Emergency Service",
-                body: "In danger, always call your local emergency number first.\n\nLantern Care alerts the family members you choose; it cannot replace police, fire or ambulance. Alerts can be late or fail — for example if a phone is off, has no signal or has notifications turned off — and we can't guarantee that anyone responds.",
+                title: "Beaconify Is Not an Emergency Service",
+                body: "In danger, always call your local emergency number first.\n\nBeaconify alerts the family members you choose; it cannot replace police, fire or ambulance. Alerts can be late or fail — for example if a phone is off, has no signal or has notifications turned off — and we can't guarantee that anyone responds.",
                 buttonTitle: "I Understand"
             ),
             Screen(
                 id: "onboard.scope",
                 icon: "eye",
                 title: "What Family Members Can See",
-                body: "The person being looked after shares with the family members they choose: their location (and their path during an SOS), battery, check-ins, and what they post in the family circle.\n\nNever their messages, photo library, calls or other apps — Lantern Care can't access those.",
+                body: "The person being looked after shares with the family members they choose: their location (and their path during an SOS), battery, check-ins, and what they post in the family circle.\n\nNever their messages, photo library, calls or other apps — Beaconify can't access those.",
                 buttonTitle: "Continue"
             ),
             Screen(
@@ -92,15 +92,15 @@ enum DisclaimerCopy {
             Screen(
                 id: "onboard.not_emergency",
                 icon: "exclamationmark.triangle",
-                title: "Lantern Care は緊急通報サービスではありません",
-                body: "危険なときは、まず現地の緊急番号（日本では救急・消防 119、警察 110）に電話してください。\n\nLantern Care はあなたが選んだ家族に知らせるアプリで、警察・消防・救急の代わりにはなりません。電源が切れている、圏外、通知がオフなどの理由で通知が遅れたり届かなかったりすることがあり、誰かが必ず応答するとは保証できません。",
+                title: "Beaconify は緊急通報サービスではありません",
+                body: "危険なときは、まず現地の緊急番号（日本では救急・消防 119、警察 110）に電話してください。\n\nBeaconify はあなたが選んだ家族に知らせるアプリで、警察・消防・救急の代わりにはなりません。電源が切れている、圏外、通知がオフなどの理由で通知が遅れたり届かなかったりすることがあり、誰かが必ず応答するとは保証できません。",
                 buttonTitle: "わかりました"
             ),
             Screen(
                 id: "onboard.scope",
                 icon: "eye",
                 title: "家族に見えるもの",
-                body: "見守られる人は、自分で選んだ家族と次の情報を共有します：位置（SOS 中は移動ルートも）、バッテリー残量、安否報告、家族の共有スペースへの投稿。\n\nメッセージ、写真ライブラリ、通話履歴、その他のアプリの内容は見えません。Lantern Care もそれらにはアクセスできません。",
+                body: "見守られる人は、自分で選んだ家族と次の情報を共有します：位置（SOS 中は移動ルートも）、バッテリー残量、安否報告、家族の共有スペースへの投稿。\n\nメッセージ、写真ライブラリ、通話履歴、その他のアプリの内容は見えません。Beaconify もそれらにはアクセスできません。",
                 buttonTitle: "次へ"
             ),
             Screen(
@@ -116,15 +116,15 @@ enum DisclaimerCopy {
             Screen(
                 id: "onboard.not_emergency",
                 icon: "exclamationmark.triangle",
-                title: "Lantern Care n'est pas un service d'urgence",
-                body: "En cas de danger, appelez toujours d'abord le numéro d'urgence local.\n\nLantern Care prévient les proches que vous choisissez ; il ne remplace ni la police, ni les pompiers, ni les secours. Une alerte peut arriver en retard ou échouer — téléphone éteint, sans réseau ou notifications désactivées, par exemple — et nous ne pouvons pas garantir que quelqu'un réponde.",
+                title: "Beaconify n'est pas un service d'urgence",
+                body: "En cas de danger, appelez toujours d'abord le numéro d'urgence local.\n\nBeaconify prévient les proches que vous choisissez ; il ne remplace ni la police, ni les pompiers, ni les secours. Une alerte peut arriver en retard ou échouer — téléphone éteint, sans réseau ou notifications désactivées, par exemple — et nous ne pouvons pas garantir que quelqu'un réponde.",
                 buttonTitle: "Je comprends"
             ),
             Screen(
                 id: "onboard.scope",
                 icon: "eye",
                 title: "Ce que voient les proches",
-                body: "La personne protégée partage avec les proches qu'elle choisit : sa position (et son trajet pendant un SOS), sa batterie, ses signes de vie et ce qu'elle publie dans le cercle familial.\n\nJamais ses messages, sa photothèque, ses appels ni ses autres applications — Lantern Care n'y a pas accès.",
+                body: "La personne protégée partage avec les proches qu'elle choisit : sa position (et son trajet pendant un SOS), sa batterie, ses signes de vie et ce qu'elle publie dans le cercle familial.\n\nJamais ses messages, sa photothèque, ses appels ni ses autres applications — Beaconify n'y a pas accès.",
                 buttonTitle: "Continuer"
             ),
             Screen(

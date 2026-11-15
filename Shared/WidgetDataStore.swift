@@ -85,11 +85,11 @@ enum WidgetDataStore {
     }
 
     /// Returns the app's display name based on language setting.
-    /// Chinese → "守灯", English/French/other → "Lantern Care"
+    /// Chinese → "守灯", English/French/other → "Beaconify"
     static var appName: String {
         let lang = sharedDefaults?.string(forKey: languageKey) ?? "zh-Hans"
         if lang == "zh-Hant" { return "守燈" }
-        return lang.hasPrefix("zh") ? "守灯" : "Lantern Care"
+        return lang.hasPrefix("zh") ? "守灯" : "Beaconify"
     }
 
     /// Current language code (for widget/Live Activity localization)
@@ -111,7 +111,7 @@ enum WidgetDataStore {
         "la.online": "人がオンライン", "la.sos.button": "SOS", "la.checkin.button": "無事",
         "la.location.button": "位置", "la.home.countdown": "帰宅まで", "la.last.checkin": "前回の無事報告",
         "la.allergy": "アレルギー：", "la.home.timer": "タイマー作動中", "la.sos.active": "SOS 発信中",
-        "la.sos.title": "緊急 SOS", "la.sos.body": "Lantern Care の SOS が発信されました",
+        "la.sos.title": "緊急 SOS", "la.sos.body": "Beaconify の SOS が発信されました",
         "la.persons.count": "人の家族", "la.all.safe": "全員無事", "la.needs.attention": "要確認",
         "la.emergency": "緊急", "la.call": "電話 ", "la.safe": "無事", "la.overdue": "報告なし",
         "la.alert": "緊急 SOS", "la.offline": "オフライン", "la.people.safe": "人が無事",
@@ -147,7 +147,7 @@ enum WidgetDataStore {
         case "la.home.timer":   return isZh ? "回家计时中" : isFr ? "Minuterie active" : "Timer active"
         case "la.sos.active":   return isZh ? "紧急求助中" : isFr ? "SOS actif" : "SOS Active"
         case "la.sos.title":    return isZh ? "SOS 紧急求助" : isFr ? "SOS d'urgence" : "SOS Emergency"
-        case "la.sos.body":     return isZh ? "守灯已触发紧急求助" : isFr ? "Le SOS Lantern Care a été déclenché" : "Lantern Care SOS has been triggered"
+        case "la.sos.body":     return isZh ? "守灯已触发紧急求助" : isFr ? "Le SOS Beaconify a été déclenché" : "Beaconify SOS has been triggered"
 
         // Live Activity - Guardian
         case "la.persons.count": return isZh ? "位家人" : isFr ? " membres" : " family"

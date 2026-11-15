@@ -61,7 +61,7 @@ struct QuickPillRow: View {
 /// Pick a text size from four large, labelled rows, each previewed at its own size.
 struct FontSizeSheet: View {
     @ObservedObject private var lang = LanguageManager.shared
-    @AppStorage(HomeStyle.storageKey) private var homeStyle = HomeStyle.standard.rawValue
+    @AppStorage(HomeStyle.storageKey) private var homeStyle = HomeStyle.defaultStyle.rawValue
     @ObservedObject private var fontScale = FontScaleManager.shared
     @Environment(\.dismiss) private var dismiss
 

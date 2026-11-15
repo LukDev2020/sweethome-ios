@@ -1009,7 +1009,7 @@ final class AppCoordinator: ObservableObject {
         let raw: RawResponse = try await apiClient.post("/v1/user/export", body: EmptyBody())
         let day = ISO8601DateFormatter.string(from: Date(), timeZone: .current, formatOptions: [.withFullDate])
         let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent("LanternCare-data-\(day).json")
+            .appendingPathComponent("Beaconify-data-\(day).json")
         try raw.data.write(to: url, options: [.atomic, .completeFileProtection])
         return url
     }

@@ -129,7 +129,7 @@ const VOICE_COPY: Record<Lang, {
   invalid: string;
 }> = {
   en: {
-    intro: (n) => `Lantern Care emergency. ${n}, who you look after, is calling for help. Please open the Lantern Care app now.`,
+    intro: (n) => `Beaconify emergency. ${n}, who you look after, is calling for help. Please open the Beaconify app now.`,
     keys: "Press 1 if you are handling it. This stops the automatic calls and tells the rest of the family. Press 2 to hear this again.",
     prompt: "Please press a key.",
     noAnswer: (last) => last
@@ -159,7 +159,7 @@ const VOICE_COPY: Record<Lang, {
     invalid: "無效按鍵。",
   },
   fr: {
-    intro: (n) => `Urgence Lantern Care. ${n}, que vous protégez, demande de l'aide. Ouvrez l'application Lantern Care maintenant.`,
+    intro: (n) => `Urgence Beaconify. ${n}, que vous protégez, demande de l'aide. Ouvrez l'application Beaconify maintenant.`,
     keys: "Appuyez sur 1 si vous vous en occupez. Les appels automatiques s'arrêteront et le reste de la famille sera prévenu. Appuyez sur 2 pour réécouter.",
     prompt: "Veuillez appuyer sur une touche.",
     noAnswer: (last) => last
@@ -169,7 +169,7 @@ const VOICE_COPY: Record<Lang, {
     invalid: "Touche invalide.",
   },
   ja: {
-    intro: (n) => `Lantern Care緊急通知です。あなたが見守っている${n}さんが助けを求めています。今すぐLantern Careアプリを開いてください。`,
+    intro: (n) => `Beaconify緊急通知です。あなたが見守っている${n}さんが助けを求めています。今すぐBeaconifyアプリを開いてください。`,
     keys: "対応できる場合は1を押してください。自動発信が停止し、ほかのご家族にお知らせします。もう一度聞く場合は2を押してください。",
     prompt: "番号を押してください。",
     noAnswer: (last) => last

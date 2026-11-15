@@ -44,13 +44,13 @@ router.get("/verify", createRateLimiter(RATE_LIMITS.publicShare, (req) => `ip:${
     res.set("X-Robots-Tag", "noindex");
     const body = !result.valid
       ? `<h1 class="bad">No report with this code</h1><p>Check the code printed on the report.</p>`
-      : `<h1 class="ok">Genuine Lantern Care report ${esc(result.reportId)}</h1>
+      : `<h1 class="ok">Genuine Beaconify report ${esc(result.reportId)}</h1>
 <p>Created ${esc(result.createdAt)} · covers ${esc(result.windowStart)} – ${esc(result.windowEnd)}${result.caseNumber ? ` · case ${esc(result.caseNumber)}` : ""}</p>
 ${"fileMatches" in result ? (result.fileMatches ? `<p class="ok">✔ The file you checked is <b>${esc(result.file)}</b>, unchanged.</p>` : `<p class="bad">✘ That SHA-256 matches no file of this report — the file was changed or belongs elsewhere.</p>`) : ""}
 <table><tr><th>File</th><th>SHA-256</th></tr>${Object.entries(result.files).map(([f, h]) => `<tr><td>${esc(f)}</td><td><code>${esc(h)}</code></td></tr>`).join("")}</table>
 <p><small>Compute a file's SHA-256 with <code>shasum -a 256 FILE</code> (macOS/Linux) or <code>certutil -hashfile FILE SHA256</code> (Windows) and compare.${result.sealed ? "" : " The PDF and map files were not registered yet; data.json can be checked."}</small></p>`;
     res.send(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Verify report — Lantern Care</title>
+<title>Verify report — Beaconify</title>
 <style>body{font:16px -apple-system,system-ui,sans-serif;margin:24px;color:#12203a;max-width:820px}h1{font-size:21px}.ok{color:#1f7a4d}.bad{color:#c4453c}table{border-collapse:collapse;font-size:13px}td,th{border:1px solid #dde;padding:6px 8px;text-align:left}code{word-break:break-all}small{color:#667}</style></head>
 <body>${body}</body></html>`);
   } catch (e) {

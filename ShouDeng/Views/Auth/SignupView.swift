@@ -8,7 +8,7 @@ import SwiftUI
 // (then the invite decides the side, after the account exists).
 // A login that verified an unregistered number opens straight at the profile.
 //
-// Security: 5 failed code attempts -> lock + contact Lantern Care support.
+// Security: 5 failed code attempts -> lock + contact Beaconify support.
 
 struct SignupView: View {
     @EnvironmentObject var coordinator: AppCoordinator

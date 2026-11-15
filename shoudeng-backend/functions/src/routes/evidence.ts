@@ -222,14 +222,14 @@ router.get("/share/:token", createRateLimiter(RATE_LIMITS.publicShare, (req) => 
       res.set("Cache-Control", "no-store");
       res.set("X-Robots-Tag", "noindex");
       res.send(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${esc(userName)} — Lantern Care</title>
+<title>${esc(userName)} — Beaconify</title>
 <style>body{font:16px -apple-system,system-ui,sans-serif;margin:24px;color:#12203a}h1{font-size:22px;color:#c4453c}a.btn{display:block;margin:16px 0;padding:14px;border-radius:10px;background:#c4453c;color:#fff;text-align:center;text-decoration:none}small{color:#667}</style></head>
 <body><h1>${esc(userName)}${activeSOS.length ? " · SOS" : ""}</h1>
 ${activeSOS.length ? `<p>SOS since ${esc(activeSOS[0].triggeredAt)}${activeSOS[0].acknowledged ? " — a family member is handling it" : ""}</p>` : ""}
 <p>Last location: ${latest.at ? esc(latest.at) : "unknown"}${latest.batteryLevel != null ? ` · battery ${Math.round(Number(latest.batteryLevel) * 100)}%` : ""}</p>
 ${map ? `<a class="btn" href="${esc(map)}">Open location in Maps</a>` : ""}
 <p>If someone is in danger, call your local emergency number.</p>
-<small>Shared by Lantern Care for emergencies. Link expires ${esc(toIso(shareData.expiresAt))}.</small>
+<small>Shared by Beaconify for emergencies. Link expires ${esc(toIso(shareData.expiresAt))}.</small>
 </body></html>`);
       return;
     }

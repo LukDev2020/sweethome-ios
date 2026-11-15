@@ -228,7 +228,7 @@ struct TripDetailView: View {
 
     private func exportGPX() {
         var gpx = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-        gpx += "<gpx version=\"1.1\" creator=\"Lantern Care\">\n"
+        gpx += "<gpx version=\"1.1\" creator=\"Beaconify\">\n"
         gpx += "  <trk>\n    <name>Trip</name>\n    <trkseg>\n"
 
         let df = ISO8601DateFormatter()

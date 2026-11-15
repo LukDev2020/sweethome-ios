@@ -7,7 +7,7 @@ import UIKit
 //
 // Both are checked by our server, not by Firebase: the phone sends Apple's signed
 // identity token (or finishes an Alipay round trip) and gets our own session tokens
-// back. A verified Apple / Alipay account with no Lantern Care account yet gets a
+// back. A verified Apple / Alipay account with no Beaconify account yet gets a
 // signup token: the person fills in the profile (SignupView), or signs in with
 // their phone number to connect it to the account they already have.
 

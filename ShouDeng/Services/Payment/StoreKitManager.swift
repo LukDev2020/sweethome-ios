@@ -50,7 +50,7 @@ final class StoreKitManager: ObservableObject {
     enum RestoreResult: Equatable {
         case restored
         case nothingToRestore
-        /// The App Store subscription already unlocks another Lantern Care account
+        /// The App Store subscription already unlocks another Beaconify account
         case ownedByOtherAccount
         case failed
     }

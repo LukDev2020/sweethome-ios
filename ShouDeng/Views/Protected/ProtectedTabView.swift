@@ -11,7 +11,7 @@ struct ProtectedTabView: View {
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     @AppStorage("protected_selected_tab") private var selectedTab = 0
     @ObservedObject private var lang = LanguageManager.shared
-    @AppStorage(HomeStyle.storageKey) private var homeStyle = HomeStyle.standard.rawValue
+    @AppStorage(HomeStyle.storageKey) private var homeStyle = HomeStyle.defaultStyle.rawValue
 
     private var tabs: [DuoTabItem] {
         if coordinator.isRiderMode {

@@ -30,27 +30,27 @@ const smsStrings: Record<string, {
   },
   en: {
     sosBody: (name, url) => url
-      ? `[Lantern Care Emergency] ${name} is calling for help! View details: ${url}`
-      : `[Lantern Care Emergency] ${name} is calling for help! Open the Lantern Care app now.`,
-    contactSosBody: (name, url) => `[Lantern Care Emergency] ${name} listed you as an emergency contact and is calling for help now.${url ? " Latest location: " + url + "." : ""} If you can't reach them, call local emergency services.`,
-    checkinBody: (name) => `[Lantern Care] ${name} hasn't checked in today. Please follow up.`,
-    verifyBody: (code) => `[Lantern Care] Your verification code is ${code}. Valid for 5 minutes.`,
+      ? `[Beaconify SOS] ${name} is calling for help! View details: ${url}`
+      : `[Beaconify SOS] ${name} is calling for help! Open the Beaconify app now.`,
+    contactSosBody: (name, url) => `[Beaconify SOS] ${name} listed you as an emergency contact and is calling for help now.${url ? " Latest location: " + url + "." : ""} If you can't reach them, call local emergency services.`,
+    checkinBody: (name) => `[Beaconify] ${name} hasn't checked in today. Please follow up.`,
+    verifyBody: (code) => `[Beaconify] Your verification code is ${code}. Valid for 5 minutes.`,
   },
   fr: {
     sosBody: (name, url) => url
-      ? `[Lantern Care Urgence] ${name} demande de l'aide ! Voir les détails : ${url}`
-      : `[Lantern Care Urgence] ${name} demande de l'aide ! Ouvrez l'application Lantern Care maintenant.`,
-    contactSosBody: (name, url) => `[Lantern Care Urgence] ${name} vous a désigné(e) comme contact d'urgence et demande de l'aide.${url ? " Dernière position : " + url + "." : ""} Si vous ne pouvez pas le/la joindre, appelez les secours.`,
-    checkinBody: (name) => `[Lantern Care] ${name} n'a pas donné signe de vie aujourd'hui.`,
-    verifyBody: (code) => `[Lantern Care] Votre code de vérification est ${code}. Valide 5 minutes.`,
+      ? `[Beaconify SOS] ${name} demande de l'aide ! Voir les détails : ${url}`
+      : `[Beaconify SOS] ${name} demande de l'aide ! Ouvrez l'application Beaconify maintenant.`,
+    contactSosBody: (name, url) => `[Beaconify SOS] ${name} vous a désigné(e) comme contact d'urgence et demande de l'aide.${url ? " Dernière position : " + url + "." : ""} Si vous ne pouvez pas le/la joindre, appelez les secours.`,
+    checkinBody: (name) => `[Beaconify] ${name} n'a pas donné signe de vie aujourd'hui.`,
+    verifyBody: (code) => `[Beaconify] Votre code de vérification est ${code}. Valide 5 minutes.`,
   },
   ja: {
     sosBody: (name, url) => url
-      ? `【Lantern Care 緊急通知】${name}さんが助けを求めています。詳細をすぐにご確認ください：${url}`
-      : `【Lantern Care 緊急通知】${name}さんが助けを求めています。今すぐLantern Careアプリを開いてご確認ください。`,
-    contactSosBody: (name, url) => `【Lantern Care 緊急通知】${name}さんがあなたを緊急連絡先に登録しており、現在助けを求めています。${url ? "最新の位置情報：" + url + " " : ""}ご本人と連絡が取れない場合は、現地の緊急通報番号（日本国内は救急119・警察110）に連絡してください。`,
-    checkinBody: (name) => `【Lantern Care】${name}さんから今日の無事報告がまだありません。ご確認をお願いします。`,
-    verifyBody: (code) => `【Lantern Care】認証コードは ${code} です。有効期限は5分間です。`,
+      ? `【Beaconify SOS】${name}さんが助けを求めています。詳細をすぐにご確認ください：${url}`
+      : `【Beaconify SOS】${name}さんが助けを求めています。今すぐBeaconifyアプリを開いてご確認ください。`,
+    contactSosBody: (name, url) => `【Beaconify SOS】${name}さんがあなたを緊急連絡先に登録しており、現在助けを求めています。${url ? "最新の位置情報：" + url + " " : ""}ご本人と連絡が取れない場合は、現地の緊急通報番号（日本国内は救急119・警察110）に連絡してください。`,
+    checkinBody: (name) => `【Beaconify】${name}さんから今日の無事報告がまだありません。ご確認をお願いします。`,
+    verifyBody: (code) => `【Beaconify】認証コードは ${code} です。有効期限は5分間です。`,
   },
 };
 

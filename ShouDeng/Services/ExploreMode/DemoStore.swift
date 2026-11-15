@@ -948,7 +948,7 @@ final class DemoStore {
         let code = String((0..<8).map { _ in alphabet.randomElement()! })
         let report: [String: Any] = [
             "reportId": reportId, "verifyCode": code, "generatedAt": iso.string(from: now),
-            "generator": "Lantern Care incident report v1 (Explore Mode — sample data)",
+            "generator": "Beaconify incident report v1 (Explore Mode — sample data)",
             "purpose": body["purpose"] as? String ?? "other", "caseNumber": body["caseNumber"] as? String ?? NSNull(),
             "sections": body["sections"] as? [String] ?? [],
             "reporter": ["id": me, "name": reporter.displayName, "role": me == personId ? "self" : "guardian"],

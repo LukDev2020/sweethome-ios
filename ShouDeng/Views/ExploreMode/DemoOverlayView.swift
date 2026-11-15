@@ -106,13 +106,37 @@ private struct DemoTipLayer: View {
     private let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
     private let ink = Color(red: 13/255, green: 52/255, blue: 99/255)
 
+    /// After "Try it" the ring shows where to tap, then fades (it used to stay for
+    /// good and, scrolled under the header or over the map, looked like a stray yellow box).
+    @State private var ringFaded = false
+    @State private var ringFadeTask: Task<Void, Never>?
+
     private var anchor: CGRect? {
         step.anchor.flatMap { explore.anchorFrames[$0] }.flatMap { $0.isEmpty ? nil : $0 }
     }
 
+    /// The anchor while the control is fully in the visible content: not under the demo
+    /// banner and app header, not behind the tab bar, not scrolled off screen.
+    private var visibleAnchor: CGRect? {
+        guard let anchor else { return nil }
+        let top = (explore.overlayRegions["banner"]?.maxY ?? safeTop) + 48
+        let bottom = screen.height - safeBottom - 64
+        return anchor.minY >= top && anchor.maxY <= bottom ? anchor : nil
+    }
+
+    private func fadeRingSoon() {
+        ringFadeTask?.cancel()
+        ringFaded = false
+        ringFadeTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 6_000_000_000)
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeOut(duration: 0.4)) { ringFaded = true }
+        }
+    }
+
     var body: some View {
         ZStack(alignment: .topLeading) {
-            if let anchor, !collapsed {
+            if let anchor = visibleAnchor, !collapsed {
                 // Dim everything except the real control (visual only — taps pass through)
                 Path { p in
                     p.addRect(CGRect(origin: .zero, size: screen))
@@ -123,7 +147,7 @@ private struct DemoTipLayer: View {
                 .accessibilityHidden(true)
             }
             // Not over a sheet: the control it rings is underneath (e.g. SOS button under the SOS screen)
-            if let anchor, !hiddenByUser, !explore.isAppPresentingModal {
+            if let anchor = visibleAnchor, !hiddenByUser, !explore.isAppPresentingModal, !(collapsed && ringFaded) {
                 RoundedRectangle(cornerRadius: 14)
                     .stroke(lamp, lineWidth: 3)
                     .frame(width: anchor.width + 12, height: anchor.height + 12)
@@ -139,6 +163,7 @@ private struct DemoTipLayer: View {
                         collapsed = false
                         autoCollapsed = false
                         hiddenByUser = false
+                        ringFaded = false
                     } label: {
                         Label(LanguageManager.shared.localized("explore.tip.show"), systemImage: "lightbulb")
                             .font(.footnote.weight(.semibold))
@@ -168,6 +193,8 @@ private struct DemoTipLayer: View {
         }
         .frame(width: screen.width, height: screen.height)
         .onChange(of: step.id) { _, _ in
+            ringFadeTask?.cancel()
+            ringFaded = false
             collapsed = explore.isAppPresentingModal
             autoCollapsed = collapsed
             titleFocused = true
@@ -244,6 +271,7 @@ private struct DemoTipLayer: View {
                 Button {
                     if case .tryIt = step.action {
                         collapsed = true // get out of the way of the real control
+                        fadeRingSoon()
                     }
                     explore.performPrimary()
                 } label: {

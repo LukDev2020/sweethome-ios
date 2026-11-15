@@ -8,15 +8,20 @@ import SwiftUI
 // both use the same data and the same SOS.
 
 enum HomeStyle: String, CaseIterable {
+    /// simple: the default — large text, four big buttons (SimpleProtectedHomeView)
+    /// standard: "Full" — map, trips, tools, five tabs (ProtectedHomeView)
     /// rider: delivery / rideshare riders — shift, crew, rider SOS (RiderHomeView)
-    case standard, simple, rider
+    case simple, standard, rider
     static let storageKey = "protected_home_style"
+    /// A protected person who hasn't chosen yet gets the simple home; once they
+    /// choose (Settings → Home screen), that choice stays until they change it.
+    static let defaultStyle = HomeStyle.simple
 }
 
 struct SimpleProtectedHomeView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
-    @AppStorage(HomeStyle.storageKey) private var homeStyle = HomeStyle.standard.rawValue
+    @AppStorage(HomeStyle.storageKey) private var homeStyle = HomeStyle.defaultStyle.rawValue
     @State private var checkedIn = false
     @State private var homeConfirmed = false
     @State private var showInvite = false
@@ -194,11 +199,11 @@ struct BigSOSButton: View {
 
 // MARK: - Settings panel
 
-/// Settings → Home style: two cards, standard / simple.
+/// Settings → Home style: simple (default), full, rider.
 struct HomeStylePanel: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
-    @AppStorage(HomeStyle.storageKey) private var storedStyle = HomeStyle.standard.rawValue
+    @AppStorage(HomeStyle.storageKey) private var storedStyle = HomeStyle.defaultStyle.rawValue
     /// Read so the panel redraws; the demo keeps its own choice
     private var homeStyle: String { _ = storedStyle; return coordinator.effectiveHomeStyle }
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)

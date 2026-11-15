@@ -829,7 +829,7 @@ describe("Trip routes", () => {
 
       const gpx = res.text;
       expect(gpx).toContain('<?xml version="1.0" encoding="UTF-8"?>');
-      expect(gpx).toContain("Lantern Care");
+      expect(gpx).toContain("Beaconify");
       expect(gpx).toContain("<trk>");
       expect(gpx).toContain("<trkseg>");
       expect(gpx).toContain("</trkseg>");

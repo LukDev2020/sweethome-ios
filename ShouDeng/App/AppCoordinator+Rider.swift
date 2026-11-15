@@ -21,7 +21,13 @@ extension AppCoordinator {
         if isDemo {
             return demoHomeStyle ?? (currentUser?.id == DemoDataset.kaiId ? HomeStyle.rider.rawValue : HomeStyle.standard.rawValue)
         }
-        return UserDefaults.standard.string(forKey: HomeStyle.storageKey) ?? HomeStyle.standard.rawValue
+        return chosenHomeStyle ?? HomeStyle.defaultStyle.rawValue
+    }
+
+    /// The style the person picked themselves (nil: never chosen, the default applies)
+    var chosenHomeStyle: String? {
+        if isDemo { return demoHomeStyle }
+        return UserDefaults.standard.string(forKey: HomeStyle.storageKey)
     }
 
     func setHomeStyle(_ style: HomeStyle, syncToServer: Bool = true) {

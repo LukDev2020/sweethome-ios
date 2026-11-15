@@ -159,7 +159,7 @@ final class TraditionalChineseTests: XCTestCase {
     func testBrandNamePerLanguage() {
         XCTAssertEqual(AppLanguage.chinese.brandName, "守灯")
         XCTAssertEqual(AppLanguage.traditionalChinese.brandName, "守燈")
-        XCTAssertEqual(AppLanguage.english.brandName, "Lantern Care")
+        XCTAssertEqual(AppLanguage.english.brandName, "Beaconify")
     }
 }
 

@@ -95,7 +95,7 @@ final class IncidentReportBuilder {
         stamp.locale = Locale(identifier: "en_US_POSIX")
         let name = (data.person.name ?? "person").components(separatedBy: CharacterSet.alphanumerics.inverted).joined()
         let base = FileManager.default.temporaryDirectory.appendingPathComponent("IncidentReports", isDirectory: true)
-        let folder = base.appendingPathComponent("LanternCare_\(data.reportId)_\(name.isEmpty ? "person" : name)_\(stamp.string(from: Date()))", isDirectory: true)
+        let folder = base.appendingPathComponent("Beaconify_\(data.reportId)_\(name.isEmpty ? "person" : name)_\(stamp.string(from: Date()))", isDirectory: true)
         try? FileManager.default.removeItem(at: folder)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         return folder
@@ -297,7 +297,7 @@ enum ReportExports {
         }
         return """
         <?xml version="1.0" encoding="UTF-8"?>
-        <gpx version="1.1" creator="Lantern Care incident report" xmlns="http://www.topografix.com/GPX/1/1">
+        <gpx version="1.1" creator="Beaconify incident report" xmlns="http://www.topografix.com/GPX/1/1">
           <metadata><name>\(esc(d.person.name ?? "")) — \(d.reportId)</name><desc>Verify code \(d.verifyCode). Window \(d.window.start) – \(d.window.end)</desc><time>\(d.generatedAt)</time></metadata>
         \(wpts.joined(separator: "\n"))
           <trk><name>\(esc(d.person.name ?? ""))</name><trkseg>

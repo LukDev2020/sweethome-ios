@@ -26,7 +26,7 @@ struct ReportPDF {
             let f = UIGraphicsPDFRendererFormat()
             f.documentInfo = [
                 kCGPDFContextTitle as String: "\(L("report.title")) \(data.reportId)",
-                kCGPDFContextCreator as String: "Lantern Care",
+                kCGPDFContextCreator as String: "Beaconify",
             ]
             return f
         }())

@@ -268,7 +268,7 @@ private struct CrewAlertMock: View {
                 HStack(alignment: .top, spacing: 10) {
                     Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(M.alert).font(.system(size: 22))
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("CRITICAL · LANTERN CARE").font(.system(size: 11, weight: .bold)).foregroundStyle(.secondary)
+                        Text("CRITICAL · BEACONIFY").font(.system(size: 11, weight: .bold)).foregroundStyle(.secondary)
                         Text("Kai needs help — 220 m away").font(.system(size: 16, weight: .bold))
                         Text("\(M.address) · SOS 40 s ago").font(.system(size: 13))
                     }

@@ -336,7 +336,7 @@ router.get("/:tripId/export", async (req: Request, res: Response) => {
     const startDate = tripData.startTime?.toDate().toISOString().split("T")[0] || "trip";
 
     let gpx = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-    gpx += `<gpx version="1.1" creator="Lantern Care">\n`;
+    gpx += `<gpx version="1.1" creator="Beaconify">\n`;
     gpx += `  <trk>\n    <name>Trip ${startDate}</name>\n    <trkseg>\n`;
 
     for (const doc of pointsSnap.docs) {

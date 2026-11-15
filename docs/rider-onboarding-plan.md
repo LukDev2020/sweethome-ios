@@ -4,7 +4,7 @@ Status: phases 1–3 built (2026-11-07). See "Built" at the end for what shipped
 
 ## Problem
 
-Today a delivery rider who installs Lantern Care has to work out the route alone:
+Today a delivery rider who installs Beaconify has to work out the route alone:
 
 1. Sign in with phone and SMS code.
 2. At "Choose your role", pick **Protected Person**. The description mentions seniors, students and travellers, never riders.

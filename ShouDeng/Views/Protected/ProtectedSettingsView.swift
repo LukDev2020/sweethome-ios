@@ -29,7 +29,7 @@ struct ProtectedSettingsView: View {
     @AppStorage("voice_command_enabled") private var voiceCommandEnabled = false
     /// Read so the fall-profile switch redraws (the value itself is the coordinator's)
     @AppStorage(AppCoordinator.sensitiveFallKey) private var sensitiveFallStored = false
-    @AppStorage(HomeStyle.storageKey) private var homeStyleStored = HomeStyle.standard.rawValue
+    @AppStorage(HomeStyle.storageKey) private var homeStyleStored = HomeStyle.defaultStyle.rawValue
     @AppStorage("notif_sos_alerts") private var notifSOS = true
     @AppStorage("notif_checkin_reminder") private var notifCheckin = true
     @AppStorage("notif_family_feed") private var notifFamilyFeed = true

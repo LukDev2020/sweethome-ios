@@ -8,7 +8,7 @@ import UIKit
 // Design follows the lighthouse design system:
 //   navy #014581, blue #3D9AC0, cream #FCF2DA, bg #FBF8F1, ink #0E2B4A
 //
-// Security: 5 failed code attempts → lock + contact Lantern Care support.
+// Security: 5 failed code attempts → lock + contact Beaconify support.
 // Reset: clears all state and returns to phone entry.
 
 struct LoginView: View {
@@ -364,7 +364,7 @@ struct LoginView: View {
                     .tracking(1.5)
                     .padding(.top, 10)
 
-                Text(lang.current.isChinese ? "Lantern Care" : "守灯")
+                Text(lang.current.isChinese ? "Beaconify" : "守灯")
                     .font(.scaled(size: 12, weight: .medium))
                     .foregroundStyle(Color(red: 26/255, green: 106/255, blue: 138/255))
                     .tracking(3.5)

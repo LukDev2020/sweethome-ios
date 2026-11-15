@@ -3,7 +3,7 @@ import Foundation
 
 // MARK: - Siri, Shortcuts and the Action Button
 //
-// "Hey Siri, Lantern Care SOS", or Settings → Action Button → Shortcut → Lantern Care
+// "Hey Siri, Beaconify SOS", or Settings → Action Button → Shortcut → Beaconify
 // → SOS. SOS opens the app at the cancel countdown (as from the lock screen); shifts
 // start and end without opening it.
 
@@ -13,8 +13,8 @@ enum AppIntentBridge {
 
 @available(iOS 17.0, *)
 struct LanternSOSIntent: AppIntent {
-    static var title: LocalizedStringResource = "Lantern Care SOS"
-    static var description = IntentDescription("Opens Lantern Care at the SOS countdown.")
+    static var title: LocalizedStringResource = "Beaconify SOS"
+    static var description = IntentDescription("Opens Beaconify at the SOS countdown.")
     static var openAppWhenRun: Bool = true
 
     @MainActor
@@ -27,10 +27,10 @@ struct LanternSOSIntent: AppIntent {
 @available(iOS 17.0, *)
 struct StartRiderShiftIntent: AppIntent {
     static var title: LocalizedStringResource = "Start shift"
-    static var description = IntentDescription("Starts a Lantern Care rider shift and shares your location with your crew.")
+    static var description = IntentDescription("Starts a Beaconify rider shift and shares your location with your crew.")
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        guard let coordinator = await AppIntentBridge.coordinator else { return .result(dialog: "Open Lantern Care first.") }
+        guard let coordinator = await AppIntentBridge.coordinator else { return .result(dialog: "Open Beaconify first.") }
         await coordinator.startShift(plannedEnd: Date().addingTimeInterval(4 * 3600))
         return .result(dialog: "Shift started. Your crew can see you.")
     }
@@ -39,10 +39,10 @@ struct StartRiderShiftIntent: AppIntent {
 @available(iOS 17.0, *)
 struct EndRiderShiftIntent: AppIntent {
     static var title: LocalizedStringResource = "End shift"
-    static var description = IntentDescription("Ends your Lantern Care rider shift.")
+    static var description = IntentDescription("Ends your Beaconify rider shift.")
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        guard let coordinator = await AppIntentBridge.coordinator else { return .result(dialog: "Open Lantern Care first.") }
+        guard let coordinator = await AppIntentBridge.coordinator else { return .result(dialog: "Open Beaconify first.") }
         await coordinator.endShift()
         return .result(dialog: "Shift ended. Get home safe.")
     }

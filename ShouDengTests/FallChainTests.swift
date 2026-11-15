@@ -119,6 +119,19 @@ final class FallChainTests: XCTestCase {
         await waitUntil { self.demo.motionService.fallDetectorConfig == .elderly }
     }
 
+    func testSimpleIsTheDefaultHomeAndAChoiceSticks() {
+        XCTAssertEqual(HomeStyle.defaultStyle, .simple)
+        XCTAssertEqual(HomeStyle.allCases.first, .simple, "listed first in Settings")
+        // Nobody chose yet: the default applies, the sensitive fall profile doesn't
+        XCTAssertNil(demo.chosenHomeStyle)
+        XCTAssertFalse(demo.sensitiveFallDetection, "only a chosen simple home turns the older-adult profile on")
+        demo.setHomeStyle(.standard)
+        XCTAssertEqual(demo.chosenHomeStyle, HomeStyle.standard.rawValue)
+        XCTAssertEqual(demo.effectiveHomeStyle, HomeStyle.standard.rawValue, "the choice stays until changed")
+        demo.setHomeStyle(.simple)
+        XCTAssertEqual(demo.effectiveHomeStyle, HomeStyle.simple.rawValue)
+    }
+
     func testTheDemoNeverChangesTheRealSetting() async throws {
         let before = UserDefaults.standard.object(forKey: AppCoordinator.sensitiveFallKey) as? Bool
         demo.setSensitiveFallDetection(before == true ? false : true)

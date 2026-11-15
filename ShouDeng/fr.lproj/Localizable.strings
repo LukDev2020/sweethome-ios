@@ -1,5 +1,5 @@
 /* Login */
-"app.name" = "Lantern Care";
+"app.name" = "Beaconify";
 "app.tagline" = "Une lumière qui veille sur votre famille";
 "login.phone.placeholder" = "Numéro de téléphone";
 "login.code.placeholder" = "Code de vérification";
@@ -21,7 +21,7 @@
 /* Login - Security */
 "login.reset" = "Recommencer";
 "login.locked.title" = "Compte verrouillé";
-"login.locked.message" = "Trop de tentatives échouées. Veuillez contacter l'équipe Lantern Care.";
+"login.locked.message" = "Trop de tentatives échouées. Veuillez contacter l'équipe Beaconify.";
 "login.locked.contact" = "Contacter le support";
 "login.attempts.warning" = "%d tentatives restantes";
 
@@ -54,7 +54,7 @@
 "tab.settings" = "Paramètres";
 
 /* Navigation */
-"nav.title" = "Lantern Care";
+"nav.title" = "Beaconify";
 "nav.you.are.here" = "Vous êtes ici";
 
 /* Home View - Protected */
@@ -102,7 +102,7 @@
 "sos.send.anyway" = "Envoyer quand même";
 "sos.invite.first" = "Inviter un gardien d'abord";
 "sos.active" = "SOS actif";
-"sos.triggered" = "SOS Lantern Care déclenché";
+"sos.triggered" = "SOS Beaconify déclenché";
 
 /* Live Activity */
 "la.normal" = "Normal";
@@ -494,11 +494,11 @@
 "guardian.home.consulate" = "Consulat";
 "guardian.home.emergency.text" = "SMS d'urgence";
 "guardian.home.family.location" = "Position famille";
-"guardian.home.footer.note" = "Lantern Care notifie la famille, ne remplace pas les services d'urgence";
+"guardian.home.footer.note" = "Beaconify notifie la famille, ne remplace pas les services d'urgence";
 "guardian.home.guardian.role" = "Gardien";
 "guardian.home.guarding" = "En protection";
 "guardian.home.guarding.count" = "Protection de %d personnes";
-"guardian.home.invite.description" = "Inviter la famille à rejoindre Lantern Care";
+"guardian.home.invite.description" = "Inviter la famille à rejoindre Beaconify";
 "guardian.home.invite.family" = "Inviter la famille";
 "guardian.home.layers.count" = "%d couches de protection";
 "guardian.home.me" = "Moi";
@@ -509,7 +509,7 @@
 "guardian.home.no.protected" = "Aucun protégé";
 "guardian.home.org.dashboard" = "Tableau de bord org";
 "guardian.home.protection" = "Protection active";
-"guardian.home.shoudeng" = "Lantern Care";
+"guardian.home.shoudeng" = "Beaconify";
 "guardian.home.sos.active" = "SOS actif";
 "guardian.home.time.afternoon" = "Après-midi";
 "guardian.home.time.dawn" = "Aube";
@@ -630,9 +630,9 @@
 "invite.howToUse" = "Comment utiliser";
 "invite.me" = "Moi";
 "invite.share" = "Partager";
-"invite.shareText" = "%@ vous invite à devenir gardien Lantern Care. Entrez le code dans l'app Lantern Care : %@ (valide 24h)";
+"invite.shareText" = "%@ vous invite à devenir gardien Beaconify. Entrez le code dans l'app Beaconify : %@ (valide 24h)";
 "invite.step1" = "Envoyez le code à un proche de confiance";
-"invite.step2" = "Ils entrent le code dans l'app Lantern Care";
+"invite.step2" = "Ils entrent le code dans l'app Beaconify";
 "invite.step3" = "Après connexion, ajustez les permissions à tout moment";
 "invite.subtitle" = "Inviter la famille comme gardien";
 "invite.title" = "Inviter un gardien";
@@ -738,7 +738,7 @@
 "protected.coverage.title" = "Couverture";
 "protected.coverage.weakNetwork" = "Réseau faible";
 "protected.home.afternoon" = "Après-midi";
-"protected.home.appName" = "Lantern Care";
+"protected.home.appName" = "Beaconify";
 "protected.home.battery" = "Batterie %d%%";
 "protected.home.cancelSOS" = "Annuler SOS";
 "protected.home.checkIn" = "Signaler OK";
@@ -755,7 +755,7 @@
 "protected.home.guardianCount" = "%d gardiens";
 "protected.home.guarding" = "En protection";
 "protected.home.imHere" = "Je suis ici";
-"protected.home.inviteDescription" = "Inviter la famille à Lantern Care";
+"protected.home.inviteDescription" = "Inviter la famille à Beaconify";
 "protected.home.inviteFamily" = "Inviter la famille";
 "protected.home.inviteNew" = "Inviter un gardien";
 "protected.home.lateNight" = "Nuit";
@@ -825,7 +825,7 @@
 "protected.settings.detection.distress" = "Détection audio de détresse";
 "protected.settings.detection.distressDesc" = "Des cris près du téléphone déclenchent « Ça va ? », puis préviennent vos gardiens";
 "protected.settings.detection.voiceCommand" = "Commande vocale SOS";
-"protected.settings.detection.voiceCommandDesc" = "Dites 'Lantern Care aide-moi' pour SOS auto";
+"protected.settings.detection.voiceCommandDesc" = "Dites 'Beaconify aide-moi' pour SOS auto";
 "protected.settings.notification.checkInReminder" = "Rappel de signalement";
 "protected.settings.role.needsApproval" = "Approbation requise";
 "protected.settings.role.protected" = "Personne protégée";
@@ -872,7 +872,7 @@
 "settings.email.addTitle" = "Ajouter un e-mail";
 "settings.fontsize.hint" = "La taille s'applique immédiatement partout";
 "settings.fontsize.sample" = "A";
-"settings.legal.about" = "À propos de Lantern Care";
+"settings.legal.about" = "À propos de Beaconify";
 "settings.legal.privacyAndTerms" = "Confidentialité et conditions";
 "settings.notification.familyFeed" = "Nouvelles du cercle familial";
 "settings.notification.sos" = "SOS d'urgence";
@@ -916,7 +916,7 @@
 "claim.networkError" = "Erreur réseau, veuillez réessayer";
 "claim.referenceChecklist" = "Liste de référence : %@";
 "claim.sharePDF" = "Partager PDF";
-"claim.velaProvides" = "Lantern Care fournit des données de sécurité vérifiées pour les réclamations d'assurance";
+"claim.velaProvides" = "Beaconify fournit des données de sécurité vérifiées pour les réclamations d'assurance";
 
 // MARK: - Duress Code (additional)
 "duress.cancel" = "Annuler";
@@ -1358,7 +1358,7 @@
 "explore.handoff.body" = "Il est %@ pour %@. Son téléphone vient de recevoir l'alerte et la position de maman. Voyons ce qu'elle voit — et comment elle arrête l'escalade.";
 "explore.handoff.cta" = "Voir le téléphone de %@ →";
 "explore.handoff.footnote" = "Démo · aucune vraie alerte n'a été envoyée";
-"explore.notif.source" = "Lantern Care · DÉMO";
+"explore.notif.source" = "Beaconify · DÉMO";
 "explore.notif.hint" = "Ouvre l'alerte";
 "explore.notif.sos.title" = "🆘 %@ demande de l'aide";
 "explore.notif.sos.body" = "SOS depuis %@ · batterie %d %%";
@@ -1431,7 +1431,7 @@
 "wizard.city.subtitle" = "Sert à afficher l'heure locale et les informations des services d'urgence.";
 "wizard.city.placeholder" = "ex. : Paris, Toronto";
 "wizard.biometric.title" = "Se connecter avec %@ ?";
-"wizard.biometric.subtitle" = "La prochaine fois, connectez-vous à Lantern Care sans code de vérification.\nVous pouvez désactiver cette option à tout moment dans Réglages.";
+"wizard.biometric.subtitle" = "La prochaine fois, connectez-vous à Beaconify sans code de vérification.\nVous pouvez désactiver cette option à tout moment dans Réglages.";
 "wizard.biometric.enable" = "Utiliser %@";
 "wizard.biometric.skip" = "Pas maintenant";
 "wizard.plan.title" = "Choisissez une formule";
@@ -1440,12 +1440,12 @@
 "wizard.invite.guardian.title" = "Ajouter une personne à protéger";
 "wizard.invite.guardian.subtitle" = "Saisissez le code d'invitation de la personne que vous protégerez,\nou créez un code et envoyez-le-lui.";
 "wizard.invite.protected.title" = "Inviter un protecteur";
-"wizard.invite.protected.subtitle" = "Créez un code d'invitation et partagez-le avec vos proches.\nIls pourront devenir vos protecteurs dans Lantern Care.";
+"wizard.invite.protected.subtitle" = "Créez un code d'invitation et partagez-le avec vos proches.\nIls pourront devenir vos protecteurs dans Beaconify.";
 "wizard.invite.codePlaceholder" = "Code d'invitation";
 "wizard.invite.linked" = "Comptes reliés";
 "wizard.invite.confirm" = "Valider le code";
 "wizard.invite.validFor" = "Valable 24 heures";
-"wizard.invite.shareMessage" = "J'utilise Lantern Care pour la sécurité de notre famille. Rejoins-moi avec ce code d'invitation : %@";
+"wizard.invite.shareMessage" = "J'utilise Beaconify pour la sécurité de notre famille. Rejoins-moi avec ce code d'invitation : %@";
 "wizard.invite.share" = "Partager le code";
 "wizard.invite.generate" = "Créer un code d'invitation";
 "wizard.invite.error.invalid" = "Ce code d'invitation est invalide ou a expiré.";
@@ -1467,11 +1467,11 @@
 
 /* Feature disclosures (first use) */
 "disclosure.sos.title" = "Avant d'envoyer un SOS";
-"disclosure.sos.body" = "Un SOS prévient les contacts que vous avez choisis.\n\nSi vous êtes en danger, appelez aussi le %@. Lantern Care n'appelle pas les secours à votre place.";
+"disclosure.sos.body" = "Un SOS prévient les contacts que vous avez choisis.\n\nSi vous êtes en danger, appelez aussi le %@. Beaconify n'appelle pas les secours à votre place.";
 "disclosure.location.title" = "Partager votre position";
 "disclosure.location.body" = "Une fois activé, les proches que vous avez choisis voient la dernière position que vous avez envoyée.\n\nChaque position est horodatée : ils voient où vous étiez il y a quelques minutes, pas un suivi en direct.";
 "disclosure.trajectory.title" = "Historique des trajets";
-"disclosure.trajectory.body" = "Une fois activé, Lantern Care conserve vos trajets des 7 derniers jours pour aider vos proches à savoir où vous avez pu aller en cas d'urgence.\n\nEn temps normal, vos proches ne voient que votre dernière position, pas votre trajet. Vos deux dernières heures de trajet ne leur deviennent visibles que si vous envoyez un SOS.";
+"disclosure.trajectory.body" = "Une fois activé, Beaconify conserve vos trajets des 7 derniers jours pour aider vos proches à savoir où vous avez pu aller en cas d'urgence.\n\nEn temps normal, vos proches ne voient que votre dernière position, pas votre trajet. Vos deux dernières heures de trajet ne leur deviennent visibles que si vous envoyez un SOS.";
 "disclosure.fallDetection.title" = "Détection de chute";
 "disclosure.fallDetection.body" = "La détection de chute est une estimation à partir des capteurs du téléphone. Ce n'est pas un dispositif médical et elle n'est certifiée par aucune autorité.\n\nElle peut manquer une vraie chute ou se déclencher lors de gestes du quotidien. Ne vous y fiez pas comme seule mesure de sécurité.";
 "disclosure.emergencyAudio.title" = "Enregistrement sonore pendant un SOS";
@@ -1559,7 +1559,7 @@
 "invite.sheet.errorBody" = "Impossible de créer l'invitation. Vérifiez votre connexion et réessayez.";
 "invite.sheet.ok" = "OK";
 "invite.sheet.cancel" = "Annuler";
-"invite.sheet.shareText" = "Rejoignez mon cercle Lantern Care : %@";
+"invite.sheet.shareText" = "Rejoignez mon cercle Beaconify : %@";
 "member.edit.title" = "Modifier le membre";
 "member.edit.info" = "Informations";
 "member.edit.city" = "Ville";
@@ -1622,8 +1622,8 @@
 "claim.provides.flight_delay" = "Numéro de vol et horaires réels de l'itinéraire partagé";
 "claim.provides.lost_luggage" = "Historique du voyage\nHeures de prise des photos";
 "claim.provides.traffic_accident" = "Contacts avec l'ambassade\nLieu de l'incident";
-"claim.disclaimer.full" = "Cet export provient des données de l'appareil de l'utilisateur et des journaux des serveurs Lantern Care ; il est fourni à titre indicatif uniquement. Lantern Care ne garantit, expressément ou implicitement, ni l'exactitude, ni l'exhaustivité, ni l'adéquation de ces données et décline toute responsabilité quant à leur utilisation.";
-"claim.disclaimer.pdfHeader" = "Document exporté automatiquement par l'app Lantern Care à partir des données de l'appareil. À titre indicatif ; ne constitue ni une attestation ni un document juridique.";
+"claim.disclaimer.full" = "Cet export provient des données de l'appareil de l'utilisateur et des journaux des serveurs Beaconify ; il est fourni à titre indicatif uniquement. Beaconify ne garantit, expressément ou implicitement, ni l'exactitude, ni l'exhaustivité, ni l'adéquation de ces données et décline toute responsabilité quant à leur utilisation.";
+"claim.disclaimer.pdfHeader" = "Document exporté automatiquement par l'app Beaconify à partir des données de l'appareil. À titre indicatif ; ne constitue ni une attestation ni un document juridique.";
 "claim.disclaimer.checklistNote" = "Liste indicative. Les exigences exactes figurent dans votre contrat d'assurance.";
 "claim.disclaimer.limitations" = "La précision de la position dépend de l'appareil et de l'environnement ; les coordonnées peuvent être décalées\nLes heures proviennent de l'horloge de l'appareil, sans certification d'un tiers horodateur\nCes données ne remplacent pas les documents officiels des hôpitaux, de la police, des compagnies aériennes, etc.\nL'utilisateur peut inclure ou exclure certains enregistrements avant l'export";
 "claim.pdf.title" = "Éléments de référence pour sinistre";
@@ -1651,14 +1651,14 @@
 "claim.pdf.insurerRequires" = "Les assureurs demandent généralement (à obtenir vous-même) :";
 "claim.pdf.deviceHas" = "Vos données d'appareil contiennent :";
 "claim.pdf.dataNotes" = "À propos de ces données";
-"claim.pdf.footer" = "Exporté de Lantern Care · à titre indicatif";
+"claim.pdf.footer" = "Exporté de Beaconify · à titre indicatif";
 "claim.pdf.listSeparator" = ", ";
 
 /* Data location consent (2026-10-31) */
 "consent.transfer.checkbox" = "J'accepte que mes données soient stockées et traitées aux États-Unis (Google Cloud, Twilio).";
 "consent.transfer.readPolicy" = "Lire la politique de confidentialité";
 "consent.transfer.title" = "Vos données sont stockées aux États-Unis";
-"consent.transfer.body" = "Pour envoyer les SOS, partager votre position avec vos proches et conserver l'historique, Lantern Care stocke vos données sur Google Cloud aux États-Unis (us-central1). Les SMS et appels d'urgence passent par Twilio, également aux États-Unis. Le droit américain de la vie privée diffère de celui de votre pays. Acceptez-vous ?";
+"consent.transfer.body" = "Pour envoyer les SOS, partager votre position avec vos proches et conserver l'historique, Beaconify stocke vos données sur Google Cloud aux États-Unis (us-central1). Les SMS et appels d'urgence passent par Twilio, également aux États-Unis. Le droit américain de la vie privée diffère de celui de votre pays. Acceptez-vous ?";
 "consent.transfer.agree" = "J'accepte";
 "consent.transfer.decline" = "Je refuse";
 "consent.transfer.failed" = "Échec de l'enregistrement. Vérifiez votre connexion et réessayez.";
@@ -1674,10 +1674,10 @@
 "invite.protect.subtitle" = "Invitez un proche dont vous serez le gardien";
 "invite.protect.step1" = "Envoyez le code au proche que vous souhaitez protéger";
 "invite.protect.step3" = "Le lien n'est actif qu'après son accord, et cette personne peut vous retirer à tout moment";
-"invite.protect.shareText" = "%@ souhaite veiller sur vous avec Lantern Care. Entrez le code dans l'app Lantern Care : %@ (valide 24h)";
+"invite.protect.shareText" = "%@ souhaite veiller sur vous avec Beaconify. Entrez le code dans l'app Beaconify : %@ (valide 24h)";
 "invite.sheet.protectTitle" = "Inviter un proche à protéger";
 "invite.sheet.protectFooter" = "Les liens d'invitation sont valides 24 heures. Vous ne verrez sa position qu'après son accord.";
-"invite.sheet.protectShareText" = "Je souhaite veiller sur toi avec Lantern Care. Rejoins-moi ici : %@";
+"invite.sheet.protectShareText" = "Je souhaite veiller sur toi avec Beaconify. Rejoins-moi ici : %@";
 "wizard.invite.enterCode" = "Saisir un code d'invitation";
 "wizard.invite.haveCode" = "J'ai un code d'invitation";
 "signup.start.title" = "Comment voulez-vous commencer ?";
@@ -1724,7 +1724,7 @@
 "invite.error.planLimit.theirs" = "Sa formule couvre jusqu'à %d personnes.";
 "invite.error.planLimit.theirsFull" = "Sa formule est complète.";
 "invite.error.planLimit.tellThem" = "Lui demander de changer de formule";
-"invite.error.planLimit.shareText" = "J'ai essayé de te rejoindre sur Lantern Care, mais ta formule est complète. Peux-tu la changer dans Paramètres → Formule ?";
+"invite.error.planLimit.shareText" = "J'ai essayé de te rejoindre sur Beaconify, mais ta formule est complète. Peux-tu la changer dans Paramètres → Formule ?";
 "invite.error.guardianLimit.yours" = "Votre formule familiale compte déjà %d gardiens. Passez à une formule supérieure pour en ajouter.";
 "invite.error.guardianLimit.theirs" = "La formule de cette famille compte déjà %d gardiens.";
 "invite.error.guardianLimit.full" = "La formule de cette famille n'a plus de place pour un gardien.";
@@ -1810,7 +1810,7 @@
 "store.legal.intro" = "%1$@ : %2$@, puis %3$@. Le paiement est débité de votre identifiant Apple à la confirmation de l'achat. L'abonnement se renouvelle automatiquement, sauf résiliation au moins 24 heures avant la fin de la période en cours. Gérez-le ou résiliez-le dans les réglages de votre compte App Store.";
 "store.link.terms" = "Conditions d'utilisation (CLUF)";
 "store.link.privacy" = "Politique de confidentialité";
-"store.error.ownedByOtherAccount" = "Cet abonnement App Store est déjà associé à un autre compte Lantern Care. Connectez-vous à ce compte pour l'utiliser.";
+"store.error.ownedByOtherAccount" = "Cet abonnement App Store est déjà associé à un autre compte Beaconify. Connectez-vous à ce compte pour l'utiliser.";
 
 /* UX pass 2026-11-05 */
 "notif.checkinReminder.title" = "Rappel : donnez des nouvelles";
@@ -1971,22 +1971,22 @@
 "lsc.row.actions" = "Boutons SOS · OK · Position";
 "lsc.reset" = "Rétablir par défaut";
 "lsc.sample.latest" = "Sarah : tu es rentrée ?";
-"weather.noLocation" = "Position introuvable. Vérifiez que Lantern Care a accès à la localisation dans Réglages.";
-"lsc.disabledInSettings" = "Les Activités en direct sont désactivées pour Lantern Care dans Réglages : la carte ne peut pas s'afficher. Touchez pour ouvrir Réglages.";
+"weather.noLocation" = "Position introuvable. Vérifiez que Beaconify a accès à la localisation dans Réglages.";
+"lsc.disabledInSettings" = "Les Activités en direct sont désactivées pour Beaconify dans Réglages : la carte ne peut pas s'afficher. Touchez pour ouvrir Réglages.";
 "lsc.demoNote" = "Démo : une carte d'exemple de la famille Chen s'affiche sur l'écran verrouillé ; elle disparaît en quittant la démo.";
 "lsc.row.madeRoom" = "« %@ » a été désactivé pour faire de la place.";
 "lsc.rows.hint" = "La carte contient environ trois lignes ; en activer une peut en désactiver une autre.";
 
 /* Disclaimers v2, Terms agreement, guardian duties */
 "duty.title" = "Avant de veiller sur un proche";
-"duty.point.alerts" = "Une alerte peut arriver en retard ou jamais — téléphone éteint ou sans réseau, par exemple. Lantern Care ne remplace pas les secours : si vous pensez qu'un proche est en danger, appelez le numéro d'urgence de l'endroit où il se trouve.";
-"duty.point.notResponder" = "Vous êtes un proche, pas un secouriste, et Lantern Care n'envoie personne sur place. Faites ce que vous pouvez raisonnablement : appeler, prendre des nouvelles, demander à quelqu'un sur place.";
+"duty.point.alerts" = "Une alerte peut arriver en retard ou jamais — téléphone éteint ou sans réseau, par exemple. Beaconify ne remplace pas les secours : si vous pensez qu'un proche est en danger, appelez le numéro d'urgence de l'endroit où il se trouve.";
+"duty.point.notResponder" = "Vous êtes un proche, pas un secouriste, et Beaconify n'envoie personne sur place. Faites ce que vous pouvez raisonnablement : appeler, prendre des nouvelles, demander à quelqu'un sur place.";
 "duty.point.consent" = "Ne veillez que sur quelqu'un qui l'a accepté. C'est cette personne qui choisit ce qu'elle partage ; elle peut mettre le partage en pause ou vous retirer à tout moment.";
 "duty.button" = "Je comprends";
 "terms.agree" = "J'ai lu et j'accepte les Conditions d'utilisation et la Politique de confidentialité.";
 "terms.read" = "Les lire";
 "terms.update.title" = "Nos conditions ont été mises à jour";
-"terms.update.body" = "Elles expliquent plus clairement ce que Lantern Care peut faire, ou non, en cas d'urgence. Lisez-les et acceptez-les pour continuer.";
+"terms.update.body" = "Elles expliquent plus clairement ce que Beaconify peut faire, ou non, en cas d'urgence. Lisez-les et acceptez-les pour continuer.";
 "terms.update.required" = "Cochez la case pour continuer.";
 "terms.update.thanks" = "Merci.";
 "sos.status.allTitle" = "Alerter tous les gardiens";
@@ -2025,11 +2025,11 @@
 "rider.shift.go" = "Commencer";
 "rider.handsfree.title" = "SOS sans regarder";
 "rider.handsfree.action" = "Bouton Action";
-"rider.handsfree.action.how" = "iPhone 15 Pro et suivants : Réglages → Bouton Action → Raccourci → Lantern Care → SOS. Un appui ouvre le compte à rebours SOS.";
+"rider.handsfree.action.how" = "iPhone 15 Pro et suivants : Réglages → Bouton Action → Raccourci → Beaconify → SOS. Un appui ouvre le compte à rebours SOS.";
 "rider.handsfree.handlebar" = "Bouton guidon";
 "rider.handsfree.handlebar.how" = "Associez un bouton d'urgence Bluetooth dans Réglages → Traceur Bluetooth et fixez-le au guidon. Fonctionne avec des gants.";
-"rider.handsfree.siri" = "« Lantern Care SOS »";
-"rider.handsfree.siri.how" = "Dites « Dis Siri, Lantern Care SOS ». « Commencer le service dans Lantern Care » fonctionne aussi.";
+"rider.handsfree.siri" = "« Beaconify SOS »";
+"rider.handsfree.siri.how" = "Dites « Dis Siri, Beaconify SOS ». « Commencer le service dans Beaconify » fonctionne aussi.";
 "rider.handsfree.medicalId" = "Fiche médicale";
 "rider.handsfree.medicalId.how" = "Remplissez la fiche médicale dans l'app Santé : les secours la voient sur l'écran verrouillé.";
 "rider.crew.why" = "Une équipe, ce sont quelques livreurs qui veillent les uns sur les autres. Quand l'un appelle au secours, les plus proches sont prévenus en premier — souvent à une minute.";
@@ -2051,7 +2051,7 @@
 "rider.crew.failed" = "Impossible pour l'instant. Vérifiez la connexion et réessayez.";
 "rider.crew.inviteHow" = "Les livreurs scannent ce code avec l'appareil photo, ou saisissent le code dans Mode livreur → Équipe.";
 "rider.crew.share" = "Partager l'invitation";
-"rider.crew.shareText" = "Rejoins mon équipe Lantern Care « %@ » : code %@ — %@";
+"rider.crew.shareText" = "Rejoins mon équipe Beaconify « %@ » : code %@ — %@";
 "rider.crew.joinTitle" = "Rejoindre cette équipe ?";
 "rider.crew.joinNote" = "Vous serez prévenu quand un membre appelle au secours, et ils vous verront sur la carte pendant votre service.";
 "rider.crew.answers" = "RÉPONSES DE L'ÉQUIPE";
@@ -2165,7 +2165,7 @@
 "home.shareMapsLink" = "Partager un lien Plans…";
 "home.locationSent" = "Position envoyée à vos gardiens";
 "common.ok" = "OK";
-"protected.records.contactsNoSMS" = "Les SMS vers ces contacts ne sont pas encore activés : ils ne sont pas prévenus automatiquement pendant un SOS. Vos gardiens dans Lantern Care le sont.";
+"protected.records.contactsNoSMS" = "Les SMS vers ces contacts ne sont pas encore activés : ils ne sont pas prévenus automatiquement pendant un SOS. Vos gardiens dans Beaconify le sont.";
 
 /* Fall check + incident report for police */
 "autosos.fall.title" = "Chute détectée";
@@ -2174,7 +2174,7 @@
 "autosos.distressSound.subtitle" = "On aurait dit un appel à l'aide. Si ça va, annulez ci-dessous ; sinon vos gardiens sont prévenus.";
 "autosos.voiceCommand.title" = "Vous avez demandé de l'aide";
 "autosos.voiceCommand.subtitle" = "Vos gardiens sont prévenus à la fin du compte à rebours. Annulez si c'est une erreur.";
-"autosos.notice.body" = "Ouvrez Lantern Care pour annuler. Vos gardiens sont prévenus dans %d s.";
+"autosos.notice.body" = "Ouvrez Beaconify pour annuler. Vos gardiens sont prévenus dans %d s.";
 "autosos.sendNow" = "J'ai besoin d'aide — SOS maintenant";
 "timeline.autosos.dismissed" = "Chute détectée — confirmé OK";
 "fallTest.banner" = "TEST — rien ne sera envoyé";
@@ -2187,7 +2187,7 @@
 "fallTest.result.sensors" = "Le détecteur a vu : impact %.1f g · %d ms de chute · corps tourné de %d°.";
 "protected.settings.detection.fall" = "Détection de chute";
 "protected.settings.detection.fallOn" = "Active quand l'app est ouverte";
-"protected.settings.detection.fallDesc" = "Une chute violente suivie d'une immobilité affiche « Ça va ? » pendant 60 s, puis prévient vos gardiens. L'iPhone ne surveille que lorsque Lantern Care est ouvert.";
+"protected.settings.detection.fallDesc" = "Une chute violente suivie d'une immobilité affiche « Ça va ? » pendant 60 s, puis prévient vos gardiens. L'iPhone ne surveille que lorsque Beaconify est ouvert.";
 "protected.settings.detection.fallSensitive" = "Détection de chute sensible (personnes âgées)";
 "protected.settings.detection.fallSensitiveDesc" = "Repère aussi un affaissement lent au sol et les chutes plus douces. Activée automatiquement avec l'accueil « Simplifié ». Peut demander « Ça va ? » un peu plus souvent.";
 "report.entry" = "Rapport pour la police";
@@ -2246,7 +2246,7 @@
 "report.reporter.guardian" = "gardien";
 "report.field.generated" = "Créé le";
 "report.field.timeZone" = "Fuseau horaire";
-"report.cover.notice" = "Établi par Lantern Care à partir de ce que le téléphone a transmis. Les positions peuvent varier selon la précision indiquée ; un téléphone peut être oublié ou éteint. C'est un relevé du téléphone, pas une preuve de la présence de la personne.";
+"report.cover.notice" = "Établi par Beaconify à partir de ce que le téléphone a transmis. Les positions peuvent varier selon la précision indiquée ; un téléphone peut être oublié ou éteint. C'est un relevé du téléphone, pas une preuve de la présence de la personne.";
 "report.h.summary" = "Résumé";
 "report.field.lastKnown" = "Dernière position connue";
 "report.none" = "Aucune sur la période";
@@ -2331,14 +2331,14 @@
 "report.source.fall" = "chute";
 "report.locations.sampled" = "%d positions sur %d affichées ; toutes sont dans locations.csv et track.gpx.";
 "report.h.integrity" = "Vérifier ces fichiers";
-"report.integrity.body" = "L'empreinte SHA-256 de chaque fichier a été enregistrée chez Lantern Care à la création. Ouvrez l'adresse ci-dessous avec le code pour voir les empreintes, puis comparez celle d'un fichier (shasum -a 256 FICHIER sous macOS/Linux, certutil -hashfile FICHIER SHA256 sous Windows). Une valeur différente signifie que le fichier a été modifié.";
+"report.integrity.body" = "L'empreinte SHA-256 de chaque fichier a été enregistrée chez Beaconify à la création. Ouvrez l'adresse ci-dessous avec le code pour voir les empreintes, puis comparez celle d'un fichier (shasum -a 256 FICHIER sous macOS/Linux, certutil -hashfile FICHIER SHA256 sous Windows). Une valeur différente signifie que le fichier a été modifié.";
 "report.integrity.url" = "Vérifier sur";
 "report.h.limits" = "Limites";
 "report.limit.accuracy" = "Les positions sont précises au rayon indiqué ; à l'intérieur ou entre des immeubles, l'écart peut atteindre des centaines de mètres.";
 "report.limit.phone" = "C'est la position du téléphone, qui a pu être oublié, pris ou éteint.";
 "report.limit.fall" = "La détection de chute ne fonctionne qu'app ouverte ; elle peut manquer une chute ou confondre un téléphone tombé.";
 "report.limit.gaps" = "Aucune donnée signifie que le téléphone n'a rien envoyé (pas de réseau, éteint, partage en pause) — pas qu'il ne s'est rien passé.";
-"report.disclaimer" = "Lantern Care n'est pas un service d'urgence. En cas de danger, appelez d'abord le numéro d'urgence local.";
+"report.disclaimer" = "Beaconify n'est pas un service d'urgence. En cas de danger, appelez d'abord le numéro d'urgence local.";
 
 // MARK: - Full button test leftovers (Records schedule, contacts, SOS end)
 "emergencyContact.delete.title" = "Supprimer %@ ?";
@@ -2358,7 +2358,7 @@
 "signup.start.rider" = "Je livre ou je conduis pour le travail";
 "signup.start.rider.desc" = "Services, une équipe de livreurs qui veillent les uns sur les autres et un SOS pensé pour la rue. Gratuit pour les livreurs.";
 "login.rider.crew" = "Vous êtes invité dans l'équipe de livreurs %@. Connectez-vous ou créez un compte pour la rejoindre.";
-"login.rider.partner" = "Lantern Care pour les livreurs : connectez-vous ou créez un compte pour commencer.";
+"login.rider.partner" = "Beaconify pour les livreurs : connectez-vous ou créez un compte pour commencer.";
 "rider.link.guardian.title" = "Les équipes sont réservées aux livreurs";
 "rider.link.guardian.body" = "Ce lien est pour la personne qui livre. Transmettez-le-lui : elle l'ouvre sur son téléphone pour rejoindre l'équipe.";
 "rider.setup.progress" = "%d sur %d";
@@ -2414,7 +2414,7 @@
 "rider.setup.plan.more" = "Plus de proches et un historique plus long avec l'offre famille, à tout moment dans Réglages.";
 "rider.duty.title" = "Avant votre premier service";
 "rider.duty.volunteers" = "Vos coéquipiers sont bénévoles, pas des secouristes. Ils peuvent être occupés, loin ou dans l'impossibilité d'aider.";
-"rider.duty.emergency" = "En danger, appelez d'abord le %@. Lantern Care n'est pas un service d'urgence.";
+"rider.duty.emergency" = "En danger, appelez d'abord le %@. Beaconify n'est pas un service d'urgence.";
 "rider.duty.phone" = "Les alertes nécessitent de la batterie et du réseau.";
 "rider.duty.agree" = "J'ai compris";
 "rider.setup.agreeFirst" = "Cochez d'abord « J'ai compris »";
@@ -2446,7 +2446,7 @@
 "org.riders.onShift" = "en service";
 "org.riders.sos" = "SOS (30 jours)";
 "org.riders.notCounted" = "%d autres ont rejoint sans accepter d'être comptés.";
-"org.riders.shareMessage" = "Lantern Care : sécurité gratuite pour les livreurs — une équipe proche, SOS depuis l'écran verrouillé.";
+"org.riders.shareMessage" = "Beaconify : sécurité gratuite pour les livreurs — une équipe proche, SOS depuis l'écran verrouillé.";
 "org.riders.share" = "Partager le lien d'inscription";
 "org.riders.getLink" = "Obtenir un lien d'inscription";
 "org.riders.privacy" = "Totaux uniquement, des livreurs qui l'ont accepté. Jamais de noms, positions ni événements individuels.";
@@ -2556,8 +2556,8 @@
 "auth.apple.failed" = "Connexion avec Apple impossible. Réessayez.";
 "auth.alipay.unavailable" = "La connexion Alipay n'est pas disponible pour l'instant. Utilisez votre numéro ou Apple.";
 "auth.alipay.notConfirmed" = "Alipay n'a pas confirmé la connexion. Réessayez.";
-"auth.link.elsewhere" = "Cette connexion est déjà liée à un autre compte Lantern Care.";
-"auth.phone.hasAccount" = "Ce numéro a déjà son propre compte Lantern Care. Connectez-vous avec lui.";
+"auth.link.elsewhere" = "Cette connexion est déjà liée à un autre compte Beaconify.";
+"auth.phone.hasAccount" = "Ce numéro a déjà son propre compte Beaconify. Connectez-vous avec lui.";
 "auth.identity.expired" = "Délai dépassé. Recommencez.";
 "auth.link.byPhone.apple" = "Connectez-vous avec votre numéro pour lier Apple à votre compte.";
 "auth.link.byPhone.alipay" = "Connectez-vous avec votre numéro pour lier Alipay à votre compte.";
@@ -2608,13 +2608,13 @@
 "explore.weather.useMine" = "Utiliser ma position";
 "explore.weather.backTo" = "Revenir à %@";
 "explore.location.weather.title" = "La météo là où vous êtes ?";
-"explore.location.weather.body" = "Lantern Care demandera votre position une seule fois, uniquement pour obtenir la météo auprès d'Apple Météo. Elle reste sur ce téléphone, n'est pas envoyée à Lantern Care et est oubliée quand vous quittez la démo.";
+"explore.location.weather.body" = "Beaconify demandera votre position une seule fois, uniquement pour obtenir la météo auprès d'Apple Météo. Elle reste sur ce téléphone, n'est pas envoyée à Beaconify et est oubliée quand vous quittez la démo.";
 "explore.location.map.title" = "Afficher où vous êtes vraiment ?";
-"explore.location.map.body" = "Votre propre repère sur la carte et l'envoi de votre position utiliseront l'endroit où vous êtes. Lantern Care demande votre position une seule fois. Elle reste sur ce téléphone (la démo n'envoie rien) et est oubliée quand vous quittez la démo.";
+"explore.location.map.body" = "Votre propre repère sur la carte et l'envoi de votre position utiliseront l'endroit où vous êtes. Beaconify demande votre position une seule fois. Elle reste sur ce téléphone (la démo n'envoie rien) et est oubliée quand vous quittez la démo.";
 "explore.location.continue" = "Continuer";
 "explore.location.notNow" = "Plus tard";
 "explore.location.denied.title" = "Localisation désactivée";
-"explore.location.denied.body" = "Pour utiliser l'endroit où vous êtes, autorisez la localisation pour Lantern Care dans Réglages. La démo continue avec la ville de la famille d'exemple.";
+"explore.location.denied.body" = "Pour utiliser l'endroit où vous êtes, autorisez la localisation pour Beaconify dans Réglages. La démo continue avec la ville de la famille d'exemple.";
 "explore.location.openSettings" = "Ouvrir Réglages";
 "explore.location.failed.title" = "Position introuvable";
 "explore.location.failed.body" = "Votre position n'est pas disponible pour le moment. La démo continue avec la ville de la famille d'exemple.";
@@ -2639,4 +2639,4 @@
 "wizard.invite.fromDemo" = "Depuis votre démo";
 "wizard.invite.forName" = "Créer une invitation pour %@";
 "wizard.invite.sendTo" = "Envoyer à %@";
-"wizard.invite.shareMessage.named" = "Bonjour %1$@ ! J'utilise Lantern Care pour veiller sur notre famille. Rejoins-nous avec ce code d'invitation : %2$@";
+"wizard.invite.shareMessage.named" = "Bonjour %1$@ ! J'utilise Beaconify pour veiller sur notre famille. Rejoins-nous avec ce code d'invitation : %2$@";

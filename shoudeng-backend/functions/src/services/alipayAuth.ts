@@ -9,7 +9,7 @@
  *     auth_code. The server exchanges it (alipay.system.oauth.token, RSA2-signed,
  *     answer checked against Alipay's public key) and remembers who it was.
  *  3. Back in the app, POST /v1/auth/alipay/complete with state + secret → signed in,
- *     or a signup token if this Alipay account has no Lantern Care account yet.
+ *     or a signup token if this Alipay account has no Beaconify account yet.
  *
  * Off until ALIPAY_APP_ID, ALIPAY_PRIVATE_KEY and ALIPAY_PUBLIC_KEY are set
  * (GET /v1/auth/providers tells the app whether to show the button).
@@ -271,16 +271,16 @@ export async function completeAlipayLogin(state: unknown, secret: unknown): Prom
 export function callbackPage(outcome: CallbackOutcome, state: string): string {
   const back = `shoudeng://auth/alipay?state=${encodeURIComponent(state)}`;
   const text = {
-    done: ["已确认", "请返回守灯完成登录。", "Confirmed — return to Lantern Care to finish signing in."],
-    failed: ["未完成", "支付宝没有确认此次登录，请返回守灯重试。", "Alipay didn't confirm this sign-in. Return to Lantern Care and try again."],
-    expired: ["已过期", "此次登录已过期，请返回守灯重新开始。", "This sign-in has expired. Return to Lantern Care and start again."],
+    done: ["已确认", "请返回守灯完成登录。", "Confirmed — return to Beaconify to finish signing in."],
+    failed: ["未完成", "支付宝没有确认此次登录，请返回守灯重试。", "Alipay didn't confirm this sign-in. Return to Beaconify and try again."],
+    expired: ["已过期", "此次登录已过期，请返回守灯重新开始。", "This sign-in has expired. Return to Beaconify and start again."],
   }[outcome];
   return `<!doctype html><html lang="zh"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"><title>守灯 Lantern Care</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>守灯 Beaconify</title>
 <style>body{font-family:-apple-system,system-ui,sans-serif;background:#FBF8F1;color:#0E2B4A;text-align:center;padding:64px 24px}
 h1{font-size:22px;color:#014581}p{font-size:15px;line-height:1.5;color:#0E2B4Acc}
 a{display:inline-block;margin-top:24px;padding:14px 28px;border-radius:12px;background:#014581;color:#FCF2DA;text-decoration:none;font-size:16px}</style>
 </head><body><h1>${text[0]}</h1><p>${text[1]}<br>${text[2]}</p>
-<a href="${back}">返回守灯 · Back to Lantern Care</a>
+<a href="${back}">返回守灯 · Back to Beaconify</a>
 <script>setTimeout(function(){location.href=${JSON.stringify(back)}},300)</script></body></html>`;
 }

@@ -1,17 +1,17 @@
-CFBundleDisplayName = "Lantern Care";
-CFBundleName = "Lantern Care";
+CFBundleDisplayName = "Beaconify";
+CFBundleName = "Beaconify";
 
 /* Location — Always */
-NSLocationAlwaysAndWhenInUseUsageDescription = "Lantern Care shares your location with family members you choose, so they can reach you in an emergency. Location is also used for safe-zone notifications. Sharing begins only after you accept the in-app consent prompt.";
+NSLocationAlwaysAndWhenInUseUsageDescription = "Beaconify shares your location with family members you choose, so they can reach you in an emergency. Location is also used for safe-zone notifications. Sharing begins only after you accept the in-app consent prompt.";
 
 /* Location — When In Use */
-NSLocationWhenInUseUsageDescription = "Lantern Care uses your location to show where you are on the map and to send your position to chosen family members during an SOS. Used only after you accept in-app consent.";
+NSLocationWhenInUseUsageDescription = "Beaconify uses your location to show where you are on the map and to send your position to chosen family members during an SOS. Used only after you accept in-app consent.";
 
 /* Motion / Accelerometer */
-NSMotionUsageDescription = "Lantern Care uses motion sensors to detect a possible fall while the app is open. If a fall is detected, you have 60 seconds to dismiss the alert before your family is notified.";
+NSMotionUsageDescription = "Beaconify uses motion sensors to detect a possible fall while the app is open. If a fall is detected, you have 60 seconds to dismiss the alert before your family is notified.";
 
 /* Face ID */
-NSFaceIDUsageDescription = "Lantern Care uses Face ID to verify your identity and protect access to your family safety data.";
+NSFaceIDUsageDescription = "Beaconify uses Face ID to verify your identity and protect access to your family safety data.";
 
 /* Microphone */
 NSMicrophoneUsageDescription = "During an active SOS, the microphone may record ambient audio to help your chosen family members assess the situation. Recording starts only if you have enabled this option and local laws permit it.";
@@ -21,5 +21,5 @@ NSPhotoLibraryUsageDescription = "Share photos with family members in your guard
 
 /* Contacts */
 NSContactsUsageDescription = "Access your contacts to quickly add emergency contact information. Contact data is not uploaded to our servers.";
-NSBluetoothAlwaysUsageDescription = "Lantern Care connects to your Bluetooth panic button and tracking tags to trigger SOS alerts and detect separation. Bluetooth is used only after you pair a device in Settings.";
+NSBluetoothAlwaysUsageDescription = "Beaconify connects to your Bluetooth panic button and tracking tags to trigger SOS alerts and detect separation. Bluetooth is used only after you pair a device in Settings.";
 NSSpeechRecognitionUsageDescription = "Voice commands let you trigger an SOS hands-free by saying “help” or “救命”. All recognition is processed on your device.";
