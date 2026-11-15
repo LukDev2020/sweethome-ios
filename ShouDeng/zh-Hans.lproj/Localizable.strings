@@ -2648,7 +2648,8 @@
 "worldClock.searchPlaceholder" = "搜索城市";
 "worldClock.noResults" = "没有找到这个城市";
 "worldClock.onHome" = "首页显示";
-"worldClock.footer.auto" = "现在显示你和家人所在的城市。添加、删除或调整顺序（最多 %d 个），就会变成你自己的列表。";
-"worldClock.footer.custom" = "你自己的列表，最多 %d 个城市。左滑删除，点「编辑」调整顺序。";
+"worldClock.footer.auto" = "现在显示你和家人所在的城市。添加、删除（−）或调整顺序（最多 %d 个），就会变成你自己的列表。";
+"worldClock.footer.custom" = "你自己的列表，最多 %d 个城市。点 − 删除，点「编辑」调整顺序。";
 "worldClock.addMe" = "添加我所在的时间";
 "worldClock.reset" = "恢复为家人时钟";
+"worldClock.remove" = "删除 %@";

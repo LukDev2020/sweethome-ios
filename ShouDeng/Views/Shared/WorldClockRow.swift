@@ -283,15 +283,11 @@ struct WorldClockSettingsView: View {
                 Section {
                     ForEach(list) { city in
                         let tz = city.isMe == true ? (me?.timeZone ?? city.timeZone) : city.timeZone
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(title(city))
-                                Text(WorldClockFormat.offset(tz, at: Date()))
-                                    .font(.caption).foregroundStyle(.secondary)
+                        WorldClockEditRow(title: title(city), timeZone: tz,
+                                          removeLabel: String(format: lang.localized("worldClock.remove"), title(city))) {
+                            if let i = list.firstIndex(where: { $0.id == city.id }) {
+                                withAnimation { settings.remove(atOffsets: IndexSet(integer: i), me: me, family: family) }
                             }
-                            Spacer()
-                            Text(WorldClockFormat.time(tz, at: Date()))
-                                .font(.title3.monospacedDigit()).foregroundStyle(.secondary)
                         }
                     }
                     .onDelete { settings.remove(atOffsets: $0, me: me, family: family) }
@@ -350,6 +346,39 @@ struct WorldClockSettingsView: View {
         }
         if let person = city.person, person != city.name { return "\(person) · \(city.name)" }
         return city.name
+    }
+}
+
+/// One clock in the sheet: a one-tap remove button (swiping or Edit → − also work;
+/// they were easy to miss), the name, the offset and the time.
+private struct WorldClockEditRow: View {
+    let title: String
+    let timeZone: TimeZone
+    let removeLabel: String
+    let onRemove: () -> Void
+    @Environment(\.editMode) private var editMode
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // In Edit mode the list draws its own red − button
+            if editMode?.wrappedValue.isEditing != true {
+                Button(action: onRemove) {
+                    Image(systemName: "minus.circle.fill")
+                        .font(.title3)
+                        .foregroundStyle(.red)
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel(removeLabel)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                Text(WorldClockFormat.offset(timeZone, at: Date()))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer()
+            Text(WorldClockFormat.time(timeZone, at: Date()))
+                .font(.title3.monospacedDigit()).foregroundStyle(.secondary)
+        }
     }
 }
 

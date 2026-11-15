@@ -2648,7 +2648,8 @@
 "worldClock.searchPlaceholder" = "Search a city";
 "worldClock.noResults" = "No city found";
 "worldClock.onHome" = "On the home screen";
-"worldClock.footer.auto" = "Now: your city and your family's. Add, remove or reorder any of them (up to %d) to make the list your own.";
-"worldClock.footer.custom" = "Your own list, up to %d cities. Swipe to remove, Edit to reorder.";
+"worldClock.footer.auto" = "Now: your city and your family's. Add, remove (−) or reorder any of them (up to %d) to make the list your own.";
+"worldClock.footer.custom" = "Your own list, up to %d cities. Tap − to remove, Edit to reorder.";
 "worldClock.addMe" = "Add my own time";
 "worldClock.reset" = "Back to family clocks";
+"worldClock.remove" = "Remove %@";

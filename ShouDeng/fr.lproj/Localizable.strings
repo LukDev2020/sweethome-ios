@@ -2648,7 +2648,8 @@
 "worldClock.searchPlaceholder" = "Rechercher une ville";
 "worldClock.noResults" = "Aucune ville trouvée";
 "worldClock.onHome" = "Sur l'écran d'accueil";
-"worldClock.footer.auto" = "Pour l'instant : votre ville et celles de votre famille. Ajoutez, supprimez ou réordonnez (jusqu'à %d) pour en faire votre liste.";
-"worldClock.footer.custom" = "Votre liste, jusqu'à %d villes. Balayez pour supprimer, Modifier pour réordonner.";
+"worldClock.footer.auto" = "Pour l'instant : votre ville et celles de votre famille. Ajoutez, supprimez (−) ou réordonnez (jusqu'à %d) pour en faire votre liste.";
+"worldClock.footer.custom" = "Votre liste, jusqu'à %d villes. Touchez − pour supprimer, Modifier pour réordonner.";
 "worldClock.addMe" = "Ajouter mon heure";
 "worldClock.reset" = "Revenir aux horloges de la famille";
+"worldClock.remove" = "Supprimer %@";

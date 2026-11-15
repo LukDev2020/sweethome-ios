@@ -2648,7 +2648,8 @@
 "worldClock.searchPlaceholder" = "都市を検索";
 "worldClock.noResults" = "都市が見つかりません";
 "worldClock.onHome" = "ホーム画面に表示";
-"worldClock.footer.auto" = "いまはあなたと家族の都市を表示中。追加・削除・並べ替え（最大 %d 件）で自分のリストになります。";
-"worldClock.footer.custom" = "あなたのリスト（最大 %d 都市）。スワイプで削除、「編集」で並べ替え。";
+"worldClock.footer.auto" = "いまはあなたと家族の都市を表示中。追加・削除（−）・並べ替え（最大 %d 件）で自分のリストになります。";
+"worldClock.footer.custom" = "あなたのリスト（最大 %d 都市）。− で削除、「編集」で並べ替え。";
 "worldClock.addMe" = "自分の時刻を追加";
 "worldClock.reset" = "家族の時計に戻す";
+"worldClock.remove" = "%@ を削除";
