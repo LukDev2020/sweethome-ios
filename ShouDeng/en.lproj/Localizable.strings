@@ -2644,10 +2644,11 @@
 /* World clocks (home screen, both roles) */
 "worldClock.hint" = "Choose which clocks to show";
 "worldClock.title" = "World clocks";
-"worldClock.family" = "Family";
-"worldClock.familyFooter" = "Shown from where each person is. Turn off anyone you don't need here.";
-"worldClock.cities" = "Other cities";
-"worldClock.citiesFooter" = "Add up to %d cities, for example where you travel or work with people. Swipe to remove.";
 "worldClock.add" = "Add a city";
 "worldClock.searchPlaceholder" = "Search a city";
 "worldClock.noResults" = "No city found";
+"worldClock.onHome" = "On the home screen";
+"worldClock.footer.auto" = "Now: your city and your family's. Add, remove or reorder any of them (up to %d) to make the list your own.";
+"worldClock.footer.custom" = "Your own list, up to %d cities. Swipe to remove, Edit to reorder.";
+"worldClock.addMe" = "Add my own time";
+"worldClock.reset" = "Back to family clocks";

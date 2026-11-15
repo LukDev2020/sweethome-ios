@@ -3,9 +3,10 @@ import MapKit
 
 // MARK: - World clocks (home screen, both roles)
 //
-// The row under the map: my time first, then the family (from where each person
-// is), then any cities the person added. Tap it to choose: hide family members
-// you don't need, add other cities (up to 4), reorder or remove them.
+// The row under the map is the person's own choice of cities. Until they change
+// it, it shows their own city and their family's (from where each person is).
+// The first change makes it their list: any cities, in any order (up to 8), with
+// or without their own clock and the family's. "Back to family clocks" undoes it.
 //
 // Apple has no world-clock API an app can use (the Clock app's list is private),
 // so cities come from the time-zone database (instant, offline) and Maps search
@@ -15,7 +16,11 @@ import MapKit
 struct WorldClockCity: Codable, Hashable, Identifiable {
     var name: String
     var timeZoneId: String
-    var id: String { "\(timeZoneId)|\(name)" }
+    /// My own clock: follows where I am (name and time zone come from my profile)
+    var isMe: Bool? = nil
+    /// Whose city it was when the family row was taken over (shown in the sheet)
+    var person: String? = nil
+    var id: String { isMe == true ? "me" : "\(timeZoneId)|\(name)" }
     var timeZone: TimeZone { TimeZone(identifier: timeZoneId) ?? .current }
 }
 
@@ -32,16 +37,17 @@ struct WorldClockEntry: Identifiable {
 @MainActor
 final class WorldClockSettings: ObservableObject {
     static let shared = WorldClockSettings()
-    static let maxCities = 4
-    private static let storageKey = "world_clock_settings_v1"
+    static let maxClocks = 8
+    private static let storageKey = "world_clock_settings_v2"
 
     private struct Stored: Codable {
-        var hiddenMemberIds: [String] = []
-        var cities: [WorldClockCity] = []
+        /// false: the automatic row (me + family)
+        var customized = false
+        var clocks: [WorldClockCity] = []
     }
 
-    @Published private(set) var hiddenMemberIds: Set<String> = []
-    @Published private(set) var cities: [WorldClockCity] = []
+    @Published private(set) var isCustomized = false
+    @Published private(set) var clocks: [WorldClockCity] = []
 
     // The demo's choices live here and vanish when it ends
     private var demoStore: Stored?
@@ -65,8 +71,8 @@ final class WorldClockSettings: ObservableObject {
             } else if let data = try? JSONEncoder().encode(newValue) {
                 defaults.set(data, forKey: Self.storageKey)
             }
-            hiddenMemberIds = Set(newValue.hiddenMemberIds)
-            cities = newValue.cities
+            isCustomized = newValue.customized
+            clocks = newValue.clocks
         }
     }
 
@@ -74,46 +80,67 @@ final class WorldClockSettings: ObservableObject {
     func load() {
         if !ExploreMode.isActive { demoStore = nil }
         let s = stored
-        hiddenMemberIds = Set(s.hiddenMemberIds)
-        cities = s.cities
+        isCustomized = s.customized
+        clocks = s.clocks
     }
 
-    func setMember(_ id: String, shown: Bool) {
-        var s = stored
-        s.hiddenMemberIds.removeAll { $0 == id }
-        if !shown { s.hiddenMemberIds.append(id) }
-        stored = s
+    /// The automatic row as a list the person can change
+    static func automatic(me: WorldClockEntry?, family: [WorldClockEntry]) -> [WorldClockCity] {
+        var list: [WorldClockCity] = me.map { [WorldClockCity(name: $0.title, timeZoneId: $0.timeZone.identifier, isMe: true)] } ?? []
+        for f in family {
+            let city = WorldClockCity(name: f.title, timeZoneId: f.timeZone.identifier, person: f.person)
+            if !list.contains(where: { $0.id == city.id }) { list.append(city) }
+        }
+        return list
     }
 
-    /// false when full or already there
+    /// The list as it is now: the person's own, or the automatic one
+    func current(me: WorldClockEntry?, family: [WorldClockEntry]) -> [WorldClockCity] {
+        isCustomized ? clocks : Self.automatic(me: me, family: family)
+    }
+
+    /// Every change starts from what the row shows and makes it the person's own list
+    private func change(me: WorldClockEntry?, family: [WorldClockEntry], _ edit: (inout [WorldClockCity]) -> Void) {
+        var list = current(me: me, family: family)
+        edit(&list)
+        stored = Stored(customized: true, clocks: Array(list.prefix(Self.maxClocks)))
+    }
+
+    /// false when full, already there, or not a real time zone
     @discardableResult
-    func add(_ city: WorldClockCity) -> Bool {
-        var s = stored
-        guard s.cities.count < Self.maxCities, !s.cities.contains(where: { $0.id == city.id }),
+    func add(_ city: WorldClockCity, me: WorldClockEntry?, family: [WorldClockEntry]) -> Bool {
+        let list = current(me: me, family: family)
+        guard list.count < Self.maxClocks, !list.contains(where: { $0.id == city.id }),
               TimeZone(identifier: city.timeZoneId) != nil else { return false }
-        s.cities.append(city)
-        stored = s
+        change(me: me, family: family) { $0.append(city) }
         return true
     }
 
-    func remove(atOffsets offsets: IndexSet) {
-        var s = stored
-        s.cities.remove(atOffsets: offsets)
-        stored = s
+    /// My own clock back, first in the row
+    func addMe(_ me: WorldClockEntry, family: [WorldClockEntry]) {
+        guard !current(me: me, family: family).contains(where: { $0.isMe == true }) else { return }
+        change(me: me, family: family) { $0.insert(WorldClockCity(name: me.title, timeZoneId: me.timeZone.identifier, isMe: true), at: 0) }
     }
 
-    func move(fromOffsets source: IndexSet, toOffset destination: Int) {
-        var s = stored
-        s.cities.move(fromOffsets: source, toOffset: destination)
-        stored = s
+    func remove(atOffsets offsets: IndexSet, me: WorldClockEntry?, family: [WorldClockEntry]) {
+        change(me: me, family: family) { $0.remove(atOffsets: offsets) }
     }
 
-    /// The row: me, the family members not hidden, then the added cities
+    func move(fromOffsets source: IndexSet, toOffset destination: Int, me: WorldClockEntry?, family: [WorldClockEntry]) {
+        change(me: me, family: family) { $0.move(fromOffsets: source, toOffset: destination) }
+    }
+
+    /// Back to the automatic row (me + family)
+    func reset() {
+        stored = Stored()
+    }
+
+    /// The row. My clock always shows where I am now.
     func entries(me: WorldClockEntry?, family: [WorldClockEntry]) -> [WorldClockEntry] {
-        var result: [WorldClockEntry] = me.map { [$0] } ?? []
-        result += family.filter { !hiddenMemberIds.contains($0.id) }
-        result += cities.map { WorldClockEntry(id: "city:\($0.id)", title: $0.name, timeZone: $0.timeZone, isMe: false) }
-        return result
+        current(me: me, family: family).compactMap { city in
+            if city.isMe == true { return me }
+            return WorldClockEntry(id: "city:\(city.id)", title: city.name, timeZone: city.timeZone, isMe: false, person: city.person)
+        }
     }
 
     // MARK: City search (offline part)
@@ -207,7 +234,7 @@ struct WorldClockRow: View {
         .accessibilityHint(lang.localized("worldClock.hint"))
         .accessibilityIdentifier("home.worldClocks")
         .sheet(isPresented: $showSettings) {
-            WorldClockSettingsView(family: family).environmentObject(coordinator)
+            WorldClockSettingsView(me: me, family: family).environmentObject(coordinator)
         }
         .onAppear { settings.load() }
     }
@@ -241,65 +268,68 @@ struct WorldClockRow: View {
 // MARK: - Settings sheet
 
 struct WorldClockSettingsView: View {
+    let me: WorldClockEntry?
     let family: [WorldClockEntry]
     @ObservedObject private var settings = WorldClockSettings.shared
     @ObservedObject private var lang = LanguageManager.shared
     @Environment(\.dismiss) private var dismiss
     @State private var showSearch = false
 
+    private var list: [WorldClockCity] { settings.current(me: me, family: family) }
+
     var body: some View {
         NavigationStack {
             List {
-                if !family.isEmpty {
-                    Section {
-                        ForEach(family) { member in
-                            Toggle(isOn: Binding(get: { !settings.hiddenMemberIds.contains(member.id) },
-                                                 set: { settings.setMember(member.id, shown: $0) })) {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(member.person.map { $0 == member.title ? $0 : "\($0) · \(member.title)" } ?? member.title)
-                                    Text("\(WorldClockFormat.time(member.timeZone, at: Date())) · \(WorldClockFormat.offset(member.timeZone, at: Date()))")
-                                        .font(.caption).foregroundStyle(.secondary)
-                                }
-                            }
-                        }
-                    } header: {
-                        Text(lang.localized("worldClock.family"))
-                    } footer: {
-                        Text(lang.localized("worldClock.familyFooter"))
-                    }
-                }
-
                 Section {
-                    ForEach(settings.cities) { city in
+                    ForEach(list) { city in
+                        let tz = city.isMe == true ? (me?.timeZone ?? city.timeZone) : city.timeZone
                         HStack {
-                            Text(city.name)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(title(city))
+                                Text(WorldClockFormat.offset(tz, at: Date()))
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
                             Spacer()
-                            Text("\(WorldClockFormat.time(city.timeZone, at: Date())) · \(WorldClockFormat.offset(city.timeZone, at: Date()))")
-                                .font(.callout).foregroundStyle(.secondary)
+                            Text(WorldClockFormat.time(tz, at: Date()))
+                                .font(.title3.monospacedDigit()).foregroundStyle(.secondary)
                         }
                     }
-                    .onDelete { settings.remove(atOffsets: $0) }
-                    .onMove { settings.move(fromOffsets: $0, toOffset: $1) }
+                    .onDelete { settings.remove(atOffsets: $0, me: me, family: family) }
+                    .onMove { settings.move(fromOffsets: $0, toOffset: $1, me: me, family: family) }
 
-                    if settings.cities.count < WorldClockSettings.maxCities {
+                    if list.count < WorldClockSettings.maxClocks {
                         Button {
                             showSearch = true
                         } label: {
                             Label(lang.localized("worldClock.add"), systemImage: "plus.circle.fill")
                         }
                         .accessibilityIdentifier("worldClock.add")
+                        if let me, !list.contains(where: { $0.isMe == true }) {
+                            Button {
+                                settings.addMe(me, family: family)
+                            } label: {
+                                Label(lang.localized("worldClock.addMe"), systemImage: "location.circle.fill")
+                            }
+                        }
                     }
                 } header: {
-                    Text(lang.localized("worldClock.cities"))
+                    Text(lang.localized("worldClock.onHome"))
                 } footer: {
-                    Text(String(format: lang.localized("worldClock.citiesFooter"), WorldClockSettings.maxCities))
+                    Text(String(format: lang.localized(settings.isCustomized ? "worldClock.footer.custom" : "worldClock.footer.auto"),
+                                WorldClockSettings.maxClocks))
+                }
+
+                if settings.isCustomized && !(me == nil && family.isEmpty) {
+                    Section {
+                        Button(lang.localized("worldClock.reset")) { settings.reset() }
+                    }
                 }
             }
             .navigationTitle(lang.localized("worldClock.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    if !settings.cities.isEmpty { EditButton() }
+                    if !list.isEmpty { EditButton() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(lang.localized("common.done")) { dismiss() }
@@ -307,11 +337,19 @@ struct WorldClockSettingsView: View {
             }
             .sheet(isPresented: $showSearch) {
                 WorldClockCitySearch { city in
-                    settings.add(city)
+                    settings.add(city, me: me, family: family)
                     showSearch = false
                 }
             }
         }
+    }
+
+    private func title(_ city: WorldClockCity) -> String {
+        if city.isMe == true {
+            return "\(lang.localized("protected.home.me")) · \(me?.title ?? city.name)"
+        }
+        if let person = city.person, person != city.name { return "\(person) · \(city.name)" }
+        return city.name
     }
 }
 

@@ -1,7 +1,8 @@
 import XCTest
 @testable import ShouDeng
 
-/// Home → world clocks: what the row shows, the choices kept, the city search.
+/// Home → world clocks: the row is the person's own choice of cities; until they
+/// change it, it shows their city and their family's.
 @MainActor
 final class WorldClockTests: XCTestCase {
 
@@ -13,45 +14,65 @@ final class WorldClockTests: XCTestCase {
     }
 
     private let me = WorldClockEntry(id: "me", title: "Toronto", timeZone: TimeZone(identifier: "America/Toronto")!, isMe: true)
-    private let mom = WorldClockEntry(id: "mom", title: "Chengdu", timeZone: TimeZone(identifier: "Asia/Shanghai")!, isMe: false)
-    private let lucy = WorldClockEntry(id: "lucy", title: "Paris", timeZone: TimeZone(identifier: "Europe/Paris")!, isMe: false)
+    private let mom = WorldClockEntry(id: "mom", title: "Chengdu", timeZone: TimeZone(identifier: "Asia/Shanghai")!, isMe: false, person: "Mom")
+    private let lucy = WorldClockEntry(id: "lucy", title: "Paris", timeZone: TimeZone(identifier: "Europe/Paris")!, isMe: false, person: "Lucy")
+    private let tokyo = WorldClockCity(name: "Tokyo", timeZoneId: "Asia/Tokyo")
 
-    func testRowIsMeThenFamilyThenAddedCities() {
+    func testUntouchedRowIsMeAndFamily() {
         let s = WorldClockSettings(defaults: defaults)
-        XCTAssertEqual(s.entries(me: me, family: [mom, lucy]).map(\.id), ["me", "mom", "lucy"])
-
-        s.setMember("lucy", shown: false)
-        XCTAssertTrue(s.add(WorldClockCity(name: "Tokyo", timeZoneId: "Asia/Tokyo")))
-        XCTAssertEqual(s.entries(me: me, family: [mom, lucy]).map(\.title), ["Toronto", "Chengdu", "Tokyo"])
+        XCTAssertFalse(s.isCustomized)
+        XCTAssertEqual(s.entries(me: me, family: [mom, lucy]).map(\.title), ["Toronto", "Chengdu", "Paris"])
     }
 
-    func testChoicesAreKeptUntilChanged() {
+    func testAnyCityAnyOrderFamilyAndMeAreOptional() {
         let s = WorldClockSettings(defaults: defaults)
-        s.setMember("mom", shown: false)
-        s.add(WorldClockCity(name: "London", timeZoneId: "Europe/London"))
-        s.add(WorldClockCity(name: "Tokyo", timeZoneId: "Asia/Tokyo"))
-        s.move(fromOffsets: IndexSet(integer: 1), toOffset: 0)
+        XCTAssertTrue(s.add(tokyo, me: me, family: [mom, lucy]))
+        XCTAssertTrue(s.isCustomized, "the first change makes it the person's own list")
+        XCTAssertEqual(s.entries(me: me, family: [mom, lucy]).map(\.title), ["Toronto", "Chengdu", "Paris", "Tokyo"])
 
+        // Remove my own clock and Mom's, put Tokyo first
+        s.remove(atOffsets: IndexSet([0, 1]), me: me, family: [mom, lucy])
+        s.move(fromOffsets: IndexSet(integer: 1), toOffset: 0, me: me, family: [mom, lucy])
+        XCTAssertEqual(s.entries(me: me, family: [mom, lucy]).map(\.title), ["Tokyo", "Paris"])
+
+        // A new family member doesn't sneak into a chosen list
+        let kevin = WorldClockEntry(id: "kevin", title: "Shanghai", timeZone: TimeZone(identifier: "Asia/Shanghai")!, isMe: false)
+        XCTAssertEqual(s.entries(me: me, family: [mom, lucy, kevin]).map(\.title), ["Tokyo", "Paris"])
+
+        s.addMe(me, family: [mom, lucy])
+        XCTAssertEqual(s.entries(me: me, family: [mom, lucy]).first?.isMe, true, "my own time back, first")
+    }
+
+    func testMyClockFollowsWhereIAm() {
+        let s = WorldClockSettings(defaults: defaults)
+        s.add(tokyo, me: me, family: [])
+        let moved = WorldClockEntry(id: "me", title: "Vancouver", timeZone: TimeZone(identifier: "America/Vancouver")!, isMe: true)
+        let row = s.entries(me: moved, family: [])
+        XCTAssertEqual(row.first?.title, "Vancouver")
+        XCTAssertEqual(row.first?.timeZone.identifier, "America/Vancouver")
+    }
+
+    func testTheListIsKeptUntilChangedAndCanGoBack() {
+        let s = WorldClockSettings(defaults: defaults)
+        s.add(tokyo, me: me, family: [mom])
+        s.remove(atOffsets: IndexSet(integer: 1), me: me, family: [mom])
         let again = WorldClockSettings(defaults: defaults)   // the app opened again
-        XCTAssertEqual(again.hiddenMemberIds, ["mom"])
-        XCTAssertEqual(again.cities.map(\.name), ["Tokyo", "London"])
-
-        again.setMember("mom", shown: true)
-        again.remove(atOffsets: IndexSet(integer: 0))
-        let third = WorldClockSettings(defaults: defaults)
-        XCTAssertTrue(third.hiddenMemberIds.isEmpty)
-        XCTAssertEqual(third.cities.map(\.name), ["London"])
+        XCTAssertEqual(again.entries(me: me, family: [mom]).map(\.title), ["Toronto", "Tokyo"])
+        again.reset()
+        XCTAssertFalse(WorldClockSettings(defaults: defaults).isCustomized)
+        XCTAssertEqual(again.entries(me: me, family: [mom]).map(\.title), ["Toronto", "Chengdu"])
     }
 
-    func testAtMostFourCitiesNoDuplicatesNoUnknownZones() {
+    func testAtMostEightNoDuplicatesNoUnknownZones() {
         let s = WorldClockSettings(defaults: defaults)
-        for (name, id) in [("London", "Europe/London"), ("Tokyo", "Asia/Tokyo"), ("Sydney", "Australia/Sydney"), ("Dubai", "Asia/Dubai")] {
-            XCTAssertTrue(s.add(WorldClockCity(name: name, timeZoneId: id)))
-        }
-        XCTAssertFalse(s.add(WorldClockCity(name: "Lima", timeZoneId: "America/Lima")), "max \(WorldClockSettings.maxCities)")
-        s.remove(atOffsets: IndexSet(integer: 3))
-        XCTAssertFalse(s.add(WorldClockCity(name: "London", timeZoneId: "Europe/London")), "already there")
-        XCTAssertFalse(s.add(WorldClockCity(name: "Atlantis", timeZoneId: "Ocean/Atlantis")))
+        let zones = ["Europe/London", "Asia/Tokyo", "Australia/Sydney", "Asia/Dubai", "America/Lima",
+                     "Africa/Cairo", "Asia/Kolkata", "Europe/Berlin"]
+        for id in zones { XCTAssertTrue(s.add(WorldClockCity(name: id, timeZoneId: id), me: nil, family: [])) }
+        XCTAssertFalse(s.add(WorldClockCity(name: "Lagos", timeZoneId: "Africa/Lagos"), me: nil, family: []),
+                       "max \(WorldClockSettings.maxClocks)")
+        s.remove(atOffsets: IndexSet(integer: 0), me: nil, family: [])
+        XCTAssertFalse(s.add(WorldClockCity(name: "Asia/Tokyo", timeZoneId: "Asia/Tokyo"), me: nil, family: []), "already there")
+        XCTAssertFalse(s.add(WorldClockCity(name: "Atlantis", timeZoneId: "Ocean/Atlantis"), me: nil, family: []))
     }
 
     func testOfflineCitySearchFromTheTimeZoneDatabase() {
@@ -69,14 +90,14 @@ final class WorldClockTests: XCTestCase {
 
     func testTheDemoNeverChangesTheRealChoices() {
         let s = WorldClockSettings(defaults: defaults)
-        s.add(WorldClockCity(name: "London", timeZoneId: "Europe/London"))
+        s.add(tokyo, me: nil, family: [])
         ExploreMode.setActive(true)
         defer { ExploreMode.setActive(false) }
         s.load()
-        XCTAssertTrue(s.cities.isEmpty, "the demo starts clean")
-        s.add(WorldClockCity(name: "Tokyo", timeZoneId: "Asia/Tokyo"))
+        XCTAssertFalse(s.isCustomized, "the demo starts with the automatic row")
+        s.add(WorldClockCity(name: "London", timeZoneId: "Europe/London"), me: nil, family: [])
         ExploreMode.setActive(false)
         s.load()
-        XCTAssertEqual(s.cities.map(\.name), ["London"], "the demo's city is gone, the real one is untouched")
+        XCTAssertEqual(s.clocks.map(\.name), ["Tokyo"], "the demo's city is gone, the real list is untouched")
     }
 }

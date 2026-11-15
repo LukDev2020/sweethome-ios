@@ -2644,10 +2644,11 @@
 /* World clocks (home screen, both roles) */
 "worldClock.hint" = "选择要显示的时钟";
 "worldClock.title" = "世界时钟";
-"worldClock.family" = "家人";
-"worldClock.familyFooter" = "按每个人所在的城市显示。不需要的可以关掉。";
-"worldClock.cities" = "其他城市";
-"worldClock.citiesFooter" = "最多添加 %d 个城市，比如常去出差或联系的地方。左滑可删除。";
 "worldClock.add" = "添加城市";
 "worldClock.searchPlaceholder" = "搜索城市";
 "worldClock.noResults" = "没有找到这个城市";
+"worldClock.onHome" = "首页显示";
+"worldClock.footer.auto" = "现在显示你和家人所在的城市。添加、删除或调整顺序（最多 %d 个），就会变成你自己的列表。";
+"worldClock.footer.custom" = "你自己的列表，最多 %d 个城市。左滑删除，点「编辑」调整顺序。";
+"worldClock.addMe" = "添加我所在的时间";
+"worldClock.reset" = "恢复为家人时钟";
