@@ -524,63 +524,17 @@ struct ProtectedHomeView: View {
 
     // MARK: - World Clocks
 
+    /// Me, my guardians, cities I added; tap to choose (WorldClockRow.swift)
     private var worldClocks: some View {
-        let clocks: [(city: String, time: String, note: String, isMe: Bool)] = {
-            var result: [(String, String, String, Bool)] = []
-            // My time
-            if let user = coordinator.currentUser {
-                result.append((
-                    user.cityName.isEmpty ? lang.localized("protected.home.me") : user.cityName,
-                    localTime(user.timeZone),
-                    lang.localized("protected.home.imHere"),
-                    true
-                ))
-            } else {
-                let formatter = DateFormatter()
-                formatter.dateFormat = "HH:mm"
-                result.append((lang.localized("protected.home.me"), formatter.string(from: Date()), lang.localized("protected.home.imHere"), true))
-            }
-            // Guardian times
-            if !coordinator.myGuardians.isEmpty {
-                for g in coordinator.myGuardians {
-                    result.append((
-                        g.user.cityName.isEmpty ? g.user.displayName : g.user.cityName,
-                        localTime(g.user.timeZone),
-                        timeOfDay(g.user.timeZone),
-                        false
-                    ))
-                }
-            }
-            return result
-        }()
-
-        return HStack(spacing: 6) {
-            ForEach(Array(clocks.enumerated()), id: \.offset) { _, clock in
-                VStack(spacing: 2) {
-                    Text(clock.city)
-                        .font(.scaled(size: 11))
-                        .foregroundStyle(ink.opacity(0.55))
-                        .lineLimit(1)
-                    Text(clock.time)
-                        .font(.scaled(size: 14, weight: .semibold, design: .serif))
-                        .foregroundStyle(clock.isMe ? lamp : ink)
-                    Text(clock.note)
-                        .font(.scaled(size: 11))
-                        .foregroundStyle(clock.isMe ? lamp : ink.opacity(0.55))
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 7)
-                .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(clock.isMe ? lamp.opacity(0.11) : Color.clear)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(clock.isMe ? lamp.opacity(0.4) : ink.opacity(0.13), lineWidth: 1)
-                )
-            }
+        let me = coordinator.currentUser.map {
+            WorldClockEntry(id: "me", title: $0.cityName.isEmpty ? lang.localized("protected.home.me") : $0.cityName,
+                            timeZone: $0.timeZone, isMe: true)
+        } ?? WorldClockEntry(id: "me", title: lang.localized("protected.home.me"), timeZone: .current, isMe: true)
+        let family = coordinator.myGuardians.map {
+            WorldClockEntry(id: $0.user.id, title: $0.user.cityName.isEmpty ? $0.user.displayName : $0.user.cityName,
+                            timeZone: $0.user.timeZone, isMe: false, person: $0.user.displayName)
         }
-        .padding(.horizontal, 16)
+        return WorldClockRow(me: me, family: family, meNote: lang.localized("protected.home.imHere"), ink: ink, lamp: lamp)
     }
 
     // MARK: - Location Card

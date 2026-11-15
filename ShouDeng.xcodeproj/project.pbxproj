@@ -87,6 +87,7 @@
 		2D5B81A7B06DD6D1E209D431 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = EC9967501D760330EF89D308 /* GoogleService-Info.plist */; };
 		2D70E3283D20F43459F2A185 /* WidgetState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DBF4A67FF0C78834A8728A8 /* WidgetState.swift */; };
 		30E1C0A106000064A56AAF66 /* LegalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D4BC3608A17EB87F1339C43 /* LegalView.swift */; };
+		AB16C4DAC87C5F7E3982FAC1 /* WorldClockRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9A36C043010C3BB132A20A5 /* WorldClockRow.swift */; };
 		34EA733F874C92ED1E5DCA81 /* OfflineQueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C24BFDE9F552166FDF0BA0C /* OfflineQueueTests.swift */; };
 		35159B7DB49900FACD831968 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C3DE3DA8E9EEE6CEB01B71 /* User.swift */; };
 		36066D7A4E9FAA28FD533C5E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E14F7CAC5E00568391DDDD13 /* PrivacyInfo.xcprivacy */; };
@@ -129,6 +130,7 @@
 				A1B2C3D4E5F60001B0000003 /* KeychainHelperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60001A0000003 /* KeychainHelperTests.swift */; };
 		5E1BA1B8E61306352C819EA8 /* AuthManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C38041E8CCB6EAE0ECF2D4F /* AuthManagerTests.swift */; };
 		F49C3B6B905C232E7083DA3E /* IdentitySignInTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 283410D1B012013890AF29D9 /* IdentitySignInTests.swift */; };
+		2C1F0D7A6FF97BBB910A62E2 /* WorldClockTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 137EC194660E62DCD73BF67A /* WorldClockTests.swift */; };
 		5EB4D8C3B5424318A166AA9B /* CrashReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C2AFD6DEC7BB6A319D0C0A1 /* CrashReporter.swift */; };
 		61586C8E3D663CC027C5804E /* GuardianAlertResponseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43D8A8B0CD131E9E09E02BF6 /* GuardianAlertResponseView.swift */; };
 		DD44EE010000000C /* GuardianDutyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD44EE010000000B /* GuardianDutyView.swift */; };
@@ -379,7 +381,9 @@
 				A1B2C3D4E5F60001A0000003 /* KeychainHelperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelperTests.swift; sourceTree = "<group>"; };
 		3C38041E8CCB6EAE0ECF2D4F /* AuthManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManagerTests.swift; sourceTree = "<group>"; };
 		283410D1B012013890AF29D9 /* IdentitySignInTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentitySignInTests.swift; sourceTree = "<group>"; };
+		137EC194660E62DCD73BF67A /* WorldClockTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockTests.swift; sourceTree = "<group>"; };
 		3D4BC3608A17EB87F1339C43 /* LegalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalView.swift; sourceTree = "<group>"; };
+		F9A36C043010C3BB132A20A5 /* WorldClockRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockRow.swift; sourceTree = "<group>"; };
 		3D922CFCBCCE8F87BD686AD8 /* FallDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallDetector.swift; sourceTree = "<group>"; };
 		52E7C29A89AD1E8E3D6D00C5 /* FallSensorTrace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallSensorTrace.swift; sourceTree = "<group>"; };
 		43D8A8B0CD131E9E09E02BF6 /* GuardianAlertResponseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianAlertResponseView.swift; sourceTree = "<group>"; };
@@ -857,6 +861,7 @@
 				794BD85D0F41F07ABDBAED46 /* GlobeMapView.swift */,
 				525930DD8BF30E7421491576 /* HotlineCardView.swift */,
 				3D4BC3608A17EB87F1339C43 /* LegalView.swift */,
+				F9A36C043010C3BB132A20A5 /* WorldClockRow.swift */,
 				36FD0E52F4564B5B9E057EB3 /* LocationCardView.swift */,
 				BB22CC3300002003 /* TripHistoryView.swift */,
 				BB22CC3300002004 /* TripDetailView.swift */,
@@ -1005,6 +1010,7 @@
 				4065FDD0413EBFDA074642D7 /* AppLifecycleTests.swift */,
 				3C38041E8CCB6EAE0ECF2D4F /* AuthManagerTests.swift */,
 				283410D1B012013890AF29D9 /* IdentitySignInTests.swift */,
+				137EC194660E62DCD73BF67A /* WorldClockTests.swift */,
 				A1B2C3D4E5F60001A0000003 /* KeychainHelperTests.swift */,
 				A1B2C3D4E5F60001A0000002 /* ConsentLoggerTests.swift */,
 				A1B2C3D4E5F60001A0000001 /* StoreKitGatingTests.swift */,
@@ -1476,6 +1482,7 @@
 				28B38BF21CF13BC8E8879F8B /* KeychainHelper.swift in Sources */,
 				9CB0FF8A248F056D774B567D /* LanguageManager.swift in Sources */,
 				30E1C0A106000064A56AAF66 /* LegalView.swift in Sources */,
+				AB16C4DAC87C5F7E3982FAC1 /* WorldClockRow.swift in Sources */,
 				D7F04B6716FF3FA38A53A700 /* LocalStore.swift in Sources */,
 				175D400D8703ED57ED5DBB50 /* LocationCardView.swift in Sources */,
 				36E61D1756A635AC2E9CE3C6 /* LoginView.swift in Sources */,
@@ -1585,6 +1592,7 @@
 				B3C4D5E6F7A8B9C0D1E2F3A4 /* ReactiveLocationServiceTests.swift in Sources */,
 				5E1BA1B8E61306352C819EA8 /* AuthManagerTests.swift in Sources */,
 				F49C3B6B905C232E7083DA3E /* IdentitySignInTests.swift in Sources */,
+				2C1F0D7A6FF97BBB910A62E2 /* WorldClockTests.swift in Sources */,
 				A1B2C3D4E5F60001B0000003 /* KeychainHelperTests.swift in Sources */,
 				A1B2C3D4E5F60001B0000002 /* ConsentLoggerTests.swift in Sources */,
 				A1B2C3D4E5F60001B0000001 /* StoreKitGatingTests.swift in Sources */,

@@ -2640,3 +2640,14 @@
 "wizard.invite.forName" = "Create an invite for %@";
 "wizard.invite.sendTo" = "Send to %@";
 "wizard.invite.shareMessage.named" = "Hi %1$@! I'm using Beaconify to keep our family safe. Join with this invite code: %2$@";
+
+/* World clocks (home screen, both roles) */
+"worldClock.hint" = "Choose which clocks to show";
+"worldClock.title" = "World clocks";
+"worldClock.family" = "Family";
+"worldClock.familyFooter" = "Shown from where each person is. Turn off anyone you don't need here.";
+"worldClock.cities" = "Other cities";
+"worldClock.citiesFooter" = "Add up to %d cities, for example where you travel or work with people. Swipe to remove.";
+"worldClock.add" = "Add a city";
+"worldClock.searchPlaceholder" = "Search a city";
+"worldClock.noResults" = "No city found";

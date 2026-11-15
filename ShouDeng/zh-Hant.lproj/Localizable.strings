@@ -2640,3 +2640,14 @@
 "wizard.invite.forName" = "為%@建立邀請";
 "wizard.invite.sendTo" = "傳送給%@";
 "wizard.invite.shareMessage.named" = "%1$@，你好！我在用守燈守護我們一家人的安全。用這個邀請碼加入：%2$@";
+
+/* World clocks (home screen, both roles) */
+"worldClock.hint" = "選擇要顯示的時鐘";
+"worldClock.title" = "世界時鐘";
+"worldClock.family" = "家人";
+"worldClock.familyFooter" = "按每個人所在的城市顯示。不需要的可以關掉。";
+"worldClock.cities" = "其他城市";
+"worldClock.citiesFooter" = "最多添加 %d 個城市，比如常去出差或聯繫的地方。左滑可刪除。";
+"worldClock.add" = "添加城市";
+"worldClock.searchPlaceholder" = "搜索城市";
+"worldClock.noResults" = "沒有找到這個城市";

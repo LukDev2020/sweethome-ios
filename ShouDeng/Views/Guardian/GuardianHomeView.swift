@@ -6,7 +6,7 @@ import MapKit
 //
 // Design from shoudeng-full-design.html:
 //   - Globe showing family locations (placeholder)
-//   - World clocks row (Kyiv, Shanghai, Toronto, London)
+//   - World clocks row (me, the people I look after, cities I added — tap to choose)
 //   - "Needs attention" section with warning cards
 //   - "All normal" section with status cards
 //   - "Add protected person" button
@@ -35,32 +35,6 @@ struct GuardianHomeView: View {
     private let creamBg = Color.paper(254, 252, 247)
     private let offWhiteBg = Color.paper(251, 248, 241, elevated: true)
     private let paneBorder = Color(red: 1/255, green: 69/255, blue: 129/255).opacity(0.13)
-
-    private var dynamicClocks: [(city: String, time: String, note: String, isYou: Bool)] {
-        var result: [(String, String, String, Bool)] = []
-        // My time (guardian)
-        if let user = coordinator.currentUser {
-            result.append((
-                user.cityName.isEmpty ? lang.localized("guardian.home.me") : user.cityName,
-                localTime(user.timeZone),
-                lang.localized("nav.you.are.here"),
-                true
-            ))
-        }
-        // Protected persons' times
-        if !coordinator.protectedPersons.isEmpty {
-            for p in coordinator.protectedPersons {
-                let tz = p.user.timeZone
-                result.append((
-                    p.user.cityName.isEmpty ? p.user.displayName : p.user.cityName,
-                    localTime(tz),
-                    timeOfDay(tz),
-                    false
-                ))
-            }
-        }
-        return result
-    }
 
     var body: some View {
         NavigationStack {
@@ -502,34 +476,18 @@ struct GuardianHomeView: View {
 
     // MARK: - World Clocks
 
+    /// Me, the people I look after, cities I added; tap to choose (WorldClockRow.swift)
     private var worldClocks: some View {
-        HStack(spacing: 6) {
-            ForEach(Array(dynamicClocks.enumerated()), id: \.offset) { _, clock in
-                VStack(spacing: 2) {
-                    Text(clock.city)
-                        .font(.scaled(size: 11))
-                        .foregroundStyle(Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.55))
-                        .lineLimit(1)
-                    Text(clock.time)
-                        .font(.scaled(size: 14, weight: .semibold, design: .serif))
-                        .foregroundStyle(clock.isYou ? lamp : ink)
-                    Text(clock.note)
-                        .font(.scaled(size: 11))
-                        .foregroundStyle(clock.isYou ? lamp : Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.45))
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 7)
-                .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(clock.isYou ? lamp.opacity(0.11) : Color.clear)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(clock.isYou ? lamp.opacity(0.4) : Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.13), lineWidth: 1)
-                )
-            }
+        let me = coordinator.currentUser.map {
+            WorldClockEntry(id: "me", title: $0.cityName.isEmpty ? lang.localized("guardian.home.me") : $0.cityName,
+                            timeZone: $0.timeZone, isMe: true)
         }
-        .padding(.horizontal, 16)
+        let family = coordinator.protectedPersons.map {
+            WorldClockEntry(id: $0.user.id, title: $0.user.cityName.isEmpty ? $0.user.displayName : $0.user.cityName,
+                            timeZone: $0.user.timeZone, isMe: false, person: $0.user.displayName)
+        }
+        return WorldClockRow(me: me, family: family, meNote: lang.localized("nav.you.are.here"),
+                             ink: Color(red: 18/255, green: 32/255, blue: 58/255), lamp: lamp)
     }
 
     // MARK: - Location Card

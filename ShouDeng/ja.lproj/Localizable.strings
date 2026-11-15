@@ -2640,3 +2640,14 @@
 "wizard.invite.forName" = "%@への招待を作成";
 "wizard.invite.sendTo" = "%@に送る";
 "wizard.invite.shareMessage.named" = "%1$@さん、こんにちは！家族の安全のために Beaconify を使っています。この招待コードで参加してね：%2$@";
+
+/* World clocks (home screen, both roles) */
+"worldClock.hint" = "表示する時計を選ぶ";
+"worldClock.title" = "世界時計";
+"worldClock.family" = "家族";
+"worldClock.familyFooter" = "各自のいる都市で表示します。不要な人はオフにできます。";
+"worldClock.cities" = "ほかの都市";
+"worldClock.citiesFooter" = "最大 %d 都市まで。出張先や仕事相手の都市など。スワイプで削除。";
+"worldClock.add" = "都市を追加";
+"worldClock.searchPlaceholder" = "都市を検索";
+"worldClock.noResults" = "都市が見つかりません";
