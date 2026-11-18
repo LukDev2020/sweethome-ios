@@ -51,7 +51,7 @@ struct BatteryIndicatorView: View {
         .background(color.opacity(0.1))
         .cornerRadius(4)
         .opacity(level <= 0.2 ? pulsingOpacity : 1.0)
-        .accessibilityLabel("Battery \(percentage) percent\(isCharging ? ", charging" : "")")
+        .accessibilityLabel(String(format: LanguageManager.shared.localized(isCharging ? "battery.a11y.charging" : "battery.a11y.level"), percentage))
     }
 
     @State private var pulsingOpacity: Double = 1.0

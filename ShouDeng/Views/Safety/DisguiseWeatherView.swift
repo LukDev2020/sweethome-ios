@@ -7,6 +7,7 @@ import SwiftUI
 
 struct DisguiseWeatherView: View {
     @ObservedObject private var disguiseService = DisguiseModeService.shared
+    @ObservedObject private var lang = LanguageManager.shared
 
     @State private var temperature = Int.random(in: 15...30)
     @State private var humidity = Int.random(in: 40...80)
@@ -19,8 +20,6 @@ struct DisguiseWeatherView: View {
     @State private var conditionIndex = Int.random(in: 0...4)
     @State private var hourlyOffsets: [Int] = (0..<12).map { _ in Int.random(in: -3...3) }
     @State private var uvIndex = Int.random(in: 1...8)
-
-    private let weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
     var body: some View {
         ZStack {
@@ -58,7 +57,7 @@ struct DisguiseWeatherView: View {
                 .foregroundStyle(.white.opacity(0.8))
 
                 // High/Low
-                Text("H:\(temperature + 3)\u{00B0}  L:\(temperature - 5)\u{00B0}")
+                Text(String(format: lang.localized("disguise.weather.highLow"), temperature + 3, temperature - 5))
                     .font(.system(size: 18))
                     .foregroundStyle(.white.opacity(0.6))
                     .padding(.top, 4)
@@ -94,10 +93,12 @@ struct DisguiseWeatherView: View {
                 VStack(spacing: 12) {
                     ForEach(0..<7, id: \.self) { day in
                         HStack {
-                            Text(weekdays[day])
+                            Text(weekdayLabel(day))
                                 .font(.system(size: 16))
                                 .foregroundStyle(.white)
-                                .frame(width: 40, alignment: .leading)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+                                .frame(width: 48, alignment: .leading)
                             Image(systemName: conditions[(conditionIndex + day) % conditions.count])
                                 .font(.system(size: 18))
                                 .foregroundStyle(.white)
@@ -131,7 +132,7 @@ struct DisguiseWeatherView: View {
                 // Bottom details
                 HStack(spacing: 30) {
                     VStack(spacing: 4) {
-                        Text("Humidity")
+                        Text(lang.localized("disguise.weather.humidity"))
                             .font(.system(size: 12))
                             .foregroundStyle(.white.opacity(0.5))
                         Text("\(humidity)%")
@@ -139,15 +140,15 @@ struct DisguiseWeatherView: View {
                             .foregroundStyle(.white)
                     }
                     VStack(spacing: 4) {
-                        Text("Wind")
+                        Text(lang.localized("disguise.weather.wind"))
                             .font(.system(size: 12))
                             .foregroundStyle(.white.opacity(0.5))
-                        Text(String(format: "%.0f km/h", windSpeed))
+                        Text(windText)
                             .font(.system(size: 16))
                             .foregroundStyle(.white)
                     }
                     VStack(spacing: 4) {
-                        Text("UV Index")
+                        Text(lang.localized("disguise.weather.uvIndex"))
                             .font(.system(size: 12))
                             .foregroundStyle(.white.opacity(0.5))
                         Text("\(uvIndex)")
@@ -179,15 +180,38 @@ struct DisguiseWeatherView: View {
 
     // MARK: - Helpers
 
+    private var locale: Locale { Locale(identifier: lang.current.rawValue) }
+
+    /// Cities that feel local for the person's language (comma-separated in the strings file)
     private var cityName: String {
-        let cities = ["San Francisco", "New York", "London", "Tokyo", "Paris", "Beijing", "Toronto"]
+        let cities = lang.localized("disguise.weather.cities")
+            .split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+        guard !cities.isEmpty else { return "" }
         let index = Calendar.current.component(.day, from: Date()) % cities.count
         return cities[index]
     }
 
     private var conditionText: String {
-        let texts = ["Sunny", "Partly Cloudy", "Cloudy", "Rainy", "Thunderstorm"]
-        return texts[conditionIndex]
+        let keys = ["sunny", "partlyCloudy", "cloudy", "rain", "thunderstorm"]
+        return lang.localized("disguise.weather.condition.\(keys[conditionIndex])")
+    }
+
+    private var windText: String {
+        let formatter = MeasurementFormatter()
+        formatter.locale = locale
+        formatter.unitOptions = .providedUnit
+        formatter.numberFormatter.maximumFractionDigits = 0
+        return formatter.string(from: Measurement(value: windSpeed, unit: UnitSpeed.kilometersPerHour))
+    }
+
+    /// "Today", then short weekday names in the person's language
+    private func weekdayLabel(_ offset: Int) -> String {
+        if offset == 0 { return lang.localized("disguise.weather.today") }
+        let date = Calendar.current.date(byAdding: .day, value: offset, to: Date()) ?? Date()
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        formatter.setLocalizedDateFormatFromTemplate("EEE")
+        return formatter.string(from: date)
     }
 
     private var gradientColors: [Color] {
@@ -202,6 +226,6 @@ struct DisguiseWeatherView: View {
 
     private func hourLabel(_ offset: Int) -> String {
         let hour = (Calendar.current.component(.hour, from: Date()) + offset) % 24
-        return offset == 0 ? "Now" : "\(hour):00"
+        return offset == 0 ? lang.localized("disguise.weather.now") : "\(hour):00"
     }
 }

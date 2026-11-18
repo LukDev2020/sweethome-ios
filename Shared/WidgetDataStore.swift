@@ -87,14 +87,47 @@ enum WidgetDataStore {
     /// Returns the app's display name based on language setting.
     /// Chinese → "守灯", English/French/other → "Beaconify"
     static var appName: String {
-        let lang = sharedDefaults?.string(forKey: languageKey) ?? "zh-Hans"
+        let lang = currentLanguage
         if lang == "zh-Hant" { return "守燈" }
         return lang.hasPrefix("zh") ? "守灯" : "Beaconify"
     }
 
-    /// Current language code (for widget/Live Activity localization)
+    /// Current language code (for widget/Live Activity localization): the language
+    /// chosen in the app. Before the app has written one (e.g. the widget gallery
+    /// right after install) it follows the phone's language.
     static var currentLanguage: String {
-        sharedDefaults?.string(forKey: languageKey) ?? "zh-Hans"
+        sharedDefaults?.string(forKey: languageKey) ?? deviceLanguage()
+    }
+
+    /// The phone's preferred language mapped onto the app's languages — the same
+    /// rule the app uses on first launch (LanguageManager.detectLanguage).
+    static func deviceLanguage(preferred: String? = Locale.preferredLanguages.first) -> String {
+        guard let preferred else { return "en" }
+        if preferred.hasPrefix("zh") {
+            let traditional = preferred.contains("Hant") || ["zh-TW", "zh-HK", "zh-MO"].contains { preferred.hasPrefix($0) }
+            return traditional ? "zh-Hant" : "zh-Hans"
+        }
+        if preferred.hasPrefix("fr") { return "fr" }
+        if preferred.hasPrefix("ja") { return "ja" }
+        return "en"
+    }
+
+    /// Locale for dates and relative times in the current language.
+    static var locale: Locale { Locale(identifier: currentLanguage) }
+
+    /// A table string with `%@` / `%d` placeholders filled in.
+    static func localizedFormat(_ key: String, _ args: CVarArg...) -> String {
+        String(format: localized(key), arguments: args)
+    }
+
+    /// A count in a phrase: "1 guardian" / "3 guardians". Uses `key.one` for one
+    /// (French: 0 and 1) when that string exists, else `key`. Format takes `%d`.
+    static func localized(_ key: String, count: Int) -> String {
+        let lang = currentLanguage
+        let singular = lang.hasPrefix("fr") ? count <= 1 : !lang.hasPrefix("zh") && !lang.hasPrefix("ja") && count == 1
+        let one = key + ".one"
+        let useOne = singular && baseLocalized(one) != one
+        return String(format: localized(useOne ? one : key), count)
     }
 
     /// Localized string lookup for widget extension (no .lproj access).
@@ -124,6 +157,27 @@ enum WidgetDataStore {
         "la.rider.noCrew": "クルーはまだいません", "la.rider.checkAt": "終了 ", "la.rider.report": "報告", "la.rider.crash": "事故",
         "la.rider.helping": "手当て中？傷口を強く押さえて · 電話 ", "la.rider.onTheWay": "さんが向かっています",
         "la.rider.crewAlerted": "クルーに通知済み", "la.rider.call": "電話 ", "la.rider.safe": "無事です",
+        // Home / lock-screen widgets
+        "widget.config.protected": "見守られる人", "widget.config.protected.desc": "見守り状況・SOS・無事報告のリマインダー",
+        "widget.config.guardian": "見守る人", "widget.config.guardian.desc": "家族の安全状況とアラート",
+        "widget.config.timer.desc": "帰宅までのカウントダウン",
+        "widget.signIn.app": "%@にログイン", "widget.signIn.toSeeStatus": "ログインして状況を確認",
+        "widget.tapToOpen": "タップして開く", "widget.tapToSignIn": "タップしてログイン",
+        "widget.protected.active": "%@ 見守り中", "widget.checkin.due": "無事を報告して",
+        "widget.last.short": "前回：%@", "widget.last.checkin": "前回の無事報告：%@", "widget.updated": "更新 %@",
+        "widget.guardians.setup": "見守る人を追加", "widget.guardians.label": "見守る人",
+        "widget.guardians.count": "%d人が見守り中", "widget.guardians.protecting": "%d人があなたを見守っています",
+        "widget.network.setup": "見守りの輪をつくる", "widget.invite.guardians": "家族を見守る人に招待",
+        "widget.invite.family": "家族を招待", "widget.invite.join": "家族を招待しましょう",
+        "widget.sos.elapsed": "経過 %@", "widget.sos.triggeredAgo": "発信：%@", "widget.sos.triggered": "SOS を発信しました",
+        "widget.sos.alert": "SOS 警報", "widget.person.sos": "%@ SOS", "widget.person.sentSOS": "%@ が助けを求めています",
+        "widget.person.overdue": "%@ 報告なし", "widget.someone.overdue": "報告がない人がいます",
+        "widget.person.offline": "%@ オフライン", "widget.device.offline": "端末がオフライン",
+        "widget.people.safe": "%d人が無事", "widget.more": "+%d人", "widget.status.header": "見守り状況",
+        "widget.timer.title": "帰宅タイマー", "widget.timer.home": "帰宅まで %@", "widget.timer.remaining": "残り %@",
+        "widget.timer.running": "計測中", "widget.timer.inProgress": "帰宅タイマー作動中", "widget.timer.none": "タイマーなし",
+        "widget.timer.notSet": "タイマー未設定", "widget.timer.overdue": "時間超過", "widget.timer.expired": "帰宅時間超過",
+        "widget.time.justNow": "たった今", "widget.time.unknown": "不明",
     ]
 
     private static func baseLocalized(_ key: String) -> String {
@@ -190,6 +244,57 @@ enum WidgetDataStore {
         case "widget.sos.description": return isZh ? "一键触发紧急求助" : isFr ? "SOS en un tap" : "One-tap SOS"
         case "widget.sos.tap":     return isZh ? "点击求助" : isFr ? "Appuyer" : "Tap for SOS"
         case "widget.login.required": return isZh ? "请先登录" : isFr ? "Connexion requise" : "Login required"
+
+        // Widget — protected, guardian and home-timer widgets (and their gallery names)
+        case "widget.config.protected": return isZh ? "被守护者" : isFr ? "Personne protégée" : "Protected"
+        case "widget.config.protected.desc": return isZh ? "显示你的守护状态、SOS 和报平安提醒" : isFr ? "Votre statut, le SOS et les rappels de nouvelles" : "Your status, SOS and check-in reminders"
+        case "widget.config.guardian": return isZh ? "守护者" : isFr ? "Gardien" : "Guardian"
+        case "widget.config.guardian.desc": return isZh ? "显示被守护者的安全状态和警报" : isFr ? "La sécurité de vos proches et leurs alertes" : "Your family's safety status and alerts"
+        case "widget.config.timer.desc": return isZh ? "显示回家倒计时" : isFr ? "Le compte à rebours de votre retour" : "Your home countdown"
+        case "widget.signIn.app":  return isZh ? "登录%@" : isFr ? "Connexion à %@" : "Sign in to %@"
+        case "widget.signIn.toSeeStatus": return isZh ? "请登录查看守护状态" : isFr ? "Connectez-vous pour voir le statut" : "Sign in to see status"
+        case "widget.tapToOpen":   return isZh ? "点击打开" : isFr ? "Touchez pour ouvrir" : "Tap to open"
+        case "widget.tapToSignIn": return isZh ? "点击登录查看守护状态" : isFr ? "Touchez pour vous connecter" : "Tap to sign in"
+        case "widget.protected.active": return isZh ? "%@守护中" : isFr ? "%@ actif" : "%@ is on"
+        case "widget.checkin.due": return isZh ? "请报平安" : isFr ? "Donnez des nouvelles" : "Please check in"
+        case "widget.last.short":  return isZh ? "上次：%@" : isFr ? "Dernier : %@" : "Last: %@"
+        case "widget.last.checkin": return isZh ? "上次报平安：%@" : isFr ? "Dernier signal : %@" : "Last check-in: %@"
+        case "widget.updated":     return isZh ? "更新于 %@" : isFr ? "Mis à jour %@" : "Updated %@"
+        case "widget.guardians.setup": return isZh ? "设置守护者" : isFr ? "Ajouter des gardiens" : "Add guardians"
+        case "widget.guardians.label": return isZh ? "守护者" : isFr ? "Gardiens" : "Guardians"
+        case "widget.guardians.count": return isZh ? "%d位守护者" : isFr ? "%d gardiens" : "%d guardians"
+        case "widget.guardians.count.one": return isZh ? "%d位守护者" : isFr ? "%d gardien" : "%d guardian"
+        case "widget.guardians.protecting": return isZh ? "%d位守护者正在保护你" : isFr ? "%d gardiens veillent sur vous" : "%d guardians watching over you"
+        case "widget.guardians.protecting.one": return isZh ? "%d位守护者正在保护你" : isFr ? "%d gardien veille sur vous" : "%d guardian watching over you"
+        case "widget.network.setup": return isZh ? "设置守护网络" : isFr ? "Créez votre cercle" : "Set up your circle"
+        case "widget.invite.guardians": return isZh ? "邀请家人成为你的守护者" : isFr ? "Invitez vos proches à veiller sur vous" : "Invite family to be your guardians"
+        case "widget.invite.family": return isZh ? "邀请家人" : isFr ? "Inviter un proche" : "Invite family"
+        case "widget.invite.join": return isZh ? "邀请家人加入守护" : isFr ? "Invitez vos proches" : "Invite your family"
+        case "widget.sos.elapsed": return isZh ? "已进行 %@" : isFr ? "Depuis %@" : "For %@"
+        case "widget.sos.triggeredAgo": return isZh ? "%@触发" : isFr ? "Déclenché %@" : "Sent %@"
+        case "widget.sos.triggered": return isZh ? "已触发紧急求助" : isFr ? "SOS envoyé" : "SOS sent"
+        case "widget.sos.alert":   return isZh ? "SOS 警报" : isFr ? "Alerte SOS" : "SOS alert"
+        case "widget.person.sos":  return isZh ? "%@ SOS" : isFr ? "%@ SOS" : "%@ SOS"
+        case "widget.person.sentSOS": return isZh ? "%@ 发出求助" : isFr ? "%@ a besoin d'aide" : "%@ needs help"
+        case "widget.person.overdue": return isZh ? "%@ 未报平安" : isFr ? "%@ sans nouvelles" : "%@ hasn't checked in"
+        case "widget.someone.overdue": return isZh ? "有人未报平安" : isFr ? "Un proche sans nouvelles" : "Someone hasn't checked in"
+        case "widget.person.offline": return isZh ? "%@ 设备离线" : isFr ? "%@ hors ligne" : "%@ offline"
+        case "widget.device.offline": return isZh ? "设备离线" : isFr ? "Appareil hors ligne" : "Device offline"
+        case "widget.people.safe": return isZh ? "%d人安全" : isFr ? "%d en sécurité" : "%d safe"
+        case "widget.more":        return isZh ? "+%d人" : isFr ? "+%d autres" : "+%d more"
+        case "widget.more.one":    return isZh ? "+%d人" : isFr ? "+%d autre" : "+%d more"
+        case "widget.status.header": return isZh ? "守护状态" : isFr ? "État de la famille" : "Family status"
+        case "widget.timer.title": return isZh ? "回家计时" : isFr ? "Retour maison" : "Home timer"
+        case "widget.timer.home":  return isZh ? "回家 %@" : isFr ? "Retour dans %@" : "Home in %@"
+        case "widget.timer.remaining": return isZh ? "剩余 %@" : isFr ? "Reste %@" : "%@ left"
+        case "widget.timer.running": return isZh ? "计时中" : isFr ? "En cours" : "Running"
+        case "widget.timer.inProgress": return isZh ? "回家倒计时进行中" : isFr ? "Compte à rebours en cours" : "Home countdown running"
+        case "widget.timer.none":  return isZh ? "无计时" : isFr ? "Pas de minuterie" : "No timer"
+        case "widget.timer.notSet": return isZh ? "未设置计时器" : isFr ? "Aucune minuterie" : "No timer set"
+        case "widget.timer.overdue": return isZh ? "已超时" : isFr ? "Dépassé" : "Overdue"
+        case "widget.timer.expired": return isZh ? "回家超时" : isFr ? "Retour en retard" : "Late home"
+        case "widget.time.justNow": return isZh ? "刚刚" : isFr ? "à l'instant" : "just now"
+        case "widget.time.unknown": return isZh ? "未知" : isFr ? "inconnu" : "unknown"
 
         default: return key
         }

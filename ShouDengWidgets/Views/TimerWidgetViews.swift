@@ -1,6 +1,8 @@
 import SwiftUI
 import WidgetKit
 
+private func L(_ key: String) -> String { WidgetDataStore.localized(key) }
+
 // MARK: - Accessory Inline
 
 struct TimerInlineView: View {
@@ -8,14 +10,14 @@ struct TimerInlineView: View {
 
     var body: some View {
         if !entry.isLoggedIn {
-            Text("守灯 · 请登录")
+            Text(WidgetHelpers.branded(L("widget.login.required")))
         } else if entry.isActive, let deadline = entry.deadline {
             HStack(spacing: 4) {
                 Image(systemName: "house.fill")
                 Text(deadline, style: .timer)
             }
         } else {
-            Text("守灯 · 无计时")
+            Text(WidgetHelpers.branded(L("widget.timer.none")))
         }
     }
 }
@@ -54,9 +56,9 @@ struct TimerRectangularView: View {
     var body: some View {
         if !entry.isLoggedIn {
             VStack(alignment: .leading, spacing: 2) {
-                Label("守灯", systemImage: "house")
+                Label(WidgetDataStore.appName, systemImage: "house")
                     .font(.headline)
-                Text("请登录")
+                Text(L("widget.login.required"))
                     .font(.caption)
             }
         } else if entry.isActive, let deadline = entry.deadline {
@@ -66,16 +68,16 @@ struct TimerRectangularView: View {
                 Text(deadline, style: .timer)
                     .font(.caption)
                 if deadline < Date() {
-                    Text("已超时")
+                    Text(L("widget.timer.overdue"))
                         .font(.caption2)
                         .foregroundStyle(.red)
                 }
             }
         } else {
             VStack(alignment: .leading, spacing: 2) {
-                Label("回家计时", systemImage: "house")
+                Label(L("widget.timer.title"), systemImage: "house")
                     .font(.headline)
-                Text("未设置计时器")
+                Text(L("widget.timer.notSet"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

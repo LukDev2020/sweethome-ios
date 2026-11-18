@@ -79,7 +79,7 @@ struct DisguiseModeSettingsView: View {
                     // Secret phrase (for notes disguise)
                     if selectedDisguise == .notes {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Secret Phrase")
+                            Text(lang.localized("disguise.secretPhrase"))
                                 .font(.scaled(size: 13, weight: .semibold))
                                 .foregroundStyle(ink)
                             SecureField("help me", text: $secretPhrase)

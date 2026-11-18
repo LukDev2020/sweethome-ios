@@ -11,8 +11,8 @@ struct ProtectedStatusWidget: Widget {
                     SharedColors.ink
                 }
         }
-        .configurationDisplayName("守灯 · 被守护者")
-        .description("显示你的守护状态、SOS 和报平安提醒")
+        .configurationDisplayName(WidgetHelpers.branded(WidgetDataStore.localized("widget.config.protected")))
+        .description(WidgetDataStore.localized("widget.config.protected.desc"))
         .supportedFamilies([
             .accessoryInline,
             .accessoryCircular,
@@ -28,6 +28,11 @@ struct ProtectedStatusWidgetEntryView: View {
     let entry: ProtectedStatusEntry
 
     var body: some View {
+        content.environment(\.locale, WidgetDataStore.locale)
+    }
+
+    @ViewBuilder
+    private var content: some View {
         switch family {
         case .accessoryInline:
             ProtectedInlineView(entry: entry)

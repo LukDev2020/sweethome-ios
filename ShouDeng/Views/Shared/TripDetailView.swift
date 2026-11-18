@@ -119,7 +119,7 @@ struct TripDetailView: View {
                     HStack(spacing: 16) {
                         statItem(icon: "arrow.triangle.swap", value: formatDistance(trip.totalDistanceMeters))
                         statItem(icon: "clock", value: formatDuration(trip.durationSeconds))
-                        statItem(icon: "location.fill", value: "\(trip.pointCount) pts")
+                        statItem(icon: "location.fill", value: String(format: lang.localized("trip.points.count"), trip.pointCount))
                         if let mode = trip.primaryTransportMode {
                             statItem(icon: transportIcon(mode), value: lang.localized("trip.mode.\(mode)"))
                         }

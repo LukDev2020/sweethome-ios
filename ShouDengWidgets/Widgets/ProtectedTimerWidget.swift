@@ -11,8 +11,8 @@ struct ProtectedTimerWidget: Widget {
                     SharedColors.ink
                 }
         }
-        .configurationDisplayName("守灯 · 回家计时")
-        .description("显示回家倒计时")
+        .configurationDisplayName(WidgetHelpers.branded(WidgetDataStore.localized("widget.timer.title")))
+        .description(WidgetDataStore.localized("widget.config.timer.desc"))
         .supportedFamilies([
             .accessoryInline,
             .accessoryCircular,
@@ -26,6 +26,11 @@ struct ProtectedTimerWidgetEntryView: View {
     let entry: TimerEntry
 
     var body: some View {
+        content.environment(\.locale, WidgetDataStore.locale)
+    }
+
+    @ViewBuilder
+    private var content: some View {
         switch family {
         case .accessoryInline:
             TimerInlineView(entry: entry)

@@ -11,8 +11,8 @@ struct GuardianStatusWidget: Widget {
                     SharedColors.ink
                 }
         }
-        .configurationDisplayName("守灯 · 守护者")
-        .description("显示被守护者的安全状态和警报")
+        .configurationDisplayName(WidgetHelpers.branded(WidgetDataStore.localized("widget.config.guardian")))
+        .description(WidgetDataStore.localized("widget.config.guardian.desc"))
         .supportedFamilies([
             .accessoryInline,
             .accessoryCircular,
@@ -28,6 +28,11 @@ struct GuardianStatusWidgetEntryView: View {
     let entry: GuardianStatusEntry
 
     var body: some View {
+        content.environment(\.locale, WidgetDataStore.locale)
+    }
+
+    @ViewBuilder
+    private var content: some View {
         switch family {
         case .accessoryInline:
             GuardianInlineView(entry: entry)

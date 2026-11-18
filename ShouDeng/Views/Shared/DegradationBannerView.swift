@@ -144,12 +144,6 @@ struct DegradationBannerView: View {
             selectedWarning = nil
         case .dismiss:
             selectedWarning = nil
-        case .call:
-            // In production, would open phone dialer for the protected person
-            selectedWarning = nil
-        case .message:
-            // In production, would open messaging
-            selectedWarning = nil
         }
     }
 

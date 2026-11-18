@@ -40,13 +40,18 @@ final class DeviceHealthMonitor: ObservableObject {
 
     private var cancellables = Set<AnyCancellable>()
     private var checkTimer: Timer?
-    private let protectedPersonName: String
+    /// Name used in the guardian-side wording; nil means "your family member" in the
+    /// current language (looked up each time, so a language change is picked up).
+    private let customPersonName: String?
+    private var protectedPersonName: String {
+        customPersonName ?? LanguageManager.shared.localized("push.protectedFallback")
+    }
     private var loggedDegradations: Set<String> = []
 
     // MARK: - Init
 
-    init(protectedPersonName: String = "被守护者") {
-        self.protectedPersonName = protectedPersonName
+    init(protectedPersonName: String? = nil) {
+        self.customPersonName = protectedPersonName
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("-screenshot") { return }
         #endif

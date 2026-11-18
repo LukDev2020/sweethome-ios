@@ -264,8 +264,6 @@ enum DisclaimerCopy {
             enum ActionType {
                 case openSettings
                 case dismiss
-                case call
-                case message
             }
 
             init(
@@ -287,21 +285,26 @@ enum DisclaimerCopy {
             }
         }
 
+        private static func L(_ key: String) -> String {
+            LanguageManager.shared.localized(key)
+        }
+
+        /// "Fix in Settings" + "Later", for the person whose own phone needs a change
+        private static var settingsActions: [Warning.Action] {
+            [
+                .init(title: L("degradation.action.fixInSettings"), type: .openSettings),
+                .init(title: L("degradation.action.later"), type: .dismiss),
+            ]
+        }
+
         static func locationRevoked(personName: String) -> Warning {
             Warning(
                 id: "location_revoked",
                 severity: .critical,
-                protectedMessage: "你的家人现在看不到你",
-                guardianMessage: "\(personName)的位置共享已中断",
-                detailText: "定位权限已被系统改为「使用期间」。你不在应用内时，家人将看不到你的位置。",
-                protectedActions: [
-                    .init(title: "去设置修复", type: .openSettings),
-                    .init(title: "稍后", type: .dismiss),
-                ],
-                guardianActions: [
-                    .init(title: "拨号", type: .call),
-                    .init(title: "发消息", type: .message),
-                ]
+                protectedMessage: L("degradation.locationRevoked.protected"),
+                guardianMessage: String(format: L("degradation.locationRevoked.guardian"), personName),
+                detailText: L("degradation.locationRevoked.detail"),
+                protectedActions: settingsActions
             )
         }
 
@@ -309,13 +312,9 @@ enum DisclaimerCopy {
             Warning(
                 id: "device_offline",
                 severity: hours >= 4 ? .critical : .caution,
-                protectedMessage: "你的设备已离线 · 守护者看到的是最后已知状态",
-                guardianMessage: "\(personName)的设备已 \(hours) 小时未上报",
-                detailText: "可能是关机、离线或权限变更，不代表有危险，但你可能需要主动联系确认。",
-                guardianActions: [
-                    .init(title: "拨号", type: .call),
-                    .init(title: "发消息", type: .message),
-                ]
+                protectedMessage: L("degradation.deviceOffline.protected"),
+                guardianMessage: String(format: L("degradation.deviceOffline.guardian"), personName, hours),
+                detailText: L("degradation.deviceOffline.detail")
             )
         }
 
@@ -323,9 +322,9 @@ enum DisclaimerCopy {
             Warning(
                 id: "battery_low",
                 severity: .critical,
-                protectedMessage: "电量极低（\(level)%）· 关机后守护者将无法收到你的信号",
-                guardianMessage: "\(personName)的电量低于 \(level)% · 设备可能即将关机",
-                detailText: "设备电量已降至 \(level)%。如果设备关机，位置上报、心跳信号和紧急求助功能都将停止。\n\n建议尽快充电或通过其他方式联系。"
+                protectedMessage: String(format: L("degradation.batteryLow.protected"), level),
+                guardianMessage: String(format: L("degradation.batteryLow.guardian"), personName, level),
+                detailText: String(format: L("degradation.batteryLow.detail"), level)
             )
         }
 
@@ -333,13 +332,10 @@ enum DisclaimerCopy {
             Warning(
                 id: "bg_refresh_disabled",
                 severity: .caution,
-                protectedMessage: "后台刷新被系统关闭 · 定位和心跳上报可能中断",
-                guardianMessage: "\(personName)的应用后台权限受限 · 上报已中断",
-                detailText: "iOS 系统或省电模式已限制守灯的后台运行能力。这意味着位置上报和心跳信号可能不完整。\n\n请前往「设置 > 通用 > 后台 App 刷新」确认守灯已开启。",
-                protectedActions: [
-                    .init(title: "去设置修复", type: .openSettings),
-                    .init(title: "稍后", type: .dismiss),
-                ]
+                protectedMessage: L("degradation.bgRefresh.protected"),
+                guardianMessage: String(format: L("degradation.bgRefresh.guardian"), personName),
+                detailText: L("degradation.bgRefresh.detail"),
+                protectedActions: settingsActions
             )
         }
 
@@ -347,13 +343,10 @@ enum DisclaimerCopy {
             Warning(
                 id: "notification_disabled",
                 severity: .caution,
-                protectedMessage: "通知权限已关闭 · 你可能收不到求助相关的消息",
-                guardianMessage: "\(personName)可能收不到你的消息",
-                detailText: "通知权限被关闭后，守灯无法在紧急情况下向你推送提醒。\n\n请前往「设置 > 通知 > 守灯」开启通知。",
-                protectedActions: [
-                    .init(title: "去设置修复", type: .openSettings),
-                    .init(title: "稍后", type: .dismiss),
-                ]
+                protectedMessage: L("degradation.notifications.protected"),
+                guardianMessage: String(format: L("degradation.notifications.guardian"), personName),
+                detailText: L("degradation.notifications.detail"),
+                protectedActions: settingsActions
             )
         }
 
@@ -361,9 +354,9 @@ enum DisclaimerCopy {
             Warning(
                 id: "no_guardian_on_duty",
                 severity: .caution,
-                protectedMessage: "当前无人值班 · 触发求助时仅有推送通知",
-                guardianMessage: "当前无守护者值班 · 建议调整排程或邀请其他时区的家人",
-                detailText: "当前时段没有守护者排班。如果此时触发紧急求助，系统会向所有守护者发送推送通知，但深夜推送可能无法叫醒对方。\n\n升级至加强版可启用自动语音外呼，在无人响应时拨打电话。"
+                protectedMessage: L("degradation.noGuardian.protected"),
+                guardianMessage: L("degradation.noGuardian.guardian"),
+                detailText: L("degradation.noGuardian.detail")
             )
         }
 
@@ -371,9 +364,9 @@ enum DisclaimerCopy {
             Warning(
                 id: "server_fault",
                 severity: .caution,
-                protectedMessage: "服务异常 · 部分功能可能暂时不可用",
-                guardianMessage: "服务异常 · 数据可能不完整",
-                detailText: "守灯服务器当前出现异常，部分功能可能暂时不可用。我们正在修复中。\n\n紧急情况下请直接拨打当地紧急号码。"
+                protectedMessage: L("degradation.serverFault.protected"),
+                guardianMessage: L("degradation.serverFault.guardian"),
+                detailText: L("degradation.serverFault.detail")
             )
         }
     }

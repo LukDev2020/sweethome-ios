@@ -1,6 +1,8 @@
 import SwiftUI
 import WidgetKit
 
+private func L(_ key: String) -> String { WidgetDataStore.localized(key) }
+
 // MARK: - Accessory Inline
 
 struct GuardianInlineView: View {
@@ -9,29 +11,29 @@ struct GuardianInlineView: View {
     var body: some View {
         switch entry.scenario {
         case .loggedOut:
-            Text("守灯 · 请登录")
+            Text(WidgetHelpers.branded(L("widget.login.required")))
         case .sosAlert:
             if let person = alertPerson {
-                Text("守灯 · \(person.displayName) SOS")
+                Text(WidgetHelpers.branded(WidgetDataStore.localizedFormat("widget.person.sos", person.displayName)))
             } else {
-                Text("守灯 · SOS 警报")
+                Text(WidgetHelpers.branded(L("widget.sos.alert")))
             }
         case .someoneOverdue:
             if let person = overduePerson {
-                Text("守灯 · \(person.displayName) 未报平安")
+                Text(WidgetHelpers.branded(WidgetDataStore.localizedFormat("widget.person.overdue", person.displayName)))
             } else {
-                Text("守灯 · 有人未报平安")
+                Text(WidgetHelpers.branded(L("widget.someone.overdue")))
             }
         case .deviceOffline:
             if let person = offlinePerson {
-                Text("守灯 · \(person.displayName) 离线")
+                Text(WidgetHelpers.branded(WidgetDataStore.localizedFormat("widget.person.offline", person.displayName)))
             } else {
-                Text("守灯 · 设备离线")
+                Text(WidgetHelpers.branded(L("widget.device.offline")))
             }
         case .noPersons:
-            Text("守灯 · 邀请家人")
+            Text(WidgetHelpers.branded(L("widget.invite.family")))
         case .allSafe, .timerExpired:
-            Text("守灯 · \(entry.persons.count)人安全")
+            Text(WidgetHelpers.branded(WidgetDataStore.localizedFormat("widget.people.safe", entry.persons.count)))
         }
     }
 
@@ -107,25 +109,25 @@ struct GuardianRectangularView: View {
         switch entry.scenario {
         case .loggedOut:
             VStack(alignment: .leading, spacing: 2) {
-                Label("守灯", systemImage: "shield.slash")
+                Label(WidgetDataStore.appName, systemImage: "shield.slash")
                     .font(.headline)
-                Text("请登录查看守护状态")
+                Text(L("widget.signIn.toSeeStatus"))
                     .font(.caption)
             }
         case .sosAlert:
             if let person = entry.persons.first(where: { $0.status == "alert" }) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Label("紧急求助", systemImage: "exclamationmark.triangle.fill")
+                    Label(L("widget.sos.title"), systemImage: "exclamationmark.triangle.fill")
                         .font(.headline)
                         .foregroundStyle(.red)
-                    Text("\(person.displayName) 发出求助")
+                    Text(WidgetDataStore.localizedFormat("widget.person.sentSOS", person.displayName))
                         .font(.caption)
                 }
             }
         case .someoneOverdue:
             if let person = entry.persons.first(where: { $0.status == "overdue" }) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Label("未报平安", systemImage: "exclamationmark.circle.fill")
+                    Label(L("la.overdue"), systemImage: "exclamationmark.circle.fill")
                         .font(.headline)
                         .foregroundStyle(.orange)
                     Text("\(person.displayName) \(WidgetHelpers.relativeTimeString(from: person.lastCheckIn))")
@@ -135,24 +137,24 @@ struct GuardianRectangularView: View {
         case .deviceOffline:
             if let person = entry.persons.first(where: { $0.status == "unreachable" }) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Label("设备离线", systemImage: "antenna.radiowaves.left.and.right.slash")
+                    Label(L("widget.device.offline"), systemImage: "antenna.radiowaves.left.and.right.slash")
                         .font(.headline)
-                    Text("\(person.displayName) 设备离线")
+                    Text(WidgetDataStore.localizedFormat("widget.person.offline", person.displayName))
                         .font(.caption)
                 }
             }
         case .noPersons:
             VStack(alignment: .leading, spacing: 2) {
-                Label("守灯", systemImage: "shield.checkered")
+                Label(WidgetDataStore.appName, systemImage: "shield.checkered")
                     .font(.headline)
-                Text("邀请家人加入守护")
+                Text(L("widget.invite.join"))
                     .font(.caption)
             }
         case .allSafe, .timerExpired:
             VStack(alignment: .leading, spacing: 2) {
-                Label("\(entry.persons.count)人安全", systemImage: "shield.checkered")
+                Label(WidgetDataStore.localizedFormat("widget.people.safe", entry.persons.count), systemImage: "shield.checkered")
                     .font(.headline)
-                Text("最近更新 \(WidgetHelpers.relativeTimeString(from: entry.updatedAt))")
+                Text(WidgetDataStore.localizedFormat("widget.updated", WidgetHelpers.relativeTimeString(from: entry.updatedAt)))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -210,19 +212,19 @@ struct GuardianSmallView: View {
 
     private var scenarioTitle: String {
         switch entry.scenario {
-        case .loggedOut: return "登录守灯"
-        case .sosAlert: return "紧急求助"
-        case .someoneOverdue: return "未报平安"
-        case .timerExpired: return "回家超时"
-        case .deviceOffline: return "设备离线"
-        case .noPersons: return "邀请家人"
-        case .allSafe: return "\(entry.persons.count)人安全"
+        case .loggedOut: return WidgetDataStore.localizedFormat("widget.signIn.app", WidgetDataStore.appName)
+        case .sosAlert: return L("widget.sos.title")
+        case .someoneOverdue: return L("la.overdue")
+        case .timerExpired: return L("widget.timer.expired")
+        case .deviceOffline: return L("widget.device.offline")
+        case .noPersons: return L("widget.invite.family")
+        case .allSafe: return WidgetDataStore.localizedFormat("widget.people.safe", entry.persons.count)
         }
     }
 
     private var scenarioSubtitle: String {
         switch entry.scenario {
-        case .loggedOut: return "点击打开"
+        case .loggedOut: return L("widget.tapToOpen")
         case .sosAlert:
             return entry.persons.first(where: { $0.status == "alert" })?.displayName ?? ""
         case .someoneOverdue:
@@ -230,7 +232,7 @@ struct GuardianSmallView: View {
         case .timerExpired: return ""
         case .deviceOffline:
             return entry.persons.first(where: { $0.status == "unreachable" })?.displayName ?? ""
-        case .noPersons: return "邀请家人加入"
+        case .noPersons: return L("widget.invite.join")
         case .allSafe: return WidgetHelpers.relativeTimeString(from: entry.updatedAt)
         }
     }
@@ -258,7 +260,7 @@ struct GuardianMediumView: View {
             Image(systemName: entry.scenario == .loggedOut ? "shield.slash" : "person.badge.plus")
                 .font(.title)
                 .foregroundStyle(SharedColors.lamp)
-            Text(entry.scenario == .loggedOut ? "登录守灯" : "邀请家人加入守护")
+            Text(entry.scenario == .loggedOut ? WidgetDataStore.localizedFormat("widget.signIn.app", WidgetDataStore.appName) : L("widget.invite.join"))
                 .font(.subheadline.bold())
                 .foregroundStyle(.white)
         }
@@ -275,7 +277,7 @@ struct GuardianMediumView: View {
             HStack {
                 Image(systemName: "shield.checkered")
                     .foregroundStyle(SharedColors.lamp)
-                Text("守护状态")
+                Text(L("widget.status.header"))
                     .font(.caption.bold())
                     .foregroundStyle(.white)
                 Spacer()
@@ -317,7 +319,7 @@ struct GuardianMediumView: View {
             }
 
             if remaining > 0 {
-                Text("+\(remaining)人")
+                Text(WidgetDataStore.localized("widget.more", count: remaining))
                     .font(.caption2)
                     .foregroundStyle(.white.opacity(0.5))
             }
@@ -327,10 +329,10 @@ struct GuardianMediumView: View {
 
     private func personStatusText(_ person: WidgetProtectedPerson) -> String {
         switch person.status {
-        case "alert": return "紧急求助"
-        case "overdue": return "未报平安 \(WidgetHelpers.relativeTimeString(from: person.lastCheckIn))"
-        case "unreachable": return "设备离线"
-        default: return "安全 · \(WidgetHelpers.relativeTimeString(from: person.lastCheckIn))"
+        case "alert": return L("widget.sos.title")
+        case "overdue": return "\(L("la.overdue")) \(WidgetHelpers.relativeTimeString(from: person.lastCheckIn))"
+        case "unreachable": return L("widget.device.offline")
+        default: return "\(L("la.safe")) · \(WidgetHelpers.relativeTimeString(from: person.lastCheckIn))"
         }
     }
 }

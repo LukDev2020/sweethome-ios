@@ -2,13 +2,32 @@ import SwiftUI
 
 enum WidgetHelpers {
 
-    static func relativeTimeString(from date: Date?) -> String {
-        guard let date else { return "未知" }
-        let interval = Date().timeIntervalSince(date)
-        if interval < 60 { return "刚刚" }
-        if interval < 3600 { return "\(Int(interval / 60))分钟前" }
-        if interval < 86400 { return "\(Int(interval / 3600))小时前" }
-        return "\(Int(interval / 86400))天前"
+    /// "just now", "5 min. ago", "il y a 3 h", "3小时前"… in the app's language.
+    static func relativeTimeString(from date: Date?, now: Date = Date()) -> String {
+        guard let date else { return WidgetDataStore.localized("widget.time.unknown") }
+        let interval = now.timeIntervalSince(date)
+        if interval < 60 { return WidgetDataStore.localized("widget.time.justNow") }
+        var ago = DateComponents()
+        if interval < 3600 { ago.minute = -Int(interval / 60) }
+        else if interval < 86400 { ago.hour = -Int(interval / 3600) }
+        else { ago.day = -Int(interval / 86400) }
+        let formatter = RelativeDateTimeFormatter()
+        formatter.locale = WidgetDataStore.locale
+        formatter.unitsStyle = .short
+        return formatter.localizedString(from: ago)
+    }
+
+    /// A table string with one `%@`, filled with a live `Text` (timer, relative date).
+    static func text(_ key: String, _ inner: Text) -> Text {
+        let parts = WidgetDataStore.localized(key).components(separatedBy: "%@")
+        let before = parts.first ?? ""
+        let after = parts.dropFirst().joined()
+        return Text("\(Text(verbatim: before))\(inner)\(Text(verbatim: after))")
+    }
+
+    /// "守灯 · …" / "Beaconify · …" for one-line lock-screen widgets.
+    static func branded(_ text: String) -> String {
+        "\(WidgetDataStore.appName) · \(text)"
     }
 
     static func isStale(_ date: Date) -> Bool {

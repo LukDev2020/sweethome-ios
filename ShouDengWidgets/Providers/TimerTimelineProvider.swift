@@ -26,7 +26,7 @@ struct TimerTimelineProvider: TimelineProvider {
             date: Date(),
             isActive: state.homeTimerActive,
             deadline: state.homeTimerDeadline,
-            label: state.homeTimerLabel ?? "回家倒计时",
+            label: state.homeTimerLabel ?? WidgetDataStore.localized("widget.timer.title"),
             isLoggedIn: state.isLoggedIn
         )
     }
@@ -43,7 +43,7 @@ struct TimerEntry: TimelineEntry {
         date: Date(),
         isActive: true,
         deadline: Date().addingTimeInterval(3600),
-        label: "回家倒计时",
+        label: WidgetDataStore.localized("widget.timer.title"),
         isLoggedIn: true
     )
 }

@@ -1,6 +1,8 @@
 import SwiftUI
 import WidgetKit
 
+private func L(_ key: String) -> String { WidgetDataStore.localized(key) }
+
 // MARK: - Accessory Inline
 
 struct ProtectedInlineView: View {
@@ -9,21 +11,21 @@ struct ProtectedInlineView: View {
     var body: some View {
         switch entry.scenario {
         case .loggedOut:
-            Text("守灯 · 请登录")
+            Text(WidgetHelpers.branded(L("widget.login.required")))
         case .sosActive:
-            Text("守灯 · 紧急求助中")
+            Text(WidgetHelpers.branded(L("la.sos.active")))
         case .timerRunning:
             if let deadline = entry.timerDeadline {
-                Text("回家 \(deadline, style: .timer)")
+                WidgetHelpers.text("widget.timer.home", Text(deadline, style: .timer))
             } else {
-                Text("守灯 · 计时中")
+                Text(WidgetHelpers.branded(L("la.home.timer")))
             }
         case .overdue:
-            Text("守灯 · 请报平安")
+            Text(WidgetHelpers.branded(L("widget.checkin.due")))
         case .noGuardians:
-            Text("守灯 · 设置守护者")
+            Text(WidgetHelpers.branded(L("widget.guardians.setup")))
         case .normal:
-            Text("守灯 · \(entry.guardianCount)位守护者")
+            Text(WidgetHelpers.branded(WidgetDataStore.localized("widget.guardians.count", count: entry.guardianCount)))
         }
     }
 }
@@ -98,27 +100,27 @@ struct ProtectedRectangularView: View {
         switch entry.scenario {
         case .loggedOut:
             VStack(alignment: .leading, spacing: 2) {
-                Label("守灯", systemImage: "shield.slash")
+                Label(WidgetDataStore.appName, systemImage: "shield.slash")
                     .font(.headline)
-                Text("请登录查看守护状态")
+                Text(L("widget.signIn.toSeeStatus"))
                     .font(.caption)
             }
         case .sosActive:
             VStack(alignment: .leading, spacing: 2) {
-                Label("紧急求助中", systemImage: "exclamationmark.triangle.fill")
+                Label(L("la.sos.active"), systemImage: "exclamationmark.triangle.fill")
                     .font(.headline)
                     .foregroundStyle(.red)
                 if let triggered = entry.sosTriggeredAt {
-                    Text("已进行 \(triggered, style: .relative)")
+                    WidgetHelpers.text("widget.sos.elapsed", Text(triggered, style: .relative))
                         .font(.caption)
                 }
             }
         case .timerRunning:
             VStack(alignment: .leading, spacing: 2) {
-                Label("回家计时中", systemImage: "house.fill")
+                Label(L("la.home.timer"), systemImage: "house.fill")
                     .font(.headline)
                 if let deadline = entry.timerDeadline {
-                    Text("剩余 \(deadline, style: .timer)")
+                    WidgetHelpers.text("widget.timer.remaining", Text(deadline, style: .timer))
                         .font(.caption)
                 }
                 if let label = entry.timerLabel {
@@ -129,29 +131,29 @@ struct ProtectedRectangularView: View {
             }
         case .overdue:
             VStack(alignment: .leading, spacing: 2) {
-                Label("请报平安", systemImage: "exclamationmark.circle.fill")
+                Label(L("widget.checkin.due"), systemImage: "exclamationmark.circle.fill")
                     .font(.headline)
                     .foregroundStyle(.orange)
-                Text("上次: \(WidgetHelpers.relativeTimeString(from: entry.lastCheckIn))")
+                Text(WidgetDataStore.localizedFormat("widget.last.short", WidgetHelpers.relativeTimeString(from: entry.lastCheckIn)))
                     .font(.caption)
             }
         case .noGuardians:
             VStack(alignment: .leading, spacing: 2) {
-                Label("守灯", systemImage: "shield.checkered")
+                Label(WidgetDataStore.appName, systemImage: "shield.checkered")
                     .font(.headline)
-                Text("设置守护网络")
+                Text(L("widget.network.setup"))
                     .font(.caption)
-                Text("邀请家人成为守护者")
+                Text(L("widget.invite.guardians"))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
         case .normal:
             VStack(alignment: .leading, spacing: 2) {
-                Label("守灯守护中", systemImage: "shield.checkered")
+                Label(WidgetDataStore.localizedFormat("widget.protected.active", WidgetDataStore.appName), systemImage: "shield.checkered")
                     .font(.headline)
-                Text("\(entry.guardianCount)位守护者正在保护你")
+                Text(WidgetDataStore.localized("widget.guardians.protecting", count: entry.guardianCount))
                     .font(.caption)
-                Text("上次报平安: \(WidgetHelpers.relativeTimeString(from: entry.lastCheckIn))")
+                Text(WidgetDataStore.localizedFormat("widget.last.checkin", WidgetHelpers.relativeTimeString(from: entry.lastCheckIn)))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
@@ -208,19 +210,19 @@ struct ProtectedSmallView: View {
     @ViewBuilder
     private var statusTitle: some View {
         switch entry.scenario {
-        case .loggedOut: Text("登录守灯")
-        case .sosActive: Text("紧急求助中")
-        case .timerRunning: Text("回家计时中")
-        case .overdue: Text("请报平安")
-        case .noGuardians: Text("设置守护者")
-        case .normal: Text("守灯守护中")
+        case .loggedOut: Text(WidgetDataStore.localizedFormat("widget.signIn.app", WidgetDataStore.appName))
+        case .sosActive: Text(L("la.sos.active"))
+        case .timerRunning: Text(L("la.home.timer"))
+        case .overdue: Text(L("widget.checkin.due"))
+        case .noGuardians: Text(L("widget.guardians.setup"))
+        case .normal: Text(WidgetDataStore.localizedFormat("widget.protected.active", WidgetDataStore.appName))
         }
     }
 
     @ViewBuilder
     private var statusSubtitle: some View {
         switch entry.scenario {
-        case .loggedOut: Text("点击打开")
+        case .loggedOut: Text(L("widget.tapToOpen"))
         case .sosActive:
             if let t = entry.sosTriggeredAt {
                 Text(t, style: .relative)
@@ -231,11 +233,11 @@ struct ProtectedSmallView: View {
             if let d = entry.timerDeadline {
                 Text(d, style: .timer)
             } else {
-                Text("计时中")
+                Text(L("widget.timer.running"))
             }
         case .overdue: Text(WidgetHelpers.relativeTimeString(from: entry.lastCheckIn))
-        case .noGuardians: Text("邀请家人")
-        case .normal: Text("\(entry.guardianCount)位守护者")
+        case .noGuardians: Text(L("widget.invite.family"))
+        case .normal: Text(WidgetDataStore.localized("widget.guardians.count", count: entry.guardianCount))
         }
     }
 }
@@ -262,7 +264,7 @@ struct ProtectedMediumView: View {
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.8))
                     if WidgetHelpers.isStale(entry.updatedAt) {
-                        Text("更新于 \(WidgetHelpers.relativeTimeString(from: entry.updatedAt))")
+                        Text(WidgetDataStore.localizedFormat("widget.updated", WidgetHelpers.relativeTimeString(from: entry.updatedAt)))
                             .font(.caption2)
                             .foregroundStyle(.white.opacity(0.5))
                     }
@@ -302,7 +304,7 @@ struct ProtectedMediumView: View {
                                 .font(.title2.bold())
                                 .foregroundStyle(.white)
                         }
-                        Text("守护者")
+                        Text(L("widget.guardians.label"))
                             .font(.caption2)
                             .foregroundStyle(.white.opacity(0.6))
                     }
@@ -336,27 +338,27 @@ struct ProtectedMediumView: View {
 
     private var scenarioTitle: String {
         switch entry.scenario {
-        case .loggedOut: return "登录守灯"
-        case .sosActive: return "紧急求助中"
-        case .timerRunning: return "回家计时中"
-        case .overdue: return "请报平安"
-        case .noGuardians: return "设置守护网络"
-        case .normal: return "守灯守护中"
+        case .loggedOut: return WidgetDataStore.localizedFormat("widget.signIn.app", WidgetDataStore.appName)
+        case .sosActive: return L("la.sos.active")
+        case .timerRunning: return L("la.home.timer")
+        case .overdue: return L("widget.checkin.due")
+        case .noGuardians: return L("widget.network.setup")
+        case .normal: return WidgetDataStore.localizedFormat("widget.protected.active", WidgetDataStore.appName)
         }
     }
 
     private var scenarioDetail: String {
         switch entry.scenario {
-        case .loggedOut: return "点击登录查看守护状态"
+        case .loggedOut: return L("widget.tapToSignIn")
         case .sosActive:
             if let t = entry.sosTriggeredAt {
-                return "已持续 \(WidgetHelpers.relativeTimeString(from: t))"
+                return WidgetDataStore.localizedFormat("widget.sos.triggeredAgo", WidgetHelpers.relativeTimeString(from: t))
             }
-            return "已触发紧急求助"
-        case .timerRunning: return entry.timerLabel ?? "回家倒计时进行中"
-        case .overdue: return "上次报平安: \(WidgetHelpers.relativeTimeString(from: entry.lastCheckIn))"
-        case .noGuardians: return "邀请家人成为你的守护者"
-        case .normal: return "\(entry.guardianCount)位守护者正在保护你"
+            return L("widget.sos.triggered")
+        case .timerRunning: return entry.timerLabel ?? L("widget.timer.inProgress")
+        case .overdue: return WidgetDataStore.localizedFormat("widget.last.checkin", WidgetHelpers.relativeTimeString(from: entry.lastCheckIn))
+        case .noGuardians: return L("widget.invite.guardians")
+        case .normal: return WidgetDataStore.localized("widget.guardians.protecting", count: entry.guardianCount)
         }
     }
 }

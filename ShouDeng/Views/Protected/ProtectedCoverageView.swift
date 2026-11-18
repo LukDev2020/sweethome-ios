@@ -1,11 +1,10 @@
 import SwiftUI
 
-// MARK: - Screen A5: Coverage & Offline Pack
+// MARK: - Screen A5: Coverage
 //
 // Design from shoudeng-full-design.html:
 //   - Current country detection (Ukraine · Kyiv)
 //   - Local resources panel (emergency number, embassy, rescue partners)
-//   - Offline pack panel (emergency numbers, SMS templates, offline map)
 //   - Weak network degradation toggles
 
 struct ProtectedCoverageView: View {
@@ -106,22 +105,7 @@ struct ProtectedCoverageView: View {
                 if showsSampleCards { sampleDataBanner }
                 localResourcesPanel
 
-                // Nearby Medical: a real Maps search; the sample list only in the demo
-                sectionHeader(langManager.localized("coverage_medical", fallback: "Nearby Medical"))
-                findHospitalsButton
-
-                // Live weather where the person is (Apple WeatherKit)
-                sectionHeader(langManager.localized("coverage_weather", fallback: "Weather"))
-                WeatherCardView(locate: { [coordinator, explore] in
-                                    (coordinator.isDemo ? explore.weatherLocation : nil)
-                                        ?? coordinator.locationManager.bestAvailableLocation
-                                },
-                                placeName: usesRealLocationInDemo ? "" : (cityName.isEmpty ? countryName : cityName),
-                                cornerAction: demoWeatherAction)
-                    // A new place (the person's own, or back to the sample city) reloads the card
-                    .id(demoWeatherKey)
-                    .onAppear { coordinator.locationManager.requestSingleLocation() }
-                    .demoLocationConsent($locationPrompt)
+                medicalAndWeatherSection
 
                 if showsSampleCards {
                     AQICardView(value: 32, label: "Good")
@@ -131,13 +115,11 @@ struct ProtectedCoverageView: View {
                     localInfoGrid
                 }
 
-                offlinePackPanel
-                if showsSampleCards { weakNetworkPanel }
-                Text(langManager.localized("protected.coverage.footer"))
-                    .font(.scaled(size: 12))
-                    .foregroundStyle(.secondary.opacity(0.7))
-                    .padding(.top, 8)
-                    .padding(.bottom, 24)
+                if showsSampleCards {
+                    weakNetworkPanel
+                    sampleDataFooter
+                }
+                Spacer().frame(height: 24)
             }
             .padding(.horizontal, 16)
         }
@@ -158,7 +140,6 @@ struct ProtectedCoverageView: View {
                     .padding(.top, 8)
                     if showsSampleCards { sampleDataBanner }
                     localResourcesPanel
-                    findHospitalsButton
                 }
                 .padding(.horizontal, 16)
             }
@@ -166,13 +147,12 @@ struct ProtectedCoverageView: View {
         } trailing: {
             ScrollView {
                 VStack(spacing: 12) {
-                    offlinePackPanel
-                    if showsSampleCards { weakNetworkPanel }
-                    Text(langManager.localized("protected.coverage.footer"))
-                        .font(.scaled(size: 12))
-                        .foregroundStyle(.secondary.opacity(0.7))
-                        .padding(.top, 8)
-                        .padding(.bottom, 24)
+                    medicalAndWeatherSection
+                    if showsSampleCards {
+                        weakNetworkPanel
+                        sampleDataFooter
+                    }
+                    Spacer().frame(height: 24)
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
@@ -248,22 +228,34 @@ struct ProtectedCoverageView: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - Offline Pack
+    // MARK: - Nearby Medical & Weather
 
-    private var offlinePackPanel: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(langManager.localized("protected.coverage.offlinePack"))
-                .font(.scaled(size: 12))
-                .foregroundStyle(.secondary)
-            resourceRow(langManager.localized("protected.coverage.offlineEmergency"), value: langManager.localized("protected.coverage.downloaded"), isOk: true)
-            resourceRow(langManager.localized("protected.coverage.offlineSMS"), value: langManager.localized("protected.coverage.downloaded"), isOk: true)
-            resourceRow(langManager.localized("protected.coverage.offlineMap") + (cityName.isEmpty ? "" : " · \(cityName)"), value: langManager.localized("protected.coverage.notDownloaded"), isOk: false)
-        }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
-        )
+    @ViewBuilder
+    private var medicalAndWeatherSection: some View {
+        // Nearby Medical: a real Maps search; the sample list only in the demo
+        sectionHeader(langManager.localized("coverage_medical", fallback: "Nearby Medical"))
+        findHospitalsButton
+
+        // Live weather where the person is (Apple WeatherKit)
+        sectionHeader(langManager.localized("coverage_weather", fallback: "Weather"))
+        WeatherCardView(locate: { [coordinator, explore] in
+                            (coordinator.isDemo ? explore.weatherLocation : nil)
+                                ?? coordinator.locationManager.bestAvailableLocation
+                        },
+                        placeName: usesRealLocationInDemo ? "" : (cityName.isEmpty ? countryName : cityName),
+                        cornerAction: demoWeatherAction)
+            // A new place (the person's own, or back to the sample city) reloads the card
+            .id(demoWeatherKey)
+            .onAppear { coordinator.locationManager.requestSingleLocation() }
+            .demoLocationConsent($locationPrompt)
+    }
+
+    /// Only with the sample cards: says the content above is sample data
+    private var sampleDataFooter: some View {
+        Text(langManager.localized("protected.coverage.footer"))
+            .font(.scaled(size: 12))
+            .foregroundStyle(.secondary.opacity(0.7))
+            .padding(.top, 8)
     }
 
     // MARK: - Weak Network
@@ -281,17 +273,6 @@ struct ProtectedCoverageView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
         )
-    }
-
-    private func resourceRow(_ label: String, value: String, isOk: Bool) -> some View {
-        HStack {
-            Text(label).font(.scaled(size: 13))
-            Spacer()
-            Text(value)
-                .font(.scaled(size: 11.5))
-                .foregroundStyle(isOk ? safe : alert)
-        }
-        .padding(.vertical, 2)
     }
 
     private func toggleRow(_ label: String, isOn: Binding<Bool>) -> some View {

@@ -112,7 +112,7 @@ struct EmergencyTextCardView: View {
                                 .foregroundStyle(alert)
                         }
 
-                        Text("Emergency Number")
+                        Text(langManager.localized("emergencyCard.emergencyNumber"))
                             .font(.scaled(size: 14))
                             .foregroundStyle(.secondary)
                     }

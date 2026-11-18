@@ -7,6 +7,7 @@ import SwiftUI
 
 struct DisguiseNotesView: View {
     @ObservedObject private var disguiseService = DisguiseModeService.shared
+    @ObservedObject private var lang = LanguageManager.shared
 
     @State private var notes: [NoteItem] = NoteItem.samples
     @State private var selectedNote: NoteItem?
@@ -20,13 +21,16 @@ struct DisguiseNotesView: View {
         var body: String
         var date: Date
 
+        /// Everyday notes in the person's language, so the shell looks like their own notes app
         static var samples: [NoteItem] {
-            [
-                NoteItem(title: "Shopping List", body: "Milk, eggs, bread, butter, apples, orange juice", date: Date().addingTimeInterval(-3600)),
-                NoteItem(title: "Meeting Notes", body: "Discuss Q4 budget\nReview team assignments\nSet deadlines for next sprint", date: Date().addingTimeInterval(-86400)),
-                NoteItem(title: "Ideas", body: "Look into weekend hiking trails\nTry new pasta recipe\nCall dentist for appointment", date: Date().addingTimeInterval(-172800)),
-                NoteItem(title: "Reminders", body: "Pay electricity bill\nRenew gym membership\nSchedule car service", date: Date().addingTimeInterval(-259200)),
-            ]
+            let lang = LanguageManager.shared
+            return [
+                ("shopping", -3600.0), ("meeting", -86400.0), ("ideas", -172800.0), ("reminders", -259200.0),
+            ].map { name, age in
+                NoteItem(title: lang.localized("disguise.notes.sample.\(name).title"),
+                         body: lang.localized("disguise.notes.sample.\(name).body"),
+                         date: Date().addingTimeInterval(age))
+            }
         }
     }
 
@@ -74,18 +78,18 @@ struct DisguiseNotesView: View {
             }
         }
         .listStyle(.plain)
-        .navigationTitle("Notes")
+        .navigationTitle(lang.localized("disguise.notes"))
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    let newNote = NoteItem(title: "New Note", body: "", date: Date())
+                    let newNote = NoteItem(title: lang.localized("disguise.notes.newNote"), body: "", date: Date())
                     notes.insert(newNote, at: 0)
                     selectedNote = newNote
                     editingTitle = newNote.title
                     editingText = ""
                     isEditing = true
                 } label: {
-                    Label("New Note", systemImage: "square.and.pencil")
+                    Label(lang.localized("disguise.notes.newNote"), systemImage: "square.and.pencil")
                 }
             }
         }
@@ -95,7 +99,7 @@ struct DisguiseNotesView: View {
 
     private func noteEditorView(_ note: NoteItem) -> some View {
         VStack(spacing: 0) {
-            TextField("Title", text: $editingTitle)
+            TextField(lang.localized("disguise.notes.titlePlaceholder"), text: $editingTitle)
                 .font(.system(size: 22, weight: .bold))
                 .padding(.horizontal, 16)
                 .padding(.top, 16)
@@ -121,15 +125,14 @@ struct DisguiseNotesView: View {
                     isEditing = false
                     selectedNote = nil
                 } label: {
-                    Label("Notes", systemImage: "chevron.left")
+                    Label(lang.localized("disguise.notes"), systemImage: "chevron.left")
                         .labelStyle(.titleAndIcon)
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    // Share (does nothing, just looks real)
-                } label: {
-                    Label("Share", systemImage: "square.and.arrow.up")
+                // Shares the note's text, like any notes app
+                ShareLink(item: [editingTitle, editingText].filter { !$0.isEmpty }.joined(separator: "\n")) {
+                    Label(lang.localized("disguise.notes.share"), systemImage: "square.and.arrow.up")
                 }
             }
         }
@@ -147,13 +150,16 @@ struct DisguiseNotesView: View {
 
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: lang.current.rawValue)
         let calendar = Calendar.current
         if calendar.isDateInToday(date) {
-            formatter.dateFormat = "h:mm a"
+            formatter.timeStyle = .short
         } else if calendar.isDateInYesterday(date) {
-            return "Yesterday"
+            // "Yesterday" / "昨天" / "昨日" / "Hier"
+            formatter.dateStyle = .short
+            formatter.doesRelativeDateFormatting = true
         } else {
-            formatter.dateFormat = "M/d/yy"
+            formatter.dateStyle = .short
         }
         return formatter.string(from: date)
     }

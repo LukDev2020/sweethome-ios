@@ -92,6 +92,8 @@
 		34EA733F874C92ED1E5DCA81 /* OfflineQueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C24BFDE9F552166FDF0BA0C /* OfflineQueueTests.swift */; };
 		35159B7DB49900FACD831968 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C3DE3DA8E9EEE6CEB01B71 /* User.swift */; };
 		36066D7A4E9FAA28FD533C5E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E14F7CAC5E00568391DDDD13 /* PrivacyInfo.xcprivacy */; };
+		B7B030A1EC56B211E4B01992 /* AppShortcuts.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 03DC4A8D019109F443FAEFA2 /* AppShortcuts.xcstrings */; };
+		3B02600CB9B5EE71D2E5E812 /* AppIntents.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E0FEC5C9C9FAAD53072C545D /* AppIntents.xcstrings */; };
 		36E61D1756A635AC2E9CE3C6 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31619A304E944F8752AA75E9 /* LoginView.swift */; };
 		BE83BE89816E70F2B72C0810 /* IdentitySignInViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 418A5E40C8D4C64CE125589C /* IdentitySignInViews.swift */; };
 		3917D763BCD59FF3CB69955D /* GuardianActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E1C1E117AC143584838AA4 /* GuardianActivityAttributes.swift */; };
@@ -477,6 +479,8 @@
 		D9AB9C9ECACF9A543D385A38 /* DeviceHealthMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceHealthMonitor.swift; sourceTree = "<group>"; };
 		DC654D034E59F72E979F06BE /* CountryCodeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryCodeTests.swift; sourceTree = "<group>"; };
 		E14F7CAC5E00568391DDDD13 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		03DC4A8D019109F443FAEFA2 /* AppShortcuts.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = AppShortcuts.xcstrings; sourceTree = "<group>"; };
+		E0FEC5C9C9FAAD53072C545D /* AppIntents.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = AppIntents.xcstrings; sourceTree = "<group>"; };
 		E2D380787D5C7576D1DF4B6C /* ShouDengWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = ShouDengWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		E49AE653FD21F8E431675140 /* WidgetDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataStore.swift; sourceTree = "<group>"; };
 		A7B99EE122444850AEC1C1C3 /* LockScreenCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockScreenCards.swift; sourceTree = "<group>"; };
@@ -1063,6 +1067,8 @@
 				EC9967501D760330EF89D308 /* GoogleService-Info.plist */,
 				CFE03FD74FE0AD57E1A8EE88 /* Info.plist */,
 				E14F7CAC5E00568391DDDD13 /* PrivacyInfo.xcprivacy */,
+				03DC4A8D019109F443FAEFA2 /* AppShortcuts.xcstrings */,
+				E0FEC5C9C9FAAD53072C545D /* AppIntents.xcstrings */,
 				AECB90E222B94FFC29DE8CB8 /* sos_alert.caf */,
 				BFCD3BD31A5FBC796E2E2A49 /* ShouDeng.entitlements */,
 				F85AA194543681ADBA601D82 /* App */,
@@ -1368,6 +1374,8 @@
 				7D9761B4731755AF8D1F6F8C /* InfoPlist.strings in Resources */,
 				17EC1E86D8BBE96D039EEE5D /* Localizable.strings in Resources */,
 				36066D7A4E9FAA28FD533C5E /* PrivacyInfo.xcprivacy in Resources */,
+				B7B030A1EC56B211E4B01992 /* AppShortcuts.xcstrings in Resources */,
+				3B02600CB9B5EE71D2E5E812 /* AppIntents.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
