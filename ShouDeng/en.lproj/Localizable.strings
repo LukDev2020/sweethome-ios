@@ -2708,3 +2708,4 @@
 "homeTimer.notStarted.body" = "Your family wasn't told about this timer, so nobody would be alerted. Check your connection and try again.";
 "arrival.notSent.title" = "Not sent";
 "arrival.notSent.body" = "Your family didn't get this. Check your connection and try again.";
+"sos.status.nobodyReached" = "Nobody in your family has been reached yet. If you're in danger, call %@ now.";

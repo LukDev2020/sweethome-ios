@@ -245,14 +245,20 @@ struct TripDetailView: View {
         let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("trip.gpx")
         try? gpx.write(to: tempURL, atomically: true, encoding: .utf8)
 
-        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = scene.windows.first,
-              let root = window.rootViewController else { return }
+        // Present from the top-most controller: this screen is itself inside a
+        // sheet, and the root (already presenting it) would refuse
+        guard let scene = UIApplication.shared.connectedScenes
+                .compactMap({ $0 as? UIWindowScene })
+                .first(where: { $0.activationState == .foregroundActive })
+                ?? UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = scene.windows.first(where: \.isKeyWindow) ?? scene.windows.first,
+              var top = window.rootViewController else { return }
+        while let presented = top.presentedViewController { top = presented }
         let ac = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
         if let popover = ac.popoverPresentationController {
             popover.sourceView = window
             popover.sourceRect = CGRect(x: window.bounds.midX, y: window.bounds.maxY - 100, width: 0, height: 0)
         }
-        root.present(ac, animated: true)
+        top.present(ac, animated: true)
     }
 }

@@ -504,6 +504,8 @@ export interface SOSStatus {
   nextStep: string | null;
   nextStepAt: string | null;
   guardiansNotified: number;
+  /** Which guardians a push or SMS actually reached (the SOS screen shows each) */
+  notifiedGuardianIds: string[];
   callsPlaced: number;
   shareLinkSent: boolean;
   noGuardians: boolean;
@@ -551,6 +553,7 @@ export async function sosStatus(
     nextStep: d.escalationNextStep ?? null,
     nextStepAt: toIso(d.escalationNextAt),
     guardiansNotified: [...notified].filter((t) => t && !String(t).startsWith("contact:")).length,
+    notifiedGuardianIds: [...notified].filter((t): t is string => !!t && !String(t).startsWith("contact:")),
     callsPlaced: log.filter((e) => e.hop === 3 && e.channel === "voice").length,
     shareLinkSent: !!d.shareLinkSentAt,
     noGuardians: d.noGuardians === true,

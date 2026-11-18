@@ -60,6 +60,13 @@ struct HomeTimerView: View {
                 checkTimerExpiry()
             }
             .task { await loadActiveTimer() }
+            // The home-screen and lock-screen timer widgets show this countdown
+            .onChange(of: isActive) { _, active in
+                coordinator.setHomeTimerForWidget(deadline: active ? activeDeadline : nil, label: activeLabel)
+            }
+            .onChange(of: activeDeadline) { _, deadline in
+                coordinator.setHomeTimerForWidget(deadline: isActive ? deadline : nil, label: activeLabel)
+            }
         }
     }
 

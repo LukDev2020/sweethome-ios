@@ -13,6 +13,10 @@
     "nextStep": "voice1",
     "nextStepAt": "2026-10-30T11:59:30.000Z",
     "guardiansNotified": 2,
+    "notifiedGuardianIds": [
+      "kevin",
+      "sarah"
+    ],
     "callsPlaced": 0,
     "shareLinkSent": false,
     "noGuardians": false,

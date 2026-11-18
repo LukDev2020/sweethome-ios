@@ -601,6 +601,7 @@ final class AppCoordinator: ObservableObject {
             let trips = tripRecordingService
             Task { @MainActor in trips.resetForSignOut() }
         }
+        homeTimerForWidget = nil
         localStore.clearAll()
         // The medical card is PII: the next user on this phone must not inherit it
         MedicalCardCache.clear()
@@ -1740,6 +1741,16 @@ final class AppCoordinator: ObservableObject {
         KeychainHelper.shared.wipeForDeletedAccount()
     }
 
+    /// The running home timer, for the widgets (set by HomeTimerView)
+    private(set) var homeTimerForWidget: (deadline: Date, label: String)?
+
+    func setHomeTimerForWidget(deadline: Date?, label: String?) {
+        let new = deadline.map { (deadline: $0, label: label ?? "") }
+        guard new?.deadline != homeTimerForWidget?.deadline || new?.label != homeTimerForWidget?.label else { return }
+        homeTimerForWidget = new
+        syncWidgetState()
+    }
+
     /// After a relaunch in the middle of an SOS (iOS ended the app in the
     /// background): keep live location at SOS rate so the family's map follows.
     func resumeSOSModeIfNeeded() {
@@ -2736,6 +2747,7 @@ final class AppCoordinator: ObservableObject {
             let sosActive = activeSOSEvent != nil && !sosConcealed
             let sosTriggeredAt = activeSOSEvent?.triggeredAt
             let emergencyPhone: String? = localEmergencyNumber
+            let timer = homeTimerForWidget.flatMap { $0.deadline > Date().addingTimeInterval(-12 * 3600) ? $0 : nil }
 
             // Move encoding + widget reload to background
             Task.detached(priority: .utility) {
@@ -2754,9 +2766,9 @@ final class AppCoordinator: ObservableObject {
                     lastCheckInDate: lastCheckIn,
                     sosActive: sosActive,
                     sosTriggeredAt: sosTriggeredAt,
-                    homeTimerActive: false,
-                    homeTimerDeadline: nil,
-                    homeTimerLabel: nil,
+                    homeTimerActive: timer != nil,
+                    homeTimerDeadline: timer?.deadline,
+                    homeTimerLabel: timer?.label,
                     protectedPersons: persons,
                     emergencyMedications: emergencyMeds,
                     emergencyPhone: emergencyPhone,

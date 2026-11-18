@@ -2708,3 +2708,4 @@
 "homeTimer.notStarted.body" = "ご家族にこのタイマーが伝わっていないため、時間を過ぎても誰にも通知されません。接続を確認してもう一度お試しください。";
 "arrival.notSent.title" = "送信されていません";
 "arrival.notSent.body" = "ご家族には届いていません。接続を確認してもう一度お試しください。";
+"sos.status.nobodyReached" = "まだご家族に連絡がついていません。危険な場合は、今すぐ %@ に電話してください。";

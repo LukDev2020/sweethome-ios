@@ -414,19 +414,21 @@ struct ProtectedHomeView: View {
                 if let loc = coordinator.locationManager.lastReportedLocation {
                     return loc.coordinate
                 }
-                if let user = coordinator.currentUser, !user.cityName.isEmpty {
-                    return Self.coordForCity(user.cityName)
+                if let user = coordinator.currentUser, let city = Self.coordForCity(user.cityName) {
+                    return city
                 }
                 return CLLocationCoordinate2D(latitude: 39.9, longitude: 116.4)
             }()
             p.append(.init(label: myLabel, latitude: myCoord.latitude, longitude: myCoord.longitude, color: lamp, isMe: true))
             for g in coordinator.myGuardians {
-                let gCoord: CLLocationCoordinate2D = {
+                let gCoord: CLLocationCoordinate2D? = {
                     if let memberLoc = coordinator.locationService.memberLocations[g.user.id] {
                         return memberLoc.coordinate
                     }
                     return Self.coordForCity(g.user.cityName)
                 }()
+                // Unknown place: no pin rather than one near New York
+                guard let gCoord else { continue }
                 let gCity = g.user.cityName
                 let gLabel = gCity.isEmpty ? g.user.displayName : "\(g.user.displayName) · \(gCity)"
                 p.append(.init(label: gLabel, latitude: gCoord.latitude, longitude: gCoord.longitude, color: safe, isMe: false))
@@ -455,8 +457,8 @@ struct ProtectedHomeView: View {
                 if let loc = coordinator.locationManager.lastReportedLocation {
                     return loc.coordinate
                 }
-                if let user = coordinator.currentUser, !user.cityName.isEmpty {
-                    return Self.coordForCity(user.cityName)
+                if let user = coordinator.currentUser, let city = Self.coordForCity(user.cityName) {
+                    return city
                 }
                 return CLLocationCoordinate2D(latitude: 39.9, longitude: 116.4)
             }()
@@ -546,8 +548,8 @@ struct ProtectedHomeView: View {
             if let loc = deviceLocation {
                 return CLLocationCoordinate2D(latitude: loc.coordinate.latitude, longitude: loc.coordinate.longitude)
             }
-            if let user = coordinator.currentUser, !user.cityName.isEmpty {
-                return Self.coordForCity( user.cityName)
+            if let user = coordinator.currentUser, let city = Self.coordForCity(user.cityName) {
+                return city
             }
             return CLLocationCoordinate2D(latitude: 39.9, longitude: 116.4) // fallback: Beijing
         }()
@@ -558,7 +560,9 @@ struct ProtectedHomeView: View {
         // Show all guardians on the map
         if !coordinator.myGuardians.isEmpty {
             for g in coordinator.myGuardians {
-                let coord = Self.coordForCity( g.user.cityName)
+                // Only where we actually know the place: an unknown city used to be
+                // drawn near New York and zoomed the map out across oceans
+                guard let coord = Self.coordForCity(g.user.cityName) else { continue }
                 pins.append(LocationPin(
                     id: g.id,
                     name: g.user.displayName,
@@ -705,7 +709,7 @@ struct ProtectedHomeView: View {
         AppCoordinator.topViewController()?.present(ac, animated: true)
     }
 
-    private static func coordForCity(_ city: String) -> CLLocationCoordinate2D {
+    private static func coordForCity(_ city: String) -> CLLocationCoordinate2D? {
         switch city {
         case "成都", "Chengdu": return CLLocationCoordinate2D(latitude: 30.67, longitude: 104.07)
         case "多伦多", "Toronto": return CLLocationCoordinate2D(latitude: 43.65, longitude: -79.38)
@@ -725,7 +729,7 @@ struct ProtectedHomeView: View {
         case "台北", "Taipei": return CLLocationCoordinate2D(latitude: 25.03, longitude: 121.57)
         case "广州", "Guangzhou": return CLLocationCoordinate2D(latitude: 23.13, longitude: 113.26)
         case "深圳", "Shenzhen": return CLLocationCoordinate2D(latitude: 22.54, longitude: 114.06)
-        default: return CLLocationCoordinate2D(latitude: 40.0, longitude: -74.0)
+        default: return nil
         }
     }
 

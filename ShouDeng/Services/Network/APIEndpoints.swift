@@ -63,6 +63,8 @@ struct SOSStatus: Codable, Equatable {
     let nextStep: String?
     let nextStepAt: Date?
     let guardiansNotified: Int
+    /// Which guardians a push or SMS reached (absent from older servers)
+    var notifiedGuardianIds: [String]? = nil
     let callsPlaced: Int
     let shareLinkSent: Bool
     let noGuardians: Bool

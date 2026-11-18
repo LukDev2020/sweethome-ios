@@ -44,6 +44,8 @@ We do NOT use your data for advertising, profiling, or sale to third parties.
 | Firebase Cloud Messaging | Google LLC | Push notifications | Device token, notification content |
 | Twilio | Twilio Inc. | SMS and voice calls | Phone number, notification text |
 | Apple APNs | Apple Inc. | Push delivery | Device token |
+| Sign in with Apple | Apple Inc. | Optional sign-in | Apple account identifier, e-mail you choose to share |
+| Alipay sign-in | Ant Group | Optional sign-in (only if you choose it) | Alipay account identifier |
 
 ### 5. Data Security
 - All data in transit uses TLS 1.2+

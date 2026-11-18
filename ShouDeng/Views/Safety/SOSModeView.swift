@@ -46,6 +46,7 @@ struct SOSActiveView: View {
             ScrollView {
                 VStack(spacing: 12) {
                     if status?.noGuardians == true { noGuardiansPanel }
+                    if nobodyReached { nobodyReachedPanel }
                     guardiansPanel
                     // Re-checked every second so the text fallback shows up once the
                     // server has been silent for SOSTextFallback.waitForServer seconds.
@@ -155,9 +156,10 @@ struct SOSActiveView: View {
 
     private var headerDetail: String {
         if ended { return lang.localized("sosmode.ended.detail") }
-        if status == nil { return lang.localized("sos.status.sending") }
-        let count = max(status?.guardiansNotified ?? 0, coordinator.myGuardians.count)
-        return lang.localized("sosmode.sharing", count: count)
+        // Only people a push or SMS actually reached — never "sharing with 3"
+        // when nobody got it
+        guard let status, status.guardiansNotified > 0 else { return lang.localized("sos.status.sending") }
+        return lang.localized("sosmode.sharing", count: status.guardiansNotified)
     }
 
     static func elapsed(from start: Date, to now: Date) -> String {
@@ -198,8 +200,28 @@ struct SOSActiveView: View {
 
     private func guardianState(_ g: Guardian) -> String {
         if status?.acknowledgedBy == g.user.id { return lang.localized("sosmode.handling") }
+        if let ids = status?.notifiedGuardianIds {
+            return lang.localized(ids.contains(g.user.id) ? "sosmode.notified" : "sosmode.notifying")
+        }
         if (status?.guardiansNotified ?? 0) > 0 { return lang.localized("sosmode.notified") }
         return lang.localized("sosmode.notifying")
+    }
+
+    /// Every alert round to family has run and nobody was reached (no app, push
+    /// and SMS failed): tell the person to call for help themselves
+    private var nobodyReached: Bool {
+        guard let status, !status.noGuardians, status.acknowledgedBy == nil, status.guardiansNotified == 0 else { return false }
+        let pastFamilyAlerts: Set<EscalationState> = [.hop2_allNotified, .hop3_voiceCalling, .hop3_exhausted, .hop4_shareSent, .exhausted]
+        return pastFamilyAlerts.contains(status.escalationState)
+    }
+
+    private var nobodyReachedPanel: some View {
+        Text(String(format: lang.localized("sos.status.nobodyReached"), coordinator.localEmergencyNumber))
+            .font(.scaled(size: 14, weight: .semibold))
+            .foregroundStyle(alert)
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: 12).fill(alert.opacity(0.08)))
     }
 
     private var noGuardiansPanel: some View {

@@ -2708,3 +2708,4 @@
 "homeTimer.notStarted.body" = "Vos proches n'ont pas été prévenus de ce minuteur : personne ne serait alerté. Vérifiez votre connexion et réessayez.";
 "arrival.notSent.title" = "Non envoyé";
 "arrival.notSent.body" = "Vos proches ne l'ont pas reçu. Vérifiez votre connexion et réessayez.";
+"sos.status.nobodyReached" = "Aucun de vos proches n'a encore été joint. Si vous êtes en danger, appelez le %@ maintenant.";

@@ -2708,3 +2708,4 @@
 "homeTimer.notStarted.body" = "家人沒有收到這個計時，逾時也不會有人被提醒。請檢查網路後重試。";
 "arrival.notSent.title" = "沒有傳送";
 "arrival.notSent.body" = "家人沒有收到。請檢查網路後重試。";
+"sos.status.nobodyReached" = "暫時還沒有聯絡上你的家人。如有危險，請立即撥打 %@。";

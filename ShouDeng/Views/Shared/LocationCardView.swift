@@ -800,10 +800,8 @@ struct FullScreenMapView: View {
                             .clipShape(Circle())
                     }
 
-                    if !showSearchBar {
-                        // Trail time range picker
-                        trailTimePicker
-                    }
+                    // (No trail range picker: no trail history is loaded on this
+                    // map yet, so the 1h/6h/24h/7d choice would change nothing)
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 60)
@@ -1144,6 +1142,12 @@ struct FullScreenMapView: View {
               item.placemark.location?.coordinate != nil,
               let myCoord = locationService.currentLocation else { return }
 
+        // MapKit draws no public-transport routes in apps: hand transit to Apple Maps
+        if routeTransportMode == .transit {
+            openInAppleMaps()
+            return
+        }
+
         isCalculatingRoute = true
         let request = MKDirections.Request()
         request.source = MKMapItem(placemark: MKPlacemark(coordinate: myCoord))
@@ -1154,11 +1158,9 @@ struct FullScreenMapView: View {
         directions.calculate { response, error in
             isCalculatingRoute = false
             guard let response, let route = response.routes.first else {
-                // Fallback: if transit not available, try automobile
-                if routeTransportMode == .transit {
-                    activeRoute = nil
-                    routeSteps = []
-                }
+                // No route for this mode: clear the old one rather than show it
+                activeRoute = nil
+                routeSteps = []
                 return
             }
             withAnimation(.easeInOut(duration: 0.3)) {
