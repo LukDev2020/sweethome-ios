@@ -212,7 +212,8 @@ router.get("/list", async (req: Request, res: Response) => {
     if (targetUserId !== uid) {
       const linkId = `${uid}_${targetUserId}`;
       const linkDoc = await db.collection("guardian_links").doc(linkId).get();
-      if (!linkDoc.exists || linkDoc.data()?.status !== "active") {
+      // Trips are location: a guardian the person hid their location from gets none
+      if (!linkDoc.exists || linkDoc.data()?.status !== "active" || linkDoc.data()?.permissions?.canSeeLocation === false) {
         res.status(403).json({ error: "Not authorized to view this user's trips" });
         return;
       }
@@ -268,7 +269,7 @@ router.get("/:tripId", async (req: Request, res: Response) => {
     if (tripData.userId !== uid) {
       const linkId = `${uid}_${tripData.userId}`;
       const linkDoc = await db.collection("guardian_links").doc(linkId).get();
-      if (!linkDoc.exists || linkDoc.data()?.status !== "active") {
+      if (!linkDoc.exists || linkDoc.data()?.status !== "active" || linkDoc.data()?.permissions?.canSeeLocation === false) {
         res.status(403).json({ error: "Not authorized" });
         return;
       }
@@ -322,7 +323,7 @@ router.get("/:tripId/export", async (req: Request, res: Response) => {
     if (tripData.userId !== uid) {
       const linkId = `${uid}_${tripData.userId}`;
       const linkDoc = await db.collection("guardian_links").doc(linkId).get();
-      if (!linkDoc.exists || linkDoc.data()?.status !== "active") {
+      if (!linkDoc.exists || linkDoc.data()?.status !== "active" || linkDoc.data()?.permissions?.canSeeLocation === false) {
         res.status(403).json({ error: "Not authorized" });
         return;
       }

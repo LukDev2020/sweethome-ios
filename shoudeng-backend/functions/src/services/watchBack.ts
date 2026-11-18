@@ -1,5 +1,6 @@
 import * as admin from "firebase-admin";
 import { sendFamilyWatchRequest, sendFamilyWatchStarted } from "./fcm";
+import { DEFAULT_LINK_PERMISSIONS } from "./guardianList";
 
 // ---------------------------------------------------------------------------
 // Watch back (family)
@@ -58,6 +59,7 @@ async function writeBackLink(guardianId: string, personId: string, status: "pend
     // The carer's plan covers it (no seat, no charge to the person being cared for)
     billedTo: guardianId,
     requestedBy,
+    permissions: DEFAULT_LINK_PERMISSIONS,
     createdAt: now,
     ...(status === "active" && { activatedAt: now }),
   });

@@ -173,7 +173,7 @@ describe("Cross-Border — APNs Pathway", () => {
     expect(fcmSource).toContain("紧急求助");
     expect(fcmSource).toContain("报平安提醒");
     expect(fcmSource).toContain("设备离线提醒");
-    expect(fcmSource).toContain("守护者已接手");
+    expect(fcmSource).toContain("求助已结束");
     // Locale routing has been added
     expect(fcmSource).toMatch(/locale|getLocale|userLocale/i);
   });

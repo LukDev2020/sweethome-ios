@@ -218,7 +218,8 @@ router.post("/resolve", authMiddleware, async (req: Request, res: Response) => {
       const resolverDoc = await db.collection("users").doc(uid).get();
       await sendSOSResolvedNotification(
         sosData.protectedPersonId,
-        resolverDoc.exists ? resolverDoc.data()!.displayName : "Guardian"
+        resolverDoc.exists ? resolverDoc.data()!.displayName : "Guardian",
+        sosRef.id
       );
     }
 

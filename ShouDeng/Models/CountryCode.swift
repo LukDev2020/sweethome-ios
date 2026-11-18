@@ -25,6 +25,28 @@ struct CountryCode: Identifiable, Hashable {
         return flag
     }
 
+    /// A phone number in international form (+8613800138000) for SMS and calls.
+    /// Accepts "+…", "00…", or a national number (a leading trunk 0 dropped)
+    /// dialled from `isoCode`. nil when it can't be a real number.
+    static func e164(_ raw: String, isoCode: String) -> String? {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        let digits = trimmed.filter(\.isASCII).filter(\.isNumber)
+        var full: String
+        if trimmed.hasPrefix("+") {
+            full = digits
+        } else if digits.hasPrefix("00") {
+            full = String(digits.dropFirst(2))
+        } else {
+            guard let dial = all.first(where: { $0.isoCode == isoCode.uppercased() })?.dialCode else { return nil }
+            var national = digits
+            // Italy keeps its leading 0 after the country code
+            if national.hasPrefix("0"), isoCode.uppercased() != "IT" { national.removeFirst() }
+            full = dial.filter(\.isNumber) + national
+        }
+        guard (8...15).contains(full.count), full.first != "0" else { return nil }
+        return "+" + full
+    }
+
     /// Detect user's current country from device locale.
     static var deviceDefault: CountryCode {
         let regionCode = Locale.current.region?.identifier ?? "CN"

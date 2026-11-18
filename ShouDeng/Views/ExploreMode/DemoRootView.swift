@@ -21,6 +21,9 @@ struct DemoRootView: View {
             }
         }
         .sosOverlays(coordinator)
+        // Settings toggled in the demo (@AppStorage: distress listening, home style…)
+        // go to the demo's own defaults, never the real app's
+        .defaultAppStorage(coordinator.defaults)
         // Choosing Rider in the demo shows the same rider setup a real rider gets
         .fullScreenCover(isPresented: Binding(get: { coordinator.showRiderSetup && coordinator.userRole == .protected_ },
                                               set: { coordinator.showRiderSetup = $0 })) {

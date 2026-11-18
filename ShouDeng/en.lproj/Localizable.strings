@@ -2653,3 +2653,4 @@
 "worldClock.addMe" = "Add my own time";
 "worldClock.reset" = "Back to family clocks";
 "worldClock.remove" = "Remove %@";
+"emergency.contacts.phoneInvalid" = "Enter a full number. Without a country code it is read as a number in your region.";

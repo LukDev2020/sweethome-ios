@@ -88,6 +88,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // AppCoordinator.onLoginComplete — never on the login screen.
         if case .loggedIn = appCoordinator.authState {
             appCoordinator.locationManager.start()
+            appCoordinator.resumeSOSModeIfNeeded()
         }
         appCoordinator.deviceHealthMonitor.beginMonitoring()
     }
@@ -137,6 +138,10 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // Silent-alarm check-in window opened on the server: show the "I'm safe" prompt
         if (userInfo["action"] as? String) == "silent_alarm_checkin" {
             SilentAlarmService.shared.handleCheckInPush()
+        }
+        // A guardian closed my SOS: drop the local copy so the next press is sent
+        if (userInfo["action"] as? String) == "sos_resolved" {
+            appCoordinator.pushService.onOwnSOSResolved?()
         }
 
         // Perform background sensor burst

@@ -2653,3 +2653,4 @@
 "worldClock.addMe" = "自分の時刻を追加";
 "worldClock.reset" = "家族の時計に戻す";
 "worldClock.remove" = "%@ を削除";
+"emergency.contacts.phoneInvalid" = "番号をすべて入力してください。国番号がない場合は、お住まいの地域の番号として扱います。";

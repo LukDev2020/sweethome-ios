@@ -20,8 +20,14 @@ final class TripRecordingService: ObservableObject {
     private var apiClient: APIClient?
 
     private let bufferFlushSize = 30
+    /// The server keeps at most 100 points per request (routes/trip.ts)
+    private let maxPointsPerRequest = 100
+    /// Offline for hours: keep the newest points, never grow without bound
+    private let maxBufferedPoints = 5_000
     private let uploadIntervalSec: TimeInterval = 30
     private let maxRecordingHours: TimeInterval = 12 * 3600
+    private var isFlushing = false
+    private var autoStopAttempted = false
 
     // Persistence keys
     private let activeKey = "trip_recording_active"
@@ -96,6 +102,11 @@ final class TripRecordingService: ObservableObject {
     // MARK: - Add Point (called from location callback)
 
     func addPoint(_ location: CLLocation) {
+        // The buffer is only touched on the main thread (flushes run there too)
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { self.addPoint(location) }
+            return
+        }
         guard isRecording else { return }
 
         let point = TripPoint(
@@ -115,51 +126,63 @@ final class TripRecordingService: ObservableObject {
         lastPoint = location
 
         pointBuffer.append(point)
-        DispatchQueue.main.async {
-            self.pointCount += 1
+        if pointBuffer.count > maxBufferedPoints {
+            pointBuffer.removeFirst(pointBuffer.count - maxBufferedPoints)
         }
+        pointCount += 1
 
         if pointBuffer.count >= bufferFlushSize {
-            Task { await flushBuffer() }
+            Task { @MainActor in await self.flushBuffer() }
         }
     }
 
     // MARK: - Buffer Flush
 
+    /// Sends buffered points, oldest first, at most 100 per request (what the
+    /// server stores). A failed batch goes back to the front and stops the run.
+    @MainActor
     private func flushBuffer() async {
-        guard let api = apiClient, let tripId = currentTripId else { return }
-        guard !pointBuffer.isEmpty else { return }
-
-        let batch = pointBuffer
-        pointBuffer = []
-
-        do {
-            let _: [String: Bool] = try await api.post(
-                "/v1/trip/\(tripId)/points",
-                body: ["points": batch]
-            )
-        } catch {
-            // Re-add failed points to buffer
-            pointBuffer.insert(contentsOf: batch, at: 0)
-            #if DEBUG
-            print("[TripRecording] flush failed: \(error)")
-            #endif
+        guard !isFlushing, let api = apiClient, let tripId = currentTripId else { return }
+        isFlushing = true
+        defer { isFlushing = false }
+        while !pointBuffer.isEmpty, currentTripId == tripId {
+            let batch = Array(pointBuffer.prefix(maxPointsPerRequest))
+            pointBuffer.removeFirst(batch.count)
+            do {
+                // { success, added } — decoded loosely; only the status matters
+                let _: SuccessResponse = try await api.post(
+                    "/v1/trip/\(tripId)/points",
+                    body: ["points": batch]
+                )
+            } catch {
+                if currentTripId == tripId { pointBuffer.insert(contentsOf: batch, at: 0) }
+                #if DEBUG
+                print("[TripRecording] flush failed: \(error)")
+                #endif
+                return
+            }
         }
     }
 
     // MARK: - Timers
 
     private func startTimers() {
+        stopTimers()
+        autoStopAttempted = false
         uploadTimer = Timer.scheduledTimer(withTimeInterval: uploadIntervalSec, repeats: true) { [weak self] _ in
-            Task { await self?.flushBuffer() }
+            Task { @MainActor in await self?.flushBuffer() }
         }
         elapsedTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             guard let self, let start = self.recordingStartTime else { return }
             let elapsed = Date().timeIntervalSince(start)
-            DispatchQueue.main.async { self.elapsedSeconds = elapsed }
-            // Auto-stop after max hours
-            if elapsed >= self.maxRecordingHours {
-                Task { @MainActor in try? await self.stopRecording() }
+            self.elapsedSeconds = elapsed
+            // Auto-stop after max hours — once; if the server can't be reached the
+            // trip is closed locally instead of retrying every second
+            if elapsed >= self.maxRecordingHours, !self.autoStopAttempted {
+                self.autoStopAttempted = true
+                Task { @MainActor in
+                    if (try? await self.stopRecording()) == nil { self.clearState() }
+                }
             }
         }
     }
@@ -186,6 +209,12 @@ final class TripRecordingService: ObservableObject {
         UserDefaults.standard.removeObject(forKey: activeKey)
         UserDefaults.standard.removeObject(forKey: tripIdKey)
         UserDefaults.standard.removeObject(forKey: startTimeKey)
+    }
+
+    /// Signing out: forget the trip on this phone (it belongs to that account)
+    @MainActor
+    func resetForSignOut() {
+        clearState()
     }
 
     private func restoreState() {

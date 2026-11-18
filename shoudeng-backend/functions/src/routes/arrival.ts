@@ -98,6 +98,10 @@ router.get("/recent", async (req: Request, res: Response) => {
     const personIds = linksSnapshot.docs.map(
       (d) => d.data().protectedPersonId
     );
+    // People who hid their location from this guardian: the arrival, not the place
+    const hidesLocation = new Set(linksSnapshot.docs
+      .filter((d) => d.data().permissions?.canSeeLocation === false)
+      .map((d) => d.data().protectedPersonId));
 
     if (personIds.length === 0) {
       res.json([]);
@@ -120,9 +124,8 @@ router.get("/recent", async (req: Request, res: Response) => {
         .get();
 
       const userDoc = await db.collection("users").doc(personId).get();
-      const displayName = userDoc.exists
-        ? userDoc.data()!.displayName
-        : "未知";
+      const displayName = userDoc.data()?.displayName ?? "";
+      const hide = hidesLocation.has(personId);
 
       for (const doc of snapshot.docs) {
         const data = doc.data();
@@ -130,9 +133,9 @@ router.get("/recent", async (req: Request, res: Response) => {
           id: doc.id,
           userId: personId,
           displayName,
-          latitude: data.latitude,
-          longitude: data.longitude,
-          placeName: data.placeName,
+          latitude: hide ? null : data.latitude,
+          longitude: hide ? null : data.longitude,
+          placeName: hide ? null : data.placeName,
           timestamp: data.timestamp.toDate().toISOString(),
         });
       }

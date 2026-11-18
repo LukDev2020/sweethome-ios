@@ -47,6 +47,8 @@ final class PushService: NSObject {
     var onShiftTemplate: ((String) -> Void)?
     var onSilentPushReceived: (([AnyHashable: Any]) -> Void)?
     var onCancelPendingSOS: (() -> Void)?
+    /// A guardian closed my SOS (push "sos_resolved")
+    var onOwnSOSResolved: (() -> Void)?
 
     // MARK: - Registration
 
@@ -346,6 +348,9 @@ extension PushService: UNUserNotificationCenterDelegate {
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
         let categoryId = notification.request.content.categoryIdentifier
+        if (notification.request.content.userInfo["action"] as? String) == "sos_resolved" {
+            DispatchQueue.main.async { [weak self] in self?.onOwnSOSResolved?() }
+        }
 
         // Always show SOS alerts even when app is in foreground
         if categoryId == Self.categorySOSAlert {

@@ -2,6 +2,19 @@ import * as admin from "firebase-admin";
 import { onDutyGuardians } from "./escalation";
 import { toIso } from "./time";
 
+/**
+ * What a new guardian may see until the person changes it. One source for the
+ * permission screen and the status a guardian gets (guardian.ts reads a missing
+ * value the same way: location/battery on, phone activity and health off).
+ */
+export const DEFAULT_LINK_PERMISSIONS = {
+  canSeeLocation: true,
+  canSeeBattery: true,
+  canSeeHealth: false,
+  canSeePhoneActivity: false,
+  canHearEmergencyAudio: false,
+};
+
 const db = admin.firestore();
 
 export function isoToCalendarWeekday(iso: number): number {
@@ -56,13 +69,7 @@ export async function guardiansOf(personId: string): Promise<Record<string, unkn
         cityName: user.cityName ?? "",
         createdAt: toIso(user.createdAt),
       },
-      permissions: link.permissions || {
-        canSeeLocation: true,
-        canSeeBattery: true,
-        canSeeHealth: false,
-        canSeePhoneActivity: false,
-        canHearEmergencyAudio: true,
-      },
+      permissions: link.permissions || DEFAULT_LINK_PERMISSIONS,
       isOnDuty,
       dutySchedule: dutySlots.length > 0
         ? {

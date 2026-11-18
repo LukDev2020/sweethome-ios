@@ -16,7 +16,7 @@
       "canSeeBattery": true,
       "canSeeHealth": false,
       "canSeePhoneActivity": false,
-      "canHearEmergencyAudio": true
+      "canHearEmergencyAudio": false
     },
     "isOnDuty": false,
     "dutySchedule": {
@@ -52,7 +52,7 @@
       "canSeeBattery": true,
       "canSeeHealth": false,
       "canSeePhoneActivity": false,
-      "canHearEmergencyAudio": true
+      "canHearEmergencyAudio": false
     },
     "isOnDuty": true,
     "dutySchedule": null,

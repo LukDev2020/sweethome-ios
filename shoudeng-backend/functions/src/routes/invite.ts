@@ -5,6 +5,7 @@ import { authMiddleware } from "../middleware/auth";
 import { createRateLimiter, RATE_LIMITS } from "../middleware/rateLimit";
 import { insertConsentAudit } from "../services/bigquery";
 import { checkNewLinkFor } from "../services/household";
+import { DEFAULT_LINK_PERMISSIONS } from "../services/guardianList";
 
 const router = Router();
 const db = admin.firestore();
@@ -297,6 +298,7 @@ router.post("/accept", createRateLimiter(RATE_LIMITS.invite), async (req: Reques
         acceptedAt: now,
         revokedAt: null,
         protectionLayers: ["location", "heartbeat", "sos"],
+        permissions: DEFAULT_LINK_PERMISSIONS,
         ...(publicKey && { acceptorPublicKey: publicKey }),
       });
 

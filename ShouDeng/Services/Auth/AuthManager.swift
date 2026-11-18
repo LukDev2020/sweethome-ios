@@ -418,7 +418,15 @@ final class AuthManager: ObservableObject {
         isRefreshing = true
 
         do {
-            guard let refreshToken = keychain.read(.refreshToken) else {
+            let refreshToken: String
+            switch keychain.readResult(.refreshToken) {
+            case .value(let token):
+                refreshToken = token
+            case .unavailable:
+                // Locked before the first unlock (background relaunch): not "no
+                // session" — a transient failure that must not sign the person out
+                throw KeychainLockedError()
+            case .notFound:
                 throw APIError.unauthorized
             }
             // No 401→refresh on the refresh call itself (it would await itself)
@@ -439,6 +447,9 @@ final class AuthManager: ObservableObject {
             throw error
         }
     }
+
+    /// The keychain can't be read yet (device not unlocked since reboot)
+    struct KeychainLockedError: Error {}
 
     /// Only a definitive answer from /refresh ends the session. Timeouts, 5xx and
     /// 429 must not log the user out (and discard queued SOS) in the middle of an

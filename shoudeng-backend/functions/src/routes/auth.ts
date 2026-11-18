@@ -263,9 +263,22 @@ router.post("/login", async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("[Auth] login error:", error);
-    res.status(401).json({ error: "Invalid credentials" });
+    const status = credentialFailureStatus(error);
+    res.status(status).json({ error: status === 401 ? "Invalid credentials" : "Sign-in is unavailable right now. Try again." });
   }
 });
+
+/**
+ * A bad or expired credential is 401 (the app signs out on it); anything else —
+ * Firestore timing out, a network blip — is 503 so the app keeps the session
+ * and retries instead of logging the person out.
+ */
+function credentialFailureStatus(error: unknown): 401 | 503 {
+  if (error instanceof jwt.JsonWebTokenError) return 401; // includes TokenExpiredError, NotBeforeError
+  const code = (error as { code?: unknown })?.code;
+  if (typeof code === "string" && code.startsWith("auth/")) return 401;
+  return 503;
+}
 
 const LINKED_ELSEWHERE = {
   error: "This sign-in is already connected to another Beaconify account.",
@@ -333,7 +346,7 @@ router.post("/apple", async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof AppleSignInError) {
       console.warn("[Auth] Apple sign-in rejected:", error.message);
-      res.status(error.retryable ? 503 : 401).json({ error: "Apple sign-in could not be verified", code: "APPLE_INVALID" });
+      res.status(error.retryable ? 503 : 422).json({ error: "Apple sign-in could not be verified", code: "APPLE_INVALID" });
       return;
     }
     console.error("[Auth] Apple sign-in error:", error);
@@ -475,7 +488,9 @@ router.post("/link-phone", authMiddleware, async (req: Request, res: Response) =
     res.json({ success: true, phone });
   } catch (error) {
     console.error("[Auth] link-phone error:", error);
-    res.status(401).json({ error: "Invalid credentials" });
+    // Signed in already: a 401 here would read as "session expired" in the app
+    const status = credentialFailureStatus(error) === 401 ? 400 : 503;
+    res.status(status).json({ error: status === 400 ? "That phone verification didn't work. Try again." : "Try again in a moment." });
   }
 });
 
@@ -622,7 +637,8 @@ router.post("/refresh", async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("[Auth] refresh error:", error);
-    res.status(401).json({ error: "Invalid or expired refresh token" });
+    const status = credentialFailureStatus(error);
+    res.status(status).json({ error: status === 401 ? "Invalid or expired refresh token" : "Try again in a moment." });
   }
 });
 

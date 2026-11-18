@@ -246,7 +246,7 @@ final class ModelTests: XCTestCase {
         XCTAssertTrue(perms.canSeeBattery)
         XCTAssertFalse(perms.canSeeHealth)
         XCTAssertFalse(perms.canSeePhoneActivity)
-        XCTAssertTrue(perms.canHearEmergencyAudio)
+        XCTAssertFalse(perms.canHearEmergencyAudio, "no ambient audio feature yet; never on by default")
     }
 
     // MARK: - SafetyStatus

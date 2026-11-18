@@ -283,7 +283,8 @@ describe("Auth routes", () => {
       ["garbage", () => "not.a.jwt"],
     ])("rejects a token from %s", async (_label, make) => {
       const res = await apple(make());
-      expect(res.status).toBe(401);
+      // 422, not 401: a signed-in person connecting Apple must not be told "session expired"
+      expect(res.status).toBe(422);
       expect(res.body.code).toBe("APPLE_INVALID");
       expect(listDocs("auth_identities")).toHaveLength(0);
     });

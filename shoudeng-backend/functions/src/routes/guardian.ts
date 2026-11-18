@@ -220,7 +220,8 @@ export async function buildPersonStatus(input: {
   const { user, telemetry, heartbeat } = input;
   const canSeeLocation = input.permissions?.canSeeLocation !== false;
   const canSeeBattery = input.permissions?.canSeeBattery !== false;
-  const canSeePhoneActivity = input.permissions?.canSeePhoneActivity !== false;
+  // Opt-in: off unless the person turned it on (matches DEFAULT_LINK_PERMISSIONS)
+  const canSeePhoneActivity = input.permissions?.canSeePhoneActivity === true;
 
   const lastHeartbeat = toIso(telemetry?.lastHeartbeat) ?? toIso(heartbeat?.timestamp);
   const lat = num(telemetry?.latitude) ?? num(heartbeat?.latitude);

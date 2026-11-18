@@ -237,6 +237,11 @@ final class AppCoordinator: ObservableObject {
         // In dev bypass mode, suppress logout to avoid wiping local state.
         apiClient.onUnauthorized = { [weak self] in
             guard let self else { return false }
+            // Only a signed-in session can be refreshed or ended. A 401 while
+            // signing in (or before the keychain is readable) must not run logout,
+            // which would throw away the code just sent, a pending Apple/Alipay
+            // sign-in, and the onboarding state.
+            guard case .loggedIn = await MainActor.run(body: { self.authManager.state }) else { return false }
             do {
                 try await self.authManager.refreshToken()
                 return true
@@ -429,9 +434,11 @@ final class AppCoordinator: ObservableObject {
 
     private func observeAuthState() {
         authManager.$state
+            .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
                 guard let self else { return }
+                let previous = self.authState
                 // Mirror auth state as a @Published property on the coordinator,
                 // since nested ObservableObject changes don't auto-propagate
                 // to views that observe the coordinator via @EnvironmentObject.
@@ -451,7 +458,11 @@ final class AppCoordinator: ObservableObject {
                     }
                     self.onLoginComplete(userId: userId)
                 case .loggedOut:
-                    self.onLogout()
+                    // Clean up only when a session actually ended — not on every
+                    // launch while signed out (that reset onboarding each time)
+                    // (or when an earlier session's data is still on the phone)
+                    if case .loggedIn = previous { self.onLogout() }
+                    else if self.localStore.loadCurrentUser() != nil { self.onLogout() }
                 case .unknown:
                     break
                 }
@@ -466,6 +477,7 @@ final class AppCoordinator: ObservableObject {
         // Location + notification permissions are requested only once someone is signed in
         if !isDemo, UserDefaults.standard.bool(forKey: "onboardingComplete") {
             locationManager.start()
+            resumeSOSModeIfNeeded()
             pushService.registerForPushNotifications()
             UIApplication.shared.registerForRemoteNotifications()
         }
@@ -583,6 +595,12 @@ final class AppCoordinator: ObservableObject {
         keyManager.clearPeerKeys()
         locationBatchUploader.stop()
         locationBatchUploader.clearAll()
+        if !isDemo {
+            // Nobody is signed in: no background location, no trip for the next account
+            locationManager.stop()
+            let trips = tripRecordingService
+            Task { @MainActor in trips.resetForSignOut() }
+        }
         localStore.clearAll()
         // The medical card is PII: the next user on this phone must not inherit it
         MedicalCardCache.clear()
@@ -616,19 +634,26 @@ final class AppCoordinator: ObservableObject {
             "setupWizardComplete",
             "distress_detection_enabled",
             "voice_command_enabled",
+            // Holds family names and cities
+            "world_clock_settings_v2",
         ]
         for key in userKeys {
             defaults.removeObject(forKey: key)
         }
+        if !isDemo { Task { @MainActor in WorldClockSettings.shared.load() } }
     }
 
     // MARK: - Scene Lifecycle (driven by ShouDengApp scenePhase)
 
     func sceneDidBecomeActive() {
-        heartbeatService.appDidBecomeActive()
         // Back from the Alipay app without its "back to the app" link: check once
         if alipayWaiting { Task { await finishAlipaySignIn(quiet: true) } }
         guard case .loggedIn = authState else { return }
+        // Signed in only: a heartbeat without a session got a 401, which signed the
+        // person out again in the middle of logging in
+        heartbeatService.appDidBecomeActive()
+        // An SOS a guardian closed while we were away: drop the stale local copy
+        if activeSOSEvent != nil, !isDemo { Task { await refreshOwnSOSStatus() } }
         // Fall detection runs while the app is open, for the person being protected
         // (matches NSMotionUsageDescription)
         if userRole == .protected_ {
@@ -814,10 +839,9 @@ final class AppCoordinator: ObservableObject {
             #if DEBUG
             print("[Coordinator] Failed to fetch profile: \(error)")
             #endif
-            // If the token is invalid/expired and refresh also failed, force logout
-            if let apiError = error as? APIError, case .unauthorized = apiError {
-                await MainActor.run { authManager.logout() }
-            }
+            // No logout here: the refresh handler already ends the session on a
+            // definitive answer from /refresh. A 401 left over after a refresh that
+            // timed out (bad network) must keep the person signed in.
         }
     }
 
@@ -1279,6 +1303,9 @@ final class AppCoordinator: ObservableObject {
             self?.performCheckIn()
         }
 
+        pushService.onOwnSOSResolved = { [weak self] in
+            Task { @MainActor in await self?.refreshOwnSOSStatus() }
+        }
         pushService.onCancelPendingSOS = { [weak self] in
             self?.cancelPendingSOS()
         }
@@ -1498,6 +1525,9 @@ final class AppCoordinator: ObservableObject {
     func requestSOS(method: SOSTriggerMethod = .longPress) {
         // An SOS already running: show it instead of silently ignoring the press.
         if activeSOSEvent != nil {
+            if deferPressIfLocalSOSMayBeStale(silent: method.isSilent, reissue: { [weak self] in
+                self?.requestSOS(method: method)
+            }) { return }
             if !method.isSilent { sosConcealed = false; isSOSScreenPresented = true }
             return
         }
@@ -1569,8 +1599,12 @@ final class AppCoordinator: ObservableObject {
             #endif
             return
         }
-        // Already in an SOS: don't create a second local event
+        // Already in an SOS: don't create a second local event (unless the local
+        // copy turns out to be over — then the press is sent as a new SOS)
         if let existing = activeSOSEvent, existing.isActive {
+            _ = deferPressIfLocalSOSMayBeStale(silent: method.isSilent) { [weak self] in
+                self?.triggerSOS(method: method, clientSOSId: clientSOSId)
+            }
             return
         }
         UIDevice.current.isBatteryMonitoringEnabled = true
@@ -1658,7 +1692,19 @@ final class AppCoordinator: ObservableObject {
 
     /// The server answered for a queued/direct SOS trigger: adopt its id so
     /// resolve and status polling address the real event.
+    /// Device ids of SOS the person cancelled; a server answer that arrives later
+    /// for one of them is closed straight away.
+    private var cancelledSOSClientIds = Set<String>()
+
     private func applyServerSOSId(_ serverId: String, forClientId clientId: String?) {
+        if let clientId, cancelledSOSClientIds.contains(clientId), activeSOSEvent?.clientSOSId != clientId {
+            // Cancelled while the trigger was on its way: close the one the server opened
+            if let userId = authManager.currentUserId {
+                apiClient.postQueued("/v1/sos/resolve", body: SOSResolveRequest(
+                    sosEventId: serverId, resolvedBy: userId, resolution: .protectedCancelled))
+            }
+            return
+        }
         guard var event = activeSOSEvent, event.clientSOSId == clientId || clientId == nil else { return }
         event.id = serverId
         activeSOSEvent = event
@@ -1681,6 +1727,45 @@ final class AppCoordinator: ObservableObject {
 
     private var hasQueuedSOSTrigger: Bool {
         offlineQueue.peekAll().contains { $0.path == "/v1/sos/trigger" }
+    }
+
+    /// After a relaunch in the middle of an SOS (iOS ended the app in the
+    /// background): keep live location at SOS rate so the family's map follows.
+    func resumeSOSModeIfNeeded() {
+        guard !isDemo, let sos = activeSOSEvent, sos.isActive else { return }
+        locationManager.enterSOSMode()
+    }
+
+    /// Same as the server's join window (services/sosTrigger.ts): an SOS this old
+    /// no longer absorbs a new press.
+    static let sosJoinWindow: TimeInterval = 30 * 60
+    private var sosStalenessCheckRunning = false
+
+    /// A press while a local SOS exists. If that copy is over a minute old it may
+    /// already be over (a guardian closed it while the app was away) or finished in
+    /// all but name, so ask the server before swallowing the press. Returns true
+    /// when the check takes the press over: it shows the running SOS, or clears the
+    /// stale copy and re-issues the press as a new SOS.
+    private func deferPressIfLocalSOSMayBeStale(silent: Bool, reissue: @escaping () -> Void) -> Bool {
+        guard !isDemo, let local = activeSOSEvent, Date().timeIntervalSince(local.triggeredAt) > 60 else { return false }
+        if sosStalenessCheckRunning { return true }
+        sosStalenessCheckRunning = true
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            await self.refreshOwnSOSStatus()
+            self.sosStalenessCheckRunning = false
+            if let still = self.activeSOSEvent {
+                let finished: Set<EscalationState> = [.exhausted, .hop3_exhausted, .no_guardians]
+                guard finished.contains(still.escalationState)
+                        || Date().timeIntervalSince(still.triggeredAt) > Self.sosJoinWindow else {
+                    if !silent { self.sosConcealed = false; self.isSOSScreenPresented = true }
+                    return
+                }
+                self.clearEndedSOSLocally()
+            }
+            reissue()
+        }
+        return true
     }
 
     /// Local cleanup for an SOS that already ended on the server (no API calls).
@@ -1852,14 +1937,16 @@ final class AppCoordinator: ObservableObject {
 
         addTimelineEntry(type: .sosResolved, description: LanguageManager.shared.localized("timeline.sosCancelled"))
 
-        // If the trigger never left the phone, drop it instead of sending a
-        // trigger + cancel later (which would alert the family for nothing).
+        // If the trigger is still queued, drop it so it isn't sent after the cancel.
+        // The resolve below goes out regardless: a queued item may already be in
+        // flight (or timed out after the server took it), and the server maps the
+        // device id to its SOS; if it never arrived, the resolve is a harmless 404.
         if let clientId = sos.clientSOSId {
-            let removed = offlineQueue.removeItems { item in
+            cancelledSOSClientIds.insert(clientId)
+            _ = offlineQueue.removeItems { item in
                 item.path == "/v1/sos/trigger"
                     && item.body.flatMap { String(data: $0, encoding: .utf8) }?.contains(clientId) == true
             }
-            if !removed.isEmpty, sos.id == clientId { return }
         }
 
         apiClient.postQueued("/v1/sos/resolve", body: SOSResolveRequest(

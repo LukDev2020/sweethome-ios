@@ -136,7 +136,8 @@ struct GuardianPermissions: Codable {
         canSeeBattery: true,
         canSeeHealth: false,
         canSeePhoneActivity: false,
-        canHearEmergencyAudio: true
+        // No ambient-audio feature ships yet: never on by default
+        canHearEmergencyAudio: false
     )
 }
 

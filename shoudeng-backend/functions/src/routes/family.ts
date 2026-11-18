@@ -61,6 +61,35 @@ export async function getFamilyGroup(uid: string): Promise<string[]> {
   return Array.from(familyIds);
 }
 
+/** How long a feed photo link works; the app refetches the feed far more often */
+const MEDIA_LINK_HOURS = 24;
+
+/**
+ * Family photos are private objects. For someone allowed to see the post, turn
+ * each stored photo id (https://storage.googleapis.com/<bucket>/family/…) into a
+ * signed link. Anything else (older or external URLs) passes through.
+ */
+async function signedFamilyMedia(urls: unknown): Promise<string[]> {
+  if (!Array.isArray(urls)) return [];
+  const bucket = admin.storage().bucket();
+  const prefix = `https://storage.googleapis.com/${bucket.name}/`;
+  return Promise.all(urls.filter((u): u is string => typeof u === "string").map(async (u) => {
+    if (!u.startsWith(prefix)) return u;
+    const path = decodeURIComponent(u.slice(prefix.length));
+    if (!path.startsWith("family/") || path.includes("..")) return u;
+    try {
+      const [signed] = await bucket.file(path).getSignedUrl({
+        action: "read",
+        expires: Date.now() + MEDIA_LINK_HOURS * 60 * 60 * 1000,
+      });
+      return signed;
+    } catch (error) {
+      console.warn("[Family] could not sign a photo link:", (error as Error).message);
+      return u;
+    }
+  }));
+}
+
 function isoOrNow(value: any): string {
   return value?.toDate?.()?.toISOString() || new Date().toISOString();
 }
@@ -78,6 +107,7 @@ router.get("/posts", async (req: Request, res: Response) => {
 
   try {
     const familyIds = await getFamilyGroup(uid);
+    const family = new Set(familyIds);
 
     // Firestore "in" query supports max 30 items
     const chunks: string[][] = [];
@@ -115,7 +145,11 @@ router.get("/posts", async (req: Request, res: Response) => {
           .limit(COMMENTS_PER_POST)
           .get();
 
-        const comments = commentsSnap.docs.reverse().map((c) => {
+        // A carer who looks after two unrelated people is in both families; on the
+        // carer's posts each family sees only its own members' comments.
+        const visibleDocs = commentsSnap.docs.filter((c) => family.has(c.data().authorId));
+        const someHidden = visibleDocs.length < commentsSnap.size;
+        const comments = visibleDocs.reverse().map((c) => {
           const cd = c.data();
           return {
             id: c.id,
@@ -135,11 +169,13 @@ router.get("/posts", async (req: Request, res: Response) => {
           authorName: post.authorName || "",
           authorInitial: post.authorInitial || "?",
           text: post.text || "",
-          mediaURLs: Array.isArray(post.mediaURLs) ? post.mediaURLs : [],
+          mediaURLs: await signedFamilyMedia(post.mediaURLs),
           createdAt: isoOrNow(post.createdAt),
           comments,
           // The stored count covers every comment, not just the ones returned
-          commentCount: typeof post.commentCount === "number" ? Math.max(post.commentCount, comments.length) : comments.length,
+          commentCount: someHidden || typeof post.commentCount !== "number"
+            ? comments.length
+            : Math.max(post.commentCount, comments.length),
           latitude: latitude !== null && longitude !== null ? latitude : null,
           longitude: latitude !== null && longitude !== null ? longitude : null,
           locationName: typeof post.locationName === "string" && post.locationName ? post.locationName : null,
@@ -171,7 +207,12 @@ router.post("/posts", createRateLimiter(RATE_LIMITS.general), async (req: Reques
     return;
   }
   // Only links everyone in the family can open (a phone's file:// path is not one)
-  const media: string[] = (mediaURLs || []).filter((u: string) => /^https:\/\//i.test(u));
+  // Our own storage links only for the author's own uploads (the feed signs them,
+  // so someone else's photo path must not be attachable)
+  const storagePrefix = `https://storage.googleapis.com/${admin.storage().bucket().name}/`;
+  const media: string[] = (mediaURLs || []).filter((u: string) =>
+    /^https:\/\//i.test(u)
+    && (!u.startsWith(storagePrefix) || decodeURIComponent(u.slice(storagePrefix.length)).startsWith(`family/${req.uid!}/`)));
   if (media.length > 9) {
     res.status(400).json({ error: "At most 9 photos per post" });
     return;
@@ -429,8 +470,8 @@ router.post("/upload", async (req: Request, res: Response) => {
       },
     });
 
-    // Make file publicly readable (or use signed URL)
-    await file.makePublic();
+    // Private: the feed hands out short-lived signed links to family members only
+    // (signedFamilyMedia). This URL is the photo's stable id, not a public link.
     const url = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
 
     res.json({ url });

@@ -69,8 +69,8 @@ const fcmStrings: Record<string, {
     checkinBody: (name) => `${name}今天还没有报平安`,
     heartbeatTitle: "设备离线提醒",
     heartbeatBody: (name, mins) => `${name}的手机已 ${mins} 分钟未上报信号`,
-    resolvedTitle: "守护者已接手",
-    resolvedBody: (name) => `${name}已确认并接手处理`,
+    resolvedTitle: "求助已结束",
+    resolvedBody: (name) => `${name}确认你已安全，结束了这次求助`,
     homeSafeTitle: (name) => `${name}已平安到家`,
     homeSafeBody: (city, time, note) => [city, time].filter(Boolean).join(" · ") + (note ? `\n${note}` : ""),
     ackOthersTitle: "已有人接手",
@@ -115,8 +115,8 @@ const fcmStrings: Record<string, {
     checkinBody: (name) => `${name}今天還沒有報平安`,
     heartbeatTitle: "裝置離線提醒",
     heartbeatBody: (name, mins) => `${name}的手機已 ${mins} 分鐘未上報訊號`,
-    resolvedTitle: "守護者已接手",
-    resolvedBody: (name) => `${name}已確認並接手處理`,
+    resolvedTitle: "求助已結束",
+    resolvedBody: (name) => `${name}確認你已安全，結束了這次求助`,
     homeSafeTitle: (name) => `${name}已平安到家`,
     homeSafeBody: (city, time, note) => [city, time].filter(Boolean).join(" · ") + (note ? `\n${note}` : ""),
     ackOthersTitle: "已有人接手",
@@ -161,8 +161,8 @@ const fcmStrings: Record<string, {
     checkinBody: (name) => `${name} hasn't checked in today`,
     heartbeatTitle: "Device Offline",
     heartbeatBody: (name, mins) => `${name}'s phone has been offline for ${mins} minutes`,
-    resolvedTitle: "Guardian Responded",
-    resolvedBody: (name) => `${name} has acknowledged and taken over`,
+    resolvedTitle: "SOS closed",
+    resolvedBody: (name) => `${name} confirmed you're safe and closed your SOS`,
     homeSafeTitle: (name) => `${name} is home safe`,
     homeSafeBody: (city, time, note) => [city, time].filter(Boolean).join(" · ") + (note ? `\n${note}` : ""),
     ackOthersTitle: "Someone is on it",
@@ -207,8 +207,8 @@ const fcmStrings: Record<string, {
     checkinBody: (name) => `${name} n'a pas donné signe de vie aujourd'hui`,
     heartbeatTitle: "Appareil hors ligne",
     heartbeatBody: (name, mins) => `Le téléphone de ${name} est hors ligne depuis ${mins} minutes`,
-    resolvedTitle: "Gardien a répondu",
-    resolvedBody: (name) => `${name} a confirmé et pris en charge`,
+    resolvedTitle: "SOS terminé",
+    resolvedBody: (name) => `${name} a confirmé que vous êtes en sécurité et a clos votre SOS`,
     homeSafeTitle: (name) => `${name} est bien rentré(e)`,
     homeSafeBody: (city, time, note) => [city, time].filter(Boolean).join(" · ") + (note ? `\n${note}` : ""),
     ackOthersTitle: "Quelqu'un s'en occupe",
@@ -253,8 +253,8 @@ const fcmStrings: Record<string, {
     checkinBody: (name) => `${name}さんから今日の無事報告がまだありません`,
     heartbeatTitle: "端末がオフラインです",
     heartbeatBody: (name, mins) => `${name}さんのスマートフォンが${mins}分間オフラインです`,
-    resolvedTitle: "見守る人が対応しました",
-    resolvedBody: (name) => `${name}さんが確認し、対応を引き継ぎました`,
+    resolvedTitle: "SOSを終了しました",
+    resolvedBody: (name) => `${name}さんがあなたの安全を確認し、SOSを終了しました`,
     homeSafeTitle: (name) => `${name}さんが無事に帰宅しました`,
     homeSafeBody: (city, time, note) => [city, time].filter(Boolean).join(" · ") + (note ? `\n${note}` : ""),
     ackOthersTitle: "対応中の人がいます",
@@ -488,7 +488,8 @@ export async function sendSilentPush(userId: string): Promise<void> {
  */
 export async function sendSOSResolvedNotification(
   protectedPersonId: string,
-  resolvedByName: string
+  resolvedByName: string,
+  sosId = ""
 ): Promise<void> {
   const locale = await getUserLocale(protectedPersonId);
   const s = getStrings(locale);
@@ -499,7 +500,9 @@ export async function sendSOSResolvedNotification(
       body: s.resolvedBody(resolvedByName),
     },
     data: {
+      // The app drops its local copy of the SOS on this
       action: "sos_resolved",
+      sos_id: sosId,
     },
   }, "SOS resolved");
 }

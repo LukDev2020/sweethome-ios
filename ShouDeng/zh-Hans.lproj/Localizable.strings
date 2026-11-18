@@ -2653,3 +2653,4 @@
 "worldClock.addMe" = "添加我所在的时间";
 "worldClock.reset" = "恢复为家人时钟";
 "worldClock.remove" = "删除 %@";
+"emergency.contacts.phoneInvalid" = "请输入完整号码。没有国家区号时，按你所在地区的号码处理。";

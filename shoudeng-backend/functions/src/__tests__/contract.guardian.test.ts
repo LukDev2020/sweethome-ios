@@ -50,7 +50,7 @@ describe("contract: GET /v1/guardian/protected-persons", () => {
 
     seed("users/mom", { displayName: "Mom", role: "protected", timeZone: "Asia/Shanghai", countryCode: "CN", cityName: "Chengdu" });
     seed("users/dad", { displayName: "Dad", role: "protected", timeZone: "America/Toronto", countryCode: "CA", cityName: "Toronto" });
-    seed("guardian_links/sarah_mom", { guardianId: "sarah", protectedPersonId: "mom", status: "active", permissions: { canSeeLocation: true } });
+    seed("guardian_links/sarah_mom", { guardianId: "sarah", protectedPersonId: "mom", status: "active", permissions: { canSeeLocation: true, canSeePhoneActivity: true } });
     seed("guardian_links/kevin_mom", { guardianId: "kevin", protectedPersonId: "mom", status: "active" });
     seed("guardian_links/sarah_dad", { guardianId: "sarah", protectedPersonId: "dad", status: "active", permissions: { canSeeLocation: false } });
     seed("checkins/c1", { userId: "mom", timestamp: ts("2026-10-30T10:58:00Z") });

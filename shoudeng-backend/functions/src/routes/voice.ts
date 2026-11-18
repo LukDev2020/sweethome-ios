@@ -37,9 +37,15 @@ router.post("/voice-callback", limit, async (req: Request, res: Response) => {
     return;
   }
   const { Digits, CallSid } = req.body ?? {};
-  const callDoc = typeof CallSid === "string" && CallSid
-    ? await db.collection("voice_calls").doc(CallSid).get()
-    : null;
+  let callDoc: FirebaseFirestore.DocumentSnapshot | null = null;
+  try {
+    callDoc = typeof CallSid === "string" && CallSid
+      ? await db.collection("voice_calls").doc(CallSid).get()
+      : null;
+  } catch (err) {
+    // Still answer Twilio; a guardian pressing 1 must never meet silence
+    console.error("[VoiceCallback] call lookup failed:", err);
+  }
   const call = callDoc?.exists ? callDoc.data()! : null;
   const lang: Lang = normalizeLocale(call?.lang) ?? normalizeLocale(req.query.lang) ?? "zh";
 
@@ -78,12 +84,17 @@ router.post("/voice-replay", limit, async (req: Request, res: Response) => {
     return;
   }
   const { CallSid } = req.body ?? {};
-  const callDoc = typeof CallSid === "string" && CallSid
-    ? await db.collection("voice_calls").doc(CallSid).get()
-    : null;
+  let callDoc: FirebaseFirestore.DocumentSnapshot | null = null;
+  try {
+    callDoc = typeof CallSid === "string" && CallSid
+      ? await db.collection("voice_calls").doc(CallSid).get()
+      : null;
+  } catch (err) {
+    console.error("[VoiceReplay] call lookup failed:", err);
+  }
   const call = callDoc?.exists ? callDoc.data()! : null;
   if (!call) {
-    twiml(res, voiceReplyTwiml("zh", "invalid"));
+    twiml(res, voiceReplyTwiml(normalizeLocale(req.query.lang) ?? "zh", "invalid"));
     return;
   }
   twiml(res, buildVoiceTwiml({

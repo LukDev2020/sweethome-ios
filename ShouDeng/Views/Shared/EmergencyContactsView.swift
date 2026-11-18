@@ -298,6 +298,9 @@ struct AddEmergencyContactView: View {
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
 
     @State private var name = ""
+
+    /// +country form, so the SOS text (Twilio) can reach it from anywhere
+    private var internationalPhone: String? { CountryCode.e164(phone, isoCode: countryCode) }
     @State private var relationship = ""
     @State private var phone = ""
     @State private var email = ""
@@ -345,12 +348,20 @@ struct AddEmergencyContactView: View {
                         }
                     }
                 }
-                Section(LanguageManager.shared.localized("emergency.contacts.contactInfo")) {
+                Section {
                     TextField(LanguageManager.shared.localized("emergency.contacts.phone"), text: $phone)
                         .keyboardType(.phonePad)
                     TextField(LanguageManager.shared.localized("emergency.contacts.email"), text: $email)
                         .keyboardType(.emailAddress)
                         .textInputAutocapitalization(.never)
+                } header: {
+                    Text(LanguageManager.shared.localized("emergency.contacts.contactInfo"))
+                } footer: {
+                    // SOS texts go to this number when nobody else can be reached
+                    if !phone.isEmpty, internationalPhone == nil {
+                        Text(LanguageManager.shared.localized("emergency.contacts.phoneInvalid"))
+                            .foregroundStyle(.red)
+                    }
                 }
                 Section(LanguageManager.shared.localized("emergency.contacts.addressSection")) {
                     TextField(LanguageManager.shared.localized("emergency.contacts.address"), text: $address)
@@ -368,7 +379,7 @@ struct AddEmergencyContactView: View {
                             id: UUID().uuidString,
                             name: name,
                             relationship: relationship.isEmpty ? LanguageManager.shared.localized("emergency.contacts.rel.other") : relationship,
-                            phone: phone,
+                            phone: internationalPhone ?? phone,
                             email: email,
                             address: address,
                             countryCode: countryCode
@@ -378,7 +389,7 @@ struct AddEmergencyContactView: View {
                     } label: {
                         Label(LanguageManager.shared.localized("emergency.contacts.save"), systemImage: "checkmark")
                     }
-                    .disabled(name.isEmpty || phone.isEmpty)
+                    .disabled(name.isEmpty || internationalPhone == nil)
                     .font(.scaled(size: 14, weight: .medium))
                     .foregroundStyle(safe)
                 }

@@ -2653,3 +2653,4 @@
 "worldClock.addMe" = "Ajouter mon heure";
 "worldClock.reset" = "Revenir aux horloges de la famille";
 "worldClock.remove" = "Supprimer %@";
+"emergency.contacts.phoneInvalid" = "Saisissez un numéro complet. Sans indicatif pays, il est lu comme un numéro de votre région.";
