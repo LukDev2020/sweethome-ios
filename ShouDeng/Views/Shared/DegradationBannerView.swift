@@ -23,13 +23,25 @@ struct DegradationBannerView: View {
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
     private let ink = Color.appInk
 
+    /// These warnings are about the phone the app runs on. On a guardian's phone,
+    /// its own location, battery or background refresh don't stop anyone's
+    /// protection (and the guardian wording would wrongly blame the family member's
+    /// phone): a guardian sees only what makes them miss alerts.
+    private static let guardianRelevant: Set<String> = ["notification_disabled", "server_fault"]
+
+    private var shownWarnings: [DisclaimerCopy.Degradation.Warning] {
+        let all = coordinator.deviceHealthMonitor.activeWarnings
+        guard coordinator.userRole == .guardian else { return all }
+        return all.filter { Self.guardianRelevant.contains($0.id) }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            ForEach(coordinator.deviceHealthMonitor.activeWarnings) { warning in
+            ForEach(shownWarnings) { warning in
                 bannerRow(warning)
             }
         }
-        .animation(.easeInOut(duration: 0.3), value: coordinator.deviceHealthMonitor.activeWarnings.count)
+        .animation(.easeInOut(duration: 0.3), value: shownWarnings.count)
         .sheet(item: $selectedWarning) { warning in
             warningDetailSheet(warning)
         }

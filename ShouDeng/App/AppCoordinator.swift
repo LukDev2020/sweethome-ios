@@ -1218,20 +1218,20 @@ final class AppCoordinator: ObservableObject {
         locationManager.onLocationReport = { [weak self] location in
             self?.heartbeatService.recordBeat(source: .significantLocation, location: location)
             self?.handleLocationUpdate(location)
-            // Feed location to trip recording if active
-            if self?.tripRecordingService.isRecording == true {
-                let clLoc = CLLocation(
-                    coordinate: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude),
-                    altitude: location.altitude ?? 0,
-                    horizontalAccuracy: location.accuracy,
-                    verticalAccuracy: -1,
-                    course: -1,
-                    speed: location.speed ?? -1,
-                    timestamp: location.timestamp
-                )
-                self?.tripRecordingService.addPoint(clLoc)
-            }
         }
+        // Trip recording gets every GPS fix while it runs (not only the
+        // de-duplicated reports above, which can be ten minutes apart)
+        locationManager.onTripLocation = { [weak self] fix in
+            self?.tripRecordingService.addPoint(fix)
+        }
+        tripRecordingService.$isRecording
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] recording in
+                guard let self, !self.isDemo else { return }
+                self.locationManager.setTripRecording(recording)
+            }
+            .store(in: &cancellables)
         // Bind reactive service AFTER setting the callback — it preserves the chain
         locationService.bind(to: locationManager)
 

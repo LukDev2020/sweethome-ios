@@ -164,5 +164,37 @@ d("firestore.rules (emulator)", () => {
       await assertFails(updateDoc(doc(as("mallory"), "invites/i1"), { status: "accepted" }));
       await assertFails(getDocs(query(collection(as("mallory"), "invites"), where("code", "==", "123456"))));
     });
+
+    it("clients cannot create or change invites at all (a planted invite could capture a code)", async () => {
+      await assertFails(setDoc(doc(as("mallory"), "invites/planted"), {
+        createdBy: "mallory", status: "pending", code: "123456", createdAt: Timestamp.now(),
+      }));
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), "invites/i2"), { createdBy: "mom", status: "pending", code: "654321" });
+      });
+      await assertFails(updateDoc(doc(as("mom"), "invites/i2"), { status: "cancelled" }));
+      await assertSucceeds(getDoc(doc(as("mom"), "invites/i2")));
+    });
+  });
+
+  describe("emergency contacts and organizations", () => {
+    it("emergency contacts are read by the owner and written only through the API", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), "emergency_contacts/mom"), { contacts: [] });
+      });
+      await assertSucceeds(getDoc(doc(as("mom"), "emergency_contacts/mom")));
+      await assertFails(setDoc(doc(as("mom"), "emergency_contacts/mom"), {
+        contacts: Array.from({ length: 50 }, (_, i) => ({ id: `c${i}`, phone: `+1900555${String(i).padStart(4, "0")}` })),
+      }));
+      await assertFails(getDoc(doc(as("mallory"), "emergency_contacts/mom")));
+    });
+
+    it("organizations are not readable by every signed-in user", async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), "organizations/o1"), { name: "Fleet", adminIds: ["boss"], partnerCode: "P1" });
+      });
+      await assertFails(getDoc(doc(as("mallory"), "organizations/o1")));
+      await assertFails(getDocs(collection(as("mallory"), "organizations")));
+    });
   });
 });

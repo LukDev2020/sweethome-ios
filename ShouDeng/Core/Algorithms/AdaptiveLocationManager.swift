@@ -192,8 +192,39 @@ final class AdaptiveLocationManager: NSObject {
         let oldMode = currentMode
         guard newMode != oldMode else { return }
 
+        configure(for: newMode)
+
+        currentMode = newMode
+        onModeChange?(oldMode, newMode)
+    }
+
+    // MARK: - Trip recording
+
+    /// While the person records a trip, GPS stays on at ~10 m with a 15 m
+    /// distance filter whatever the mode (SOS keeps its own, stricter setting),
+    /// and every fix goes to `onTripLocation` — not only the de-duplicated reports,
+    /// which can be ten minutes apart.
+    private(set) var isRecordingTrip = false
+    var onTripLocation: ((CLLocation) -> Void)?
+
+    func setTripRecording(_ on: Bool) {
+        guard !ExploreMode.isActive, on != isRecordingTrip else { return }
+        isRecordingTrip = on
+        configure(for: currentMode)
+    }
+
+    private func configure(for newMode: LocationMode) {
         // Stop current tracking
         locationManager.stopUpdatingLocation()
+
+        if isRecordingTrip && newMode != .sos {
+            locationManager.stopMonitoringSignificantLocationChanges()
+            locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
+            locationManager.distanceFilter = 15
+            locationManager.showsBackgroundLocationIndicator = true
+            locationManager.startUpdatingLocation()
+            return
+        }
 
         switch newMode {
         case .safe:
@@ -218,9 +249,6 @@ final class AdaptiveLocationManager: NSObject {
             locationManager.showsBackgroundLocationIndicator = true
             locationManager.startUpdatingLocation()
         }
-
-        currentMode = newMode
-        onModeChange?(oldMode, newMode)
     }
 
     /// Enter SOS mode — maximum accuracy, maximum frequency
@@ -468,6 +496,13 @@ extension AdaptiveLocationManager: CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
+
+        // A recorded trip keeps every reasonably accurate fix (not paused)
+        if isRecordingTrip, !isTrackingPaused {
+            for fix in locations where fix.horizontalAccuracy >= 0 && fix.horizontalAccuracy <= 65 {
+                onTripLocation?(fix)
+            }
+        }
 
         // Store in history
         locationHistory.append(location)
