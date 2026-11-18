@@ -34,7 +34,17 @@ export async function generateEvidenceBundle(params: {
     .collection("users")
     .doc(params.protectedPersonId)
     .get();
-  const user = userDoc.exists ? userDoc.data() ?? null : null;
+  // Only what identifies the person in a report — never phone, e-mail, sign-in
+  // providers, consent records or other account fields
+  const profile = userDoc.exists ? userDoc.data() ?? {} : null;
+  const user = profile
+    ? {
+        displayName: profile.displayName ?? null,
+        cityName: profile.cityName ?? null,
+        countryCode: profile.countryCode ?? null,
+        timeZone: profile.timeZone ?? null,
+      }
+    : null;
 
   // Fetch location trail from BigQuery
   const locations = await queryLocations(

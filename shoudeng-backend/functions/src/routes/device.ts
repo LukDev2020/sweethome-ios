@@ -3,6 +3,7 @@ import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
 import { isSendableDeviceToken } from "../services/apns";
 import { sendPushToUser } from "../services/push";
+import { alertCopyFor, nameOr } from "../services/pushCopy";
 
 const router = Router();
 const db = admin.firestore();
@@ -130,32 +131,40 @@ router.post("/ble-separation", async (req: Request, res: Response) => {
 
   try {
     // Get all guardians linked to this protected person
-    const links = await db.collection("links")
+    const links = await db.collection("guardian_links")
       .where("protectedPersonId", "==", uid)
       .where("status", "==", "active")
       .get();
+    const tag = String(tagName).slice(0, 60);
 
     const data: Record<string, string> = {
       type: "ble_separation",
-      tagName,
+      tagName: tag,
       protectedPersonId: uid,
       ...(latitude ? { latitude: String(latitude) } : {}),
       ...(longitude ? { longitude: String(longitude) } : {}),
     };
-    await Promise.all(links.docs.map((link) => sendPushToUser(link.data().guardianId, {
-      notification: {
-        title: "分离提醒",
-        body: `蓝牙标签「${tagName}」已超出范围`,
-      },
-      data,
-    }, "BLE separation")));
+    await Promise.all(links.docs.map(async (link) => {
+      const guardianId = link.data().guardianId;
+      const copy = await alertCopyFor(guardianId);
+      return sendPushToUser(guardianId, {
+        notification: {
+          title: copy.bleSeparationTitle,
+          body: copy.bleSeparationBody(tag),
+        },
+        data,
+      }, "BLE separation");
+    }));
 
-    // Log timeline entry
-    await db.collection("users").doc(uid).collection("timeline").add({
+    // Records timeline (the collection guardians and the person read)
+    const own = await alertCopyFor(uid);
+    await db.collection("timeline_entries").add({
+      userId: uid,
       type: "ble_separation",
-      description: `蓝牙标签「${tagName}」超出范围`,
-      latitude: latitude || null,
-      longitude: longitude || null,
+      description: own.bleSeparationBody(tag),
+      detail: null,
+      latitude: typeof latitude === "number" ? latitude : null,
+      longitude: typeof longitude === "number" ? longitude : null,
       timestamp: admin.firestore.Timestamp.now(),
     });
 

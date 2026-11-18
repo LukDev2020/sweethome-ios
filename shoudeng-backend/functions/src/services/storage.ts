@@ -6,7 +6,7 @@ const BUCKET_NAME = "shoudeng-evidence"; // Configure via firebase config
 
 /**
  * Upload evidence bundle JSON to Cloud Storage.
- * Returns a signed download URL valid for 7 days.
+ * Returns a signed download URL valid for 48 hours.
  */
 export async function uploadEvidenceBundle(
   bundleId: string,
@@ -32,10 +32,10 @@ export async function uploadEvidenceBundle(
     },
   });
 
-  // Generate signed URL valid for 7 days
+  // Privacy policy: links to someone's location data live at most 48 hours
   const [url] = await file.getSignedUrl({
     action: "read",
-    expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
+    expires: Date.now() + 48 * 60 * 60 * 1000,
   });
 
   return url;
@@ -68,7 +68,7 @@ export async function uploadEvidencePdf(
 
   const [url] = await file.getSignedUrl({
     action: "read",
-    expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
+    expires: Date.now() + 48 * 60 * 60 * 1000, // privacy policy: 48 h at most
   });
 
   return url;
@@ -100,7 +100,7 @@ export async function uploadGpxTrack(
 
   const [url] = await file.getSignedUrl({
     action: "read",
-    expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
+    expires: Date.now() + 48 * 60 * 60 * 1000, // privacy policy: 48 h at most
   });
 
   return url;

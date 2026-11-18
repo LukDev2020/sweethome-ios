@@ -223,24 +223,22 @@ router.post("/claim-report", async (req: Request, res: Response) => {
   }
 
   try {
-    const targetId = protectedPersonId || uid;
+    const targetId = typeof protectedPersonId === "string" && protectedPersonId ? protectedPersonId : uid;
 
-    // Verify access
+    // The person, or an active guardian still allowed to see their location
     if (targetId !== uid) {
-      const linkSnapshot = await db
-        .collection("guardian_links")
-        .where("guardianId", "==", uid)
-        .where("protectedPersonId", "==", targetId)
-        .where("status", "==", "active")
-        .limit(1)
-        .get();
-      if (linkSnapshot.empty) {
+      const link = (await db.collection("guardian_links").doc(`${uid}_${targetId}`).get()).data();
+      if (link?.status !== "active" || link.permissions?.canSeeLocation === false) {
         res.status(403).json({ error: "Not authorized" });
         return;
       }
     }
 
     const incidentTime = new Date(incidentDate);
+    if (!Number.isFinite(incidentTime.getTime())) {
+      res.status(400).json({ error: "incidentDate must be a date (ISO 8601)" });
+      return;
+    }
     const windowStart = new Date(incidentTime.getTime() - 24 * 60 * 60 * 1000);
     const windowEnd = new Date(incidentTime.getTime() + 24 * 60 * 60 * 1000);
 

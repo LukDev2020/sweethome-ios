@@ -84,6 +84,8 @@ final class SilentAlarmService: ObservableObject {
         let times: [CheckInTime]
         let windowMinutes: Int
         let gracePeriodMisses: Int
+        /// Check-in times are wall-clock times where the person is
+        var timeZone: String = TimeZone.current.identifier
     }
 
     // MARK: - Server Sync

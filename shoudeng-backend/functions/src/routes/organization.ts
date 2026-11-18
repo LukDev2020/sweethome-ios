@@ -20,6 +20,21 @@ function partnerFail(res: Response, what: string, e: unknown) {
 }
 
 /**
+ * Riders who joined through a partner link were promised the organization sees
+ * totals only: never their name, place, check-ins or individual events. They are
+ * left out of everything below that names or contacts members one by one.
+ */
+function isPartnerRider(member: admin.firestore.DocumentData): boolean {
+  return member.role === "rider" || member.joinedVia === "partner_link";
+}
+
+const text = (v: unknown, max: number): string | null =>
+  typeof v === "string" && v.trim() ? v.trim().slice(0, max) : null;
+
+/** Most people one admin request may list (one Firestore batch is 500 writes) */
+const MAX_MEMBERS_PER_REQUEST = 200;
+
+/**
  * Partner links for riders (services/partners.ts)
  *   POST /v1/org/partner-code            admin: the org's code (+ link)
  *   GET  /v1/org/partner/:code           a rider signing up: the org's name
@@ -48,7 +63,10 @@ router.get("/riders", async (req: Request, res: Response) => {
  */
 router.post("/", async (req: Request, res: Response) => {
   const uid = req.uid!;
-  const { name, type, contactEmail, contactPhone } = req.body;
+  const name = text(req.body?.name, 100);
+  const type = text(req.body?.type, 40);
+  const contactEmail = text(req.body?.contactEmail, 120);
+  const contactPhone = text(req.body?.contactPhone, 32);
 
   if (!name || !type) {
     res.status(400).json({ error: "name and type are required" });
@@ -60,8 +78,8 @@ router.post("/", async (req: Request, res: Response) => {
     const orgRef = await db.collection("organizations").add({
       name,
       type,
-      contactEmail: contactEmail || null,
-      contactPhone: contactPhone || null,
+      contactEmail,
+      contactPhone,
       adminIds: [uid],
       memberCount: 0,
       activatedCount: 0,
@@ -117,14 +135,14 @@ router.get("/dashboard", async (req: Request, res: Response) => {
 
     for (const memberDoc of membersSnapshot.docs) {
       const member = memberDoc.data();
+      if (isPartnerRider(member)) continue;
       totalMembers++;
 
-      const userDoc = await db
-        .collection("users")
-        .doc(member.userId)
-        .get();
+      const userDoc = member.userId
+        ? await db.collection("users").doc(member.userId).get()
+        : null;
 
-      if (!userDoc.exists) {
+      if (!userDoc || !userDoc.exists) {
         notInstalled++;
         memberDetails.push({
           userId: member.userId,
@@ -212,8 +230,12 @@ router.post("/members", async (req: Request, res: Response) => {
   const uid = req.uid!;
   const { orgId, members } = req.body;
 
-  if (!orgId || !members || !Array.isArray(members)) {
+  if (typeof orgId !== "string" || !orgId || !Array.isArray(members)) {
     res.status(400).json({ error: "orgId and members array are required" });
+    return;
+  }
+  if (members.length === 0 || members.length > MAX_MEMBERS_PER_REQUEST) {
+    res.status(400).json({ error: `members must list 1–${MAX_MEMBERS_PER_REQUEST} people` });
     return;
   }
 
@@ -231,15 +253,20 @@ router.post("/members", async (req: Request, res: Response) => {
     const batch = db.batch();
     const now = admin.firestore.Timestamp.now();
 
-    for (const member of members) {
+    // An admin lists people to invite; it never attaches an existing account.
+    // (Attaching by userId would let anyone who creates an organization watch and
+    // message any user without their agreement.)
+    for (const raw of members) {
+      const member = raw && typeof raw === "object" ? raw as Record<string, unknown> : {};
       const memberRef = db.collection("org_members").doc();
       batch.set(memberRef, {
         orgId,
-        userId: member.userId || null,
-        displayName: member.displayName || member.name || "",
-        email: member.email || null,
-        phone: member.phone || null,
-        role: member.role || "member",
+        userId: null,
+        status: "invited",
+        displayName: text(member.displayName, 80) ?? text(member.name, 80) ?? "",
+        email: text(member.email, 120),
+        phone: text(member.phone, 32),
+        role: "member",
         addedAt: now,
         addedBy: uid,
       });
@@ -265,9 +292,11 @@ router.post("/members", async (req: Request, res: Response) => {
  */
 router.post("/alert", async (req: Request, res: Response) => {
   const uid = req.uid!;
-  const { orgId, title, body, countryCode, severity } = req.body;
+  const { orgId, countryCode, severity } = req.body;
+  const title = text(req.body?.title, 120);
+  const body = text(req.body?.body, 1000);
 
-  if (!orgId || !title || !body) {
+  if (typeof orgId !== "string" || !orgId || !title || !body) {
     res
       .status(400)
       .json({ error: "orgId, title, and body are required" });
@@ -310,7 +339,7 @@ router.post("/alert", async (req: Request, res: Response) => {
     let sentCount = 0;
     for (const memberDoc of membersSnapshot.docs) {
       const member = memberDoc.data();
-      if (!member.userId) continue;
+      if (!member.userId || isPartnerRider(member)) continue;
 
       // Filter by country if specified
       if (countryCode) {
@@ -445,7 +474,8 @@ router.get(
       // Verify caller is an admin of the org that owns this alert
       const alertOrgId = alertDoc.data()!.orgId;
       const orgDoc = await db.collection("organizations").doc(alertOrgId).get();
-      if (!orgDoc.exists || !orgDoc.data()!.adminIds.includes(uid)) {
+      const isAdmin = orgDoc.exists && (orgDoc.data()!.adminIds ?? []).includes(uid);
+      if (!isAdmin) {
         // Also allow if caller is a member of the org
         const memberSnap = await db
           .collection("org_members")
@@ -464,7 +494,9 @@ router.get(
         .where("alertId", "==", alertId)
         .get();
 
-      const entries = rollCallSnapshot.docs.map((d) => {
+      // A member sees only their own answer; the admin sees everyone's
+      const visible = isAdmin ? rollCallSnapshot.docs : rollCallSnapshot.docs.filter((d) => d.data().userId === uid);
+      const entries = visible.map((d) => {
         const data = d.data();
         return {
           userId: data.userId,
@@ -540,6 +572,7 @@ router.get("/reports", async (req: Request, res: Response) => {
       .get();
 
     const memberIds = membersSnapshot.docs
+      .filter((d) => !isPartnerRider(d.data()))
       .map((d) => d.data().userId)
       .filter(Boolean);
 

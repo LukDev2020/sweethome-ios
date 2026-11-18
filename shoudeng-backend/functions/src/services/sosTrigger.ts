@@ -14,6 +14,21 @@ import { initialEscalationFields } from "./escalation";
 
 export const CLIENT_ID_RE = /^[A-Za-z0-9-]{8,64}$/;
 
+/** An open SOS older than this no longer absorbs a new press */
+export const SOS_JOIN_WINDOW_MS = 30 * 60 * 1000;
+
+/**
+ * Whether an open SOS is finished in all but name: its escalation ran out (or
+ * there was nobody to escalate to), or it is older than the join window.
+ * A new trigger then starts a fresh SOS instead of silently joining this one.
+ */
+export function isStaleSOS(data: admin.firestore.DocumentData, nowMs: number): boolean {
+  if (data.escalationState === "exhausted" || data.escalationState === "no_guardians") return true;
+  const at = data.triggeredAt as { toMillis?: () => number } | undefined;
+  const triggeredMs = at && typeof at.toMillis === "function" ? at.toMillis() : nowMs;
+  return nowMs - triggeredMs > SOS_JOIN_WINDOW_MS;
+}
+
 export interface SOSTriggerInput {
   personId: string;
   triggerMethod?: unknown;
@@ -48,11 +63,26 @@ export async function createSOSEvent(input: SOSTriggerInput): Promise<SOSTrigger
     );
     if (!active.empty) {
       const doc = active.docs[0];
-      // Remember this device-side id too, so a later resolve sent with it maps here
-      if (clientId) {
-        tx.update(doc.ref, { clientSOSIds: admin.firestore.FieldValue.arrayUnion(clientId) });
+      const data = doc.data();
+      const sameTrigger = clientId !== null && Array.isArray(data.clientSOSIds) && data.clientSOSIds.includes(clientId);
+      if (sameTrigger || !isStaleSOS(data, now.toMillis())) {
+        // Remember this device-side id too, so a later resolve sent with it maps here
+        if (clientId && !sameTrigger) {
+          tx.update(doc.ref, { clientSOSIds: admin.firestore.FieldValue.arrayUnion(clientId) });
+        }
+        return { sosEventId: doc.id, escalationState: data.escalationState as string };
       }
-      return { sosEventId: doc.id, escalationState: doc.data().escalationState as string };
+      // An old SOS nobody closed (escalation finished, or a guardian said
+      // "I've got it" long ago): a new press is a new emergency and must alert
+      // everyone again, so close the old one and fall through to a fresh SOS.
+      tx.update(doc.ref, {
+        resolvedAt: now,
+        resolvedBy: "system",
+        resolution: "timeout",
+        escalationNextStep: null,
+        escalationNextAt: null,
+        escalationLeaseUntil: null,
+      });
     }
     tx.set(db.collection("sos_events").doc(sosId), {
       protectedPersonId: personId,

@@ -13,6 +13,9 @@ import { localTime, onDutyAt } from "./localTime";
 import { userLang } from "./locale";
 import { toIso } from "./time";
 
+/** Matches MAX_CONTACTS in routes/emergencyContacts.ts */
+const MAX_EMERGENCY_CONTACTS = 10;
+
 const db = admin.firestore();
 
 /**
@@ -377,7 +380,14 @@ async function notifyWithoutGuardians(
   now: Date,
 ): Promise<StepOutcome> {
   const contactsDoc = await db.collection("emergency_contacts").doc(personId).get();
-  const contacts: { id: string; phone: string }[] = contactsDoc.exists ? contactsDoc.data()?.contacts ?? [] : [];
+  // Same limits the contacts API enforces (10, phone-shaped), re-applied here in
+  // case the stored list did not come through the API
+  const stored: unknown = contactsDoc.exists ? contactsDoc.data()?.contacts : [];
+  const contacts = (Array.isArray(stored) ? stored : [])
+    .filter((c): c is { id: string; phone: string } =>
+      !!c && typeof c.id === "string" && c.id.length > 0
+      && typeof c.phone === "string" && /^\+?[0-9 ()-]{3,32}$/.test(c.phone))
+    .slice(0, MAX_EMERGENCY_CONTACTS);
   let texted = 0;
   if (contacts.length > 0) {
     const url = await createEmergencyShareUrl(personId);

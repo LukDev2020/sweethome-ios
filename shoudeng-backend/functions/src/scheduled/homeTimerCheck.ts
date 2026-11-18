@@ -4,6 +4,7 @@ import { sendPushToUser } from "../services/push";
 import { PUSH_SECRETS } from "../config/params";
 import { checkOverdueShifts, checkStillOk } from "../services/crew";
 import { escalateUnansweredFalls } from "../services/safetyEvents";
+import { alertCopyFor, nameOr } from "../services/pushCopy";
 
 const db = admin.firestore();
 
@@ -65,9 +66,7 @@ export const checkHomeTimerExpiry = functions
 
         // Get user info
         const userDoc = await db.collection("users").doc(userId).get();
-        const userName = userDoc.exists
-          ? userDoc.data()!.displayName
-          : "被守护者";
+        const userName = userDoc.data()?.displayName;
 
         // Notify all guardians
         const linksSnapshot = await db
@@ -78,10 +77,11 @@ export const checkHomeTimerExpiry = functions
 
         for (const linkDoc of linksSnapshot.docs) {
           const guardianId = linkDoc.data().guardianId;
+          const copy = await alertCopyFor(guardianId);
           await sendPushToUser(guardianId, {
             notification: {
-              title: "回家计时超时",
-              body: `${userName}设置的「${timer.label}」计时已到期，但未关闭`,
+              title: copy.homeTimerOverdueTitle,
+              body: copy.homeTimerOverdueBody(nameOr(userName, copy), timer.label || undefined),
             },
             priority: 10,
             aps: {

@@ -85,18 +85,12 @@ service cloud.firestore {
       allow write: if false; // Server-side only
     }
 
-    // Invites — only creator can read their own invites; accepting goes through
-    // the server (any signed-in user could otherwise rewrite a pending invite)
+    // Invites — the creator may read their own; only the server creates or
+    // changes them. (A client-written invite could reuse someone else's code
+    // and capture the person who enters it.)
     match /invites/{inviteId} {
       allow read: if isAuth() && resource.data.createdBy == request.auth.uid;
-      allow create: if isAuth()
-        && request.resource.data.createdBy == request.auth.uid
-        && request.resource.data.status == 'pending'
-        && request.resource.data.code is string;
-      allow update: if isAuth()
-        && resource.data.createdBy == request.auth.uid
-        && request.resource.data.createdBy == resource.data.createdBy
-        && request.resource.data.status in ['pending', 'cancelled'];
+      allow write: if false; // Server-side only (invite routes)
     }
 
     // Device tokens — own tokens only (fixed: was allowing any auth user)
@@ -186,14 +180,17 @@ service cloud.firestore {
       allow delete: if isAuth() && resource.data.userId == request.auth.uid;
     }
 
-    // Emergency contacts — owner only
+    // Emergency contacts — owner reads; writes go through the API, which
+    // validates the numbers and caps the list (SOS texts every contact)
     match /emergency_contacts/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read: if isOwner(userId);
+      allow write: if false; // Server-side only (PUT /v1/emergency-contacts)
     }
 
-    // Organizations — members can read, admin can write
+    // Organizations — served by the API only (admin ids, contacts and the
+    // partner code are not for every signed-in user)
     match /organizations/{orgId} {
-      allow read: if isAuth();
+      allow read: if false;
       allow write: if false; // Server-side only
     }
 

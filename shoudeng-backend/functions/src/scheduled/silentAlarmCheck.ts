@@ -4,6 +4,7 @@ import { sendPushToUser } from "../services/push";
 import { PUSH_SECRETS } from "../config/params";
 
 import { localTime } from "../services/localTime";
+import { alertCopyFor, nameOr } from "../services/pushCopy";
 
 const db = admin.firestore();
 
@@ -42,7 +43,9 @@ export const checkSilentAlarms = functions
       for (const t of times) {
         const scheduledMinutes = t.hour * 60 + t.minute;
         const nowMinutes = currentHour * 60 + currentMinute;
-        const elapsed = nowMinutes - scheduledMinutes;
+        // Minutes since the most recent occurrence of this time (a window that
+        // runs past midnight, e.g. 23:45 + 30 min, is still measured correctly)
+        const elapsed = (((nowMinutes - scheduledMinutes) % 1440) + 1440) % 1440;
 
         // Check if we're past the window end (scheduled time + window)
         if (elapsed >= windowMinutes && elapsed < windowMinutes + 5) {
@@ -62,7 +65,7 @@ export const checkSilentAlarms = functions
             await db.collection("timeline_entries").add({
               userId,
               type: "silent_alarm_missed",
-              description: `沉默报警签到未确认 (${newMisses}/${gracePeriodMisses})`,
+              description: `Silent alarm check-in missed (${newMisses}/${gracePeriodMisses})`,
               timestamp: admin.firestore.FieldValue.serverTimestamp(),
             });
 
@@ -105,14 +108,15 @@ async function escalateToGuardians(userId: string): Promise<void> {
   }
 
   const userDoc = await db.collection("users").doc(userId).get();
-  const userName = userDoc.exists ? userDoc.data()!.displayName : "被守护者";
+  const userName = userDoc.data()?.displayName;
 
   for (const linkDoc of linksSnapshot.docs) {
     const guardianId = linkDoc.data().guardianId;
+    const copy = await alertCopyFor(guardianId);
     await sendPushToUser(guardianId, {
       notification: {
-        title: "沉默报警触发",
-        body: `${userName}连续多次未确认安全签到，请立即确认其状况。`,
+        title: copy.silentAlarmTitle,
+        body: copy.silentAlarmBody(nameOr(userName, copy)),
       },
       data: {
         action: "silent_alarm_escalation",
@@ -125,7 +129,7 @@ async function escalateToGuardians(userId: string): Promise<void> {
   await db.collection("timeline_entries").add({
     userId,
     type: "silent_alarm_escalated",
-    description: "沉默报警已升级，已通知所有守护者",
+    description: (await alertCopyFor(userId)).silentAlarmTimeline,
     timestamp: admin.firestore.FieldValue.serverTimestamp(),
   });
 }

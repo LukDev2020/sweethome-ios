@@ -16,6 +16,9 @@ import { createRateLimiter, RATE_LIMITS } from "../middleware/rateLimit";
 const router = Router();
 const db = admin.firestore();
 
+/** Longest stretch one export may cover (same as incident reports) */
+export const MAX_WINDOW_DAYS = 7;
+
 /**
  * POST /v1/evidence/generate
  * Generate an evidence bundle (PDF data, JSON, or GPX) for a protected person.
@@ -34,13 +37,22 @@ router.post("/generate", authMiddleware, requireFeature("export_pdf"), async (re
     return;
   }
 
+  const start = Date.parse(timeWindowStart);
+  const end = Date.parse(timeWindowEnd);
+  if (typeof protectedPersonId !== "string" || !Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+    res.status(400).json({ error: "timeWindowStart must be before timeWindowEnd (ISO 8601)" });
+    return;
+  }
+  if (end - start > MAX_WINDOW_DAYS * 24 * 60 * 60 * 1000) {
+    res.status(400).json({ error: `The time window can be at most ${MAX_WINDOW_DAYS} days` });
+    return;
+  }
+
   try {
-    // Verify requester is a guardian of this person
-    const linkId = `${uid}_${protectedPersonId}`;
-    const linkDoc = await db.collection("guardian_links").doc(linkId).get();
-    if (!linkDoc.exists || linkDoc.data()?.status !== "active") {
-      // Also check if the user is the protected person themselves
-      if (uid !== protectedPersonId) {
+    // The person, or an active guardian still allowed to see their location
+    if (uid !== protectedPersonId) {
+      const link = (await db.collection("guardian_links").doc(`${uid}_${protectedPersonId}`).get()).data();
+      if (link?.status !== "active" || link.permissions?.canSeeLocation === false) {
         res.status(403).json({ error: "Not authorized to access this data" });
         return;
       }
@@ -67,9 +79,10 @@ router.post("/generate", authMiddleware, requireFeature("export_pdf"), async (re
       const gpx = generateGPX(bundle.locations, personName);
 
       res.set("Content-Type", "application/gpx+xml");
+      // RFC 5987: names like 陈伟 are not valid in a plain header value
       res.set(
         "Content-Disposition",
-        `attachment; filename="${personName}_track.gpx"`
+        `attachment; filename="track.gpx"; filename*=UTF-8''${encodeURIComponent(`${personName}_track.gpx`)}`
       );
       res.send(gpx);
       return;

@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
 import { sendPushToUser } from "../services/push";
+import { alertCopyFor, nameOr } from "../services/pushCopy";
 
 const router = Router();
 const db = admin.firestore();
@@ -133,14 +134,15 @@ router.post("/dismiss", async (req: Request, res: Response) => {
       .get();
 
     const userDoc = await db.collection("users").doc(uid).get();
-    const userName = userDoc.exists ? userDoc.data()!.displayName : "被守护者";
+    const userName = userDoc.data()?.displayName;
 
     for (const linkDoc of linksSnapshot.docs) {
       const guardianId = linkDoc.data().guardianId;
+      const copy = await alertCopyFor(guardianId);
       await sendPushToUser(guardianId, {
         notification: {
-          title: "已安全到达",
-          body: `${userName}已关闭回家计时器`,
+          title: copy.homeTimerDismissedTitle,
+          body: copy.homeTimerDismissedBody(nameOr(userName, copy)),
         },
         data: { action: "home_timer_dismissed" },
       }, "home timer dismissed");
@@ -196,18 +198,18 @@ router.post("/expire", async (req: Request, res: Response) => {
       .get();
 
     const userDoc = await db.collection("users").doc(uid).get();
-    const userName = userDoc.exists ? userDoc.data()!.displayName : "被守护者";
+    const userName = userDoc.data()?.displayName;
     const timerData = timerDoc.data()!;
-
-    let body = `${userName}的回家计时器已超时`;
-    if (destination) body += `\n目的地：${destination}`;
-    if (routeNotes) body += `\n路线：${routeNotes}`;
 
     for (const linkDoc of linksSnapshot.docs) {
       const guardianId = linkDoc.data().guardianId;
+      const copy = await alertCopyFor(guardianId);
+      let body = copy.homeTimerOverdueBody(nameOr(userName, copy));
+      if (destination) body += `\n${copy.destinationLine(destination)}`;
+      if (routeNotes) body += `\n${copy.routeLine(routeNotes)}`;
       await sendPushToUser(guardianId, {
         notification: {
-          title: "回家计时器超时",
+          title: copy.homeTimerOverdueTitle,
           body,
         },
         data: {

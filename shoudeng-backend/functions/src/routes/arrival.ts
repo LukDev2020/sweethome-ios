@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
 import { sendPushToUser } from "../services/push";
+import { alertCopyFor, nameOr } from "../services/pushCopy";
 
 const router = Router();
 const db = admin.firestore();
@@ -49,7 +50,7 @@ router.post("/", async (req: Request, res: Response) => {
 
     // Notify all guardians
     const userDoc = await db.collection("users").doc(uid).get();
-    const userName = userDoc.exists ? userDoc.data()!.displayName : "被守护者";
+    const userName = userDoc.data()?.displayName;
 
     const linksSnapshot = await db
       .collection("guardian_links")
@@ -59,10 +60,11 @@ router.post("/", async (req: Request, res: Response) => {
 
     for (const linkDoc of linksSnapshot.docs) {
       const guardianId = linkDoc.data().guardianId;
+      const copy = await alertCopyFor(guardianId);
       await sendPushToUser(guardianId, {
         notification: {
-          title: "到达报告",
-          body: `${userName}已安全到达${placeName ? "「" + placeName + "」" : ""}`,
+          title: copy.arrivalTitle,
+          body: copy.arrivalBody(nameOr(userName, copy), placeName || undefined),
         },
         data: {
           action: "arrival_report",
