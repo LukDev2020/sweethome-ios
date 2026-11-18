@@ -35,6 +35,10 @@
         "destination": "/terms.html"
       },
       {
+        "source": "/support",
+        "destination": "/support.html"
+      },
+      {
         "source": "/crew/**",
         "destination": "/crew.html"
       },

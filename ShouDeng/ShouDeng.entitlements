@@ -10,6 +10,8 @@
 	</array>
 	<key>com.apple.developer.associated-domains</key>
 	<array>
+		<string>applinks:omni-webb.web.app</string>
+		<string>applinks:omni-webb.com</string>
 		<string>applinks:shoudeng.app</string>
 		<string>applinks:www.shoudeng.app</string>
 	</array>

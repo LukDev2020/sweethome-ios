@@ -1199,7 +1199,7 @@ struct InviteGuardianSheet: View {
 
             // The invitee will be someone I protect, not a member of the guardian
             // team, so they are not added to `members`.
-            let inviteLink = "https://shoudeng.app/invite?code=\(inviteCode)"
+            let inviteLink = "\(DeepLinkRouter.webBase)/invite?code=\(inviteCode)"
 
             switch method {
             case .link:

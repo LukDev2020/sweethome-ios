@@ -44,7 +44,7 @@ const MAX_MEMBERS_PER_REQUEST = 200;
 router.post("/partner-code", async (req: Request, res: Response) => {
   try {
     const r = await partnerCodeFor(req.uid!);
-    res.json({ ...r, link: `https://shoudeng.app/start?for=rider&org=${r.code}` });
+    res.json({ ...r, link: `https://omni-webb.web.app/beaconify/start?for=rider&org=${r.code}` });
   } catch (e) { partnerFail(res, "create the partner code", e); }
 });
 router.get("/partner/:code", async (req: Request, res: Response) => {

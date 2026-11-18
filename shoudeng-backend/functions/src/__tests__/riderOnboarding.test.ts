@@ -121,7 +121,7 @@ describe("partner organisations", () => {
   it("code → preview → join; the admin sees totals of riders who agreed only", async () => {
     const pc = await as("boss").post("/v1/org/partner-code");
     expect(pc.body.code).toMatch(/^[A-HJ-NP-Z2-9]{6}$/);
-    expect(pc.body.link).toBe(`https://shoudeng.app/start?for=rider&org=${pc.body.code}`);
+    expect(pc.body.link).toBe(`https://omni-webb.web.app/beaconify/start?for=rider&org=${pc.body.code}`);
     // Asking again gives the same code
     expect((await as("boss").post("/v1/org/partner-code")).body.code).toBe(pc.body.code);
 

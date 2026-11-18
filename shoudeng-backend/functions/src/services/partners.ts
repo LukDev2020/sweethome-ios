@@ -6,7 +6,7 @@ import * as crypto from "crypto";
 // ---------------------------------------------------------------------------
 //
 // A delivery platform, union or rider community gets a partner code. Its link
-// (https://shoudeng.app/start?for=rider&org=CODE) opens sign-up with Rider chosen.
+// (https://omni-webb.web.app/beaconify/start?for=rider&org=CODE) opens sign-up with Rider chosen.
 // A rider who joins through it decides whether the organisation may count them;
 // the organisation then sees totals only — riders, active, on shift now, SOS in the
 // last 30 days — never names, positions or individual events.

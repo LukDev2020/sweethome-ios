@@ -12,6 +12,7 @@ final class RiderOnboardingTests: XCTestCase {
     func testCrewLinksOpenTheCrewInAnyForm() {
         let forms = [
             "https://shoudeng.app/crew/abc123",
+            "https://omni-webb.web.app/beaconify/crew/abc123",
             "https://www.shoudeng.app/crew/ABC123",
             "https://shoudeng.app/crew/join?code=abc-123",
             "shoudeng://crew/join?code=ABC123",
@@ -25,6 +26,8 @@ final class RiderOnboardingTests: XCTestCase {
     func testPartnerLinksChooseRider() {
         XCTAssertEqual(DeepLinkRouter.parse(url: URL(string: "https://shoudeng.app/start?for=rider&org=ab2cd3")!),
                        .riderStart(partnerCode: "AB2CD3"))
+        XCTAssertEqual(DeepLinkRouter.parse(url: URL(string: "https://omni-webb.web.app/beaconify/start?for=rider&org=ab2cd3")!),
+                       .riderStart(partnerCode: "AB2CD3"))
         XCTAssertEqual(DeepLinkRouter.parse(url: URL(string: "shoudeng://start?for=rider")!), .riderStart(partnerCode: nil))
         // A malformed partner code is dropped, the rider choice stays
         XCTAssertEqual(DeepLinkRouter.parse(url: URL(string: "https://shoudeng.app/start?for=rider&org=OOO111")!),
@@ -34,7 +37,7 @@ final class RiderOnboardingTests: XCTestCase {
 
     func testCrewQRIsAWebLinkThatWorksWithoutTheApp() {
         let crew = Crew(id: "c", name: "CBD", inviteCode: "ABC123", isOwner: true, members: [], cautions: [])
-        XCTAssertEqual(crew.inviteURL.absoluteString, "https://shoudeng.app/crew/ABC123")
+        XCTAssertEqual(crew.inviteURL.absoluteString, "https://omni-webb.web.app/beaconify/crew/ABC123")
         XCTAssertEqual(DeepLinkRouter.parse(url: crew.inviteURL), .crew(code: "ABC123"))
     }
 

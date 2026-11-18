@@ -1,44 +1,36 @@
-Beaconify — Family Safety, One Light of Protection
+Beaconify keeps the people you love one tap away. When someone needs help, the family they chose hears about it right away, with where they are.
 
-Beaconify is a family safety app that creates reliable safety connections between loved ones. Whether it's elderly parents living alone, children coming home late, or family members traveling abroad, Beaconify helps you stay informed about your family's wellbeing.
+Made for parents who live alone, kids coming home late, riders on night shifts and family members travelling abroad.
 
-Key Features:
+SOS TO YOUR FAMILY
+Press and hold the SOS button, or use a Bluetooth panic button, the widget or Siri. A short countdown stops accidental alerts. Your guardians get an alert with your location; if nobody answers, Beaconify follows up by text and phone call. You see who has been reached and who is on the way.
 
-EMERGENCY SOS
-One tap to send an emergency alert with your precise location. Guardians receive instant push notifications to respond immediately.
+FALL AND DISTRESS DETECTION
+Optional fall detection asks "Are you OK?" and alerts family if you don't answer within 60 seconds. Voice SOS and distress-sound detection listen on your phone only.
 
-REAL-TIME LOCATION SHARING
-Protected persons share their location on their own terms. Guardians can check in anytime. Set safe zones with automatic alerts when boundaries are crossed. Location is visible only to authorized guardians.
+LOCATION, ONLY FOR THE PEOPLE YOU CHOOSE
+Share your location with the guardians you approve — and choose, for each one, what they can see. Safe zones, arrival reports and a home timer that tells family if you're late.
 
-CHECK-IN
-A simple tap to let family know you're safe. Set scheduled reminders — guardians are notified if a check-in is overdue.
+CHECK-INS
+One tap to say you're fine. If a check-in is missed, your guardians are told.
 
-DUTY SCHEDULE
-Multiple guardians can set up a rotation schedule, ensuring someone is always watching.
+MORE
+- Medical card for first responders (blood type, allergies, medications)
+- Trip recording with route and export
+- Private family feed for photos and updates
+- World clocks for family across time zones
+- Duress code and discreet modes for difficult situations
+- Lock-screen widgets and Live Activities
+- English, 简体中文, 繁體中文, Français, 日本語
 
-MEDICAL CARD
-Record blood type, allergies, medications, and more — available for first responders in emergencies.
+PRIVACY
+No ads and no tracking. Your location is shared only with guardians you approve. Pause sharing any time, and delete your account and data from Settings.
 
-FAMILY FEED
-Share daily moments and photos within your family circle.
+PLANS
+SOS, fall detection, check-ins and live location are free. Optional plans add more guardians and family members, longer history and reports. Monthly and yearly plans start with a 3-day free trial; payment is charged to your Apple ID and renews automatically unless cancelled at least 24 hours before the end of the period. Manage or cancel in your Apple ID settings.
 
-Privacy First:
-- No behavioral tracking, no ads
-- No third-party analytics
-- Location shared only with authorized guardians
-- Pause location sharing anytime
-- Delete all data with one tap
+IMPORTANT
+Beaconify is not an emergency service and does not contact 911 or other emergency numbers. In danger, call your local emergency number first.
 
-Important Notice:
-Beaconify is a supplementary safety tool and does not replace professional emergency services (911, 112, etc.). In an emergency, always call your local emergency number first.
-
-Subscription Plans:
-- Free: Basic SOS, check-in (1 guardian)
-- Single: Duty schedule, PDF export, trajectory replay (up to 3 guardians)
-- Family: SMS fallback, family dashboard (up to 4 protected persons)
-- Ultimate: Priority support, unlimited members
-
-Subscriptions are processed through Apple and can be cancelled anytime in your Apple ID settings.
-
-Privacy Policy: https://sweethome-b4e82.web.app/privacy
-Terms of Service: https://sweethome-b4e82.web.app/terms
+Privacy Policy: https://omni-webb.web.app/beaconify/privacy
+Terms of Use: https://omni-webb.web.app/beaconify/terms

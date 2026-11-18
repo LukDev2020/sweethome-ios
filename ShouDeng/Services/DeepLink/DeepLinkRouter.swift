@@ -18,8 +18,15 @@ enum DeepLinkDestination: Equatable {
 
 struct DeepLinkRouter {
 
+    /// Public home of shared links (invites, crews, rider partners): the
+    /// company site, which also serves the universal-link association file
+    static let webBase = "https://omni-webb.web.app/beaconify"
+
     static func parse(url: URL) -> DeepLinkDestination? {
         var pathComponents = url.pathComponents.filter { $0 != "/" }
+        // https://omni-webb.web.app/beaconify/invite?code=… — the app's links live
+        // under /beaconify on the company site
+        if pathComponents.first?.lowercased() == "beaconify" { pathComponents.removeFirst() }
         // shoudeng://invite/ABC123 — the first segment is the host
         if url.scheme == "shoudeng", let host = url.host, !host.isEmpty {
             pathComponents.insert(host, at: 0)

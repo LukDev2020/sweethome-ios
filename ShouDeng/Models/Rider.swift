@@ -21,7 +21,7 @@ struct Crew: Codable, Equatable {
 
     /// Joining link shown as a QR code. A web link (universal link): opens the app when
     /// installed, otherwise a page with the code and the App Store (web/crew.html)
-    var inviteURL: URL { URL(string: "https://shoudeng.app/crew/\(inviteCode)")! }
+    var inviteURL: URL { URL(string: "\(DeepLinkRouter.webBase)/crew/\(inviteCode)")! }
 }
 
 struct CrewMember: Codable, Identifiable, Equatable {

@@ -519,7 +519,7 @@ struct OrgRidersPanel: View {
 
     private func loadStats() async {
         stats = try? await coordinator.apiClient.get("/v1/org/riders")
-        if let code = stats?.partnerCode { link = "https://shoudeng.app/start?for=rider&org=\(code)" }
+        if let code = stats?.partnerCode { link = "\(DeepLinkRouter.webBase)/start?for=rider&org=\(code)" }
     }
 
     private func loadLink() async {
