@@ -54,12 +54,16 @@ router.post("/:sosId/voice-notes", createRateLimiter(RATE_LIMITS.general), async
     const now = admin.firestore.Timestamp.now();
 
     // Store voice note as a subcollection of the SOS event
+    // Role from the link, never from the client; inputs typed and capped
+    const text = typeof transcript === "string" ? transcript.slice(0, 2000) : "";
     await sosRef.collection("voice_notes").doc(noteId).set({
       senderId: uid,
-      senderRole: senderRole || (isProtected ? "protected" : "guardian"),
-      transcript: transcript || "",
-      duration: duration || 0,
-      keywords: keywords || [],
+      senderRole: isProtected ? "protected" : "guardian",
+      transcript: text,
+      duration: typeof duration === "number" && Number.isFinite(duration) ? Math.min(Math.max(duration, 0), 600) : 0,
+      keywords: Array.isArray(keywords)
+        ? keywords.filter((k: unknown): k is string => typeof k === "string").slice(0, 20).map((k: string) => k.slice(0, 40))
+        : [],
       createdAt: now,
     });
 
@@ -71,8 +75,8 @@ router.post("/:sosId/voice-notes", createRateLimiter(RATE_LIMITS.general), async
       userId: sosData.protectedPersonId,
       timestamp: now,
       type: "voiceNote",
-      description: `${senderName}发送了语音消息`,
-      detail: transcript ? transcript.substring(0, 100) : null,
+      description: `${senderName}: voice message`,
+      detail: text ? text.substring(0, 100) : null,
     });
 
     res.status(201).json({

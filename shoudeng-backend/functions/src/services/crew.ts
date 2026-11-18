@@ -156,13 +156,25 @@ export async function leaveCrew(uid: string): Promise<void> {
   const crewId = await crewIdOf(uid);
   if (!crewId) return;
   const ref = db().collection("crews").doc(crewId);
+  let formerMates: string[] = [];
   await db().runTransaction(async (tx) => {
     const fresh = await tx.get(ref);
     const members: string[] = (fresh.data()?.memberIds ?? []).filter((m: string) => m !== uid);
+    formerMates = members;
     if (members.length === 0) tx.delete(ref);
     else tx.update(ref, { memberIds: members, ...(fresh.data()?.ownerId === uid && { ownerId: members[0] }) });
     tx.set(db().collection("users").doc(uid), { crewId: admin.firestore.FieldValue.delete() }, { merge: true });
   });
+  // Shift watching between former crew mates ends with the crew (guardians stay)
+  const mates = new Set(formerMates);
+  // update, not set: never create a stub profile for a mate whose account is gone
+  await Promise.all(formerMates.map((m) =>
+    db().collection("users").doc(m).update({ riderWatchers: admin.firestore.FieldValue.arrayRemove(uid) })
+      .catch(() => undefined)));
+  const mine = await watchersOf(uid);
+  if (mine.some((w) => mates.has(w))) {
+    await db().collection("users").doc(uid).set({ riderWatchers: mine.filter((w) => !mates.has(w)) }, { merge: true });
+  }
 }
 
 interface Position { latitude: number; longitude: number; at: string | null }
@@ -250,7 +262,11 @@ export async function setShift(
     return;
   }
   // Watchers sent with the shift (else the ones from last time); must be crew mates or guardians
-  const watcherIds = rawWatchers === undefined ? await watchersOf(uid) : await validWatchers(uid, rawWatchers);
+  // Last time's watchers are re-checked: someone who left the crew or stopped
+  // being a guardian no longer gets this rider's shift alerts
+  const watcherIds = rawWatchers === undefined
+    ? await (async () => { const allowed = await allowedWatchers(uid); return (await watchersOf(uid)).filter((w) => allowed.has(w)); })()
+    : await validWatchers(uid, rawWatchers);
   const end = typeof plannedEnd === "string" && !Number.isNaN(Date.parse(plannedEnd)) ? new Date(plannedEnd) : null;
   const previous = await watchersOf(uid);
   await db().collection("users").doc(uid).set({ riderOnShift: true, riderWatchers: watcherIds }, { merge: true });
@@ -282,15 +298,20 @@ export async function watchersOf(uid: string): Promise<string[]> {
   return Array.isArray(w) ? w.filter((x): x is string => typeof x === "string") : [];
 }
 
-/** Keeps only crew mates and active guardians (no strangers); 20 at most. */
-async function validWatchers(uid: string, raw: unknown): Promise<string[]> {
-  if (!Array.isArray(raw)) throw new CrewError(400, "watcherIds must be a list");
+/** Who may watch this rider's shifts right now: crew mates and active guardians */
+async function allowedWatchers(uid: string): Promise<Set<string>> {
   const crewId = await crewIdOf(uid);
   const crewMates: string[] = crewId
     ? (((await db().collection("crews").doc(crewId).get()).data()?.memberIds ?? []) as string[]).filter((m) => m !== uid)
     : [];
   const guardians = await activeGuardianIds(uid);
-  const allowed = new Set([...crewMates, ...guardians]);
+  return new Set([...crewMates, ...guardians]);
+}
+
+/** Keeps only crew mates and active guardians (no strangers); 20 at most. */
+async function validWatchers(uid: string, raw: unknown): Promise<string[]> {
+  if (!Array.isArray(raw)) throw new CrewError(400, "watcherIds must be a list");
+  const allowed = await allowedWatchers(uid);
   const ids = [...new Set(raw.filter((x): x is string => typeof x === "string"))];
   const bad = ids.filter((id) => !allowed.has(id));
   if (bad.length > 0) throw new CrewError(403, "watchers must be crew mates or guardians");

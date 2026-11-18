@@ -145,8 +145,9 @@ router.get("/share/:token", async (req: Request, res: Response) => {
       allergies: card.allergies,
       medications: card.medications,
       conditions: card.conditions,
+      // No policy number on a public link: a responder needs the insurer, not
+      // the number someone could misuse
       insuranceProvider: card.insuranceProvider,
-      insurancePolicyNumber: card.insurancePolicyNumber,
       emergencyNote: card.emergencyNote,
       organDonor: card.organDonor,
       emergencyContacts: contacts.map(
@@ -174,16 +175,39 @@ router.post("/share", authMiddleware, createRateLimiter(RATE_LIMITS.general), as
     const token = crypto.randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year
 
-    await db.collection("medical_card_shares").doc(token).set({
+    // One live link per person: a new link replaces (revokes) the old ones
+    const old = await db.collection("medical_card_shares").where("userId", "==", uid).get();
+    const batch = db.batch();
+    old.docs.forEach((d) => batch.delete(d.ref));
+    batch.set(db.collection("medical_card_shares").doc(token), {
       userId: uid,
       createdAt: admin.firestore.Timestamp.now(),
       expiresAt: admin.firestore.Timestamp.fromDate(expiresAt),
     });
+    await batch.commit();
 
     res.json({ token, expiresAt: expiresAt.toISOString() });
   } catch (error) {
     console.error("[MedicalCard] share create error:", error);
     res.status(500).json({ error: "Failed to create share link" });
+  }
+});
+
+/**
+ * DELETE /v1/medical-card/share
+ * Revoke my medical-card link(s); the public page stops working at once.
+ */
+router.delete("/share", authMiddleware, async (req: Request, res: Response) => {
+  const uid = req.uid!;
+  try {
+    const shares = await db.collection("medical_card_shares").where("userId", "==", uid).get();
+    const batch = db.batch();
+    shares.docs.forEach((d) => batch.delete(d.ref));
+    await batch.commit();
+    res.json({ success: true, revoked: shares.size });
+  } catch (error) {
+    console.error("[MedicalCard] share revoke error:", error);
+    res.status(500).json({ error: "Failed to revoke the link" });
   }
 });
 

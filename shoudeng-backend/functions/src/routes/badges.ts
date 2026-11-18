@@ -47,21 +47,16 @@ router.get("/", async (req: Request, res: Response) => {
       }
     }
 
-    // Active SOS events
-    const sosSnap = await db
-      .collection("sos_events")
-      .where("resolvedAt", "==", null)
-      .get();
-
-    let activeSOS = 0;
-    for (const doc of sosSnap.docs) {
-      // Check if any of the guardian's protected persons triggered this SOS
-      const eventData = doc.data();
-      const isRelevant = linksSnap.docs.some(
-        (l) => l.data().protectedPersonId === eventData.userId
-      );
-      if (isRelevant) activeSOS++;
-    }
+    // Open SOS of the people this guardian looks after (one small query each,
+    // never a scan of every open SOS in the database)
+    const personIds = [...new Set(linksSnap.docs.map((l) => l.data().protectedPersonId as string).filter(Boolean))];
+    const openCounts = await Promise.all(personIds.map(async (personId) =>
+      (await db.collection("sos_events")
+        .where("protectedPersonId", "==", personId)
+        .where("resolvedAt", "==", null)
+        .limit(1)
+        .get()).size));
+    const activeSOS = openCounts.reduce((a, b) => a + b, 0);
 
     // Unread family posts since last read timestamp
     const prefsDoc = await db.collection("user_preferences").doc(uid).get();

@@ -134,6 +134,20 @@ function consulateEntry(code: string) {
 }
 
 /**
+ * GET /v1/emergency-text/consulate (registered before /:lang, which would
+ * otherwise answer it with the English phrase)
+ * Get all available consulate data.
+ */
+router.get("/consulate", authMiddleware, (_req: Request, res: Response) => {
+  const countries = Object.keys(CONSULATE_DATA).map((code) => ({
+    countryCode: code,
+    countryName: CONSULATE_DATA[code].name,
+    emergencyNumber: getEmergencyNumber(code),
+  }));
+  res.json(countries);
+});
+
+/**
  * GET /v1/emergency-text/:lang
  * Get emergency help text in a specific language.
  * No auth required — must work when phone is partially accessible.
@@ -169,18 +183,5 @@ router.get(
     res.json(data);
   }
 );
-
-/**
- * GET /v1/consulate
- * Get all available consulate data.
- */
-router.get("/consulate", authMiddleware, (_req: Request, res: Response) => {
-  const countries = Object.keys(CONSULATE_DATA).map((code) => ({
-    countryCode: code,
-    countryName: CONSULATE_DATA[code].name,
-    emergencyNumber: getEmergencyNumber(code),
-  }));
-  res.json(countries);
-});
 
 export default router;
