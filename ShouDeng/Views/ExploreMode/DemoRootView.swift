@@ -11,7 +11,14 @@ struct DemoRootView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            #if DEBUG
+            // `-storeShots`: App Store screenshots without the DEMO bar
+            if !ProcessInfo.processInfo.arguments.contains("-storeShots") {
+                DemoBannerView(explore: explore)
+            }
+            #else
             DemoBannerView(explore: explore)
+            #endif
             FamilyStatusBar()
             switch coordinator.userRole {
             case .protected_:

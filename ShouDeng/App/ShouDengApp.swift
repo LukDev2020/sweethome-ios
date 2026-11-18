@@ -36,6 +36,13 @@ struct ShouDengApp: App {
                 .overlay { if ProcessInfo.processInfo.arguments.contains("-la-gallery") { LockScreenCardGallery() } }
                 // `-rider-mock`: Rider mode design mock (see RiderModeMock.swift)
                 .overlay { if ProcessInfo.processInfo.arguments.contains("-rider-mock") { RiderModeMock() } }
+                // `-plans-shot`: the plans screen on its own (App Store / IAP review screenshots)
+                .overlay {
+                    if ProcessInfo.processInfo.arguments.contains("-plans-shot") {
+                        NavigationStack { GuardianPlanBillingView() }
+                            .environmentObject(appDelegate.appCoordinator)
+                    }
+                }
                 #endif
                 .preferredColorScheme(colorScheme)
                 // Firebase phone-auth reCAPTCHA callback + shoudeng:// deep links

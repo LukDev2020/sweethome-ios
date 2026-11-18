@@ -22,7 +22,13 @@ struct GuardianPlanBillingView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var langManager = LanguageManager.shared
     /// Yearly first: it is what most families choose, and its card points to lifetime
-    @State private var billingCycle: BillingCycle = .yearly
+    @State private var billingCycle: BillingCycle = {
+        #if DEBUG
+        // App Store screenshots (StoreShotsHostTests) pick the tab to show
+        if let raw = UserDefaults.standard.string(forKey: "plansShotCycle"), let c = BillingCycle(rawValue: raw) { return c }
+        #endif
+        return .yearly
+    }()
     @State private var selectedPlan: PlanTier = .family
     @State private var restoreResult: StoreKitManager.RestoreResult?
     @State private var showPaymentSuccess = false
@@ -272,6 +278,15 @@ struct GuardianPlanBillingView: View {
 
     // MARK: - Plan Cards
 
+    /// App Store screenshots of the Essential plan (StoreShotsHostTests); always false in release
+    private static var essentialFirst: Bool {
+        #if DEBUG
+        return UserDefaults.standard.bool(forKey: "plansShotEssentialFirst")
+        #else
+        return false
+        #endif
+    }
+
     @ViewBuilder
     private var planCards: some View {
         let store = coordinator.storeKitManager
@@ -300,8 +315,13 @@ struct GuardianPlanBillingView: View {
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                familyPlanCard
-                singlePlanCard
+                if Self.essentialFirst {
+                    singlePlanCard
+                    familyPlanCard
+                } else {
+                    familyPlanCard
+                    singlePlanCard
+                }
                 if billingCycle == .lifetime {
                     Text(langManager.localized("store.lifetime.footnote"))
                         .font(.scaled(size: 11))
