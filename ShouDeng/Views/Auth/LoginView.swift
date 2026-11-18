@@ -639,14 +639,12 @@ struct LoginView: View {
 
         do {
             if codeSent {
-                // Check for duress code — silently trigger SOS after login
-                let isDuressCode = KeychainHelper.shared.read(.duressCode) == code && !code.isEmpty
+                // (No duress check here: the field holds the SMS code, which can
+                // never equal the duress code, and nobody is signed in to send an
+                // SOS for yet. The duress code works on the SOS end screen.)
                 try await coordinator.authManager.login(phone: fullPhoneNumber, code: code)
                 failedAttempts = 0
                 UserDefaults.standard.set(0, forKey: failedAttemptsKey)
-                if isDuressCode {
-                    coordinator.triggerDuressSOS()
-                }
             } else {
                 try await coordinator.authManager.requestCode(phone: fullPhoneNumber)
                 codeSent = true
@@ -667,7 +665,7 @@ struct LoginView: View {
                 return
             }
 
-            if codeSent {
+            if codeSent, AuthError.isWrongCode(error) {
                 failedAttempts += 1
                 UserDefaults.standard.set(failedAttempts, forKey: failedAttemptsKey)
                 if failedAttempts >= maxAttempts {

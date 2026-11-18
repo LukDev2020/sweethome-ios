@@ -1,41 +1,45 @@
 Review Notes for Apple App Review Team
 
 1. APP PURPOSE
-ShouDeng is a family safety app. It connects "Protected Persons" (e.g., elderly parents, children) with "Guardians" (family members who watch over them). The app provides emergency SOS alerts, location sharing, check-ins, and medical card features.
+Beaconify (守灯 in Chinese) is a family safety app. It connects people being looked after ("Protected") with family members who look after them ("Guardians"). It provides an SOS alert to family, location sharing with family the person approves, check-ins, a home-arrival timer, and a medical card.
 
-2. TEST ACCOUNT
-Phone: +1 650-555-0100
-OTP Code: 123456
-Role: Guardian (has one linked protected person)
+2. TRYING THE APP
+- Without an account: on the sign-in screen tap "Try a demo first" for a guided demo with a sample family. Nothing is sent to real people.
+- Test account (sign in with phone):
+  Phone: +1 650-555-0100
+  SMS code: 123456
+  Role: Guardian, with one linked protected person.
+- Sign in with Apple is offered next to phone sign-in.
 
-3. SOS FEATURE EXPLANATION
-The app has a prominent red SOS button. When tapped:
-- It sends push notifications to all linked guardians with the user's GPS location
-- It does NOT call 911 or any emergency services
-- The onboarding flow clearly disclaims this: "ShouDeng is not an emergency service"
-- Users must acknowledge this disclaimer before using the app
+3. SOS
+- The red SOS button sends an alert to the person's own guardians (push, then SMS and a voice call if nobody responds), with their location.
+- It does NOT contact 911 or any emergency service. The onboarding and the SOS screen say so: "Beaconify is not an emergency service. In danger, call your local emergency number first."
+- A short cancel countdown prevents accidental alerts.
 
-4. LOCATION USAGE
-- Location is used to share the protected person's position with their guardians
-- "Always" location is requested so check-in reminders and safe-zone alerts work in the background
-- Users can pause location sharing at any time from Settings
-- Location is never shared with third parties or used for advertising
+4. LOCATION
+- Shared only with the guardians the person has approved, who can be limited per guardian (location can be hidden from any of them).
+- "Always" permission keeps safe-zone and check-in alerts working in the background; sharing can be paused in Settings.
+- Never sold, never used for advertising, never shared with other third parties.
 
 5. BACKGROUND MODES
-- Location updates: For safe-zone monitoring and heartbeat signals
-- Remote notifications: For SOS alerts and check-in reminders
-- Background fetch: To refresh subscription status
+- location: safe-zone monitoring, location for family during an SOS, trip recording the person starts.
+- remote-notification: SOS alerts, check-in reminders, silent heartbeat checks.
+- fetch: the "check-in timer" (dead-man switch) — a BGAppRefreshTask (com.shoudeng.deadman.check) that sends the SOS if the person doesn't check in by the time they set.
+- bluetooth-central: an optional Bluetooth panic button or tag the person pairs in Settings (press to send SOS; alert when a tag is left behind). Used only after pairing.
 
-6. SUBSCRIPTIONS
-- 3 paid tiers (Single, Family, Ultimate) x 2 periods (Monthly, Yearly) = 6 products
-- Free tier is fully functional for basic SOS and check-in with 1 guardian
-- No paywall blocks core safety features
-- Subscription can be cancelled anytime via Apple ID settings
+6. PERMISSIONS
+- Microphone and speech recognition: only if the person turns on voice SOS ("help" / "救命") or distress-sound detection. Recognition and sound classification run on the device; no audio is recorded or uploaded.
+- Motion: optional fall detection (60-second "Are you OK?" countdown before family is alerted).
+- Contacts: only the contact the person picks with the system contact picker, to add as an emergency contact.
+- Photos: photos the person chooses to post to their private family feed.
 
-7. HEALTH DATA
-- Medical card data (blood type, allergies, medications) is user-entered, not collected from HealthKit
-- No HealthKit integration
+7. SUBSCRIPTIONS
+- Plans: Single, Family (monthly / yearly / lifetime) and Ultimate (monthly / yearly).
+- SOS, check-ins and one guardian work without paying; no paywall blocks basic safety features.
+- Price, period and auto-renewal are shown before purchase, with Terms of Use (Apple EULA) and Privacy Policy links; Restore Purchases is on the paywall and in Settings.
 
-8. CONTACTS
-- Contacts are accessed only when the user manually adds an emergency contact
-- The full address book is never uploaded or scanned in the background
+8. HEALTH DATA
+- The medical card (blood type, allergies, medications) is typed in by the person. No HealthKit.
+
+9. ACCOUNT DELETION
+- Settings > Delete Account, for both roles. It deletes the account and its data on our servers and revokes Sign in with Apple.

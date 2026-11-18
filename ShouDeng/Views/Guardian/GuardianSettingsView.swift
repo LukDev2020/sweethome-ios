@@ -106,9 +106,8 @@ struct GuardianSettingsView: View {
                         do {
                             try await coordinator.switchRole(to: .protected_)
                         } catch {
-                            #if DEBUG
-                            print("[Settings] Role switch failed: \(error)")
-                            #endif
+                            // Offline or a server error: say so instead of doing nothing
+                            showDeleteError = true
                         }
                     }
                 }
@@ -992,7 +991,7 @@ struct GuardianSettingsView: View {
                 "/v1/user/delete",
                 body: EmptyBody()
             )
-            coordinator.authManager.logout()
+            coordinator.accountWasDeleted()
         } catch {
             showDeleteError = true
         }

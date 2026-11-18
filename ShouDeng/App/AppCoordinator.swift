@@ -654,6 +654,9 @@ final class AppCoordinator: ObservableObject {
         heartbeatService.appDidBecomeActive()
         // An SOS a guardian closed while we were away: drop the stale local copy
         if activeSOSEvent != nil, !isDemo { Task { await refreshOwnSOSStatus() } }
+        // A guardian coming back after hours sees current place, battery and status
+        // (and not someone who has since removed them)
+        if userRole == .guardian, !isDemo { Task { await fetchProtectedPersons() } }
         // Fall detection runs while the app is open, for the person being protected
         // (matches NSMotionUsageDescription)
         if userRole == .protected_ {
@@ -1727,6 +1730,14 @@ final class AppCoordinator: ObservableObject {
 
     private var hasQueuedSOSTrigger: Bool {
         offlineQueue.peekAll().contains { $0.path == "/v1/sos/trigger" }
+    }
+
+    /// The server deleted the account: sign out and leave nothing of it on this
+    /// phone (keychain secrets survive a plain sign-out on purpose; not this).
+    func accountWasDeleted() {
+        guard !isDemo else { authManager.logout(); return }
+        authManager.logout()
+        KeychainHelper.shared.wipeForDeletedAccount()
     }
 
     /// After a relaunch in the middle of an SOS (iOS ended the app in the

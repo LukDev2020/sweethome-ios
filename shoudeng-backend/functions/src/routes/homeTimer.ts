@@ -108,7 +108,10 @@ router.post("/dismiss", async (req: Request, res: Response) => {
     // M1 fix: use transaction to prevent race condition
     await db.runTransaction(async (transaction) => {
       const timerDoc = await transaction.get(timerRef);
-      if (!timerDoc.exists || timerDoc.data()!.status !== "active") {
+      // "escalated" too: after the family was told she's late, "I'm home" must
+      // still reach them
+      const status = timerDoc.data()?.status;
+      if (!timerDoc.exists || (status !== "active" && status !== "escalated")) {
         throw new Error("NO_ACTIVE_TIMER");
       }
       transaction.update(timerRef, {
@@ -122,7 +125,7 @@ router.post("/dismiss", async (req: Request, res: Response) => {
       userId: uid,
       timestamp: now,
       type: "homeTimerDismissed",
-      description: "已安全到达",
+      description: "Arrived safely",
       detail: null,
     });
 

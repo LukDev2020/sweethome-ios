@@ -16,6 +16,7 @@ struct ArrivalReportView: View {
     @State private var placeName = ""
     @State private var isSending = false
     @State private var didSend = false
+    @State private var sendFailed = false
 
     @ObservedObject private var lang = LanguageManager.shared
 
@@ -25,6 +26,15 @@ struct ArrivalReportView: View {
     }
 
     var body: some View {
+        content
+            .alert(lang.localized("arrival.notSent.title"), isPresented: $sendFailed) {
+                Button(lang.localized("settings.action.ok")) {}
+            } message: {
+                Text(lang.localized("arrival.notSent.body"))
+            }
+    }
+
+    private var content: some View {
         NavigationStack {
             VStack(spacing: 24) {
                 Spacer()
@@ -156,11 +166,10 @@ struct ArrivalReportView: View {
                 )
             )
         } catch {
-            #if DEBUG
-            print("[ArrivalReport] send error (using local fallback): \(error)")
-            #endif
+            // Never show "Sent" when the family got nothing
+            await MainActor.run { sendFailed = true }
+            return
         }
-        // Always confirm locally so the UI responds even without backend
         coordinator.addTimelineEntry(
             type: .arrivalReport,
             description: placeName.isEmpty ? lang.localized("arrival.timeline")

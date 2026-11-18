@@ -132,6 +132,20 @@ final class KeychainHelper {
         }
     }
 
+    /// The account was deleted: remove everything this app keeps in the keychain
+    /// on this phone — the session, the duress code, safety settings
+    /// (com.shoudeng.prefs) and the end-to-end encryption key (com.shoudeng.e2e),
+    /// so the next account on this phone inherits none of it.
+    func wipeForDeletedAccount() {
+        for svc in [service, safetyService, "com.shoudeng.e2e"] {
+            let query: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: svc,
+            ]
+            SecItemDelete(query as CFDictionary)
+        }
+    }
+
     // MARK: - Generic String-Key Access (for safety feature settings)
     // Uses a separate service name to avoid collisions with auth keys.
     // Data stored here is hidden from device backups (kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly).

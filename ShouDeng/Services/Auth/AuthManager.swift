@@ -516,6 +516,13 @@ final class AuthManager: ObservableObject {
 // MARK: - Auth Errors
 
 enum AuthError: LocalizedError {
+    /// Only a wrong code counts toward the login lockout — never a network
+    /// error, a busy server or an expired sign-in
+    static func isWrongCode(_ error: Error) -> Bool {
+        if case AuthError.invalidVerificationCode = error { return true }
+        return false
+    }
+
     case noVerificationID
     case firebaseNotConfigured
     case invalidVerificationCode
@@ -622,7 +629,17 @@ final class FirebasePhoneAuthProvider: PhoneAuthProviding {
             verificationCode: verificationCode
         )
 
-        let result = try await Auth.auth().signIn(with: credential)
+        let result: AuthDataResult
+        do {
+            result = try await Auth.auth().signIn(with: credential)
+        } catch let error as NSError where error.domain == AuthErrorDomain {
+            // A wrong code is the only failure that counts toward the lockout
+            switch AuthErrorCode(rawValue: error.code) {
+            case .invalidVerificationCode: throw AuthError.invalidVerificationCode
+            case .tooManyRequests: throw AuthError.tooManyRequests
+            default: throw error
+            }
+        }
         let idToken = try await result.user.getIDToken()
         return idToken
     }

@@ -25,10 +25,20 @@ struct HomeTimerView: View {
     @State private var tick = Date()
     @State private var isLoading = false
     @State private var hasEscalated = false
+    @State private var startFailed = false
 
     nonisolated(unsafe) private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
+        content
+            .alert(langManager.localized("homeTimer.notStarted.title"), isPresented: $startFailed) {
+                Button(langManager.localized("settings.action.ok")) {}
+            } message: {
+                Text(langManager.localized("homeTimer.notStarted.body"))
+            }
+    }
+
+    private var content: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 if isActive, let deadline = activeDeadline {
@@ -247,11 +257,11 @@ struct HomeTimerView: View {
                 )
             )
         } catch {
-            #if DEBUG
-            print("[HomeTimer] start error (using local fallback): \(error)")
-            #endif
+            // Without the server's copy nobody would be alerted when it runs out:
+            // say so instead of showing a countdown that protects nobody
+            await MainActor.run { startFailed = true }
+            return
         }
-        // Always activate locally so timer works even without backend
         await MainActor.run {
             activeDeadline = selectedTime
             activeLabel = label

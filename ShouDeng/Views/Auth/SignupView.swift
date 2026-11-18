@@ -577,7 +577,7 @@ struct SignupView: View {
                 coordinator.showSignup = false
             }
         } catch {
-            if step == .code {
+            if step == .code, AuthError.isWrongCode(error) {
                 failedAttempts += 1
                 UserDefaults.standard.set(failedAttempts, forKey: failedAttemptsKey)
                 if failedAttempts >= maxAttempts {

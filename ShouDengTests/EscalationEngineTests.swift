@@ -131,9 +131,11 @@ final class CriticalAlertClaimsTests: XCTestCase {
 
     /// TestFlight build 33: an SOS left active on the phone made every press of the
     /// SOS button do nothing. A press now opens the running SOS instead.
+    /// (A recent one: an SOS older than a minute is first checked with the server,
+    /// and one past the 30-minute join window is replaced by a new SOS.)
     func testPressingSOSWhileOneIsActiveShowsIt() {
         let coordinator = AppCoordinator()
-        coordinator.activeSOSEvent = SOSEvent(id: "old", protectedPersonId: "me", triggeredAt: Date().addingTimeInterval(-3600),
+        coordinator.activeSOSEvent = SOSEvent(id: "old", protectedPersonId: "me", triggeredAt: Date().addingTimeInterval(-30),
                                               triggerMethod: .longPress, location: nil, batteryLevel: nil,
                                               escalationState: .initiated, resolvedAt: nil, resolvedBy: nil, resolution: nil)
         coordinator.isSOSScreenPresented = false

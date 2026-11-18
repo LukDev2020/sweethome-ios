@@ -122,6 +122,10 @@ struct GuardianHomeView: View {
                 await coordinator.fetchProtectedPersons()
                 await coordinator.fetchFamilyPosts()
             }
+            // Pull down for the latest place, battery and status of everyone
+            .refreshable {
+                await coordinator.fetchProtectedPersons()
+            }
         }
     }
 
