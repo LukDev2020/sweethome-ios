@@ -715,4 +715,109 @@ struct LockScreenCardGallery: View {
         }
     }
 }
+
+/// `-lockscreen-shot protected|guardian`: one card on an iPhone-style lock screen
+/// (clock, date, wallpaper) with English sample data, for App Store screenshots.
+struct LockScreenShot: View {
+    let guardian: Bool
+
+    private static var now: Date {
+        var c = DateComponents(); c.year = 2026; c.month = 11; c.day = 18; c.hour = 9; c.minute = 41
+        return Calendar.current.date(from: c) ?? Date()
+    }
+
+    private var protectedState: ProtectedActivityAttributes.ContentState {
+        let now = Self.now
+        return .init(
+            status: .timerRunning,
+            statusText: WidgetDataStore.localized("la.home.timer"),
+            guardians: [
+                .init(name: "Sarah", initial: "S", isOnDuty: true, isOnline: true),
+                .init(name: "Kevin", initial: "K", isOnDuty: false, isOnline: true),
+            ],
+            lastCheckIn: now.addingTimeInterval(-25 * 60),
+            // The countdown runs against the real clock
+            homeTimerDeadline: Date().addingTimeInterval(18 * 60 + 20),
+            homeTimerLabel: nil,
+            emergencyPhone: "911",
+            emergencyLabel: "911",
+            bloodType: "A+",
+            allergies: ["Penicillin"],
+            conditions: [],
+            emergencyNote: nil,
+            emergencyMedications: [.init(name: "Nitroglycerin", location: "Handbag", dosage: "")],
+            latestUpdate: "Sarah: Mom, are you home yet?",
+            latestUpdateAt: now.addingTimeInterval(-6 * 60)
+        )
+    }
+
+    private var guardianState: GuardianActivityAttributes.ContentState {
+        let now = Self.now
+        return .init(
+            overallStatus: .needsAttention,
+            overallStatusText: WidgetDataStore.localized("la.needs.attention"),
+            persons: [
+                .init(id: "1", displayName: "Mom", initial: "M", status: .normal, cityName: "Chengdu",
+                      lastCheckIn: now.addingTimeInterval(-25 * 60), batteryLevel: 0.82),
+                .init(id: "2", displayName: "Dad", initial: "D", status: .overdue, cityName: "Chengdu",
+                      lastCheckIn: now.addingTimeInterval(-9 * 3600), batteryLevel: 0.15),
+            ],
+            priorityPersonName: "Dad",
+            priorityPersonPhone: "+15555550123",
+            updatedAt: now
+        )
+    }
+
+    var body: some View {
+        GeometryReader { geo in
+            let cardWidth = min(geo.size.width - 28, 520)
+            ZStack {
+                LinearGradient(colors: [Color(red: 0.05, green: 0.09, blue: 0.17),
+                                        Color(red: 0.13, green: 0.20, blue: 0.36),
+                                        Color(red: 0.62, green: 0.40, blue: 0.20)],
+                               startPoint: .top, endPoint: .bottom)
+                    .ignoresSafeArea()
+                VStack(spacing: 0) {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 18, weight: .semibold))
+                        .padding(.top, geo.safeAreaInsets.top > 30 ? 6 : 20)
+                    Text("Wednesday, November 18")
+                        .font(.system(size: 21, weight: .semibold))
+                        .padding(.top, 10)
+                    Text("9:41")
+                        .font(.system(size: 104, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                    Spacer()
+                    Group {
+                        if guardian {
+                            GuardianLockScreenCard(state: guardianState)
+                        } else {
+                            ProtectedLockScreenCard(state: protectedState)
+                        }
+                    }
+                    .frame(width: cardWidth)
+                    .background(LockScreenCardStyle.stored.theme.background)
+                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                    .padding(.bottom, 36)
+                    HStack {
+                        circle("flashlight.off.fill")
+                        Spacer()
+                        circle("camera.fill")
+                    }
+                    .padding(.horizontal, 46)
+                    .padding(.bottom, 26)
+                }
+                .foregroundStyle(.white)
+            }
+        }
+        .environment(\.colorScheme, .dark)
+    }
+
+    private func circle(_ symbol: String) -> some View {
+        Image(systemName: symbol)
+            .font(.system(size: 20, weight: .medium))
+            .frame(width: 50, height: 50)
+            .background(.ultraThinMaterial, in: Circle())
+    }
+}
 #endif

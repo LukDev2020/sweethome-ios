@@ -16,6 +16,9 @@ struct ShouDengApp: App {
     /// Onboarding is drawn dark (a light scheme left the status bar black on black);
     /// otherwise — the demo included — the in-app dark mode setting.
     private var colorScheme: ColorScheme {
+        #if DEBUG
+        if UserDefaults.standard.string(forKey: "lockscreen-shot") != nil { return .dark } // white status bar
+        #endif
         if explore.isActive { return darkModeEnabled ? .dark : .light }
         let onboarding = !onboardingComplete || onboardingCopyVersion != DisclaimerCopy.Onboarding.version
             || ProcessInfo.processInfo.arguments.contains("-show-onboarding")
@@ -36,6 +39,12 @@ struct ShouDengApp: App {
                 .overlay { if ProcessInfo.processInfo.arguments.contains("-la-gallery") { LockScreenCardGallery() } }
                 // `-rider-mock`: Rider mode design mock (see RiderModeMock.swift)
                 .overlay { if ProcessInfo.processInfo.arguments.contains("-rider-mock") { RiderModeMock() } }
+                // `-lockscreen-shot protected|guardian`: a lock screen with the Live Activity card
+                .overlay {
+                    if let role = UserDefaults.standard.string(forKey: "lockscreen-shot") {
+                        LockScreenShot(guardian: role == "guardian")
+                    }
+                }
                 // `-plans-shot`: the plans screen on its own (App Store / IAP review screenshots)
                 .overlay {
                     if ProcessInfo.processInfo.arguments.contains("-plans-shot") {
