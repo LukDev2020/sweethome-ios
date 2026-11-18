@@ -13,10 +13,17 @@ const db = admin.firestore();
  * Checks for expired home timers and sends escalation notifications to guardians.
  */
 export const checkHomeTimerExpiry = functions
-  .runWith({ secrets: PUSH_SECRETS })
+  .runWith({ secrets: PUSH_SECRETS, timeoutSeconds: 120 })
   .pubsub
   .schedule("every 1 minutes")
   .onRun(async () => {
+    // First: a detected fall the phone never answered (locked face-down, app
+    // killed, battery dead) becomes an SOS — nothing slower may delay it
+    try {
+      await escalateUnansweredFalls();
+    } catch (error) {
+      console.error("[Fall] unanswered fall check failed:", error);
+    }
     // Rider shifts past their planned end without a check-in (same 1-minute cadence)
     try {
       await checkOverdueShifts();
@@ -28,12 +35,6 @@ export const checkHomeTimerExpiry = functions
       await checkStillOk();
     } catch (error) {
       console.error("[Crew] still-OK check failed:", error);
-    }
-    // A detected fall the phone never answered (locked face-down, app killed, battery dead)
-    try {
-      await escalateUnansweredFalls();
-    } catch (error) {
-      console.error("[Fall] unanswered fall check failed:", error);
     }
     try {
       const now = admin.firestore.Timestamp.now();

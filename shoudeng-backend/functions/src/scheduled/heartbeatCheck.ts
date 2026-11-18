@@ -3,6 +3,7 @@ import * as admin from "firebase-admin";
 import { PUSH_SECRETS } from "../config/params";
 import { getLatestHeartbeat, bqTimestampToIso } from "../services/bigquery";
 import { sendHeartbeatMissingAlert } from "../services/fcm";
+import { watchedPeople } from "../services/watchedPeople";
 
 const db = admin.firestore();
 
@@ -15,24 +16,19 @@ const HEARTBEAT_MISSING_THRESHOLD_MIN = 30;
  * Sends alert to their guardians.
  */
 export const checkHeartbeatMissing = functions
-  .runWith({ secrets: PUSH_SECRETS })
+  .runWith({ secrets: PUSH_SECRETS, timeoutSeconds: 240 })
   .pubsub
   .schedule("every 5 minutes")
   .onRun(async () => {
     console.log("[Scheduled] Running heartbeat missing check");
 
     try {
-      // Get all protected users
-      const usersSnapshot = await db
-        .collection("users")
-        .where("role", "==", "protected")
-        .get();
-
-      for (const userDoc of usersSnapshot.docs) {
+      // Everyone someone looks after (not only accounts with role "protected")
+      for (const person of await watchedPeople()) {
         try {
-          await checkUser(userDoc.id, userDoc.data().displayName);
+          await checkUser(person.id, person.displayName);
         } catch (err) {
-          console.error(`[Scheduled] Heartbeat check failed for ${userDoc.id}:`, err);
+          console.error(`[Scheduled] Heartbeat check failed for ${person.id}:`, err);
         }
       }
     } catch (error) {

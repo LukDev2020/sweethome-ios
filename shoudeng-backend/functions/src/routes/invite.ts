@@ -310,28 +310,38 @@ router.post("/accept", createRateLimiter(RATE_LIMITS.invite), async (req: Reques
       return { guardianId, protectedPersonId, linkId, acceptorRole };
     });
 
-    // Log consent (outside transaction — non-critical)
-    await insertConsentAudit({
-      userId: result.protectedPersonId,
-      consentType: "guardian_link",
-      action: "granted",
-      grantedTo: result.guardianId,
-      detail: `Guardian link established via invite ${inviteRef.id}`,
-    });
-
+    // The link exists now: nothing below may turn this into a "failed" answer
+    // (a retry would then hit "invite already used").
     // The guardian's own opt-in to receive SOS alerts as iOS Critical Alerts.
     if (uid === result.guardianId) {
-      await db.collection("users").doc(uid).set(
-        { notificationPrefs: { sosCriticalAlerts: criticalAlertConsent } },
-        { merge: true }
-      );
+      try {
+        await db.collection("users").doc(uid).set(
+          { notificationPrefs: { sosCriticalAlerts: criticalAlertConsent } },
+          { merge: true }
+        );
+      } catch (error) {
+        console.warn("[Invite] critical-alert preference not saved:", (error as Error).message);
+      }
+    }
+    try {
       await insertConsentAudit({
-        userId: uid,
-        consentType: "sos_critical_alerts",
-        action: criticalAlertConsent ? "granted" : "declined",
-        grantedTo: result.protectedPersonId,
-        detail: `SOS critical alert consent at guardian link ${result.linkId}`,
+        userId: result.protectedPersonId,
+        consentType: "guardian_link",
+        action: "granted",
+        grantedTo: result.guardianId,
+        detail: `Guardian link established via invite ${inviteRef.id}`,
       });
+      if (uid === result.guardianId) {
+        await insertConsentAudit({
+          userId: uid,
+          consentType: "sos_critical_alerts",
+          action: criticalAlertConsent ? "granted" : "declined",
+          grantedTo: result.protectedPersonId,
+          detail: `SOS critical alert consent at guardian link ${result.linkId}`,
+        });
+      }
+    } catch (error) {
+      console.error("[Invite] consent audit write failed (link kept):", error);
     }
 
     res.json({

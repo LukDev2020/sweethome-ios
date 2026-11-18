@@ -448,7 +448,9 @@ export async function checkOverdueShifts(now: Date = new Date()): Promise<number
       ...(await activeGuardianIds(uid)),
     ]);
     await Promise.all([...recipients].map((to) => sendShiftOverdueNotification(to, name, minutes, uid)));
-    await doc.ref.update({ overdueAlerted: true });
+    // Alerted once: drop the due time so the every-minute scan stops reading
+    // this shift (a new plan sets it again)
+    await doc.ref.update({ overdueAlerted: true, checkDueAt: null });
     alerted++;
   }
   return alerted;

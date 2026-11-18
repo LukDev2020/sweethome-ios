@@ -308,6 +308,21 @@ export class FakeQuery {
   }
 }
 
+/** db.collectionGroup(name): every collection called `name`, at any depth (equality filters) */
+export class FakeCollectionGroup {
+  constructor(private readonly name: string, private readonly filters: Filter[] = []) {}
+  where(field: string, op: string, value: unknown) {
+    return new FakeCollectionGroup(this.name, [...this.filters, { field, op, value }]);
+  }
+  async get() {
+    const docs = [...store.entries()]
+      .filter(([p]) => { const parts = p.split("/"); return parts.length % 2 === 0 && parts[parts.length - 2] === this.name; })
+      .filter(([, d]) => this.filters.every((f) => matches(d, f)))
+      .map(([p, d]) => new FakeDocSnapshot(new FakeDocRef(p), d));
+    return { docs, empty: docs.length === 0, size: docs.length, forEach: (fn: (d: FakeDocSnapshot) => void) => docs.forEach(fn) };
+  }
+}
+
 export class FakeCollectionRef extends FakeQuery {
   constructor(collPath: string) { super(collPath); }
   get id() { return this.collPath.split("/").pop()!; }
@@ -403,6 +418,7 @@ const auth = {
 
 export const fakeDb = {
   collection: (name: string) => new FakeCollectionRef(name),
+  collectionGroup: (name: string) => new FakeCollectionGroup(name),
   doc: (p: string) => new FakeDocRef(p),
   batch: () => new FakeWriteBatch(),
   runTransaction: async <T>(fn: (t: FakeTransaction) => Promise<T>) => {

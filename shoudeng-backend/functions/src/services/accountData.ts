@@ -1,6 +1,7 @@
 import * as admin from "firebase-admin";
 import { BigQuery } from "@google-cloud/bigquery";
 import { PLANS, paidPlanOf, SUBSCRIPTION_OWNERS } from "./payment";
+import { leaveCrew } from "./crew";
 
 // Account data rights: export, erasure, and per-plan retention.
 // The in-app privacy policy (iOS LegalView.swift) describes exactly what this does —
@@ -205,10 +206,24 @@ async function deleteWhere(query: FirebaseFirestore.Query): Promise<number> {
  * consent_audit (legal record of consent), evidence_holds (legal holds; files expire in 90 days).
  */
 export async function eraseAccount(uid: string): Promise<{ bigQueryComplete: boolean }> {
+  // Leave the crew first: it updates the user doc, which is deleted below (and the
+  // crew mates must stop getting this person's shift alerts)
+  try {
+    await leaveCrew(uid);
+  } catch (error) {
+    console.warn(`[Erase] leaving the crew for ${uid}:`, (error as Error).message);
+  }
+  // Nobody keeps watching shifts of, or being watched by, a deleted account
+  const watching = await db.collection("users").where("riderWatchers", "array-contains", uid).get();
+  await Promise.all(watching.docs.map((d) =>
+    d.ref.update({ riderWatchers: admin.firestore.FieldValue.arrayRemove(uid) })));
+
   // Docs keyed by uid; recursiveDelete also removes subcollections
   // (users/{uid}/ble_tags, ble_sightings, timeline).
   const byId = ["users", "subscriptions", "home_timers", "medical_cards", "selected_hotlines",
-    "user_telemetry", "emergency_contacts", "silent_alarm_schedules"];
+    "user_telemetry", "emergency_contacts", "silent_alarm_schedules",
+    // An open shift would keep sending "shift overdue" alerts for a deleted person
+    "rider_shifts", "user_preferences"];
   await Promise.all(byId.map((c) => db.recursiveDelete(db.collection(c).doc(uid))));
 
   await Promise.all([
@@ -231,6 +246,14 @@ export async function eraseAccount(uid: string): Promise<{ bigQueryComplete: boo
     deleteWhere(db.collection("family_posts").where("authorId", "==", uid)), // + comments
     deleteWhere(db.collection(SUBSCRIPTION_OWNERS).where("uid", "==", uid)), // frees the Apple subscription
     deleteWhere(db.collection("auth_identities").where("uid", "==", uid)),   // Apple / Alipay / added phone
+    deleteWhere(db.collection("safety_events").where("userId", "==", uid)),   // falls, crashes (place, battery)
+    deleteWhere(db.collection("incident_reports").where("personId", "==", uid)),
+    deleteWhere(db.collection("incident_reports").where("createdBy", "==", uid)),
+    deleteWhere(db.collection("claim_material_exports").where("userId", "==", uid)),
+    deleteWhere(db.collection("org_members").where("userId", "==", uid)),
+    deleteWhere(db.collection("org_roll_calls").where("userId", "==", uid)),
+    // Comments left on other people's family posts (name + text)
+    deleteWhere(db.collectionGroup("comments").where("authorId", "==", uid)),
   ]);
 
   try {

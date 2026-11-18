@@ -2,6 +2,7 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { PUSH_SECRETS } from "../config/params";
 import { sendCheckinReminder } from "../services/fcm";
+import { watchedPeople } from "../services/watchedPeople";
 
 const db = admin.firestore();
 
@@ -14,7 +15,7 @@ const CHECKIN_OVERDUE_HOURS = 8;
  * Sends reminder to their guardians.
  */
 export const checkCheckinOverdue = functions
-  .runWith({ secrets: PUSH_SECRETS })
+  .runWith({ secrets: PUSH_SECRETS, timeoutSeconds: 240 })
   .pubsub
   .schedule("every 15 minutes")
   .onRun(async () => {
@@ -25,15 +26,10 @@ export const checkCheckinOverdue = functions
         new Date(Date.now() - CHECKIN_OVERDUE_HOURS * 60 * 60 * 1000)
       );
 
-      // Get all protected users
-      const usersSnapshot = await db
-        .collection("users")
-        .where("role", "==", "protected")
-        .get();
-
-      for (const userDoc of usersSnapshot.docs) {
-        const userId = userDoc.id;
-        const userName = userDoc.data().displayName;
+      // Everyone someone looks after (not only accounts with role "protected")
+      for (const person of await watchedPeople()) {
+        const userId = person.id;
+        const userName = person.displayName;
 
         // Get latest check-in
         const checkinSnapshot = await db
@@ -46,7 +42,7 @@ export const checkCheckinOverdue = functions
         let isOverdue = false;
         if (checkinSnapshot.empty) {
           // Never checked in — overdue if account is older than threshold
-          const createdAt = userDoc.data().createdAt;
+          const createdAt = person.createdAt;
           if (createdAt && createdAt.toDate() < cutoff.toDate()) {
             isOverdue = true;
           }

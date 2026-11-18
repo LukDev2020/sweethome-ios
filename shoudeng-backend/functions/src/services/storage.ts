@@ -118,8 +118,9 @@ export async function cleanupExpiredEvidence(olderThanDays: number): Promise<num
   let deleted = 0;
 
   for (const file of files) {
-    const metadata = await file.getMetadata();
-    const created = new Date(metadata[0].timeCreated as string);
+    // The listing already carries the metadata; fetch it only if missing
+    const listed = file.metadata?.timeCreated as string | undefined;
+    const created = new Date(listed ?? ((await file.getMetadata())[0].timeCreated as string));
     if (created < cutoff) {
       await file.delete();
       deleted++;
