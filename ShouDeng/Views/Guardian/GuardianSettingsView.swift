@@ -779,12 +779,14 @@ struct GuardianSettingsView: View {
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             toggleRow(langManager.localized("settings.notification.sos"), isOn: $notifSOS)
-            toggleRow(langManager.localized("settings.notification.sosCritical"), isOn: $notifSOSCritical)
-                .disabled(!notifSOS)
-            Text(langManager.localized("settings.notification.sosCritical.footnote"))
-                .font(.scaled(size: 11))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            if PushService.criticalAlertsEntitled {
+                toggleRow(langManager.localized("settings.notification.sosCritical"), isOn: $notifSOSCritical)
+                    .disabled(!notifSOS)
+                Text(langManager.localized("settings.notification.sosCritical.footnote"))
+                    .font(.scaled(size: 11))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             toggleRow(langManager.localized("guardian.settings.notification.checkInOverdue"), isOn: $notifCheckinOverdue)
             toggleRow(langManager.localized("settings.notification.familyFeed"), isOn: $notifFamilyFeed)
         }

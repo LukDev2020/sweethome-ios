@@ -58,7 +58,7 @@
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Beaconify connects to your Bluetooth panic button and tracking tags to trigger SOS alerts and detect separation. Bluetooth is used only after you pair a device in Settings.</string>
 	<key>NSContactsUsageDescription</key>
-	<string>Access your contacts to quickly add emergency contact information. Contact data is not uploaded to our servers.</string>
+	<string>Pick someone from your contacts to add as an emergency contact. Only the person you choose (name and phone number) is saved to your account, so your SOS texts can reach them.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Beaconify uses Face ID to verify your identity and protect access to your family safety data.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
@@ -66,7 +66,7 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Beaconify uses your location to show where you are on the map and to send your position to chosen family members during an SOS. Used only after you accept in-app consent.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>During an active SOS, the microphone may record ambient audio to help your chosen family members assess the situation. Recording starts only if you have enabled this option and local laws permit it.</string>
+	<string>If you turn on voice SOS or distress-sound detection, Beaconify listens for your SOS phrase or a scream so it can send your SOS hands-free. Listening happens on your device; audio is not recorded or uploaded.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>Beaconify uses motion sensors to detect a possible fall while the app is open. If a fall is detected, you have 60 seconds to dismiss the alert before your family is notified.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
@@ -74,7 +74,7 @@
 	<key>NSPrivacyPolicyURL</key>
 	<string>https://shoudeng.app/privacy</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Voice commands let you trigger an SOS hands-free by saying "help" or "救命". All recognition is processed on your device.</string>
+	<string>Voice SOS listens for a phrase such as “help” or “救命” and sends your SOS hands-free. Recognition runs on your device; where your phone can’t do that, voice SOS stays off.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>UIBackgroundModes</key>

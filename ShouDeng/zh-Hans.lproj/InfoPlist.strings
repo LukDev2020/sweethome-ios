@@ -14,12 +14,12 @@ NSMotionUsageDescription = "守灯在应用打开时使用运动传感器检测�
 NSFaceIDUsageDescription = "守灯使用面容 ID 验证你的身份，保护家庭安全数据的访问。";
 
 /* 麦克风 */
-NSMicrophoneUsageDescription = "在紧急求助期间，麦克风可能会录制环境音以帮助你选择的家人判断现场情况。仅在你开启此选项且当地法律允许时才会录制。";
+NSMicrophoneUsageDescription = "开启语音求助或呼救声识别后，守灯会监听你的求助口令或尖叫声，以便免手动发出 SOS。识别在你的设备上完成，不会录音或上传。";
 
 /* 照片图库 */
 NSPhotoLibraryUsageDescription = "与守护圈内的家人分享照片。照片仅对你的守护关系内的人可见。";
 
 /* 通讯录 */
-NSContactsUsageDescription = "访问通讯录以快速添加紧急联络人信息。联系人数据不会上传到我们的服务器。";
+NSContactsUsageDescription = "从通讯录中选择一位联系人作为紧急联络人。只会把你选中的这一位（姓名和电话）保存到你的账户，以便求助短信能联系到对方。";
 NSBluetoothAlwaysUsageDescription = "守灯会连接你的蓝牙紧急按钮和防丢标签，用于发出 SOS 和提醒物品遗落。只有在设置中配对设备后才会使用蓝牙。";
-NSSpeechRecognitionUsageDescription = "语音指令让你无需动手即可发出 SOS，说出「救命」或 “help” 即可。所有识别都在你的设备上完成。";
+NSSpeechRecognitionUsageDescription = "语音求助会识别「救命」或 “help” 等口令，免手动发出 SOS。识别在你的设备上完成；设备不支持时，语音求助保持关闭。";

@@ -228,6 +228,22 @@ struct PostSignupWizardView: View {
     @State private var purchaseSuccess = false
     @State private var showPrivacyPolicy = false
     @State private var showCancelSubscriptionHint = false
+    @State private var restoreResult: StoreKitManager.RestoreResult?
+
+    private var restoreMessage: String {
+        switch restoreResult {
+        case .restored:
+            return lang.localized("guardian.billing.restore.success")
+        case .ownedByOtherAccount:
+            return lang.localized("store.error.ownedByOtherAccount")
+        case .failed where coordinator.storeKitManager.purchasedPlanId != nil:
+            return lang.localized("guardian.billing.restore.success")
+        case .failed:
+            return coordinator.storeKitManager.errorMessage ?? lang.localized("guardian.billing.restore.none")
+        case .nothingToRestore, .none:
+            return lang.localized("guardian.billing.restore.none")
+        }
+    }
 
     private var paymentStep: some View {
         let store = coordinator.storeKitManager
@@ -315,12 +331,34 @@ struct PostSignupWizardView: View {
                         .multilineTextAlignment(.center)
                 }
 
+                // Someone who bought on another phone (or reinstalled) gets it back here
+                Button {
+                    Task {
+                        restoreResult = await store.restorePurchases()
+                        await coordinator.fetchSubscription()
+                    }
+                } label: {
+                    Text(lang.localized("guardian.billing.restore.purchase"))
+                        .font(.scaled(size: 13))
+                        .foregroundStyle(.secondary)
+                }
+                .disabled(purchaseInProgress)
+
                 SubscriptionLegalLinks(accent: navy) { showPrivacyPolicy = true }
                     .padding(.bottom, 8)
             }
         }
         .sheet(isPresented: $showPrivacyPolicy) {
             PrivacyPolicyView().environmentObject(coordinator)
+        }
+        .alert(lang.localized("guardian.billing.restore.purchase"), isPresented: Binding(
+            get: { restoreResult != nil }, set: { if !$0 { restoreResult = nil } }
+        )) {
+            Button(lang.localized("guardian.billing.ok")) {
+                if store.purchasedPlanId != nil { advanceStep() }
+            }
+        } message: {
+            Text(restoreMessage)
         }
         .alert(lang.localized("store.lifetime.purchased.title"), isPresented: $showCancelSubscriptionHint) {
             Button(lang.localized("guardian.billing.manage.subscription")) {

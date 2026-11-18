@@ -206,7 +206,7 @@ router.post("/consent", authMiddleware, async (req: Request, res: Response) => {
         userId: uid,
         consentType: r.item,
         action: r.action,
-        grantedTo: "lantern-care",
+        grantedTo: "beaconify",
         detail: `copy ${r.copyVersion}; shown ${r.at}; app ${r.appVersion}; locale ${r.locale}`,
         deviceInfo: r.deviceId,
       })));

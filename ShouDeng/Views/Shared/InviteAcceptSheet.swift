@@ -272,7 +272,7 @@ struct InviteAcceptSheet: View {
             .background(RoundedRectangle(cornerRadius: 12).fill(bg))
 
             // Only someone who will receive SOS alerts is asked about Critical Alerts
-            if becomesGuardian {
+            if becomesGuardian, PushService.criticalAlertsEntitled {
                 criticalAlertConsentCard
             }
 
@@ -432,7 +432,8 @@ struct InviteAcceptSheet: View {
         failure = nil
         defer { isLoading = false }
         do {
-            let consent: Bool? = preview.acceptorRole == .guardian ? criticalAlertConsent : nil
+            let consent: Bool? = preview.acceptorRole == .guardian && PushService.criticalAlertsEntitled
+                ? criticalAlertConsent : nil
             accepted = try await coordinator.acceptInvite(code: preview.code, criticalAlertConsent: consent)
         } catch {
             failure = InviteFailure(error: error)

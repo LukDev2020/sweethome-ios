@@ -59,6 +59,7 @@
 		02E7F90A2B6831265F6305B0 /* ProtectedActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CD6466B4BA2EA1E57F4AEBC /* ProtectedActivityAttributes.swift */; };
 		0505E7358600028AB24F69D6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B0993240A8B2FFA1C6928BF2 /* Assets.xcassets */; };
 		DD44EE0100000007 /* WidgetAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DD44EE0100000006 /* WidgetAssets.xcassets */; };
+		D2758235CBC178C8FF34FE01 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D33BB88A0F0654BAF562AE8F /* PrivacyInfo.xcprivacy */; };
 		06386B2FC24D4DFE3C69F2CB /* HotlineCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 525930DD8BF30E7421491576 /* HotlineCardView.swift */; };
 		08008D4727E3F87A4F8C3F87 /* DismissTimerIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 040C57BD82556A18B68CDDE7 /* DismissTimerIntent.swift */; };
 		0A520BDDFC2C9F526CAEB9EC /* ConsentLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35327FBDA1338FA0E3A57540 /* ConsentLogger.swift */; };
@@ -447,6 +448,7 @@
 		ABAFCCA942C4FA62E1F96326 /* CountryCodePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryCodePicker.swift; sourceTree = "<group>"; };
 		B0993240A8B2FFA1C6928BF2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		DD44EE0100000006 /* WidgetAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = WidgetAssets.xcassets; sourceTree = "<group>"; };
+		D33BB88A0F0654BAF562AE8F /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		B273093A701FBEED8E657124 /* APIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClientTests.swift; sourceTree = "<group>"; };
 		4E7E845F98EC7CE44B31E699 /* OutdoorSatelliteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutdoorSatelliteTests.swift; sourceTree = "<group>"; };
 		B2DCC7B638A2022D63472071 /* TimerWidgetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerWidgetViews.swift; sourceTree = "<group>"; };
@@ -1103,6 +1105,7 @@
 				6C0D6EE1A2DDEF20B0D245C8 /* ProtectedLiveActivity.swift */,
 				88B67AB48387F3263CABF4FE /* ShouDengWidgetBundle.swift */,
 				DD44EE0100000006 /* WidgetAssets.xcassets */,
+				D33BB88A0F0654BAF562AE8F /* PrivacyInfo.xcprivacy */,
 				325580AA75684B4486819630 /* ShouDengWidgets.entitlements */,
 				8AAD2A5190E8EB3FF3F30C92 /* Intents */,
 				2BB3566311840A35DCD43359 /* Providers */,
@@ -1373,6 +1376,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DD44EE0100000007 /* WidgetAssets.xcassets in Resources */,
+				D2758235CBC178C8FF34FE01 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

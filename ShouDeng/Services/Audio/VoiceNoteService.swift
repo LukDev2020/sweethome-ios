@@ -184,7 +184,9 @@ final class VoiceNoteService: NSObject, ObservableObject {
         SFSpeechRecognizer.requestAuthorization { [weak self] authStatus in
             guard let self else { return }
 
-            guard authStatus == .authorized else {
+            // On-device only (the speech permission text promises it): no
+            // transcript rather than sending audio to Apple's servers
+            guard authStatus == .authorized, recognizer.supportsOnDeviceRecognition else {
                 let note = VoiceNote(
                     id: UUID().uuidString,
                     audioURL: fileURL,
@@ -200,7 +202,7 @@ final class VoiceNoteService: NSObject, ObservableObject {
             let request = SFSpeechURLRecognitionRequest(url: fileURL)
             request.shouldReportPartialResults = false
             if #available(iOS 16, *) {
-                request.requiresOnDeviceRecognition = recognizer.supportsOnDeviceRecognition
+                request.requiresOnDeviceRecognition = true
             }
 
             recognizer.recognitionTask(with: request) { [weak self] result, error in

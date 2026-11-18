@@ -488,8 +488,8 @@ struct OrgRidersPanel: View {
                         .font(.scaled(size: 12)).foregroundStyle(.secondary)
                 }
             }
-            if let link {
-                ShareLink(item: URL(string: link)!, message: Text(lang.localized("org.riders.shareMessage"))) {
+            if let link, let shareURL = URL(string: link) {
+                ShareLink(item: shareURL, message: Text(lang.localized("org.riders.shareMessage"))) {
                     Label(lang.localized("org.riders.share"), systemImage: "square.and.arrow.up")
                         .font(.scaled(size: 14, weight: .semibold))
                 }

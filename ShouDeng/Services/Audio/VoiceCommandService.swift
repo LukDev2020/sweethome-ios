@@ -40,7 +40,7 @@ final class VoiceCommandService: ObservableObject {
             "help", "help me", "sos",
             "救命", "帮帮我", "救我", "紧急求助",
             "幫幫我", "緊急求助", // Traditional, in case a zh-Hant / zh-HK recognizer is used
-            "au secours", "aidez-moi",
+            "au secours", "aidez-moi", "aide-moi", "aide moi", "aidez moi",
             "助けて", "たすけて", "助けてください",
         ]
         var confidenceThreshold: Double = 0.5
@@ -106,12 +106,14 @@ final class VoiceCommandService: ObservableObject {
             return
         }
 
-        // Request on-device recognition if available
-        if recognizer.supportsOnDeviceRecognition {
-            startListening(recognizer: recognizer, onDevice: true)
-        } else {
-            startListening(recognizer: recognizer, onDevice: false)
+        // On-device only, as the speech permission text promises: where this
+        // language can't be recognised on the phone, voice SOS is unavailable
+        // rather than streaming the microphone to a server
+        guard recognizer.supportsOnDeviceRecognition else {
+            state = .unavailable
+            return
         }
+        startListening(recognizer: recognizer, onDevice: true)
         #endif
     }
 

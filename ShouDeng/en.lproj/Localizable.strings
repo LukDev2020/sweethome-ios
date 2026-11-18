@@ -14,7 +14,7 @@
 "error.not.configured" = "Authentication service not configured";
 "error.invalid.code" = "Invalid code, please try again";
 "error.sms.failed" = "Failed to send code: ";
-"error.too.many" = "Too many requests. Please wait a few minutes and try again, or use a test phone number.";
+"error.too.many" = "Too many requests. Please wait a few minutes and try again.";
 "error.region" = "SMS is not available in your region. Please contact support.";
 "error.user.not.found" = "This phone number is not registered. Redirecting to sign up...";
 

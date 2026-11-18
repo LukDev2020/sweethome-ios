@@ -14,12 +14,12 @@ NSMotionUsageDescription = "Beaconifyは、アプリの使用中にモーショ�
 NSFaceIDUsageDescription = "Beaconifyは、本人確認を行い、ご家族の安全に関するデータへのアクセスを保護するためにFace IDを使用します。";
 
 /* Microphone */
-NSMicrophoneUsageDescription = "SOSの発信中、あなたが選んだご家族が状況を把握できるよう、マイクで周囲の音声を録音することがあります。録音は、この機能をオンにしていて、かつ現地の法律で認められている場合にのみ開始されます。";
+NSMicrophoneUsageDescription = "音声SOSまたは悲鳴の検知をオンにすると、Beaconifyが合言葉や悲鳴を聞き取り、手を使わずにSOSを発信します。聞き取りはデバイス上で行われ、音声は録音もアップロードもされません。";
 
 /* Photo Library */
 NSPhotoLibraryUsageDescription = "見守りグループのご家族と写真を共有できます。写真は見守り関係にある人だけが閲覧できます。";
 
 /* Contacts */
-NSContactsUsageDescription = "連絡先にアクセスして、緊急連絡先をすばやく追加できます。連絡先のデータがサーバーにアップロードされることはありません。";
+NSContactsUsageDescription = "連絡先から緊急連絡先にする人を選びます。選んだ人（名前と電話番号）だけがアカウントに保存され、SOSのSMSが届くようになります。";
 NSBluetoothAlwaysUsageDescription = "Beaconifyは、Bluetooth対応の緊急ボタンや追跡タグに接続し、SOSアラートの発信や離れたことの検知を行います。Bluetoothは「設定」でデバイスをペアリングした後にのみ使用されます。";
-NSSpeechRecognitionUsageDescription = "音声コマンドを使うと、「help」や「救命」と言うだけで、手を使わずにSOSを発信できます。音声認識はすべてデバイス上で処理されます。";
+NSSpeechRecognitionUsageDescription = "音声SOSは「助けて」や「help」などの言葉を聞き取り、手を使わずにSOSを発信します。認識はデバイス上で行われ、対応していない端末では音声SOSはオフのままです。";

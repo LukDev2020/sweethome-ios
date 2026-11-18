@@ -21,7 +21,7 @@ struct ProtectedGuardianDetailView: View {
     @State private var shareBattery = true
     @State private var shareHealth = false
     @State private var sharePhoneActivity = false
-    @State private var shareEmergencyAudio = true
+    @State private var shareEmergencyAudio = false
     @State private var locationDisclosureTrigger = false
     @State private var audioDisclosureTrigger = false
     @State private var showRemoveConfirm = false
@@ -261,20 +261,8 @@ struct ProtectedGuardianDetailView: View {
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
             fixedRow(langManager.localized("guardian.detail.highFreqLocation"), value: langManager.localized("guardian.detail.alwaysOn"), isOk: true)
-            HStack {
-                Text(langManager.localized("guardian.detail.ambientAudio")).font(.scaled(size: 13))
-                Spacer()
-                Toggle("", isOn: Binding(
-                    get: { shareEmergencyAudio },
-                    set: { newValue in
-                        shareEmergencyAudio = newValue
-                        savePermissions()
-                    }
-                ))
-                    .labelsHidden()
-                    .tint(safe)
-            }
-            .padding(.vertical, 2)
+            // No "ambient audio" switch: the app records no SOS audio, so it
+            // would be a control that does nothing (App Review 2.1)
         }
         .padding(12)
         .background(

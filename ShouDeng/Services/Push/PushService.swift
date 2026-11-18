@@ -77,6 +77,13 @@ final class PushService: NSObject {
         }
     }
 
+    /// Whether this build carries Apple's Critical Alerts entitlement
+    /// (com.apple.developer.usernotifications.critical-alerts in
+    /// ShouDeng.entitlements). Until Apple grants it, iOS never shows the prompt
+    /// and SOS arrives as Time Sensitive, so the app doesn't offer the choice.
+    /// Flip together with adding the entitlement and CRITICAL_ALERTS_ENABLED.
+    static let criticalAlertsEntitled = false
+
     /// Asks iOS for Critical Alerts permission (separate system prompt). Only
     /// call after the guardian has opted in to SOS critical alerts in the app.
     /// Requires the com.apple.developer.usernotifications.critical-alerts entitlement.
