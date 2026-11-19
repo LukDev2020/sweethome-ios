@@ -523,6 +523,8 @@ struct FullScreenMapView: View {
     private let ink = Color.appInk
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
+    /// Near-opaque so map labels don't show through the floating panels
+    private let panel = Color(red: 18/255, green: 30/255, blue: 52/255).opacity(0.95)
 
     @State private var position: MapCameraPosition
     @State private var selectedPin: LocationPin?
@@ -536,7 +538,6 @@ struct FullScreenMapView: View {
     @State private var searchText = ""
     @State private var searchResults: [MKMapItem] = []
     @State private var isSearching = false
-    @State private var showSearchBar = false
     @State private var selectedSearchItem: MKMapItem?
     @FocusState private var searchFieldFocused: Bool
 
@@ -549,6 +550,14 @@ struct FullScreenMapView: View {
         case h24 = "24h"
         case d7 = "7d"
     }
+
+    // Nearby places: the category being shown, its result markers, map style
+    @State private var activeCategory: MapPlaceCategory?
+    @State private var showResultList = false
+    @State private var selectedResultIndex: Int?
+    @State private var mapMode: MapDisplayMode = .standard
+    @State private var visibleRegion: MKCoordinateRegion?
+    @Environment(\.openURL) private var openURL
 
     // Navigation route state
     @State private var activeRoute: MKRoute?
@@ -599,15 +608,6 @@ struct FullScreenMapView: View {
         }
     }
 
-    // POI categories
-    private let poiCategories: [(icon: String, label: String, category: MKPointOfInterestCategory)] = [
-        ("cross.fill", "map.search.hospital", .hospital),
-        ("shield.fill", "map.search.police", .police),
-        ("pills.fill", "map.search.pharmacy", .pharmacy),
-        ("fuelpump.fill", "map.search.gas", .gasStation),
-        ("fork.knife", "map.search.food", .restaurant),
-        ("cup.and.saucer.fill", "map.search.cafe", .cafe),
-    ]
 
     init(pins: [LocationPin], label: String? = nil, focusedPinId: Binding<String?>,
          locationService: ReactiveLocationService = ReactiveLocationService()) {
@@ -648,7 +648,7 @@ struct FullScreenMapView: View {
         let currentPins = livePins
         ZStack(alignment: .top) {
             // Full screen map
-            Map(position: $position, interactionModes: [.pan, .zoom, .rotate, .pitch]) {
+            Map(position: $position, interactionModes: [.pan, .zoom, .rotate, .pitch], selection: $selectedResultIndex) {
                 // Pins
                 ForEach(currentPins) { pin in
                     Annotation(pin.name, coordinate: pin.coordinate) {
@@ -676,24 +676,13 @@ struct FullScreenMapView: View {
                     }
                 }
 
-                // Search result pin
-                if let item = selectedSearchItem,
-                   let coord = item.placemark.location?.coordinate {
-                    Annotation(item.name ?? "", coordinate: coord) {
-                        VStack(spacing: 2) {
-                            Image(systemName: "mappin.circle.fill")
-                                .font(.system(size: 28))
-                                .foregroundStyle(.red)
-                                .background(Circle().fill(.white).frame(width: 20, height: 20))
-                            Text(item.name ?? "")
-                                .font(.scaled(size: 11, weight: .semibold))
-                                .foregroundStyle(ink)
-                                .lineLimit(1)
-                                .padding(.horizontal, 4)
-                                .padding(.vertical, 2)
-                                .background(.white.opacity(0.8))
-                                .clipShape(RoundedRectangle(cornerRadius: 4))
-                        }
+                // Nearby / search results: one marker each, tap to pick
+                ForEach(Array(searchResults.enumerated()), id: \.offset) { idx, item in
+                    if let coord = item.placemark.location?.coordinate {
+                        Marker(item.name ?? "", systemImage: activeCategory?.icon ?? "mappin",
+                               coordinate: coord)
+                            .tint(activeCategory?.color ?? alert)
+                            .tag(idx)
                     }
                 }
 
@@ -703,8 +692,14 @@ struct FullScreenMapView: View {
                         .stroke(routeTransportMode.color, lineWidth: 5)
                 }
             }
-            .mapStyle(.standard(pointsOfInterest: .excludingAll))
+            .mapStyle(mapMode.style)
+            .mapControls { MapCompass(); MapScaleView() }
             .ignoresSafeArea()
+            .onMapCameraChange(frequency: .onEnd) { ctx in visibleRegion = ctx.region }
+            .onChange(of: selectedResultIndex) { _, idx in
+                guard let idx, idx < searchResults.count else { return }
+                selectSearchResult(searchResults[idx])
+            }
             .onMapCameraChange { _ in
                 if !fullMapDragged {
                     withAnimation(.easeInOut(duration: 0.2)) {
@@ -725,8 +720,8 @@ struct FullScreenMapView: View {
                 }
             }
 
-            // Recenter button
-            if fullMapDragged {
+            // Recenter button (out of the way while a place or route card is up)
+            if fullMapDragged && selectedSearchItem == nil && activeRoute == nil {
                 VStack {
                     Spacer()
                     HStack {
@@ -762,72 +757,33 @@ struct FullScreenMapView: View {
                     }
                     .accessibilityLabel(LanguageManager.shared.localized("location.closeMap"))
 
-                    Spacer()
-
-                    if !showSearchBar {
-                        if let label {
-                            Text(label)
-                                .font(.scaled(size: 13, weight: .semibold))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 5)
-                                .background(Color.inkSolid.opacity(0.7))
-                                .clipShape(Capsule())
-                        }
-
-                        Spacer()
-                    }
-
-                    // Search toggle
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.25)) {
-                            showSearchBar.toggle()
-                            if !showSearchBar {
-                                searchText = ""
-                                searchResults = []
-                                selectedSearchItem = nil
-                                clearRoute()
-                            } else {
-                                searchFieldFocused = true
-                            }
-                        }
-                    } label: {
-                        Image(systemName: showSearchBar ? "xmark" : "magnifyingglass")
-                            .font(.scaled(size: 14, weight: .medium))
-                            .foregroundStyle(.white)
-                            .frame(width: 34, height: 34)
-                            .background(Color.inkSolid.opacity(0.65))
-                            .clipShape(Circle())
-                    }
-
-                    // (No trail range picker: no trail history is loaded on this
-                    // map yet, so the 1h/6h/24h/7d choice would change nothing)
+                    searchBarView
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 60)
 
-                // Search bar
-                if showSearchBar {
-                    searchBarView
-                        .padding(.horizontal, 16)
-                        .padding(.top, 8)
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                }
+                // Nearby places: emergency first, then everyday
+                poiChipsView
+                    .padding(.top, 8)
 
-                // POI quick filters
-                if showSearchBar && searchText.isEmpty {
-                    poiChipsView
+                if isSearching {
+                    ProgressView().tint(.white)
+                        .padding(8)
+                        .background(panel, in: Capsule())
                         .padding(.top, 6)
-                        .transition(.opacity)
-                }
-
-                // Search results list
-                if !searchResults.isEmpty {
+                } else if showResultList {
                     searchResultsView
                         .padding(.horizontal, 16)
-                        .padding(.top, 4)
+                        .padding(.top, 6)
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
+
+                HStack {
+                    Spacer()
+                    mapModeControls
+                }
+                .padding(.trailing, 16)
+                .padding(.top, 8)
 
                 Spacer()
 
@@ -836,9 +792,9 @@ struct FullScreenMapView: View {
                     routePanel
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
-                // Navigate button for selected search result (no active route)
-                else if selectedSearchItem != nil && activeRoute == nil {
-                    navigateButton
+                // The picked place: call, directions, Apple Maps
+                else if let item = selectedSearchItem {
+                    placePanel(item)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
                 // Bottom info panel
@@ -889,6 +845,8 @@ struct FullScreenMapView: View {
             }
         }
         .animation(.easeInOut(duration: 0.3), value: selectedPin?.id)
+        // Globe sits in black space: white status bar there
+        .preferredColorScheme(mapMode == .globe ? .dark : nil)
     }
 
     private func selectedPinPanel(_ pin: LocationPin) -> some View {
@@ -926,7 +884,7 @@ struct FullScreenMapView: View {
             }
         }
         .padding(14)
-        .background(Color.inkSolid.opacity(0.85))
+        .background(panel)
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .padding(.horizontal, 16)
         .padding(.bottom, 8)
@@ -981,33 +939,151 @@ struct FullScreenMapView: View {
         }
     }
 
-    // MARK: - Navigate Button
+    // MARK: - Place Panel
 
-    private var navigateButton: some View {
-        Button {
-            calculateRoute()
-        } label: {
-            HStack(spacing: 6) {
-                if isCalculatingRoute {
-                    ProgressView()
-                        .tint(.white)
-                        .scaleEffect(0.8)
-                } else {
-                    Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
-                        .font(.scaled(size: 14))
+    private func placePanel(_ item: MKMapItem) -> some View {
+        let lm = LanguageManager.shared
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: activeCategory?.icon ?? "mappin.circle.fill")
+                    .font(.scaled(size: 16, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 34, height: 34)
+                    .background(activeCategory?.color ?? alert, in: Circle())
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(item.name ?? lm.localized("map.search.unknown"))
+                        .font(.scaled(size: 15, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .lineLimit(2)
+                    if let address = item.placemark.title {
+                        Text(address)
+                            .font(.scaled(size: 12))
+                            .foregroundStyle(.white.opacity(0.65))
+                            .lineLimit(2)
+                    }
+                    if let dist = distanceFromMe(item) {
+                        Text(formatSearchDistance(dist))
+                            .font(.scaled(size: 12, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.85))
+                    }
                 }
-                Text(LanguageManager.shared.localized("map.route.navigate"))
-                    .font(.scaled(size: 14, weight: .semibold))
+                Spacer()
+                Button {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        selectedSearchItem = nil
+                        selectedResultIndex = nil
+                        addressText = nil
+                    }
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.scaled(size: 22))
+                        .foregroundStyle(.white.opacity(0.5))
+                }
+                .accessibilityLabel(lm.localized("common.close"))
             }
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .background(safe)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+
+            HStack(spacing: 8) {
+                Button {
+                    calculateRoute()
+                } label: {
+                    HStack(spacing: 5) {
+                        if isCalculatingRoute {
+                            ProgressView().tint(.white).scaleEffect(0.8)
+                        } else {
+                            Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
+                        }
+                        Text(lm.localized("map.route.navigate"))
+                    }
+                    .font(.scaled(size: 14, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 11)
+                    .background(safe, in: RoundedRectangle(cornerRadius: 10))
+                }
+                .disabled(isCalculatingRoute)
+
+                if let phone = item.phoneNumber, let url = Self.telURL(phone) {
+                    Button {
+                        openURL(url)
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: "phone.fill")
+                            Text(lm.localized("map.place.call"))
+                        }
+                        .font(.scaled(size: 14, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 11)
+                        .background(Color.blue.opacity(0.85), in: RoundedRectangle(cornerRadius: 10))
+                    }
+                    .accessibilityLabel("\(lm.localized("map.place.call")) \(phone)")
+                }
+
+                Button {
+                    openInAppleMaps()
+                } label: {
+                    Image(systemName: "map.fill")
+                        .font(.scaled(size: 15))
+                        .foregroundStyle(.white)
+                        .frame(width: 44, height: 42)
+                        .background(Color.white.opacity(0.15), in: RoundedRectangle(cornerRadius: 10))
+                }
+                .accessibilityLabel(lm.localized("map.search.openInMaps"))
+            }
         }
-        .disabled(isCalculatingRoute)
+        .padding(14)
+        .background(panel)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
         .padding(.horizontal, 16)
         .padding(.bottom, 8)
+    }
+
+    static func telURL(_ phone: String) -> URL? {
+        let digits = phone.filter { $0.isNumber || $0 == "+" }
+        return digits.isEmpty ? nil : URL(string: "tel:\(digits)")
+    }
+
+    private func distanceFromMe(_ item: MKMapItem) -> CLLocationDistance? {
+        guard let location = item.placemark.location,
+              let me = locationService.currentLocation ?? pins.first(where: \.isMe)?.coordinate else { return nil }
+        return location.distance(from: CLLocation(latitude: me.latitude, longitude: me.longitude))
+    }
+
+    // MARK: - Map Style
+
+    private var mapModeControls: some View {
+        VStack(spacing: 0) {
+            ForEach(MapDisplayMode.allCases, id: \.self) { mode in
+                Button {
+                    setMapMode(mode)
+                } label: {
+                    Image(systemName: mode.icon)
+                        .font(.scaled(size: 16, weight: .medium))
+                        .foregroundStyle(mapMode == mode ? Color(red: 232/255, green: 163/255, blue: 61/255) : .white)
+                        .frame(width: 42, height: 40)
+                }
+                .accessibilityLabel(LanguageManager.shared.localized(mode.labelKey))
+                .accessibilityAddTraits(mapMode == mode ? .isSelected : [])
+            }
+        }
+        .background(panel, in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    private func setMapMode(_ mode: MapDisplayMode) {
+        let wasGlobe = mapMode == .globe
+        mapMode = mode
+        if mode == .globe {
+            let me = locationService.currentLocation ?? pins.first?.coordinate
+                ?? CLLocationCoordinate2D(latitude: 20, longitude: 0)
+            isFollowing = false
+            withAnimation(.easeInOut(duration: 1.2)) {
+                position = .camera(MapCamera(
+                    centerCoordinate: .init(latitude: max(-30, min(30, me.latitude)), longitude: me.longitude),
+                    distance: GlobeMapView.globeDistance, heading: 0, pitch: 0))
+            }
+        } else if wasGlobe {
+            recenterFullMap()
+        }
     }
 
     // MARK: - Route Panel
@@ -1203,97 +1279,153 @@ struct FullScreenMapView: View {
             Image(systemName: "magnifyingglass")
                 .font(.scaled(size: 14))
                 .foregroundStyle(.white.opacity(0.6))
-            TextField(LanguageManager.shared.localized("map.search.placeholder"), text: $searchText)
+            TextField("", text: $searchText,
+                      prompt: Text(LanguageManager.shared.localized("map.search.placeholder")).foregroundStyle(.white.opacity(0.55)))
                 .font(.scaled(size: 14))
                 .foregroundStyle(.white)
                 .tint(.white)
                 .focused($searchFieldFocused)
+                .submitLabel(.search)
                 .onSubmit { performSearch() }
-            if !searchText.isEmpty {
+            if !searchText.isEmpty || !searchResults.isEmpty {
                 Button {
-                    searchText = ""
-                    searchResults = []
-                    selectedSearchItem = nil
+                    clearSearch()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.scaled(size: 14))
                         .foregroundStyle(.white.opacity(0.5))
                 }
+                .accessibilityLabel(LanguageManager.shared.localized("map.search.clear"))
             }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
-        .background(Color.inkSolid.opacity(0.75))
+        .background(panel)
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
-    // MARK: - POI Quick Filters
+    private func clearSearch() {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            searchText = ""
+            searchResults = []
+            activeCategory = nil
+            showResultList = false
+            selectedSearchItem = nil
+            selectedResultIndex = nil
+            addressText = nil
+            searchFieldFocused = false
+            clearRoute()
+        }
+    }
+
+    // MARK: - Nearby Places
 
     private var poiChipsView: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 6) {
-                ForEach(poiCategories, id: \.label) { poi in
-                    Button {
-                        searchPOI(category: poi.category)
-                    } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: poi.icon)
-                                .font(.scaled(size: 11))
-                            Text(LanguageManager.shared.localized(poi.label))
-                                .font(.scaled(size: 12))
-                        }
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Color.inkSolid.opacity(0.6))
-                        .clipShape(Capsule())
-                    }
-                }
+                ForEach(MapPlaceCategory.emergency) { chip($0) }
+                Rectangle().fill(.white.opacity(0.35)).frame(width: 1, height: 20)
+                ForEach(MapPlaceCategory.daily) { chip($0) }
             }
             .padding(.horizontal, 16)
         }
     }
 
+    private func chip(_ category: MapPlaceCategory) -> some View {
+        let on = activeCategory == category
+        return Button {
+            if on { clearSearch() } else { searchNearby(category) }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: category.icon)
+                    .font(.scaled(size: 11, weight: .semibold))
+                    .foregroundStyle(on ? .white : category.color)
+                Text(LanguageManager.shared.localized(category.labelKey))
+                    .font(.scaled(size: 12, weight: on ? .semibold : .regular))
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(on ? category.color : panel, in: Capsule())
+            .overlay(Capsule().stroke(category.isEmergency && !on ? category.color.opacity(0.7) : .clear, lineWidth: 1))
+        }
+        .accessibilityAddTraits(on ? .isSelected : [])
+    }
+
     // MARK: - Search Results
 
     private var searchResultsView: some View {
-        VStack(spacing: 2) {
-            ForEach(searchResults.prefix(5), id: \.self) { item in
-                Button {
-                    selectSearchResult(item)
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "mappin.circle.fill")
-                            .font(.scaled(size: 16))
-                            .foregroundStyle(safe)
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(item.name ?? LanguageManager.shared.localized("map.search.unknown"))
-                                .font(.scaled(size: 13, weight: .medium))
-                                .foregroundStyle(.white)
-                                .lineLimit(1)
-                            if let address = item.placemark.title {
-                                Text(address)
-                                    .font(.scaled(size: 11))
-                                    .foregroundStyle(.white.opacity(0.6))
-                                    .lineLimit(1)
+        let lm = LanguageManager.shared
+        return VStack(spacing: 0) {
+            if searchResults.isEmpty {
+                Text(lm.localized("map.search.noResults"))
+                    .font(.scaled(size: 13))
+                    .foregroundStyle(.white.opacity(0.7))
+                    .padding(12)
+            } else {
+                ScrollView {
+                    VStack(spacing: 0) {
+                        ForEach(Array(searchResults.enumerated()), id: \.offset) { idx, item in
+                            resultRow(item)
+                            if idx < searchResults.count - 1 {
+                                Divider().overlay(.white.opacity(0.12)).padding(.leading, 40)
                             }
                         }
-                        Spacer()
-                        if let location = item.placemark.location,
-                           let myLoc = locationService.currentLocation {
-                            let dist = location.distance(from: CLLocation(latitude: myLoc.latitude, longitude: myLoc.longitude))
-                            Text(formatSearchDistance(dist))
-                                .font(.scaled(size: 11))
-                                .foregroundStyle(.white.opacity(0.5))
-                        }
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
                 }
+                .frame(maxHeight: 250)
             }
         }
-        .background(Color.inkSolid.opacity(0.75))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .background(panel)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    private func resultRow(_ item: MKMapItem) -> some View {
+        HStack(spacing: 8) {
+            Button {
+                selectSearchResult(item)
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: activeCategory?.icon ?? "mappin.circle.fill")
+                        .font(.scaled(size: 13, weight: .semibold))
+                        .foregroundStyle(activeCategory?.color ?? safe)
+                        .frame(width: 24)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(item.name ?? LanguageManager.shared.localized("map.search.unknown"))
+                            .font(.scaled(size: 13, weight: .medium))
+                            .foregroundStyle(.white)
+                            .lineLimit(1)
+                        if let address = item.placemark.title {
+                            Text(address)
+                                .font(.scaled(size: 11))
+                                .foregroundStyle(.white.opacity(0.6))
+                                .lineLimit(1)
+                        }
+                    }
+                    Spacer(minLength: 4)
+                    if let dist = distanceFromMe(item) {
+                        Text(formatSearchDistance(dist))
+                            .font(.scaled(size: 11, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.7))
+                    }
+                }
+                .contentShape(Rectangle())
+            }
+            if let phone = item.phoneNumber, let url = Self.telURL(phone) {
+                Button {
+                    openURL(url)
+                } label: {
+                    Image(systemName: "phone.fill")
+                        .font(.scaled(size: 13))
+                        .foregroundStyle(.white)
+                        .frame(width: 32, height: 32)
+                        .background(Color.blue.opacity(0.8), in: Circle())
+                }
+                .accessibilityLabel("\(LanguageManager.shared.localized("map.place.call")) \(item.name ?? phone)")
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
     }
 
     // MARK: - Trail Time Picker
@@ -1324,56 +1456,87 @@ struct FullScreenMapView: View {
 
     // MARK: - Search Logic
 
-    private func performSearch() {
-        guard !searchText.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-        isSearching = true
-        let request = MKLocalSearch.Request()
-        request.naturalLanguageQuery = searchText
-
-        // Search near current map region
-        if let coord = locationService.currentLocation ?? pins.first?.coordinate {
-            request.region = MKCoordinateRegion(
-                center: coord,
-                span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
-            )
+    /// Where to look: the part of the map on screen when zoomed in to a town,
+    /// otherwise around me (a whole-country view would find nothing useful)
+    private var searchRegion: MKCoordinateRegion? {
+        if let region = visibleRegion, mapMode != .globe,
+           region.span.latitudeDelta < 1.0, region.span.longitudeDelta < 1.0 {
+            return region
         }
+        guard let me = locationService.currentLocation ?? pins.first?.coordinate else { return nil }
+        return MKCoordinateRegion(center: me, span: MKCoordinateSpan(latitudeDelta: 0.06, longitudeDelta: 0.06))
+    }
 
-        let search = MKLocalSearch(request: request)
-        search.start { response, error in
+    private func performSearch() {
+        let query = searchText.trimmingCharacters(in: .whitespaces)
+        guard !query.isEmpty else { return }
+        activeCategory = nil
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = query
+        run(request)
+    }
+
+    private func searchNearby(_ category: MapPlaceCategory) {
+        activeCategory = category
+        searchText = ""
+        searchFieldFocused = false
+        let request = MKLocalSearch.Request()
+        if let poi = category.poi {
+            request.pointOfInterestFilter = MKPointOfInterestFilter(including: [poi])
+            request.resultTypes = .pointOfInterest
+            // A category search needs some text on older systems; the filter does the work
+            request.naturalLanguageQuery = category.query
+        } else {
+            request.naturalLanguageQuery = category.query
+        }
+        run(request)
+    }
+
+    private func run(_ request: MKLocalSearch.Request) {
+        if let region = searchRegion { request.region = region }
+        isSearching = true
+        selectedSearchItem = nil
+        selectedResultIndex = nil
+        clearRoute()
+        if mapMode == .globe { mapMode = .standard }
+        MKLocalSearch(request: request).start { response, error in
             isSearching = false
-            guard let response, error == nil else {
-                searchResults = []
-                return
-            }
-            searchResults = response.mapItems
+            let items = (error == nil ? response?.mapItems : nil) ?? []
+            // Nearest first, the way you'd want them in an emergency
+            searchResults = Array(items.sorted {
+                (distanceFromMe($0) ?? .greatestFiniteMagnitude) < (distanceFromMe($1) ?? .greatestFiniteMagnitude)
+            }.prefix(25))
+            withAnimation(.easeInOut(duration: 0.25)) { showResultList = true }
+            fitResults()
         }
     }
 
-    private func searchPOI(category: MKPointOfInterestCategory) {
-        isSearching = true
-        let request = MKLocalSearch.Request()
-        request.pointOfInterestFilter = MKPointOfInterestFilter(including: [category])
-        if let coord = locationService.currentLocation ?? pins.first?.coordinate {
-            request.region = MKCoordinateRegion(
-                center: coord,
-                span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
-            )
+    /// Show me and the closest results together
+    private func fitResults() {
+        let coords = searchResults.prefix(5).compactMap { $0.placemark.location?.coordinate }
+            + [locationService.currentLocation].compactMap { $0 }
+        guard !coords.isEmpty else { return }
+        var rect = MKMapRect.null
+        for c in coords {
+            let pt = MKMapPoint(c)
+            rect = rect.union(MKMapRect(x: pt.x, y: pt.y, width: 1, height: 1))
         }
-        let search = MKLocalSearch(request: request)
-        search.start { response, error in
-            isSearching = false
-            guard let response, error == nil else {
-                searchResults = []
-                return
-            }
-            searchResults = response.mapItems
+        let padX = max(rect.width * 0.35, 2000), padY = max(rect.height * 0.6, 2000)
+        withAnimation(.easeInOut(duration: 0.5)) {
+            position = .rect(rect.insetBy(dx: -padX, dy: -padY))
+            isFollowing = false
+            fullMapDragged = true
         }
     }
 
     private func selectSearchResult(_ item: MKMapItem) {
         selectedSearchItem = item
-        searchResults = []
+        clearRoute()
         searchFieldFocused = false
+        withAnimation(.easeInOut(duration: 0.25)) { showResultList = false }
+        if let idx = searchResults.firstIndex(of: item), selectedResultIndex != idx {
+            selectedResultIndex = idx
+        }
         if let coord = item.placemark.location?.coordinate {
             withAnimation(.easeInOut(duration: 0.5)) {
                 position = .region(MKCoordinateRegion(
@@ -1382,7 +1545,6 @@ struct FullScreenMapView: View {
                 ))
                 isFollowing = false
             }
-            addressText = item.name
         }
     }
 
@@ -1436,5 +1598,72 @@ struct LocationPin: Identifiable {
         case me
         case guardian
         case protected_
+    }
+}
+
+// MARK: - Nearby place categories
+
+/// One-tap "what's near me": emergency services first, then everyday places.
+struct MapPlaceCategory: Identifiable, Equatable {
+    let id: String
+    let icon: String
+    let labelKey: String
+    let poi: MKPointOfInterestCategory?
+    /// Used alone when there's no POI category (embassies), else alongside it
+    let query: String
+    let color: Color
+    let isEmergency: Bool
+
+    static func == (a: Self, b: Self) -> Bool { a.id == b.id }
+
+    private static let red = Color(red: 214/255, green: 69/255, blue: 65/255)
+
+    static let emergency: [MapPlaceCategory] = [
+        .init(id: "hospital", icon: "cross.case.fill", labelKey: "map.search.hospital", poi: .hospital, query: "hospital", color: red, isEmergency: true),
+        .init(id: "police", icon: "shield.fill", labelKey: "map.search.police", poi: .police, query: "police", color: Color(red: 52/255, green: 101/255, blue: 201/255), isEmergency: true),
+        .init(id: "fire", icon: "flame.fill", labelKey: "map.search.fire", poi: .fireStation, query: "fire station", color: Color(red: 232/255, green: 110/255, blue: 40/255), isEmergency: true),
+        .init(id: "pharmacy", icon: "pills.fill", labelKey: "map.search.pharmacy", poi: .pharmacy, query: "pharmacy", color: Color(red: 46/255, green: 150/255, blue: 100/255), isEmergency: true),
+        .init(id: "embassy", icon: "building.columns.fill", labelKey: "map.search.embassy", poi: nil, query: "embassy consulate", color: Color(red: 107/255, green: 92/255, blue: 165/255), isEmergency: true),
+    ]
+
+    static let daily: [MapPlaceCategory] = [
+        .init(id: "grocery", icon: "cart.fill", labelKey: "map.search.grocery", poi: .foodMarket, query: "grocery", color: Color(red: 63/255, green: 143/255, blue: 110/255), isEmergency: false),
+        .init(id: "food", icon: "fork.knife", labelKey: "map.search.food", poi: .restaurant, query: "restaurant", color: Color(red: 232/255, green: 140/255, blue: 61/255), isEmergency: false),
+        .init(id: "cafe", icon: "cup.and.saucer.fill", labelKey: "map.search.cafe", poi: .cafe, query: "cafe", color: Color(red: 150/255, green: 105/255, blue: 70/255), isEmergency: false),
+        .init(id: "gas", icon: "fuelpump.fill", labelKey: "map.search.gas", poi: .gasStation, query: "gas station", color: Color(red: 61/255, green: 120/255, blue: 192/255), isEmergency: false),
+        .init(id: "ev", icon: "bolt.car.fill", labelKey: "map.search.ev", poi: .evCharger, query: "EV charger", color: Color(red: 40/255, green: 170/255, blue: 160/255), isEmergency: false),
+        .init(id: "atm", icon: "banknote.fill", labelKey: "map.search.atm", poi: .atm, query: "ATM", color: Color(red: 90/255, green: 140/255, blue: 70/255), isEmergency: false),
+        .init(id: "parking", icon: "parkingsign", labelKey: "map.search.parking", poi: .parking, query: "parking", color: Color(red: 61/255, green: 110/255, blue: 200/255), isEmergency: false),
+        .init(id: "transit", icon: "tram.fill", labelKey: "map.search.transit", poi: .publicTransport, query: "station", color: Color(red: 120/255, green: 100/255, blue: 190/255), isEmergency: false),
+        .init(id: "hotel", icon: "bed.double.fill", labelKey: "map.search.hotel", poi: .hotel, query: "hotel", color: Color(red: 170/255, green: 90/255, blue: 140/255), isEmergency: false),
+    ]
+}
+
+/// Street map, satellite with labels, or the whole-Earth globe.
+enum MapDisplayMode: CaseIterable {
+    case standard, satellite, globe
+
+    var icon: String {
+        switch self {
+        case .standard: return "map"
+        case .satellite: return "square.2.layers.3d"
+        case .globe: return "globe.americas.fill"
+        }
+    }
+
+    var labelKey: String {
+        switch self {
+        case .standard: return "map.mode.map"
+        case .satellite: return "map.mode.satellite"
+        case .globe: return "map.mode.globe"
+        }
+    }
+
+    var style: MapStyle {
+        switch self {
+        case .standard: return .standard(elevation: .realistic, pointsOfInterest: .all)
+        case .satellite: return .hybrid(elevation: .realistic, pointsOfInterest: .all)
+        case .globe: return .imagery(elevation: .realistic)
+        }
     }
 }

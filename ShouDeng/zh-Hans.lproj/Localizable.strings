@@ -989,6 +989,21 @@
 "map.search.unknown" = "未知地点";
 "map.search.food" = "餐饮";
 "map.search.cafe" = "咖啡";
+"globe.openMap" = "打开地图";
+"globe.openMap.hint" = "搜索地点，查找最近的医院或警察局，并导航";
+"map.search.fire" = "消防站";
+"map.search.embassy" = "使领馆";
+"map.search.grocery" = "超市";
+"map.search.ev" = "充电站";
+"map.search.atm" = "ATM";
+"map.search.parking" = "停车场";
+"map.search.transit" = "公共交通";
+"map.search.hotel" = "酒店";
+"map.search.clear" = "清除搜索";
+"map.place.call" = "拨打";
+"map.mode.map" = "地图";
+"map.mode.satellite" = "卫星";
+"map.mode.globe" = "地球";
 "map.search.noResults" = "未找到结果";
 "map.search.openInMaps" = "在地图中打开";
 

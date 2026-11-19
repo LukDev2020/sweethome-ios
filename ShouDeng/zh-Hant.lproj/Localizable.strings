@@ -989,6 +989,21 @@
 "map.search.unknown" = "未知地點";
 "map.search.food" = "餐飲";
 "map.search.cafe" = "咖啡";
+"globe.openMap" = "打開地圖";
+"globe.openMap.hint" = "搜尋地點，查找最近的醫院或警察局，並導航";
+"map.search.fire" = "消防局";
+"map.search.embassy" = "使領館";
+"map.search.grocery" = "超市";
+"map.search.ev" = "充電站";
+"map.search.atm" = "ATM";
+"map.search.parking" = "停車場";
+"map.search.transit" = "大眾運輸";
+"map.search.hotel" = "酒店";
+"map.search.clear" = "清除搜尋";
+"map.place.call" = "撥打";
+"map.mode.map" = "地圖";
+"map.mode.satellite" = "衛星";
+"map.mode.globe" = "地球";
 "map.search.noResults" = "未找到結果";
 "map.search.openInMaps" = "在地圖中開啟";
 

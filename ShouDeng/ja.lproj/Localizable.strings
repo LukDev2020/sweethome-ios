@@ -989,6 +989,21 @@
 "map.search.unknown" = "不明な場所";
 "map.search.food" = "飲食店";
 "map.search.cafe" = "カフェ";
+"globe.openMap" = "地図を開く";
+"globe.openMap.hint" = "場所を検索、最寄りの病院や警察を探して経路を表示";
+"map.search.fire" = "消防署";
+"map.search.embassy" = "大使館";
+"map.search.grocery" = "スーパー";
+"map.search.ev" = "EV充電";
+"map.search.atm" = "ATM";
+"map.search.parking" = "駐車場";
+"map.search.transit" = "交通機関";
+"map.search.hotel" = "ホテル";
+"map.search.clear" = "検索をクリア";
+"map.place.call" = "電話";
+"map.mode.map" = "地図";
+"map.mode.satellite" = "衛星写真";
+"map.mode.globe" = "地球儀";
 "map.search.noResults" = "見つかりませんでした";
 "map.search.openInMaps" = "マップで開く";
 

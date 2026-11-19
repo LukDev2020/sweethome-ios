@@ -20,6 +20,7 @@ struct ProtectedHomeView: View {
     @State private var sosProgress: Double = 0
     @State private var sosDisclosureTrigger = false
     @State private var showInviteGuardian = false
+    @State private var showFamilyMap = false
     @State private var mapFocusId: String?
     @State private var checkInDone = false
     @State private var showHomeTimer = false
@@ -479,7 +480,7 @@ struct ProtectedHomeView: View {
                 pins: dynamicPins,
                 links: dynamicLinks,
                 initialLongitude: -30,
-                labelInsets: EdgeInsets(top: 46, leading: 0, bottom: 26, trailing: 0)
+                onExpand: { showFamilyMap = true }
             )
 
             // Overlay: header + legend
@@ -510,7 +511,11 @@ struct ProtectedHomeView: View {
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 16))
-        .frame(height: 260)
+        .frame(height: 320)
+        .fullScreenCover(isPresented: $showFamilyMap) {
+            FullScreenMapView(pins: familyMapPins.pins, label: lang.localized("protected.home.myLocation"),
+                              focusedPinId: .constant(nil), locationService: coordinator.locationService)
+        }
         .padding(.horizontal, 16)
         .padding(.top, 8)
     }
@@ -541,7 +546,8 @@ struct ProtectedHomeView: View {
 
     // MARK: - Location Card
 
-    private var locationCard: some View {
+    /// Me + family, for the location card and the full-screen map
+    private var familyMapPins: (pins: [LocationPin], myCoord: CLLocationCoordinate2D, deviceLocation: CLLocation?) {
         // Use best available location for fresher timestamp
         let deviceLocation = coordinator.locationManager.bestAvailableLocation
         let myCoord: CLLocationCoordinate2D = {
@@ -573,6 +579,11 @@ struct ProtectedHomeView: View {
                 ))
             }
         }
+        return (pins, myCoord, deviceLocation)
+    }
+
+    private var locationCard: some View {
+        let (pins, myCoord, deviceLocation) = familyMapPins
         return LocationCardView(
             pins: pins,
             centerCoordinate: myCoord,

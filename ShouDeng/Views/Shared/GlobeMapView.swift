@@ -1,11 +1,11 @@
 import SwiftUI
+import MapKit
 
-// MARK: - Interactive Globe (Canvas)
+// MARK: - Interactive Globe (Apple Maps)
 //
-// Orthographic globe projection — a direct port of the HTML design's
-// JavaScript canvas globe. Draws a rotating dark sphere with grid lines,
-// great-circle connection arcs between family members, and glowing dots
-// at each person's location.
+// Apple's satellite globe (MapKit imagery, realistic elevation): drag to spin,
+// pinch to zoom in on a city. Family members are glowing dots, each linked to
+// the hub by a great-circle arc. Labels are one per place (see labelGroups).
 
 struct GlobeMapView: View {
 
@@ -15,6 +15,8 @@ struct GlobeMapView: View {
         let longitude: Double
         let color: Color
         let isMe: Bool
+
+        var coordinate: CLLocationCoordinate2D { .init(latitude: latitude, longitude: longitude) }
     }
 
     struct Link {
@@ -24,22 +26,126 @@ struct GlobeMapView: View {
 
     let pins: [Pin]
     var links: [Link] = []
+    /// Where the globe faces when there are no pins.
     var initialLongitude: Double = -40
-    /// Bands at the top/bottom covered by overlay text (card header, legend);
-    /// labels are never drawn there.
-    var labelInsets: EdgeInsets = EdgeInsets()
+    /// Shows an "Open map" button (full-screen map: search, nearby places, routes)
+    var onExpand: (() -> Void)?
 
-    private let tilt: Double = 20
-    private let speed: Double = 6
+    /// Far enough out that the whole Earth shows as a globe
+    static let globeDistance: CLLocationDistance = 26_000_000
+
+    @State private var position: MapCameraPosition
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Slow spin, like the old drawn globe; stops for good once the user touches it
+    @State private var spinning = true
+    @State private var centerLongitude: Double = 0
+    private let spinTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
+    init(pins: [Pin], links: [Link] = [], initialLongitude: Double = -40, onExpand: (() -> Void)? = nil) {
+        self.pins = pins
+        self.links = links
+        self.initialLongitude = initialLongitude
+        self.onExpand = onExpand
+        _position = State(initialValue: Self.globeCamera(pins: pins, fallbackLongitude: initialLongitude))
+        _centerLongitude = State(initialValue: Self.globeCenter(pins: pins, fallbackLongitude: initialLongitude).longitude)
+    }
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: false)) { timeline in
-            Canvas { ctx, size in
-                draw(ctx: &ctx, size: size, time: timeline.date.timeIntervalSinceReferenceDate)
+        globeMap
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(globeAccessibilityLabel)
+            .overlay(alignment: .topTrailing) {
+                if let onExpand {
+                    Button(action: onExpand) {
+                        HStack(spacing: 5) {
+                            Image(systemName: "map.fill")
+                            Text(LanguageManager.shared.localized("globe.openMap"))
+                        }
+                        .font(.scaled(size: 12, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 7)
+                        .background(.black.opacity(0.55), in: Capsule())
+                        .overlay(Capsule().stroke(.white.opacity(0.25), lineWidth: 0.5))
+                    }
+                    .padding(10)
+                    .accessibilityHint(LanguageManager.shared.localized("globe.openMap.hint"))
+                }
+            }
+    }
+
+    private var globeMap: some View {
+        Map(position: $position, interactionModes: [.pan, .zoom, .rotate]) {
+            ForEach(Array(links.enumerated()), id: \.offset) { _, link in
+                if link.from < pins.count, link.to < pins.count {
+                    MapPolyline(coordinates: [pins[link.from].coordinate, pins[link.to].coordinate],
+                                contourStyle: .geodesic)
+                        .stroke(Self.lamp.opacity(0.85),
+                                style: StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [5, 4]))
+                }
+            }
+            ForEach(Array(Self.labelGroups(pins).enumerated()), id: \.offset) { _, group in
+                let members = group.pinIndices.map { pins[$0] }
+                let isMe = members.contains(where: \.isMe)
+                let color = (members.first(where: \.isMe) ?? members[0]).color
+                Annotation(group.label, coordinate: .init(latitude: group.latitude, longitude: group.longitude)) {
+                    GlowDot(color: color, isMe: isMe)
+                }
             }
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(globeAccessibilityLabel)
+        .mapStyle(.imagery(elevation: .realistic))
+        .mapControls { }
+        .background(Color.black)
+        .simultaneousGesture(DragGesture(minimumDistance: 2).onChanged { _ in spinning = false })
+        .simultaneousGesture(MagnifyGesture().onChanged { _ in spinning = false })
+        .onReceive(spinTimer) { _ in
+            guard spinning, !reduceMotion else { return }
+            centerLongitude = centerLongitude >= 180 ? centerLongitude - 357.5 : centerLongitude + 2.5
+            let lat = Self.globeCenter(pins: pins, fallbackLongitude: initialLongitude).latitude
+            withAnimation(.linear(duration: 1)) {
+                position = .camera(MapCamera(centerCoordinate: .init(latitude: lat, longitude: centerLongitude),
+                                             distance: Self.globeDistance, heading: 0, pitch: 0))
+            }
+        }
+        // Family moved / joined: face the globe toward them again
+        .onChange(of: pinsKey) { _, _ in
+            let center = Self.globeCenter(pins: pins, fallbackLongitude: initialLongitude)
+            centerLongitude = center.longitude
+            withAnimation(.easeInOut(duration: 0.8)) {
+                position = Self.globeCamera(pins: pins, fallbackLongitude: initialLongitude)
+            }
+        }
+    }
+
+    /// Changes when someone is added, removed or moves more than ~100 km
+    private var pinsKey: String {
+        pins.map { "\(Int($0.latitude))/\(Int($0.longitude))" }.joined(separator: ",")
+    }
+
+    /// The camera over the middle of everyone (3-D mean of their positions),
+    /// pulled back to show the whole globe.
+    static func globeCamera(pins: [Pin], fallbackLongitude: Double) -> MapCameraPosition {
+        .camera(MapCamera(centerCoordinate: globeCenter(pins: pins, fallbackLongitude: fallbackLongitude),
+                          distance: globeDistance, heading: 0, pitch: 0))
+    }
+
+    static func globeCenter(pins: [Pin], fallbackLongitude: Double) -> CLLocationCoordinate2D {
+        let rad = Double.pi / 180
+        var x = 0.0, y = 0.0, z = 0.0
+        for p in pins {
+            let la = p.latitude * rad, lo = p.longitude * rad
+            x += cos(la) * cos(lo); y += cos(la) * sin(lo); z += sin(la)
+        }
+        let len = sqrt(x * x + y * y + z * z)
+        // Nobody, or people on opposite sides of the Earth: fall back to "me" / the default view
+        guard len > 0.3 else {
+            if let me = pins.first(where: \.isMe) ?? pins.first {
+                return .init(latitude: max(-30, min(30, me.latitude)), longitude: me.longitude)
+            }
+            return .init(latitude: 20, longitude: fallbackLongitude)
+        }
+        // MapKit pulls a camera over high latitudes in to ~11 000 km (the globe no longer fits): stay near the tropics
+        return .init(latitude: max(-30, min(30, asin(z / len) / rad)), longitude: atan2(y, x) / rad)
     }
 
     private var globeAccessibilityLabel: String {
@@ -105,165 +211,27 @@ struct GlobeMapView: View {
             + cos(a.latitude * rad) * cos(b.latitude * rad) * sin(dLon / 2) * sin(dLon / 2)
         return 6371 * 2 * atan2(sqrt(h), sqrt(1 - h))
     }
+}
 
-    // MARK: - Rendering
+// MARK: - Dot
 
-    private func draw(ctx: inout GraphicsContext, size: CGSize, time: TimeInterval) {
-        let cx = size.width / 2
-        let cy = size.height / 2
-        let R = min(size.width, size.height) * 0.42
-        let RAD = Double.pi / 180
-        let phi = tilt * RAD
-        let lam = (initialLongitude + time * speed) * RAD
+private struct GlowDot: View {
+    let color: Color
+    let isMe: Bool
 
-        // Orthographic projection (matches HTML proj() function)
-        func proj(_ lo: Double, _ la: Double) -> (x: Double, y: Double, z: Double) {
-            let l = lo * RAD + lam
-            let p = la * RAD
-            let cp = cos(p), sp = sin(p), cl = cos(l), sl = sin(l)
-            return (
-                x: cx + R * cp * sl,
-                y: cy - R * (cos(phi) * sp - sin(phi) * cp * cl),
-                z: sin(phi) * sp + cos(phi) * cp * cl
-            )
-        }
-
-        // --- Globe body ---
-        let globe = CGRect(x: cx - R, y: cy - R, width: R * 2, height: R * 2)
-        ctx.fill(Path(ellipseIn: globe), with: .color(Color(red: 44/255, green: 70/255, blue: 112/255).opacity(0.2)))
-        ctx.stroke(Path(ellipseIn: globe), with: .color(.white.opacity(0.22)), lineWidth: 0.8)
-
-        // --- Grid lines ---
-        let gridColor: GraphicsContext.Shading = .color(.white.opacity(0.09))
-        for i in stride(from: -180, to: 180, by: 24) {
-            var p = Path(); var on = false
-            for j in stride(from: -90, through: 90, by: 4) {
-                let pt = proj(Double(i), Double(j))
-                if pt.z > 0 { if !on { p.move(to: CGPoint(x: pt.x, y: pt.y)); on = true } else { p.addLine(to: CGPoint(x: pt.x, y: pt.y)) } } else { on = false }
-            }
-            ctx.stroke(p, with: gridColor, lineWidth: 0.5)
-        }
-        for i in stride(from: -60, through: 60, by: 24) {
-            var p = Path(); var on = false
-            for j in stride(from: -180, through: 180, by: 4) {
-                let pt = proj(Double(j), Double(i))
-                if pt.z > 0 { if !on { p.move(to: CGPoint(x: pt.x, y: pt.y)); on = true } else { p.addLine(to: CGPoint(x: pt.x, y: pt.y)) } } else { on = false }
-            }
-            ctx.stroke(p, with: gridColor, lineWidth: 0.5)
-        }
-
-        // --- Connection arcs (great circles via SLERP) ---
-        func vec(_ lo: Double, _ la: Double) -> (Double, Double, Double) {
-            let a = lo * RAD, b = la * RAD, cb = cos(b)
-            return (cb * cos(a), cb * sin(a), sin(b))
-        }
-        func ll(_ v: (Double, Double, Double)) -> (Double, Double) {
-            (atan2(v.1, v.0) / RAD, asin(max(-1, min(1, v.2))) / RAD)
-        }
-        func slerp(_ aPin: Pin, _ bPin: Pin, _ t: Double) -> (Double, Double) {
-            let u = vec(aPin.longitude, aPin.latitude)
-            let v = vec(bPin.longitude, bPin.latitude)
-            let d = max(-1.0, min(1.0, u.0*v.0 + u.1*v.1 + u.2*v.2))
-            let omega = acos(d)
-            if omega < 1e-6 { return ll(u) }
-            let so = sin(omega)
-            let s1 = sin((1-t)*omega)/so, s2 = sin(t*omega)/so
-            return ll((u.0*s1+v.0*s2, u.1*s1+v.1*s2, u.2*s1+v.2*s2))
-        }
-
-        let lampArc = Color(red: 232/255, green: 163/255, blue: 61/255).opacity(0.4)
-        let proArc  = Color(red: 107/255, green: 92/255, blue: 165/255).opacity(0.45)
-
-        for link in links {
-            guard link.from < pins.count, link.to < pins.count else { continue }
-            let a = pins[link.from], b = pins[link.to]
-            var p = Path(); var on = false
-            for step in stride(from: 0.0, through: 1.0, by: 0.025) {
-                let (lo, la) = slerp(a, b, step)
-                let pt = proj(lo, la)
-                if pt.z > 0 { if !on { p.move(to: CGPoint(x: pt.x, y: pt.y)); on = true } else { p.addLine(to: CGPoint(x: pt.x, y: pt.y)) } } else { on = false }
-            }
-            let isHub = a.label.contains("响应") || b.label.contains("响应")
-            ctx.stroke(p, with: .color(isHub ? proArc : lampArc), lineWidth: 1)
-        }
-
-        // --- Dots and labels ---
-        for pin in pins {
-            let pt = proj(pin.longitude, pin.latitude)
-            guard pt.z > 0 else { continue }
-
-            let alpha = min(1.0, 0.4 + pt.z)
-
-            // Outer glow
-            let glowR: CGFloat = pin.isMe ? 14 : 10
-            ctx.fill(
-                Path(ellipseIn: CGRect(x: pt.x - glowR, y: pt.y - glowR, width: glowR * 2, height: glowR * 2)),
-                with: .color(pin.color.opacity(0.18 * alpha))
-            )
-
-            // Inner glow
-            let innerR: CGFloat = pin.isMe ? 8 : 6
-            ctx.fill(
-                Path(ellipseIn: CGRect(x: pt.x - innerR, y: pt.y - innerR, width: innerR * 2, height: innerR * 2)),
-                with: .color(pin.color.opacity(0.35 * alpha))
-            )
-
-            // Core dot
-            let coreR: CGFloat = pin.isMe ? 5.5 : 4
-            ctx.fill(
-                Path(ellipseIn: CGRect(x: pt.x - coreR, y: pt.y - coreR, width: coreR * 2, height: coreR * 2)),
-                with: .color(pin.color.opacity(alpha))
-            )
-
-        }
-
-        // --- Labels: one per place, nudged apart if they still collide on screen ---
-        var placed: [CGRect] = []
-        for group in Self.labelGroups(pins) {
-            let pt = proj(group.longitude, group.latitude)
-            // City label (only when facing forward enough)
-            guard pt.z > 0.2 else { continue }
-            let alpha = min(1.0, 0.4 + pt.z)
-            let isMe = group.pinIndices.contains { pins[$0].isMe }
-            let glowR: CGFloat = isMe ? 14 : 10
-            let resolved = ctx.resolve(
-                Text(group.label)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.9 * alpha))
-            )
-            let textSize = resolved.measure(in: CGSize(width: size.width, height: 40))
-            // Prefer above the dot; then below; then further up.
-            let candidates: [CGFloat] = [
-                pt.y - glowR - 6 - textSize.height,
-                pt.y + glowR + 4,
-                pt.y - glowR - 8 - textSize.height * 2,
-            ]
-            let allowed = CGRect(x: 0, y: labelInsets.top, width: size.width,
-                                 height: size.height - labelInsets.top - labelInsets.bottom)
-            var chosen: CGRect?
-            for top in candidates {
-                let r = CGRect(x: pt.x - textSize.width / 2, y: top, width: textSize.width, height: textSize.height)
-                if allowed.contains(CGRect(x: allowed.minX, y: r.minY, width: 1, height: r.height)),
-                   !placed.contains(where: { $0.insetBy(dx: -2, dy: -1).intersects(r) }) {
-                    chosen = r
-                    break
-                }
-            }
-            // No free spot this frame (e.g. dot under the header): skip the label rather than overlap
-            guard let rect = chosen else { continue }
-            placed.append(rect)
-            ctx.draw(resolved, at: CGPoint(x: rect.midX, y: rect.minY), anchor: .top)
+    var body: some View {
+        let core: CGFloat = isMe ? 11 : 8
+        ZStack {
+            Circle().fill(color.opacity(0.22)).frame(width: core * 2.6, height: core * 2.6)
+            Circle().fill(color.opacity(0.4)).frame(width: core * 1.6, height: core * 1.6)
+            Circle().fill(color).frame(width: core, height: core)
+                .overlay(Circle().stroke(.white.opacity(0.9), lineWidth: isMe ? 1.5 : 1))
         }
     }
 }
 
-// MARK: - Pin Presets
+// MARK: - Colours
 
 extension GlobeMapView {
-
-    private static let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
-    private static let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
-    private static let pro  = Color(red: 107/255, green: 92/255, blue: 165/255)
-
-    // Pin presets removed — globe now uses dynamic pins from real data only
+    static let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
 }

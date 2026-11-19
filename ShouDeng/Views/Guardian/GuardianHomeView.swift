@@ -14,6 +14,7 @@ import MapKit
 struct GuardianHomeView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
+    @State private var showFamilyMap = false
     @State private var mapFocusId: String?
     @State private var showInviteSheet = false
     @State private var showMedicalCard = false
@@ -407,7 +408,7 @@ struct GuardianHomeView: View {
                 pins: dynamicPins,
                 links: dynamicLinks,
                 initialLongitude: 60,
-                labelInsets: EdgeInsets(top: 46, leading: 0, bottom: 26, trailing: 0)
+                onExpand: { showFamilyMap = true }
             )
 
             VStack {
@@ -437,7 +438,11 @@ struct GuardianHomeView: View {
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 16))
-        .frame(height: 240)
+        .frame(height: 320)
+        .fullScreenCover(isPresented: $showFamilyMap) {
+            FullScreenMapView(pins: familyMapPins.pins, label: lang.localized("guardian.home.family.location"),
+                              focusedPinId: .constant(nil), locationService: coordinator.locationService)
+        }
         .padding(.horizontal, 16)
         .padding(.top, 8)
     }
@@ -496,7 +501,8 @@ struct GuardianHomeView: View {
 
     // MARK: - Location Card
 
-    private var locationCard: some View {
+    /// Me + family, for the location card and the full-screen map
+    private var familyMapPins: (pins: [LocationPin], myCoord: CLLocationCoordinate2D, deviceLocation: CLLocation?) {
         // Guardian's own location (use best available for fresher timestamp)
         let deviceLocation = coordinator.locationManager.bestAvailableLocation
         let myCoord: CLLocationCoordinate2D = {
@@ -526,6 +532,11 @@ struct GuardianHomeView: View {
             }
         }
 
+        return (pins, myCoord, deviceLocation)
+    }
+
+    private var locationCard: some View {
+        let (pins, myCoord, deviceLocation) = familyMapPins
         return LocationCardView(
             pins: pins,
             centerCoordinate: myCoord,

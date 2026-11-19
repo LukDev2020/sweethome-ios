@@ -989,6 +989,21 @@
 "map.search.unknown" = "Unknown place";
 "map.search.food" = "Food";
 "map.search.cafe" = "Cafe";
+"globe.openMap" = "Open map";
+"globe.openMap.hint" = "Search places, find the nearest hospital or police, get directions";
+"map.search.fire" = "Fire station";
+"map.search.embassy" = "Embassy";
+"map.search.grocery" = "Grocery";
+"map.search.ev" = "EV charging";
+"map.search.atm" = "ATM";
+"map.search.parking" = "Parking";
+"map.search.transit" = "Transit";
+"map.search.hotel" = "Hotel";
+"map.search.clear" = "Clear search";
+"map.place.call" = "Call";
+"map.mode.map" = "Map";
+"map.mode.satellite" = "Satellite";
+"map.mode.globe" = "Globe";
 "map.search.noResults" = "No results found";
 "map.search.openInMaps" = "Open in Maps";
 
