@@ -34,6 +34,7 @@
 		B6F3D8CDCB5E6CE9C9A0A5D1 /* MedicalCardCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C1A3C9F27C325C2D52BDF9F /* MedicalCardCache.swift */; };
 		02FDCD5227ECBAF427E9684C /* ConnectivityMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85E5EF8C5CE00C0809028032 /* ConnectivityMonitor.swift */; };
 		CC43ECAB20D34828CF0CC677 /* GlobeLabelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A3FBDFE830D15DFC6912B40 /* GlobeLabelTests.swift */; };
+		06EFE3CFF211E38500E5B928 /* TripReportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7279309955F51A69BEB3C8 /* TripReportTests.swift */; };
 		B30EB6602DA702F7A6D20086 /* LocalizationCompletenessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02875D1C7B137931AD752965 /* LocalizationCompletenessTests.swift */; };
 		D6777B81C2D1BCB346B6C2F3 /* ContractFixtureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAEC4525DF40C4476C125A50 /* ContractFixtureTests.swift */; };
 		25F3BEBCE49F83D028EDDA2A /* AppLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4065FDD0413EBFDA074642D7 /* AppLifecycleTests.swift */; };
@@ -43,9 +44,11 @@
 		DD44EE0100000012 /* Rider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD44EE0100000011 /* Rider.swift */; };
 		C3C1F19404F659FA019487D2 /* RiderSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE8FA0C777CF17B3172FFD0E /* RiderSettings.swift */; };
 		BB22CC3300001002 /* TripRecordingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC3300002002 /* TripRecordingService.swift */; };
+		CD5115087309976B9C82EFD5 /* TripReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B5833AC8940C5EB4CFE87B /* TripReport.swift */; };
 		B2FE267CF1ADBC58FC73EE86 /* AppleMapsLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05D8D5E956E9740F8D58568C /* AppleMapsLink.swift */; };
 		BB22CC3300001003 /* TripHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC3300002003 /* TripHistoryView.swift */; };
 		BB22CC3300001004 /* TripDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC3300002004 /* TripDetailView.swift */; };
+		E6335ACC9D5A1C7224F60BD5 /* LiveTrackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED429348EE07178B805D1C31 /* LiveTrackView.swift */; };
 		AA11BB2200001001 /* DuressCodeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB2200002001 /* DuressCodeSettingsView.swift */; };
 		AA11BB2200001002 /* SilentAlarmSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB2200002002 /* SilentAlarmSettingsView.swift */; };
 		AA11BB2200001003 /* SilentAlarmService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB2200002003 /* SilentAlarmService.swift */; };
@@ -331,6 +334,7 @@
 		4C1A3C9F27C325C2D52BDF9F /* MedicalCardCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicalCardCache.swift; sourceTree = "<group>"; };
 		85E5EF8C5CE00C0809028032 /* ConnectivityMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectivityMonitor.swift; sourceTree = "<group>"; };
 		1A3FBDFE830D15DFC6912B40 /* GlobeLabelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobeLabelTests.swift; sourceTree = "<group>"; };
+		DA7279309955F51A69BEB3C8 /* TripReportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripReportTests.swift; sourceTree = "<group>"; };
 		02875D1C7B137931AD752965 /* LocalizationCompletenessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizationCompletenessTests.swift; sourceTree = "<group>"; };
 		DAEC4525DF40C4476C125A50 /* ContractFixtureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContractFixtureTests.swift; sourceTree = "<group>"; };
 		4065FDD0413EBFDA074642D7 /* AppLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLifecycleTests.swift; sourceTree = "<group>"; };
@@ -522,9 +526,11 @@
 		DD44EE0100000011 /* Rider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Rider.swift; sourceTree = "<group>"; };
 		CE8FA0C777CF17B3172FFD0E /* RiderSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiderSettings.swift; sourceTree = "<group>"; };
 		BB22CC3300002002 /* TripRecordingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRecordingService.swift; sourceTree = "<group>"; };
+		B1B5833AC8940C5EB4CFE87B /* TripReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripReport.swift; sourceTree = "<group>"; };
 		05D8D5E956E9740F8D58568C /* AppleMapsLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleMapsLink.swift; sourceTree = "<group>"; };
 		BB22CC3300002003 /* TripHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripHistoryView.swift; sourceTree = "<group>"; };
 		BB22CC3300002004 /* TripDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripDetailView.swift; sourceTree = "<group>"; };
+		ED429348EE07178B805D1C31 /* LiveTrackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTrackView.swift; sourceTree = "<group>"; };
 		AA11BB2200002001 /* DuressCodeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuressCodeSettingsView.swift; sourceTree = "<group>"; };
 		AA11BB2200002002 /* SilentAlarmSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilentAlarmSettingsView.swift; sourceTree = "<group>"; };
 		AA11BB2200002003 /* SilentAlarmService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilentAlarmService.swift; sourceTree = "<group>"; };
@@ -814,6 +820,7 @@
 				A1B2C3D4E5F6A7B8C9D0E1F2 /* ReactiveLocationService.swift */,
 				AE1267A17B7842458F45DF8F /* LocationBatchUploader.swift */,
 				BB22CC3300002002 /* TripRecordingService.swift */,
+				B1B5833AC8940C5EB4CFE87B /* TripReport.swift */,
 				05D8D5E956E9740F8D58568C /* AppleMapsLink.swift */,
 				CC33DD0100001008 /* IndoorPositioningService.swift */,
 			);
@@ -871,6 +878,7 @@
 				36FD0E52F4564B5B9E057EB3 /* LocationCardView.swift */,
 				BB22CC3300002003 /* TripHistoryView.swift */,
 				BB22CC3300002004 /* TripDetailView.swift */,
+				ED429348EE07178B805D1C31 /* LiveTrackView.swift */,
 				0879BC98D0B4991130725412 /* MedicalCardView.swift */,
 				3466851E2976AD062984576F /* OnboardingView.swift */,
 				5A999FE740978FB9A70C0B89 /* ProfileEditView.swift */,
@@ -1011,6 +1019,7 @@
 				D221832EF096E7D1E27553C4 /* StubURLProtocol.swift */,
 				7475386BF03D4C56BF3E8AF6 /* RelayFailoverTests.swift */,
 				1A3FBDFE830D15DFC6912B40 /* GlobeLabelTests.swift */,
+				DA7279309955F51A69BEB3C8 /* TripReportTests.swift */,
 				02875D1C7B137931AD752965 /* LocalizationCompletenessTests.swift */,
 				DAEC4525DF40C4476C125A50 /* ContractFixtureTests.swift */,
 				4065FDD0413EBFDA074642D7 /* AppLifecycleTests.swift */,
@@ -1549,6 +1558,7 @@
 				DD44EE0100000012 /* Rider.swift in Sources */,
 				C3C1F19404F659FA019487D2 /* RiderSettings.swift in Sources */,
 				BB22CC3300001002 /* TripRecordingService.swift in Sources */,
+				CD5115087309976B9C82EFD5 /* TripReport.swift in Sources */,
 				B2FE267CF1ADBC58FC73EE86 /* AppleMapsLink.swift in Sources */,
 				CC33DD0100002001 /* FakeCallService.swift in Sources */,
 				CC33DD0100002002 /* DeadManSwitchService.swift in Sources */,
@@ -1570,6 +1580,7 @@
 				DD44EE0100000005 /* LockScreenCardSettingsView.swift in Sources */,
 				BB22CC3300001003 /* TripHistoryView.swift in Sources */,
 				BB22CC3300001004 /* TripDetailView.swift in Sources */,
+				E6335ACC9D5A1C7224F60BD5 /* LiveTrackView.swift in Sources */,
 				0B1E36F80D59153D5A93D7BA /* FoldSplitView.swift in Sources */,
 				DD44EE010000000A /* AppColors.swift in Sources */,
 				42A6F0543B22E8DBB972EEBD /* WidgetDataStore.swift in Sources */,
@@ -1595,6 +1606,7 @@
 				B85E897C516D23FA3207CAE3 /* StubURLProtocol.swift in Sources */,
 				E826437A0F1C4F8D818500F2 /* RelayFailoverTests.swift in Sources */,
 				CC43ECAB20D34828CF0CC677 /* GlobeLabelTests.swift in Sources */,
+				06EFE3CFF211E38500E5B928 /* TripReportTests.swift in Sources */,
 				B30EB6602DA702F7A6D20086 /* LocalizationCompletenessTests.swift in Sources */,
 				D6777B81C2D1BCB346B6C2F3 /* ContractFixtureTests.swift in Sources */,
 				25F3BEBCE49F83D028EDDA2A /* AppLifecycleTests.swift in Sources */,

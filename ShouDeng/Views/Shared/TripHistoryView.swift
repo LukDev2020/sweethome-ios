@@ -35,7 +35,7 @@ struct TripHistoryView: View {
                 } else {
                     List(trips) { trip in
                         NavigationLink {
-                            TripDetailView(tripId: trip.id)
+                            TripDetailView(tripId: trip.id, personName: targetUserName)
                                 .environmentObject(coordinator)
                         } label: {
                             tripRow(trip)

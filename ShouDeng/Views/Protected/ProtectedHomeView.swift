@@ -32,6 +32,7 @@ struct ProtectedHomeView: View {
     @State private var showClaimMaterials = false
     @State private var showNoGuardianSOSWarning = false
     @State private var showTripHistory = false
+    @State private var showLiveTrack = false
     @State private var showTripStartConfirm = false
     @State private var showTripPreflight = false
     @State private var showTripEndConfirm = false
@@ -134,6 +135,10 @@ struct ProtectedHomeView: View {
             }
             .sheet(isPresented: $showClaimMaterials) {
                 ClaimMaterialsView()
+                    .environmentObject(coordinator)
+            }
+            .fullScreenCover(isPresented: $showLiveTrack) {
+                LiveTrackView(recorder: coordinator.tripRecordingService)
                     .environmentObject(coordinator)
             }
             .sheet(isPresented: $showTripHistory) {
@@ -619,6 +624,18 @@ struct ProtectedHomeView: View {
                     .font(.scaled(size: 12))
                     .foregroundStyle(.white.opacity(0.7))
                 Spacer()
+                // Tap the banner: the live track (the line drawn as you move)
+                Button {
+                    showLiveTrack = true
+                } label: {
+                    Image(systemName: "map.fill")
+                        .font(.scaled(size: 12, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .padding(6)
+                        .background(Color.white.opacity(0.25), in: Circle())
+                }
+                .accessibilityLabel(lang.localized("live.open"))
+                .accessibilityIdentifier("trip.openLive")
                 Button {
                     showTripEndConfirm = true
                 } label: {
@@ -635,6 +652,8 @@ struct ProtectedHomeView: View {
             .padding(.vertical, 10)
             .background(Color.red.opacity(0.85))
             .clipShape(RoundedRectangle(cornerRadius: 10))
+            .contentShape(Rectangle())
+            .onTapGesture { showLiveTrack = true }
         } else {
             // Start recording + view history
             HStack(spacing: 8) {

@@ -44,6 +44,9 @@ struct TripStats: Equatable {
             s.maxSpeed = max(s.maxSpeed, v)
         }
         s.averageSpeed = s.movingSeconds > 0 ? s.distanceMeters / s.movingSeconds : 0
+        // The phone's speed readings lag distance / time a little: an average above
+        // the top speed reads as a bug
+        s.maxSpeed = max(s.maxSpeed, s.averageSpeed)
 
         // Climb with hysteresis: only count a change once it exceeds the noise
         let altitudes = points.compactMap(\.altitude)
@@ -302,7 +305,7 @@ enum TripReportPDF {
             y = section(L("report.trip.speedChart"), y: y)
             y = chart(input.points, value: { $0.speed.map { max(0, $0) * 3.6 } }, unit: "km/h",
                       color: TrackSpeedBand.moderate.uiColor, y: y + 6)
-            if input.points.contains(where: { $0.altitude != nil }) {
+            if let lo = stats.minAltitude, let hi = stats.maxAltitude, hi - lo >= 1 {
                 y = section(L("report.trip.elevChart"), y: y + 18)
                 y = chart(input.points, value: \.altitude, unit: "m",
                           color: TrackSpeedBand.slow.uiColor, y: y + 6)
@@ -432,7 +435,7 @@ enum TripReportPDF {
             return rect.maxY + 16
         }
         let vMin = min(0, samples.map(\.1).min() ?? 0)
-        let vMax = max(samples.map(\.1).max() ?? 1, vMin + 1)
+        let vMax = max(samples.map(\.1).max() ?? 1, vMin + 4)
         let grid = 4
         for i in 0...grid {
             let gy = rect.maxY - CGFloat(i) / CGFloat(grid) * rect.height
@@ -442,7 +445,7 @@ enum TripReportPDF {
             text(String(format: "%.0f", v), at: CGPoint(x: margin, y: gy - 6), font: .systemFont(ofSize: 8),
                  color: muted, width: 30, alignment: .right)
         }
-        text(unit, at: CGPoint(x: margin, y: rect.minY - 14), font: .systemFont(ofSize: 8), color: muted, width: 30, alignment: .right)
+        text(unit, at: CGPoint(x: rect.minX + 5, y: rect.minY + 3), font: .systemFont(ofSize: 8), color: muted, width: 40)
         let path = UIBezierPath()
         for (i, s) in samples.enumerated() {
             let p = CGPoint(x: rect.minX + CGFloat(s.0 / tMax) * rect.width,
@@ -467,7 +470,7 @@ enum TripReportPDF {
         tf.dateFormat = "HH:mm"
         var y = y
         for (i, stop) in stops.enumerated() {
-            if y > pageSize.height - 80 { y = newPage() }
+            if y > pageSize.height - 90 { y = newPage() }
             let line = String(format: "%d.  %@–%@  ·  %@  ·  %.5f, %.5f", i + 1,
                               tf.string(from: stop.start), tf.string(from: stop.end),
                               TripFormat.duration(stop.duration), stop.latitude, stop.longitude)
@@ -497,7 +500,7 @@ enum TripReportPDF {
         }
         var y = headerRow(y)
         for (i, p) in points.enumerated() {
-            if y > pageSize.height - 70 { y = headerRow(newPage()) }
+            if y > pageSize.height - 80 { y = headerRow(newPage()) }
             let cells = [
                 "\(i + 1)", tf.string(from: p.timestamp),
                 String(format: "%.5f", p.latitude), String(format: "%.5f", p.longitude),
@@ -520,15 +523,15 @@ enum TripReportPDF {
         df.dateStyle = .medium
         df.timeStyle = .short
         df.locale = Locale(identifier: LanguageManager.shared.current.rawValue)
-        let y = pageSize.height - 46
+        let y = pageSize.height - 50
         rule.setFill()
         UIRectFill(CGRect(x: margin, y: y, width: pageSize.width - 2 * margin, height: 0.5))
-        text(L("report.trip.disclaimer"), at: CGPoint(x: margin, y: y + 6), font: .systemFont(ofSize: 7.5),
-             color: muted, width: pageSize.width - 2 * margin - 90)
+        let below = text(L("report.trip.disclaimer"), at: CGPoint(x: margin, y: y + 5), font: .systemFont(ofSize: 7.5),
+                         color: muted, width: pageSize.width - 2 * margin)
         let right = String(format: L("report.trip.generated"), df.string(from: input.generatedAt))
             + " · " + String(format: L("report.trip.page"), page)
-        text(right, at: CGPoint(x: pageSize.width - margin - 200, y: y + 6), font: .systemFont(ofSize: 7.5),
-             color: muted, width: 200, alignment: .right)
+        text(right, at: CGPoint(x: margin, y: below + 2), font: .systemFont(ofSize: 7.5),
+             color: muted, width: pageSize.width - 2 * margin, alignment: .right)
     }
 
     /// At most `max` points, evenly spread, always keeping the first and last

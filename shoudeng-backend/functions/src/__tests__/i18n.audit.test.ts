@@ -371,6 +371,7 @@ const SAME_IN_FR = new Set([
   "auth.methods.alipay",
   // Map: same words in French
   "map.search.parking", "map.mode.satellite", "map.mode.globe",
+  "report.trip.col.lat", "report.trip.col.lon", "report.trip.col.alt",
     // Incident report: same words in French
     "report.hours", "report.minutes", "report.col.distance", "report.fall.impact", "report.h.locations", "report.col.position", "report.col.source",
     // Rider onboarding: same word in French

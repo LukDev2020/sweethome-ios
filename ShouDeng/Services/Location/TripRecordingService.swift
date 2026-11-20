@@ -12,6 +12,26 @@ final class TripRecordingService: ObservableObject {
     @Published var pointCount: Int = 0
     @Published var totalDistance: Double = 0
     @Published var elapsedSeconds: TimeInterval = 0
+    /// The whole trip so far, on this phone (the live track line and the PDF report)
+    @Published private(set) var livePoints: [TripPoint] = []
+    /// m/s, from the latest fix
+    @Published private(set) var currentSpeed: Double = 0
+    /// The trip that just ended, kept so its report can still be exported
+    @Published private(set) var lastFinishedTrip: FinishedTrip?
+    /// Recorded on this phone only (no server): simulator runs
+    @Published private(set) var isLocalOnly = false
+
+    struct FinishedTrip {
+        let points: [TripPoint]
+        let start: Date
+        let end: Date
+    }
+
+    /// A fix older than the recording by more than this is a cached position
+    static let staleFixTolerance: TimeInterval = 5
+
+    /// Hours at ~1 fix / 15 m: keep the line drawable, thin the oldest half when full
+    static let maxLivePoints = 20_000
 
     private var pointBuffer: [TripPoint] = []
     private var lastPoint: CLLocation?
@@ -59,6 +79,9 @@ final class TripRecordingService: ObservableObject {
         totalDistance = 0
         pointBuffer = []
         lastPoint = nil
+        livePoints = []
+        currentSpeed = 0
+        isLocalOnly = false
 
         // Persist state
         UserDefaults.standard.set(true, forKey: activeKey)
@@ -68,10 +91,35 @@ final class TripRecordingService: ObservableObject {
         startTimers()
     }
 
+    /// Records on this phone only — nothing is sent (simulator testing of the
+    /// live track and the PDF report without an account).
+    @MainActor
+    func startLocalRecording() {
+        guard !isRecording else { return }
+        currentTripId = "local-\(UUID().uuidString)"
+        recordingStartTime = Date()
+        isRecording = true
+        isLocalOnly = true
+        pointCount = 0
+        totalDistance = 0
+        pointBuffer = []
+        lastPoint = nil
+        livePoints = []
+        currentSpeed = 0
+        startTimers()
+    }
+
     // MARK: - Stop Recording
 
     @MainActor
     func stopRecording() async throws -> TripEndResponse? {
+        if isLocalOnly, isRecording, let tripId = currentTripId {
+            let duration = Date().timeIntervalSince(recordingStartTime ?? Date())
+            let response = TripEndResponse(tripId: tripId, totalDistanceMeters: totalDistance,
+                                           pointCount: pointCount, durationSeconds: duration)
+            clearState()
+            return response
+        }
         guard let api = apiClient, let tripId = currentTripId else { return nil }
         guard isRecording else { return nil }
 
@@ -91,6 +139,7 @@ final class TripRecordingService: ObservableObject {
 
     @MainActor
     func cancelRecording() async {
+        if isLocalOnly { clearState(); lastFinishedTrip = nil; return }
         guard let api = apiClient, let tripId = currentTripId else { return }
         let _: [String: Bool]? = try? await api.post(
             "/v1/trip/\(tripId)/cancel",
@@ -108,12 +157,18 @@ final class TripRecordingService: ObservableObject {
             return
         }
         guard isRecording else { return }
+        // When GPS starts, the phone first hands over its last known position, which
+        // can be minutes old and somewhere else: it isn't part of this trip
+        if let start = recordingStartTime, location.timestamp < start.addingTimeInterval(-Self.staleFixTolerance) {
+            return
+        }
 
         let point = TripPoint(
             latitude: location.coordinate.latitude,
             longitude: location.coordinate.longitude,
             accuracy: location.horizontalAccuracy,
-            altitude: location.altitude,
+            // Negative vertical accuracy: the phone has no altitude (don't record 0 m)
+            altitude: location.verticalAccuracy >= 0 ? location.altitude : nil,
             speed: location.speed >= 0 ? location.speed : nil,
             timestamp: location.timestamp,
             activityType: nil
@@ -123,7 +178,18 @@ final class TripRecordingService: ObservableObject {
         if let last = lastPoint {
             totalDistance += location.distance(from: last)
         }
+        if location.speed >= 0 {
+            currentSpeed = location.speed
+        } else if let last = lastPoint {
+            let dt = location.timestamp.timeIntervalSince(last.timestamp)
+            currentSpeed = dt > 0 ? location.distance(from: last) / dt : currentSpeed
+        }
         lastPoint = location
+
+        livePoints.append(point)
+        if livePoints.count > Self.maxLivePoints {
+            livePoints = Self.thinned(livePoints)
+        }
 
         pointBuffer.append(point)
         if pointBuffer.count > maxBufferedPoints {
@@ -142,6 +208,7 @@ final class TripRecordingService: ObservableObject {
     /// server stores). A failed batch goes back to the front and stops the run.
     @MainActor
     private func flushBuffer() async {
+        guard !isLocalOnly else { pointBuffer = []; return }
         guard !isFlushing, let api = apiClient, let tripId = currentTripId else { return }
         isFlushing = true
         defer { isFlushing = false }
@@ -196,6 +263,12 @@ final class TripRecordingService: ObservableObject {
 
     @MainActor
     private func clearState() {
+        if isRecording, let start = recordingStartTime, !livePoints.isEmpty {
+            lastFinishedTrip = FinishedTrip(points: livePoints, start: start, end: Date())
+        }
+        livePoints = []
+        currentSpeed = 0
+        isLocalOnly = false
         isRecording = false
         currentTripId = nil
         recordingStartTime = nil
@@ -215,6 +288,14 @@ final class TripRecordingService: ObservableObject {
     @MainActor
     func resetForSignOut() {
         clearState()
+        lastFinishedTrip = nil
+    }
+
+    /// Every other point of the older half (the recent line stays detailed)
+    static func thinned(_ points: [TripPoint]) -> [TripPoint] {
+        let half = points.count / 2
+        let older = stride(from: 0, to: half, by: 2).map { points[$0] }
+        return older + points[half...]
     }
 
     private func restoreState() {
@@ -234,7 +315,18 @@ final class TripRecordingService: ObservableObject {
             self.recordingStartTime = start
             self.elapsedSeconds = Date().timeIntervalSince(start)
             self.startTimers()
+            Task { @MainActor in await self.reloadLivePoints(tripId: tripId) }
         }
+    }
+
+    /// After a relaunch the line so far is on the server: fetch it back
+    @MainActor
+    private func reloadLivePoints(tripId: String) async {
+        guard let api = apiClient else { return }
+        guard let detail: TripDetailResponse = try? await api.get("/v1/trip/\(tripId)"),
+              currentTripId == tripId else { return }
+        let newest = detail.points.last?.timestamp ?? .distantPast
+        livePoints = detail.points + livePoints.filter { $0.timestamp > newest }
     }
 
     /// Format elapsed time as HH:MM:SS

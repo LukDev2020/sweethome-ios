@@ -3,6 +3,8 @@ import MapKit
 
 struct TripDetailView: View {
     let tripId: String
+    /// Whose trip (a guardian looking at someone's) — the PDF report's name
+    var personName: String? = nil
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
     @Environment(\.dismiss) private var dismiss
@@ -13,6 +15,12 @@ struct TripDetailView: View {
     @State private var position: MapCameraPosition = .automatic
     @State private var scrubberValue: Double = 1.0
     @State private var showExportSheet = false
+    @State private var exportingPDF = false
+    @State private var didFit = false
+
+    /// A trip still being recorded is reloaded this often (guardians watch it grow)
+    static let livePollSeconds: UInt64 = 15
+    private var isLive: Bool { trip?.status == "recording" }
 
     private let ink = Color.appInk
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
@@ -43,15 +51,39 @@ struct TripDetailView: View {
         }
         .navigationTitle(lang.localized("trip.detail.title"))
         .navigationBarTitleDisplayMode(.inline)
-        .task { await loadTrip() }
+        .toolbar {
+            if isLive {
+                ToolbarItem(placement: .topBarTrailing) {
+                    HStack(spacing: 5) {
+                        Circle().fill(Color.red).frame(width: 7, height: 7)
+                        Text(lang.localized("trip.detail.live"))
+                            .font(.scaled(size: 11, weight: .semibold))
+                    }
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 4)
+                    .background(Color.red.opacity(0.12), in: Capsule())
+                    .accessibilityElement(children: .combine)
+                }
+            }
+        }
+        .task {
+            await loadTrip()
+            // Live: keep reloading while it is being recorded and this screen is open
+            while !Task.isCancelled, isLive {
+                try? await Task.sleep(nanoseconds: Self.livePollSeconds * 1_000_000_000)
+                guard !Task.isCancelled else { break }
+                await loadTrip()
+            }
+        }
     }
 
     private var mapView: some View {
         Map(position: $position) {
-            // Route polyline
-            if coordinates.count > 1 {
-                MapPolyline(coordinates: coordinates)
-                    .stroke(routeColor, lineWidth: 4)
+            // Route, coloured by speed (same bands as the live track and the PDF)
+            ForEach(Array(TrackRun.runs(visiblePoints).enumerated()), id: \.offset) { _, run in
+                MapPolyline(coordinates: run.coordinates)
+                    .stroke(Color(uiColor: run.band.uiColor),
+                            style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
             }
 
             // Start pin
@@ -126,21 +158,42 @@ struct TripDetailView: View {
                     }
                 }
 
-                // Export button
-                Button {
-                    exportGPX()
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "square.and.arrow.up")
-                            .font(.scaled(size: 13))
-                        Text(lang.localized("trip.export.gpx"))
+                // Export: PDF report and GPX
+                HStack(spacing: 10) {
+                    Button {
+                        Task { await exportPDF() }
+                    } label: {
+                        HStack(spacing: 6) {
+                            if exportingPDF { ProgressView().tint(.white) } else {
+                                Image(systemName: "doc.richtext").font(.scaled(size: 13))
+                            }
+                            Text(lang.localized("report.trip.export"))
+                        }
+                        .font(.scaled(size: 14, weight: .medium))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.inkSolid)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
-                    .font(.scaled(size: 14, weight: .medium))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Color.inkSolid)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .disabled(exportingPDF)
+                    .accessibilityIdentifier("trip.exportPDF")
+
+                    Button {
+                        exportGPX()
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.scaled(size: 13))
+                            Text(lang.localized("trip.export.gpx"))
+                        }
+                        .font(.scaled(size: 14, weight: .medium))
+                        .foregroundStyle(Color.inkSolid)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.inkSolid.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
                 }
             }
             .padding(16)
@@ -197,8 +250,9 @@ struct TripDetailView: View {
                 points = response.points
                 isLoading = false
 
-                // Fit map to route
-                if !coordinates.isEmpty {
+                // Fit map to route — once: a live reload must not undo the person's panning
+                if !coordinates.isEmpty, !didFit {
+                    didFit = true
                     let region = regionForCoordinates(coordinates)
                     position = .region(region)
                 }
@@ -224,6 +278,17 @@ struct TripDetailView: View {
             longitudeDelta: max((lons.max()! - lons.min()!) * 1.3, 0.005)
         )
         return MKCoordinateRegion(center: center, span: span)
+    }
+
+    @MainActor
+    private func exportPDF() async {
+        exportingPDF = true
+        defer { exportingPDF = false }
+        let input = TripReportInput(personName: personName ?? coordinator.currentUser?.displayName ?? "",
+                                    points: points, inProgress: isLive)
+        let data = await TripReportPDF.render(input)
+        guard let url = try? TripReportPDF.write(data, input: input) else { return }
+        TripReportShare.present(url)
     }
 
     private func exportGPX() {

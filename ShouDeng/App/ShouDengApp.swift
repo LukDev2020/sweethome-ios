@@ -52,6 +52,14 @@ struct ShouDengApp: App {
                             .environmentObject(appDelegate.appCoordinator)
                     }
                 }
+                // `-liveTrackSim`: Live Track on its own, recording on this phone only (nothing
+                // sent) — drive it with `xcrun simctl location <udid> run "City Bicycle Ride"`
+                .overlay {
+                    if ProcessInfo.processInfo.arguments.contains("-liveTrackSim") {
+                        LiveTrackSimulation()
+                            .environmentObject(appDelegate.appCoordinator)
+                    }
+                }
                 #endif
                 .preferredColorScheme(colorScheme)
                 // Firebase phone-auth reCAPTCHA callback + shoudeng:// deep links
@@ -77,3 +85,21 @@ struct ShouDengApp: App {
         }
     }
 }
+
+#if DEBUG
+/// Simulator test harness for the live track and the PDF report
+private struct LiveTrackSimulation: View {
+    @EnvironmentObject var coordinator: AppCoordinator
+
+    var body: some View {
+        LiveTrackView(recorder: coordinator.tripRecordingService)
+            .background(Color(.systemBackground))
+            .task {
+                coordinator.locationManager.start()
+                coordinator.tripRecordingService.startLocalRecording()
+                // The coordinator turns trip GPS on when a recording starts; be explicit here
+                coordinator.locationManager.setTripRecording(true)
+            }
+    }
+}
+#endif
