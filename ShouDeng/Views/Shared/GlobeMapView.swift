@@ -100,7 +100,7 @@ struct GlobeMapView: View {
         .simultaneousGesture(MagnifyGesture().onChanged { _ in spinning = false })
         .onReceive(spinTimer) { _ in
             guard spinning, !reduceMotion else { return }
-            centerLongitude = centerLongitude >= 180 ? centerLongitude - 357.5 : centerLongitude + 2.5
+            centerLongitude = Self.spunLongitude(centerLongitude)
             let lat = Self.globeCenter(pins: pins, fallbackLongitude: initialLongitude).latitude
             withAnimation(.linear(duration: 1)) {
                 position = .camera(MapCamera(centerCoordinate: .init(latitude: lat, longitude: centerLongitude),
@@ -129,8 +129,24 @@ struct GlobeMapView: View {
                           distance: globeDistance, heading: 0, pitch: 0))
     }
 
+    /// One second of spin: 2.5° east, always inside -180…180. MapKit throws (and the
+    /// app aborts) for a camera longitude past 180, e.g. 179.04 + 2.5.
+    static func spunLongitude(_ longitude: Double, step: Double = 2.5) -> Double {
+        normalizedLongitude(longitude + step)
+    }
+
+    static func normalizedLongitude(_ longitude: Double) -> Double {
+        guard longitude.isFinite else { return 0 }
+        var l = longitude.truncatingRemainder(dividingBy: 360)
+        if l > 180 { l -= 360 }
+        if l < -180 { l += 360 }
+        return l
+    }
+
     static func globeCenter(pins: [Pin], fallbackLongitude: Double) -> CLLocationCoordinate2D {
         let rad = Double.pi / 180
+        // A bad coordinate from the server must not reach MapKit (it throws)
+        let pins = pins.filter { CLLocationCoordinate2DIsValid($0.coordinate) }
         var x = 0.0, y = 0.0, z = 0.0
         for p in pins {
             let la = p.latitude * rad, lo = p.longitude * rad
@@ -140,12 +156,12 @@ struct GlobeMapView: View {
         // Nobody, or people on opposite sides of the Earth: fall back to "me" / the default view
         guard len > 0.3 else {
             if let me = pins.first(where: \.isMe) ?? pins.first {
-                return .init(latitude: max(-30, min(30, me.latitude)), longitude: me.longitude)
+                return .init(latitude: max(-30, min(30, me.latitude)), longitude: normalizedLongitude(me.longitude))
             }
-            return .init(latitude: 20, longitude: fallbackLongitude)
+            return .init(latitude: 20, longitude: normalizedLongitude(fallbackLongitude))
         }
         // MapKit pulls a camera over high latitudes in to ~11 000 km (the globe no longer fits): stay near the tropics
-        return .init(latitude: max(-30, min(30, asin(z / len) / rad)), longitude: atan2(y, x) / rad)
+        return .init(latitude: max(-30, min(30, asin(z / len) / rad)), longitude: normalizedLongitude(atan2(y, x) / rad))
     }
 
     private var globeAccessibilityLabel: String {

@@ -429,12 +429,14 @@ struct GuardianHomeView: View {
                 Spacer()
 
                 HStack(spacing: 11) {
+                    // Right-aligned: Apple's logo and Legal link sit bottom-left and must stay visible
                     Spacer()
                     legendDot(color: lamp, label: lang.localized("home.persons"))
                     legendDot(color: safe, label: lang.localized("guardian.home.me"))
-                    Spacer()
                 }
+                .padding(.trailing, 12)
                 .padding(.bottom, 8)
+                .allowsHitTesting(false)
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 16))

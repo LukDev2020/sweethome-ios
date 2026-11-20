@@ -21,13 +21,16 @@ extension AppCoordinator {
         case .failure(let error):
             // Closing Apple's sheet is not an error
             if (error as? ASAuthorizationError)?.code == .canceled { return }
-            identitySignInError = IdentitySignInError.appleFailed.localizedDescription
+            // Apple's own code (e.g. 1000) so a report from a tester can be traced
+            let ns = error as NSError
+            identitySignInError = IdentitySignInError.appleFailed.localizedDescription + " (Apple \(ns.code))"
+            print("[Auth] Sign in with Apple failed on the phone: \(ns.domain) \(ns.code) \(ns.localizedDescription)")
             return
         case .success(let authorization):
             guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
                   let tokenData = credential.identityToken,
                   let identityToken = String(data: tokenData, encoding: .utf8) else {
-                identitySignInError = IdentitySignInError.appleFailed.localizedDescription
+                identitySignInError = IdentitySignInError.appleFailed.localizedDescription + " (no token)"
                 return
             }
             let code = credential.authorizationCode.flatMap { String(data: $0, encoding: .utf8) }
@@ -42,6 +45,7 @@ extension AppCoordinator {
                 }
             } catch {
                 identitySignInError = error.localizedDescription
+                print("[Auth] Sign in with Apple: the server step failed: \(error)")
             }
         }
     }

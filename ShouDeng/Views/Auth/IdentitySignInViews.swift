@@ -22,6 +22,7 @@ struct IdentitySignInButtons: View {
 
     @State private var rawNonce = ""
     @State private var alipayAvailable = false
+    @State private var showTermsHint = false
 
     var body: some View {
         VStack(spacing: 10) {
@@ -62,6 +63,23 @@ struct IdentitySignInButtons: View {
             .disabled(!termsAccepted)
             .opacity(termsAccepted ? 1 : 0.4)
             .accessibilityIdentifier("login.apple")
+            // A greyed-out button that silently ignores taps reads as "Apple sign-in is broken"
+            .overlay {
+                if !termsAccepted {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture { showTermsHint = true }
+                        .accessibilityHidden(true)
+                }
+            }
+            .onChange(of: termsAccepted) { _, accepted in if accepted { showTermsHint = false } }
+
+            if showTermsHint && !termsAccepted {
+                Text(lang.localized("terms.update.required"))
+                    .font(.scaled(size: 12))
+                    .foregroundStyle(red)
+                    .multilineTextAlignment(.center)
+            }
 
             if alipayAvailable {
                 if coordinator.alipayWaiting && !coordinator.alipayConnecting {

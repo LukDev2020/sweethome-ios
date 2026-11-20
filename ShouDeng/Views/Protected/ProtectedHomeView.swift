@@ -502,12 +502,14 @@ struct ProtectedHomeView: View {
                 Spacer()
 
                 HStack(spacing: 16) {
+                    // Right-aligned: Apple's logo and Legal link sit bottom-left and must stay visible
                     Spacer()
                     legendDot(color: lamp, label: lang.localized("protected.home.me"))
                     legendDot(color: safe, label: lang.localized("protected.home.guardian"))
-                    Spacer()
                 }
+                .padding(.trailing, 12)
                 .padding(.bottom, 8)
+                .allowsHitTesting(false)
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 16))
