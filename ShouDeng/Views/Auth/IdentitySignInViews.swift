@@ -60,10 +60,11 @@ struct IdentitySignInButtons: View {
             .signInWithAppleButtonStyle(.black)
             .frame(height: 50)
             .clipShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
-            .disabled(!termsAccepted)
-            .opacity(termsAccepted ? 1 : 0.4)
+            // Always full colour: a greyed-out Apple button read as "Apple sign-in is broken".
+            // Until the Terms are ticked, a tap shows why instead of opening Apple's sheet.
+            .allowsHitTesting(termsAccepted)
+            .disabled(!termsAccepted)   // VoiceOver can't bypass the Terms either
             .accessibilityIdentifier("login.apple")
-            // A greyed-out button that silently ignores taps reads as "Apple sign-in is broken"
             .overlay {
                 if !termsAccepted {
                     Color.clear
