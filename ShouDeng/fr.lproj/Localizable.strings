@@ -2768,3 +2768,10 @@
 "live.open" = "Ouvrir le suivi en direct";
 "live.exportFailed" = "Impossible d'enregistrer le rapport. Réessayez.";
 "trip.detail.live" = "En direct";
+
+/* Guardian member page: live track + trip history */
+"guardian.member.liveTrack.on" = "Enregistrement en cours";
+"guardian.member.liveTrack.off" = "Aucun trajet en cours";
+"guardian.member.tripHistory.sub" = "Voir et exporter";
+"guardian.member.liveTrack.none.title" = "Aucun trajet en ce moment";
+"guardian.member.liveTrack.none.body" = "%@ n'enregistre pas de trajet en ce moment. Dès qu'il ou elle touche « Enregistrer le trajet » sur l'écran d'accueil, vous verrez l'itinéraire se dessiner ici.";

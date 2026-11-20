@@ -12,6 +12,11 @@ struct GuardianMemberDetailView: View {
     @ObservedObject private var langManager = LanguageManager.shared
     let personId: String
     @State private var personTimeline: [TimelineEntry] = []
+    /// The trip this person is recording right now (checked every 30 s while open)
+    @State private var liveTripId: String?
+    @State private var showLiveTrip = false
+    @State private var showTripHistory = false
+    @State private var showNoLiveTrip = false
 
     private let ink = Color.appInk
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
@@ -38,6 +43,9 @@ struct GuardianMemberDetailView: View {
 
                     // Map with real location
                     locationMapSection(person)
+
+                    // Live track + trip history: big, always visible
+                    tripButtons(person)
 
                     // Status panel
                     statusPanel(person)
@@ -115,6 +123,101 @@ struct GuardianMemberDetailView: View {
                     .foregroundStyle(safe)
             }
         }
+        .task(id: personId) {
+            while !Task.isCancelled {
+                await refreshLiveTrip()
+                try? await Task.sleep(nanoseconds: 30_000_000_000)
+            }
+        }
+        .sheet(isPresented: $showLiveTrip) {
+            if let liveTripId {
+                NavigationStack {
+                    TripDetailView(tripId: liveTripId)
+                        .environmentObject(coordinator)
+                        .toolbar {
+                            ToolbarItem(placement: .topBarLeading) {
+                                Button { showLiveTrip = false } label: {
+                                    Label(langManager.localized("common.close"), systemImage: "xmark")
+                                }
+                            }
+                        }
+                }
+            }
+        }
+        .sheet(isPresented: $showTripHistory) {
+            TripHistoryView(targetUserId: personId, targetUserName: person?.user.displayName)
+                .environmentObject(coordinator)
+        }
+        .alert(langManager.localized("guardian.member.liveTrack.none.title"), isPresented: $showNoLiveTrip) {
+            Button(langManager.localized("trip.history.title")) { showTripHistory = true }
+            Button(langManager.localized("common.ok"), role: .cancel) {}
+        } message: {
+            Text(String(format: langManager.localized("guardian.member.liveTrack.none.body"),
+                        person?.user.displayName ?? ""))
+        }
+    }
+
+    // MARK: - Trips
+
+    private func tripButtons(_ person: ProtectedPerson) -> some View {
+        let live = liveTripId != nil
+        return HStack(spacing: 10) {
+            Button {
+                if live { showLiveTrip = true } else { showNoLiveTrip = true }
+            } label: {
+                tripBlock(title: langManager.localized("live.title"),
+                          subtitle: langManager.localized(live ? "guardian.member.liveTrack.on" : "guardian.member.liveTrack.off"),
+                          icon: "location.north.line.fill",
+                          background: live ? Color(red: 214/255, green: 69/255, blue: 65/255)
+                                           : Color(red: 47/255, green: 133/255, blue: 98/255),
+                          pulsing: live)
+            }
+            .accessibilityIdentifier("member.liveTrack")
+            Button {
+                showTripHistory = true
+            } label: {
+                tripBlock(title: langManager.localized("trip.history.title"),
+                          subtitle: langManager.localized("guardian.member.tripHistory.sub"),
+                          icon: "clock.arrow.circlepath",
+                          background: Color(red: 33/255, green: 104/255, blue: 166/255),
+                          pulsing: false)
+            }
+            .accessibilityIdentifier("member.tripHistory")
+        }
+    }
+
+    private func tripBlock(title: String, subtitle: String, icon: String, background: Color, pulsing: Bool) -> some View {
+        VStack(spacing: 4) {
+            HStack(spacing: 6) {
+                if pulsing {
+                    Circle().fill(.white).frame(width: 8, height: 8)
+                }
+                Image(systemName: icon)
+                    .font(.scaled(size: 20, weight: .semibold))
+            }
+            Text(title)
+                .font(.scaled(size: 16, weight: .semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+            Text(subtitle)
+                .font(.scaled(size: 12, weight: .medium))
+                .opacity(0.85)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .foregroundStyle(.white)
+        .frame(maxWidth: .infinity, minHeight: 82)
+        .padding(.vertical, 6)
+        .background(background, in: RoundedRectangle(cornerRadius: 14))
+        .contentShape(RoundedRectangle(cornerRadius: 14))
+    }
+
+    /// Asks the server whether this person is recording a trip now
+    private func refreshLiveTrip() async {
+        guard !coordinator.isDemo else { return }
+        guard let response: TripListResponse = try? await coordinator.apiClient.get("/v1/trip/list?userId=\(personId)") else { return }
+        let recording = response.trips.first { $0.status == "recording" }?.id
+        await MainActor.run { liveTripId = recording }
     }
 
     // MARK: - Header

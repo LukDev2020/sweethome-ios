@@ -94,6 +94,9 @@ struct ProtectedHomeView: View {
             }
             .navigationDestination(for: String.self) { guardianId in
                 ProtectedGuardianDetailView(guardianId: guardianId)
+                    // Back home, the map shows that guardian (a tap gesture on the card
+                    // swallowed the card's own tap on iOS 27)
+                    .onAppear { withAnimation { mapFocusId = guardianId } }
             }
             .alert(lang.localized("sos.no.guardian.title"), isPresented: $showNoGuardianSOSWarning) {
                 Button(lang.localized("sos.send.anyway")) {
@@ -608,55 +611,48 @@ struct ProtectedHomeView: View {
 
     @ViewBuilder
     private var tripRecordingSection: some View {
-        if coordinator.tripRecordingService.isRecording {
-            // Recording banner
-            HStack(spacing: 8) {
-                Circle()
-                    .fill(Color.red)
-                    .frame(width: 10, height: 10)
-                Text(lang.localized("trip.record.recording"))
-                    .font(.scaled(size: 13, weight: .semibold))
-                    .foregroundStyle(.white)
-                Text(coordinator.tripRecordingService.elapsedFormatted)
-                    .font(.scaled(size: 13, weight: .medium).monospacedDigit())
-                    .foregroundStyle(.white.opacity(0.9))
-                Text(coordinator.tripRecordingService.distanceFormatted)
-                    .font(.scaled(size: 12))
-                    .foregroundStyle(.white.opacity(0.7))
-                Spacer()
-                // Tap the banner: the live track (the line drawn as you move)
-                Button {
-                    showLiveTrack = true
-                } label: {
-                    Image(systemName: "map.fill")
-                        .font(.scaled(size: 12, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .padding(6)
-                        .background(Color.white.opacity(0.25), in: Circle())
+        let trips = coordinator.tripRecordingService
+        if trips.isRecording {
+            // Recording: one red block — what's happening, then the two things to do
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 10, height: 10)
+                    Text(lang.localized("trip.record.recording"))
+                        .font(.scaled(size: 17, weight: .bold))
+                    Spacer()
+                    Text(trips.elapsedFormatted)
+                        .font(.scaled(size: 17, weight: .semibold).monospacedDigit())
+                    Text(trips.distanceFormatted)
+                        .font(.scaled(size: 15, weight: .medium))
+                        .opacity(0.85)
                 }
-                .accessibilityLabel(lang.localized("live.open"))
-                .accessibilityIdentifier("trip.openLive")
-                Button {
-                    showTripEndConfirm = true
-                } label: {
-                    Text(lang.localized("trip.record.stop"))
-                        .font(.scaled(size: 12, weight: .medium))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(Color.white.opacity(0.25))
-                        .clipShape(Capsule())
+                .foregroundStyle(.white)
+                HStack(spacing: 10) {
+                    Button {
+                        showLiveTrack = true
+                    } label: {
+                        tripBlockLabel(lang.localized("live.title"), icon: "location.north.line.fill",
+                                       foreground: Color(red: 196/255, green: 50/255, blue: 45/255), background: .white)
+                    }
+                    .accessibilityHint(lang.localized("live.open"))
+                    .accessibilityIdentifier("trip.openLive")
+                    Button {
+                        showTripEndConfirm = true
+                    } label: {
+                        tripBlockLabel(lang.localized("trip.record.stop"), icon: "stop.fill",
+                                       foreground: .white, background: Color.white.opacity(0.22))
+                    }
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
-            .background(Color.red.opacity(0.85))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .padding(14)
+            .background(Color(red: 214/255, green: 69/255, blue: 65/255), in: RoundedRectangle(cornerRadius: 14))
             .contentShape(Rectangle())
             .onTapGesture { showLiveTrack = true }
         } else {
-            // Start recording + view history
-            HStack(spacing: 8) {
+            // Two colour blocks: green starts a trip, blue opens past trips
+            HStack(spacing: 10) {
                 Button {
                     // Preflight checklist (offline maps, Find My, satellite SOS) unless
                     // the person chose to skip it; then the plain confirmation.
@@ -666,36 +662,37 @@ struct ProtectedHomeView: View {
                         showTripPreflight = true
                     }
                 } label: {
-                    HStack(spacing: 5) {
-                        Image(systemName: "record.circle")
-                            .font(.scaled(size: 13))
-                        Text(lang.localized("trip.record.start"))
-                            .font(.scaled(size: 13, weight: .medium))
-                    }
-                    .foregroundStyle(ink)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(ink.opacity(0.06))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    tripBlockLabel(lang.localized("trip.record.start"), icon: "record.circle",
+                                   foreground: .white, background: Color(red: 47/255, green: 133/255, blue: 98/255))
                 }
-
+                .accessibilityIdentifier("trip.start")
                 Button {
                     showTripHistory = true
                 } label: {
-                    HStack(spacing: 5) {
-                        Image(systemName: "clock.arrow.circlepath")
-                            .font(.scaled(size: 13))
-                        Text(lang.localized("trip.history.title"))
-                            .font(.scaled(size: 13, weight: .medium))
-                    }
-                    .foregroundStyle(ink)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(ink.opacity(0.06))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    tripBlockLabel(lang.localized("trip.history.title"), icon: "clock.arrow.circlepath",
+                                   foreground: .white, background: Color(red: 33/255, green: 104/255, blue: 166/255))
                 }
+                .accessibilityIdentifier("trip.history")
             }
         }
+    }
+
+    /// A large, solid colour block button (icon over a short label)
+    private func tripBlockLabel(_ title: String, icon: String, foreground: Color, background: Color) -> some View {
+        VStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.scaled(size: 22, weight: .semibold))
+            Text(title)
+                .font(.scaled(size: 16, weight: .semibold))
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+                .minimumScaleFactor(0.8)
+        }
+        .foregroundStyle(foreground)
+        .frame(maxWidth: .infinity, minHeight: 72)
+        .padding(.vertical, 8)
+        .background(background, in: RoundedRectangle(cornerRadius: 14))
+        .contentShape(RoundedRectangle(cornerRadius: 14))
     }
 
     // MARK: - Send Location Button
@@ -1138,9 +1135,6 @@ struct ProtectedHomeView: View {
                             )
                         }
                         .buttonStyle(.plain)
-                        .simultaneousGesture(TapGesture().onEnded {
-                            withAnimation { mapFocusId = g.id }
-                        })
                     }
                 }
 
@@ -1158,9 +1152,6 @@ struct ProtectedHomeView: View {
                             )
                         }
                         .buttonStyle(.plain)
-                        .simultaneousGesture(TapGesture().onEnded {
-                            withAnimation { mapFocusId = g.id }
-                        })
                     }
                 }
             } else {

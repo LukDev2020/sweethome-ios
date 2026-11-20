@@ -2768,3 +2768,10 @@
 "live.open" = "ライブトラックを開く";
 "live.exportFailed" = "レポートを保存できませんでした。もう一度お試しください。";
 "trip.detail.live" = "ライブ";
+
+/* Guardian member page: live track + trip history */
+"guardian.member.liveTrack.on" = "記録中";
+"guardian.member.liveTrack.off" = "記録していません";
+"guardian.member.tripHistory.sub" = "表示・書き出し";
+"guardian.member.liveTrack.none.title" = "現在、移動の記録はありません";
+"guardian.member.liveTrack.none.body" = "%@さんは今、移動を記録していません。ホーム画面で「移動を記録」をタップすると、ここでルートがリアルタイムに表示されます。";

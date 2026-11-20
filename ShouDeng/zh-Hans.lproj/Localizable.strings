@@ -2768,3 +2768,10 @@
 "live.open" = "打开实时轨迹";
 "live.exportFailed" = "报告无法保存，请重试。";
 "trip.detail.live" = "实时";
+
+/* Guardian member page: live track + trip history */
+"guardian.member.liveTrack.on" = "正在记录";
+"guardian.member.liveTrack.off" = "未在记录";
+"guardian.member.tripHistory.sub" = "查看与导出";
+"guardian.member.liveTrack.none.title" = "现在没有行程";
+"guardian.member.liveTrack.none.body" = "%@ 目前没有在记录行程。对方在主页点“记录行程”后，你就能在这里实时看到路线。";

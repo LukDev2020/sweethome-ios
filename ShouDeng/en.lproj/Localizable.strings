@@ -2768,3 +2768,10 @@
 "live.open" = "Open Live Track";
 "live.exportFailed" = "The report couldn't be saved. Try again.";
 "trip.detail.live" = "Live";
+
+/* Guardian member page: live track + trip history */
+"guardian.member.liveTrack.on" = "Recording now";
+"guardian.member.liveTrack.off" = "Not recording";
+"guardian.member.tripHistory.sub" = "View & export";
+"guardian.member.liveTrack.none.title" = "No trip right now";
+"guardian.member.liveTrack.none.body" = "%@ isn't recording a trip right now. When they tap “Record Trip” on their home screen, you'll see the route here as it's drawn.";

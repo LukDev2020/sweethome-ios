@@ -84,11 +84,17 @@ struct GuardianHomeView: View {
                 }
             }
             .navigationDestination(for: String.self) { personId in
-                if coordinator.guardianSOS[personId] != nil {
-                    GuardianAlertResponseView(personId: personId)
-                } else {
-                    GuardianMemberDetailView(personId: personId)
+                Group {
+                    if coordinator.guardianSOS[personId] != nil {
+                        GuardianAlertResponseView(personId: personId)
+                    } else {
+                        GuardianMemberDetailView(personId: personId)
+                    }
                 }
+                // Back on the home screen the map shows that person. (A tap gesture on
+                // the card did this, but it swallowed the card's own tap on iOS 27,
+                // so the detail page never opened.)
+                .onAppear { withAnimation { mapFocusId = personId } }
             }
             .sheet(isPresented: $showInviteSheet) {
                 InviteGuardianView()
@@ -593,9 +599,6 @@ struct GuardianHomeView: View {
                                 Label(lang.localized("trip.history.title"), systemImage: "map")
                             }
                         }
-                        .simultaneousGesture(TapGesture().onEnded {
-                            withAnimation { mapFocusId = person.id }
-                        })
                     }
                 }
             }
@@ -674,9 +677,6 @@ struct GuardianHomeView: View {
                                 Label(lang.localized("trip.history.title"), systemImage: "map")
                             }
                         }
-                        .simultaneousGesture(TapGesture().onEnded {
-                            withAnimation { mapFocusId = person.id }
-                        })
                     }
                 }
             } else if coordinator.protectedPersons.isEmpty {
