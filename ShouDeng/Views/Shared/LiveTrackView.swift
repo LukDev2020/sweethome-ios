@@ -16,6 +16,10 @@ struct LiveTrackView: View {
 
     @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
     @State private var following = true
+    /// "Whole route" stays fitted as the line grows (until the map is moved or Follow is tapped)
+    @State private var overview = false
+    /// Height of the stats panel + buttons: the map fits the route above it
+    @State private var bottomInset: CGFloat = 0
     @State private var showStopConfirm = false
     @State private var exporting = false
     @State private var exportFailed = false
@@ -40,11 +44,20 @@ struct LiveTrackView: View {
             topBar
             VStack {
                 Spacer()
-                mapButtons
-                panel
+                VStack(spacing: 0) {
+                    mapButtons
+                    panel
+                }
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { bottomInset = $0 }
             }
         }
-        .onChange(of: recorder.livePoints.count) { _, _ in follow(animated: true) }
+        .onChange(of: recorder.livePoints.count) { _, _ in
+            if overview { fitRoute(animated: true) } else { follow(animated: true) }
+        }
+        // Trip ended: show the whole route
+        .onChange(of: recorder.isRecording) { _, recording in
+            if !recording { showWholeRoute() }
+        }
         .onAppear { follow(animated: false) }
         .alert(lang.localized("trip.record.stop"), isPresented: $showStopConfirm) {
             Button(lang.localized("settings.action.confirm"), role: .destructive) {
@@ -92,8 +105,14 @@ struct LiveTrackView: View {
         }
         .mapStyle(.standard(elevation: .realistic, pointsOfInterest: .excludingAll))
         .mapControls { MapCompass(); MapScaleView() }
+        // The route, the arrow and "whole route" fit the part of the map you can see
+        .safeAreaPadding(.top, 60)
+        .safeAreaPadding(.bottom, bottomInset)
         // Moving the map yourself stops the camera chasing the arrow
-        .simultaneousGesture(DragGesture(minimumDistance: 4).onChanged { _ in following = false })
+        .simultaneousGesture(DragGesture(minimumDistance: 4).onChanged { _ in
+            following = false
+            overview = false
+        })
         .ignoresSafeArea()
     }
 
@@ -118,9 +137,17 @@ struct LiveTrackView: View {
 
     private func showWholeRoute() {
         following = false
+        overview = true
+        fitRoute(animated: true)
+    }
+
+    private func fitRoute(animated: Bool) {
         guard points.count > 1 else { return }
-        withAnimation(.easeInOut(duration: 0.8)) {
-            position = .region(TripReportPDF.region(for: points))
+        let region = TripReportPDF.region(for: points)
+        if animated {
+            withAnimation(.easeInOut(duration: 0.8)) { position = .region(region) }
+        } else {
+            position = .region(region)
         }
     }
 
@@ -167,10 +194,11 @@ struct LiveTrackView: View {
                 mapButton(icon: following ? "location.fill" : "location", label: lang.localized("live.follow"),
                           active: following) {
                     following = true
+                    overview = false
                     follow(animated: true)
                 }
                 mapButton(icon: "point.topleft.down.to.point.bottomright.curvepath", label: lang.localized("live.overview"),
-                          active: false) { showWholeRoute() }
+                          active: overview) { showWholeRoute() }
             }
         }
         .padding(.horizontal, 16)

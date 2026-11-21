@@ -250,7 +250,7 @@ enum TripReportPDF {
         let df = DateFormatter()
         df.dateFormat = "yyyy-MM-dd_HHmm"
         let stamp = df.string(from: input.points.first?.timestamp ?? input.generatedAt)
-        let name = input.personName.isEmpty ? "Beaconify" : input.personName
+        let name = input.personName.isEmpty ? LanguageManager.shared.current.brandName : input.personName
         let safe = name.components(separatedBy: CharacterSet(charactersIn: "/\\:?%*|\"<>")).joined()
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(safe)_trip_\(stamp).pdf")
         try data.write(to: url, options: .atomic)
@@ -352,7 +352,7 @@ enum TripReportPDF {
         let band = CGRect(x: 0, y: 0, width: pageSize.width, height: 86)
         navy.setFill()
         UIRectFill(band)
-        text("Beaconify", at: CGPoint(x: margin, y: 20), font: .boldSystemFont(ofSize: 13),
+        text(LanguageManager.shared.current.brandName, at: CGPoint(x: margin, y: 20), font: .boldSystemFont(ofSize: 13),
              color: UIColor.white.withAlphaComponent(0.8))
         text(L("report.trip.title"), at: CGPoint(x: margin, y: 38), font: .boldSystemFont(ofSize: 22), color: .white)
 

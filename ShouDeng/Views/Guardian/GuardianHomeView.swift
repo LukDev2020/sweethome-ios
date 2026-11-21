@@ -16,6 +16,9 @@ struct GuardianHomeView: View {
     @ObservedObject private var lang = LanguageManager.shared
     @State private var showFamilyMap = false
     @State private var mapFocusId: String?
+    /// Person cards push explicitly (a NavigationLink with a context menu and tip
+    /// in this scroll view often ignored taps on iOS 27)
+    @State private var navPath = NavigationPath()
     @State private var showInviteSheet = false
     @State private var showMedicalCard = false
     @State private var showEmergencyText = false
@@ -38,7 +41,7 @@ struct GuardianHomeView: View {
     private let paneBorder = Color(red: 1/255, green: 69/255, blue: 129/255).opacity(0.13)
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navPath) {
             Group {
                 if sizeClass == .regular {
                     duoPaneLayout
@@ -576,7 +579,7 @@ struct GuardianHomeView: View {
                         .padding(.top, 12)
 
                     ForEach(warningPersons) { person in
-                        NavigationLink(value: person.id) {
+                        Button { navPath.append(person.id) } label: {
                             protectedPersonCard(
                                 initial: person.user.avatarInitial, name: person.user.displayName,
                                 tag: person.status == .alert ? lang.localized("guardian.home.sos.active") : lang.localized("guardian.home.missed.checkin"),
@@ -656,7 +659,7 @@ struct GuardianHomeView: View {
                         .padding(.top, 12)
 
                     ForEach(normalPersons) { person in
-                        NavigationLink(value: person.id) {
+                        Button { navPath.append(person.id) } label: {
                             protectedPersonCard(
                                 initial: person.user.avatarInitial, name: person.user.displayName,
                                 tag: nil, tagColor: nil,
