@@ -2775,3 +2775,12 @@
 "guardian.member.tripHistory.sub" = "查看与导出";
 "guardian.member.liveTrack.none.title" = "现在没有行程";
 "guardian.member.liveTrack.none.body" = "%@ 目前没有在记录行程。对方在主页点“记录行程”后，你就能在这里实时看到路线。";
+
+/* Guardian family page (the "Protecting N" pill) + hold-to-SOS countdown */
+"guardian.family.title" = "我的家人";
+"guardian.family.protecting" = "我守护的人";
+"guardian.family.alsoGuarding" = "一起守护：%@";
+"guardian.family.onlyMe" = "目前只有你在守护";
+"guardian.family.invite.sub" = "把邀请码发给家人";
+"guardian.family.invite.hint" = "对方在自己手机上的守灯里输入邀请码后，就会出现在这里。";
+"home.sos.holding" = "继续按住… %d";

@@ -2775,3 +2775,12 @@
 "guardian.member.tripHistory.sub" = "表示・書き出し";
 "guardian.member.liveTrack.none.title" = "現在、移動の記録はありません";
 "guardian.member.liveTrack.none.body" = "%@さんは今、移動を記録していません。ホーム画面で「移動を記録」をタップすると、ここでルートがリアルタイムに表示されます。";
+
+/* Guardian family page (the "Protecting N" pill) + hold-to-SOS countdown */
+"guardian.family.title" = "家族";
+"guardian.family.protecting" = "見守っている人";
+"guardian.family.alsoGuarding" = "一緒に見守っている人：%@";
+"guardian.family.onlyMe" = "今はあなただけが見守っています";
+"guardian.family.invite.sub" = "招待コードを家族に送る";
+"guardian.family.invite.hint" = "相手が自分のiPhoneのBeaconifyでコードを入力すると、ここに表示されます。";
+"home.sos.holding" = "そのまま押し続けて… %d";

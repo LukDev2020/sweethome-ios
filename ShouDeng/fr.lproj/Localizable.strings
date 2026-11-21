@@ -2775,3 +2775,12 @@
 "guardian.member.tripHistory.sub" = "Voir et exporter";
 "guardian.member.liveTrack.none.title" = "Aucun trajet en ce moment";
 "guardian.member.liveTrack.none.body" = "%@ n'enregistre pas de trajet en ce moment. Dès qu'il ou elle touche « Enregistrer le trajet » sur l'écran d'accueil, vous verrez l'itinéraire se dessiner ici.";
+
+/* Guardian family page (the "Protecting N" pill) + hold-to-SOS countdown */
+"guardian.family.title" = "Ma famille";
+"guardian.family.protecting" = "Les personnes que je protège";
+"guardian.family.alsoGuarding" = "Veillent aussi : %@";
+"guardian.family.onlyMe" = "Vous êtes seul(e) à veiller sur cette personne";
+"guardian.family.invite.sub" = "Envoyez un code d'invitation à un proche";
+"guardian.family.invite.hint" = "La personne saisit le code dans Beaconify sur son propre téléphone, puis apparaît ici.";
+"home.sos.holding" = "Continuez d'appuyer… %d";

@@ -2775,3 +2775,12 @@
 "guardian.member.tripHistory.sub" = "View & export";
 "guardian.member.liveTrack.none.title" = "No trip right now";
 "guardian.member.liveTrack.none.body" = "%@ isn't recording a trip right now. When they tap “Record Trip” on their home screen, you'll see the route here as it's drawn.";
+
+/* Guardian family page (the "Protecting N" pill) + hold-to-SOS countdown */
+"guardian.family.title" = "My family";
+"guardian.family.protecting" = "People I protect";
+"guardian.family.alsoGuarding" = "Also looked after by %@";
+"guardian.family.onlyMe" = "Only you look after them";
+"guardian.family.invite.sub" = "Send an invite code to a family member";
+"guardian.family.invite.hint" = "They enter the code in Beaconify on their own phone, then appear here.";
+"home.sos.holding" = "Keep holding… %d";

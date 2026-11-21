@@ -18,6 +18,10 @@ struct ProtectedHomeView: View {
     @ObservedObject private var lang = LanguageManager.shared
     @State private var isSOSPressed = false
     @State private var sosProgress: Double = 0
+    /// Seconds left while the SOS bar is held (3 → 2 → 1)
+    @State private var sosSecondsLeft = 3
+    @State private var sosHoldTask: Task<Void, Never>?
+    @State private var sosHoldStartedAt: Date?
     @State private var sosDisclosureTrigger = false
     @State private var showInviteGuardian = false
     @State private var showFamilyMap = false
@@ -928,62 +932,96 @@ struct ProtectedHomeView: View {
     // MARK: - SOS Button
 
     private var sosButton: some View {
-        Button(action: {}) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 13)
-                    .fill(alert)
-                    .frame(height: 52)
-
-                // Progress overlay for long-press
-                GeometryReader { geo in
-                    RoundedRectangle(cornerRadius: 13)
-                        .fill(.white.opacity(0.2))
-                        .frame(width: geo.size.width * sosProgress)
-                }
-                .frame(height: 52)
-                .clipShape(RoundedRectangle(cornerRadius: 13))
-
-                Text(isSOSPressed ? lang.localized("home.sos.hold") : lang.localized("home.sos.hold"))
-                    .font(.scaled(size: 15, weight: .medium))
-                    .foregroundStyle(.white)
+        let hold = FloatingSOSButton.holdDuration
+        return ZStack(alignment: .leading) {
+            RoundedRectangle(cornerRadius: 13)
+                .fill(alert)
+            // Dark red sweeping left to right while held: clearly "something is happening"
+            GeometryReader { geo in
+                Rectangle()
+                    .fill(Color(red: 120/255, green: 22/255, blue: 18/255))
+                    .frame(width: geo.size.width * sosProgress)
             }
+            HStack(spacing: 8) {
+                if isSOSPressed {
+                    Image(systemName: "hand.point.up.left.fill")
+                        .font(.scaled(size: 15, weight: .semibold))
+                }
+                Text(isSOSPressed
+                     ? String(format: lang.localized("home.sos.holding"), sosSecondsLeft)
+                     : lang.localized("home.sos.hold"))
+                    .font(.scaled(size: isSOSPressed ? 17 : 15, weight: isSOSPressed ? .bold : .medium).monospacedDigit())
+            }
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
         }
-        .simultaneousGesture(
-            LongPressGesture(minimumDuration: FloatingSOSButton.holdDuration, maximumDistance: FloatingSOSButton.holdTolerance)
-                .onChanged { _ in
-                    isSOSPressed = true
-                    sosDisclosureTrigger = true
-                    UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-                    withAnimation(.linear(duration: FloatingSOSButton.holdDuration)) {
-                        sosProgress = 1.0
-                    }
-                }
-                .onEnded { _ in
-                    isSOSPressed = false
-                    sosProgress = 0
-                    UINotificationFeedbackGenerator().notificationOccurred(.warning)
-                    if coordinator.myGuardians.isEmpty {
-                        showNoGuardianSOSWarning = true
-                    } else {
-                        coordinator.requestSOS(method: .longPress)
-                    }
-                }
-        )
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onEnded { _ in
-                    // Released before the hold completed
-                    if sosProgress < 1.0 {
-                        withAnimation {
-                            isSOSPressed = false
-                            sosProgress = 0
-                        }
-                    }
-                }
-        )
+        .frame(height: 52)
+        .clipShape(RoundedRectangle(cornerRadius: 13))
+        .scaleEffect(isSOSPressed ? 0.97 : 1)
+        .shadow(color: alert.opacity(isSOSPressed ? 0.5 : 0), radius: 10)
+        .contentShape(RoundedRectangle(cornerRadius: 13))
+        // Same gesture as the round floating SOS button (it reports the press reliably;
+        // the old LongPressGesture inside a Button often never started the fill)
+        .onLongPressGesture(minimumDuration: hold, maximumDistance: FloatingSOSButton.holdTolerance, pressing: { pressing in
+            if pressing {
+                startSOSHold(duration: hold)
+            } else {
+                let held = sosHoldStartedAt.map { Date().timeIntervalSince($0) } ?? 0
+                if held < hold - 0.05 { cancelSOSHold() }
+            }
+        }, perform: {
+            finishSOSHold()
+        })
+        .accessibilityElement(children: .ignore)
         .accessibilityLabel(lang.localized("protected.home.sosLabel"))
         .accessibilityHint(lang.localized("protected.home.sosHint"))
         .accessibilityAddTraits(.isButton)
+    }
+
+    /// Finger down: the fill starts, a countdown 3 → 2 → 1, and a tap of the
+    /// Taptic Engine every second (stronger each time).
+    private func startSOSHold(duration: Double) {
+        sosHoldStartedAt = Date()
+        sosDisclosureTrigger = true
+        let seconds = Int(duration.rounded())
+        sosSecondsLeft = seconds
+        withAnimation(.easeOut(duration: 0.12)) { isSOSPressed = true }
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        withAnimation(.linear(duration: duration)) { sosProgress = 1.0 }
+        sosHoldTask?.cancel()
+        sosHoldTask = Task { @MainActor in
+            for left in stride(from: seconds - 1, through: 1, by: -1) {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                guard !Task.isCancelled else { return }
+                sosSecondsLeft = left
+                UIImpactFeedbackGenerator(style: left == 1 ? .heavy : .medium).impactOccurred()
+            }
+        }
+    }
+
+    /// Let go too early: everything springs back, nothing is sent
+    private func cancelSOSHold() {
+        sosHoldTask?.cancel()
+        sosHoldStartedAt = nil
+        withAnimation(.easeOut(duration: 0.2)) {
+            isSOSPressed = false
+            sosProgress = 0
+        }
+    }
+
+    private func finishSOSHold() {
+        sosHoldTask?.cancel()
+        sosHoldStartedAt = nil
+        UINotificationFeedbackGenerator().notificationOccurred(.warning)
+        withAnimation(.easeOut(duration: 0.2)) {
+            isSOSPressed = false
+            sosProgress = 0
+        }
+        if coordinator.myGuardians.isEmpty {
+            showNoGuardianSOSWarning = true
+        } else {
+            coordinator.requestSOS(method: .longPress)
+        }
     }
 
     // MARK: - Check-in Button

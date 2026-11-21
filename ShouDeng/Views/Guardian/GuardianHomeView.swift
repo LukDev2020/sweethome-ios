@@ -20,6 +20,10 @@ struct GuardianHomeView: View {
     /// in this scroll view often ignored taps on iOS 27)
     @State private var navPath = NavigationPath()
     @State private var showInviteSheet = false
+    /// The "Protecting N" pill: everyone I protect, who else guards them, and adding someone
+    @State private var showFamilySheet = false
+    /// Chosen in the family sheet: opened once the sheet has gone
+    @State private var familySheetNext: FamilySheetNext?
     @State private var showMedicalCard = false
     @State private var showEmergencyText = false
     @State private var showConsulate = false
@@ -74,16 +78,22 @@ struct GuardianHomeView: View {
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    // Only show duty text when there are protected persons
-                    if !coordinator.protectedPersons.isEmpty {
-                        Text(lang.localized("guardian.home.guarding.count", count: coordinator.protectedPersons.count))
-                            .font(.scaled(size: 12))
-                            .foregroundStyle(safe)
-                    } else {
-                        Text(lang.localized("guardian.home.shoudeng"))
-                            .font(.scaled(size: 12))
-                            .foregroundStyle(safe)
+                    // Tappable: the family page (who I protect, their guardians, add someone)
+                    Button { showFamilySheet = true } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: coordinator.protectedPersons.isEmpty ? "person.badge.plus" : "person.2.fill")
+                                .font(.scaled(size: 11))
+                            Text(coordinator.protectedPersons.isEmpty
+                                 ? lang.localized("guardian.home.add.person")
+                                 : lang.localized("guardian.home.guarding.count", count: coordinator.protectedPersons.count))
+                                .font(.scaled(size: 12, weight: .medium))
+                            Image(systemName: "chevron.right")
+                                .font(.scaled(size: 9, weight: .semibold))
+                        }
+                        .foregroundStyle(safe)
                     }
+                    .accessibilityHint(lang.localized("guardian.family.title"))
+                    .accessibilityIdentifier("guardian.familyPill")
                 }
             }
             .navigationDestination(for: String.self) { personId in
@@ -102,6 +112,22 @@ struct GuardianHomeView: View {
             .sheet(isPresented: $showInviteSheet) {
                 InviteGuardianView()
                     .environmentObject(coordinator)
+            }
+            .sheet(isPresented: $showFamilySheet, onDismiss: {
+                // One sheet at a time: open what was chosen once this one is gone
+                switch familySheetNext {
+                case .person(let id): navPath.append(id)
+                case .invite: showInviteSheet = true
+                case .joinWithCode: coordinator.showInviteAccept = true
+                case nil: break
+                }
+                familySheetNext = nil
+            }) {
+                GuardianFamilySheet(statusDetail: statusDetail) { next in
+                    familySheetNext = next
+                    showFamilySheet = false
+                }
+                .environmentObject(coordinator)
             }
             .sheet(isPresented: $showMedicalCard) {
                 MedicalCardView()
@@ -792,5 +818,136 @@ struct GuardianHomeView: View {
                 .stroke(isWarning ? lamp.opacity(0.55) : Color(red: 18/255, green: 32/255, blue: 58/255).opacity(0.13), lineWidth: 1)
         )
         .padding(.horizontal, 16)
+    }
+}
+
+// MARK: - Family sheet (the "Protecting N" pill)
+
+enum FamilySheetNext: Equatable {
+    case person(String)
+    case invite
+    case joinWithCode
+}
+
+/// Everyone this guardian protects, who else looks after each of them, and the two
+/// ways to add someone: invite a person to be protected, or join a family with a code.
+private struct GuardianFamilySheet: View {
+    @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var lang = LanguageManager.shared
+    @Environment(\.dismiss) private var dismiss
+    let statusDetail: (ProtectedPerson) -> String
+    let choose: (FamilySheetNext) -> Void
+
+    private let ink = Color.appInk
+    private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
+    private let navy = Color(red: 33/255, green: 104/255, blue: 166/255)
+    private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    if coordinator.protectedPersons.isEmpty {
+                        Text(lang.localized("guardian.home.no.protected"))
+                            .font(.scaled(size: 15, weight: .medium))
+                            .foregroundStyle(ink.opacity(0.7))
+                            .padding(.top, 8)
+                    } else {
+                        Text(lang.localized("guardian.family.protecting"))
+                            .font(.scaled(size: 13, weight: .semibold))
+                            .foregroundStyle(ink.opacity(0.55))
+                        ForEach(coordinator.protectedPersons) { person in
+                            Button { choose(.person(person.id)) } label: { personRow(person) }
+                                .buttonStyle(.plain)
+                        }
+                    }
+
+                    // Adding someone: two big, clearly different actions
+                    VStack(spacing: 10) {
+                        Button { choose(.invite) } label: {
+                            actionLabel(lang.localized("guardian.home.add.person"),
+                                        subtitle: lang.localized("guardian.family.invite.sub"),
+                                        icon: "person.badge.plus", background: safe)
+                        }
+                        Button { choose(.joinWithCode) } label: {
+                            actionLabel(lang.localized("settings.joinFamily"),
+                                        subtitle: lang.localized("settings.joinFamily.desc"),
+                                        icon: "key.fill", background: navy)
+                        }
+                    }
+                    .padding(.top, 6)
+
+                    Text(lang.localized("guardian.family.invite.hint"))
+                        .font(.scaled(size: 12))
+                        .foregroundStyle(ink.opacity(0.5))
+                }
+                .padding(16)
+            }
+            .navigationTitle(lang.localized("guardian.family.title"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { dismiss() } label: {
+                        Label(lang.localized("common.close"), systemImage: "xmark")
+                    }
+                }
+            }
+        }
+    }
+
+    private func personRow(_ person: ProtectedPerson) -> some View {
+        let warning = person.status == .alert || person.isOverdue || person.status == .overdue
+        let others = person.guardians
+            .filter { $0.user.id != coordinator.currentUser?.id }
+            .map(\.user.displayName)
+            .filter { !$0.isEmpty }
+        return HStack(alignment: .top, spacing: 12) {
+            AvatarView(user: person.user, size: 44)
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    Text(person.user.displayName)
+                        .font(.scaled(size: 16, weight: .semibold))
+                        .foregroundStyle(ink)
+                    Circle().fill(warning ? alert : safe).frame(width: 7, height: 7)
+                }
+                Text("\(person.user.cityName.isEmpty ? "" : person.user.cityName + " · ")\(statusDetail(person))")
+                    .font(.scaled(size: 12.5))
+                    .foregroundStyle(ink.opacity(0.6))
+                    .lineLimit(2)
+                Label(others.isEmpty
+                      ? lang.localized("guardian.family.onlyMe")
+                      : String(format: lang.localized("guardian.family.alsoGuarding"), others.joined(separator: "、")),
+                      systemImage: "shield.lefthalf.filled")
+                    .font(.scaled(size: 12))
+                    .foregroundStyle(navy)
+                    .lineLimit(2)
+            }
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right")
+                .font(.scaled(size: 12, weight: .semibold))
+                .foregroundStyle(ink.opacity(0.3))
+                .padding(.top, 14)
+        }
+        .padding(14)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color(.secondarySystemBackground)))
+        .contentShape(RoundedRectangle(cornerRadius: 14))
+    }
+
+    private func actionLabel(_ title: String, subtitle: String, icon: String, background: Color) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.scaled(size: 20, weight: .semibold))
+                .frame(width: 28)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.scaled(size: 16, weight: .semibold))
+                Text(subtitle).font(.scaled(size: 12)).opacity(0.85)
+            }
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right").font(.scaled(size: 12, weight: .semibold))
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 16)
+        .frame(maxWidth: .infinity, minHeight: 64)
+        .background(background, in: RoundedRectangle(cornerRadius: 14))
     }
 }

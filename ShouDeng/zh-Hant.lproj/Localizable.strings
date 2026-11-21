@@ -2775,3 +2775,12 @@
 "guardian.member.tripHistory.sub" = "查看與匯出";
 "guardian.member.liveTrack.none.title" = "現在沒有行程";
 "guardian.member.liveTrack.none.body" = "%@ 目前沒有在記錄行程。對方在主頁點「記錄行程」後，你就能在這裡即時看到路線。";
+
+/* Guardian family page (the "Protecting N" pill) + hold-to-SOS countdown */
+"guardian.family.title" = "我的家人";
+"guardian.family.protecting" = "我守護的人";
+"guardian.family.alsoGuarding" = "一起守護：%@";
+"guardian.family.onlyMe" = "目前只有你在守護";
+"guardian.family.invite.sub" = "把邀請碼傳給家人";
+"guardian.family.invite.hint" = "對方在自己手機上的守燈裡輸入邀請碼後，就會出現在這裡。";
+"home.sos.holding" = "繼續按住… %d";
