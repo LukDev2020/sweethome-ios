@@ -2784,3 +2784,6 @@
 "guardian.family.invite.sub" = "把邀請碼傳給家人";
 "guardian.family.invite.hint" = "對方在自己手機上的守燈裡輸入邀請碼後，就會出現在這裡。";
 "home.sos.holding" = "繼續按住… %d";
+
+"auth.apple.button.signIn" = "透過 Apple 登入";
+"auth.apple.button.continue" = "透過 Apple 繼續";

@@ -20,7 +20,6 @@ struct IdentitySignInButtons: View {
     /// phone codes need Google's servers there, so point to Apple / Alipay.
     var recommendForChina = false
 
-    @State private var rawNonce = ""
     @State private var alipayAvailable = false
     @State private var showTermsHint = false
 
@@ -50,16 +49,9 @@ struct IdentitySignInButtons: View {
                 .accessibilityIdentifier("login.chinaHint")
             }
 
-            SignInWithAppleButton(.signIn) { request in
-                rawNonce = AppleSignInNonce.make()
-                request.requestedScopes = [.fullName, .email]
-                request.nonce = AppleSignInNonce.sha256(rawNonce)
-            } onCompletion: { result in
-                Task { await coordinator.handleAppleSignIn(result, rawNonce: rawNonce) }
+            AppleIDButton { result, nonce in
+                Task { await coordinator.handleAppleSignIn(result, rawNonce: nonce) }
             }
-            .signInWithAppleButtonStyle(.black)
-            .frame(height: 50)
-            .clipShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
             // Always full colour: a greyed-out Apple button read as "Apple sign-in is broken".
             // Until the Terms are ticked, a tap shows why instead of opening Apple's sheet.
             .allowsHitTesting(termsAccepted)
@@ -195,7 +187,6 @@ struct SignInMethodsView: View {
     @State private var alipayAvailable = false
     @State private var loadFailed = false
     @State private var showAddPhone = false
-    @State private var rawNonce = ""
 
     var body: some View {
         List {
@@ -210,17 +201,13 @@ struct SignInMethodsView: View {
                 row(icon: "applelogo", title: "Apple",
                     detail: methods?.apple == true ? lang.localized("auth.methods.connected") : nil) {
                     if methods?.apple == false {
-                        SignInWithAppleButton(.continue) { request in
-                            rawNonce = AppleSignInNonce.make()
-                            request.requestedScopes = []
-                            request.nonce = AppleSignInNonce.sha256(rawNonce)
-                        } onCompletion: { result in
+                        AppleIDButton(kind: .continue, scopes: [], height: 34, cornerRadius: 8) { result, nonce in
                             Task {
-                                await coordinator.handleAppleSignIn(result, rawNonce: rawNonce, connecting: true)
+                                await coordinator.handleAppleSignIn(result, rawNonce: nonce, connecting: true)
                                 await load()
                             }
                         }
-                        .frame(width: 150, height: 34)
+                        .frame(width: 170)
                     }
                 }
                 if alipayAvailable || methods?.alipay == true {
@@ -442,5 +429,58 @@ struct SignInMethodsRow: View {
             }
             .buttonStyle(.settingsRow)
         }
+    }
+}
+
+// MARK: - Apple button in the app's own language
+
+/// "Sign in with Apple" drawn to Apple's guidelines (black, Apple logo, Apple's
+/// wording) so the title follows the in-app language right away. Apple's
+/// SignInWithAppleButton only uses the language the app was launched in.
+struct AppleIDButton: View {
+    enum Kind { case signIn, `continue` }
+
+    @ObservedObject private var lang = LanguageManager.shared
+    var kind: Kind = .signIn
+    var scopes: [ASAuthorization.Scope] = [.fullName, .email]
+    var height: CGFloat = 50
+    var cornerRadius: CGFloat = 13
+    /// Gets the raw nonce (for the server) with Apple's answer
+    let onCompletion: (Result<ASAuthorization, Error>, String) -> Void
+
+    @State private var runner = AppleSignInRunner()
+
+    var body: some View {
+        Button {
+            let nonce = AppleSignInNonce.make()
+            Task {
+                let result = await runner.run(scopes: scopes, nonceHash: AppleSignInNonce.sha256(nonce))
+                onCompletion(result, nonce)
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "applelogo")
+                    .font(.system(size: height * 0.36, weight: .medium))
+                    .offset(y: -1)
+                Text(lang.localized(kind == .signIn ? "auth.apple.button.signIn" : "auth.apple.button.continue"))
+                    .font(.system(size: height * 0.38, weight: .medium))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 10)
+            .frame(maxWidth: .infinity)
+            .frame(height: height)
+            .background(Color.black, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .contentShape(Rectangle())
+        }
+        // Stays black while the Terms aren't ticked: a grey Apple button read as "broken"
+        .buttonStyle(AppleIDButtonStyle())
+    }
+}
+
+private struct AppleIDButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label.opacity(configuration.isPressed ? 0.75 : 1)
     }
 }

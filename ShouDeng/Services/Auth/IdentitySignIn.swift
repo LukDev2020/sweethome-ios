@@ -194,3 +194,54 @@ final class AlipayWebSignIn: NSObject, ASWebAuthenticationPresentationContextPro
         }
     }
 }
+
+// MARK: Apple sign-in sheet (for our own button)
+
+/// Opens Apple's sign-in sheet and returns its answer. Used by `AppleIDButton`:
+/// Apple's own button draws its title in the language the app *started* in, so after
+/// switching language in the app it kept showing the old one (e.g. French).
+@MainActor
+final class AppleSignInRunner: NSObject, ASAuthorizationControllerDelegate,
+                               ASAuthorizationControllerPresentationContextProviding {
+    private var continuation: CheckedContinuation<Result<ASAuthorization, Error>, Never>?
+    private var controller: ASAuthorizationController?
+
+    func run(scopes: [ASAuthorization.Scope], nonceHash: String) async -> Result<ASAuthorization, Error> {
+        // One sheet at a time: a second tap while it is open is ignored
+        if continuation != nil { return .failure(ASAuthorizationError(.canceled)) }
+        let request = ASAuthorizationAppleIDProvider().createRequest()
+        request.requestedScopes = scopes
+        request.nonce = nonceHash
+        let controller = ASAuthorizationController(authorizationRequests: [request])
+        controller.delegate = self
+        controller.presentationContextProvider = self
+        self.controller = controller
+        return await withCheckedContinuation { c in
+            continuation = c
+            controller.performRequests()
+        }
+    }
+
+    private func finish(_ result: Result<ASAuthorization, Error>) {
+        continuation?.resume(returning: result)
+        continuation = nil
+        controller = nil
+    }
+
+    nonisolated func authorizationController(controller: ASAuthorizationController,
+                                             didCompleteWithAuthorization authorization: ASAuthorization) {
+        MainActor.assumeIsolated { finish(.success(authorization)) }
+    }
+
+    nonisolated func authorizationController(controller: ASAuthorizationController,
+                                             didCompleteWithError error: Error) {
+        MainActor.assumeIsolated { finish(.failure(error)) }
+    }
+
+    nonisolated func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+        MainActor.assumeIsolated {
+            UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+                .flatMap(\.windows).first(where: \.isKeyWindow) ?? ASPresentationAnchor()
+        }
+    }
+}

@@ -2784,3 +2784,6 @@
 "guardian.family.invite.sub" = "Send an invite code to a family member";
 "guardian.family.invite.hint" = "They enter the code in Beaconify on their own phone, then appear here.";
 "home.sos.holding" = "Keep holding… %d";
+
+"auth.apple.button.signIn" = "Sign in with Apple";
+"auth.apple.button.continue" = "Continue with Apple";

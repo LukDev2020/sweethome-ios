@@ -2784,3 +2784,6 @@
 "guardian.family.invite.sub" = "招待コードを家族に送る";
 "guardian.family.invite.hint" = "相手が自分のiPhoneのBeaconifyでコードを入力すると、ここに表示されます。";
 "home.sos.holding" = "そのまま押し続けて… %d";
+
+"auth.apple.button.signIn" = "Appleでサインイン";
+"auth.apple.button.continue" = "Appleで続ける";
