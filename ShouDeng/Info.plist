@@ -72,7 +72,7 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Share photos with family members in your guardian circle. Photos are visible only to people in your guardianship relationship.</string>
 	<key>NSPrivacyPolicyURL</key>
-	<string>https://shoudeng.app/privacy</string>
+	<string>https://omni-webb.web.app/beaconify/privacy</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Voice SOS listens for a phrase such as “help” or “救命” and sends your SOS hands-free. Recognition runs on your device; where your phone can’t do that, voice SOS stays off.</string>
 	<key>NSSupportsLiveActivities</key>

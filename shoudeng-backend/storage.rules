@@ -1,0 +1,14 @@
+rules_version = '2';
+
+// Nothing in the app reads or writes Cloud Storage directly: every upload and
+// download goes through the API (Admin SDK, which skips these rules) and the
+// short-lived signed URLs it hands out (which skip them too). So all direct
+// client access is refused — evidence PDFs, GPX tracks and family photos can
+// only be reached through a signed link the server checked access for.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

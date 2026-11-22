@@ -4,6 +4,7 @@ import { sendPushToUser } from "../services/push";
 import { PUSH_SECRETS } from "../config/params";
 import { checkOverdueShifts, checkStillOk } from "../services/crew";
 import { escalateUnansweredFalls } from "../services/safetyEvents";
+import { escalateExpiredSafetyTimers } from "../services/safetyTimer";
 import { alertCopyFor, nameOr } from "../services/pushCopy";
 
 const db = admin.firestore();
@@ -23,6 +24,12 @@ export const checkHomeTimerExpiry = functions
       await escalateUnansweredFalls();
     } catch (error) {
       console.error("[Fall] unanswered fall check failed:", error);
+    }
+    // Safety timers whose phone never checked in or raised the SOS (killed, dead battery)
+    try {
+      await escalateExpiredSafetyTimers();
+    } catch (error) {
+      console.error("[SafetyTimer] expired timer check failed:", error);
     }
     // Rider shifts past their planned end without a check-in (same 1-minute cadence)
     try {

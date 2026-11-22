@@ -7,7 +7,8 @@ import { SOS_SECRETS } from "../config/params";
  * that is due but was not run inline (instance crash, timeout, cold start).
  */
 export const advanceEscalations = functions
-  .runWith({ secrets: SOS_SECRETS })
+  // Room for Twilio calls to many SOS at once (default 60 s could cut a run short)
+  .runWith({ secrets: SOS_SECRETS, timeoutSeconds: 300 })
   .pubsub.schedule("every 1 minutes")
   .onRun(async () => {
     const ran = await advanceDueEscalations(new Date());

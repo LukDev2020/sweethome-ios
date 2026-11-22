@@ -11,7 +11,10 @@ const { app } = require("./app");
 // --- Export HTTP function ---
 // Secrets: Twilio (SOS SMS/voice, webhook signatures) + Google Maps (geocoding).
 // Every function that can reach services/sms or services/twilio must bind TWILIO_SECRETS.
-export const api = functions.runWith({ secrets: API_SECRETS }).https.onRequest(app);
+// One warm instance: an SOS must not wait for a cold start (~a few dollars a month).
+export const api = functions
+  .runWith({ secrets: API_SECRETS, minInstances: 1, memory: "512MB" })
+  .https.onRequest(app);
 
 // --- Trigger Exports ---
 export { onSOSCreated } from "./triggers/onSOSCreated";

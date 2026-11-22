@@ -608,6 +608,8 @@ final class AppCoordinator: ObservableObject {
         // Preserve SOS-critical requests across logout — they must reach the server.
         // They are tagged with their owner and only replay when that user signs in again.
         offlineQueue.retainOnly { $0.isSOS && $0.ownerId != nil }
+        sosRetryTask?.cancel()
+        sosRetryTask = nil
         guardianSOS = [:]
         ownSOSStatus = nil
         pendingAlertPersonId = nil
@@ -1674,7 +1676,8 @@ final class AppCoordinator: ObservableObject {
         // Persist to the offline queue FIRST, then try right away with a short
         // timeout; if that fails the queue retries on reconnect / foreground.
         sosDeliveryFailed = false
-        let sosLocation = locationManager.lastReportedLocation
+        // The freshest fix there is (lastReportedLocation alone can be hours old in safe mode)
+        let sosLocation = locationManager.bestAvailableLocation
         let triggerRequest = SOSTriggerRequest(
             protectedPersonId: userId,
             triggerMethod: method,
@@ -1685,14 +1688,55 @@ final class AppCoordinator: ObservableObject {
             clientTriggeredAt: now
         )
         let api = apiClient
+        // Keep the app running until the request is out: a fall, duress code, voice
+        // command or safety timer may fire while the app is in the background
+        let backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "sos.trigger")
         Task { @MainActor [weak self] in
+            defer {
+                if backgroundTask != .invalid { UIApplication.shared.endBackgroundTask(backgroundTask) }
+            }
             let response: SOSTriggerResponse? = await api.postSOS("/v1/sos/trigger", body: triggerRequest)
             guard let self else { return }
             if let response {
                 self.applyServerSOSId(response.sosEventId, forClientId: localId)
                 await self.refreshOwnSOSStatus()
-            } else if self.activeSOSEvent?.clientSOSId == localId {
-                self.sosDeliveryFailed = true
+            } else {
+                if self.activeSOSEvent?.clientSOSId == localId {
+                    self.sosDeliveryFailed = true
+                }
+                self.startSOSRetryLoop()
+            }
+        }
+    }
+
+    // MARK: - SOS retry
+
+    /// Seconds between resends of a queued SOS: quick at first, then once a minute
+    static let sosRetryDelays: [UInt64] = [5, 10, 20, 40, 60]
+    /// Stop resending on our own after this long (the queue still sends on
+    /// reconnect / foreground / login after that)
+    static let sosRetryWindow: TimeInterval = 30 * 60
+    private var sosRetryTask: Task<Void, Never>?
+
+    /// A queued SOS trigger is resent with backoff until the server has it.
+    /// The offline queue alone only flushes when the network comes back or the app
+    /// comes to the front — not when the server errored or timed out on a network
+    /// iOS still calls reachable, and a silent (duress) SOS has no screen to retry from.
+    func startSOSRetryLoop() {
+        guard !isDemo, sosRetryTask == nil, hasQueuedSOSTrigger else { return }
+        let started = Date()
+        sosRetryTask = Task { @MainActor [weak self] in
+            defer { self?.sosRetryTask = nil }
+            var attempt = 0
+            while !Task.isCancelled, Date().timeIntervalSince(started) < Self.sosRetryWindow {
+                let delay = Self.sosRetryDelays[min(attempt, Self.sosRetryDelays.count - 1)]
+                attempt += 1
+                try? await Task.sleep(nanoseconds: delay * 1_000_000_000)
+                guard let self, self.hasQueuedSOSTrigger else { return }
+                guard case .loggedIn = self.authState else { continue }
+                let bg = UIApplication.shared.beginBackgroundTask(withName: "sos.retry")
+                await self.apiClient.flushOfflineQueue()
+                if bg != .invalid { UIApplication.shared.endBackgroundTask(bg) }
             }
         }
     }
@@ -1759,6 +1803,8 @@ final class AppCoordinator: ObservableObject {
     func resumeSOSModeIfNeeded() {
         guard !isDemo, let sos = activeSOSEvent, sos.isActive else { return }
         locationManager.enterSOSMode()
+        // Relaunched with the trigger still queued: keep resending it
+        startSOSRetryLoop()
     }
 
     /// Same as the server's join window (services/sosTrigger.ts): an SOS this old

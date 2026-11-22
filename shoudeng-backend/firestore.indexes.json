@@ -215,6 +215,20 @@
       ]
     },
     {
+      "collectionGroup": "safety_timers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "deadline",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "home_timers",
       "queryScope": "COLLECTION",
       "fields": [

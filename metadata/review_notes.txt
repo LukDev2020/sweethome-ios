@@ -9,7 +9,8 @@ Beaconify (守灯 in Chinese) is a family safety app. It connects people being l
   Phone: +1 650-555-0100
   SMS code: 123456
   Role: Guardian, with one linked protected person.
-- Sign in with Apple is offered next to phone sign-in.
+- Sign in with Apple is offered next to phone sign-in. "Sign in with Alipay" is also offered for users in China.
+- The features in section 10 are on the Protected side: Settings > switch role to "Protected" (or use the demo).
 
 3. SOS
 - The red SOS button sends an alert to the person's own guardians (push, then SMS and a voice call if nobody responds), with their location.
@@ -24,7 +25,7 @@ Beaconify (守灯 in Chinese) is a family safety app. It connects people being l
 5. BACKGROUND MODES
 - location: safe-zone monitoring, location for family during an SOS, trip recording the person starts.
 - remote-notification: SOS alerts, check-in reminders, silent heartbeat checks.
-- fetch: the "check-in timer" (dead-man switch) — a BGAppRefreshTask (com.shoudeng.deadman.check) that sends the SOS if the person doesn't check in by the time they set.
+- fetch: the "check-in timer" (safety timer / dead-man switch) — a BGAppRefreshTask (com.shoudeng.deadman.check) that lets the phone send the SOS if the person doesn't check in by the time they set. The deadline is also kept on our server, which sends the SOS itself if the phone is off or the app was closed.
 - bluetooth-central: an optional Bluetooth panic button or tag the person pairs in Settings (press to send SOS; alert when a tag is left behind). Used only after pairing.
 
 6. PERMISSIONS
@@ -34,7 +35,8 @@ Beaconify (守灯 in Chinese) is a family safety app. It connects people being l
 - Photos: photos the person chooses to post to their private family feed.
 
 7. SUBSCRIPTIONS
-- Plans: Single, Family (monthly / yearly / lifetime) and Ultimate (monthly / yearly).
+- In-app purchases (6): Single and Family, each monthly / yearly / lifetime.
+- "Organization" plans for care homes and schools are not sold in the app: the plan page shows a "Contact us" email button only (an enterprise service agreed outside the app, 3.1.3(c)).
 - SOS, check-ins and one guardian work without paying; no paywall blocks basic safety features.
 - Price, period and auto-renewal are shown before purchase, with Terms of Use (Apple EULA) and Privacy Policy links; Restore Purchases is on the paywall and in Settings.
 
@@ -43,3 +45,11 @@ Beaconify (守灯 in Chinese) is a family safety app. It connects people being l
 
 9. ACCOUNT DELETION
 - Settings > Delete Account, for both roles. It deletes the account and its data on our servers and revokes Sign in with Apple.
+
+10. DISCREET SAFETY FEATURES (for people in danger — all optional, off by default, Protected > Settings)
+- Disguise mode: makes the app open to a working calculator, weather or notes screen so an abuser glancing at the phone doesn't see a safety app. The app's icon and name don't change. To get back to the app: Calculator — type 911 then "="; Weather — triple-tap the temperature; Notes — type the secret phrase the person set. It can be turned off in the same Settings screen.
+- Duress code: a secret code the person sets. If someone forces them to end an SOS, entering this code closes the SOS screen as if it ended, while the SOS keeps alerting their guardians.
+- Silent alarm: scheduled check-ins; if the person misses the number of check-ins they chose, their guardians are alerted with the last known location.
+- Safety timer: a countdown the person starts (e.g. walking home); if they don't check in before it ends, their guardians get an SOS.
+- Fake call: shows an incoming-call screen (CallKit) with a caller name the person picks, so they can leave an uncomfortable situation. No real call is placed or received and nothing is dialled; optionally an SOS is sent when the fake call ends.
+None of these contact emergency services; all alerts go only to the person's own guardians.

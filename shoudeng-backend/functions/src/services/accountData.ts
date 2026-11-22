@@ -220,7 +220,7 @@ export async function eraseAccount(uid: string): Promise<{ bigQueryComplete: boo
 
   // Docs keyed by uid; recursiveDelete also removes subcollections
   // (users/{uid}/ble_tags, ble_sightings, timeline).
-  const byId = ["users", "subscriptions", "home_timers", "medical_cards", "selected_hotlines",
+  const byId = ["users", "subscriptions", "home_timers", "safety_timers", "medical_cards", "selected_hotlines",
     "user_telemetry", "emergency_contacts", "silent_alarm_schedules",
     // An open shift would keep sending "shift overdue" alerts for a deleted person
     "rider_shifts", "user_preferences"];

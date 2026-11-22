@@ -7,7 +7,7 @@ import {
 } from "./fcm";
 import { sendSOSSms, sendEmergencyContactSms, hasAppInstalled } from "./sms";
 import { initiateVoiceCall, publicLinkBaseUrl } from "./twilio";
-import { reserveSms, recordSms, reserveVoiceMinute, releaseVoiceMinute } from "./fairUse";
+import { reserveSms, recordSms, reserveVoiceMinute, forceVoiceMinute, releaseVoiceMinute } from "./fairUse";
 import { createShareToken } from "./evidence";
 import { localTime, onDutyAt } from "./localTime";
 import { userLang } from "./locale";
@@ -95,6 +95,8 @@ interface SOSDoc {
   escalationNextAt: admin.firestore.Timestamp | null;
   escalationLeaseUntil: admin.firestore.Timestamp | null;
   escalationSent?: Record<string, boolean>;
+  /** Guardians already texted about this SOS (any SMS step) */
+  escalationSms?: Record<string, boolean>;
   latitude?: number | null;
   longitude?: number | null;
   batteryLevel?: number | null;
@@ -226,16 +228,26 @@ async function logEntry(sosId: string, entry: Record<string, unknown>, sentKey?:
 /**
  * An SOS SMS within the person's monthly fair-use allowance. null = allowance used up
  * (the guardian still got the push); a send that fails gives its SMS back.
+ *
+ * `floor`: the guardian's only way to hear of this SOS (their push failed or they have
+ * no app) and they haven't been texted about it yet — sent even past the allowance,
+ * and counted. A monthly cap must never be the reason nobody hears of an SOS.
  */
 async function fairUseSms(
-  sosId: string, personId: string, now: Date, send: () => Promise<boolean>,
+  sosId: string, personId: string, gid: string, now: Date, send: () => Promise<boolean>,
+  floor = false,
 ): Promise<boolean | null> {
-  if (!(await reserveSms(personId, 1, now))) {
+  const reserved = await reserveSms(personId, 1, now);
+  if (!reserved && !floor) {
     await markFairUseLimited(sosId);
     return null;
   }
   const ok = await send();
-  if (!ok) await recordSms(personId, -1, now);
+  if (reserved && !ok) await recordSms(personId, -1, now);
+  if (!reserved && ok) await recordSms(personId, 1, now);
+  if (ok) {
+    await db.collection("sos_events").doc(sosId).update({ [`escalationSms.${gid}`]: true });
+  }
   return ok;
 }
 
@@ -254,6 +266,7 @@ async function runStep(sosId: string, step: EscalationStep, sos: SOSDoc, now: Da
   const user = userDoc.data() ?? {};
   const personName: string = user.displayName || "Protected Person";
   const sent = sos.escalationSent ?? {};
+  const texted = sos.escalationSms ?? {};
   const guardianIds = await activeGuardianIds(personId);
   const alertDetails = {
     protectedPersonId: personId,
@@ -277,7 +290,9 @@ async function runStep(sosId: string, step: EscalationStep, sos: SOSDoc, now: Da
         const push = await sendSOSAlert(gid, personName, sosId, alertDetails);
         let channel = "push";
         if (push.allFailed) {
-          const ok = await fairUseSms(sosId, personId, now, () => sendSOSSms(gid, personName, sosId));
+          const ok = await fairUseSms(sosId, personId, gid, now,
+            () => sendSOSSms(gid, personName, sosId), !texted[gid]);
+          if (ok) texted[gid] = true;
           channel = ok === null ? "sms_fair_use_limit" : ok ? "sms_fallback" : "failed";
         }
         await logEntry(sosId, { hop: 1, targetId: gid, channel }, key);
@@ -292,7 +307,9 @@ async function runStep(sosId: string, step: EscalationStep, sos: SOSDoc, now: Da
         let channel = "push";
         const hasApp = await hasAppInstalled(gid);
         if (!hasApp || push.allFailed) {
-          const ok = await fairUseSms(sosId, personId, now, () => sendSOSSms(gid, personName, sosId));
+          const ok = await fairUseSms(sosId, personId, gid, now,
+            () => sendSOSSms(gid, personName, sosId), !texted[gid]);
+          if (ok) texted[gid] = true;
           channel = ok === null ? "sms_fair_use_limit" : ok ? "sms_fallback" : hasApp ? "push_failed" : "sms_failed";
         }
         await logEntry(sosId, { hop: 2, targetId: gid, channel }, key);
@@ -308,7 +325,9 @@ async function runStep(sosId: string, step: EscalationStep, sos: SOSDoc, now: Da
         if (sent[key]) continue;
         // Stop ringing phones the moment someone acknowledges
         if (!(await stillActive(sosId))) return { stop: true };
-        const reservation = await reserveVoiceMinute(personId, now);
+        // First round always rings (safety floor); later rounds within the allowance
+        const reservation = (await reserveVoiceMinute(personId, now))
+          ?? (round === 1 ? await forceVoiceMinute(personId, now) : null);
         if (!reservation) {
           // Monthly call minutes used up: remind by push instead of calling
           await markFairUseLimited(sosId);
@@ -342,7 +361,7 @@ async function runStep(sosId: string, step: EscalationStep, sos: SOSDoc, now: Da
       for (const gid of guardianIds) {
         const key = `share:${gid}`;
         if (sent[key]) continue;
-        const ok = await fairUseSms(sosId, personId, now, () => sendSOSSms(gid, personName, sosId, url));
+        const ok = await fairUseSms(sosId, personId, gid, now, () => sendSOSSms(gid, personName, sosId, url));
         await logEntry(sosId, {
           hop: 4, targetId: gid, channel: ok === null ? "sms_fair_use_limit" : ok ? "sms_link" : "sms_failed",
         }, key);
@@ -608,18 +627,21 @@ export async function advanceDueEscalations(now: Date = new Date()): Promise<num
     .where("escalationNextAt", "<=", admin.firestore.Timestamp.fromDate(now))
     .limit(50)
     .get();
-  let ran = 0;
-  for (const doc of due.docs) {
+  // Each SOS on its own: one slow Twilio call must not hold up the others
+  const counts = await Promise.all(due.docs.map(async (doc) => {
+    let n = 0;
     try {
       // A single scheduler tick may need to catch up several overdue steps
       for (let i = 0; i < ESCALATION_PLAN.length; i++) {
         const r = await advanceEscalation(doc.id, now);
-        if (r.ran) ran++;
+        if (r.ran) n++;
         if (!r.ran || r.nextAt === null || r.nextAt > now.getTime()) break;
       }
     } catch (err) {
       console.error(`[Escalation] scheduler failed for ${doc.id}:`, err);
     }
-  }
+    return n;
+  }));
+  const ran = counts.reduce((a, b) => a + b, 0);
   return ran;
 }

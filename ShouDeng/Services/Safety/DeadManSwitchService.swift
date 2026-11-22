@@ -176,6 +176,7 @@ final class DeadManSwitchService: ObservableObject {
         submitBGTask(fireAt: now.addingTimeInterval(TimeInterval(seconds)))
         beginBackgroundTask()
         startDispatchTimer()
+        syncServerDeadline()
     }
 
     /// Convenience: start from a Preset.
@@ -198,6 +199,7 @@ final class DeadManSwitchService: ObservableObject {
         cancelScheduledLocalNotifications()
         cancelBGTask()
         endBackgroundTask()
+        syncServerDeadline()
     }
 
     /// Resume a paused countdown. Idempotent.
@@ -221,11 +223,13 @@ final class DeadManSwitchService: ObservableObject {
         submitBGTask(fireAt: now.addingTimeInterval(TimeInterval(remaining)))
         beginBackgroundTask()
         startDispatchTimer()
+        syncServerDeadline()
     }
 
     /// Cancel the timer entirely. User-initiated safe dismissal.
     func cancel() {
         cancel(suppressNotifications: false)
+        syncServerDeadline()
     }
 
     /// Add extra time to an active (running or paused) timer.
@@ -252,6 +256,7 @@ final class DeadManSwitchService: ObservableObject {
             resetNotificationFlags()
             scheduleLocalNotifications(from: now, duration: remainingSeconds)
             submitBGTask(fireAt: now.addingTimeInterval(TimeInterval(remainingSeconds)))
+            syncServerDeadline()
         }
     }
 
@@ -468,12 +473,16 @@ final class DeadManSwitchService: ObservableObject {
     // MARK: - Private: SOS Trigger
 
     private func fireSOS() {
+        // The phone raises it; the server's copy of the deadline is no longer needed.
+        // (Queued after the SOS, so offline both go out in that order; if the phone
+        // dies first, the server raises the SOS itself.)
+        defer { syncServerDeadline() }
         if let onTriggerSOS {
             DispatchQueue.main.async { onTriggerSOS(.deadManSwitch) }
             return
         }
         // Grab location snapshot before going async.
-        let location = locationManager?.lastReportedLocation
+        let location = locationManager?.bestAvailableLocation
         let lat = location?.coordinate.latitude
         let lon = location?.coordinate.longitude
 
@@ -513,6 +522,34 @@ final class DeadManSwitchService: ObservableObject {
         UserDefaults.standard.string(forKey: "currentUserId")
             ?? KeychainHelper.shared.read(.userId)
             ?? ""
+    }
+
+    // MARK: - Private: Server copy of the deadline
+
+    private struct ServerDeadline: Encodable {
+        let deadline: String?
+        let latitude: Double?
+        let longitude: Double?
+        let batteryLevel: Double?
+    }
+
+    /// Keeps the server's copy of the deadline in step (POST /v1/safety-timer).
+    /// iOS may kill the app or the battery may die before the countdown ends — the
+    /// cases this timer exists for — so the server raises the SOS if no check-in
+    /// reaches it by the deadline. Sent through the offline queue: kept until delivered.
+    private func syncServerDeadline() {
+        guard let apiClient, !ExploreMode.blocks("deadManSwitch") else { return }
+        let running = isActive && !isPaused ? deadline : nil
+        let location = locationManager?.bestAvailableLocation
+        UIDevice.current.isBatteryMonitoringEnabled = true
+        let battery = UIDevice.current.batteryLevel
+        let body = ServerDeadline(
+            deadline: running.map { ISO8601DateFormatter().string(from: $0) },
+            latitude: running == nil ? nil : location?.coordinate.latitude,
+            longitude: running == nil ? nil : location?.coordinate.longitude,
+            batteryLevel: running == nil || battery < 0 ? nil : Double(battery)
+        )
+        apiClient.postQueued("/v1/safety-timer", body: body)
     }
 
     // MARK: - Private: Local Notifications

@@ -146,26 +146,30 @@ describe("escalation over the allowance falls back to push, never blocks the SOS
     expect(sos().fairUseLimited).toBeUndefined();
   });
 
-  test("SMS allowance used up: no SMS, pushes still sent, SOS runs to the end", async () => {
+  test("SMS allowance used up: each guardian's first fallback text still goes out, repeats don't", async () => {
     seedFamily();
     seed("sos_usage/mom_2026-10", { smsCount: 50 });
     await runAll();
-    expect(mockSms.sendSOSSms).not.toHaveBeenCalled();
-    expect(channels().filter((c) => c === "sms_fair_use_limit")).toHaveLength(4);
+    // hop2 (no app) × 2 = safety floor, sent and counted; share-link repeats are capped
+    expect(mockSms.sendSOSSms).toHaveBeenCalledTimes(2);
+    expect(usage()?.smsCount).toBe(52);
+    expect(channels().filter((c) => c === "sms_fallback")).toHaveLength(2);
+    expect(channels().filter((c) => c === "sms_fair_use_limit")).toHaveLength(2);
     expect(sentMessages.length).toBeGreaterThan(0);
     expect(mockCalls).toHaveLength(6); // calls are a separate allowance
     expect(sos().fairUseLimited).toBe(true);
     expect(sos().escalationState).toBe("exhausted");
   });
 
-  test("call minutes used up: guardians get a push instead of a call", async () => {
+  test("call minutes used up: the first round still rings everyone, later rounds are pushes", async () => {
     seedFamily();
     seed("sos_usage/mom_2026-10", { voiceMinutes: 30 });
     await runAll();
-    expect(mockCalls).toHaveLength(0);
-    expect(channels().filter((c) => c === "push_fair_use_limit")).toHaveLength(6);
+    expect(mockCalls).toHaveLength(2); // round 1 × 2 guardians = safety floor
+    expect(usage()?.voiceMinutes).toBe(32);
+    expect(channels().filter((c) => c === "push_fair_use_limit")).toHaveLength(4);
     const pushes = sentMessages.filter((m) => m.payload.action === "sos_alert").length;
-    expect(pushes).toBeGreaterThanOrEqual(6 + 2); // hop1/hop2 pushes + one per skipped call
+    expect(pushes).toBeGreaterThanOrEqual(4 + 2); // hop1/hop2 pushes + one per skipped call
     expect(sos().fairUseLimited).toBe(true);
     expect(sos().escalationState).toBe("exhausted");
   });
@@ -175,6 +179,20 @@ describe("escalation over the allowance falls back to push, never blocks the SOS
     mockCallResult = null;
     await runAll();
     expect(usage()?.voiceMinutes ?? 0).toBe(0);
+  });
+
+  test("push failed at hop1 with the allowance used up: the guardian is texted once, not twice", async () => {
+    seedFamily();
+    seed("sos_usage/mom_2026-10", { smsCount: 50 });
+    // Dead push tokens: hop1 falls back to SMS (floor); hop2 must not text again past the cap
+    seed("device_tokens/t_sarah", { userId: "sarah", token: "" });
+    seed("device_tokens/t_kevin", { userId: "kevin", token: "" });
+    await advanceEscalation("sos1", T0);
+    await advanceEscalation("sos1", new Date(T0.getTime() + ESCALATION_PLAN[1].offsetMs));
+    const smsTo = mockSms.sendSOSSms.mock.calls.map((c) => c[0]);
+    expect(smsTo.filter((g) => g === "sarah")).toHaveLength(1);
+    expect(smsTo.filter((g) => g === "kevin")).toHaveLength(1);
+    expect(sos().escalationSms).toEqual({ sarah: true, kevin: true });
   });
 
   test("a failed SMS gives its allowance back", async () => {

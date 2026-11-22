@@ -3,9 +3,10 @@ import * as admin from "firebase-admin";
 /**
  * Fair use of SOS SMS and voice calls (docs/pricing/PRICING.md): SMS fallback and voice
  * escalation are part of every plan, up to this much per protected person per calendar
- * month (UTC). Beyond it, escalation goes on with push notifications only — the SOS
- * itself, its push alerts, and texts to emergency contacts when nobody else can be
- * reached are never blocked.
+ * month (UTC). Beyond it, repeat texts and later call rounds become push reminders.
+ * Never blocked: the SOS itself, its push alerts, texts to emergency contacts when
+ * nobody else can be reached, and the safety floor — each guardian's first fallback
+ * text (push failed / no app) and first call of every SOS (see escalation.ts).
  *
  * Usage lives in sos_usage/{personId}_{YYYY-MM}: smsCount, voiceMinutes.
  * A call reserves 1 minute when it is placed; the Twilio status callback settles it to
@@ -70,6 +71,20 @@ export async function reserveVoiceMinute(personId: string, now: Date = new Date(
     }, { merge: true });
     return { personId, month };
   });
+}
+
+/**
+ * A minute for a call that must go out even past the allowance (the safety floor):
+ * counted like any other, never refused.
+ */
+export async function forceVoiceMinute(personId: string, now: Date = new Date()): Promise<VoiceReservation> {
+  const month = usageMonth(now);
+  await usageRef(personId, month).set({
+    personId, month,
+    voiceMinutes: admin.firestore.FieldValue.increment(1),
+    updatedAt: admin.firestore.Timestamp.now(),
+  }, { merge: true });
+  return { personId, month };
 }
 
 /** Give back a reservation whose call was never placed. */

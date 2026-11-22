@@ -68,6 +68,7 @@ import crewRoutes from "./routes/crew";
 import watchBackRoutes from "./routes/watchBack";
 import voiceRoutes from "./routes/voice";
 import safetyEventRoutes from "./routes/safetyEvents";
+import safetyTimerRoutes from "./routes/safetyTimer";
 import incidentReportRoutes from "./routes/incidentReports";
 import { createRateLimiter, RATE_LIMITS } from "./middleware/rateLimit";
 
@@ -121,6 +122,7 @@ app.use("/v1", userRoutes);
 
 // Phase 7: Daily Use (Iteration 1)
 app.use("/v1/home-timer", homeTimerRoutes);
+app.use("/v1/safety-timer", safetyTimerRoutes);
 app.use("/v1/arrival-report", arrivalRoutes);
 app.use("/v1/itinerary", itineraryRoutes);
 

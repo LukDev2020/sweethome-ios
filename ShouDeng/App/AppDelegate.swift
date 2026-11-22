@@ -1,5 +1,6 @@
 import UIKit
 import UserNotifications
+import CoreLocation
 import FirebaseCore
 import FirebaseAuth
 #if canImport(FirebaseCrashlytics)
@@ -64,14 +65,22 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         }
 
         // Check if launched from significant location change
-        if launchOptions?[.location] != nil {
+        // Report the fix iOS woke us for. Never a made-up position: a 0,0 heartbeat
+        // would put the person in the Atlantic on the family's map.
+        if launchOptions?[.location] != nil, let fix = CLLocationManager().location,
+           CLLocationCoordinate2DIsValid(fix.coordinate), fix.horizontalAccuracy >= 0 {
             appCoordinator.heartbeatService.significantLocationChanged(
                 location: Location(
-                    latitude: 0, longitude: 0, accuracy: 0,
-                    altitude: nil, speed: nil, timestamp: Date(),
+                    latitude: fix.coordinate.latitude, longitude: fix.coordinate.longitude,
+                    accuracy: fix.horizontalAccuracy,
+                    altitude: fix.verticalAccuracy >= 0 ? fix.altitude : nil,
+                    speed: fix.speed >= 0 ? fix.speed : nil, timestamp: fix.timestamp,
                     address: nil, isInSafeZone: nil, safeZoneName: nil
                 )
             )
+        } else if launchOptions?[.location] != nil {
+            // No usable fix yet: still a sign of life, just without a position
+            appCoordinator.heartbeatService.recordBeat(source: .significantLocation)
         }
 
         return true
