@@ -821,7 +821,7 @@
 "protected.settings.alert.roleSwitch.message" = "You will switch from Protected to Guardian role";
 "protected.settings.checkIn.dailyReminder" = "Daily check-in reminder";
 "protected.settings.checkIn.fourHours" = "4 hours";
-"protected.settings.checkIn.overdueThreshold" = "Overdue Threshold";
+"protected.settings.checkIn.overdueThreshold" = "Family is alerted after";
 "protected.settings.detection.distress" = "Audio Distress Detection";
 "protected.settings.detection.distressDesc" = "Screaming or shouting near the phone asks \"Are you OK?\", then alerts your guardians";
 "protected.settings.detection.voiceCommand" = "Voice Command SOS";
@@ -836,11 +836,11 @@
 "protected.settings.section.checkIn" = "Check-in Settings";
 "protected.settings.section.smartDetection" = "Smart Detection";
 "protected.settings.section.sosAndPrivacy" = "SOS & Privacy";
-"protected.settings.section.sosTrigger" = "SOS Trigger Methods";
+"protected.settings.section.sosTrigger" = "Ways to call for help";
 "protected.settings.security.silentAlarm" = "Silent Alarm";
 "protected.settings.security.silentAlarmDesc" = "Scheduled safety check — auto-notify if missed";
 "protected.settings.sos.bluetooth" = "Bluetooth Button";
-"protected.settings.sos.longPress" = "Long Press (3s)";
+"protected.settings.sos.longPress" = "Hold the SOS button (3 s)";
 "protected.settings.sos.notPaired" = "Not Paired";
 "protected.settings.sos.redundancyHint" = "Multiple trigger methods ensure SOS works when needed";
 "protected.settings.sos.silentMode" = "Silent Mode";
@@ -866,7 +866,7 @@
 "settings.alert.roleSwitch.title" = "Switch Role?";
 "settings.data.exportAll" = "Export All My Data";
 "settings.data.locationRetention" = "Location Retention";
-"settings.data.locationRetentionValue" = "Auto-delete after 90 days";
+"settings.data.locationRetentionValue" = "Depends on plan (7–365 days)";
 "settings.dev.switchRole" = "Switch Role (Dev)";
 "settings.email.addDesc" = "For account recovery and data export";
 "settings.email.addTitle" = "Add Email";
@@ -2787,3 +2787,18 @@
 
 "auth.apple.button.signIn" = "Sign in with Apple";
 "auth.apple.button.continue" = "Continue with Apple";
+
+/* Settings review */
+"protected.settings.sos.widget" = "SOS widget on the Home Screen";
+"protected.settings.sos.pairButton" = "Pair a button";
+"settings.notification.sos.alwaysOn" = "Always on";
+"settings.notification.sos.alwaysOnHint" = "SOS alerts can't be turned off — they're why the app is here.";
+"settings.notification.systemOff.title" = "Notifications are off for this app";
+"settings.notification.systemOff.body" = "You won't hear an SOS or a missed check-in. Tap to turn them on in Settings.";
+"protected.settings.checkIn.time" = "Remind me at";
+"protected.settings.checkIn.hours" = "%d hours";
+"protected.settings.checkIn.overdueHint" = "If you haven't checked in for this long, your family gets a reminder to check on you.";
+"guardian.settings.notification.homeSafe" = "Check-ins (\"home safe\")";
+"settings.logout.confirm.title" = "Log out?";
+"settings.logout.confirm.protected" = "While you're logged out, your family won't get your check-ins or an SOS from this phone.";
+"settings.logout.confirm.guardian" = "While you're logged out, this phone won't get SOS alerts from your family.";

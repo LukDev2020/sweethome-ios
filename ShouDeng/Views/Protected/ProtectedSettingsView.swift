@@ -22,17 +22,11 @@ struct ProtectedSettingsView: View {
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
 
     @AppStorage("app_dark_mode") private var darkModeEnabled = false
-    @AppStorage("sos_longPress") private var longPressEnabled = true
-    @AppStorage("sos_watch") private var watchEnabled = true
-    @AppStorage("sos_silentMode") private var silentMode = false
     @AppStorage("distress_detection_enabled") private var distressDetectionEnabled = false
     @AppStorage("voice_command_enabled") private var voiceCommandEnabled = false
     /// Read so the fall-profile switch redraws (the value itself is the coordinator's)
     @AppStorage(AppCoordinator.sensitiveFallKey) private var sensitiveFallStored = false
     @AppStorage(HomeStyle.storageKey) private var homeStyleStored = HomeStyle.defaultStyle.rawValue
-    @AppStorage("notif_sos_alerts") private var notifSOS = true
-    @AppStorage("notif_checkin_reminder") private var notifCheckin = true
-    @AppStorage("notif_family_feed") private var notifFamilyFeed = true
     @AppStorage("lockscreen_card_enabled") private var lockscreenCardEnabled = true
 
     private let pro = Color(red: 107/255, green: 92/255, blue: 165/255)
@@ -60,6 +54,7 @@ struct ProtectedSettingsView: View {
     @State private var showDeadManSwitch = false
     @State private var showTrackerDetection = false
     @State private var showDisguiseMode = false
+    @State private var showLogoutConfirm = false
 
     var body: some View {
         NavigationStack {
@@ -164,9 +159,9 @@ struct ProtectedSettingsView: View {
             .sheet(isPresented: $showDisguiseMode) {
                 DisguiseModeSettingsView().environmentObject(coordinator)
             }
-            .onChange(of: notifSOS) { coordinator.syncNotificationPrefs() }
-            .onChange(of: notifCheckin) { coordinator.syncNotificationPrefs() }
-            .onChange(of: notifFamilyFeed) { coordinator.syncNotificationPrefs() }
+            .logoutConfirmation(isPresented: $showLogoutConfirm, isProtected: true) {
+                coordinator.authManager.logout()
+            }
         }
     }
 
@@ -228,6 +223,7 @@ struct ProtectedSettingsView: View {
                     PhoneMissingBanner()
                     rolePanel
                     HomeStylePanel()
+                    WatchBackPanel()
                     sosTriggerPanel
                     smartDetectionPanel
                     checkInPanel
@@ -247,6 +243,9 @@ struct ProtectedSettingsView: View {
                     lockScreenCardPanel
                     securityPanel
                     languagePanel
+                    fontSizePanel
+                    darkModePanel
+                    TipsSettingsPanel()
                     notificationPanel
                     dataPanel
                     legalPanel
@@ -343,10 +342,26 @@ struct ProtectedSettingsView: View {
             Text(langManager.localized("protected.settings.section.sosTrigger"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            toggleRow(langManager.localized("protected.settings.sos.longPress"), isOn: $longPressEnabled)
-            toggleRow(langManager.localized("protected.settings.sos.watch"), isOn: $watchEnabled)
-            fixedRow(langManager.localized("protected.settings.sos.bluetooth"), value: langManager.localized("protected.settings.sos.notPaired"), isWarning: true)
-            toggleRow(langManager.localized("protected.settings.sos.silentMode"), isOn: $silentMode)
+            // Always on (no switch): turning SOS off is never what someone means to do
+            fixedRow(langManager.localized("protected.settings.sos.longPress"),
+                     value: langManager.localized("settings.notification.sos.alwaysOn"), isWarning: false)
+            fixedRow(langManager.localized("protected.settings.sos.widget"),
+                     value: langManager.localized("settings.notification.sos.alwaysOn"), isWarning: false)
+            Button { showBLETracker = true } label: {
+                let paired = BLETrackerService.shared.pairedTags.count
+                HStack {
+                    Text(langManager.localized("protected.settings.sos.bluetooth")).font(.scaled(size: 13))
+                    Spacer()
+                    Text(paired > 0
+                         ? String(format: langManager.localized("settings.security.deviceCount"), paired)
+                         : langManager.localized("protected.settings.sos.pairButton"))
+                        .font(.scaled(size: 12))
+                        .foregroundStyle(.secondary)
+                    Image(systemName: "chevron.right").font(.scaled(size: 11)).foregroundStyle(.secondary)
+                }
+                .padding(.vertical, 2)
+            }
+            .buttonStyle(.settingsRow)
         }
         .padding(12)
         .background(
@@ -401,7 +416,7 @@ struct ProtectedSettingsView: View {
                 Text(langManager.localized("protected.settings.detection.distressDesc"))
                     .font(.scaled(size: 11))
                     .foregroundStyle(.secondary)
-                    .padding(.leading, 30)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .onChange(of: distressDetectionEnabled) { _, enabled in
                 coordinator.audioCoordinator.distressDetectionEnabled = enabled
@@ -412,7 +427,7 @@ struct ProtectedSettingsView: View {
                 Text(langManager.localized("protected.settings.detection.voiceCommandDesc"))
                     .font(.scaled(size: 11))
                     .foregroundStyle(.secondary)
-                    .padding(.leading, 30)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .onChange(of: voiceCommandEnabled) { _, enabled in
                 if enabled {
@@ -435,18 +450,7 @@ struct ProtectedSettingsView: View {
     // MARK: - Check-in Panel
 
     private var checkInPanel: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(langManager.localized("protected.settings.section.checkIn"))
-                .font(.scaled(size: 12))
-                .foregroundStyle(.secondary)
-            fixedRow(langManager.localized("protected.settings.checkIn.dailyReminder"), value: "09:00、21:00", isWarning: false)
-            fixedRow(langManager.localized("protected.settings.checkIn.overdueThreshold"), value: langManager.localized("protected.settings.checkIn.fourHours"), isWarning: false)
-        }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
-        )
+        CheckInSettingsPanel()
     }
 
     // MARK: - Safety Tools Panel
@@ -839,9 +843,8 @@ struct ProtectedSettingsView: View {
             Text(langManager.localized("settings.section.notifications"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            toggleRow(langManager.localized("settings.notification.sos"), isOn: $notifSOS)
-            toggleRow(langManager.localized("protected.settings.notification.checkInReminder"), isOn: $notifCheckin)
-            toggleRow(langManager.localized("settings.notification.familyFeed"), isOn: $notifFamilyFeed)
+            // The daily check-in reminder lives in the check-in panel
+            SOSNotificationRows()
         }
         .padding(12)
         .background(
@@ -873,7 +876,7 @@ struct ProtectedSettingsView: View {
             }
             .buttonStyle(.settingsRow)
             Button { showDeleteConfirm = true } label: {
-                fixedRow(langManager.localized("settings.delete.account"), value: "", isWarning: true)
+                destructiveRow(langManager.localized("settings.delete.account"))
             }
             .buttonStyle(.settingsRow)
         }
@@ -896,11 +899,11 @@ struct ProtectedSettingsView: View {
             }
             .buttonStyle(.settingsRow)
             Button { showAbout = true } label: {
-                fixedRow(langManager.localized("settings.legal.about"), value: "v1.0.0", isWarning: false)
+                fixedRow(langManager.localized("settings.legal.about"), value: AppVersion.display, isWarning: false)
             }
             .buttonStyle(.settingsRow)
-            Button { coordinator.authManager.logout() } label: {
-                fixedRow(langManager.localized("settings.logout"), value: "", isWarning: true)
+            Button { showLogoutConfirm = true } label: {
+                destructiveRow(langManager.localized("settings.logout"))
             }
             .buttonStyle(.settingsRow)
         }
@@ -1074,6 +1077,15 @@ struct ProtectedSettingsView: View {
             Toggle("", isOn: isOn)
                 .labelsHidden()
                 .tint(safe)
+        }
+        .padding(.vertical, 2)
+    }
+
+    /// Delete account / Log out: red, so they don't read like ordinary rows
+    private func destructiveRow(_ label: String) -> some View {
+        HStack {
+            Text(label).font(.scaled(size: 13)).foregroundStyle(alert)
+            Spacer()
         }
         .padding(.vertical, 2)
     }

@@ -821,7 +821,7 @@
 "protected.settings.alert.roleSwitch.message" = "切换后将从被守护者变为守护者角色";
 "protected.settings.checkIn.dailyReminder" = "每日报平安提醒";
 "protected.settings.checkIn.fourHours" = "4 小时";
-"protected.settings.checkIn.overdueThreshold" = "逾期阈值";
+"protected.settings.checkIn.overdueThreshold" = "多久没报平安会提醒家人";
 "protected.settings.detection.distress" = "异常声音检测";
 "protected.settings.detection.distressDesc" = "附近有尖叫或呼喊时先问“你还好吗？”，没有回应再通知守护者";
 "protected.settings.detection.voiceCommand" = "语音指令求助";
@@ -836,11 +836,11 @@
 "protected.settings.section.checkIn" = "报平安设置";
 "protected.settings.section.smartDetection" = "智能检测";
 "protected.settings.section.sosAndPrivacy" = "SOS 与隐私";
-"protected.settings.section.sosTrigger" = "SOS 触发方式";
+"protected.settings.section.sosTrigger" = "求助方式";
 "protected.settings.security.silentAlarm" = "静默警报";
 "protected.settings.security.silentAlarmDesc" = "定时确认安全，未确认自动通知";
 "protected.settings.sos.bluetooth" = "蓝牙按钮";
-"protected.settings.sos.longPress" = "长按按钮（3秒）";
+"protected.settings.sos.longPress" = "按住 SOS 按钮（3 秒）";
 "protected.settings.sos.notPaired" = "未配对";
 "protected.settings.sos.redundancyHint" = "多种触发方式确保紧急时能够求助";
 "protected.settings.sos.silentMode" = "静默模式";
@@ -866,7 +866,7 @@
 "settings.alert.roleSwitch.title" = "切换角色？";
 "settings.data.exportAll" = "导出我的全部数据";
 "settings.data.locationRetention" = "位置保留时长";
-"settings.data.locationRetentionValue" = "90 天后自动删除";
+"settings.data.locationRetentionValue" = "按方案保留 7–365 天";
 "settings.dev.switchRole" = "切换角色 (Dev)";
 "settings.email.addDesc" = "用于账户恢复和数据导出";
 "settings.email.addTitle" = "添加邮箱";
@@ -2787,3 +2787,18 @@
 
 "auth.apple.button.signIn" = "通过 Apple 登录";
 "auth.apple.button.continue" = "通过 Apple 继续";
+
+/* Settings review */
+"protected.settings.sos.widget" = "主屏幕 SOS 小组件";
+"protected.settings.sos.pairButton" = "配对按钮";
+"settings.notification.sos.alwaysOn" = "始终开启";
+"settings.notification.sos.alwaysOnHint" = "SOS 通知不能关闭——这是守灯存在的意义。";
+"settings.notification.systemOff.title" = "本应用的通知已被关闭";
+"settings.notification.systemOff.body" = "你将收不到 SOS 和报平安逾期提醒。点此去系统设置开启。";
+"protected.settings.checkIn.time" = "提醒时间";
+"protected.settings.checkIn.hours" = "%d 小时";
+"protected.settings.checkIn.overdueHint" = "超过这个时间没报平安，家人会收到提醒，请他们关心一下你。";
+"guardian.settings.notification.homeSafe" = "报平安通知（“已到家”）";
+"settings.logout.confirm.title" = "确定退出登录？";
+"settings.logout.confirm.protected" = "退出后，家人将收不到你的报平安，这部手机也无法发出 SOS。";
+"settings.logout.confirm.guardian" = "退出后，这部手机将收不到家人的 SOS 求助。";

@@ -821,7 +821,7 @@
 "protected.settings.alert.roleSwitch.message" = "Vous passerez du rôle de Protégé à celui de Gardien";
 "protected.settings.checkIn.dailyReminder" = "Rappel quotidien";
 "protected.settings.checkIn.fourHours" = "4 heures";
-"protected.settings.checkIn.overdueThreshold" = "Seuil de retard";
+"protected.settings.checkIn.overdueThreshold" = "Votre famille est prévenue après";
 "protected.settings.detection.distress" = "Détection audio de détresse";
 "protected.settings.detection.distressDesc" = "Des cris près du téléphone déclenchent « Ça va ? », puis préviennent vos gardiens";
 "protected.settings.detection.voiceCommand" = "Commande vocale SOS";
@@ -836,11 +836,11 @@
 "protected.settings.section.checkIn" = "Paramètres de signalement";
 "protected.settings.section.smartDetection" = "Détection intelligente";
 "protected.settings.section.sosAndPrivacy" = "SOS et confidentialité";
-"protected.settings.section.sosTrigger" = "Méthodes de déclenchement SOS";
+"protected.settings.section.sosTrigger" = "Façons de demander de l'aide";
 "protected.settings.security.silentAlarm" = "Alarme silencieuse";
 "protected.settings.security.silentAlarmDesc" = "Vérification planifiée — notification auto si manquée";
 "protected.settings.sos.bluetooth" = "Bouton Bluetooth";
-"protected.settings.sos.longPress" = "Appui long (3s)";
+"protected.settings.sos.longPress" = "Maintenir le bouton SOS (3 s)";
 "protected.settings.sos.notPaired" = "Non associé";
 "protected.settings.sos.redundancyHint" = "Plusieurs méthodes pour garantir le SOS";
 "protected.settings.sos.silentMode" = "Mode silencieux";
@@ -866,7 +866,7 @@
 "settings.alert.roleSwitch.title" = "Changer de rôle ?";
 "settings.data.exportAll" = "Exporter toutes mes données";
 "settings.data.locationRetention" = "Conservation de la position";
-"settings.data.locationRetentionValue" = "Suppression auto après 90 jours";
+"settings.data.locationRetentionValue" = "Selon la formule (7 à 365 jours)";
 "settings.dev.switchRole" = "Changer de rôle (Dev)";
 "settings.email.addDesc" = "Pour la récupération et l'export";
 "settings.email.addTitle" = "Ajouter un e-mail";
@@ -2787,3 +2787,18 @@
 
 "auth.apple.button.signIn" = "Se connecter avec Apple";
 "auth.apple.button.continue" = "Continuer avec Apple";
+
+/* Settings review */
+"protected.settings.sos.widget" = "Widget SOS sur l'écran d'accueil";
+"protected.settings.sos.pairButton" = "Jumeler un bouton";
+"settings.notification.sos.alwaysOn" = "Toujours activé";
+"settings.notification.sos.alwaysOnHint" = "Les alertes SOS ne peuvent pas être désactivées : c'est la raison d'être de l'app.";
+"settings.notification.systemOff.title" = "Les notifications de cette app sont désactivées";
+"settings.notification.systemOff.body" = "Vous ne recevrez ni SOS ni alerte de nouvelles manquées. Touchez pour les activer dans Réglages.";
+"protected.settings.checkIn.time" = "Me le rappeler à";
+"protected.settings.checkIn.hours" = "%d heures";
+"protected.settings.checkIn.overdueHint" = "Sans nouvelles de vous pendant ce temps, votre famille reçoit un rappel pour prendre de vos nouvelles.";
+"guardian.settings.notification.homeSafe" = "Nouvelles (« bien rentré »)";
+"settings.logout.confirm.title" = "Se déconnecter ?";
+"settings.logout.confirm.protected" = "Une fois déconnecté, votre famille ne recevra plus vos nouvelles ni de SOS depuis ce téléphone.";
+"settings.logout.confirm.guardian" = "Une fois déconnecté, ce téléphone ne recevra plus les SOS de votre famille.";

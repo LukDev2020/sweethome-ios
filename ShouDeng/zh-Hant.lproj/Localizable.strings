@@ -821,7 +821,7 @@
 "protected.settings.alert.roleSwitch.message" = "切換後將從被守護者變為守護者角色";
 "protected.settings.checkIn.dailyReminder" = "每日報平安提醒";
 "protected.settings.checkIn.fourHours" = "4 小時";
-"protected.settings.checkIn.overdueThreshold" = "逾期閾值";
+"protected.settings.checkIn.overdueThreshold" = "多久沒報平安會提醒家人";
 "protected.settings.detection.distress" = "異常聲音檢測";
 "protected.settings.detection.distressDesc" = "附近有尖叫或呼喊時先問“你還好嗎？”，沒有回應再通知守護者";
 "protected.settings.detection.voiceCommand" = "語音指令求助";
@@ -836,11 +836,11 @@
 "protected.settings.section.checkIn" = "報平安設定";
 "protected.settings.section.smartDetection" = "智慧檢測";
 "protected.settings.section.sosAndPrivacy" = "SOS 與隱私";
-"protected.settings.section.sosTrigger" = "SOS 觸發方式";
+"protected.settings.section.sosTrigger" = "求助方式";
 "protected.settings.security.silentAlarm" = "靜默警報";
 "protected.settings.security.silentAlarmDesc" = "定時確認安全，未確認自動通知";
 "protected.settings.sos.bluetooth" = "藍芽按鈕";
-"protected.settings.sos.longPress" = "長按按鈕（3秒）";
+"protected.settings.sos.longPress" = "按住 SOS 按鈕（3 秒）";
 "protected.settings.sos.notPaired" = "未配對";
 "protected.settings.sos.redundancyHint" = "多種觸發方式確保緊急時能夠求助";
 "protected.settings.sos.silentMode" = "靜默模式";
@@ -866,7 +866,7 @@
 "settings.alert.roleSwitch.title" = "切換角色？";
 "settings.data.exportAll" = "匯出我的全部資料";
 "settings.data.locationRetention" = "位置保留時長";
-"settings.data.locationRetentionValue" = "90 天后自動刪除";
+"settings.data.locationRetentionValue" = "依方案保留 7–365 天";
 "settings.dev.switchRole" = "切換角色 (Dev)";
 "settings.email.addDesc" = "用於賬戶恢復和資料匯出";
 "settings.email.addTitle" = "新增郵箱";
@@ -2787,3 +2787,18 @@
 
 "auth.apple.button.signIn" = "透過 Apple 登入";
 "auth.apple.button.continue" = "透過 Apple 繼續";
+
+/* Settings review */
+"protected.settings.sos.widget" = "主畫面 SOS 小工具";
+"protected.settings.sos.pairButton" = "配對按鈕";
+"settings.notification.sos.alwaysOn" = "始終開啟";
+"settings.notification.sos.alwaysOnHint" = "SOS 通知不能關閉——這是守燈存在的意義。";
+"settings.notification.systemOff.title" = "本應用的通知已被關閉";
+"settings.notification.systemOff.body" = "你將收不到 SOS 和報平安逾期提醒。點此到系統設定開啟。";
+"protected.settings.checkIn.time" = "提醒時間";
+"protected.settings.checkIn.hours" = "%d 小時";
+"protected.settings.checkIn.overdueHint" = "超過這個時間沒報平安，家人會收到提醒，請他們關心一下你。";
+"guardian.settings.notification.homeSafe" = "報平安通知（「已到家」）";
+"settings.logout.confirm.title" = "確定登出？";
+"settings.logout.confirm.protected" = "登出後，家人將收不到你的報平安，這部手機也無法發出 SOS。";
+"settings.logout.confirm.guardian" = "登出後，這部手機將收不到家人的 SOS 求助。";

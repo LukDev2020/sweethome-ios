@@ -154,6 +154,7 @@ struct GuardianHomeView: View {
                     .environmentObject(coordinator)
             }
             .task {
+                CheckInReminder.cancel()   // only the protected person gets it
                 coordinator.locationManager.requestSingleLocation()
                 await coordinator.fetchProtectedPersons()
                 await coordinator.fetchFamilyPosts()

@@ -821,7 +821,7 @@
 "protected.settings.alert.roleSwitch.message" = "見守られる人から見守る人に切り替わります。";
 "protected.settings.checkIn.dailyReminder" = "毎日の無事報告リマインダー";
 "protected.settings.checkIn.fourHours" = "4時間";
-"protected.settings.checkIn.overdueThreshold" = "期限超過の判定時間";
+"protected.settings.checkIn.overdueThreshold" = "家族に知らせるまでの時間";
 "protected.settings.detection.distress" = "異常音の検知";
 "protected.settings.detection.distressDesc" = "近くで悲鳴や叫び声がすると「大丈夫？」と確認し、応答がなければ見守る人に通知します";
 "protected.settings.detection.voiceCommand" = "音声コマンドでSOS";
@@ -836,11 +836,11 @@
 "protected.settings.section.checkIn" = "無事報告の設定";
 "protected.settings.section.smartDetection" = "スマート検知";
 "protected.settings.section.sosAndPrivacy" = "SOSとプライバシー";
-"protected.settings.section.sosTrigger" = "SOSの発信方法";
+"protected.settings.section.sosTrigger" = "助けを求める方法";
 "protected.settings.security.silentAlarm" = "サイレントアラーム";
 "protected.settings.security.silentAlarmDesc" = "決まった時刻に安全を確認し、応答がない場合は自動で通知します";
 "protected.settings.sos.bluetooth" = "Bluetoothボタン";
-"protected.settings.sos.longPress" = "長押し（3秒）";
+"protected.settings.sos.longPress" = "SOSボタンを長押し（3秒）";
 "protected.settings.sos.notPaired" = "未ペアリング";
 "protected.settings.sos.redundancyHint" = "複数の発信方法を用意しておくと、いざという時に確実にSOSを送れます";
 "protected.settings.sos.silentMode" = "サイレントモード";
@@ -866,7 +866,7 @@
 "settings.alert.roleSwitch.title" = "役割を切り替えますか？";
 "settings.data.exportAll" = "すべてのデータを書き出す";
 "settings.data.locationRetention" = "位置情報の保存期間";
-"settings.data.locationRetentionValue" = "90日後に自動削除";
+"settings.data.locationRetentionValue" = "プランにより7〜365日";
 "settings.dev.switchRole" = "役割を切り替え（開発用）";
 "settings.email.addDesc" = "アカウントの復旧とデータの書き出しに使用します";
 "settings.email.addTitle" = "メールアドレスを追加";
@@ -2787,3 +2787,18 @@
 
 "auth.apple.button.signIn" = "Appleでサインイン";
 "auth.apple.button.continue" = "Appleで続ける";
+
+/* Settings review */
+"protected.settings.sos.widget" = "ホーム画面のSOSウィジェット";
+"protected.settings.sos.pairButton" = "ボタンをペアリング";
+"settings.notification.sos.alwaysOn" = "常にオン";
+"settings.notification.sos.alwaysOnHint" = "SOS通知はオフにできません。このアプリがある理由だからです。";
+"settings.notification.systemOff.title" = "このアプリの通知がオフになっています";
+"settings.notification.systemOff.body" = "SOSや無事報告の遅れが届きません。タップして設定でオンにしてください。";
+"protected.settings.checkIn.time" = "通知する時刻";
+"protected.settings.checkIn.hours" = "%d時間";
+"protected.settings.checkIn.overdueHint" = "この時間を過ぎても無事報告がないと、家族に様子を確認するよう通知が届きます。";
+"guardian.settings.notification.homeSafe" = "無事報告（「帰宅しました」）";
+"settings.logout.confirm.title" = "ログアウトしますか？";
+"settings.logout.confirm.protected" = "ログアウト中は、家族に無事報告が届かず、このiPhoneからSOSも送れません。";
+"settings.logout.confirm.guardian" = "ログアウト中は、このiPhoneに家族からのSOSが届きません。";

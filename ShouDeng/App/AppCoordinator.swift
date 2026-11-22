@@ -628,6 +628,8 @@ final class AppCoordinator: ObservableObject {
             "notif_checkin_reminder",
             "notif_checkin_overdue",
             "notif_family_feed",
+            CheckInReminder.enabledKey,
+            CheckInReminder.minutesKey,
             "login_failed_attempts",
             "login_lockout_until",
             "signup_failed_attempts",
@@ -641,6 +643,7 @@ final class AppCoordinator: ObservableObject {
         for key in userKeys {
             defaults.removeObject(forKey: key)
         }
+        CheckInReminder.cancel()   // signed out: no daily check-in reminder
         if !isDemo { Task { @MainActor in WorldClockSettings.shared.load() } }
     }
 
@@ -2563,7 +2566,7 @@ final class AppCoordinator: ObservableObject {
 
     func syncNotificationPrefs() {
         let prefs = NotificationPrefsRequest(
-            sosAlerts: defaults.object(forKey: "notif_sos_alerts") as? Bool ?? true,
+            sosAlerts: true,   // SOS can't be muted (the server ignores it anyway)
             sosCriticalAlerts: defaults.object(forKey: Self.sosCriticalAlertsKey) as? Bool ?? true,
             checkinReminder: defaults.object(forKey: "notif_checkin_reminder") as? Bool ?? true,
             checkinOverdue: defaults.object(forKey: "notif_checkin_overdue") as? Bool ?? true,

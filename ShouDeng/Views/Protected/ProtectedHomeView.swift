@@ -187,6 +187,8 @@ struct ProtectedHomeView: View {
             }
             .featureDisclosure(.sos, trigger: $sosDisclosureTrigger, emergencyNumber: coordinator.localEmergencyNumber)
             .task {
+                // The daily check-in reminder (Settings) — not in the demo
+                if coordinator.isDemo { CheckInReminder.cancel() } else { CheckInReminder.apply() }
                 coordinator.locationManager.requestSingleLocation()
                 await coordinator.fetchGuardians()
                 await coordinator.fetchFamilyPosts()

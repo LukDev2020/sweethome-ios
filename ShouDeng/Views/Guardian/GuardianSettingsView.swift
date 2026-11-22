@@ -37,12 +37,13 @@ struct GuardianSettingsView: View {
     @State private var showInsuranceReport = false
     @State private var showDuressCode = false
     @State private var showBLETracker = false
+    @State private var showLogoutConfirm = false
 
     @AppStorage("app_dark_mode") private var darkModeEnabled = false
-    @AppStorage("notif_sos_alerts") private var notifSOS = true
     @AppStorage(AppCoordinator.sosCriticalAlertsKey) private var notifSOSCritical = true
     @AppStorage("notif_checkin_overdue") private var notifCheckinOverdue = true
-    @AppStorage("notif_family_feed") private var notifFamilyFeed = true
+    /// "Mom is home safe" pushes (the server reads it as checkinReminder)
+    @AppStorage("notif_checkin_reminder") private var notifHomeSafe = true
     @AppStorage("lockscreen_card_enabled") private var lockscreenCardEnabled = true
 
     var body: some View {
@@ -136,10 +137,12 @@ struct GuardianSettingsView: View {
             .sheet(isPresented: $showBLETracker) {
                 BLETrackerSettingsView().environmentObject(coordinator)
             }
-            .onChange(of: notifSOS) { coordinator.syncNotificationPrefs() }
             .onChange(of: notifSOSCritical) { coordinator.setSOSCriticalAlerts(enabled: notifSOSCritical) }
             .onChange(of: notifCheckinOverdue) { coordinator.syncNotificationPrefs() }
-            .onChange(of: notifFamilyFeed) { coordinator.syncNotificationPrefs() }
+            .onChange(of: notifHomeSafe) { coordinator.syncNotificationPrefs() }
+            .logoutConfirmation(isPresented: $showLogoutConfirm, isProtected: false) {
+                coordinator.authManager.logout()
+            }
         }
     }
 
@@ -210,8 +213,12 @@ struct GuardianSettingsView: View {
                     safetyToolsPanel
                     organizationPanel
                     lockScreenCardPanel
+                    WatchBackPanel()
                     securityPanel
                     languagePanel
+                    fontSizePanel
+                    darkModePanel
+                    TipsSettingsPanel()
                     notificationPanel
                     dataPanel
                     legalPanel
@@ -777,17 +784,16 @@ struct GuardianSettingsView: View {
             Text(langManager.localized("settings.section.notifications"))
                 .font(.scaled(size: 12))
                 .foregroundStyle(.secondary)
-            toggleRow(langManager.localized("settings.notification.sos"), isOn: $notifSOS)
+            SOSNotificationRows()
             if PushService.criticalAlertsEntitled {
                 toggleRow(langManager.localized("settings.notification.sosCritical"), isOn: $notifSOSCritical)
-                    .disabled(!notifSOS)
                 Text(langManager.localized("settings.notification.sosCritical.footnote"))
                     .font(.scaled(size: 11))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             toggleRow(langManager.localized("guardian.settings.notification.checkInOverdue"), isOn: $notifCheckinOverdue)
-            toggleRow(langManager.localized("settings.notification.familyFeed"), isOn: $notifFamilyFeed)
+            toggleRow(langManager.localized("guardian.settings.notification.homeSafe"), isOn: $notifHomeSafe)
         }
         .padding(12)
         .background(
@@ -818,7 +824,7 @@ struct GuardianSettingsView: View {
             }
             .buttonStyle(.settingsRow)
             Button { showDeleteConfirm = true } label: {
-                fixedRow(langManager.localized("settings.delete.account"), value: "", isWarning: true)
+                destructiveRow(langManager.localized("settings.delete.account"))
             }
             .buttonStyle(.settingsRow)
         }
@@ -841,11 +847,11 @@ struct GuardianSettingsView: View {
             }
             .buttonStyle(.settingsRow)
             Button { showAbout = true } label: {
-                fixedRow(langManager.localized("settings.legal.about"), value: "v1.0.0", isWarning: false)
+                fixedRow(langManager.localized("settings.legal.about"), value: AppVersion.display, isWarning: false)
             }
             .buttonStyle(.settingsRow)
-            Button { coordinator.authManager.logout() } label: {
-                fixedRow(langManager.localized("settings.logout"), value: "", isWarning: true)
+            Button { showLogoutConfirm = true } label: {
+                destructiveRow(langManager.localized("settings.logout"))
             }
             .buttonStyle(.settingsRow)
         }
@@ -1012,6 +1018,15 @@ struct GuardianSettingsView: View {
             Toggle("", isOn: isOn)
                 .labelsHidden()
                 .tint(safe)
+        }
+        .padding(.vertical, 2)
+    }
+
+    /// Delete account / Log out: red, so they don't read like ordinary rows
+    private func destructiveRow(_ label: String) -> some View {
+        HStack {
+            Text(label).font(.scaled(size: 13)).foregroundStyle(alert)
+            Spacer()
         }
         .padding(.vertical, 2)
     }
