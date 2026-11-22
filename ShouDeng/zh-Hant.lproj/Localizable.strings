@@ -2802,3 +2802,20 @@
 "settings.logout.confirm.title" = "確定登出？";
 "settings.logout.confirm.protected" = "登出後，家人將收不到你的報平安，這部手機也無法發出 SOS。";
 "settings.logout.confirm.guardian" = "登出後，這部手機將收不到家人的 SOS 求助。";
+
+/* Onboarding intro: family / Rider */
+"intro.title" = "守燈可以這樣守護你";
+"intro.hint" = "點選適合你的一項，之後可以在設定裡隨時更改";
+"intro.family.title" = "家庭安全";
+"intro.family.tagline" = "讓遠方的家人安心";
+"intro.family.b1" = "一鍵報平安，家人隨時知道你好不好";
+"intro.family.b2" = "按下 SOS，所有守護者同時收到你的位置";
+"intro.family.b3" = "跌倒或很久沒報平安時，提醒家人關心你";
+"intro.rider.title" = "外送騎手模式";
+"intro.rider.tagline" = "為街頭設計的守護 · 騎手免費";
+"intro.rider.b1" = "開工時請家人和同事照看，超時未收工會提醒他們";
+"intro.rider.b2" = "騎手車隊互相照應，一人求助全隊知道";
+"intro.rider.b3" = "鎖定畫面卡片一鍵求助，不用解鎖、不用看手機";
+"intro.continue" = "繼續";
+"intro.family.for" = "適合：獨居長輩、出門在外的家人、孩子";
+"intro.rider.for" = "適合：外送、快遞、網約車";

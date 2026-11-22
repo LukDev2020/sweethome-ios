@@ -77,6 +77,16 @@ final class ConsentLogger {
         )
     }
 
+    /// A disclosure screen passed over with Skip: recorded as skipped, not agreed
+    func logOnboardingScreenSkipped(_ screenId: String) {
+        log(
+            userId: currentUserId,
+            item: screenId,
+            copyVersion: DisclaimerCopy.Onboarding.version,
+            action: "skipped"
+        )
+    }
+
     func logFeatureDisclosure(_ feature: DisclaimerCopy.FeatureDisclosure, granted: Bool = true) {
         log(
             userId: currentUserId,

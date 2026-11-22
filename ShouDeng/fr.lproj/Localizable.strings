@@ -2802,3 +2802,20 @@
 "settings.logout.confirm.title" = "Se déconnecter ?";
 "settings.logout.confirm.protected" = "Une fois déconnecté, votre famille ne recevra plus vos nouvelles ni de SOS depuis ce téléphone.";
 "settings.logout.confirm.guardian" = "Une fois déconnecté, ce téléphone ne recevra plus les SOS de votre famille.";
+
+/* Onboarding intro: family / Rider */
+"intro.title" = "Deux façons de veiller sur vous";
+"intro.hint" = "Touchez celle qui vous correspond — modifiable à tout moment dans Réglages";
+"intro.family.title" = "Sécurité familiale";
+"intro.family.tagline" = "Rassurer la famille, même loin";
+"intro.family.b1" = "Donnez des nouvelles en un geste";
+"intro.family.b2" = "Appuyez sur SOS : tous vos proches reçoivent votre position";
+"intro.family.b3" = "Votre famille est prévenue après une chute ou un long silence";
+"intro.rider.title" = "Mode livreur";
+"intro.rider.tagline" = "Pensé pour la rue · gratuit pour les livreurs";
+"intro.rider.b1" = "Un proche et un collègue suivent votre service, prévenus si vous ne finissez pas à l'heure";
+"intro.rider.b2" = "Les livreurs d'une équipe veillent les uns sur les autres : un SOS, toute l'équipe le sait";
+"intro.rider.b3" = "SOS depuis l'écran verrouillé, sans déverrouiller ni regarder";
+"intro.continue" = "Continuer";
+"intro.family.for" = "Pour : parents seuls, proches en voyage, enfants";
+"intro.rider.for" = "Pour : livreurs, coursiers, VTC";

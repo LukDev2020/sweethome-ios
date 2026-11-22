@@ -2802,3 +2802,20 @@
 "settings.logout.confirm.title" = "ログアウトしますか？";
 "settings.logout.confirm.protected" = "ログアウト中は、家族に無事報告が届かず、このiPhoneからSOSも送れません。";
 "settings.logout.confirm.guardian" = "ログアウト中は、このiPhoneに家族からのSOSが届きません。";
+
+/* Onboarding intro: family / Rider */
+"intro.title" = "Beaconifyの2つの見守り方";
+"intro.hint" = "合うほうをタップしてください（あとで設定からいつでも変更できます）";
+"intro.family.title" = "家族の安全";
+"intro.family.tagline" = "離れて暮らす家族に安心を";
+"intro.family.b1" = "ワンタップで無事を報告";
+"intro.family.b2" = "SOSを押すと、見守る家族全員に位置が届きます";
+"intro.family.b3" = "転倒や長く無事報告がないとき、家族に知らせます";
+"intro.rider.title" = "配達ライダーモード";
+"intro.rider.tagline" = "街のために設計 · ライダーは無料";
+"intro.rider.b1" = "家族と同僚がシフトを見守り、時間内に終わらないと知らせます";
+"intro.rider.b2" = "クルーで助け合い：1人のSOSがクルー全員に届きます";
+"intro.rider.b3" = "ロック画面からSOS。ロック解除も画面を見る必要もありません";
+"intro.continue" = "続ける";
+"intro.family.for" = "こんな方に：一人暮らしの親、離れて暮らす家族、子ども";
+"intro.rider.for" = "こんな方に：フードデリバリー、配送、ライドシェア";
