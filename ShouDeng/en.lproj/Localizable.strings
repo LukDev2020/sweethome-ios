@@ -2821,3 +2821,14 @@
 "intro.continue" = "Continue";
 "intro.family.for" = "For: parents living alone, family away from home, kids";
 "intro.rider.for" = "For: food delivery, couriers, ride-hailing";
+
+/* Both roles: home side switch */
+"roles.switch.me" = "My safety";
+"roles.switch.rider" = "Rider";
+"roles.switch.family" = "My family";
+"roles.switch.sos" = "SOS in progress";
+"signup.start.both" = "Both at once: a switch at the top of the home goes between them. Your SOS, fall detection and location keep running either way.";
+"settings.bothRoles" = "Use both roles";
+"settings.bothRoles.desc" = "Be looked after and look after family; switch at the top of the home";
+"settings.bothRoles.offWarning" = "The home keeps only the side on screen. If that's \"My family\", your own fall detection and lock-screen SOS stop.";
+"settings.bothRoles.offConfirm" = "Keep this side";

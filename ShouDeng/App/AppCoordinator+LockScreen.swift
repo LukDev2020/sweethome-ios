@@ -48,7 +48,7 @@ extension AppCoordinator {
     /// Second tap on "Silent SOS": an SOS with nothing on this phone's screen or card
     /// (someone may be watching). Guardians get it like any other SOS.
     func sendSilentSOSFromLockScreen() {
-        guard userRole == .protected_ else { return }
+        guard isProtectedSide else { return }
         triggerSOS(method: .widgetTap, clientSOSId: nil, silent: true)
         liveActivityManager.markSilentSOSSent(Date())
     }
@@ -110,7 +110,7 @@ extension AppCoordinator {
 
     /// Puts the running countdown on the card: the safety timer first, else the home timer.
     func refreshLiveActivityTimer() {
-        guard !isDemo, userRole == .protected_ else { return }
+        guard !isDemo, isProtectedSide else { return }
         let safety = DeadManSwitchService.shared
         if let deadline = safety.runningDeadline {
             liveActivityManager.updateProtectedTimer(
@@ -195,7 +195,7 @@ extension AppCoordinator {
 
     /// The newest SOS among the people I look after goes on the card (nil clears it).
     func refreshGuardianSOSCard() {
-        guard !isDemo, userRole == .guardian else { return }
+        guard !isDemo, isGuardianSide else { return }
         guard let (personId, sos) = guardianSOS.max(by: { ($0.value.triggeredAt ?? .distantPast) < ($1.value.triggeredAt ?? .distantPast) }) else {
             guardianCardSOSId = nil
             liveActivityManager.updateGuardianSOS(nil)

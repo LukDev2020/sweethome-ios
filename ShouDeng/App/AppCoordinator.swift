@@ -16,6 +16,11 @@ final class AppCoordinator: ObservableObject {
 
     @Published var currentUser: User?
     @Published var userRole: UserRole = .protected_
+    /// Looked after *and* looks after family: the home shows a switch between the two
+    /// sides (AppCoordinator+Roles.swift). `userRole` is only the side on screen.
+    @Published var hasBothRoles = UserDefaults.standard.bool(forKey: AppCoordinator.bothRolesKey) {
+        didSet { UserDefaults.standard.set(hasBothRoles, forKey: Self.bothRolesKey) }
+    }
     @Published var protectedPersons: [ProtectedPerson] = []  // Guardian sees these
     @Published var myGuardians: [Guardian] = []               // Protected person sees these
     @Published var activeSOSEvent: SOSEvent? {
@@ -524,9 +529,11 @@ final class AppCoordinator: ObservableObject {
             await fetchUserProfile()
             // Signed in (not signed up) through a crew / partner link
             await MainActor.run { self.applyPendingRiderIntent() }
-            if userRole == .guardian {
+            // Both sides for someone who has both (the side on screen doesn't matter)
+            if isGuardianSide {
                 await fetchProtectedPersons()
-            } else {
+            }
+            if isProtectedSide {
                 await fetchGuardians()
                 await fetchSafeZones()
                 await refreshOwnSOSStatus()
@@ -557,7 +564,7 @@ final class AppCoordinator: ObservableObject {
         // prompt (shown once; later calls just read the current setting).
         // Only after an explicit opt-in (consent card or settings) — a guardian who
         // never saw the choice is not prompted at login.
-        if userRole == .guardian, defaults.object(forKey: Self.sosCriticalAlertsKey) as? Bool == true {
+        if isGuardianSide, defaults.object(forKey: Self.sosCriticalAlertsKey) as? Bool == true {
             pushService.requestCriticalAlertPermission()
         }
 
@@ -584,6 +591,7 @@ final class AppCoordinator: ObservableObject {
     }
 
     private func onLogout() {
+        hasBothRoles = false
         if !isDemo { liveActivityManager.endAllActivities() }
         if !isDemo {
             // The next person to sign in on this phone agrees for themselves
@@ -686,10 +694,10 @@ final class AppCoordinator: ObservableObject {
         personReturnedDuringSOS()
         // A guardian coming back after hours sees current place, battery and status
         // (and not someone who has since removed them)
-        if userRole == .guardian, !isDemo { Task { await fetchProtectedPersons() } }
-        // Fall detection runs while the app is open, for the person being protected
-        // (matches NSMotionUsageDescription)
-        if userRole == .protected_ {
+        if isGuardianSide, !isDemo { Task { await fetchProtectedPersons() } }
+        // Fall detection runs while the app is open, for the person being protected —
+        // also while they look at the family side (matches NSMotionUsageDescription)
+        if isProtectedSide {
             motionService.startForegroundMonitoring()
         }
         // Flush queued requests (SOS, check-ins, locations) now that we're in front
@@ -771,7 +779,7 @@ final class AppCoordinator: ObservableObject {
             switch url.host {
             case "sos":
                 // Never trigger directly from a URL — ask the user first.
-                if case .loggedIn = authState, userRole == .protected_ {
+                if case .loggedIn = authState, isProtectedSide {
                     pendingSOSConfirmation = .widgetTap
                 }
                 return
@@ -873,6 +881,7 @@ final class AppCoordinator: ObservableObject {
                 self.currentUser = user
                 self.userRole = user.role
                 self.applyServerRiderFields(profile)
+                if let both = profile.bothRoles { self.hasBothRoles = both }
                 self.localStore.saveCurrentUser(user)
                 self.localStore.saveUserRole(user.role)
                 self.needsDataTransferConsent = !self.isDemo
@@ -1095,6 +1104,7 @@ final class AppCoordinator: ObservableObject {
                 self.localStore.saveCurrentUser(user)
             }
             self.localStore.saveUserRole(newRole)
+            self.homeSideChanged()
         }
     }
 

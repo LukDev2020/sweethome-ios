@@ -52,6 +52,8 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
       createdAt: data.createdAt.toDate().toISOString(),
       publicKey: data.publicKey || null,
       dataTransferConsentVersion: data.dataTransferConsentVersion || null,
+      // Both sides (looked after + looks after family): the home shows a switch
+      bothRoles: data.bothRoles === true,
       // Why they use the app, which home they see, rider setup (survives a new phone)
       ...riderProfileView(data),
     });
@@ -67,7 +69,7 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
  */
 router.put("/me", authMiddleware, async (req: Request, res: Response) => {
   const uid = req.uid!;
-  const { displayName, email, timeZone, cityName, countryCode, publicKey, role, locale } = req.body;
+  const { displayName, email, timeZone, cityName, countryCode, publicKey, role, locale, bothRoles } = req.body;
 
   const updates: Record<string, unknown> = {
     updatedAt: admin.firestore.Timestamp.now(),
@@ -79,6 +81,13 @@ router.put("/me", authMiddleware, async (req: Request, res: Response) => {
       return;
     }
     updates.role = role;
+  }
+  if (bothRoles !== undefined) {
+    if (typeof bothRoles !== "boolean") {
+      res.status(400).json({ error: "bothRoles must be true or false" });
+      return;
+    }
+    updates.bothRoles = bothRoles;
   }
   if (displayName !== undefined) {
     if (typeof displayName !== "string" || displayName.length > 100) {

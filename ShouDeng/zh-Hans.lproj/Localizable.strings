@@ -2821,3 +2821,14 @@
 "intro.continue" = "继续";
 "intro.family.for" = "适合：独居长辈、出门在外的家人、孩子";
 "intro.rider.for" = "适合：外卖、快递、网约车";
+
+/* Both roles: home side switch */
+"roles.switch.me" = "我的安全";
+"roles.switch.rider" = "骑手";
+"roles.switch.family" = "守护家人";
+"roles.switch.sos" = "有人在求救";
+"signup.start.both" = "两个身份都可以用：注册后首页顶部可以随时切换。你的求助、跌倒检测和定位不会因为切换而停止。";
+"settings.bothRoles" = "同时使用两个身份";
+"settings.bothRoles.desc" = "被家人守护，也守护家人；首页顶部可以切换";
+"settings.bothRoles.offWarning" = "关闭后首页只保留现在这一边。如果现在是守护家人这一边，你自己的跌倒检测和锁屏求助会停止。";
+"settings.bothRoles.offConfirm" = "只保留这一边";

@@ -11,7 +11,7 @@ extension AppCoordinator {
     /// Rider home and rider SOS: the protected person chose Rider in Settings → Home
     /// screen (in the demo: Kai's phone).
     var isRiderMode: Bool {
-        guard userRole == .protected_ else { return false }
+        guard isProtectedSide else { return false }
         return effectiveHomeStyle == HomeStyle.rider.rawValue
     }
 

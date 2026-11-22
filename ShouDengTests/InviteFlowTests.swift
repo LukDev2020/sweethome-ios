@@ -123,6 +123,31 @@ final class InviteFlowTests: XCTestCase {
                                                   inviteCode: "", agreedToDataTransfer: true))
     }
 
+    func testBothRolesStartOnTheLookedAfterSide() {
+        XCTAssertNil(SignupProfileGate.startRole(protected: false, rider: false, guardian: false))
+        XCTAssertEqual(SignupProfileGate.startRole(protected: false, rider: false, guardian: true), .guardian)
+        // Rider + family, or looked after + family: own safety setup first
+        XCTAssertEqual(SignupProfileGate.startRole(protected: false, rider: true, guardian: true), .protected_)
+        XCTAssertEqual(SignupProfileGate.startRole(protected: true, rider: false, guardian: true), .protected_)
+    }
+
+    @MainActor
+    func testProtectionDoesNotDependOnTheSideOnScreen() {
+        let coordinator = AppCoordinator()
+        let saved = coordinator.hasBothRoles
+        defer { coordinator.hasBothRoles = saved }
+        coordinator.hasBothRoles = false
+        coordinator.userRole = .guardian
+        XCTAssertFalse(coordinator.isProtectedSide, "a guardian alone isn't looked after")
+        XCTAssertTrue(coordinator.isGuardianSide)
+        coordinator.hasBothRoles = true
+        for side in [UserRole.protected_, .guardian] {
+            coordinator.userRole = side
+            XCTAssertTrue(coordinator.isProtectedSide, "fall detection, SOS, location keep running on \(side)")
+            XCTAssertTrue(coordinator.isGuardianSide, "family SOS keeps arriving on \(side)")
+        }
+    }
+
     func testInvitePathNeedsACode() {
         XCTAssertFalse(SignupProfileGate.canFinish(name: "Ann", selectedRole: nil, usesInviteCode: true,
                                                    inviteCode: "", agreedToDataTransfer: true))

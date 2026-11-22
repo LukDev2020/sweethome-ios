@@ -49,6 +49,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         }
         #endif
 
+        // Old default card colours → the calm default (once); redraw a card already up
+        if LockScreenCardStyle.migrateToCalmDefaultIfNeeded() {
+            appCoordinator.liveActivityManager.restyle()
+        }
+
         // Register background tasks (must happen before didFinishLaunching returns)
         DeadManSwitchService.registerBGTask()
         // A running dead-man countdown survives app kill: reconnect it (and fire
@@ -159,11 +164,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             let coordinator = appCoordinator
             let task = application.beginBackgroundTask(withName: "sos.card")
             Task { @MainActor in
-                if coordinator.userRole == .guardian {
-                    await coordinator.fetchProtectedPersons()
-                } else {
-                    await coordinator.refreshOwnSOSStatus()
-                }
+                if coordinator.isGuardianSide { await coordinator.fetchProtectedPersons() }
+                if coordinator.isProtectedSide { await coordinator.refreshOwnSOSStatus() }
                 if task != .invalid { application.endBackgroundTask(task) }
             }
         }

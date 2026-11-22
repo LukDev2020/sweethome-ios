@@ -345,6 +345,27 @@ final class SafetyPathTests: XCTestCase {
         XCTAssertNil(decoded.silentSOSArmedUntil)
     }
 
+    func testOldDefaultCardColoursMoveToTheCalmDefaultOnce() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "test.lsc.\(UUID().uuidString)"))
+        var old = LockScreenCardStyle.standard
+        old.theme = .navy; old.accent = .lantern; old.textSize = .large
+        defaults.set(try JSONEncoder().encode(old), forKey: "lockscreen_card_style")
+        XCTAssertTrue(LockScreenCardStyle.migrateToCalmDefaultIfNeeded(defaults: defaults))
+        let moved = try JSONDecoder().decode(LockScreenCardStyle.self,
+                                             from: XCTUnwrap(defaults.data(forKey: "lockscreen_card_style")))
+        XCTAssertEqual(moved.theme, .graphite)
+        XCTAssertEqual(moved.accent, .slate)
+        XCTAssertEqual(moved.textSize, .large, "the rest of the style stays")
+        // Picking navy + lantern again afterwards sticks
+        defaults.set(try JSONEncoder().encode(old), forKey: "lockscreen_card_style")
+        XCTAssertFalse(LockScreenCardStyle.migrateToCalmDefaultIfNeeded(defaults: defaults))
+        // A colour the person chose is never touched
+        let other = try XCTUnwrap(UserDefaults(suiteName: "test.lsc.\(UUID().uuidString)"))
+        var forest = old; forest.theme = .forest
+        other.set(try JSONEncoder().encode(forest), forKey: "lockscreen_card_style")
+        XCTAssertFalse(LockScreenCardStyle.migrateToCalmDefaultIfNeeded(defaults: other))
+    }
+
     func testOvernightDutySlotSplitsAcrossDays() {
         // Calendar weekdays: 2 = Monday, 3 = Tuesday
         let slot = DutySlot(startHour: 22, endHour: 6, dayOfWeek: [2], isConfirmed: true)

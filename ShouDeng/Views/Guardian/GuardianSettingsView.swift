@@ -909,6 +909,9 @@ struct GuardianSettingsView: View {
             .buttonStyle(.settingsRow)
             .accessibilityIdentifier("settings.joinFamily")
 
+            // Looked after and looking after family: the home's side switch
+            BothRolesSettingsRow()
+
             // Switching roles silently turns off protection for this person, so it is
             // DEBUG-only until roles phase B (docs/roles/ROLES.md: dual roles + view switcher).
             #if DEBUG

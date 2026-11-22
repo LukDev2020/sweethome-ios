@@ -32,9 +32,18 @@ struct SignupView: View {
     @State private var phone = ""
     @State private var code = ""
     @State private var displayName = ""
-    @State private var selectedRole: UserRole?
+    /// "Let my family look after me"
+    @State private var wantsProtected = false
     /// "I deliver or drive for work": a protected person with Rider mode and the rider setup
     @State private var asRider = false
+    /// "I look after my family" — can go with either of the two above (both roles)
+    @State private var wantsGuardian = false
+    /// The side the account starts on: looked after (rider included) first
+    private var selectedRole: UserRole? {
+        SignupProfileGate.startRole(protected: wantsProtected, rider: asRider, guardian: wantsGuardian)
+    }
+    /// Looked after and looks after family: the home gets a switch
+    private var bothRoles: Bool { (wantsProtected || asRider) && wantsGuardian }
     @State private var usesInviteCode = false
     @State private var inviteCode = ""
     /// Opened from a login that already verified this number (no second SMS)
@@ -165,8 +174,11 @@ struct SignupView: View {
                     chooseInvite()
                     inviteCode = linkCode
                 } else if coordinator.pendingSignupIntent?.rider == true || coordinator.pendingCrewCode != nil {
-                    // A rider crew / partner link: start as a rider
-                    chooseRider()
+                    // A rider crew / partner link: start as a rider (set, not toggled:
+                    // this can run more than once)
+                    asRider = true
+                    wantsProtected = false
+                    usesInviteCode = false
                 }
                 checkLockout()
                 applyLanguageForCountry(selectedCountry)
@@ -397,7 +409,7 @@ struct SignupView: View {
                             .font(.scaled(size: 12))
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
-                        startOption(isSelected: selectedRole == .protected_ && !asRider, icon: "shield.fill",
+                        startOption(isSelected: wantsProtected, icon: "shield.fill",
                                     title: lang.localized("signup.start.protected"),
                                     desc: lang.localized("signup.start.protected.desc")) {
                             chooseRole(.protected_)
@@ -409,12 +421,22 @@ struct SignupView: View {
                             chooseRider()
                         }
                         .accessibilityIdentifier("signup.start.rider")
-                        startOption(isSelected: selectedRole == .guardian, icon: "eye.fill",
+                        startOption(isSelected: wantsGuardian, icon: "eye.fill",
                                     title: lang.localized("signup.start.guardian"),
                                     desc: lang.localized("signup.start.guardian.desc")) {
                             chooseRole(.guardian)
                         }
                         .accessibilityIdentifier("signup.start.guardian")
+                        if bothRoles {
+                            // Both chosen: say what happens next
+                            Label(lang.localized("signup.start.both"), systemImage: "arrow.left.arrow.right")
+                                .font(.scaled(size: 12))
+                                .foregroundStyle(ink2)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .padding(10)
+                                .background(RoundedRectangle(cornerRadius: 8).fill(lamp.opacity(0.08)))
+                                .accessibilityIdentifier("signup.start.bothHint")
+                        }
                         startOption(isSelected: usesInviteCode, icon: "key.fill",
                                     title: lang.localized("signup.start.invite"),
                                     desc: lang.localized("signup.start.invite.desc")) {
@@ -453,21 +475,28 @@ struct SignupView: View {
         }
     }
 
+    /// "Look after me" and "Rider" exclude each other (a rider is looked after too);
+    /// "I look after my family" goes with either. The invite code stands alone.
     private func chooseRole(_ role: UserRole) {
-        selectedRole = role
-        asRider = false
         usesInviteCode = false
+        if role == .guardian {
+            wantsGuardian.toggle()
+        } else {
+            wantsProtected.toggle()
+            if wantsProtected { asRider = false }
+        }
     }
 
     private func chooseRider() {
-        selectedRole = .protected_
-        asRider = true
         usesInviteCode = false
+        asRider.toggle()
+        if asRider { wantsProtected = false }
     }
 
     private func chooseInvite() {
-        selectedRole = nil
+        wantsProtected = false
         asRider = false
+        wantsGuardian = false
         usesInviteCode = true
     }
 
@@ -565,6 +594,7 @@ struct SignupView: View {
                     dataTransferConsent: DataTransferConsent.version
                 )
                 coordinator.userRole = role
+                if bothRoles && !usesInviteCode { coordinator.setBothRoles(true) }
                 // Riders get their own setup (crew, someone at home, lock-screen SOS…)
                 coordinator.showSetupWizard = !asRider
                 if !usesInviteCode { coordinator.completeSignup(asRider: asRider) }
@@ -642,5 +672,12 @@ enum SignupProfileGate {
     /// (the server moves it to the guardian side if the invite says so).
     static func accountRole(selectedRole: UserRole?, usesInviteCode: Bool) -> UserRole? {
         usesInviteCode ? .protected_ : selectedRole
+    }
+
+    /// The side a new account starts on: looked after (or rider) first — their own
+    /// safety setup comes first — else guardian; nil while nothing is chosen.
+    static func startRole(protected: Bool, rider: Bool, guardian: Bool) -> UserRole? {
+        if protected || rider { return .protected_ }
+        return guardian ? .guardian : nil
     }
 }

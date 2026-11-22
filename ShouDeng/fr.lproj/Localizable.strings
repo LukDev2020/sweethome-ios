@@ -2821,3 +2821,14 @@
 "intro.continue" = "Continuer";
 "intro.family.for" = "Pour : parents seuls, proches en voyage, enfants";
 "intro.rider.for" = "Pour : livreurs, coursiers, VTC";
+
+/* Both roles: home side switch */
+"roles.switch.me" = "Ma sécurité";
+"roles.switch.rider" = "Livreur";
+"roles.switch.family" = "Ma famille";
+"roles.switch.sos" = "Un SOS en cours";
+"signup.start.both" = "Les deux à la fois : un bouton en haut de l'accueil passe de l'un à l'autre. Votre SOS, la détection de chute et la position restent actifs.";
+"settings.bothRoles" = "Utiliser les deux rôles";
+"settings.bothRoles.desc" = "Être protégé et veiller sur sa famille ; bascule en haut de l'accueil";
+"settings.bothRoles.offWarning" = "L'accueil ne garde que le côté affiché. Si c'est « Ma famille », votre détection de chute et le SOS de l'écran verrouillé s'arrêtent.";
+"settings.bothRoles.offConfirm" = "Garder ce côté";

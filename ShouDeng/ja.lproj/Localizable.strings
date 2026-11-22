@@ -2821,3 +2821,14 @@
 "intro.continue" = "続ける";
 "intro.family.for" = "こんな方に：一人暮らしの親、離れて暮らす家族、子ども";
 "intro.rider.for" = "こんな方に：フードデリバリー、配送、ライドシェア";
+
+/* Both roles: home side switch */
+"roles.switch.me" = "自分の安全";
+"roles.switch.rider" = "配達";
+"roles.switch.family" = "家族を見守る";
+"roles.switch.sos" = "SOS 発信中";
+"signup.start.both" = "両方使えます：ホーム上部でいつでも切り替え。SOS・転倒検知・位置共有は切り替えても止まりません。";
+"settings.bothRoles" = "両方の役割を使う";
+"settings.bothRoles.desc" = "見守られながら家族も見守る（ホーム上部で切り替え）";
+"settings.bothRoles.offWarning" = "ホームは今の側だけになります。「家族を見守る」側なら、自分の転倒検知とロック画面の SOS は止まります。";
+"settings.bothRoles.offConfirm" = "この側だけにする";

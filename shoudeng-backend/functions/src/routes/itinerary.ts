@@ -78,27 +78,23 @@ router.post("/", async (req: Request, res: Response) => {
 
 /**
  * GET /v1/itinerary
- * Get itineraries. Protected person sees own; guardian sees all linked persons'.
+ * Get itineraries: my own and those of everyone I look after (any account role).
  */
 router.get("/", async (req: Request, res: Response) => {
   const uid = req.uid!;
 
   try {
-    // Get user role
-    const userDoc = await db.collection("users").doc(uid).get();
-    const role = userDoc.exists ? userDoc.data()!.role : "protected";
-
+    // My own, plus everyone I look after — whichever side the app is showing
+    // (someone can be looked after and look after family at the same time)
     const personIds = [uid];
-
-    if (role === "guardian") {
-      const linksSnapshot = await db
-        .collection("guardian_links")
-        .where("guardianId", "==", uid)
-        .where("status", "==", "active")
-        .get();
-      for (const linkDoc of linksSnapshot.docs) {
-        personIds.push(linkDoc.data().protectedPersonId);
-      }
+    const linksSnapshot = await db
+      .collection("guardian_links")
+      .where("guardianId", "==", uid)
+      .where("status", "==", "active")
+      .get();
+    for (const linkDoc of linksSnapshot.docs) {
+      const personId = linkDoc.data().protectedPersonId;
+      if (typeof personId === "string" && !personIds.includes(personId)) personIds.push(personId);
     }
 
     // Query upcoming/active itineraries (last 24h + future)

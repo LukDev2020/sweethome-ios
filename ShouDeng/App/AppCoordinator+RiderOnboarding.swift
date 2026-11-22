@@ -131,7 +131,9 @@ extension AppCoordinator {
 
     /// Open the rider setup (sign-up, Settings, a link, the "Finish setting up" card).
     func beginRiderSetup(at step: RiderSetupStep = .ride) {
-        guard userRole == .protected_ else { return }
+        guard isProtectedSide else { return }
+        // Both roles, family side on screen: the setup belongs to the rider side
+        if userRole != .protected_ { switchHomeSide(to: .protected_) }
         riderSetupStartStep = step
         if !isRiderMode { setHomeStyle(.rider) }
         showRiderSetup = true
@@ -177,7 +179,7 @@ extension AppCoordinator {
 
     /// A crew link / QR: riders join (Rider mode turns on); a guardian is told crews are for riders.
     func handleCrewLink(code: String) {
-        if userRole == .guardian {
+        if !isProtectedSide {
             showInfoAlert(title: "rider.link.guardian.title", message: "rider.link.guardian.body")
             return
         }
@@ -187,7 +189,7 @@ extension AppCoordinator {
 
     /// A partner / "for riders" link while signed in.
     func handleRiderStartLink(partnerCode: String?) {
-        if userRole == .guardian {
+        if !isProtectedSide {
             showInfoAlert(title: "rider.link.guardian.title", message: "rider.link.guardian.body")
             return
         }
@@ -198,12 +200,12 @@ extension AppCoordinator {
     /// After sign-in: a link chose Rider (sign-up handles its own case in completeSignup).
     func applyPendingRiderIntent() {
         guard !isDemo, !showRiderSetup else { return }
-        if pendingCrewCode != nil, userRole == .guardian {
+        if pendingCrewCode != nil, !isProtectedSide {
             pendingCrewCode = nil
             showInfoAlert(title: "rider.link.guardian.title", message: "rider.link.guardian.body")
             return
         }
-        guard pendingSignupIntent?.rider == true || pendingCrewCode != nil, userRole == .protected_ else { return }
+        guard pendingSignupIntent?.rider == true || pendingCrewCode != nil, isProtectedSide else { return }
         if !riderSetupDone {
             beginRiderSetup(at: pendingCrewCode != nil && pendingSignupIntent?.partnerCode == nil ? .crew : .ride)
         } else if !isRiderMode {

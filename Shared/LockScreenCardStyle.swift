@@ -170,6 +170,24 @@ struct LockScreenCardStyle: Codable, Hashable {
         return style
     }
 
+    /// Build 61: cards still on the old default colours (navy + lantern red) move once
+    /// to the calm default (graphite + slate). Returns true if it changed the style.
+    /// Choosing navy + lantern again later sticks (the move happens only once).
+    @discardableResult
+    static func migrateToCalmDefaultIfNeeded(defaults: UserDefaults? = UserDefaults(suiteName: WidgetDataStore.appGroupId)) -> Bool {
+        let flag = "lockscreen_style_calm_default_v1"
+        guard let defaults, !defaults.bool(forKey: flag) else { return false }
+        defaults.set(true, forKey: flag)
+        guard let data = defaults.data(forKey: key),
+              var style = try? JSONDecoder().decode(LockScreenCardStyle.self, from: data),
+              style.theme == .navy, style.accent == .lantern else { return false }
+        style.theme = .graphite
+        style.accent = .slate
+        guard let encoded = try? JSONEncoder().encode(style) else { return false }
+        defaults.set(encoded, forKey: key)
+        return true
+    }
+
     func save() {
         guard let data = try? JSONEncoder().encode(self) else { return }
         UserDefaults(suiteName: WidgetDataStore.appGroupId)?.set(data, forKey: Self.key)

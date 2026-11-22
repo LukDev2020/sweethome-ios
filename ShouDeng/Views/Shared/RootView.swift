@@ -98,6 +98,11 @@ private struct AuthenticatedRootView: View {
                             // Banners take their own space above the screens instead of
                             // floating over the navigation bar title.
                             VStack(spacing: 0) {
+                                // Looked after and looks after family: switch the home's side
+                                if coordinator.hasBothRoles {
+                                    HomeSideSwitch()
+                                        .environmentObject(coordinator)
+                                }
                                 FamilyStatusBar()
                                     .environmentObject(coordinator)
                                 betaBanner
@@ -338,5 +343,93 @@ struct FamilyStatusBar: View {
                     ? AppTips.available(StatusBarTip()) : nil, arrowEdge: .top)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(s.level == .urgent ? .isHeader : [])
+    }
+}
+
+
+/// Top of the home for someone with both roles: "My safety" (or "Rider") | "My family".
+/// Only the screens change: fall detection, location, SOS keep running on either side,
+/// and family SOS alerts arrive on either side.
+struct HomeSideSwitch: View {
+    @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var lang = LanguageManager.shared
+
+    private var familyAlert: Bool { !coordinator.guardianSOS.isEmpty }
+
+    var body: some View {
+        HStack(spacing: 4) {
+            side(.protected_, icon: coordinator.isRiderMode ? "bicycle" : "shield.fill",
+                 title: lang.localized(coordinator.isRiderMode ? "roles.switch.rider" : "roles.switch.me"),
+                 alert: coordinator.activeSOSEvent != nil)
+            side(.guardian, icon: "person.2.fill",
+                 title: lang.localized("roles.switch.family") + (coordinator.protectedPersons.isEmpty ? "" : " · \(coordinator.protectedPersons.count)"),
+                 alert: familyAlert)
+        }
+        .padding(3)
+        .background(Capsule().fill(Color(.secondarySystemBackground)))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 6)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("home.sideSwitch")
+    }
+
+    private func side(_ role: UserRole, icon: String, title: String, alert: Bool) -> some View {
+        let selected = coordinator.userRole == role
+        return Button {
+            withAnimation(.easeInOut(duration: 0.2)) { coordinator.switchHomeSide(to: role) }
+        } label: {
+            HStack(spacing: 5) {
+                Image(systemName: icon).font(.scaled(size: 12, weight: .semibold))
+                Text(title).font(.scaled(size: 13, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
+                if alert {
+                    // Someone's SOS on that side: visible from the other side too
+                    Circle().fill(Color(red: 0.79, green: 0.42, blue: 0.38)).frame(width: 7, height: 7)
+                        .accessibilityLabel(lang.localized("roles.switch.sos"))
+                }
+            }
+            .foregroundStyle(selected ? Color.primary : Color.secondary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 7)
+            .background(Capsule().fill(selected ? Color(.systemBackground) : .clear))
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
+/// Settings (both sides): turn the home's side switch on or off. Off keeps the side on
+/// screen, after saying what stops if that's the family side.
+struct BothRolesSettingsRow: View {
+    @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var lang = LanguageManager.shared
+    @State private var confirmOff = false
+
+    var body: some View {
+        Toggle(isOn: Binding(
+            get: { coordinator.hasBothRoles },
+            set: { on in if on { coordinator.setBothRoles(true) } else { confirmOff = true } }
+        )) {
+            HStack(spacing: 8) {
+                Image(systemName: "arrow.left.arrow.right")
+                    .font(.scaled(size: 13))
+                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(lang.localized("settings.bothRoles")).font(.scaled(size: 13))
+                    Text(lang.localized("settings.bothRoles.desc"))
+                        .font(.scaled(size: 12))
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .padding(.vertical, 2)
+        .accessibilityIdentifier("settings.bothRoles")
+        .alert(lang.localized("settings.bothRoles"), isPresented: $confirmOff) {
+            Button(lang.localized("settings.bothRoles.offConfirm"), role: .destructive) {
+                coordinator.setBothRoles(false)
+            }
+            Button(lang.localized("settings.action.cancel"), role: .cancel) {}
+        } message: {
+            Text(lang.localized("settings.bothRoles.offWarning"))
+        }
     }
 }

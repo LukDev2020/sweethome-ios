@@ -243,6 +243,8 @@ struct UserProfileResponse: Codable {
     var useCase: String? = nil
     var homeStyle: String? = nil
     var riderProfile: RiderProfileInfo? = nil
+    /// Looked after and looks after family (absent from older servers)
+    var bothRoles: Bool? = nil
 }
 
 // MARK: - Protected Person Status (guardian polls this)
