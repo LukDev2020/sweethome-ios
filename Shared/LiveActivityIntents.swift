@@ -38,3 +38,70 @@ struct LockScreenShareLocationIntent: LiveActivityIntent {
         return .result()
     }
 }
+
+/// "Silent SOS": the first tap asks for a second one (5 s), the second sends an SOS
+/// with nothing on this phone's screen — for someone who can't be seen calling for help.
+@available(iOS 17.0, *)
+struct LockScreenSilentSOSIntent: LiveActivityIntent {
+    static var title: LocalizedStringResource = "Silent SOS"
+    static var isDiscoverable: Bool = false
+
+    func perform() async throws -> some IntentResult {
+        WidgetDataStore.enqueuePendingAction(WidgetDataStore.silentSOSTap() ? .silentSOS : .armSilentSOS)
+        await MainActor.run { LiveActivityActionBridge.handler?() }
+        return .result()
+    }
+}
+
+/// "Fake call": an incoming-call screen after the delay set in Settings → Fake call.
+@available(iOS 17.0, *)
+struct LockScreenFakeCallIntent: LiveActivityIntent {
+    static var title: LocalizedStringResource = "Fake call"
+    static var isDiscoverable: Bool = false
+
+    func perform() async throws -> some IntentResult {
+        WidgetDataStore.enqueuePendingAction(.fakeCall)
+        await MainActor.run { LiveActivityActionBridge.handler?() }
+        return .result()
+    }
+}
+
+/// Countdown "+15 min" (safety timer or home timer, whichever is on the card).
+@available(iOS 17.0, *)
+struct LockScreenExtendTimerIntent: LiveActivityIntent {
+    static var title: LocalizedStringResource = "Add 15 minutes"
+    static var isDiscoverable: Bool = false
+
+    func perform() async throws -> some IntentResult {
+        WidgetDataStore.enqueuePendingAction(.extendTimer)
+        await MainActor.run { LiveActivityActionBridge.handler?() }
+        return .result()
+    }
+}
+
+/// Countdown "I'm here": ends the countdown and checks in.
+@available(iOS 17.0, *)
+struct LockScreenArrivedIntent: LiveActivityIntent {
+    static var title: LocalizedStringResource = "I've arrived"
+    static var isDiscoverable: Bool = false
+
+    func perform() async throws -> some IntentResult {
+        WidgetDataStore.enqueuePendingAction(.arrived)
+        await MainActor.run { LiveActivityActionBridge.handler?() }
+        return .result()
+    }
+}
+
+/// Guardian card during an SOS: "On my way" — acknowledges the SOS (stops the
+/// automatic calls, tells the person and the other guardians).
+@available(iOS 17.0, *)
+struct LockScreenAcknowledgeSOSIntent: LiveActivityIntent {
+    static var title: LocalizedStringResource = "On my way"
+    static var isDiscoverable: Bool = false
+
+    func perform() async throws -> some IntentResult {
+        WidgetDataStore.enqueuePendingAction(.acknowledgeSOS)
+        await MainActor.run { LiveActivityActionBridge.handler?() }
+        return .result()
+    }
+}

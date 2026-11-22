@@ -11,7 +11,7 @@ struct GuardianLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: GuardianActivityAttributes.self) { context in
             GuardianLockScreenCard(state: context.state)
-                .activityBackgroundTint((context.state.cardStyle ?? .stored).theme.background)
+                .activityBackgroundTint((context.state.cardStyle ?? .stored).theme.background(alert: context.state.sos != nil))
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {

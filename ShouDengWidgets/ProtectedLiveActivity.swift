@@ -10,8 +10,9 @@ struct ProtectedLiveActivity: Widget {
 
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: ProtectedActivityAttributes.self) { context in
-            ProtectedLockScreenCard(state: context.state)
-                .activityBackgroundTint((context.state.cardStyle ?? .stored).theme.background)
+            ProtectedLockScreenCard(state: context.state, userName: context.attributes.userName)
+                .activityBackgroundTint((context.state.cardStyle ?? .stored).theme
+                    .background(alert: context.state.status == .sosActive && context.state.rider == nil))
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {

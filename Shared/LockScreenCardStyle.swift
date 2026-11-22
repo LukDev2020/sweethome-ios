@@ -24,14 +24,26 @@ struct LockScreenCardStyle: Codable, Hashable {
     }
 
     enum Theme: String, Codable, CaseIterable {
-        case navy, midnight, forest, plum, light
+        case graphite, navy, midnight, forest, plum, light
         var background: Color {
             switch self {
+            case .graphite: return Color(red: 0.145, green: 0.153, blue: 0.169)
             case .navy: return SharedColors.ink
             case .midnight: return Color(red: 0.05, green: 0.05, blue: 0.07)
             case .forest: return Color(red: 0.08, green: 0.22, blue: 0.17)
             case .plum: return Color(red: 0.24, green: 0.11, blue: 0.24)
             case .light: return Color(red: 0.98, green: 0.97, blue: 0.94)
+            }
+        }
+        /// During an SOS the dark backgrounds turn a shade warmer: noticeable to the
+        /// person, not a red flag to someone glancing at the phone
+        func background(alert: Bool) -> Color {
+            guard alert else { return background }
+            switch self {
+            case .graphite: return Color(red: 0.165, green: 0.145, blue: 0.141)
+            case .navy: return Color(red: 0.13, green: 0.12, blue: 0.2)
+            case .midnight: return Color(red: 0.09, green: 0.06, blue: 0.07)
+            case .forest, .plum, .light: return background
             }
         }
         var isLight: Bool { self == .light }
@@ -42,9 +54,10 @@ struct LockScreenCardStyle: Codable, Hashable {
     }
 
     enum Accent: String, Codable, CaseIterable {
-        case lantern, gold, teal, green, sky
+        case slate, lantern, gold, teal, green, sky
         var color: Color {
             switch self {
+            case .slate: return Color(red: 0.58, green: 0.64, blue: 0.72)
             case .lantern: return SharedColors.lamp
             case .gold: return Color(red: 0.91, green: 0.64, blue: 0.24)
             case .teal: return Color(red: 0.18, green: 0.62, blue: 0.66)
@@ -60,11 +73,41 @@ struct LockScreenCardStyle: Codable, Hashable {
     }
 
     var textSize: TextSize = .standard
-    var theme: Theme = .navy
-    var accent: Accent = .lantern
+    var theme: Theme = .graphite
+    var accent: Accent = .slate
     var sections: [Section] = [.checkIn, .latest, .actions]
 
     static let standard = LockScreenCardStyle()
+
+    // MARK: Calm status colours
+    //
+    // Buttons and status text use dimmed colours on a tinted background instead of
+    // solid red / green, so the lock screen stays quiet. Same meaning on every theme.
+
+    enum Tone { case sos, safe, warn, info }
+
+    /// Text and icon colour of a tone on this card's background
+    func ink(_ tone: Tone) -> Color {
+        let light = theme.isLight
+        switch tone {
+        case .sos:  return light ? Color(red: 0.56, green: 0.29, blue: 0.25) : Color(red: 0.89, green: 0.70, blue: 0.66)
+        case .safe: return light ? Color(red: 0.25, green: 0.38, blue: 0.31) : Color(red: 0.72, green: 0.80, blue: 0.75)
+        case .warn: return light ? Color(red: 0.48, green: 0.37, blue: 0.16) : Color(red: 0.84, green: 0.76, blue: 0.61)
+        case .info: return light ? Color(red: 0.27, green: 0.34, blue: 0.42) : Color(red: 0.73, green: 0.77, blue: 0.82)
+        }
+    }
+
+    /// Background of a button / chip in a tone
+    func fill(_ tone: Tone) -> Color {
+        let base: Color
+        switch tone {
+        case .sos:  base = Color(red: 0.79, green: 0.54, blue: 0.50)
+        case .safe: base = Color(red: 0.58, green: 0.67, blue: 0.61)
+        case .warn: base = Color(red: 0.78, green: 0.67, blue: 0.45)
+        case .info: base = Color(red: 0.58, green: 0.64, blue: 0.72)
+        }
+        return base.opacity(theme.isLight ? 0.22 : 0.2)
+    }
 
     func with(textSize: TextSize) -> LockScreenCardStyle {
         var copy = self

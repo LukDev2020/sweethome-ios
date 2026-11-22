@@ -1968,12 +1968,14 @@
 "lsc.textSize.hint" = "文字越大，能放的行越少。";
 "lsc.guardianRows" = "这个大小下，卡片显示 %d 位家人。";
 "lsc.background" = "背景";
+"lsc.theme.graphite" = "石墨灰";
 "lsc.theme.navy" = "藏青";
 "lsc.theme.midnight" = "黑色";
 "lsc.theme.forest" = "森林绿";
 "lsc.theme.plum" = "梅紫";
 "lsc.theme.light" = "浅色";
 "lsc.accent" = "强调色";
+"lsc.accent.slate" = "雾蓝";
 "lsc.accent.lantern" = "灯笼红";
 "lsc.accent.gold" = "金色";
 "lsc.accent.teal" = "青色";

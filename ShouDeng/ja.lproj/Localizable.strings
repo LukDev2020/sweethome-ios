@@ -1968,12 +1968,14 @@
 "lsc.textSize.hint" = "文字が大きいほど表示できる行が減ります。";
 "lsc.guardianRows" = "このサイズでは家族 %d 人を表示します。";
 "lsc.background" = "背景";
+"lsc.theme.graphite" = "グラファイト";
 "lsc.theme.navy" = "ネイビー";
 "lsc.theme.midnight" = "ブラック";
 "lsc.theme.forest" = "フォレスト";
 "lsc.theme.plum" = "プラム";
 "lsc.theme.light" = "ライト";
 "lsc.accent" = "アクセントカラー";
+"lsc.accent.slate" = "スレート";
 "lsc.accent.lantern" = "ランタン";
 "lsc.accent.gold" = "ゴールド";
 "lsc.accent.teal" = "ティール";

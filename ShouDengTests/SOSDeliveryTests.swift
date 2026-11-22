@@ -286,6 +286,65 @@ final class SafetyPathTests: XCTestCase {
         XCTAssertEqual(WidgetDataStore.takePendingActions(now: now), [])
     }
 
+    // MARK: Lock-screen card: emergency features
+
+    func testSilentSOSNeedsTwoTapsWithinTheWindow() {
+        let t0 = Date()
+        _ = WidgetDataStore.silentSOSTap(now: t0.addingTimeInterval(-100))   // whatever state: reset below
+        _ = WidgetDataStore.silentSOSTap(now: t0.addingTimeInterval(-100))
+        XCTAssertFalse(WidgetDataStore.silentSOSTap(now: t0), "first tap only arms")
+        XCTAssertNotNil(WidgetDataStore.silentSOSArmedUntil(now: t0))
+        XCTAssertTrue(WidgetDataStore.silentSOSTap(now: t0.addingTimeInterval(3)), "second tap within 5 s sends")
+        XCTAssertNil(WidgetDataStore.silentSOSArmedUntil(now: t0.addingTimeInterval(3)), "sending disarms")
+        // A late second tap only arms again
+        XCTAssertFalse(WidgetDataStore.silentSOSTap(now: t0.addingTimeInterval(20)))
+        XCTAssertFalse(WidgetDataStore.silentSOSTap(now: t0.addingTimeInterval(26)))
+        XCTAssertTrue(WidgetDataStore.silentSOSTap(now: t0.addingTimeInterval(27)))
+    }
+
+    func testTakingSomeActionsLeavesTheOthersQueued() {
+        _ = WidgetDataStore.takePendingActions()
+        WidgetDataStore.enqueuePendingAction(.checkIn)
+        WidgetDataStore.enqueuePendingAction(.silentSOS)
+        WidgetDataStore.enqueuePendingAction(.fakeCall)
+        XCTAssertEqual(WidgetDataStore.takePendingActions([.silentSOS, .fakeCall]), [.silentSOS, .fakeCall])
+        XCTAssertEqual(WidgetDataStore.takePendingActions([.silentSOS]), [])
+        XCTAssertEqual(WidgetDataStore.takePendingActions(), [.checkIn])
+    }
+
+    func testCardModeFollowsTheState() {
+        var state = ProtectedActivityAttributes.ContentState.sample(full: true, timer: false)
+        XCTAssertEqual(ProtectedLockScreenCard.mode(for: state), .everyday)
+        state.homeTimerDeadline = Date().addingTimeInterval(600)
+        XCTAssertEqual(ProtectedLockScreenCard.mode(for: state), .countdown)
+        state.status = .sosActive
+        XCTAssertEqual(ProtectedLockScreenCard.mode(for: state), .sos, "an SOS beats the countdown")
+        state.sos = .init(startedAt: Date(), bystander: true)
+        XCTAssertEqual(ProtectedLockScreenCard.mode(for: state), .bystander)
+        XCTAssertEqual(ProtectedLockScreenCard.nextStepKey("voice2"), "la.sos.next.call")
+        XCTAssertEqual(ProtectedLockScreenCard.nextStepKey("hop2"), "la.sos.next.sms")
+        XCTAssertNil(ProtectedLockScreenCard.nextStepKey(nil))
+    }
+
+    func testOnlyDuressAndTheSilentFlagHideTheSOSFromTheCard() {
+        // A fall: bystander card straight away; widget tap: the person's own card first
+        XCTAssertFalse(SOSTriggerMethod.widgetTap.isSilent)
+        XCTAssertTrue(SOSTriggerMethod.duressPassword.isSilent)
+    }
+
+    func testNewCardsDecodeFromOlderState() throws {
+        // A card started by the previous build (no emergency fields) still decodes
+        var old = ProtectedActivityAttributes.ContentState.sample(full: true, timer: false)
+        old.sos = nil
+        var json = try JSONSerialization.jsonObject(with: JSONEncoder().encode(old)) as! [String: Any]
+        for key in ["timerStartedAt", "timerKind", "sos", "silentSOSArmedUntil", "silentSOSSentAt",
+                    "familyContactName", "familyContactPhone"] { json.removeValue(forKey: key) }
+        let decoded = try JSONDecoder().decode(ProtectedActivityAttributes.ContentState.self,
+                                               from: JSONSerialization.data(withJSONObject: json))
+        XCTAssertNil(decoded.sos)
+        XCTAssertNil(decoded.silentSOSArmedUntil)
+    }
+
     func testOvernightDutySlotSplitsAcrossDays() {
         // Calendar weekdays: 2 = Monday, 3 = Tuesday
         let slot = DutySlot(startHour: 22, endHour: 6, dayOfWeek: [2], isConfirmed: true)

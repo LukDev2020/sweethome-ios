@@ -324,6 +324,8 @@ export function sosApsPayload(title: string, body: string, guardianOptedIn = tru
     "relevance-score": 1.0,
     category: "SOS_ALERT",
     alert: { title, body },
+    // Also wakes the guardian's app, which puts the SOS on its lock-screen card
+    "content-available": 1,
   };
 }
 
@@ -555,7 +557,7 @@ export async function sendSOSAcknowledgedToGuardian(
     action: "sos_acknowledged",
     sos_id: sosEventId,
     person_id: protectedPersonId,
-  }, { sound: "default", "interruption-level": "time-sensitive" });
+  }, { sound: "default", "interruption-level": "time-sensitive", "content-available": 1 });
 }
 
 /** "Sarah got your SOS and is responding" to the person who raised it. */
@@ -568,7 +570,7 @@ export async function sendSOSAcknowledgedToProtected(
   await sendSimple(protectedPersonId, s.ackProtectedTitle, s.ackProtectedBody(ackGuardianName), {
     action: "sos_acknowledged",
     sos_id: sosEventId,
-  }, { sound: "default", "interruption-level": "time-sensitive" });
+  }, { sound: "default", "interruption-level": "time-sensitive", "content-available": 1 });
 }
 
 /** "Mom is safe — she ended the SOS herself" to each guardian. */
@@ -578,7 +580,7 @@ export async function sendSOSEndedByPersonNotification(
   const s = getStrings(await getUserLocale(guardianId));
   await sendSimple(guardianId, s.sosSafeTitle(personName), s.sosSafeBody, {
     action: "sos_resolved_by_person", sos_id: sosEventId, person_id: protectedPersonId,
-  }, { sound: "default", "interruption-level": "time-sensitive" });
+  }, { sound: "default", "interruption-level": "time-sensitive", "content-available": 1 });
 }
 
 /** "Mom is heading to the hospital (on foot)" to each guardian during an SOS. */

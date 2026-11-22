@@ -1968,12 +1968,14 @@
 "lsc.textSize.hint" = "Larger text leaves room for fewer rows.";
 "lsc.guardianRows" = "At this size the card shows %d family members.";
 "lsc.background" = "Background";
+"lsc.theme.graphite" = "Graphite";
 "lsc.theme.navy" = "Navy";
 "lsc.theme.midnight" = "Black";
 "lsc.theme.forest" = "Forest";
 "lsc.theme.plum" = "Plum";
 "lsc.theme.light" = "Light";
 "lsc.accent" = "Accent colour";
+"lsc.accent.slate" = "Slate";
 "lsc.accent.lantern" = "Lantern";
 "lsc.accent.gold" = "Gold";
 "lsc.accent.teal" = "Teal";

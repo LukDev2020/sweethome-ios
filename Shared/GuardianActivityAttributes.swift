@@ -21,6 +21,26 @@ struct GuardianActivityAttributes: ActivityAttributes {
 
         /// Settings → Lock screen card (nil: the stored style); a change here redraws the card
         var cardStyle: LockScreenCardStyle? = nil
+        /// Someone I look after raised an SOS: the card is about them
+        var sos: SOSCardInfo? = nil
+    }
+
+    /// The SOS on the guardian's card: where, how far, battery, who is handling it.
+    struct SOSCardInfo: Codable, Hashable {
+        var sosEventId: String
+        var personName: String
+        var initial: String
+        var startedAt: Date
+        var batteryLevel: Double? = nil
+        var address: String? = nil
+        var distanceMeters: Int? = nil
+        var locationAt: Date? = nil
+        var latitude: Double? = nil
+        var longitude: Double? = nil
+        var phone: String? = nil
+        /// A guardian said "I've got it" (me: `acknowledgedByMe`)
+        var acknowledgedByName: String? = nil
+        var acknowledgedByMe: Bool = false
     }
 
     struct PersonInfo: Codable, Hashable, Identifiable {

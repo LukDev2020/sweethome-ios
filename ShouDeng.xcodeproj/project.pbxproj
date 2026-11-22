@@ -186,6 +186,7 @@
 		A1302B34EE4C90A44A1ED47C /* ShouDengApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5465F763A8A338E12D44592E /* ShouDengApp.swift */; };
 		A22F58C7B33F5DE5F6350346 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCC9F2C44D93C9435463C4A7 /* AppDelegate.swift */; };
 		DD44EE0100000014 /* AppCoordinator+Rider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD44EE0100000013 /* AppCoordinator+Rider.swift */; };
+		DD44EE0100000914 /* AppCoordinator+LockScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD44EE0100000913 /* AppCoordinator+LockScreen.swift */; };
 		A406EE8717C42C064E08EA50 /* GuardianPlanBillingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2045C1ED8DC5B6CCC03AC6C3 /* GuardianPlanBillingView.swift */; };
 		A58C7804D02B22DF2ADD2838 /* HomeTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7E7DF026259086BD8255347 /* HomeTimerView.swift */; };
 		A5963AD625F11CE7952C86C0 /* SharedItineraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD5DECB3D0590E8B19B6BC11 /* SharedItineraryView.swift */; };
@@ -464,6 +465,7 @@
 		BB252440C67956A6E95C34C2 /* GuardianSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardianSettingsView.swift; sourceTree = "<group>"; };
 		BCC9F2C44D93C9435463C4A7 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		DD44EE0100000013 /* AppCoordinator+Rider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppCoordinator+Rider.swift"; sourceTree = "<group>"; };
+		DD44EE0100000913 /* AppCoordinator+LockScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppCoordinator+LockScreen.swift"; sourceTree = "<group>"; };
 		BF7FCEEEEB1FA39016A477FF /* DuoTabItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuoTabItem.swift; sourceTree = "<group>"; };
 		BFCD3BD31A5FBC796E2E2A49 /* ShouDeng.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShouDeng.entitlements; sourceTree = "<group>"; };
 		C0BEFF93B8A9039DB83F17EA /* TrajectoryProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrajectoryProcessorTests.swift; sourceTree = "<group>"; };
@@ -1185,6 +1187,7 @@
 				A662E552423F06178E58DA7A /* BuildChannel.swift */,
 				BCC9F2C44D93C9435463C4A7 /* AppDelegate.swift */,
 				DD44EE0100000013 /* AppCoordinator+Rider.swift */,
+				DD44EE0100000913 /* AppCoordinator+LockScreen.swift */,
 				5465F763A8A338E12D44592E /* ShouDengApp.swift */,
 			);
 			path = App;
@@ -1450,6 +1453,7 @@
 				B7853876E83E1B94800D56FD /* AppCoordinator+AutoSOSCheck.swift in Sources */,
 				A22F58C7B33F5DE5F6350346 /* AppDelegate.swift in Sources */,
 				DD44EE0100000014 /* AppCoordinator+Rider.swift in Sources */,
+				DD44EE0100000914 /* AppCoordinator+LockScreen.swift in Sources */,
 				255D788D0378FE97EA28EF51 /* ArrivalReportView.swift in Sources */,
 				F3ECFE963F1129AB9DCD91B0 /* AuthManager.swift in Sources */,
 				BA8A5AADDCA87BBDFFE6CD26 /* IdentitySignIn.swift in Sources */,

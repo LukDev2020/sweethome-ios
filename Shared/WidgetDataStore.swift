@@ -49,6 +49,41 @@ enum WidgetDataStore {
         case arrived
         /// Lock-screen card "Location": send a fresh location to the family
         case shareLocation
+        /// Lock-screen card "Silent SOS", first tap: ask for a second tap
+        case armSilentSOS
+        /// Second tap within the window: send an SOS with nothing on screen
+        case silentSOS
+        /// Lock-screen card "Fake call"
+        case fakeCall
+        /// Countdown "+15 min"
+        case extendTimer
+        /// Guardian card "On my way": acknowledge the SOS on the card
+        case acknowledgeSOS
+    }
+
+    // MARK: - Silent SOS (two taps)
+
+    /// Seconds the second tap has to come within
+    static let silentSOSWindow: TimeInterval = 5
+    private static let silentArmedKey = "silent_sos_armed_until"
+
+    /// One tap on "Silent SOS". The first arms it (returns false); a second tap
+    /// within `silentSOSWindow` returns true — send — and disarms.
+    static func silentSOSTap(now: Date = Date()) -> Bool {
+        guard let defaults = sharedDefaults else { return false }
+        let armedUntil = defaults.double(forKey: silentArmedKey)
+        if armedUntil > 0, now.timeIntervalSince1970 <= armedUntil {
+            defaults.removeObject(forKey: silentArmedKey)
+            return true
+        }
+        defaults.set(now.addingTimeInterval(silentSOSWindow).timeIntervalSince1970, forKey: silentArmedKey)
+        return false
+    }
+
+    /// Until when a first tap is waiting for the second (nil: not armed)
+    static func silentSOSArmedUntil(now: Date = Date()) -> Date? {
+        guard let value = sharedDefaults?.double(forKey: silentArmedKey), value > now.timeIntervalSince1970 else { return nil }
+        return Date(timeIntervalSince1970: value)
     }
 
     private struct PendingEntry: Codable {
@@ -65,6 +100,21 @@ enum WidgetDataStore {
         if let data = try? encoder.encode(Array(entries.suffix(10))) {
             defaults.set(data, forKey: pendingKey)
         }
+    }
+
+    /// Returns and clears only the pending actions in `kinds` (newer than `maxAge`);
+    /// the others stay queued.
+    static func takePendingActions(_ kinds: Set<PendingAction>, maxAge: TimeInterval = 600, now: Date = Date()) -> [PendingAction] {
+        guard !writesSuspended, let defaults = sharedDefaults else { return [] }
+        let entries = (defaults.data(forKey: pendingKey)).flatMap { try? decoder.decode([PendingEntry].self, from: $0) } ?? []
+        let (taken, kept) = (entries.filter { kinds.contains($0.action) }, entries.filter { !kinds.contains($0.action) })
+        guard !taken.isEmpty else { return [] }
+        if kept.isEmpty {
+            defaults.removeObject(forKey: pendingKey)
+        } else if let data = try? encoder.encode(kept) {
+            defaults.set(data, forKey: pendingKey)
+        }
+        return taken.filter { now.timeIntervalSince($0.at) <= maxAge && $0.at <= now.addingTimeInterval(5) }.map(\.action)
     }
 
     /// Returns and clears pending actions newer than `maxAge`.
@@ -157,6 +207,39 @@ enum WidgetDataStore {
         "la.rider.noCrew": "クルーはまだいません", "la.rider.checkAt": "終了 ", "la.rider.report": "報告", "la.rider.crash": "事故",
         "la.rider.helping": "手当て中？傷口を強く押さえて · 電話 ", "la.rider.onTheWay": "さんが向かっています",
         "la.rider.crewAlerted": "クルーに通知済み", "la.rider.call": "電話 ", "la.rider.safe": "無事です",
+        "la.silent.sos": "サイレントSOS",
+        "la.silent.again": "もう一度",
+        "la.silent.sent": "送信済み",
+        "la.fake.call": "偽着信",
+        "la.timer.safety": "安全タイマー",
+        "la.timer.notify": "報告がなければ通知：",
+        "la.timer.notify.sos": "報告がなければ SOS を送信",
+        "la.timer.server": "サーバーでも計測：電源が切れても通知",
+        "la.plus.fifteen": "+15分",
+        "la.arrived": "到着",
+        "la.sos.sent": "SOS 送信済み",
+        "la.live.location": "位置を共有中",
+        "la.sos.notifying": "見守る人に通知中…",
+        "la.sos.notified": "見守る人 %d 人に通知済み",
+        "la.sos.handling": "%@ さんが対応中",
+        "la.sos.calls": "自動で %d 回電話",
+        "la.sos.next.call": "自動電話 ",
+        "la.sos.next.sms": "SMS ",
+        "la.sos.next.share": "位置リンク送信 ",
+        "la.family.alerted": "家族に通知済み・位置を共有中",
+        "la.needs.help": " さんが助けを求めています",
+        "la.please.call": "通報 ",
+        "la.contact": "連絡 ",
+        "la.g.sos": " SOS",
+        "la.g.away": "あなたから %@",
+        "la.g.located": "位置更新 ",
+        "la.g.noloc": "位置不明",
+        "la.g.unanswered": "まだ誰も応答していません",
+        "la.g.you.handling": "あなたが対応中（本人に通知済み）",
+        "la.g.call": "電話",
+        "la.g.onway": "向かいます",
+        "la.g.told": "伝えました",
+        "la.g.navigate": "経路",
         // Home / lock-screen widgets
         "widget.config.protected": "見守られる人", "widget.config.protected.desc": "見守り状況・SOS・無事報告のリマインダー",
         "widget.config.guardian": "見守る人", "widget.config.guardian.desc": "家族の安全状況とアラート",
@@ -238,6 +321,41 @@ enum WidgetDataStore {
         case "la.rider.crewAlerted": return isZh ? "已通知车队" : isFr ? "Équipe prévenue" : "Crew alerted"
         case "la.rider.call":     return isZh ? "拨打 " : isFr ? "Appeler " : "Call "
         case "la.rider.safe":     return isZh ? "我安全" : isFr ? "Je vais bien" : "I'm safe"
+
+        // Lock-screen card — emergency features
+        case "la.silent.sos": return isZh ? "静默求救" : isFr ? "SOS discret" : "Silent SOS"
+        case "la.silent.again": return isZh ? "再按一次" : isFr ? "Encore" : "Tap again"
+        case "la.silent.sent": return isZh ? "已发出" : isFr ? "Envoyé" : "Sent"
+        case "la.fake.call": return isZh ? "假来电" : isFr ? "Faux appel" : "Fake call"
+        case "la.timer.safety": return isZh ? "安全倒计时" : isFr ? "Minuteur sécurité" : "Safety timer"
+        case "la.timer.notify": return isZh ? "到期未报平安会通知 " : isFr ? "Sans nouvelles, on alerte " : "No check-in? Alerts "
+        case "la.timer.notify.sos": return isZh ? "到期未报平安会自动求救" : isFr ? "Sans nouvelles, un SOS part" : "No check-in? An SOS goes out"
+        case "la.timer.server": return isZh ? "服务器同步计时，手机关机也会通知" : isFr ? "Suivi aussi par le serveur, même téléphone éteint" : "Also timed on our server, even if the phone dies"
+        case "la.plus.fifteen": return isZh ? "+15分钟" : isFr ? "+15 min" : "+15 min"
+        case "la.arrived": return isZh ? "我到了" : isFr ? "Arrivé" : "I'm here"
+        case "la.sos.sent": return isZh ? "求救已发出" : isFr ? "SOS envoyé" : "SOS sent"
+        case "la.live.location": return isZh ? "位置实时共享" : isFr ? "Position en direct" : "Live location"
+        case "la.sos.notifying": return isZh ? "正在通知守护人…" : isFr ? "Alerte de vos gardiens…" : "Alerting your guardians…"
+        case "la.sos.notified": return isZh ? "已通知 %d 位守护人" : isFr ? "%d gardien(s) alerté(s)" : "%d guardian(s) alerted"
+        case "la.sos.handling": return isZh ? "%@ 已接手处理" : isFr ? "%@ s'en occupe" : "%@ is handling it"
+        case "la.sos.calls": return isZh ? "已自动拨打 %d 次电话" : isFr ? "%d appel(s) passé(s)" : "%d call(s) placed"
+        case "la.sos.next.call": return isZh ? "下一步自动打电话 " : isFr ? "Appel automatique à " : "Auto call at "
+        case "la.sos.next.sms": return isZh ? "下一步发短信 " : isFr ? "SMS à " : "Text at "
+        case "la.sos.next.share": return isZh ? "下一步发送位置链接 " : isFr ? "Lien de position à " : "Location link at "
+        case "la.family.alerted": return isZh ? "家人已收到通知，位置实时共享" : isFr ? "Famille prévenue, position en direct" : "Family alerted, live location on"
+        case "la.needs.help": return isZh ? " 需要帮助" : isFr ? " a besoin d'aide" : " needs help"
+        case "la.please.call": return isZh ? "请拨打 " : isFr ? "Appelez le " : "Call "
+        case "la.contact": return isZh ? "联系 " : isFr ? "Appeler " : "Call "
+        case "la.g.sos": return isZh ? " 求救" : isFr ? " SOS" : " SOS"
+        case "la.g.away": return isZh ? "距你 %@" : isFr ? "à %@" : "%@ away"
+        case "la.g.located": return isZh ? "位置更新于 " : isFr ? "Position à " : "Location at "
+        case "la.g.noloc": return isZh ? "位置未知" : isFr ? "Position inconnue" : "Location unknown"
+        case "la.g.unanswered": return isZh ? "还没有人回应" : isFr ? "Personne n'a répondu" : "No one has responded"
+        case "la.g.you.handling": return isZh ? "你已接手，对方已收到通知" : isFr ? "Vous vous en occupez, prévenu(e)" : "You're handling it, they've been told"
+        case "la.g.call": return isZh ? "打电话" : isFr ? "Appeler" : "Call"
+        case "la.g.onway": return isZh ? "我在路上" : isFr ? "J'arrive" : "On my way"
+        case "la.g.told": return isZh ? "已告知" : isFr ? "Prévenu" : "Told"
+        case "la.g.navigate": return isZh ? "导航" : isFr ? "Itinéraire" : "Directions"
 
         // Widget — SOS
         case "widget.sos.title":   return isZh ? "紧急求助" : isFr ? "SOS Urgence" : "Emergency SOS"

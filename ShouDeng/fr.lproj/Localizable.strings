@@ -1968,12 +1968,14 @@
 "lsc.textSize.hint" = "Plus le texte est grand, moins il y a de lignes.";
 "lsc.guardianRows" = "À cette taille, la carte affiche %d proches.";
 "lsc.background" = "Fond";
+"lsc.theme.graphite" = "Anthracite";
 "lsc.theme.navy" = "Marine";
 "lsc.theme.midnight" = "Noir";
 "lsc.theme.forest" = "Forêt";
 "lsc.theme.plum" = "Prune";
 "lsc.theme.light" = "Clair";
 "lsc.accent" = "Couleur d'accent";
+"lsc.accent.slate" = "Ardoise";
 "lsc.accent.lantern" = "Lanterne";
 "lsc.accent.gold" = "Or";
 "lsc.accent.teal" = "Sarcelle";

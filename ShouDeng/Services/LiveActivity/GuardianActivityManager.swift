@@ -6,8 +6,42 @@ import Foundation
 /// - Guardian: shows protected persons' status + call button
 final class GuardianActivityManager {
 
-    private var protectedActivity: Activity<ProtectedActivityAttributes>?
-    private var guardianActivity: Activity<GuardianActivityAttributes>?
+    private var startedProtected: Activity<ProtectedActivityAttributes>?
+    private var startedGuardian: Activity<GuardianActivityAttributes>?
+
+    /// The card this launch started, or — after iOS relaunched the app (SOS, lock-screen
+    /// button) — the one still on the lock screen, so updates keep reaching it.
+    private var protectedActivity: Activity<ProtectedActivityAttributes>? {
+        get { startedProtected ?? Activity<ProtectedActivityAttributes>.activities.first { $0.activityState == .active } }
+        set { startedProtected = newValue }
+    }
+    private var guardianActivity: Activity<GuardianActivityAttributes>? {
+        get { startedGuardian ?? Activity<GuardianActivityAttributes>.activities.first { $0.activityState == .active } }
+        set { startedGuardian = newValue }
+    }
+
+    private static var stale: Date { Date().addingTimeInterval(600) }
+
+    /// Changes the protected card's state (nothing if no card is up).
+    private func updateProtected(_ change: @escaping (inout ProtectedActivityAttributes.ContentState) -> Void) {
+        guard let activity = protectedActivity else { return }
+        Task {
+            var state = activity.content.state
+            change(&state)
+            guard state != activity.content.state else { return }
+            await activity.update(.init(state: state, staleDate: Self.stale))
+        }
+    }
+
+    private func updateGuardian(_ change: @escaping (inout GuardianActivityAttributes.ContentState) -> Void) {
+        guard let activity = guardianActivity else { return }
+        Task {
+            var state = activity.content.state
+            change(&state)
+            guard state != activity.content.state else { return }
+            await activity.update(.init(state: state, staleDate: Self.stale))
+        }
+    }
 
     // MARK: - Start (Protected Person role)
 
@@ -24,6 +58,8 @@ final class GuardianActivityManager {
         conditions: [String] = [],
         emergencyNote: String? = nil,
         emergencyMedications: [ProtectedActivityAttributes.MedInfo] = [],
+        familyContactName: String? = nil,
+        familyContactPhone: String? = nil,
         demo: Bool = false
     ) {
         // During the demo only the demo's own (sample) card may start — never the real one
@@ -39,7 +75,7 @@ final class GuardianActivityManager {
         endAllActivities()
 
         let attributes = ProtectedActivityAttributes(userName: userName)
-        let state = ProtectedActivityAttributes.ContentState(
+        var state = ProtectedActivityAttributes.ContentState(
             status: .normal,
             statusText: WidgetDataStore.localized("la.normal"),
             guardians: guardians,
@@ -57,6 +93,8 @@ final class GuardianActivityManager {
             latestUpdateAt: latestUpdateAt,
             cardStyle: .stored
         )
+        state.familyContactName = familyContactName
+        state.familyContactPhone = familyContactPhone
 
         do {
             let activity = try Activity.request(
@@ -178,16 +216,54 @@ final class GuardianActivityManager {
         }
     }
 
-    func updateProtectedTimer(deadline: Date?, label: String?) {
-        guard let activity = protectedActivity else { return }
-        Task {
-            var state = activity.content.state
+    /// The running countdown (safety timer or home timer) on the card; nil ends it.
+    /// An SOS on the card stays — the countdown shows again once it's over.
+    func updateProtectedTimer(deadline: Date?, startedAt: Date? = nil, kind: String? = nil, label: String?) {
+        updateProtected { state in
             state.homeTimerDeadline = deadline
             state.homeTimerLabel = label
+            state.timerStartedAt = deadline == nil ? nil : startedAt
+            state.timerKind = deadline == nil ? nil : kind
+            guard state.status != .sosActive else { return }
             state.status = deadline != nil ? .timerRunning : .normal
-            state.statusText = deadline != nil ? WidgetDataStore.localized("la.home.timer") : WidgetDataStore.localized("la.normal")
-            await activity.update(.init(state: state, staleDate: Date().addingTimeInterval(600)))
+            state.statusText = WidgetDataStore.localized(deadline != nil ? "la.home.timer" : "la.normal")
         }
+    }
+
+    /// What the server has done for my SOS (guardians reached, who is handling it, next step).
+    func updateOwnSOS(_ info: ProtectedActivityAttributes.SOSCardInfo) {
+        updateProtected { state in
+            guard state.status == .sosActive else { return }
+            state.sos = info
+        }
+    }
+
+    /// Silent SOS: waiting for the second tap until `until` (nil: not any more)
+    func setSilentSOSArmed(until: Date?) {
+        updateProtected { $0.silentSOSArmedUntil = until }
+    }
+
+    /// Silent SOS sent from the card (nil: that SOS is over)
+    func markSilentSOSSent(_ at: Date?) {
+        updateProtected { state in
+            state.silentSOSArmedUntil = nil
+            state.silentSOSSentAt = at
+        }
+    }
+
+    /// Who a bystander can call for the family
+    func updateFamilyContact(name: String?, phone: String?) {
+        updateProtected { state in
+            state.familyContactName = name
+            state.familyContactPhone = phone
+        }
+    }
+
+    // MARK: - Update (Guardian SOS)
+
+    /// Someone I look after raised an SOS (nil: no SOS any more).
+    func updateGuardianSOS(_ info: GuardianActivityAttributes.SOSCardInfo?) {
+        updateGuardian { $0.sos = info }
     }
 
     // MARK: - Update (Guardian)
@@ -200,7 +276,7 @@ final class GuardianActivityManager {
         guard let activity = guardianActivity else { return }
         let status = Self.computeOverallStatus(persons)
         Task {
-            let newState = GuardianActivityAttributes.ContentState(
+            var newState = GuardianActivityAttributes.ContentState(
                 overallStatus: status,
                 overallStatusText: Self.overallStatusText(status, count: persons.count),
                 persons: Array(persons.prefix(3)),
@@ -209,6 +285,7 @@ final class GuardianActivityManager {
                 updatedAt: Date(),
                 cardStyle: .stored
             )
+            newState.sos = activity.content.state.sos
             await activity.update(.init(state: newState, staleDate: Date().addingTimeInterval(600)))
         }
     }
@@ -245,7 +322,7 @@ final class GuardianActivityManager {
 
     // MARK: - SOS (both roles)
 
-    func triggerSOS(localEmergencyNumber: String, demo: Bool = false) {
+    func triggerSOS(localEmergencyNumber: String, startedAt: Date = Date(), bystander: Bool = false, demo: Bool = false) {
         guard !ExploreMode.isActive || demo else { return }
         if let activity = protectedActivity {
             Task {
@@ -254,6 +331,7 @@ final class GuardianActivityManager {
                 state.statusText = WidgetDataStore.localized("la.sos.active")
                 state.emergencyPhone = localEmergencyNumber
                 state.emergencyLabel = localEmergencyNumber
+                state.sos = .init(startedAt: startedAt, bystander: bystander)
                 await activity.update(
                     .init(state: state, staleDate: Date().addingTimeInterval(600)),
                     alertConfiguration: .init(
@@ -271,8 +349,11 @@ final class GuardianActivityManager {
         if let activity = protectedActivity {
             Task {
                 var state = activity.content.state
-                state.status = .normal
-                state.statusText = WidgetDataStore.localized("la.normal")
+                state.sos = nil
+                state.silentSOSSentAt = nil
+                // A countdown still running comes back
+                state.status = state.homeTimerDeadline != nil ? .timerRunning : .normal
+                state.statusText = WidgetDataStore.localized(state.homeTimerDeadline != nil ? "la.home.timer" : "la.normal")
                 await activity.update(.init(state: state, staleDate: Date().addingTimeInterval(600)))
             }
         }
@@ -376,7 +457,10 @@ extension GuardianActivityManager {
                 allergies: full ? ["青霉素"] : [],
                 emergencyMedications: full ? [.init(name: "硝酸甘油", location: "包里", dosage: "")] : []
             )
-            if full { updateProtectedTimer(deadline: now.addingTimeInterval(18 * 60), label: nil) }
+            if full {
+                updateProtectedTimer(deadline: now.addingTimeInterval(18 * 60), startedAt: now.addingTimeInterval(-12 * 60),
+                                     kind: "safety", label: nil)
+            }
         case "guardian", "guardian-empty":
             let full = kind == "guardian"
             startGuardianActivity(

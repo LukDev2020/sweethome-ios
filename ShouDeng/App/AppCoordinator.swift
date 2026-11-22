@@ -178,6 +178,22 @@ final class AppCoordinator: ObservableObject {
 
     private var cancellables = Set<AnyCancellable>()
 
+    // Lock-screen card during an SOS (AppCoordinator+LockScreen.swift)
+    /// The card speaks to whoever finds the phone
+    var sosCardBystander = false
+    var sosCardAddress: String?
+    /// The SOS went out silently (lock-screen silent SOS): the card stays calm, also
+    /// after a relaunch
+    var sosCardSilent: Bool {
+        get { UserDefaults.standard.bool(forKey: "sos_card_silent") }
+        set { UserDefaults.standard.set(newValue, forKey: "sos_card_silent") }
+    }
+    var bystanderTask: Task<Void, Never>?
+    /// Guardian: the SOS on the card, "On my way" already sent, street names by place
+    var guardianCardSOSId: String?
+    var guardianAckSent = Set<String>()
+    var guardianSOSAddresses: [String: String] = [:]
+
     // MARK: - Init
 
     /// Everything that differs between the real app and Explore Mode.
@@ -336,6 +352,12 @@ final class AppCoordinator: ObservableObject {
     // MARK: - Language Change Observer
 
     private func observeLanguageChange() {
+        // Safety timer started / extended / ended: the lock-screen card follows
+        NotificationCenter.default.addObserver(
+            forName: DeadManSwitchService.didChangeNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            self?.refreshLiveActivityTimer()
+        }
         NotificationCenter.default.addObserver(
             forName: LanguageManager.languageDidChangeNotification,
             object: nil,
@@ -660,6 +682,8 @@ final class AppCoordinator: ObservableObject {
         heartbeatService.appDidBecomeActive()
         // An SOS a guardian closed while we were away: drop the stale local copy
         if activeSOSEvent != nil, !isDemo { Task { await refreshOwnSOSStatus() } }
+        // The person is here: the lock-screen card is theirs again (not the bystander's)
+        personReturnedDuringSOS()
         // A guardian coming back after hours sees current place, battery and status
         // (and not someone who has since removed them)
         if userRole == .guardian, !isDemo { Task { await fetchProtectedPersons() } }
@@ -684,18 +708,26 @@ final class AppCoordinator: ObservableObject {
     /// Check-in / "I arrived" tapped on a widget or the Live Activity.
     func processPendingWidgetActions() {
         guard !isDemo else { return }
+        // Silent SOS / fake call from the lock screen: before the sign-in check, which
+        // can lag behind a background launch
+        processLockScreenEmergencyActions()
         guard case .loggedIn = authState else { return }
         for action in WidgetDataStore.takePendingActions() {
             switch action {
             case .checkIn:
                 performCheckIn()
             case .arrived:
-                apiClient.postQueued("/v1/home-timer/dismiss", body: EmptyBody())
-                performCheckIn(note: LanguageManager.shared.localized("widget.arrived.note"))
+                arrivedFromLockScreen()
             case .shareLocation:
                 // A fresh fix goes to the family through the normal location report
                 locationManager.requestSingleLocation()
                 liveActivityManager.updateProtectedLocationShared()
+            case .extendTimer:
+                extendCountdownFromLockScreen()
+            case .acknowledgeSOS:
+                acknowledgeSOSFromLockScreen()
+            case .armSilentSOS, .silentSOS, .fakeCall:
+                break // handled above
             }
         }
     }
@@ -705,6 +737,8 @@ final class AppCoordinator: ObservableObject {
         motionService.stopForegroundMonitoring()
         // Auto-start Live Activity when user leaves the app (if enabled)
         startLiveActivityOnBackground()
+        // During an SOS: bystander card if the person doesn't come back within two minutes
+        if !isDemo { scheduleBystanderCard() }
     }
 
     // MARK: - Widget SOS Intent
@@ -1115,6 +1149,7 @@ final class AppCoordinator: ObservableObject {
                 self.protectedPersons = mapped
                 self.localStore.saveProtectedPersons(mapped)
                 self.syncWidgetState()
+                self.refreshGuardianSOSCard()
             }
             // Links decide the household plan (a family member may pay for everyone)
             await storeKitManager.refreshHousehold()
@@ -1383,6 +1418,8 @@ final class AppCoordinator: ObservableObject {
                 latestUpdate: latest?.text,
                 latestUpdateAt: latest?.at
             )
+            liveActivityManager.updateFamilyContact(name: familyContactForCard?.name, phone: familyContactForCard?.phone)
+            refreshLiveActivityTimer()
         } else {
             let priority = protectedPersons
                 .sorted { Self.statusPriority($0.status) > Self.statusPriority($1.status) }
@@ -1457,9 +1494,18 @@ final class AppCoordinator: ObservableObject {
                 conditions: cachedCard?.conditions ?? [],
                 emergencyNote: cachedCard?.emergencyNote,
                 emergencyMedications: medInfos,
+                familyContactName: isDemo ? nil : familyContactForCard?.name,
+                familyContactPhone: isDemo ? nil : familyContactForCard?.phone,
                 demo: isDemo
             )
             liveActivityManager.updateRider(riderCardInfo)
+            refreshLiveActivityTimer()
+            // Card (re)started in the middle of an SOS: show it
+            if !isDemo, let sos = activeSOSEvent, sos.isActive, !sosConcealed, !sosCardSilent, !sos.triggerMethod.isSilent {
+                liveActivityManager.triggerSOS(localEmergencyNumber: emergencyPhone, startedAt: sos.triggeredAt,
+                                               bystander: sosCardBystander)
+                updateOwnSOSCard()
+            }
         } else {
             // Guardian: show each protected person's status
             let personInfos = protectedPersons.map { pp in
@@ -1484,6 +1530,7 @@ final class AppCoordinator: ObservableObject {
                 priorityPersonPhone: priority?.user.phone ?? "",
                 demo: isDemo
             )
+            refreshGuardianSOSCard()
         }
     }
 
@@ -1599,7 +1646,10 @@ final class AppCoordinator: ObservableObject {
         triggerSOS(method: method, clientSOSId: nil)
     }
 
-    func triggerSOS(method: SOSTriggerMethod, clientSOSId: String?) {
+    /// `silent`: nothing on this phone's screen or lock-screen card (like a duress SOS),
+    /// for an SOS that isn't a duress code — the lock-screen silent SOS.
+    func triggerSOS(method: SOSTriggerMethod, clientSOSId: String?, silent: Bool = false) {
+        let isSilent = silent || method.isSilent
         // authManager is the source of truth: currentUser can still be nil after a
         // locked background relaunch (BLE button, widget, dead-man switch).
         guard let userId = authManager.currentUserId ?? currentUser?.id, !userId.isEmpty else {
@@ -1611,8 +1661,8 @@ final class AppCoordinator: ObservableObject {
         // Already in an SOS: don't create a second local event (unless the local
         // copy turns out to be over — then the press is sent as a new SOS)
         if let existing = activeSOSEvent, existing.isActive {
-            _ = deferPressIfLocalSOSMayBeStale(silent: method.isSilent) { [weak self] in
-                self?.triggerSOS(method: method, clientSOSId: clientSOSId)
+            _ = deferPressIfLocalSOSMayBeStale(silent: isSilent) { [weak self] in
+                self?.triggerSOS(method: method, clientSOSId: clientSOSId, silent: silent)
             }
             return
         }
@@ -1640,7 +1690,8 @@ final class AppCoordinator: ObservableObject {
         ownSOSStatus = nil
         sosConcealed = false
         sosLocalTrail = locationManager.bestAvailableLocation.map { [$0.coordinate] } ?? []
-        if !method.isSilent { isSOSScreenPresented = true }
+        if !isSilent { isSOSScreenPresented = true }
+        sosCardSilent = isSilent
         localStore.saveActiveSOSEvent(sosEvent)
         syncWidgetState()
 
@@ -1654,8 +1705,8 @@ final class AppCoordinator: ObservableObject {
 
         // Lock-screen card shows SOS — but a duress / disguise SOS must stay invisible and silent
         // (The demo's rider card — Kai's phone — shows its SOS state too)
-        if !method.isSilent && (!isDemo || isRiderMode) {
-            liveActivityManager.triggerSOS(localEmergencyNumber: localEmergencyNumber, demo: isDemo)
+        if !isSilent && (!isDemo || isRiderMode) {
+            showSOSOnCard(method: method, startedAt: now)
         }
         if isRiderMode { updateRiderCardForSOS() }
 
@@ -1790,12 +1841,16 @@ final class AppCoordinator: ObservableObject {
 
     /// The running home timer, for the widgets (set by HomeTimerView)
     private(set) var homeTimerForWidget: (deadline: Date, label: String)?
+    /// When this app first saw the running home timer (the card's progress bar)
+    private(set) var homeTimerStartedAt: Date?
 
     func setHomeTimerForWidget(deadline: Date?, label: String?) {
         let new = deadline.map { (deadline: $0, label: label ?? "") }
         guard new?.deadline != homeTimerForWidget?.deadline || new?.label != homeTimerForWidget?.label else { return }
+        if new == nil { homeTimerStartedAt = nil } else if homeTimerForWidget == nil { homeTimerStartedAt = Date() }
         homeTimerForWidget = new
         syncWidgetState()
+        refreshLiveActivityTimer()
     }
 
     /// After a relaunch in the middle of an SOS (iOS ended the app in the
@@ -1848,10 +1903,20 @@ final class AppCoordinator: ObservableObject {
         isSOSScreenPresented = false
         localStore.saveActiveSOSEvent(nil)
         syncWidgetState()
+        resetSOSCardState()
         if !isDemo {
             locationManager.exitSOSMode()
             liveActivityManager.cancelSOS()
         }
+    }
+
+    /// The SOS is over: forget the lock-screen card's SOS details.
+    func resetSOSCardState() {
+        bystanderTask?.cancel()
+        bystanderTask = nil
+        sosCardBystander = false
+        sosCardAddress = nil
+        sosCardSilent = false
     }
 
     /// Protected person: what the server has actually done for my SOS.
@@ -1872,6 +1937,7 @@ final class AppCoordinator: ObservableObject {
                 }
                 if let sos = response.sos {
                     if self.isRiderMode { self.liveActivityManager.updateRider(self.riderCardWithAddress) }
+                    defer { self.updateOwnSOSCard() }
                     self.sosDeliveryFailed = false
                     if self.activeSOSEvent?.id != sos.sosEventId {
                         self.applyServerSOSId(sos.sosEventId, forClientId: nil)
@@ -1897,6 +1963,7 @@ final class AppCoordinator: ObservableObject {
                 } else {
                     self.guardianSOS.removeValue(forKey: personId)
                 }
+                self.refreshGuardianSOSCard()
             }
         } catch {
             #if DEBUG
@@ -1983,6 +2050,7 @@ final class AppCoordinator: ObservableObject {
         guard activeSOSEvent != nil else { return }
         sosConcealed = true
         isSOSScreenPresented = false
+        bystanderTask?.cancel()
         if !isDemo { liveActivityManager.cancelSOS() }
         syncWidgetState()
         // Same entry as a real end, so the timeline gives nothing away
@@ -2000,6 +2068,7 @@ final class AppCoordinator: ObservableObject {
         sosDeliveryFailed = false
         localStore.saveActiveSOSEvent(nil)
         syncWidgetState()
+        resetSOSCardState()
         if !isDemo {
             locationManager.exitSOSMode()
             // Restore lock screen to normal
@@ -2207,7 +2276,7 @@ final class AppCoordinator: ObservableObject {
 
     /// Guardian tapped "I've got it" on the SOS push: tell the server (which stops
     /// the calls and notifies the others), not just the local engine.
-    private func handleSOSTakenOver(sosId: String) {
+    func handleSOSTakenOver(sosId: String) {
         let bgTask = UIApplication.shared.beginBackgroundTask(withName: "sos-acknowledge")
         Task {
             do {

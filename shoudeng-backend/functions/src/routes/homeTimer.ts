@@ -95,6 +95,39 @@ router.get("/", async (req: Request, res: Response) => {
 });
 
 /**
+ * POST /v1/home-timer/extend  { minutes }
+ * "+15 min" on the lock-screen card: moves the deadline of the active timer
+ * (from now if it already passed), keeping its destination and notes.
+ */
+router.post("/extend", async (req: Request, res: Response) => {
+  const uid = req.uid!;
+  const minutes = Number(req.body?.minutes);
+  if (!Number.isInteger(minutes) || minutes < 1 || minutes > 120) {
+    res.status(400).json({ error: "minutes must be a whole number from 1 to 120" });
+    return;
+  }
+  try {
+    const timerRef = db.collection("home_timers").doc(uid);
+    const deadline = await db.runTransaction(async (tx) => {
+      const snap = await tx.get(timerRef);
+      if (!snap.exists || snap.data()!.status !== "active") return null;
+      const current: Date = snap.data()!.deadline.toDate();
+      const next = new Date(Math.max(current.getTime(), Date.now()) + minutes * 60_000);
+      tx.update(timerRef, { deadline: admin.firestore.Timestamp.fromDate(next) });
+      return next;
+    });
+    if (!deadline) {
+      res.status(404).json({ error: "No active home timer" });
+      return;
+    }
+    res.json({ success: true, deadline: deadline.toISOString() });
+  } catch (error) {
+    console.error("[HomeTimer] extend error:", error);
+    res.status(500).json({ error: "Failed to extend home timer" });
+  }
+});
+
+/**
  * POST /v1/home-timer/dismiss
  * Dismiss the timer (user arrived safely).
  */

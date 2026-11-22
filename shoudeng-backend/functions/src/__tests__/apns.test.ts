@@ -160,6 +160,8 @@ describe("request to Apple", () => {
       "interruption-level": "critical",
       "relevance-score": 1.0,
       category: "SOS_ALERT",
+      // wakes the guardian's app to put the SOS on its lock-screen card
+      "content-available": 1,
     });
     expect(body).toMatchObject({
       action: "sos_alert", sos_id: "sos1", person_id: "mom", protected_person_name: "Mom",

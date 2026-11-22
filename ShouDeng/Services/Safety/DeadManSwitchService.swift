@@ -40,6 +40,12 @@ final class DeadManSwitchService: ObservableObject {
     @Published var totalSeconds: Int = 0
     @Published var isPaused: Bool = false
 
+    /// Posted when the countdown starts, pauses, resumes, is extended or ends
+    static let didChangeNotification = Notification.Name("DeadManSwitchService.didChange")
+
+    /// The deadline while the countdown is running (nil when off or paused)
+    var runningDeadline: Date? { isActive && !isPaused ? deadline : nil }
+
     // MARK: - Preset Durations
 
     enum Preset: Int, CaseIterable, Identifiable {
@@ -538,6 +544,8 @@ final class DeadManSwitchService: ObservableObject {
     /// cases this timer exists for — so the server raises the SOS if no check-in
     /// reaches it by the deadline. Sent through the offline queue: kept until delivered.
     private func syncServerDeadline() {
+        // The lock-screen card shows the countdown too
+        NotificationCenter.default.post(name: Self.didChangeNotification, object: nil)
         guard let apiClient, !ExploreMode.blocks("deadManSwitch") else { return }
         let running = isActive && !isPaused ? deadline : nil
         let location = locationManager?.bestAvailableLocation

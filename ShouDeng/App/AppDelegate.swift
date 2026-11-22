@@ -152,6 +152,21 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         if (userInfo["action"] as? String) == "sos_resolved" {
             appCoordinator.pushService.onOwnSOSResolved?()
         }
+        // SOS news (the push wakes the app): bring the lock-screen card up to date —
+        // the guardian's card shows the SOS, the person's card who is handling it
+        if let action = userInfo["action"] as? String,
+           ["sos_alert", "sos_acknowledged", "sos_resolved_by_person"].contains(action) {
+            let coordinator = appCoordinator
+            let task = application.beginBackgroundTask(withName: "sos.card")
+            Task { @MainActor in
+                if coordinator.userRole == .guardian {
+                    await coordinator.fetchProtectedPersons()
+                } else {
+                    await coordinator.refreshOwnSOSStatus()
+                }
+                if task != .invalid { application.endBackgroundTask(task) }
+            }
+        }
 
         // Perform background sensor burst
         appCoordinator.motionService.performBackgroundBurst { result in

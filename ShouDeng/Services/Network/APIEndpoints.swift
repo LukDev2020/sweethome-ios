@@ -470,6 +470,16 @@ struct HomeTimerResponse: Codable {
     let createdAt: Date
 }
 
+/// POST /v1/home-timer/extend ("+15 min" on the lock-screen card)
+struct HomeTimerExtendRequest: Codable {
+    let minutes: Int
+}
+
+struct HomeTimerExtendResponse: Codable {
+    let success: Bool
+    let deadline: Date
+}
+
 struct HomeTimerDismissResponse: Codable {
     let success: Bool
 }

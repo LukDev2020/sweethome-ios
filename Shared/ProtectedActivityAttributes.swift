@@ -39,6 +39,37 @@ struct ProtectedActivityAttributes: ActivityAttributes {
         var cardStyle: LockScreenCardStyle? = nil
         /// Rider mode: the card shows the shift, crew and (during SOS) bystander help
         var rider: RiderCardInfo? = nil
+
+        // Emergency features of the card (all optional: older cards decode without them)
+        /// When the running countdown started (progress bar); nil: no bar
+        var timerStartedAt: Date? = nil
+        /// "safety" (safety timer) or "home" (home timer)
+        var timerKind: String? = nil
+        /// What the server has done for my SOS, shown while `status == .sosActive`
+        var sos: SOSCardInfo? = nil
+        /// "Silent SOS" was tapped once: a second tap before this sends it
+        var silentSOSArmedUntil: Date? = nil
+        /// A silent SOS went out from the card (the card itself stays calm)
+        var silentSOSSentAt: Date? = nil
+        /// Who a bystander can call for the family (first guardian with a number)
+        var familyContactName: String? = nil
+        var familyContactPhone: String? = nil
+    }
+
+    /// The person's own SOS on the card. `bystander`: written for whoever finds the
+    /// phone (medical info, address, call the emergency number) — straight away after
+    /// a fall, else after two minutes without the person opening the app.
+    struct SOSCardInfo: Codable, Hashable {
+        var startedAt: Date
+        var guardiansNotified: Int = 0
+        var callsPlaced: Int = 0
+        /// The guardian who said "I've got it"
+        var acknowledgedByName: String? = nil
+        /// Next automatic step ("voice1", "hop2", "share" …) and when
+        var nextStep: String? = nil
+        var nextStepAt: Date? = nil
+        var address: String? = nil
+        var bystander: Bool = false
     }
 
     struct MedInfo: Codable, Hashable {
