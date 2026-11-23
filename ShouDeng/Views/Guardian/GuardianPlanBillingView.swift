@@ -3,7 +3,12 @@ import StoreKit
 
 // MARK: - Plan & Billing
 //
-// Subscription page:
+// From build 63 what is sold is per person (SeatPaywallView, docs/pricing/SEATS.md):
+// this page shows it to everyone who doesn't own a Single / Family / organisation plan
+// (subscription or lifetime). Those who do keep the page below — their plan, its
+// renewal, restore — with a way to switch to per person.
+//
+// The old plan page:
 //   - Free / 单人关注版 (single) / 家庭版 (family); 机构 / 社区版 (ultimate) is contact-us only
 //   - SOS with SMS fallback and voice escalation is free on every plan (fair use)
 //   - Plan IDs match StoreKitManager and backend PLANS
@@ -48,9 +53,28 @@ struct GuardianPlanBillingView: View {
         case single, family
     }
 
+    /// Owns a plan from before per-person pricing (Single, Family, organisation)
+    private var ownsOldPlan: Bool {
+        let store = coordinator.storeKitManager
+        let old: Set<String> = ["single", "family", "ultimate"]
+        return old.contains(store.purchasedPlanId ?? "") || old.contains(store.lifetimePlanId ?? "")
+    }
+
     var body: some View {
+        if ownsOldPlan {
+            oldPlanPage
+        } else {
+            SeatPaywallView(mode: coordinator.storeKitManager.purchasedPlanId == "seats" ? .manage : .new,
+                            coveredBy: coordinator.storeKitManager.coveredByName)
+                .task { await coordinator.storeKitManager.refreshSubscriptionStatus() }
+        }
+    }
+
+    /// Single / Family / organisation: their plan as before, and per person to switch to
+    private var oldPlanPage: some View {
         ScrollView {
             VStack(spacing: 20) {
+                switchToSeats
                 heroSection
                 renewalReminder
                 currentPlanBanner
@@ -108,6 +132,36 @@ struct GuardianPlanBillingView: View {
         case .nothingToRestore, .none:
             return langManager.localized("guardian.billing.restore.none")
         }
+    }
+
+    /// Switch to per person: buying a seat level replaces the old subscription (same
+    /// App Store subscription group); a lifetime purchase stays as it is.
+    private var switchToSeats: some View {
+        NavigationLink {
+            SeatPaywallView(mode: .new)
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "person.2.badge.plus")
+                    .font(.scaled(size: 18))
+                    .foregroundStyle(safe)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(langManager.localized("seats.switch.title"))
+                        .font(.scaled(size: 14, weight: .semibold))
+                        .foregroundStyle(ink)
+                    Text(langManager.localized("seats.switch.desc"))
+                        .font(.scaled(size: 12))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer()
+                Image(systemName: "chevron.right").font(.scaled(size: 12)).foregroundStyle(.tertiary)
+            }
+            .padding(14)
+            .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemGroupedBackground)))
+        }
+        .buttonStyle(.plain)
+        .padding(.top, 8)
+        .accessibilityIdentifier("billing.switchToSeats")
     }
 
     // MARK: - Hero

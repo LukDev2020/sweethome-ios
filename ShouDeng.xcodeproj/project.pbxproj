@@ -248,6 +248,7 @@
 		1D0F0A554877406A9B2D7355 /* BatteryIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C54FBFA48A54BBFA4C1B499 /* BatteryIndicatorView.swift */; };
 		F06797BB85BA4C7EB6D94A9A /* AppTips.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB50B08C37D14BD88EBFE063 /* AppTips.swift */; };
 		862F35BC5650451AB0F25C79 /* HomeSafePill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C0C843D3C714D578DFF5690 /* HomeSafePill.swift */; };
+		DD44EE0100000922 /* SeatPaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD44EE0100000921 /* SeatPaywallView.swift */; };
 		B31C2969CC6A4B1B9786BAE8 /* ReactionBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78D285E5A8124670ACBD6168 /* ReactionBarView.swift */; };
 		F3DCD539ABF44643B97B26C7 /* LocationShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D406A35BC93841D6B5C20657 /* LocationShareCardView.swift */; };
 		2FC0842B41A54B05BF837FDD /* WeatherCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F14713FC3A945F1BDB7E1C4 /* WeatherCardView.swift */; };
@@ -553,6 +554,7 @@
 		9C54FBFA48A54BBFA4C1B499 /* BatteryIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryIndicatorView.swift; sourceTree = "<group>"; };
 		DB50B08C37D14BD88EBFE063 /* AppTips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTips.swift; sourceTree = "<group>"; };
 		1C0C843D3C714D578DFF5690 /* HomeSafePill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeSafePill.swift; sourceTree = "<group>"; };
+		DD44EE0100000921 /* SeatPaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeatPaywallView.swift; sourceTree = "<group>"; };
 		78D285E5A8124670ACBD6168 /* ReactionBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionBarView.swift; sourceTree = "<group>"; };
 		D406A35BC93841D6B5C20657 /* LocationShareCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationShareCardView.swift; sourceTree = "<group>"; };
 		0F14713FC3A945F1BDB7E1C4 /* WeatherCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherCardView.swift; sourceTree = "<group>"; };
@@ -857,6 +859,7 @@
 				9C54FBFA48A54BBFA4C1B499 /* BatteryIndicatorView.swift */,
 				DB50B08C37D14BD88EBFE063 /* AppTips.swift */,
 				1C0C843D3C714D578DFF5690 /* HomeSafePill.swift */,
+				DD44EE0100000921 /* SeatPaywallView.swift */,
 				78D285E5A8124670ACBD6168 /* ReactionBarView.swift */,
 				D406A35BC93841D6B5C20657 /* LocationShareCardView.swift */,
 				0F14713FC3A945F1BDB7E1C4 /* WeatherCardView.swift */,
@@ -1433,6 +1436,7 @@
 				1D0F0A554877406A9B2D7355 /* BatteryIndicatorView.swift in Sources */,
 				F06797BB85BA4C7EB6D94A9A /* AppTips.swift in Sources */,
 				862F35BC5650451AB0F25C79 /* HomeSafePill.swift in Sources */,
+				DD44EE0100000922 /* SeatPaywallView.swift in Sources */,
 				B31C2969CC6A4B1B9786BAE8 /* ReactionBarView.swift in Sources */,
 				F3DCD539ABF44643B97B26C7 /* LocationShareCardView.swift in Sources */,
 				2FC0842B41A54B05BF837FDD /* WeatherCardView.swift in Sources */,

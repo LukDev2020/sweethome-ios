@@ -1,5 +1,6 @@
 import * as admin from "firebase-admin";
 import { PLANS, PLAN_RANK, PlanId, paidPlanOf } from "./payment";
+import { SeatConfig, DEFAULT_SEATS, fitSeats, invalidSeatConfig, seatLimits } from "./seats";
 
 // ---------------------------------------------------------------------------
 // Households — one plan, shared by the family (docs/pricing/PRICING.md)
@@ -15,6 +16,8 @@ import { PLANS, PLAN_RANK, PlanId, paidPlanOf } from "./payment";
 //      payer's protected members ≤ plan.maxProtected,
 //      household guardians      ≤ plan.maxGuardians,
 //    and people nobody pays for stay within the free plan (1 + 1).
+//  - Per-person plan ("seats", services/seats.ts): the limits are the seats the payer
+//    chose (trimmed to what their price level pays for), not fixed per plan.
 //
 // The rules are pure functions over a LinkGraph (unit-tested); loadGraph() reads the
 // part of Firestore a decision needs.
@@ -25,6 +28,14 @@ export interface LinkGraph {
   links: Link[];
   /** Paid plans only; anyone missing is on the free plan */
   paid: Map<string, PlanId>;
+  /** Seats a per-person payer pays for (missing: the least, 1 + 1) */
+  seats?: Map<string, SeatConfig>;
+}
+
+/** A payer's household limits: from the plan, or from the seats they pay for */
+export function limitsOf(g: LinkGraph, payerId: string, planId: PlanId): { maxProtected: number; maxGuardians: number } {
+  if (planId === "seats") return seatLimits(g.seats?.get(payerId) ?? DEFAULT_SEATS);
+  return { maxProtected: PLANS[planId].maxProtected, maxGuardians: PLANS[planId].maxGuardians };
 }
 
 export interface Household {
@@ -95,6 +106,7 @@ export function effectivePlanIn(g: LinkGraph, uid: string): { planId: PlanId; pa
 export function checkNewLink(g: LinkGraph, guardianId: string, protectedId: string): LimitViolation | null {
   const graph: LinkGraph = {
     paid: g.paid,
+    seats: g.seats,
     links: g.links.filter((l) => !(l.guardianId === guardianId && l.protectedPersonId === protectedId)),
   };
   const guardianPlan = graph.paid.get(guardianId) ?? null;
@@ -102,7 +114,7 @@ export function checkNewLink(g: LinkGraph, guardianId: string, protectedId: stri
 
   // Protected seats
   if (guardianPlan) {
-    const max = PLANS[guardianPlan].maxProtected;
+    const max = limitsOf(graph, guardianId, guardianPlan).maxProtected;
     if (!within(protectedOf(graph, guardianId).length + 1, max)) {
       return { limit: "protected", max, planId: guardianPlan, payerId: guardianId };
     }
@@ -123,11 +135,11 @@ export function checkNewLink(g: LinkGraph, guardianId: string, protectedId: stri
     }
     return null;
   }
-  const after: LinkGraph = { paid: graph.paid, links: [...graph.links, { guardianId, protectedPersonId: protectedId }] };
+  const after: LinkGraph = { paid: graph.paid, seats: graph.seats, links: [...graph.links, { guardianId, protectedPersonId: protectedId }] };
   let tightest: LimitViolation | null = null;
   for (const payer of payersAfter) {
     const h = householdIn(after, payer)!;
-    const max = PLANS[h.planId].maxGuardians;
+    const max = limitsOf(after, payer, h.planId).maxGuardians;
     if (within(h.guardianIds.size, max)) return null;
     if (!tightest || PLAN_RANK[h.planId] > PLAN_RANK[tightest.planId]) {
       tightest = { limit: "guardians", max, planId: h.planId, payerId: payer };
@@ -150,14 +162,23 @@ async function activeLinks(field: "guardianId" | "protectedPersonId", id: string
     .map((d) => ({ guardianId: d.data().guardianId, protectedPersonId: d.data().protectedPersonId }));
 }
 
-async function paidPlans(uids: Iterable<string>): Promise<Map<string, PlanId>> {
+async function paidPlans(uids: Iterable<string>, seats: Map<string, SeatConfig> = new Map()): Promise<Map<string, PlanId>> {
   const paid = new Map<string, PlanId>();
   await Promise.all([...new Set(uids)].map(async (uid) => {
     const doc = await db().collection("subscriptions").doc(uid).get();
-    const plan = paidPlanOf(doc.exists ? doc.data() : undefined);
-    if (plan) paid.set(uid, plan.planId);
+    const data = doc.exists ? doc.data() : undefined;
+    const plan = paidPlanOf(data);
+    if (!plan) return;
+    paid.set(uid, plan.planId);
+    if (plan.planId === "seats") seats.set(uid, seatsPaidFor(data));
   }));
   return paid;
+}
+
+/** The seats a subscription doc pays for: those chosen, trimmed to its price level */
+export function seatsPaidFor(data: FirebaseFirestore.DocumentData | undefined): SeatConfig {
+  const chosen = data?.seats && !invalidSeatConfig(data.seats) ? data.seats as SeatConfig : DEFAULT_SEATS;
+  return fitSeats({ protected: chosen.protected, guardians: chosen.guardians, dual: chosen.dual }, data?.appleProductId);
 }
 
 /**
@@ -180,15 +201,16 @@ export async function loadGraph(uids: string[]): Promise<LinkGraph> {
   // Other guardians of the people these users guard (who may pay for them)
   await Promise.all(links.filter((l) => uids.includes(l.guardianId)).map((l) => asProtected(l.protectedPersonId)));
 
-  const paid = await paidPlans([...uids, ...links.map((l) => l.guardianId)]);
+  const seats = new Map<string, SeatConfig>();
+  const paid = await paidPlans([...uids, ...links.map((l) => l.guardianId)], seats);
   // Each payer's whole household (for guardian-seat counts)
   for (const payer of [...paid.keys()]) {
     await asGuardian(payer);
     await Promise.all(links.filter((l) => l.guardianId === payer).map((l) => asProtected(l.protectedPersonId)));
   }
-  const more = await paidPlans(links.map((l) => l.guardianId).filter((id) => !paid.has(id)));
+  const more = await paidPlans(links.map((l) => l.guardianId).filter((id) => !paid.has(id)), seats);
   more.forEach((v, k) => paid.set(k, v));
-  return { links, paid };
+  return { links, paid, seats };
 }
 
 export interface HouseholdSummary {
@@ -216,6 +238,7 @@ export async function householdSummary(uid: string): Promise<HouseholdSummary> {
     };
   }
   const h = householdIn(graph, payerId)!;
+  const limits = limitsOf(graph, payerId, planId);
   let payerName: string | null = null;
   if (payerId !== uid) {
     const user = await db().collection("users").doc(payerId).get();
@@ -223,9 +246,18 @@ export async function householdSummary(uid: string): Promise<HouseholdSummary> {
   }
   return {
     planId, payerId, payerName,
-    guardians: h.guardianIds.size, maxGuardians: plan.maxGuardians,
-    protected: h.protectedIds.size, maxProtected: plan.maxProtected,
+    guardians: h.guardianIds.size, maxGuardians: limits.maxGuardians,
+    protected: h.protectedIds.size, maxProtected: limits.maxProtected,
   };
+}
+
+/** People in a payer's household now: seats can't go below this */
+export async function seatsInUse(payerId: string): Promise<{ protected: number; guardians: number }> {
+  const graph = await loadGraph([payerId]);
+  const protectedIds = new Set(protectedOf(graph, payerId));
+  const guardianIds = new Set<string>([payerId]);
+  for (const p of protectedIds) guardiansOf(graph, p).forEach((id) => guardianIds.add(id));
+  return { protected: protectedIds.size, guardians: guardianIds.size };
 }
 
 /** Plan in effect for feature checks (own plan, else the best household). */

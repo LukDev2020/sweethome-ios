@@ -1131,9 +1131,33 @@ struct InviteGuardianSheet: View {
         }
     }
 
+    /// Per person, every seat for people looked after taken: the next one needs a seat
+    private var seatsFull: Bool {
+        let store = coordinator.storeKitManager
+        guard inviterRole == .guardian, store.purchasedPlanId == "seats",
+              let h = store.household, h.payerId == store.accountId, h.maxProtected >= 0 else { return false }
+        return h.protected >= h.maxProtected
+    }
+
     var body: some View {
         NavigationStack {
             Form {
+                if seatsFull {
+                    Section {
+                        NavigationLink {
+                            SeatPaywallView(mode: .manage, addProtected: 1)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(LanguageManager.shared.localized("seats.full.title"))
+                                    .font(.scaled(size: 14, weight: .semibold))
+                                Text(LanguageManager.shared.localized("seats.full.desc"))
+                                    .font(.scaled(size: 12))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .accessibilityIdentifier("invite.addSeat")
+                    }
+                }
                 Section(LanguageManager.shared.localized("invite.sheet.invitee")) {
                     TextField(LanguageManager.shared.localized("invite.sheet.phone"), text: $invitePhone)
                         .keyboardType(.phonePad)

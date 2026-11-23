@@ -98,6 +98,35 @@ final class StoreKitPurchaseTests: XCTestCase {
         XCTAssertTrue(legal.contains("not a subscription"), legal)
     }
 
+    /// Same answers as the backend (shoudeng-backend/functions/src/__tests__/seats.test.ts)
+    func testSeatPricingMatchesTheServer() {
+        let p = SeatPricing.standard
+        func c(_ protectedCount: Int, _ guardians: Int = 1, _ dual: Bool = false) -> SeatConfig {
+            SeatConfig(protected: protectedCount, guardians: guardians, dual: dual)
+        }
+        XCTAssertEqual(p.priceCents(c(1), .monthly), 498)
+        XCTAssertEqual(p.priceCents(c(2), .monthly), 697)
+        XCTAssertEqual(p.priceCents(c(2, 2), .monthly), 797)
+        XCTAssertEqual(p.priceCents(c(2, 1, true), .monthly), 797)
+        XCTAssertEqual(p.priceCents(c(2), .yearly), 6997)
+        XCTAssertEqual(p.priceCents(c(9, 7), .monthly), p.priceCents(c(4, 3), .monthly), "capped at 4 + 3")
+        XCTAssertEqual(p.productId(for: c(1), period: .monthly), "com.shoudeng.app.seats.monthly.499")
+        XCTAssertEqual(p.productId(for: c(2), period: .yearly), "com.shoudeng.app.seats.yearly.6999")
+        XCTAssertEqual(p.productIds.count, 20)
+        XCTAssertEqual(p.level(of: "com.shoudeng.app.seats.yearly.8999")?.cents, 8999)
+        XCTAssertNil(p.level(of: "com.shoudeng.app.family.monthly"))
+        // Every config lands on a level at or above its price
+        for period in SeatPricing.Period.allCases {
+            for protectedCount in 1...12 { for guardians in 1...8 { for dual in [false, true] {
+                let config = c(protectedCount, guardians, dual)
+                let level = p.levelCents(for: config, period: period)
+                XCTAssertNotNil(level)
+                XCTAssertGreaterThanOrEqual(level ?? 0, p.priceCents(config, period))
+            } } }
+        }
+        XCTAssertTrue(StoreKitManager.productIds.isSuperset(of: p.productIds))
+    }
+
     func testBetterPlanPicksTheHigherTier() {
         XCTAssertEqual(StoreKitManager.betterPlan("single", "family"), "family")
         XCTAssertEqual(StoreKitManager.betterPlan("family", "single"), "family")
@@ -187,7 +216,12 @@ final class StoreKitPurchaseTests: XCTestCase {
 
         // Before any purchase: products, eligibility, trial wording, yearly saving
         await alice.fetchProducts()
-        XCTAssertEqual(alice.products.count, 6)
+        XCTAssertEqual(alice.products.count, 26, "20 seat levels + Single / Family")
+        // Per person: 1v2 lands on the $6.99 level
+        let seats = try XCTUnwrap(alice.seatProduct(for: SeatConfig(protected: 2, guardians: 1, dual: false), period: .monthly))
+        XCTAssertEqual(seats.id, "com.shoudeng.app.seats.monthly.699")
+        XCTAssertEqual(seats.displayPrice, "$6.99")
+        XCTAssertEqual(alice.planId(for: seats), "seats")
         XCTAssertFalse(alice.productsLoadFailed)
         XCTAssertTrue(alice.isEligibleForIntroOffer)
         XCTAssertEqual(alice.yearlySavingsPercent, 30)

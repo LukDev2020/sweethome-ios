@@ -14,7 +14,9 @@ import {
   VerifiedReceipt,
   PLANS,
 } from "../services/payment";
-import { householdSummary } from "../services/household";
+import { householdSummary, seatsInUse, seatsPaidFor } from "../services/household";
+import * as admin from "firebase-admin";
+import { SeatConfig, SEAT_CAPS, invalidSeatConfig, productCovers, seatPricing, seatProductFor, seatLevelOf } from "../services/seats";
 
 const router = Router();
 
@@ -28,7 +30,9 @@ router.get("/plans", (_req: Request, res: Response) => {
     name: p.name,
     prices: p.prices,
     appleProductIds: "appleProductIds" in p ? p.appleProductIds : [],
-    soldInApp: p.id !== "ultimate", // organisation / community plan: contact us
+    // Sold from build 63: per person. Single and Family stay for those who bought them;
+    // organisation / community plan: contact us
+    soldInApp: p.id === "seats",
     maxGuardians: p.maxGuardians,
     maxProtected: p.maxProtected,
     features: p.features,
@@ -55,13 +59,76 @@ router.get(
       } catch (error) {
         console.warn("[Payment] household summary failed:", error);
       }
-      res.json({ ...sub, household });
+      // Per person: the seats chosen and what the price level pays for
+      let seats = null;
+      if (sub.planId === "seats") {
+        const doc = await admin.firestore().collection("subscriptions").doc(uid).get();
+        seats = { chosen: doc.data()?.seats ?? null, paidFor: seatsPaidFor(doc.data()) };
+      }
+      res.json({ ...sub, household, seats });
     } catch (error) {
       console.error("[Payment] get subscription error:", error);
       res.status(500).json({ error: "Failed to get subscription" });
     }
   }
 );
+
+/**
+ * GET /v1/payment/seats/pricing
+ * Per-person prices, caps and price levels (the app prices seats with these). Public.
+ */
+router.get("/seats/pricing", (_req: Request, res: Response) => {
+  res.json(seatPricing());
+});
+
+/**
+ * PUT /v1/payment/seats { protected, guardians, dual }
+ * The seats a per-person payer pays for: kept when their price level covers them and
+ * they aren't fewer than the people already in the family (remove someone first).
+ * Response: the seats in effect and the product they'd need next time, if different.
+ */
+router.put("/seats", authMiddleware, async (req: Request, res: Response) => {
+  const uid = req.uid!;
+  const problem = invalidSeatConfig(req.body);
+  if (problem) {
+    res.status(400).json({ error: problem });
+    return;
+  }
+  const seats: SeatConfig = { protected: req.body.protected, guardians: req.body.guardians, dual: req.body.dual };
+  try {
+    const sub = await getSubscription(uid);
+    if (sub.planId !== "seats" || sub.lifetime) {
+      res.status(409).json({ error: "No per-person plan on this account", code: "NOT_PER_PERSON" });
+      return;
+    }
+    const ref = admin.firestore().collection("subscriptions").doc(uid);
+    const productId = (await ref.get()).data()?.appleProductId as string | undefined;
+    if (!productCovers(productId, seats)) {
+      const level = seatLevelOf(productId);
+      res.status(402).json({
+        error: "Your plan doesn't pay for these seats yet",
+        code: "SEATS_NOT_PAID",
+        productId: seatProductFor(seats, level?.period ?? "monthly"),
+      });
+      return;
+    }
+    const inUse = await seatsInUse(uid);
+    // At the cap a seat count has no limit, so it covers any number of people
+    if (seats.protected < Math.min(inUse.protected, SEAT_CAPS.protected)
+        || seats.guardians < Math.min(inUse.guardians, SEAT_CAPS.guardians)) {
+      res.status(409).json({
+        error: "More people are in the family than these seats", code: "SEATS_IN_USE",
+        inUse, inUseProtected: inUse.protected, inUseGuardians: inUse.guardians,
+      });
+      return;
+    }
+    await ref.set({ seats: { ...seats, updatedAt: admin.firestore.Timestamp.now() } }, { merge: true });
+    res.json({ success: true, seats });
+  } catch (error) {
+    console.error("[Payment] seats update error:", error);
+    res.status(500).json({ error: "Failed to update seats" });
+  }
+});
 
 /** 409 body when the Apple subscription already unlocks another account. */
 const OWNED_ELSEWHERE = {

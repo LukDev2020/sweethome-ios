@@ -57,15 +57,16 @@ final class StoreKitManager: ObservableObject {
 
     // MARK: - Product IDs (must match App Store Connect)
 
-    /// Products offered on the paywall
-    static let productIds: Set<String> = [
+    /// Products loaded: per person (sold), and Single / Family (kept for the people who
+    /// bought them: their status, restore, the old plan page)
+    static let productIds: Set<String> = Set(SeatPricing.standard.productIds).union([
         "com.shoudeng.app.single.monthly",
         "com.shoudeng.app.single.yearly",
         "com.shoudeng.app.single.lifetime",
         "com.shoudeng.app.family.monthly",
         "com.shoudeng.app.family.yearly",
         "com.shoudeng.app.family.lifetime",
-    ]
+    ])
 
     /// One-time (non-consumable) purchases: no expiry, not in the subscription group
     static let lifetimeProductIds: Set<String> = [
@@ -74,7 +75,9 @@ final class StoreKitManager: ObservableObject {
     ]
 
     /// Every product that grants a plan, including ones no longer sold (ultimate)
-    private static let productToPlan: [String: String] = [
+    private static let productToPlan: [String: String] = Dictionary(
+        uniqueKeysWithValues: SeatPricing.standard.productIds.map { ($0, "seats") }
+    ).merging([
         "com.shoudeng.app.single.monthly": "single",
         "com.shoudeng.app.single.yearly": "single",
         "com.shoudeng.app.single.lifetime": "single",
@@ -83,9 +86,9 @@ final class StoreKitManager: ObservableObject {
         "com.shoudeng.app.family.lifetime": "family",
         "com.shoudeng.app.ultimate.monthly": "ultimate",
         "com.shoudeng.app.ultimate.yearly": "ultimate",
-    ]
+    ]) { a, _ in a }
 
-    private static let planRank: [String: Int] = ["free": 0, "single": 1, "family": 2, "ultimate": 3]
+    private static let planRank: [String: Int] = ["free": 0, "single": 1, "family": 2, "seats": 2, "ultimate": 3]
 
     /// The better of two plans (nil = none)
     static func betterPlan(_ a: String?, _ b: String?) -> String? {
@@ -530,6 +533,7 @@ final class StoreKitManager: ObservableObject {
         "free": safetyFloor,
         "single": safetyFloor.union(["duty_schedule", "export_pdf"]),
         "family": safetyFloor.union(["duty_schedule", "export_pdf", "family_dashboard", "location_history_export"]),
+        "seats": safetyFloor.union(["duty_schedule", "export_pdf", "family_dashboard", "location_history_export"]),
         "ultimate": safetyFloor.union(["duty_schedule", "export_pdf", "family_dashboard", "location_history_export",
                                        "priority_support"]),
     ]
@@ -539,6 +543,7 @@ final class StoreKitManager: ObservableObject {
         "free": (1, 1),
         "single": (2, 2),
         "family": (4, 6),
+        "seats": (1, 1), // the seats paid for come with the household
         "ultimate": (-1, -1),
     ]
 
@@ -546,6 +551,7 @@ final class StoreKitManager: ObservableObject {
         "free": 1,
         "single": 90,
         "family": 180,
+        "seats": 180,
         "ultimate": 365,
     ]
 
@@ -587,7 +593,20 @@ final class StoreKitManager: ObservableObject {
         return h.payerName ?? ""
     }
 
-    private struct SubscriptionResponse: Decodable { let household: HouseholdInfo? }
+    private struct SubscriptionResponse: Decodable {
+        let household: HouseholdInfo?
+        var seats: SeatsInfo? = nil
+    }
+
+    /// Per person: the seats chosen and what the price level pays for
+    struct SeatsInfo: Decodable, Equatable {
+        let chosen: SeatConfig?
+        let paidFor: SeatConfig
+    }
+
+    @MainActor @Published private(set) var seats: SeatsInfo?
+    /// Prices, caps and levels (GET /v1/payment/seats/pricing; built-in until loaded)
+    @MainActor @Published private(set) var seatPricing = SeatPricing.standard
 
     @MainActor
     func applyHousehold(_ info: HouseholdInfo?) {
@@ -600,11 +619,81 @@ final class StoreKitManager: ObservableObject {
         do {
             let response: SubscriptionResponse = try await apiClient.get("/v1/payment/subscription")
             applyHousehold(response.household)
+            seats = response.seats
+            await sendPendingSeats()
         } catch {
             #if DEBUG
             print("[StoreKit] Household refresh failed: \(error)")
             #endif
         }
+    }
+
+    // MARK: - Per person (seats)
+
+    static let pendingSeatsKey = "pending_seats"
+
+    @MainActor
+    func refreshSeatPricing() async {
+        if let pricing: SeatPricing = try? await apiClient.get("/v1/payment/seats/pricing"), !pricing.levels.monthly.isEmpty {
+            seatPricing = pricing
+        }
+    }
+
+    /// The App Store product for these seats (nil until the products load)
+    @MainActor
+    func seatProduct(for config: SeatConfig, period: SeatPricing.Period) -> Product? {
+        guard let id = seatPricing.productId(for: config, period: period) else { return nil }
+        return products.first { $0.id == id }
+    }
+
+    /// The seat product this account renews now (nil: not per person)
+    @MainActor
+    var currentSeatProductId: String? {
+        guard let id = subscriptionStatus?.productId, seatPricing.level(of: id) != nil else { return nil }
+        return id
+    }
+
+    enum SeatsError: Error, Equatable {
+        /// The price level doesn't pay for these seats (buy `productId` first)
+        case notPaid(productId: String?)
+        /// More people are in the family than these seats (remove someone first)
+        case inUse(protected: Int, guardians: Int)
+        case failed
+    }
+
+    /// Tell the server the seats chosen. Kept on the phone until it answers, so seats
+    /// bought while offline still reach it (sent again on the next refresh).
+    @MainActor
+    func updateSeats(_ config: SeatConfig) async -> Result<Void, SeatsError> {
+        if let data = try? JSONEncoder().encode(config) { UserDefaults.standard.set(data, forKey: Self.pendingSeatsKey) }
+        do {
+            let _: SuccessResponse = try await apiClient.put("/v1/payment/seats", body: config)
+            UserDefaults.standard.removeObject(forKey: Self.pendingSeatsKey)
+            seats = SeatsInfo(chosen: config, paidFor: config)
+            return .success(())
+        } catch let error as APIServerError {
+            switch error.code {
+            case "SEATS_NOT_PAID":
+                return .failure(.notPaid(productId: error.details["productId"]))
+            case "SEATS_IN_USE":
+                UserDefaults.standard.removeObject(forKey: Self.pendingSeatsKey)
+                return .failure(.inUse(protected: error.details["inUseProtected"].flatMap { Int($0) } ?? 0,
+                                       guardians: error.details["inUseGuardians"].flatMap { Int($0) } ?? 0))
+            default:
+                // Refused for good (no per-person plan, bad input): don't send it again
+                if (400..<500).contains(error.status) { UserDefaults.standard.removeObject(forKey: Self.pendingSeatsKey) }
+                return .failure(.failed)
+            }
+        } catch {
+            return .failure(.failed)
+        }
+    }
+
+    @MainActor
+    private func sendPendingSeats() async {
+        guard let data = UserDefaults.standard.data(forKey: Self.pendingSeatsKey),
+              let config = try? JSONDecoder().decode(SeatConfig.self, from: data) else { return }
+        _ = await updateSeats(config)
     }
 
     /// Check if user's plan includes a specific feature
@@ -654,7 +743,7 @@ final class StoreKitManager: ObservableObject {
 
     func planDisplayName(for planId: String) -> String {
         switch planId {
-        case "single", "family", "ultimate": return LanguageManager.shared.localized("guardian.billing.plan.\(planId)")
+        case "single", "family", "seats", "ultimate": return LanguageManager.shared.localized("guardian.billing.plan.\(planId)")
         default: return LanguageManager.shared.localized("guardian.billing.free")
         }
     }
@@ -844,4 +933,85 @@ struct SubscriptionPricing: Equatable {
         let percent = NSDecimalNumber(decimal: rounded).intValue
         return percent >= 5 ? percent : nil
     }
+}
+
+// MARK: - Per-person pricing (mirrors backend services/seats.ts)
+
+/// The seats a payer chooses: people looked after, people looking after (the payer
+/// included), and whether the payer is looked after too.
+struct SeatConfig: Codable, Equatable {
+    var `protected`: Int
+    var guardians: Int
+    var dual: Bool
+}
+
+/// Per-person prices in cents (USD list prices), the caps, and the App Store price
+/// levels that sell them. Built in, replaced by GET /v1/payment/seats/pricing.
+struct SeatPricing: Decodable, Equatable {
+    enum Period: String, Codable, CaseIterable { case monthly, yearly }
+
+    struct Prices: Decodable, Equatable {
+        let `protected`: Int
+        let firstGuardian: Int
+        let extraGuardian: Int
+        let dual: Int
+    }
+    struct PerPeriod<T: Decodable & Equatable>: Decodable, Equatable {
+        let monthly: T
+        let yearly: T
+        subscript(_ p: Period) -> T { p == .monthly ? monthly : yearly }
+    }
+    struct Counts: Decodable, Equatable {
+        let `protected`: Int
+        let guardians: Int
+    }
+
+    let prices: PerPeriod<Prices>
+    let caps: Counts
+    let max: Counts
+    let levels: PerPeriod<[Int]>
+
+    static let standard = SeatPricing(
+        prices: .init(monthly: .init(protected: 199, firstGuardian: 299, extraGuardian: 100, dual: 100),
+                      yearly: .init(protected: 1999, firstGuardian: 2999, extraGuardian: 999, dual: 999)),
+        caps: .init(protected: 4, guardians: 3),
+        max: .init(protected: 12, guardians: 8),
+        levels: .init(monthly: [499, 599, 699, 799, 899, 999, 1099, 1199, 1299, 1399],
+                      yearly: [4999, 5999, 6999, 7999, 8999, 9999, 10999, 11999, 12999, 13999])
+    )
+
+    static func productId(period: Period, cents: Int) -> String { "com.shoudeng.app.seats.\(period.rawValue).\(cents)" }
+
+    var productIds: [String] {
+        Period.allCases.flatMap { p in levels[p].map { Self.productId(period: p, cents: $0) } }
+    }
+
+    /// List price of the seats, in cents
+    func priceCents(_ c: SeatConfig, _ period: Period) -> Int {
+        let p = prices[period]
+        let protectedSeats = Swift.min(c.protected, caps.protected)
+        let extraGuardians = Swift.min(c.guardians, caps.guardians) - 1
+        return protectedSeats * p.protected + p.firstGuardian + extraGuardians * p.extraGuardian + (c.dual ? p.dual : 0)
+    }
+
+    /// The cheapest level at or above the price (nil: none)
+    func levelCents(for c: SeatConfig, period: Period) -> Int? {
+        let price = priceCents(c, period)
+        return levels[period].first { $0 >= price }
+    }
+
+    func productId(for c: SeatConfig, period: Period) -> String? {
+        levelCents(for: c, period: period).map { Self.productId(period: period, cents: $0) }
+    }
+
+    /// The level a seat product sells
+    func level(of productId: String) -> (period: Period, cents: Int)? {
+        for p in Period.allCases {
+            for cents in levels[p] where Self.productId(period: p, cents: cents) == productId { return (p, cents) }
+        }
+        return nil
+    }
+
+    /// Charged count (beyond the cap a person is free)
+    func charged(_ count: Int, cap: Int) -> Int { Swift.min(count, cap) }
 }

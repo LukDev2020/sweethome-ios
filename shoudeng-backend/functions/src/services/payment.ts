@@ -6,6 +6,7 @@ import {
 } from "@apple/app-store-server-library";
 import { v5 as uuidv5 } from "uuid";
 import { insertConsentAudit } from "./bigquery";
+import { SEAT_PRODUCT_IDS } from "./seats";
 
 const db = admin.firestore();
 
@@ -330,6 +331,23 @@ export const PLANS = {
       "export_pdf", "family_dashboard", "location_history_export",
     ],
   },
+  // Per person (services/seats.ts, docs/pricing/SEATS.md): what is sold from build 63.
+  // Single and Family stay for the people who bought them. Limits come from the seats
+  // the payer chose (subscriptions/{uid}.seats), not from here.
+  seats: {
+    id: "seats",
+    name: "按人数",
+    // "From": one guardian + one person looked after
+    prices: { monthly: { CNY: 18, USD: 4.99 }, yearly: { CNY: 180, USD: 49.99 } },
+    appleProductIds: SEAT_PRODUCT_IDS,
+    ttlDays: { heartbeat: 180, location: 180, checkin: -1 },
+    maxGuardians: -1,
+    maxProtected: -1,
+    features: [
+      ...SAFETY_FLOOR, "seat_guardians", "180d_timeline", "duty_schedule",
+      "export_pdf", "family_dashboard", "location_history_export",
+    ],
+  },
   // No longer sold in the app (organisation / community plan, contact us). Kept so an
   // existing App Store purchase of these products still resolves.
   ultimate: {
@@ -364,7 +382,7 @@ export function isLifetimeProduct(productId: string | undefined): boolean {
 }
 
 /** Higher = more. Used to pick the better of a subscription and a lifetime purchase. */
-export const PLAN_RANK: Record<PlanId, number> = { free: 0, single: 1, family: 2, ultimate: 3 };
+export const PLAN_RANK: Record<PlanId, number> = { free: 0, single: 1, family: 2, seats: 2, ultimate: 3 };
 
 /**
  * Map an App Store product ID to its plan. Returns null for unknown products.

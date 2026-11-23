@@ -1,253 +1,753 @@
 {
-  "identifier" : "4E66F4B3-C2A1-4D1E-B5F0-A1B2C3D4E5F6",
-  "nonRenewingSubscriptions" : [],
-  "products" : [
+  "identifier": "4E66F4B3-C2A1-4D1E-B5F0-A1B2C3D4E5F6",
+  "nonRenewingSubscriptions": [],
+  "products": [
     {
-      "displayPrice" : "59.99",
-      "familyShareable" : false,
-      "internalID" : "single_lifetime_001",
-      "localizations" : [
+      "displayPrice": "59.99",
+      "familyShareable": false,
+      "internalID": "single_lifetime_001",
+      "localizations": [
         {
-          "description" : "2 people protected, 2 guardians. Pay once.",
-          "displayName" : "Essential – Lifetime",
-          "locale" : "en_CA"
+          "description": "2 people protected, 2 guardians. Pay once.",
+          "displayName": "Essential – Lifetime",
+          "locale": "en_CA"
         },
         {
-          "description" : "守护 2 人，最多 2 位守护者，一次买断",
-          "displayName" : "基础版 · 终身",
-          "locale" : "zh_Hans"
+          "description": "守护 2 人，最多 2 位守护者，一次买断",
+          "displayName": "基础版 · 终身",
+          "locale": "zh_Hans"
         }
       ],
-      "productID" : "com.shoudeng.app.single.lifetime",
-      "referenceName" : "Single Lifetime",
-      "type" : "NonConsumable"
+      "productID": "com.shoudeng.app.single.lifetime",
+      "referenceName": "Single Lifetime",
+      "type": "NonConsumable"
     },
     {
-      "displayPrice" : "129.99",
-      "familyShareable" : false,
-      "internalID" : "family_lifetime_001",
-      "localizations" : [
+      "displayPrice": "129.99",
+      "familyShareable": false,
+      "internalID": "family_lifetime_001",
+      "localizations": [
         {
-          "description" : "6 people protected, 4 guardians. Pay once.",
-          "displayName" : "Family – Lifetime",
-          "locale" : "en_CA"
+          "description": "6 people protected, 4 guardians. Pay once.",
+          "displayName": "Family – Lifetime",
+          "locale": "en_CA"
         },
         {
-          "description" : "守护最多 6 人，最多 4 位守护者，一次买断",
-          "displayName" : "家庭版 · 终身",
-          "locale" : "zh_Hans"
+          "description": "守护最多 6 人，最多 4 位守护者，一次买断",
+          "displayName": "家庭版 · 终身",
+          "locale": "zh_Hans"
         }
       ],
-      "productID" : "com.shoudeng.app.family.lifetime",
-      "referenceName" : "Family Lifetime",
-      "type" : "NonConsumable"
+      "productID": "com.shoudeng.app.family.lifetime",
+      "referenceName": "Family Lifetime",
+      "type": "NonConsumable"
     }
   ],
-  "settings" : {
-    "_applicationInternalID" : "0",
-    "_developerTeamID" : "B98QT5LTWZ",
-    "_failTransactionsEnabled" : false,
-    "_lastError" : "",
-    "_locale" : "en_CA",
-    "_storefront" : "CAN",
-    "_storeKitErrors" : [
+  "settings": {
+    "_applicationInternalID": "0",
+    "_developerTeamID": "B98QT5LTWZ",
+    "_failTransactionsEnabled": false,
+    "_lastError": "",
+    "_locale": "en_CA",
+    "_storefront": "CAN",
+    "_storeKitErrors": [
       {
-        "current" : null,
-        "enabled" : false,
-        "name" : "Load Products"
+        "current": null,
+        "enabled": false,
+        "name": "Load Products"
       },
       {
-        "current" : null,
-        "enabled" : false,
-        "name" : "Purchase"
+        "current": null,
+        "enabled": false,
+        "name": "Purchase"
       },
       {
-        "current" : null,
-        "enabled" : false,
-        "name" : "Verification"
+        "current": null,
+        "enabled": false,
+        "name": "Verification"
       },
       {
-        "current" : null,
-        "enabled" : false,
-        "name" : "App Store Sync"
+        "current": null,
+        "enabled": false,
+        "name": "App Store Sync"
       },
       {
-        "current" : null,
-        "enabled" : false,
-        "name" : "Subscription Status"
+        "current": null,
+        "enabled": false,
+        "name": "Subscription Status"
       },
       {
-        "current" : null,
-        "enabled" : false,
-        "name" : "App Transaction"
+        "current": null,
+        "enabled": false,
+        "name": "App Transaction"
       },
       {
-        "current" : null,
-        "enabled" : false,
-        "name" : "Manage Subscriptions Sheet"
+        "current": null,
+        "enabled": false,
+        "name": "Manage Subscriptions Sheet"
       },
       {
-        "current" : null,
-        "enabled" : false,
-        "name" : "Offer Code Redeem Sheet"
+        "current": null,
+        "enabled": false,
+        "name": "Offer Code Redeem Sheet"
       },
       {
-        "current" : null,
-        "enabled" : false,
-        "name" : "Transaction Listener"
+        "current": null,
+        "enabled": false,
+        "name": "Transaction Listener"
       }
     ]
   },
-  "subscriptionGroups" : [
+  "subscriptionGroups": [
     {
-      "id" : "shoudeng_subscriptions",
-      "localizations" : [
+      "id": "shoudeng_subscriptions",
+      "localizations": [
         {
-          "description" : "",
-          "displayName" : "Beaconify Plans",
-          "locale" : "en_CA"
+          "description": "",
+          "displayName": "Beaconify Plans",
+          "locale": "en_CA"
         },
         {
-          "description" : "",
-          "displayName" : "守灯会员方案",
-          "locale" : "zh_Hans"
+          "description": "",
+          "displayName": "守灯会员方案",
+          "locale": "zh_Hans"
         }
       ],
-      "name" : "ShouDeng Subscriptions",
-      "subscriptions" : [
+      "name": "ShouDeng Subscriptions",
+      "subscriptions": [
         {
-          "adHocOffers" : [],
-          "codeOffers" : [],
-          "displayPrice" : "2.99",
-          "familyShareable" : false,
-          "groupNumber" : 2,
-          "internalID" : "single_monthly_001",
-          "introductoryOffer" : {
-            "displayPrice" : "0",
-            "internalID" : "trial_single_monthly",
-            "numberOfPeriods" : 1,
-            "paymentMode" : "free",
-            "subscriptionPeriod" : "P3D"
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "2.99",
+          "familyShareable": false,
+          "groupNumber": 2,
+          "internalID": "single_monthly_001",
+          "introductoryOffer": {
+            "displayPrice": "0",
+            "internalID": "trial_single_monthly",
+            "numberOfPeriods": 1,
+            "paymentMode": "free",
+            "subscriptionPeriod": "P3D"
           },
-          "localizations" : [
+          "localizations": [
             {
-              "description" : "Protect 2 people, up to 2 guardians",
-              "displayName" : "Essential – Monthly",
-              "locale" : "en_CA"
+              "description": "Protect 2 people, up to 2 guardians",
+              "displayName": "Essential – Monthly",
+              "locale": "en_CA"
             },
             {
-              "description" : "守护 2 人，最多 2 位守护者，按月续订",
-              "displayName" : "基础版 · 月付",
-              "locale" : "zh_Hans"
+              "description": "守护 2 人，最多 2 位守护者，按月续订",
+              "displayName": "基础版 · 月付",
+              "locale": "zh_Hans"
             }
           ],
-          "productID" : "com.shoudeng.app.single.monthly",
-          "recurringSubscriptionPeriod" : "P1M",
-          "referenceName" : "Single Monthly",
-          "subscriptionGroupID" : "shoudeng_subscriptions",
-          "type" : "RecurringSubscription"
+          "productID": "com.shoudeng.app.single.monthly",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Single Monthly",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
         },
         {
-          "adHocOffers" : [],
-          "codeOffers" : [],
-          "displayPrice" : "22.99",
-          "familyShareable" : false,
-          "groupNumber" : 2,
-          "internalID" : "single_yearly_001",
-          "introductoryOffer" : {
-            "displayPrice" : "0",
-            "internalID" : "trial_single_yearly",
-            "numberOfPeriods" : 1,
-            "paymentMode" : "free",
-            "subscriptionPeriod" : "P3D"
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "22.99",
+          "familyShareable": false,
+          "groupNumber": 2,
+          "internalID": "single_yearly_001",
+          "introductoryOffer": {
+            "displayPrice": "0",
+            "internalID": "trial_single_yearly",
+            "numberOfPeriods": 1,
+            "paymentMode": "free",
+            "subscriptionPeriod": "P3D"
           },
-          "localizations" : [
+          "localizations": [
             {
-              "description" : "Protect 2 people, up to 2 guardians",
-              "displayName" : "Essential – Yearly",
-              "locale" : "en_CA"
+              "description": "Protect 2 people, up to 2 guardians",
+              "displayName": "Essential – Yearly",
+              "locale": "en_CA"
             },
             {
-              "description" : "守护 2 人，最多 2 位守护者，按年续订",
-              "displayName" : "基础版 · 年付",
-              "locale" : "zh_Hans"
+              "description": "守护 2 人，最多 2 位守护者，按年续订",
+              "displayName": "基础版 · 年付",
+              "locale": "zh_Hans"
             }
           ],
-          "productID" : "com.shoudeng.app.single.yearly",
-          "recurringSubscriptionPeriod" : "P1Y",
-          "referenceName" : "Single Yearly",
-          "subscriptionGroupID" : "shoudeng_subscriptions",
-          "type" : "RecurringSubscription"
+          "productID": "com.shoudeng.app.single.yearly",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Single Yearly",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
         },
         {
-          "adHocOffers" : [],
-          "codeOffers" : [],
-          "displayPrice" : "5.99",
-          "familyShareable" : false,
-          "groupNumber" : 1,
-          "internalID" : "family_monthly_001",
-          "introductoryOffer" : {
-            "displayPrice" : "0",
-            "internalID" : "trial_family_monthly",
-            "numberOfPeriods" : 1,
-            "paymentMode" : "free",
-            "subscriptionPeriod" : "P3D"
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "5.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "family_monthly_001",
+          "introductoryOffer": {
+            "displayPrice": "0",
+            "internalID": "trial_family_monthly",
+            "numberOfPeriods": 1,
+            "paymentMode": "free",
+            "subscriptionPeriod": "P3D"
           },
-          "localizations" : [
+          "localizations": [
             {
-              "description" : "Protect up to 6 people, up to 4 guardians",
-              "displayName" : "Family – Monthly",
-              "locale" : "en_CA"
+              "description": "Protect up to 6 people, up to 4 guardians",
+              "displayName": "Family – Monthly",
+              "locale": "en_CA"
             },
             {
-              "description" : "守护最多 6 人，最多 4 位守护者，按月续订",
-              "displayName" : "家庭版 · 月付",
-              "locale" : "zh_Hans"
+              "description": "守护最多 6 人，最多 4 位守护者，按月续订",
+              "displayName": "家庭版 · 月付",
+              "locale": "zh_Hans"
             }
           ],
-          "productID" : "com.shoudeng.app.family.monthly",
-          "recurringSubscriptionPeriod" : "P1M",
-          "referenceName" : "Family Monthly",
-          "subscriptionGroupID" : "shoudeng_subscriptions",
-          "type" : "RecurringSubscription"
+          "productID": "com.shoudeng.app.family.monthly",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Family Monthly",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
         },
         {
-          "adHocOffers" : [],
-          "codeOffers" : [],
-          "displayPrice" : "49.99",
-          "familyShareable" : false,
-          "groupNumber" : 1,
-          "internalID" : "family_yearly_001",
-          "introductoryOffer" : {
-            "displayPrice" : "0",
-            "internalID" : "trial_family_yearly",
-            "numberOfPeriods" : 1,
-            "paymentMode" : "free",
-            "subscriptionPeriod" : "P3D"
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "49.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "family_yearly_001",
+          "introductoryOffer": {
+            "displayPrice": "0",
+            "internalID": "trial_family_yearly",
+            "numberOfPeriods": 1,
+            "paymentMode": "free",
+            "subscriptionPeriod": "P3D"
           },
-          "localizations" : [
+          "localizations": [
             {
-              "description" : "Protect up to 6 people, up to 4 guardians",
-              "displayName" : "Family – Yearly",
-              "locale" : "en_CA"
+              "description": "Protect up to 6 people, up to 4 guardians",
+              "displayName": "Family – Yearly",
+              "locale": "en_CA"
             },
             {
-              "description" : "守护最多 6 人，最多 4 位守护者，按年续订",
-              "displayName" : "家庭版 · 年付",
-              "locale" : "zh_Hans"
+              "description": "守护最多 6 人，最多 4 位守护者，按年续订",
+              "displayName": "家庭版 · 年付",
+              "locale": "zh_Hans"
             }
           ],
-          "productID" : "com.shoudeng.app.family.yearly",
-          "recurringSubscriptionPeriod" : "P1Y",
-          "referenceName" : "Family Yearly",
-          "subscriptionGroupID" : "shoudeng_subscriptions",
-          "type" : "RecurringSubscription"
+          "productID": "com.shoudeng.app.family.yearly",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Family Yearly",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "4.99",
+          "familyShareable": false,
+          "groupNumber": 3,
+          "internalID": "seats_monthly_499",
+          "localizations": [
+            {
+              "description": "Per person: the people you look after and the people looking after",
+              "displayName": "Family seats · level 1",
+              "locale": "en_CA"
+            },
+            {
+              "description": "按人数：被守护的家人和守护的人",
+              "displayName": "按人数 · 第 1 档",
+              "locale": "zh_Hans"
+            }
+          ],
+          "productID": "com.shoudeng.app.seats.monthly.499",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Seats Monthly 4.99",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "5.99",
+          "familyShareable": false,
+          "groupNumber": 4,
+          "internalID": "seats_monthly_599",
+          "localizations": [
+            {
+              "description": "Per person: the people you look after and the people looking after",
+              "displayName": "Family seats · level 2",
+              "locale": "en_CA"
+            },
+            {
+              "description": "按人数：被守护的家人和守护的人",
+              "displayName": "按人数 · 第 2 档",
+              "locale": "zh_Hans"
+            }
+          ],
+          "productID": "com.shoudeng.app.seats.monthly.599",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Seats Monthly 5.99",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "6.99",
+          "familyShareable": false,
+          "groupNumber": 5,
+          "internalID": "seats_monthly_699",
+          "localizations": [
+            {
+              "description": "Per person: the people you look after and the people looking after",
+              "displayName": "Family seats · level 3",
+              "locale": "en_CA"
+            },
+            {
+              "description": "按人数：被守护的家人和守护的人",
+              "displayName": "按人数 · 第 3 档",
+              "locale": "zh_Hans"
+            }
+          ],
+          "productID": "com.shoudeng.app.seats.monthly.699",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Seats Monthly 6.99",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "7.99",
+          "familyShareable": false,
+          "groupNumber": 6,
+          "internalID": "seats_monthly_799",
+          "localizations": [
+            {
+              "description": "Per person: the people you look after and the people looking after",
+              "displayName": "Family seats · level 4",
+              "locale": "en_CA"
+            },
+            {
+              "description": "按人数：被守护的家人和守护的人",
+              "displayName": "按人数 · 第 4 档",
+              "locale": "zh_Hans"
+            }
+          ],
+          "productID": "com.shoudeng.app.seats.monthly.799",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Seats Monthly 7.99",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "8.99",
+          "familyShareable": false,
+          "groupNumber": 7,
+          "internalID": "seats_monthly_899",
+          "localizations": [
+            {
+              "description": "Per person: the people you look after and the people looking after",
+              "displayName": "Family seats · level 5",
+              "locale": "en_CA"
+            },
+            {
+              "description": "按人数：被守护的家人和守护的人",
+              "displayName": "按人数 · 第 5 档",
+              "locale": "zh_Hans"
+            }
+          ],
+          "productID": "com.shoudeng.app.seats.monthly.899",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Seats Monthly 8.99",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "9.99",
+          "familyShareable": false,
+          "groupNumber": 8,
+          "internalID": "seats_monthly_999",
+          "localizations": [
+            {
+              "description": "Per person: the people you look after and the people looking after",
+              "displayName": "Family seats · level 6",
+              "locale": "en_CA"
+            },
+            {
+              "description": "按人数：被守护的家人和守护的人",
+              "displayName": "按人数 · 第 6 档",
+              "locale": "zh_Hans"
+            }
+          ],
+          "productID": "com.shoudeng.app.seats.monthly.999",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Seats Monthly 9.99",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "10.99",
+          "familyShareable": false,
+          "groupNumber": 9,
+          "internalID": "seats_monthly_1099",
+          "localizations": [
+            {
+              "description": "Per person: the people you look after and the people looking after",
+              "displayName": "Family seats · level 7",
+              "locale": "en_CA"
+            },
+            {
+              "description": "按人数：被守护的家人和守护的人",
+              "displayName": "按人数 · 第 7 档",
+              "locale": "zh_Hans"
+            }
+          ],
+          "productID": "com.shoudeng.app.seats.monthly.1099",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Seats Monthly 10.99",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "11.99",
+          "familyShareable": false,
+          "groupNumber": 10,
+          "internalID": "seats_monthly_1199",
+          "localizations": [
+            {
+              "description": "Per person: the people you look after and the people looking after",
+              "displayName": "Family seats · level 8",
+              "locale": "en_CA"
+            },
+            {
+              "description": "按人数：被守护的家人和守护的人",
+              "displayName": "按人数 · 第 8 档",
+              "locale": "zh_Hans"
+            }
+          ],
+          "productID": "com.shoudeng.app.seats.monthly.1199",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Seats Monthly 11.99",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "12.99",
+          "familyShareable": false,
+          "groupNumber": 11,
+          "internalID": "seats_monthly_1299",
+          "localizations": [
+            {
+              "description": "Per person: the people you look after and the people looking after",
+              "displayName": "Family seats · level 9",
+              "locale": "en_CA"
+            },
+            {
+              "description": "按人数：被守护的家人和守护的人",
+              "displayName": "按人数 · 第 9 档",
+              "locale": "zh_Hans"
+            }
+          ],
+          "productID": "com.shoudeng.app.seats.monthly.1299",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Seats Monthly 12.99",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "13.99",
+          "familyShareable": false,
+          "groupNumber": 12,
+          "internalID": "seats_monthly_1399",
+          "localizations": [
+            {
+              "description": "Per person: the people you look after and the people looking after",
+              "displayName": "Family seats · level 10",
+              "locale": "en_CA"
+            },
+            {
+              "description": "按人数：被守护的家人和守护的人",
+              "displayName": "按人数 · 第 10 档",
+              "locale": "zh_Hans"
+            }
+          ],
+          "productID": "com.shoudeng.app.seats.monthly.1399",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Seats Monthly 13.99",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "49.99",
+          "familyShareable": false,
+          "groupNumber": 3,
+          "internalID": "seats_yearly_4999",
+          "localizations": [
+            {
+              "description": "Per person: the people you look after and the people looking after",
+              "displayName": "Family seats · level 1",
+              "locale": "en_CA"
+            },
+            {
+              "description": "按人数：被守护的家人和守护的人",
+              "displayName": "按人数 · 第 1 档",
+              "locale": "zh_Hans"
+            }
+          ],
+          "productID": "com.shoudeng.app.seats.yearly.4999",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Seats Yearly 49.99",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "59.99",
+          "familyShareable": false,
+          "groupNumber": 4,
+          "internalID": "seats_yearly_5999",
+          "localizations": [
+            {
+              "description": "Per person: the people you look after and the people looking after",
+              "displayName": "Family seats · level 2",
+              "locale": "en_CA"
+            },
+            {
+              "description": "按人数：被守护的家人和守护的人",
+              "displayName": "按人数 · 第 2 档",
+              "locale": "zh_Hans"
+            }
+          ],
+          "productID": "com.shoudeng.app.seats.yearly.5999",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Seats Yearly 59.99",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "69.99",
+          "familyShareable": false,
+          "groupNumber": 5,
+          "internalID": "seats_yearly_6999",
+          "localizations": [
+            {
+              "description": "Per person: the people you look after and the people looking after",
+              "displayName": "Family seats · level 3",
+              "locale": "en_CA"
+            },
+            {
+              "description": "按人数：被守护的家人和守护的人",
+              "displayName": "按人数 · 第 3 档",
+              "locale": "zh_Hans"
+            }
+          ],
+          "productID": "com.shoudeng.app.seats.yearly.6999",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Seats Yearly 69.99",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "79.99",
+          "familyShareable": false,
+          "groupNumber": 6,
+          "internalID": "seats_yearly_7999",
+          "localizations": [
+            {
+              "description": "Per person: the people you look after and the people looking after",
+              "displayName": "Family seats · level 4",
+              "locale": "en_CA"
+            },
+            {
+              "description": "按人数：被守护的家人和守护的人",
+              "displayName": "按人数 · 第 4 档",
+              "locale": "zh_Hans"
+            }
+          ],
+          "productID": "com.shoudeng.app.seats.yearly.7999",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Seats Yearly 79.99",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "89.99",
+          "familyShareable": false,
+          "groupNumber": 7,
+          "internalID": "seats_yearly_8999",
+          "localizations": [
+            {
+              "description": "Per person: the people you look after and the people looking after",
+              "displayName": "Family seats · level 5",
+              "locale": "en_CA"
+            },
+            {
+              "description": "按人数：被守护的家人和守护的人",
+              "displayName": "按人数 · 第 5 档",
+              "locale": "zh_Hans"
+            }
+          ],
+          "productID": "com.shoudeng.app.seats.yearly.8999",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Seats Yearly 89.99",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "99.99",
+          "familyShareable": false,
+          "groupNumber": 8,
+          "internalID": "seats_yearly_9999",
+          "localizations": [
+            {
+              "description": "Per person: the people you look after and the people looking after",
+              "displayName": "Family seats · level 6",
+              "locale": "en_CA"
+            },
+            {
+              "description": "按人数：被守护的家人和守护的人",
+              "displayName": "按人数 · 第 6 档",
+              "locale": "zh_Hans"
+            }
+          ],
+          "productID": "com.shoudeng.app.seats.yearly.9999",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Seats Yearly 99.99",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "109.99",
+          "familyShareable": false,
+          "groupNumber": 9,
+          "internalID": "seats_yearly_10999",
+          "localizations": [
+            {
+              "description": "Per person: the people you look after and the people looking after",
+              "displayName": "Family seats · level 7",
+              "locale": "en_CA"
+            },
+            {
+              "description": "按人数：被守护的家人和守护的人",
+              "displayName": "按人数 · 第 7 档",
+              "locale": "zh_Hans"
+            }
+          ],
+          "productID": "com.shoudeng.app.seats.yearly.10999",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Seats Yearly 109.99",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "119.99",
+          "familyShareable": false,
+          "groupNumber": 10,
+          "internalID": "seats_yearly_11999",
+          "localizations": [
+            {
+              "description": "Per person: the people you look after and the people looking after",
+              "displayName": "Family seats · level 8",
+              "locale": "en_CA"
+            },
+            {
+              "description": "按人数：被守护的家人和守护的人",
+              "displayName": "按人数 · 第 8 档",
+              "locale": "zh_Hans"
+            }
+          ],
+          "productID": "com.shoudeng.app.seats.yearly.11999",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Seats Yearly 119.99",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "129.99",
+          "familyShareable": false,
+          "groupNumber": 11,
+          "internalID": "seats_yearly_12999",
+          "localizations": [
+            {
+              "description": "Per person: the people you look after and the people looking after",
+              "displayName": "Family seats · level 9",
+              "locale": "en_CA"
+            },
+            {
+              "description": "按人数：被守护的家人和守护的人",
+              "displayName": "按人数 · 第 9 档",
+              "locale": "zh_Hans"
+            }
+          ],
+          "productID": "com.shoudeng.app.seats.yearly.12999",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Seats Yearly 129.99",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "139.99",
+          "familyShareable": false,
+          "groupNumber": 12,
+          "internalID": "seats_yearly_13999",
+          "localizations": [
+            {
+              "description": "Per person: the people you look after and the people looking after",
+              "displayName": "Family seats · level 10",
+              "locale": "en_CA"
+            },
+            {
+              "description": "按人数：被守护的家人和守护的人",
+              "displayName": "按人数 · 第 10 档",
+              "locale": "zh_Hans"
+            }
+          ],
+          "productID": "com.shoudeng.app.seats.yearly.13999",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Seats Yearly 139.99",
+          "subscriptionGroupID": "shoudeng_subscriptions",
+          "type": "RecurringSubscription"
         }
       ]
     }
   ],
-  "version" : {
-    "major" : 3,
-    "minor" : 0
+  "version": {
+    "major": 3,
+    "minor": 0
   }
 }

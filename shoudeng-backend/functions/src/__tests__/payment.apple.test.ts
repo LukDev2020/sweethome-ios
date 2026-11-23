@@ -664,6 +664,8 @@ describe("lifetime (one-time) purchases", () => {
     expect(mapProductToPlan("com.shoudeng.app.ultimate.yearly")).toBe("ultimate");
     const plans = await request(app).get("/v1/payment/plans");
     expect(plans.body.find((p: { id: string }) => p.id === "ultimate").soldInApp).toBe(false);
-    expect(plans.body.find((p: { id: string }) => p.id === "family").soldInApp).toBe(true);
+    // Per person is what's sold; Family and Single stay for the people who bought them
+    expect(plans.body.find((p: { id: string }) => p.id === "seats").soldInApp).toBe(true);
+    expect(plans.body.find((p: { id: string }) => p.id === "family").soldInApp).toBe(false);
   });
 });
