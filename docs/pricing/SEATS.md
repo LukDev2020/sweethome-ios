@@ -48,9 +48,14 @@ so that someone on Single / Family who switches is moved over (upgrade / crossgr
 instead of paying twice. **Family Sharing: off** (a seat is one family's, not shared
 with the buyer's Apple family). No free trial.
 
-Level ordering in the group (highest first): yearly 139.99 … 49.99, then monthly
-13.99 … 4.99. Put them above Single / Family so that moving from Family to a seat level
-of the same or higher price is an upgrade.
+Level ordering in the group (set 2026-11-23, one product per level, highest first):
+yearly 139.99, monthly 13.99, yearly 129.99, monthly 12.99, … yearly 49.99, monthly 4.99
+(levels 1–20), then Family Monthly, Family Yearly, Essential Monthly, Essential Yearly
+(21–24). Each yearly sits just above the monthly for the same seats, so adding people is
+always an upgrade (immediate, prorated), monthly → yearly for the same seats is an
+upgrade, and yearly → monthly or fewer people is a downgrade (at renewal). In the App
+Store Connect level editor, dropping a row onto another row puts both in one level; drop
+into the thin strip between rows to make a new level.
 
 | Product ID | Reference name | Duration | US price |
 |---|---|---|---|
