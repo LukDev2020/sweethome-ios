@@ -962,9 +962,8 @@ struct ProtectedHomeView: View {
         .scaleEffect(isSOSPressed ? 0.97 : 1)
         .shadow(color: alert.opacity(isSOSPressed ? 0.5 : 0), radius: 10)
         .contentShape(RoundedRectangle(cornerRadius: 13))
-        // Same gesture as the round floating SOS button (it reports the press reliably;
-        // the old LongPressGesture inside a Button often never started the fill)
-        .onLongPressGesture(minimumDuration: hold, maximumDistance: FloatingSOSButton.holdTolerance, pressing: { pressing in
+        // Same hold as the round floating SOS button: sliding the finger doesn't stop it
+        .sosHold(duration: hold, pressing: { pressing in
             if pressing {
                 startSOSHold(duration: hold)
             } else {

@@ -20,9 +20,6 @@ struct FloatingSOSButton: View {
     /// 3 s at the owner's request (5 s felt too long in an emergency). Accidental
     /// presses are still caught by the 5 s cancel countdown that follows.
     static let holdDuration: Double = 3.0
-    /// How far the finger may drift during the hold. The system default (10 pt) cancels
-    /// a long hold too easily: the press then seemed to do nothing.
-    static let holdTolerance: CGFloat = 40
     private var holdDuration: Double { Self.holdDuration }
 
     var body: some View {
@@ -58,7 +55,7 @@ struct FloatingSOSButton: View {
                 )
                 .scaleEffect(isPressed ? 0.92 : 1.0)
         }
-        .onLongPressGesture(minimumDuration: holdDuration, maximumDistance: Self.holdTolerance, pressing: { pressing in
+        .sosHold(duration: holdDuration, pressing: { pressing in
             withAnimation(.easeInOut(duration: 0.15)) {
                 isPressed = pressing
             }
@@ -142,6 +139,88 @@ extension View {
     /// nested in a NavigationStack, unlike safeAreaInset.
     func floatingSOSClearance() -> some View {
         contentMargins(.bottom, 120, for: .scrollContent)
+    }
+}
+
+// MARK: - Press and hold for SOS
+
+extension View {
+    /// Press and hold for `duration` seconds to send an SOS. Unlike a long-press gesture,
+    /// the hold goes on however far the finger slides (a hand in a panic or a bumpy ride
+    /// moves) and a scroll view around the button doesn't take the touch over; only
+    /// lifting the finger stops it. Same callbacks as `onLongPressGesture`: `pressing`
+    /// true on touch-down, false on release or once the hold completes, then `perform`.
+    func sosHold(duration: Double, pressing: @escaping (Bool) -> Void,
+                 perform: @escaping () -> Void) -> some View {
+        modifier(SOSHoldModifier(duration: duration, pressing: pressing, perform: perform))
+    }
+}
+
+private struct SOSHoldModifier: ViewModifier {
+    let duration: Double
+    let pressing: (Bool) -> Void
+    let perform: () -> Void
+    @State private var holdTask: Task<Void, Never>?
+
+    func body(content: Content) -> some View {
+        content.overlay(
+            SOSHoldTouchArea { down in
+                holdTask?.cancel()
+                if down {
+                    pressing(true)
+                    holdTask = Task { @MainActor in
+                        try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
+                        guard !Task.isCancelled else { return }
+                        holdTask = nil
+                        pressing(false)
+                        perform()
+                    }
+                } else if holdTask != nil {
+                    // Let go before the end
+                    holdTask = nil
+                    pressing(false)
+                }
+            }
+            .accessibilityHidden(true)
+        )
+        .onDisappear { holdTask?.cancel(); holdTask = nil }
+    }
+}
+
+/// A UIKit press recognizer: starts on touch-down, follows the finger anywhere on the
+/// screen (no movement limit) and, once started, keeps the enclosing scroll view from
+/// scrolling. Ends only when the finger lifts (or the system cancels the touch).
+private struct SOSHoldTouchArea: UIViewRepresentable {
+    let onPress: (Bool) -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator(onPress: onPress) }
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        view.backgroundColor = .clear
+        let press = UILongPressGestureRecognizer(target: context.coordinator,
+                                                 action: #selector(Coordinator.changed(_:)))
+        press.minimumPressDuration = 0
+        press.allowableMovement = .greatestFiniteMagnitude
+        view.addGestureRecognizer(press)
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        context.coordinator.onPress = onPress
+    }
+
+    final class Coordinator: NSObject {
+        var onPress: (Bool) -> Void
+        init(onPress: @escaping (Bool) -> Void) { self.onPress = onPress }
+
+        @objc func changed(_ recognizer: UILongPressGestureRecognizer) {
+            switch recognizer.state {
+            case .began: onPress(true)
+            case .ended, .cancelled, .failed: onPress(false)
+            default: break
+            }
+        }
     }
 }
 

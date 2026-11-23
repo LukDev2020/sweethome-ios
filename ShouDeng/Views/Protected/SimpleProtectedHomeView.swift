@@ -150,7 +150,7 @@ struct SimpleProtectedHomeView: View {
 
 // MARK: - Large SOS button (simple home)
 
-/// Same 5-second hold as the floating button, drawn large.
+/// Same hold as the floating button, drawn large.
 struct BigSOSButton: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
@@ -176,9 +176,7 @@ struct BigSOSButton: View {
                 .scaleEffect(pressing ? 0.95 : 1)
         }
         .contentShape(Circle())
-        .onLongPressGesture(minimumDuration: FloatingSOSButton.holdDuration,
-                            maximumDistance: FloatingSOSButton.holdTolerance,
-                            pressing: { isPressing in
+        .sosHold(duration: FloatingSOSButton.holdDuration, pressing: { isPressing in
             pressing = isPressing
             if isPressing {
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
