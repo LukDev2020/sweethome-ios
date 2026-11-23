@@ -2806,8 +2806,8 @@
 "settings.logout.confirm.guardian" = "Une fois déconnecté, ce téléphone ne recevra plus les SOS de votre famille.";
 
 /* Onboarding intro: family / Rider */
-"intro.title" = "Deux façons de veiller sur vous";
-"intro.hint" = "Touchez celle qui vous correspond — modifiable à tout moment dans Réglages";
+"intro.title" = "Que peut faire Beaconify pour vous ?";
+"intro.hint" = "Choisissez-en une ou plusieurs — modifiable à tout moment dans Réglages";
 "intro.family.title" = "Sécurité familiale";
 "intro.family.tagline" = "Rassurer la famille, même loin";
 "intro.family.b1" = "Donnez des nouvelles en un geste";
@@ -2832,3 +2832,43 @@
 "settings.bothRoles.desc" = "Être protégé et veiller sur sa famille ; bascule en haut de l'accueil";
 "settings.bothRoles.offWarning" = "L'accueil ne garde que le côté affiché. Si c'est « Ma famille », votre détection de chute et le SOS de l'écran verrouillé s'arrêtent.";
 "settings.bothRoles.offConfirm" = "Garder ce côté";
+
+/* One onboarding: family care, work, looking after family (any together) */
+"intro.invite" = "Un proche m'a envoyé une invitation";
+"intro.care.title" = "Veille familiale";
+"intro.care.tagline" = "Vos proches savent toujours que tout va bien";
+"intro.work.title" = "Sécurité au travail";
+"intro.work.tagline" = "En service, votre équipe et vos proches veillent sur vous";
+"intro.work.kind.rider" = "Livreur / coursier";
+"intro.work.kind.driver" = "Chauffeur VTC";
+"intro.guardian.title" = "Veiller sur mes proches";
+"intro.guardian.tagline" = "Savoir que vos parents ou enfants vont bien, recevoir leur SOS";
+"intro.guardian.for" = "Pour : enfants adultes, parents, conjoints";
+"signup.start.careAndWork" = "Votre accueil aura deux côtés : Travail pendant le service, Ma sécurité le reste du temps. Il bascule tout seul au début et à la fin du service.";
+"roles.switch.work" = "Travail";
+"roles.switch.driver" = "Conduite";
+"roles.switch.onShift" = "En service";
+"settings.workRole" = "Je livre ou conduis aussi pour le travail";
+"settings.workRole.desc" = "Ajoute un côté Travail à l'accueil : services, équipe, SOS livreur";
+"setup.label" = "Configuration";
+"setup.home.title" = "Reliez vos proches";
+"setup.home.why" = "Beaconify fonctionne entre proches. Invitez-les ici, ou utilisez le code qu'ils vous ont envoyé.";
+"setup.home.me" = "Qui veille sur moi";
+"setup.home.me.invite" = "Demander à un proche de veiller sur moi";
+"setup.home.family" = "Sur qui je veille";
+"setup.home.family.invite" = "Inviter un proche à suivre";
+"setup.home.haveCode" = "J'ai un code d'invitation";
+"setup.permissions.title" = "Autorisations, demandées une fois";
+"setup.permissions.why" = "Votre iPhone ne demande chacune qu'une fois. Voici à quoi elles servent.";
+"setup.perm.location.why" = "Pour que les proches qui veillent sur vous voient où vous êtes, et reçoivent votre position avec un SOS.";
+"setup.perm.location.always" = "Passez-la sur « Toujours » dans Réglages, sinon vos proches ne vous voient plus une fois le téléphone verrouillé.";
+"setup.perm.notifications.why" = "Quand un proche vous répond, prend de vos nouvelles, ou qu'une personne que vous suivez a besoin d'aide.";
+"setup.perm.motion.why" = "Détection de chute : après une chute brutale sans mouvement, elle demande « Ça va ? »";
+"setup.subscription.title" = "Choisissez une formule";
+"setup.subscription.why" = "Pour veiller sur vos proches. Vous pourrez choisir plus tard dans Réglages.";
+"setup.ready.title" = "Tout est prêt";
+"setup.ready.why" = "Ce qui reste peut se faire plus tard.";
+"setup.ready.start" = "Commencer";
+"setup.ready.later" = "E-mail, ville et Face ID peuvent être ajoutés à tout moment dans Réglages.";
+"setup.check.family" = "Proches reliés";
+"setup.check.notifications" = "Notifications activées";

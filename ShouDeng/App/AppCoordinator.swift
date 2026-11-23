@@ -21,6 +21,16 @@ final class AppCoordinator: ObservableObject {
     @Published var hasBothRoles = UserDefaults.standard.bool(forKey: AppCoordinator.bothRolesKey) {
         didSet { UserDefaults.standard.set(hasBothRoles, forKey: Self.bothRolesKey) }
     }
+    /// Rides or drives for work on top of being looked after by family: the home gets a
+    /// "Work" side next to "My safety" (AppCoordinator+Roles.swift). A pure rider (home
+    /// style Rider) has it too, without the extra side.
+    @Published var hasWorkRole = UserDefaults.standard.bool(forKey: AppCoordinator.workRoleKey) {
+        didSet { UserDefaults.standard.set(hasWorkRole, forKey: Self.workRoleKey) }
+    }
+    /// The "Work" side is on screen (only with a separate work side)
+    @Published var workSideActive = UserDefaults.standard.bool(forKey: AppCoordinator.workSideKey) {
+        didSet { UserDefaults.standard.set(workSideActive, forKey: Self.workSideKey) }
+    }
     @Published var protectedPersons: [ProtectedPerson] = []  // Guardian sees these
     @Published var myGuardians: [Guardian] = []               // Protected person sees these
     @Published var activeSOSEvent: SOSEvent? {
@@ -65,6 +75,8 @@ final class AppCoordinator: ObservableObject {
     @Published var showRiderSetup = false
     /// Step the setup opens at (the "Finish setting up" card jumps to one)
     var riderSetupStartStep: RiderSetupStep = .ride
+    /// The steps the setup shows: the rider setup, or the sign-up's chosen sides
+    var setupSteps: [RiderSetupStep] = RiderSetupStep.riderFlow
     /// From GET /v1/user/me: rider profile (platforms, partner, milestones, Rider Free)
     @Published var riderProfile: RiderProfileInfo?
     /// On-device suggestion card: "Riding for work? Try Rider mode"
@@ -592,6 +604,8 @@ final class AppCoordinator: ObservableObject {
 
     private func onLogout() {
         hasBothRoles = false
+        hasWorkRole = false
+        workSideActive = false
         if !isDemo { liveActivityManager.endAllActivities() }
         if !isDemo {
             // The next person to sign in on this phone agrees for themselves
@@ -882,6 +896,12 @@ final class AppCoordinator: ObservableObject {
                 self.userRole = user.role
                 self.applyServerRiderFields(profile)
                 if let both = profile.bothRoles { self.hasBothRoles = both }
+                // Rides for work (set on another phone); older accounts: a rider home
+                if let work = profile.workRole {
+                    self.hasWorkRole = work
+                } else if profile.homeStyle == HomeStyle.rider.rawValue {
+                    self.hasWorkRole = true
+                }
                 self.localStore.saveCurrentUser(user)
                 self.localStore.saveUserRole(user.role)
                 self.needsDataTransferConsent = !self.isDemo

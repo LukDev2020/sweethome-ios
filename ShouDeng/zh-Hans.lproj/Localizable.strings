@@ -2806,8 +2806,8 @@
 "settings.logout.confirm.guardian" = "退出后，这部手机将收不到家人的 SOS 求助。";
 
 /* Onboarding intro: family / Rider */
-"intro.title" = "守灯可以这样守护你";
-"intro.hint" = "点选适合你的一项，之后可以在设置里随时更改";
+"intro.title" = "守灯能为你做什么？";
+"intro.hint" = "可以选多个，之后也能在设置里随时更改";
 "intro.family.title" = "家庭安全";
 "intro.family.tagline" = "让远方的家人安心";
 "intro.family.b1" = "一键报平安，家人随时知道你好不好";
@@ -2832,3 +2832,43 @@
 "settings.bothRoles.desc" = "被家人守护，也守护家人；首页顶部可以切换";
 "settings.bothRoles.offWarning" = "关闭后首页只保留现在这一边。如果现在是守护家人这一边，你自己的跌倒检测和锁屏求助会停止。";
 "settings.bothRoles.offConfirm" = "只保留这一边";
+
+/* One onboarding: family care, work, looking after family (any together) */
+"intro.invite" = "家人发了邀请给我";
+"intro.care.title" = "家人关怀";
+"intro.care.tagline" = "家人随时知道你平安";
+"intro.work.title" = "工作安全";
+"intro.work.tagline" = "上班时同事和家人一起照应你";
+"intro.work.kind.rider" = "外卖 / 快递骑手";
+"intro.work.kind.driver" = "网约车司机";
+"intro.guardian.title" = "守护家人";
+"intro.guardian.tagline" = "知道父母或孩子是否平安，接收他们的求助";
+"intro.guardian.for" = "适合：在外的子女、父母、伴侣";
+"signup.start.careAndWork" = "首页会有两边：上班时是「工作」，其余时间是「我的安全」。开始和结束班次时会自动切换。";
+"roles.switch.work" = "工作";
+"roles.switch.driver" = "出车";
+"roles.switch.onShift" = "上班中";
+"settings.workRole" = "我也做外卖或网约车";
+"settings.workRole.desc" = "首页多一个「工作」：班次、车队、骑手求助";
+"setup.label" = "开始使用前";
+"setup.home.title" = "连接家人";
+"setup.home.why" = "守灯靠家人之间互相照应。在这里邀请家人，或者输入家人发给你的邀请码。";
+"setup.home.me" = "谁来守护我";
+"setup.home.me.invite" = "邀请家人守护我";
+"setup.home.family" = "我要守护谁";
+"setup.home.family.invite" = "邀请家人让我守护";
+"setup.home.haveCode" = "我有邀请码";
+"setup.permissions.title" = "权限，只问一次";
+"setup.permissions.why" = "iPhone 每项只会问一次。下面说明每项的用处。";
+"setup.perm.location.why" = "守护你的家人能看到你在哪里，求助时也会收到你的位置。";
+"setup.perm.location.always" = "请在设置中改为“始终”，否则锁屏后家人就看不到你。";
+"setup.perm.notifications.why" = "家人回复你、关心你，或你守护的人需要帮助时。";
+"setup.perm.motion.why" = "跌倒检测：重摔后一动不动时会问“你还好吗？”。";
+"setup.subscription.title" = "选择守护方案";
+"setup.subscription.why" = "用于守护家人。也可以之后在设置里再选。";
+"setup.ready.title" = "都准备好了";
+"setup.ready.why" = "没做完的，之后都可以补上。";
+"setup.ready.start" = "开始使用";
+"setup.ready.later" = "邮箱、城市和面容解锁，随时可以在设置里补上。";
+"setup.check.family" = "已连接家人";
+"setup.check.notifications" = "通知已打开";

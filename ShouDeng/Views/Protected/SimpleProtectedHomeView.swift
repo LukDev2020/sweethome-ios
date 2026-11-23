@@ -127,7 +127,7 @@ struct SimpleProtectedHomeView: View {
         }
         .background(cream)
         .sheet(isPresented: $showInvite) {
-            InviteGuardianSheet().environmentObject(coordinator)
+            InviteGuardianSheet(inviterRole: .protected_).environmentObject(coordinator)
         }
     }
 
@@ -203,7 +203,11 @@ struct HomeStylePanel: View {
     @ObservedObject private var lang = LanguageManager.shared
     @AppStorage(HomeStyle.storageKey) private var storedStyle = HomeStyle.defaultStyle.rawValue
     /// Read so the panel redraws; the demo keeps its own choice
-    private var homeStyle: String { _ = storedStyle; return coordinator.effectiveHomeStyle }
+    /// The home of My safety (not the Work side that may be on screen)
+    private var homeStyle: String {
+        _ = storedStyle
+        return coordinator.hasWorkSide ? coordinator.familyHomeStyle : coordinator.effectiveHomeStyle
+    }
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     @State private var showRiderSettings = false
 

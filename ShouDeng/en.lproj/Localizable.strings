@@ -2806,8 +2806,8 @@
 "settings.logout.confirm.guardian" = "While you're logged out, this phone won't get SOS alerts from your family.";
 
 /* Onboarding intro: family / Rider */
-"intro.title" = "Two ways Beaconify looks out for you";
-"intro.hint" = "Tap the one that fits you — you can change it any time in Settings";
+"intro.title" = "What can Beaconify do for you?";
+"intro.hint" = "Pick one or more — you can change it any time in Settings";
 "intro.family.title" = "Family safety";
 "intro.family.tagline" = "Peace of mind for family far away";
 "intro.family.b1" = "Check in with one tap so family knows you're OK";
@@ -2832,3 +2832,43 @@
 "settings.bothRoles.desc" = "Be looked after and look after family; switch at the top of the home";
 "settings.bothRoles.offWarning" = "The home keeps only the side on screen. If that's \"My family\", your own fall detection and lock-screen SOS stop.";
 "settings.bothRoles.offConfirm" = "Keep this side";
+
+/* One onboarding: family care, work, looking after family (any together) */
+"intro.invite" = "Family sent me an invite";
+"intro.care.title" = "Family care";
+"intro.care.tagline" = "Your family always knows you're OK";
+"intro.work.title" = "Work safety";
+"intro.work.tagline" = "On shift, your crew and family look out for you";
+"intro.work.kind.rider" = "Delivery / courier";
+"intro.work.kind.driver" = "Ride-hailing driver";
+"intro.guardian.title" = "Look after family";
+"intro.guardian.tagline" = "Know your parents or kids are safe, get their SOS";
+"intro.guardian.for" = "For: adult children, parents, partners";
+"signup.start.careAndWork" = "Your home gets two sides: Work while you're on shift, My safety the rest of the time. It switches by itself when a shift starts and ends.";
+"roles.switch.work" = "Work";
+"roles.switch.driver" = "Driving";
+"roles.switch.onShift" = "On shift";
+"settings.workRole" = "I also ride or drive for work";
+"settings.workRole.desc" = "Adds a Work side to the home: shifts, crew, rider SOS";
+"setup.label" = "Getting set up";
+"setup.home.title" = "Connect your family";
+"setup.home.why" = "Beaconify works between family members. Invite them here, or use the code they sent you.";
+"setup.home.me" = "Who looks after me";
+"setup.home.me.invite" = "Ask family to look after me";
+"setup.home.family" = "Who I look after";
+"setup.home.family.invite" = "Invite someone to look after";
+"setup.home.haveCode" = "I have an invite code";
+"setup.permissions.title" = "Permissions, asked once";
+"setup.permissions.why" = "Your iPhone asks for each one only once. Here's what each is for.";
+"setup.perm.location.why" = "So the family who look after you can see where you are, and get your location with an SOS.";
+"setup.perm.location.always" = "Change it to \"Always\" in Settings, or family can't see you once the phone is locked.";
+"setup.perm.notifications.why" = "When family reply, check on you, or someone you look after needs help.";
+"setup.perm.motion.why" = "Fall detection: after a hard fall with no movement, it asks \"Are you OK?\"";
+"setup.subscription.title" = "Choose a plan";
+"setup.subscription.why" = "For looking after family. You can choose later in Settings.";
+"setup.ready.title" = "You're all set";
+"setup.ready.why" = "Anything left can be done later.";
+"setup.ready.start" = "Start";
+"setup.ready.later" = "Email, city and Face ID can be added any time in Settings.";
+"setup.check.family" = "Family connected";
+"setup.check.notifications" = "Notifications on";

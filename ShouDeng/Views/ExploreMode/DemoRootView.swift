@@ -34,7 +34,7 @@ struct DemoRootView: View {
         // Choosing Rider in the demo shows the same rider setup a real rider gets
         .fullScreenCover(isPresented: Binding(get: { coordinator.showRiderSetup && coordinator.userRole == .protected_ },
                                               set: { coordinator.showRiderSetup = $0 })) {
-            RiderSetupView(start: coordinator.riderSetupStartStep)
+            RiderSetupView(steps: coordinator.setupSteps, start: coordinator.riderSetupStartStep)
                 .environmentObject(coordinator)
         }
         .environmentObject(coordinator)

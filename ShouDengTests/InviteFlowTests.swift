@@ -131,6 +131,77 @@ final class InviteFlowTests: XCTestCase {
         XCTAssertEqual(SignupProfileGate.startRole(protected: true, rider: false, guardian: true), .protected_)
     }
 
+    /// One sign-up, several sides: the setup asks only what they need, each once.
+    func testSignupSetupHasTheStepsTheChosenSidesNeed() {
+        // Work alone: the rider setup as it always was
+        XCTAssertEqual(RiderSetupStep.signupFlow(family: false, work: true, guardian: false), RiderSetupStep.riderFlow)
+        // Family care alone: connect family, permissions, start
+        XCTAssertEqual(RiderSetupStep.signupFlow(family: true, work: false, guardian: false), [.home, .permissions, .ready])
+        // Looking after family alone: no rider steps, the plan
+        XCTAssertEqual(RiderSetupStep.signupFlow(family: false, work: false, guardian: true), [.home, .permissions, .subscription, .ready])
+        // Family care and work: family first, then where you ride and crew, one permissions step
+        XCTAssertEqual(RiderSetupStep.signupFlow(family: true, work: true, guardian: false),
+                       [.home, .ride, .crew, .permissions, .sos, .plan, .ready])
+        // All three
+        let all = RiderSetupStep.signupFlow(family: true, work: true, guardian: true)
+        XCTAssertEqual(all, [.home, .ride, .crew, .permissions, .sos, .plan, .subscription, .ready])
+        for flow in [all, RiderSetupStep.signupFlow(family: true, work: false, guardian: true)] {
+            XCTAssertEqual(Set(flow).count, flow.count, "no step twice")
+            XCTAssertEqual(flow.filter { $0 == .permissions }.count, 1, "permissions asked once")
+            XCTAssertEqual(flow.last, .ready)
+        }
+    }
+
+    /// Family care and work: My safety and a Work side; Work is the rider home, and
+    /// rider SOS applies while a shift runs whichever side is on screen.
+    @MainActor
+    func testWorkAndFamilyCareGiveTwoHomeSides() {
+        let coordinator = AppCoordinator()
+        let defaults = UserDefaults.standard
+        let savedStyle = defaults.string(forKey: HomeStyle.storageKey)
+        let saved = (coordinator.hasBothRoles, coordinator.hasWorkRole, coordinator.workSideActive, coordinator.riderShift)
+        defer {
+            if let savedStyle { defaults.set(savedStyle, forKey: HomeStyle.storageKey) } else { defaults.removeObject(forKey: HomeStyle.storageKey) }
+            (coordinator.hasBothRoles, coordinator.hasWorkRole, coordinator.workSideActive, coordinator.riderShift) = saved
+        }
+        coordinator.userRole = .protected_
+        coordinator.hasBothRoles = false
+        coordinator.riderShift = nil
+        defaults.set(HomeStyle.simple.rawValue, forKey: HomeStyle.storageKey)
+        coordinator.hasWorkRole = true
+        coordinator.workSideActive = false
+
+        XCTAssertEqual(coordinator.homeSides, [.work, .me])
+        XCTAssertEqual(coordinator.currentHomeSide, .me)
+        XCTAssertEqual(coordinator.effectiveHomeStyle, HomeStyle.simple.rawValue)
+        XCTAssertFalse(coordinator.isRiderMode)
+
+        coordinator.workSideActive = true
+        XCTAssertEqual(coordinator.currentHomeSide, .work)
+        XCTAssertEqual(coordinator.effectiveHomeStyle, HomeStyle.rider.rawValue, "Work is the rider home")
+        XCTAssertEqual(coordinator.familyHomeStyle, HomeStyle.simple.rawValue, "My safety keeps its own home")
+        XCTAssertTrue(coordinator.isRiderMode)
+
+        // On shift with My safety on screen: still rider SOS (crew is told)
+        coordinator.workSideActive = false
+        coordinator.riderShift = RiderShift(startedAt: Date(), plannedEnd: nil, watcherIds: nil)
+        XCTAssertTrue(coordinator.isRiderMode)
+        coordinator.riderShift = nil
+
+        // All three: Work, My safety, My family
+        coordinator.hasBothRoles = true
+        XCTAssertEqual(coordinator.homeSides, [.work, .me, .family])
+        coordinator.userRole = .guardian
+        XCTAssertEqual(coordinator.currentHomeSide, .family)
+
+        // A pure rider (rider home) has no separate Work side
+        coordinator.userRole = .protected_
+        coordinator.hasBothRoles = false
+        defaults.set(HomeStyle.rider.rawValue, forKey: HomeStyle.storageKey)
+        XCTAssertEqual(coordinator.homeSides, [.me])
+        XCTAssertTrue(coordinator.isRiderMode)
+    }
+
     @MainActor
     func testProtectionDoesNotDependOnTheSideOnScreen() {
         let coordinator = AppCoordinator()

@@ -60,3 +60,15 @@ it("itineraries: my own and grandma's, on either side", async () => {
     expect(owners).toEqual(["grandma", "kai"]); // never mum's: Kai doesn't look after her
   }
 });
+
+it("work role: null until set, then kept beside the home style; true/false only", async () => {
+  expect((await as("kai").get("/v1/user/me")).body.workRole).toBeNull();
+  expect((await as("kai").put("/v1/user/me", { workRole: true, useCase: "rider", homeStyle: "simple" })).status).toBe(200);
+  expect(readDoc("users/kai")).toMatchObject({ workRole: true, useCase: "rider", homeStyle: "simple" });
+  const me = (await as("kai").get("/v1/user/me")).body;
+  expect(me).toMatchObject({ workRole: true, homeStyle: "simple", useCase: "rider" });
+  expect(me.riderProfile).not.toBeNull(); // the rider setup and crew stay available
+  expect((await as("kai").put("/v1/user/me", { workRole: false })).status).toBe(200);
+  expect((await as("kai").get("/v1/user/me")).body.workRole).toBe(false);
+  expect((await as("kai").put("/v1/user/me", { workRole: "on" })).status).toBe(400);
+});

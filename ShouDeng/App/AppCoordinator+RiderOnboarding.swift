@@ -2,22 +2,52 @@ import UIKit
 import ActivityKit
 import CoreMotion
 
-// MARK: - Rider onboarding (docs/rider-onboarding-plan.md)
+// MARK: - Rider onboarding (docs/rider-onboarding-plan.md) and the setup after sign-up
 //
 // A rider is a protected person with Rider mode on — no third role. They arrive by
-// choosing "I deliver or drive for work" at sign-up, through a crew invite link, a
-// partner link, or Settings → Home screen → Rider. All of them go through the same
-// rider setup (RiderSetupView): where you ride → crew → someone at home → SOS without
-// looking → permissions → plan & rider notice → ready / first shift.
+// choosing "Work safety" at sign-up, through a crew invite link, a partner link, or
+// Settings → Home screen → Rider. All of them go through the same rider setup
+// (RiderSetupView): where you ride → crew → someone at home → SOS without looking →
+// permissions → plan & rider notice → ready / first shift.
+//
+// Sign-up can choose several at once — family care, work safety, looking after family —
+// and the setup after it is one list made of the steps those need, each asked once
+// (`RiderSetupStep.signupFlow`): connect family → work (where you ride, crew) →
+// permissions → lock-screen card and rider notice → guardian plan → ready.
 
-/// What the sign-up should start as (a crew / partner link chose Rider).
+/// What the sign-up should start as: chosen on the first page, or a crew / partner
+/// link chose Rider.
 struct SignupIntent: Equatable {
+    /// Work safety (rides or drives for work)
     var rider: Bool
     var partnerCode: String? = nil
+    /// Family care: looked after by family
+    var family: Bool = false
+    /// Looks after family
+    var guardian: Bool = false
+    /// "Family sent me an invite": the sign-up opens on the invite code
+    var invite: Bool = false
 }
 
 enum RiderSetupStep: Int, CaseIterable {
-    case ride, crew, home, sos, permissions, plan, ready
+    /// `home`: someone at home (rider) / connect family, both ways (sign-up)
+    case ride, crew, home, sos, permissions, plan, subscription, ready
+
+    /// Rider setup from a link, Settings or the "Finish setting up" card
+    static let riderFlow: [RiderSetupStep] = [.ride, .crew, .home, .sos, .permissions, .plan, .ready]
+
+    /// After sign-up: only the steps the chosen sides need, each once.
+    /// Work alone keeps the rider order (where you ride comes first).
+    static func signupFlow(family: Bool, work: Bool, guardian: Bool) -> [RiderSetupStep] {
+        if work && !family && !guardian { return riderFlow }
+        var steps: [RiderSetupStep] = [.home]
+        if work { steps += [.ride, .crew] }
+        steps.append(.permissions)
+        if work { steps += [.sos, .plan] }
+        if guardian { steps.append(.subscription) }
+        steps.append(.ready)
+        return steps
+    }
 }
 
 struct RiderProfileInfo: Codable, Equatable {
@@ -39,7 +69,7 @@ struct RiderProfileInfo: Codable, Equatable {
     var riderFree: RiderFree?
 }
 
-struct HomeStyleUpdate: Encodable { let homeStyle: String }
+struct HomeStyleUpdate: Encodable { let homeStyle: String; var workRole: Bool? = nil }
 
 /// PUT /v1/user/me: rider fields only (others untouched)
 struct RiderProfileUpdate: Encodable {
@@ -129,31 +159,54 @@ extension AppCoordinator {
         )
     }
 
-    /// Open the rider setup (sign-up, Settings, a link, the "Finish setting up" card).
+    /// Open the rider setup (Settings, a link, the "Finish setting up" card).
     func beginRiderSetup(at step: RiderSetupStep = .ride) {
         guard isProtectedSide else { return }
         // Both roles, family side on screen: the setup belongs to the rider side
         if userRole != .protected_ { switchHomeSide(to: .protected_) }
+        setupSteps = RiderSetupStep.riderFlow
         riderSetupStartStep = step
-        if !isRiderMode { setHomeStyle(.rider) }
+        if !hasWorkRole {
+            // Chose family care and work on the first page, then signed in: a Work side
+            if pendingSignupIntent?.family == true, !isDemo { setWorkRole(true) } else { setHomeStyle(.rider) }
+        }
+        if hasWorkSide { workSideActive = true }
         showRiderSetup = true
     }
 
+    /// The setup is over (finished or "Not now"). With work in it, the rider setup counts
+    /// as done; the sign-up setup isn't shown again either way.
     func finishRiderSetup() {
         showRiderSetup = false
+        showSetupWizard = false
+        let hadWork = setupSteps.contains(.ride)
+        setupSteps = RiderSetupStep.riderFlow
         guard !isDemo else { demoRiderSetupDone = true; return }
+        UserDefaults.standard.set(true, forKey: "setupWizardComplete")
+        guard hadWork else { return }
         UserDefaults.standard.set(true, forKey: Self.riderSetupDoneKey)
         saveRiderProfile(.init(riderProfile: .init(milestones: ["setupDone": true])))
     }
 
-    /// Account created: remember why they came, and riders go straight to their setup.
-    func completeSignup(asRider rider: Bool) {
+    /// Account created with the sides chosen at sign-up: remember why they came, set up
+    /// the home, and open the setup with the steps those sides need.
+    func completeSignup(family: Bool, work: Bool, guardian: Bool, setup: Bool = true) {
         guard !isDemo else { return }
-        saveRiderProfile(.init(useCase: rider ? "rider" : (userRole == .guardian ? "guardian" : "personal")))
-        if rider {
-            setHomeStyle(.rider)
-            beginRiderSetup(at: .ride)
+        saveRiderProfile(.init(useCase: work ? "rider" : (userRole == .guardian ? "guardian" : "personal")))
+        if work && !family {
+            setHomeStyle(.rider)                   // a pure rider: the rider home
+        } else if work {
+            setWorkRole(true)                      // My safety and a Work side
+            workSideActive = false
         }
+        if setup { beginSignupSetup(family: family, work: work, guardian: guardian) }
+    }
+
+    /// The setup after sign-up (an invite code, or the sides chosen)
+    func beginSignupSetup(family: Bool, work: Bool, guardian: Bool) {
+        setupSteps = RiderSetupStep.signupFlow(family: family, work: work, guardian: guardian)
+        riderSetupStartStep = setupSteps.first ?? .home
+        showRiderSetup = true
     }
 
     func saveRiderProfile(_ update: RiderProfileUpdate) {
@@ -208,7 +261,7 @@ extension AppCoordinator {
         guard pendingSignupIntent?.rider == true || pendingCrewCode != nil, isProtectedSide else { return }
         if !riderSetupDone {
             beginRiderSetup(at: pendingCrewCode != nil && pendingSignupIntent?.partnerCode == nil ? .crew : .ride)
-        } else if !isRiderMode {
+        } else if !hasWorkRole {
             setHomeStyle(.rider)
         }
     }
@@ -279,7 +332,7 @@ enum RiderSuggestion {
 extension AppCoordinator {
     /// Checked when the app comes to the front (at most once a day).
     func evaluateRiderSuggestion() {
-        guard !isDemo, userRole == .protected_, !isRiderMode,
+        guard !isDemo, userRole == .protected_, !isRiderMode, !hasWorkRole,
               !UserDefaults.standard.bool(forKey: RiderSuggestion.dismissedKey),
               CMMotionActivityManager.isActivityAvailable(),
               CMMotionActivityManager.authorizationStatus() == .authorized else { return }

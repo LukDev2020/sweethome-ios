@@ -45,6 +45,17 @@ struct ShouDengApp: App {
                         LockScreenShot(guardian: role == "guardian")
                     }
                 }
+                // `-setup-shot care,work,guardian`: the setup after sign-up for those sides, on
+                // its own (nothing is saved: buttons that call the server just fail quietly)
+                .overlay {
+                    if let sides = UserDefaults.standard.string(forKey: "setup-shot") {
+                        let set = Set(sides.split(separator: ","))
+                        RiderSetupView(steps: RiderSetupStep.signupFlow(family: set.contains("care"), work: set.contains("work"),
+                                                                       guardian: set.contains("guardian")),
+                                       start: .home)
+                            .environmentObject(appDelegate.appCoordinator)
+                    }
+                }
                 // `-plans-shot`: the plans screen on its own (App Store / IAP review screenshots)
                 .overlay {
                     if ProcessInfo.processInfo.arguments.contains("-plans-shot") {

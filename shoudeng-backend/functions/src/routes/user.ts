@@ -54,6 +54,9 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
       dataTransferConsentVersion: data.dataTransferConsentVersion || null,
       // Both sides (looked after + looks after family): the home shows a switch
       bothRoles: data.bothRoles === true,
+      // Looked after by family and rides / drives for work: a "Work" side on the home.
+      // null when never set (older accounts: the rider home says it)
+      workRole: typeof data.workRole === "boolean" ? data.workRole : null,
       // Why they use the app, which home they see, rider setup (survives a new phone)
       ...riderProfileView(data),
     });
@@ -69,7 +72,7 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
  */
 router.put("/me", authMiddleware, async (req: Request, res: Response) => {
   const uid = req.uid!;
-  const { displayName, email, timeZone, cityName, countryCode, publicKey, role, locale, bothRoles } = req.body;
+  const { displayName, email, timeZone, cityName, countryCode, publicKey, role, locale, bothRoles, workRole } = req.body;
 
   const updates: Record<string, unknown> = {
     updatedAt: admin.firestore.Timestamp.now(),
@@ -88,6 +91,13 @@ router.put("/me", authMiddleware, async (req: Request, res: Response) => {
       return;
     }
     updates.bothRoles = bothRoles;
+  }
+  if (workRole !== undefined) {
+    if (typeof workRole !== "boolean") {
+      res.status(400).json({ error: "workRole must be true or false" });
+      return;
+    }
+    updates.workRole = workRole;
   }
   if (displayName !== undefined) {
     if (typeof displayName !== "string" || displayName.length > 100) {

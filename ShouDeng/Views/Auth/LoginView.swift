@@ -208,7 +208,8 @@ struct LoginView: View {
 
     /// Arrived from a crew invite / partner link: say what happens after signing in.
     @ViewBuilder private var riderLinkBanner: some View {
-        if coordinator.pendingCrewCode != nil || coordinator.pendingSignupIntent?.rider == true {
+        if coordinator.pendingCrewCode != nil || coordinator.pendingSignupIntent?.partnerCode != nil
+            || (coordinator.pendingSignupIntent.map { $0.rider && !$0.family && !$0.guardian } ?? false) {
             HStack(alignment: .top, spacing: 10) {
                 Image(systemName: "bicycle")
                     .font(.scaled(size: 18))

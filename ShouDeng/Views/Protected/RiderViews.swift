@@ -96,7 +96,7 @@ struct RiderHomeView: View {
             coordinator.pendingShiftTemplateId = nil
         }
         .sheet(isPresented: $showHandsFree) { HandsFreeSheet() }
-        .sheet(isPresented: $showInvite) { InviteGuardianSheet().environmentObject(coordinator) }
+        .sheet(isPresented: $showInvite) { InviteGuardianSheet(inviterRole: .protected_).environmentObject(coordinator) }
         .confirmationDialog(lang.localized("rider.shift.endConfirm"), isPresented: $confirmEnd, titleVisibility: .visible) {
             Button(lang.localized("rider.shift.end")) { Task { await coordinator.endShift() } }
             Button(lang.localized("common.cancel"), role: .cancel) {}
@@ -426,7 +426,7 @@ struct ShiftStartSheet: View {
                        (family.first(where: \.isOnDuty) ?? family.first)?.user.id].compactMap { $0 })
                 : last
         }
-        .sheet(isPresented: $showInviteFamily) { InviteGuardianSheet().environmentObject(coordinator) }
+        .sheet(isPresented: $showInviteFamily) { InviteGuardianSheet(inviterRole: .protected_).environmentObject(coordinator) }
     }
 
     private func watcherRow(id: String, name: String, initial: String, detail: String, color: Color) -> some View {

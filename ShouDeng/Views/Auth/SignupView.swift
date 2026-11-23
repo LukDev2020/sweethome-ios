@@ -4,8 +4,9 @@ import SwiftUI
 //
 // Phone + verification code + name + "how do you want to start?".
 // Supports international phone numbers with country code picker.
-// Nothing is preselected: protected, guardian, or "I have an invite code"
-// (then the invite decides the side, after the account exists).
+// Starts with what the first page chose (nothing if it chose nothing): looked after,
+// work (rider / driver), looking after family — any of them together — or "I have an
+// invite code" (then the invite decides the side, after the account exists).
 // A login that verified an unregistered number opens straight at the profile.
 //
 // Security: 5 failed code attempts -> lock + contact Beaconify support.
@@ -34,9 +35,10 @@ struct SignupView: View {
     @State private var displayName = ""
     /// "Let my family look after me"
     @State private var wantsProtected = false
-    /// "I deliver or drive for work": a protected person with Rider mode and the rider setup
+    /// "I deliver or drive for work": a protected person with Rider mode and the rider
+    /// setup; with "look after me" too, the home gets a Work side
     @State private var asRider = false
-    /// "I look after my family" — can go with either of the two above (both roles)
+    /// "I look after my family" — goes with either or both of the above (both roles)
     @State private var wantsGuardian = false
     /// The side the account starts on: looked after (rider included) first
     private var selectedRole: UserRole? {
@@ -44,6 +46,8 @@ struct SignupView: View {
     }
     /// Looked after and looks after family: the home gets a switch
     private var bothRoles: Bool { (wantsProtected || asRider) && wantsGuardian }
+    /// Looked after by family and works: My safety and a Work side
+    private var careAndWork: Bool { wantsProtected && asRider }
     @State private var usesInviteCode = false
     @State private var inviteCode = ""
     /// Opened from a login that already verified this number (no second SMS)
@@ -173,11 +177,18 @@ struct SignupView: View {
                 if case .invite(let linkCode) = coordinator.pendingDeepLink {
                     chooseInvite()
                     inviteCode = linkCode
-                } else if coordinator.pendingSignupIntent?.rider == true || coordinator.pendingCrewCode != nil {
-                    // A rider crew / partner link: start as a rider (set, not toggled:
-                    // this can run more than once)
+                } else if let intent = coordinator.pendingSignupIntent, intent.invite {
+                    // First page: "Family sent me an invite"
+                    chooseInvite()
+                } else if let intent = coordinator.pendingSignupIntent {
+                    // The first page's choices, or a crew / partner link (Rider). Set, not
+                    // toggled: this can run more than once
+                    asRider = intent.rider
+                    wantsProtected = intent.family
+                    wantsGuardian = intent.guardian
+                    usesInviteCode = false
+                } else if coordinator.pendingCrewCode != nil {
                     asRider = true
-                    wantsProtected = false
                     usesInviteCode = false
                 }
                 checkLockout()
@@ -427,6 +438,16 @@ struct SignupView: View {
                             chooseRole(.guardian)
                         }
                         .accessibilityIdentifier("signup.start.guardian")
+                        if careAndWork {
+                            // Family care and work: say how the home works
+                            Label(lang.localized("signup.start.careAndWork"), systemImage: "bicycle")
+                                .font(.scaled(size: 12))
+                                .foregroundStyle(ink2)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .padding(10)
+                                .background(RoundedRectangle(cornerRadius: 8).fill(safe.opacity(0.08)))
+                                .accessibilityIdentifier("signup.start.careAndWorkHint")
+                        }
                         if bothRoles {
                             // Both chosen: say what happens next
                             Label(lang.localized("signup.start.both"), systemImage: "arrow.left.arrow.right")
@@ -475,22 +496,20 @@ struct SignupView: View {
         }
     }
 
-    /// "Look after me" and "Rider" exclude each other (a rider is looked after too);
-    /// "I look after my family" goes with either. The invite code stands alone.
+    /// "Look after me", "Rider" and "I look after my family" go together in any
+    /// combination. The invite code stands alone.
     private func chooseRole(_ role: UserRole) {
         usesInviteCode = false
         if role == .guardian {
             wantsGuardian.toggle()
         } else {
             wantsProtected.toggle()
-            if wantsProtected { asRider = false }
         }
     }
 
     private func chooseRider() {
         usesInviteCode = false
         asRider.toggle()
-        if asRider { wantsProtected = false }
     }
 
     private func chooseInvite() {
@@ -595,9 +614,18 @@ struct SignupView: View {
                 )
                 coordinator.userRole = role
                 if bothRoles && !usesInviteCode { coordinator.setBothRoles(true) }
-                // Riders get their own setup (crew, someone at home, lock-screen SOS…)
-                coordinator.showSetupWizard = !asRider
-                if !usesInviteCode { coordinator.completeSignup(asRider: asRider) }
+                if usesInviteCode {
+                    // The invite decides the side; the setup connects family both ways
+                    coordinator.beginSignupSetup(family: true, work: false, guardian: false)
+                } else if !ExploreModeController.shared.inviteHandoff.isEmpty && !asRider {
+                    // Came from the demo with people to invite: the wizard has them ready
+                    coordinator.completeSignup(family: wantsProtected, work: false, guardian: wantsGuardian, setup: false)
+                    coordinator.showSetupWizard = true
+                } else {
+                    // One setup with the steps the chosen sides need, each asked once
+                    coordinator.completeSignup(family: wantsProtected, work: asRider, guardian: wantsGuardian)
+                }
+                coordinator.pendingSignupIntent = coordinator.pendingSignupIntent?.partnerCode == nil ? nil : coordinator.pendingSignupIntent
                 if usesInviteCode {
                     // The account exists now: confirm and accept the invite right
                     // away. Accepting sets the side the invite gives this account.

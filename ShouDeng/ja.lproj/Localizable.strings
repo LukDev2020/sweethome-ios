@@ -2806,8 +2806,8 @@
 "settings.logout.confirm.guardian" = "ログアウト中は、このiPhoneに家族からのSOSが届きません。";
 
 /* Onboarding intro: family / Rider */
-"intro.title" = "Beaconifyの2つの見守り方";
-"intro.hint" = "合うほうをタップしてください（あとで設定からいつでも変更できます）";
+"intro.title" = "Beaconifyでできること";
+"intro.hint" = "いくつでも選べます（あとで設定からいつでも変更できます）";
 "intro.family.title" = "家族の安全";
 "intro.family.tagline" = "離れて暮らす家族に安心を";
 "intro.family.b1" = "ワンタップで無事を報告";
@@ -2832,3 +2832,43 @@
 "settings.bothRoles.desc" = "見守られながら家族も見守る（ホーム上部で切り替え）";
 "settings.bothRoles.offWarning" = "ホームは今の側だけになります。「家族を見守る」側なら、自分の転倒検知とロック画面の SOS は止まります。";
 "settings.bothRoles.offConfirm" = "この側だけにする";
+
+/* One onboarding: family care, work, looking after family (any together) */
+"intro.invite" = "家族から招待が届いた";
+"intro.care.title" = "家族の見守り";
+"intro.care.tagline" = "家族がいつでもあなたの無事を確認できます";
+"intro.work.title" = "仕事中の安全";
+"intro.work.tagline" = "勤務中は仲間と家族が見守ります";
+"intro.work.kind.rider" = "配達・宅配";
+"intro.work.kind.driver" = "ライドシェア運転手";
+"intro.guardian.title" = "家族を見守る";
+"intro.guardian.tagline" = "親や子どもの無事を確認し、SOSを受け取れます";
+"intro.guardian.for" = "こんな方に：離れて暮らす子ども、親、パートナー";
+"signup.start.careAndWork" = "ホームが2つになります：勤務中は「仕事」、それ以外は「自分の安全」。勤務の開始と終了で自動的に切り替わります。";
+"roles.switch.work" = "仕事";
+"roles.switch.driver" = "運転";
+"roles.switch.onShift" = "勤務中";
+"settings.workRole" = "仕事で配達・運転もする";
+"settings.workRole.desc" = "ホームに「仕事」を追加：勤務、クルー、ライダーSOS";
+"setup.label" = "はじめる前に";
+"setup.home.title" = "家族とつながる";
+"setup.home.why" = "Beaconifyは家族同士で見守るアプリです。ここで家族を招待するか、届いた招待コードを入力してください。";
+"setup.home.me" = "私を見守る人";
+"setup.home.me.invite" = "家族に見守りを頼む";
+"setup.home.family" = "私が見守る人";
+"setup.home.family.invite" = "見守る家族を招待";
+"setup.home.haveCode" = "招待コードを持っている";
+"setup.permissions.title" = "許可は一度だけ";
+"setup.permissions.why" = "iPhoneは各項目を一度しか尋ねません。それぞれの用途は次のとおりです。";
+"setup.perm.location.why" = "見守る家族があなたの居場所を確認でき、SOSのときも位置が届きます。";
+"setup.perm.location.always" = "設定で「常に」に変更してください。変更しないと、ロック中は家族から見えません。";
+"setup.perm.notifications.why" = "家族からの返信や声かけ、見守っている人が助けを求めたときに通知します。";
+"setup.perm.motion.why" = "転倒検知：強く転んで動かないとき「大丈夫ですか？」と尋ねます。";
+"setup.subscription.title" = "プランを選択";
+"setup.subscription.why" = "家族を見守るためのプランです。あとで設定から選ぶこともできます。";
+"setup.ready.title" = "準備ができました";
+"setup.ready.why" = "残りはあとからでも設定できます。";
+"setup.ready.start" = "はじめる";
+"setup.ready.later" = "メール、都市、Face IDはいつでも設定から追加できます。";
+"setup.check.family" = "家族とつながった";
+"setup.check.notifications" = "通知オン";

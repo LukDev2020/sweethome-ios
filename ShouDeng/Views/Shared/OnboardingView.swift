@@ -2,8 +2,10 @@ import SwiftUI
 
 // MARK: - Onboarding: what Beaconify is + 3 disclosure screens
 //
-//   - First page: the two ways to use it — family safety and Rider (delivery /
-//     ride-hailing). Tapping Rider makes the sign-up start as a rider.
+//   - First page: what it can do — family care, work safety (delivery / courier rider,
+//     ride-hailing driver), looking after family. Any of them together; the sign-up
+//     starts with them ticked and the setup after it asks only what they need.
+//     "Family sent me an invite" takes the sign-up straight to the invite code.
 //   - Then one concept per screen, not a single large popup; "我明白了" not "确定"
 //   - Each tap logs consent with copy version (sent to the server after sign-in)
 //   - Skip on every page: the skipped screens are logged as "skipped". The Terms
@@ -42,6 +44,10 @@ struct OnboardingView: View {
             }
         }
         .preferredColorScheme(.dark)
+        // A crew / partner link opened the app: Work safety starts ticked
+        .onAppear {
+            if coordinator.pendingSignupIntent?.rider == true || coordinator.pendingCrewCode != nil { intro.work = true }
+        }
     }
 
     // MARK: - Compact Layout
@@ -52,8 +58,11 @@ struct OnboardingView: View {
                 onboardingTopBar
                 progressDots
                     .padding(.top, 16)
-                OnboardingIntroPage(riderChosen: riderChosen, choose: chooseIntro)
-                    .padding(.top, 14)
+                ScrollView {
+                    OnboardingIntroPage(choice: $intro)
+                        .padding(.top, 14)
+                }
+                .scrollBounceBehavior(.basedOnSize)
                 introContinueButton
                     .padding(.top, 14)
                     .padding(.bottom, 32)
@@ -83,18 +92,19 @@ struct OnboardingView: View {
 
     @ViewBuilder private var duoOnboardingLayout: some View {
         if showingIntro {
-            // Unfolded: family on the left, Rider on the right
+            // Unfolded: the choices on the left, Continue on the right
             FoldSplitView(dividerColor: .white.opacity(0.08)) {
                 VStack(spacing: 0) {
                     onboardingTopBar.padding(.horizontal, 12)
                     progressDots.padding(.top, 16)
-                    OnboardingIntroPage.FamilyHalf(selected: riderChosen == false) { chooseIntro(rider: false) }
-                        .padding(24)
+                    ScrollView {
+                        OnboardingIntroPage(choice: $intro)
+                            .padding(24)
+                    }
                 }
             } trailing: {
                 VStack(spacing: 0) {
-                    OnboardingIntroPage.RiderHalf(selected: riderChosen == true) { chooseIntro(rider: true) }
-                        .padding(24)
+                    Spacer()
                     introContinueButton
                         .padding(.horizontal, 24)
                         .padding(.bottom, 40)
@@ -208,29 +218,28 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - Intro (family / Rider)
+    // MARK: - Intro (family care / work / looking after family)
 
-    /// nil: nothing tapped yet; true: Rider; false: family
-    private var riderChosen: Bool? {
-        guard introTapped else { return nil }
-        return coordinator.pendingSignupIntent?.rider == true
-    }
-    @State private var introTapped = false
+    @State private var intro = IntroChoice()
 
-    private func chooseIntro(rider: Bool) {
-        introTapped = true
-        if rider {
-            // The sign-up starts as a rider (same as a partner link without a partner)
-            coordinator.pendingSignupIntent = SignupIntent(rider: true,
-                                                           partnerCode: coordinator.pendingSignupIntent?.partnerCode)
-        } else if coordinator.pendingSignupIntent?.partnerCode == nil, coordinator.pendingCrewCode == nil {
-            // A crew / partner link already chose Rider: keep it
+    /// What the first page passes on to the sign-up
+    private func applyIntro() {
+        let link = coordinator.pendingSignupIntent
+        // A crew / partner link already chose work: keep it, add the rest
+        let linkChoseWork = link?.partnerCode != nil || coordinator.pendingCrewCode != nil
+        guard intro.any || linkChoseWork else {
             coordinator.pendingSignupIntent = nil
+            return
         }
+        coordinator.pendingSignupIntent = SignupIntent(
+            rider: intro.work || linkChoseWork, partnerCode: link?.partnerCode,
+            family: intro.care, guardian: intro.guardian, invite: intro.invite)
+        if intro.work { UserDefaults.standard.set(intro.workKind, forKey: AppCoordinator.workKindKey) }
     }
 
     private var introContinueButton: some View {
         Button {
+            applyIntro()
             withAnimation(.easeInOut(duration: 0.3)) { showingIntro = false }
         } label: {
             Text(lang.localized("intro.continue"))
@@ -337,124 +346,183 @@ struct OnboardingView: View {
     }
 }
 
-// MARK: - Intro page: half family safety, half Rider
+// MARK: - Intro page: family care, work safety, looking after family
+
+/// The first page's choices (any of them together)
+struct IntroChoice: Equatable {
+    var care = false
+    var work = false
+    var guardian = false
+    /// "rider" (delivery, courier) or "driver" (ride-hailing)
+    var workKind = "rider"
+    /// "Family sent me an invite"
+    var invite = false
+    var any: Bool { care || work || guardian || invite }
+}
 
 struct OnboardingIntroPage: View {
-    /// nil: nothing chosen yet
-    let riderChosen: Bool?
-    let choose: (Bool) -> Void
+    @Binding var choice: IntroChoice
     @ObservedObject private var lang = LanguageManager.shared
+
+    static let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
+    static let riderGreen = Color(red: 63/255, green: 168/255, blue: 120/255)
+    static let guardianBlue = Color(red: 110/255, green: 150/255, blue: 205/255)
 
     var body: some View {
         VStack(spacing: 10) {
+            // Invited by family: the fastest way in
+            Button {
+                choice.invite.toggle()
+                if choice.invite { choice.care = false; choice.work = false; choice.guardian = false }
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "envelope.open.fill")
+                        .font(.scaled(size: 16, weight: .semibold))
+                    Text(lang.localized("intro.invite"))
+                        .font(.scaled(size: 15, weight: .semibold))
+                        .multilineTextAlignment(.leading)
+                    Spacer(minLength: 0)
+                    Image(systemName: choice.invite ? "checkmark.circle.fill" : "chevron.right")
+                        .font(.scaled(size: 15, weight: .semibold))
+                }
+                .foregroundStyle(Self.lamp)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 11)
+                .background(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Self.lamp.opacity(choice.invite ? 0.22 : 0.1)))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(choice.invite ? Self.lamp : .clear, lineWidth: 1.5))
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("onboarding.intro.invite")
+            .accessibilityAddTraits(choice.invite ? .isSelected : [])
+
             Text(lang.localized("intro.title"))
                 .font(.scaled(size: 22, weight: .bold, design: .serif))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
+                .padding(.top, 6)
             Text(lang.localized("intro.hint"))
                 .font(.scaled(size: 13))
                 .foregroundStyle(.white.opacity(0.6))
                 .multilineTextAlignment(.center)
                 .padding(.bottom, 4)
-            FamilyHalf(selected: riderChosen == false) { choose(false) }
-            RiderHalf(selected: riderChosen == true) { choose(true) }
-        }
-    }
 
-    static let lamp = Color(red: 232/255, green: 163/255, blue: 61/255)
-    static let riderGreen = Color(red: 63/255, green: 168/255, blue: 120/255)
-
-    struct FamilyHalf: View {
-        let selected: Bool
-        let action: () -> Void
-        var body: some View {
-            Half(icon: "house.and.flag.fill", color: OnboardingIntroPage.lamp,
-                 titleKey: "intro.family.title", taglineKey: "intro.family.tagline",
-                 bulletKeys: ["intro.family.b1", "intro.family.b2", "intro.family.b3"],
-                 forKey: "intro.family.for", selected: selected, action: action)
+            Card(icon: "house.and.flag.fill", color: Self.lamp,
+                 titleKey: "intro.care.title", taglineKey: "intro.care.tagline", forKey: "intro.family.for",
+                 selected: choice.care) { toggle(\.care) }
                 .accessibilityIdentifier("onboarding.intro.family")
+            Card(icon: choice.workKind == "driver" ? "car.fill" : "bicycle", color: Self.riderGreen,
+                 titleKey: "intro.work.title", taglineKey: "intro.work.tagline", forKey: "intro.rider.for",
+                 selected: choice.work) { toggle(\.work) } extra: {
+                if choice.work { workKinds }
+            }
+            .accessibilityIdentifier("onboarding.intro.rider")
+            Card(icon: "person.2.fill", color: Self.guardianBlue,
+                 titleKey: "intro.guardian.title", taglineKey: "intro.guardian.tagline", forKey: "intro.guardian.for",
+                 selected: choice.guardian) { toggle(\.guardian) }
+                .accessibilityIdentifier("onboarding.intro.guardian")
         }
     }
 
-    struct RiderHalf: View {
-        let selected: Bool
-        let action: () -> Void
-        var body: some View {
-            Half(icon: "bicycle", color: OnboardingIntroPage.riderGreen,
-                 titleKey: "intro.rider.title", taglineKey: "intro.rider.tagline",
-                 bulletKeys: ["intro.rider.b1", "intro.rider.b2", "intro.rider.b3"],
-                 forKey: "intro.rider.for", selected: selected, action: action)
-                .accessibilityIdentifier("onboarding.intro.rider")
+    private func toggle(_ key: WritableKeyPath<IntroChoice, Bool>) {
+        withAnimation(.easeInOut(duration: 0.15)) {
+            choice[keyPath: key].toggle()
+            if choice[keyPath: key] { choice.invite = false }
         }
     }
 
-    /// One half: a tappable card that fills its share of the page
-    private struct Half: View {
+    /// Delivery / courier rider or ride-hailing driver
+    private var workKinds: some View {
+        HStack(spacing: 8) {
+            ForEach(["rider", "driver"], id: \.self) { kind in
+                let on = choice.workKind == kind
+                Button { choice.workKind = kind } label: {
+                    Text(lang.localized("intro.work.kind.\(kind)"))
+                        .font(.scaled(size: 13, weight: .semibold))
+                        .foregroundStyle(on ? Color.black.opacity(0.85) : .white.opacity(0.85))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(Capsule().fill(on ? Self.riderGreen : .white.opacity(0.08)))
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(on ? .isSelected : [])
+                .accessibilityIdentifier("onboarding.intro.work.\(kind)")
+            }
+            Spacer(minLength: 0)
+        }
+    }
+
+    /// One choice: a tappable card, ticked when chosen
+    fileprivate struct Card<Extra: View>: View {
         let icon: String
         let color: Color
         let titleKey: String
         let taglineKey: String
-        let bulletKeys: [String]
-        /// "Good for: …" at the bottom of the card
+        /// "Good for: …"
         let forKey: String
         let selected: Bool
         let action: () -> Void
+        @ViewBuilder var extra: () -> Extra
         @ObservedObject private var lang = LanguageManager.shared
 
+        init(icon: String, color: Color, titleKey: String, taglineKey: String, forKey: String,
+             selected: Bool, action: @escaping () -> Void, @ViewBuilder extra: @escaping () -> Extra) {
+            self.icon = icon; self.color = color; self.titleKey = titleKey; self.taglineKey = taglineKey
+            self.forKey = forKey; self.selected = selected; self.action = action; self.extra = extra
+        }
+
         var body: some View {
-            Button(action: action) {
-                VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 10) {
+                Button(action: action) {
                     HStack(spacing: 12) {
                         Image(systemName: icon)
-                            .font(.scaled(size: 22, weight: .semibold))
+                            .font(.scaled(size: 20, weight: .semibold))
                             .foregroundStyle(color)
-                            .frame(width: 46, height: 46)
+                            .frame(width: 42, height: 42)
                             .background(Circle().fill(color.opacity(0.16)))
                         VStack(alignment: .leading, spacing: 2) {
                             Text(lang.localized(titleKey))
-                                .font(.scaled(size: 19, weight: .bold))
+                                .font(.scaled(size: 18, weight: .bold))
                                 .foregroundStyle(.white)
                             Text(lang.localized(taglineKey))
                                 .font(.scaled(size: 13, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.78))
+                                .fixedSize(horizontal: false, vertical: true)
+                            Text(lang.localized(forKey))
+                                .font(.scaled(size: 12))
                                 .foregroundStyle(color)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                         Spacer(minLength: 0)
                         Image(systemName: selected ? "checkmark.circle.fill" : "circle")
                             .font(.scaled(size: 22))
                             .foregroundStyle(selected ? color : .white.opacity(0.25))
                     }
-                    ForEach(bulletKeys, id: \.self) { key in
-                        HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            Circle().fill(color).frame(width: 5, height: 5).offset(y: -2)
-                            Text(lang.localized(key))
-                                .font(.scaled(size: 14))
-                                .foregroundStyle(.white.opacity(0.82))
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-                    Spacer(minLength: 0)
-                    Label(lang.localized(forKey), systemImage: "person.2.fill")
-                        .font(.scaled(size: 13, weight: .medium))
-                        .foregroundStyle(color)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Capsule().fill(color.opacity(0.14)))
+                    .contentShape(Rectangle())
                 }
-                .padding(16)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(LinearGradient(colors: [color.opacity(selected ? 0.26 : 0.14), color.opacity(0.04)],
-                                             startPoint: .topLeading, endPoint: .bottomTrailing))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(selected ? color : .white.opacity(0.1), lineWidth: selected ? 2 : 1)
-                )
-                .contentShape(RoundedRectangle(cornerRadius: 18))
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(selected ? .isSelected : [])
+                extra()
             }
-            .buttonStyle(.plain)
-            .accessibilityAddTraits(selected ? .isSelected : [])
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(color.opacity(selected ? 0.2 : 0.08))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(selected ? color : .white.opacity(0.1), lineWidth: selected ? 2 : 1)
+            )
         }
+    }
+}
+
+extension OnboardingIntroPage.Card where Extra == EmptyView {
+    init(icon: String, color: Color, titleKey: String, taglineKey: String, forKey: String,
+         selected: Bool, action: @escaping () -> Void) {
+        self.init(icon: icon, color: color, titleKey: titleKey, taglineKey: taglineKey, forKey: forKey,
+                  selected: selected, action: action, extra: { EmptyView() })
     }
 }

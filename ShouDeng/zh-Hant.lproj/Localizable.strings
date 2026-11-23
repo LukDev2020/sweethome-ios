@@ -2806,8 +2806,8 @@
 "settings.logout.confirm.guardian" = "登出後，這部手機將收不到家人的 SOS 求助。";
 
 /* Onboarding intro: family / Rider */
-"intro.title" = "守燈可以這樣守護你";
-"intro.hint" = "點選適合你的一項，之後可以在設定裡隨時更改";
+"intro.title" = "守燈能為你做什麼？";
+"intro.hint" = "可以選多個，之後也能在設定裡隨時更改";
 "intro.family.title" = "家庭安全";
 "intro.family.tagline" = "讓遠方的家人安心";
 "intro.family.b1" = "一鍵報平安，家人隨時知道你好不好";
@@ -2832,3 +2832,43 @@
 "settings.bothRoles.desc" = "被家人守護，也守護家人；首頁頂部可以切換";
 "settings.bothRoles.offWarning" = "關閉後首頁只保留現在這一邊。如果現在是守護家人這一邊，你自己的跌倒偵測和鎖屏求助會停止。";
 "settings.bothRoles.offConfirm" = "只保留這一邊";
+
+/* One onboarding: family care, work, looking after family (any together) */
+"intro.invite" = "家人發了邀請給我";
+"intro.care.title" = "家人關懷";
+"intro.care.tagline" = "家人隨時知道你平安";
+"intro.work.title" = "工作安全";
+"intro.work.tagline" = "上班時同事和家人一起照應你";
+"intro.work.kind.rider" = "外送 / 快遞騎手";
+"intro.work.kind.driver" = "網約車司機";
+"intro.guardian.title" = "守護家人";
+"intro.guardian.tagline" = "知道父母或孩子是否平安，接收他們的求助";
+"intro.guardian.for" = "適合：在外的子女、父母、伴侶";
+"signup.start.careAndWork" = "首頁會有兩邊：上班時是「工作」，其餘時間是「我的安全」。開始和結束班次時會自動切換。";
+"roles.switch.work" = "工作";
+"roles.switch.driver" = "出車";
+"roles.switch.onShift" = "上班中";
+"settings.workRole" = "我也做外送或網約車";
+"settings.workRole.desc" = "首頁多一個「工作」：班次、車隊、騎手求助";
+"setup.label" = "開始使用前";
+"setup.home.title" = "連接家人";
+"setup.home.why" = "守燈靠家人之間互相照應。在這裡邀請家人，或者輸入家人發給你的邀請碼。";
+"setup.home.me" = "誰來守護我";
+"setup.home.me.invite" = "邀請家人守護我";
+"setup.home.family" = "我要守護誰";
+"setup.home.family.invite" = "邀請家人讓我守護";
+"setup.home.haveCode" = "我有邀請碼";
+"setup.permissions.title" = "權限，只問一次";
+"setup.permissions.why" = "iPhone 每項只會問一次。下面說明每項的用處。";
+"setup.perm.location.why" = "守護你的家人能看到你在哪裡，求助時也會收到你的位置。";
+"setup.perm.location.always" = "請在設定中改為「永遠」，否則鎖定螢幕後家人就看不到你。";
+"setup.perm.notifications.why" = "家人回覆你、關心你，或你守護的人需要幫助時。";
+"setup.perm.motion.why" = "跌倒偵測：重摔後一動不動時會問「你還好嗎？」。";
+"setup.subscription.title" = "選擇守護方案";
+"setup.subscription.why" = "用於守護家人。也可以之後在設定裡再選。";
+"setup.ready.title" = "都準備好了";
+"setup.ready.why" = "沒做完的，之後都可以補上。";
+"setup.ready.start" = "開始使用";
+"setup.ready.later" = "電子郵件、城市和 Face ID，隨時可以在設定裡補上。";
+"setup.check.family" = "已連接家人";
+"setup.check.notifications" = "通知已開啟";

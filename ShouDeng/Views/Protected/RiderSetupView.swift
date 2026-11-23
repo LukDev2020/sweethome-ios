@@ -4,13 +4,18 @@ import CoreLocation
 import CoreMotion
 import UserNotifications
 
-// MARK: - Rider setup (docs/rider-onboarding-plan.md §2)
+// MARK: - Rider setup (docs/rider-onboarding-plan.md §2) and the setup after sign-up
 //
 // One job per screen, one big button, "Later" on everything but the rider notice:
 //   where you ride → your crew → someone at home → SOS without looking →
 //   permissions → plan & rider notice → ready (first shift)
-// Shown after a rider signs up, from a crew / partner link, from Settings → Home
-// screen → Rider, and from the rider home's "Finish setting up" card.
+// Shown from a crew / partner link, from Settings → Home screen → Rider, and from the
+// rider home's "Finish setting up" card.
+//
+// After sign-up the same screens run with the steps the chosen sides need
+// (`RiderSetupStep.signupFlow`): "someone at home" becomes "connect family", both ways
+// (who looks after me, who I look after); permissions are asked once for all of them;
+// a guardian gets the plan step; the last step is the first shift with work, else Start.
 
 struct RiderSetupView: View {
     @EnvironmentObject var coordinator: AppCoordinator
@@ -29,8 +34,9 @@ struct RiderSetupView: View {
     @State private var crewError: String?
     @State private var crewBusy = false
     @State private var showCrewInvite = false
-    // Someone at home
+    // Someone at home / connect family
     @State private var showGuardianInvite = false
+    @State private var showPersonInvite = false
     // SOS without looking
     @AppStorage("lockscreen_card_enabled") private var lockCardOn = true
     @State private var showHandsFree = false
@@ -43,11 +49,21 @@ struct RiderSetupView: View {
     // Ready
     @State private var showShiftStart = false
 
-    init(start: RiderSetupStep = .ride) {
-        _step = State(initialValue: start)
+    /// The steps shown, in order
+    private let steps: [RiderSetupStep]
+
+    init(steps: [RiderSetupStep] = RiderSetupStep.riderFlow, start: RiderSetupStep = .ride) {
+        let list = steps.isEmpty ? RiderSetupStep.riderFlow : steps
+        self.steps = list
+        _step = State(initialValue: list.contains(start) ? start : list[0])
     }
 
     private var dutyAgreed: Bool { dutyVersion == DisclaimerCopy.RiderDuty.version }
+    /// Rides for work: rider words, the rider notice, the first shift at the end
+    private var isWorkFlow: Bool { steps.contains(.ride) }
+    /// The setup after sign-up with family care or looking after family
+    private var connectsFamily: Bool { steps != RiderSetupStep.riderFlow }
+    private var index: Int { steps.firstIndex(of: step) ?? 0 }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -72,7 +88,7 @@ struct RiderSetupView: View {
             if let crew = coordinator.crew { CrewInviteSheet(crew: crew) }
         }
         .sheet(isPresented: $showGuardianInvite, onDismiss: { Task { await coordinator.fetchGuardians() } }) {
-            InviteGuardianSheet().environmentObject(coordinator)
+            InviteGuardianSheet(inviterRole: .protected_).environmentObject(coordinator)
         }
         .sheet(isPresented: $showHandsFree) { HandsFreeSheet() }
         .sheet(isPresented: $showShiftStart, onDismiss: { if coordinator.isOnShift { coordinator.finishRiderSetup() } }) {
@@ -85,26 +101,27 @@ struct RiderSetupView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 4) {
-                ForEach(RiderSetupStep.allCases, id: \.self) { s in
+                ForEach(Array(steps.enumerated()), id: \.offset) { i, _ in
                     Capsule()
-                        .fill(s.rawValue <= step.rawValue ? RC.safe : Color(.separator).opacity(0.5))
+                        .fill(i <= index ? RC.safe : Color(.separator).opacity(0.5))
                         .frame(height: 4)
                 }
             }
             HStack {
-                Label(lang.localized("rider.title"), systemImage: "bicycle")
+                Label(lang.localized(connectsFamily ? "setup.label" : "rider.title"),
+                      systemImage: connectsFamily ? "checklist" : "bicycle")
                     .font(.scaled(size: 13, weight: .semibold))
                     .foregroundStyle(RC.safe)
                 Spacer()
-                Text(String(format: lang.localized("rider.setup.progress"), step.rawValue + 1, RiderSetupStep.allCases.count))
+                Text(String(format: lang.localized("rider.setup.progress"), index + 1, steps.count))
                     .font(.scaled(size: 13))
                     .foregroundStyle(.secondary)
             }
-            Text(lang.localized("rider.setup.\(key(step)).title"))
+            Text(lang.localized(textKey(step) + ".title"))
                 .font(.scaled(size: 26, weight: .bold))
                 .foregroundStyle(RC.ink)
                 .fixedSize(horizontal: false, vertical: true)
-            Text(lang.localized("rider.setup.\(key(step)).why"))
+            Text(lang.localized(textKey(step) + ".why"))
                 .font(.scaled(size: 15))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -122,29 +139,44 @@ struct RiderSetupView: View {
         case .sos: return "sos"
         case .permissions: return "permissions"
         case .plan: return "plan"
+        case .subscription: return "subscription"
         case .ready: return "ready"
+        }
+    }
+
+    /// Title and "why" of a step: rider words with work; the sign-up's own words for
+    /// connecting family, permissions without work, the plan and Start.
+    private func textKey(_ s: RiderSetupStep) -> String {
+        switch s {
+        case .home where connectsFamily, .subscription: return "setup.\(key(s))"
+        case .permissions where !isWorkFlow, .ready where !isWorkFlow: return "setup.\(key(s))"
+        default: return "rider.setup.\(key(s))"
         }
     }
 
     private var bottomBar: some View {
         VStack(spacing: 10) {
-            if step == .ready {
+            if step == .ready && isWorkFlow {
                 primaryButton(lang.localized("rider.setup.ready.start"), icon: "play.fill") { showShiftStart = true }
                     .accessibilityIdentifier("rider.setup.startShift")
                 Button(lang.localized("rider.setup.ready.notNow")) { coordinator.finishRiderSetup() }
                     .font(.scaled(size: 15, weight: .medium))
                     .foregroundStyle(RC.ink)
                     .accessibilityIdentifier("rider.setup.notNow")
+            } else if step == .ready {
+                primaryButton(lang.localized("setup.ready.start"), icon: nil) { coordinator.finishRiderSetup() }
+                    .accessibilityIdentifier("setup.start")
             } else {
-                primaryButton(lang.localized(step == .plan && !dutyAgreed ? "rider.setup.agreeFirst" : "rider.setup.next"),
+                primaryButton(lang.localized(step == .plan && !dutyAgreed ? "rider.setup.agreeFirst"
+                                             : step == .subscription ? "wizard.nav.later" : "rider.setup.next"),
                               icon: nil, disabled: step == .plan && !dutyAgreed) { Task { await next() } }
                     .accessibilityIdentifier("rider.setup.next")
                 HStack {
-                    if step != .ride {
-                        Button(lang.localized("rider.setup.back")) { withAnimation { step = RiderSetupStep(rawValue: step.rawValue - 1) ?? .ride } }
+                    if index > 0 {
+                        Button(lang.localized("rider.setup.back")) { withAnimation { step = steps[index - 1] } }
                     }
                     Spacer()
-                    if step != .plan {
+                    if step != .plan && step != .subscription {
                         Button(lang.localized("rider.setup.later")) { withAnimation { advance() } }
                             .accessibilityIdentifier("rider.setup.later")
                     }
@@ -174,7 +206,7 @@ struct RiderSetupView: View {
     }
 
     private func advance() {
-        if let nextStep = RiderSetupStep(rawValue: step.rawValue + 1) { step = nextStep }
+        if index + 1 < steps.count { step = steps[index + 1] }
     }
 
     private func next() async {
@@ -192,7 +224,8 @@ struct RiderSetupView: View {
         case .sos: sosStep
         case .permissions: permissionsStep
         case .plan: planStep
-        case .ready: readyStep
+        case .subscription: GuardianPlanPicker(onDone: { withAnimation { advance() } }, showsHeader: false)
+        case .ready: if isWorkFlow { readyStep } else { startStep }
         }
     }
 
@@ -273,8 +306,16 @@ struct RiderSetupView: View {
         }
     }
 
-    // 3 — Someone at home
-    private var homeStep: some View {
+    // 3 — Someone at home (rider) / connect family, both ways (after sign-up)
+    @ViewBuilder private var homeStep: some View {
+        if connectsFamily {
+            familyStep
+        } else {
+            riderHomeStep
+        }
+    }
+
+    private var riderHomeStep: some View {
         VStack(alignment: .leading, spacing: 14) {
             if coordinator.myGuardians.isEmpty {
                 Label(lang.localized("rider.setup.home.none"), systemImage: "person.crop.circle.badge.questionmark")
@@ -291,6 +332,53 @@ struct RiderSetupView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .task { await coordinator.fetchGuardians() }
+    }
+
+    /// Who looks after me (family care, work), who I look after (guardian), and the
+    /// code family sent — one screen for all of them.
+    private var familyStep: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            if coordinator.isProtectedSide {
+                card {
+                    Text(lang.localized("setup.home.me")).font(.scaled(size: 16, weight: .semibold))
+                    if coordinator.myGuardians.isEmpty {
+                        Text(lang.localized("rider.setup.home.none")).font(.scaled(size: 14)).foregroundStyle(.secondary)
+                    } else {
+                        ForEach(coordinator.myGuardians) { g in doneRow(g.user.displayName) }
+                    }
+                    secondaryButton(lang.localized("setup.home.me.invite"), icon: "person.badge.plus") { showGuardianInvite = true }
+                        .accessibilityIdentifier("setup.home.inviteGuardian")
+                }
+            }
+            if coordinator.isGuardianSide {
+                card {
+                    Text(lang.localized("setup.home.family")).font(.scaled(size: 16, weight: .semibold))
+                    if coordinator.protectedPersons.isEmpty {
+                        Text(lang.localized("rider.setup.home.none")).font(.scaled(size: 14)).foregroundStyle(.secondary)
+                    } else {
+                        ForEach(coordinator.protectedPersons) { p in doneRow(p.user.displayName) }
+                    }
+                    secondaryButton(lang.localized("setup.home.family.invite"), icon: "person.2.badge.plus") { showPersonInvite = true }
+                        .accessibilityIdentifier("setup.home.invitePerson")
+                }
+            }
+            Button {
+                coordinator.presentInviteAccept()
+            } label: {
+                Label(lang.localized("setup.home.haveCode"), systemImage: "key.fill")
+                    .font(.scaled(size: 15, weight: .medium))
+                    .foregroundStyle(RC.safe)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("setup.home.haveCode")
+        }
+        .task {
+            if coordinator.isProtectedSide { await coordinator.fetchGuardians() }
+            if coordinator.isGuardianSide { await coordinator.fetchProtectedPersons() }
+        }
+        .sheet(isPresented: $showPersonInvite, onDismiss: { Task { await coordinator.fetchProtectedPersons() } }) {
+            InviteGuardianSheet(inviterRole: .guardian).environmentObject(coordinator)
+        }
     }
 
     // 4 — SOS without looking
@@ -336,11 +424,14 @@ struct RiderSetupView: View {
     // 5 — Permissions, in rider words
     private var permissionsStep: some View {
         VStack(alignment: .leading, spacing: 12) {
-            permissionRow(icon: "location.fill", key: "location",
-                          granted: locationStatus == .authorizedAlways,
-                          partial: locationStatus == .authorizedWhenInUse) {
-                coordinator.locationManager.start()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { refreshPermissions() }
+            // Someone who only looks after family needs notifications alone
+            if coordinator.isProtectedSide {
+                permissionRow(icon: "location.fill", key: "location",
+                              granted: locationStatus == .authorizedAlways,
+                              partial: locationStatus == .authorizedWhenInUse) {
+                    coordinator.locationManager.start()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { refreshPermissions() }
+                }
             }
             permissionRow(icon: "bell.badge.fill", key: "notifications",
                           granted: notificationStatus == .authorized || notificationStatus == .provisional,
@@ -349,10 +440,12 @@ struct RiderSetupView: View {
                 UIApplication.shared.registerForRemoteNotifications()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { refreshPermissions() }
             }
-            permissionRow(icon: "figure.fall", key: "motion",
-                          granted: motionStatus == .authorized, partial: false) {
-                CMMotionActivityManager().queryActivityStarting(from: Date().addingTimeInterval(-60), to: Date(), to: .main) { _, _ in
-                    refreshPermissions()
+            if coordinator.isProtectedSide {
+                permissionRow(icon: "figure.fall", key: "motion",
+                              granted: motionStatus == .authorized, partial: false) {
+                    CMMotionActivityManager().queryActivityStarting(from: Date().addingTimeInterval(-60), to: Date(), to: .main) { _, _ in
+                        refreshPermissions()
+                    }
                 }
             }
         }
@@ -363,11 +456,13 @@ struct RiderSetupView: View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon).font(.system(size: 20)).foregroundStyle(RC.safe).frame(width: 28)
             VStack(alignment: .leading, spacing: 4) {
+                // Rider words with work; the sign-up's own otherwise
+                let words = isWorkFlow ? "rider.setup.perm" : "setup.perm"
                 Text(lang.localized("rider.setup.perm.\(key)")).font(.scaled(size: 16, weight: .semibold))
-                Text(lang.localized("rider.setup.perm.\(key).why")).font(.scaled(size: 13)).foregroundStyle(.secondary)
+                Text(lang.localized("\(words).\(key).why")).font(.scaled(size: 13)).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 if partial {
-                    Text(lang.localized("rider.setup.perm.location.always")).font(.scaled(size: 12)).foregroundStyle(.orange)
+                    Text(lang.localized("\(words).location.always")).font(.scaled(size: 12)).foregroundStyle(.orange)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -453,6 +548,37 @@ struct RiderSetupView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+    }
+
+    // Last step without work: what's set up, then Start
+    private var startStep: some View {
+        let linked = !coordinator.myGuardians.isEmpty || !coordinator.protectedPersons.isEmpty
+        let notified = notificationStatus == .authorized || notificationStatus == .provisional
+        return VStack(alignment: .leading, spacing: 10) {
+            setupCheckRow(done: linked, key: "setup.check.family") { step = .home }
+            setupCheckRow(done: notified, key: "setup.check.notifications") { step = .permissions }
+            Text(lang.localized("setup.ready.later"))
+                .font(.scaled(size: 13)).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .onAppear(perform: refreshPermissions)
+    }
+
+    private func setupCheckRow(done: Bool, key: String, fix: @escaping () -> Void) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: done ? "checkmark.circle.fill" : "circle")
+                .font(.system(size: 22))
+                .foregroundStyle(done ? RC.safe : Color(.separator))
+            Text(lang.localized(key)).font(.scaled(size: 16))
+            Spacer()
+            if !done {
+                Button(lang.localized("rider.setup.check.fix")) { withAnimation { fix() } }
+                    .font(.scaled(size: 14, weight: .semibold))
+                    .foregroundStyle(RC.safe)
+            }
+        }
+        .padding(14)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color(.secondarySystemBackground)))
     }
 
     private func checkRow(done: Bool, key: String, fix: @escaping () -> Void) -> some View {

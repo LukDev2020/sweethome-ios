@@ -8,20 +8,32 @@ import CoreLocation
 
 extension AppCoordinator {
 
-    /// Rider home and rider SOS: the protected person chose Rider in Settings → Home
-    /// screen (in the demo: Kai's phone).
+    /// Rider SOS, rider lock-screen card: a pure rider (home style Rider), or someone
+    /// who also rides for work while the Work side is on screen or a shift runs.
     var isRiderMode: Bool {
         guard isProtectedSide else { return false }
-        return effectiveHomeStyle == HomeStyle.rider.rawValue
+        return effectiveHomeStyle == HomeStyle.rider.rawValue || (hasWorkSide && isOnShift)
     }
 
-    /// The home style in use: the demo keeps its own (Kai's phone starts on Rider), so
-    /// trying the setting there never changes the real one.
+    /// The home in use on the protected side: the rider home while the Work side is on
+    /// screen, else the one chosen. The demo keeps its own (Kai's phone starts on Rider),
+    /// so trying the setting there never changes the real one.
     var effectiveHomeStyle: String {
         if isDemo {
             return demoHomeStyle ?? (currentUser?.id == DemoDataset.kaiId ? HomeStyle.rider.rawValue : HomeStyle.standard.rawValue)
         }
-        return chosenHomeStyle ?? HomeStyle.defaultStyle.rawValue
+        if hasWorkSide && workSideActive { return HomeStyle.rider.rawValue }
+        return familyHomeStyle
+    }
+
+    /// The home of "My safety" (Settings → Home screen; Rider for a pure rider)
+    var familyHomeStyle: String {
+        chosenHomeStyle ?? HomeStyle.defaultStyle.rawValue
+    }
+
+    /// Looked after by family *and* rides for work: "Work" and "My safety" are two sides
+    var hasWorkSide: Bool {
+        !isDemo && hasWorkRole && familyHomeStyle != HomeStyle.rider.rawValue
     }
 
     /// The style the person picked themselves (nil: never chosen, the default applies)
@@ -30,18 +42,25 @@ extension AppCoordinator {
         return UserDefaults.standard.string(forKey: HomeStyle.storageKey)
     }
 
+    /// Settings → Home screen (and sign-up). Rider makes a pure rider; leaving the rider
+    /// home from there leaves Rider mode, as before — "Work" as a side of its own is the
+    /// Settings switch below Home screen (`setWorkRole`).
     func setHomeStyle(_ style: HomeStyle, syncToServer: Bool = true) {
         if isDemo {
             demoHomeStyle = style.rawValue
         } else {
+            let wasPureRider = familyHomeStyle == HomeStyle.rider.rawValue && hasWorkRole
             UserDefaults.standard.set(style.rawValue, forKey: HomeStyle.storageKey)
+            workSideActive = false
+            if style == .rider { hasWorkRole = true } else if wasPureRider { hasWorkRole = false }
             // Kept on the account too, so a new phone opens on the same home
             if syncToServer {
                 let api = apiClient
-                Task { let _: SuccessResponse? = try? await api.put("/v1/user/me", body: HomeStyleUpdate(homeStyle: style.rawValue)) }
+                let work = hasWorkRole
+                Task { let _: SuccessResponse? = try? await api.put("/v1/user/me", body: HomeStyleUpdate(homeStyle: style.rawValue, workRole: work)) }
             }
         }
-        if style == .rider { liveActivityManager.updateRider(riderCardInfo) } else { liveActivityManager.updateRider(nil) }
+        liveActivityManager.updateRider(riderCardInfo)
         // Simple home → the older-adult fall profile, unless the person chose otherwise
         applyFallProfile()
     }
@@ -110,6 +129,11 @@ extension AppCoordinator {
             } else {
                 UserDefaults.standard.removeObject(forKey: "rider_shift")
             }
+        }
+        // Work and family care: a shift brings the Work side up, its end My safety
+        if hasWorkSide, workSideActive != (shift != nil) {
+            workSideActive = shift != nil
+            if shift != nil, userRole != .protected_ { switchHomeSide(to: .protected_) }
         }
         liveActivityManager.updateRider(riderCardInfo)
     }

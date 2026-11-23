@@ -963,6 +963,7 @@ struct ProtectedSettingsView: View {
 
             // Looked after and looking after family: the home's side switch
             BothRolesSettingsRow()
+            WorkRoleSettingsRow()
 
             // Switching roles silently turns off protection for this person, so it is
             // DEBUG-only until roles phase B (docs/roles/ROLES.md: dual roles + view switcher).

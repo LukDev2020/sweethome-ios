@@ -84,9 +84,10 @@ private struct AuthenticatedRootView: View {
                     Group {
                         if biometric.isEnabled && !biometric.isUnlocked {
                             BiometricGateView()
-                        } else if coordinator.showRiderSetup && coordinator.userRole == .protected_ {
-                            // Rider setup: after a rider signs up, a crew / partner link, Settings
-                            RiderSetupView(start: coordinator.riderSetupStartStep)
+                        } else if coordinator.showRiderSetup {
+                            // The setup after sign-up (the steps the chosen sides need), or
+                            // the rider setup: a crew / partner link, Settings, the home card
+                            RiderSetupView(steps: coordinator.setupSteps, start: coordinator.riderSetupStartStep)
                                 .environmentObject(coordinator)
                         } else if showsSetupWizard {
                             PostSignupWizardView(onComplete: {
@@ -98,8 +99,8 @@ private struct AuthenticatedRootView: View {
                             // Banners take their own space above the screens instead of
                             // floating over the navigation bar title.
                             VStack(spacing: 0) {
-                                // Looked after and looks after family: switch the home's side
-                                if coordinator.hasBothRoles {
+                                // Two or more sides (work, my safety, family): switch the home's side
+                                if coordinator.homeSides.count > 1 {
                                     HomeSideSwitch()
                                         .environmentObject(coordinator)
                                 }
@@ -347,9 +348,10 @@ struct FamilyStatusBar: View {
 }
 
 
-/// Top of the home for someone with both roles: "My safety" (or "Rider") | "My family".
-/// Only the screens change: fall detection, location, SOS keep running on either side,
-/// and family SOS alerts arrive on either side.
+/// Top of the home for someone with two or more sides: "Work" (rides or drives for
+/// work, with family care), "My safety" (or "Rider" for a pure rider), "My family".
+/// Only the screens change: fall detection, location, SOS keep running on every side,
+/// and family SOS alerts arrive on every side. A shift brings Work up, its end My safety.
 struct HomeSideSwitch: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
@@ -358,12 +360,9 @@ struct HomeSideSwitch: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            side(.protected_, icon: coordinator.isRiderMode ? "bicycle" : "shield.fill",
-                 title: lang.localized(coordinator.isRiderMode ? "roles.switch.rider" : "roles.switch.me"),
-                 alert: coordinator.activeSOSEvent != nil)
-            side(.guardian, icon: "person.2.fill",
-                 title: lang.localized("roles.switch.family") + (coordinator.protectedPersons.isEmpty ? "" : " · \(coordinator.protectedPersons.count)"),
-                 alert: familyAlert)
+            ForEach(coordinator.homeSides, id: \.self) { side in
+                segment(side)
+            }
         }
         .padding(3)
         .background(Capsule().fill(Color(.secondarySystemBackground)))
@@ -373,18 +372,40 @@ struct HomeSideSwitch: View {
         .accessibilityIdentifier("home.sideSwitch")
     }
 
-    private func side(_ role: UserRole, icon: String, title: String, alert: Bool) -> some View {
-        let selected = coordinator.userRole == role
+    @ViewBuilder private func segment(_ side: HomeSide) -> some View {
+        switch side {
+        case .work:
+            button(.work, icon: coordinator.workKind == "driver" ? "car.fill" : "bicycle",
+                   title: lang.localized(coordinator.workKind == "driver" ? "roles.switch.driver" : "roles.switch.work"),
+                   alert: false, onShift: coordinator.isOnShift)
+        case .me:
+            let rider = coordinator.familyHomeStyle == HomeStyle.rider.rawValue
+            button(.me, icon: rider ? "bicycle" : "shield.fill",
+                   title: lang.localized(rider ? "roles.switch.rider" : "roles.switch.me"),
+                   alert: coordinator.activeSOSEvent != nil, onShift: false)
+        case .family:
+            button(.family, icon: "person.2.fill",
+                   title: lang.localized("roles.switch.family") + (coordinator.protectedPersons.isEmpty ? "" : " · \(coordinator.protectedPersons.count)"),
+                   alert: familyAlert, onShift: false)
+        }
+    }
+
+    private func button(_ side: HomeSide, icon: String, title: String, alert: Bool, onShift: Bool) -> some View {
+        let selected = coordinator.currentHomeSide == side
         return Button {
-            withAnimation(.easeInOut(duration: 0.2)) { coordinator.switchHomeSide(to: role) }
+            withAnimation(.easeInOut(duration: 0.2)) { coordinator.switchHome(to: side) }
         } label: {
             HStack(spacing: 5) {
                 Image(systemName: icon).font(.scaled(size: 12, weight: .semibold))
-                Text(title).font(.scaled(size: 13, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
+                Text(title).font(.scaled(size: 13, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.75)
                 if alert {
                     // Someone's SOS on that side: visible from the other side too
                     Circle().fill(Color(red: 0.79, green: 0.42, blue: 0.38)).frame(width: 7, height: 7)
                         .accessibilityLabel(lang.localized("roles.switch.sos"))
+                } else if onShift {
+                    // A shift is running
+                    Circle().fill(Color(red: 0.25, green: 0.56, blue: 0.43)).frame(width: 7, height: 7)
+                        .accessibilityLabel(lang.localized("roles.switch.onShift"))
                 }
             }
             .foregroundStyle(selected ? Color.primary : Color.secondary)
@@ -394,6 +415,41 @@ struct HomeSideSwitch: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityIdentifier("home.side.\(side.rawValue)")
+    }
+}
+
+/// Settings (looked after): ride or drive for work as well — a "Work" side on the home.
+/// Not shown to a pure rider (Home screen → Rider already is the work home).
+struct WorkRoleSettingsRow: View {
+    @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var lang = LanguageManager.shared
+
+    var body: some View {
+        if coordinator.isProtectedSide && coordinator.familyHomeStyle != HomeStyle.rider.rawValue {
+            Toggle(isOn: Binding(
+                get: { coordinator.hasWorkRole },
+                set: { on in
+                    coordinator.setWorkRole(on)
+                    // First time: where you ride, crew, the rider notice
+                    if on && !coordinator.riderSetupDone { coordinator.beginRiderSetup(at: .ride) }
+                }
+            )) {
+                HStack(spacing: 8) {
+                    Image(systemName: "bicycle")
+                        .font(.scaled(size: 13))
+                        .foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(lang.localized("settings.workRole")).font(.scaled(size: 13))
+                        Text(lang.localized("settings.workRole.desc"))
+                            .font(.scaled(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .padding(.vertical, 2)
+            .accessibilityIdentifier("settings.workRole")
+        }
     }
 }
 

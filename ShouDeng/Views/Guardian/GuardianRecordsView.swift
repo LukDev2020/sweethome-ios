@@ -1090,14 +1090,22 @@ struct GuardianMember: Identifiable {
 
 // MARK: - Invite Guardian Sheet
 //
-// A guardian invites someone to be looked after (inviterRole "guardian"): the
-// person who accepts becomes protected and sees what they are agreeing to first.
-// Inviting another guardian to share the care of someone (primary / backup /
-// observer) is a later phase, so the role picker is not shown.
+// The invite carries my side. A guardian invites someone to be looked after
+// (inviterRole "guardian"): the person who accepts becomes protected and sees what
+// they are agreeing to first. Someone looked after (or a rider) invites family to
+// look after them (inviterRole "protected"). Inviting another guardian to share the
+// care of someone (primary / backup / observer) is a later phase.
 
 struct InviteGuardianSheet: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @Environment(\.dismiss) var dismiss
+    /// .guardian: "look out for someone"; .protected_: "ask family to look after me"
+    let inviterRole: UserRole
+    private var asksForGuardian: Bool { inviterRole == .protected_ }
+
+    init(inviterRole: UserRole = .guardian) {
+        self.inviterRole = inviterRole
+    }
 
     private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
     private let ink = Color.appInk
@@ -1161,12 +1169,12 @@ struct InviteGuardianSheet: View {
                 }
 
                 Section {
-                    Text(LanguageManager.shared.localized("invite.sheet.protectFooter"))
+                    Text(LanguageManager.shared.localized(asksForGuardian ? "invite.sheet.footer" : "invite.sheet.protectFooter"))
                         .font(.scaled(size: 12))
                         .foregroundStyle(.tertiary)
                 }
             }
-            .navigationTitle(LanguageManager.shared.localized("invite.sheet.protectTitle"))
+            .navigationTitle(LanguageManager.shared.localized(asksForGuardian ? "invite.sheet.title" : "invite.sheet.protectTitle"))
             .navigationBarTitleDisplayMode(.inline)
             .alert(LanguageManager.shared.localized("invite.sheet.errorTitle"), isPresented: Binding(
                 get: { inviteError != nil },
@@ -1190,15 +1198,16 @@ struct InviteGuardianSheet: View {
             // be accepted, so on failure tell the user instead of sharing it.
             let inviteCode: String
             do {
-                let response: CreateInviteResponse = try await coordinator.createInviteCode(inviterRole: .guardian)
+                let response: CreateInviteResponse = try await coordinator.createInviteCode(inviterRole: inviterRole)
                 inviteCode = response.code
             } catch {
                 inviteError = LanguageManager.shared.localized("invite.sheet.errorBody")
                 return
             }
 
-            // The invitee will be someone I protect, not a member of the guardian
-            // team, so they are not added to `members`.
+            // The invitee will be someone I protect (or who looks after me), not a
+            // member of a guardian team, so they are not added to `members`.
+            let shareKey = asksForGuardian ? "invite.sheet.shareText" : "invite.sheet.protectShareText"
             let inviteLink = "\(DeepLinkRouter.webBase)/invite?code=\(inviteCode)"
 
             switch method {
@@ -1209,7 +1218,7 @@ struct InviteGuardianSheet: View {
                     showCopied = false
                 }
             case .sms:
-                let message = String(format: LanguageManager.shared.localized("invite.sheet.protectShareText"), inviteLink)
+                let message = String(format: LanguageManager.shared.localized(shareKey), inviteLink)
                 let encoded = message.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? inviteLink
                 // The phone number (optional) becomes the message recipient
                 let recipient = invitePhone.filter { $0.isNumber || $0 == "+" }
@@ -1220,7 +1229,7 @@ struct InviteGuardianSheet: View {
             case .wechat:
                 // Use system share sheet as fallback
                 let activityVC = UIActivityViewController(
-                    activityItems: [String(format: LanguageManager.shared.localized("invite.sheet.protectShareText"), inviteLink)],
+                    activityItems: [String(format: LanguageManager.shared.localized(shareKey), inviteLink)],
                     applicationActivities: nil
                 )
                 AppCoordinator.topViewController()?.present(activityVC, animated: true)

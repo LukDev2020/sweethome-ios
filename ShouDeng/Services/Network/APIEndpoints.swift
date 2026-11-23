@@ -245,6 +245,8 @@ struct UserProfileResponse: Codable {
     var riderProfile: RiderProfileInfo? = nil
     /// Looked after and looks after family (absent from older servers)
     var bothRoles: Bool? = nil
+    /// Rides or drives for work on top of family care (absent from older servers)
+    var workRole: Bool? = nil
 }
 
 // MARK: - Protected Person Status (guardian polls this)

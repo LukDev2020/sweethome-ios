@@ -14,8 +14,8 @@ struct ProtectedTabView: View {
     @AppStorage(HomeStyle.storageKey) private var homeStyle = HomeStyle.defaultStyle.rawValue
 
     private var tabs: [DuoTabItem] {
-        if coordinator.isRiderMode {
-            // Rider: the home draws its own large SOS; Crew replaces Coverage
+        if coordinator.effectiveHomeStyle == HomeStyle.rider.rawValue {
+            // Rider (or the Work side): the home draws its own large SOS; Crew replaces Coverage
             return [
                 DuoTabItem(id: 0, title: lang.localized("tab.home"),     icon: "bicycle",           view: AnyView(RiderHomeView()), placesOwnAccessory: true),
                 DuoTabItem(id: 5, title: lang.localized("rider.tab.crew"), icon: "person.3.fill",   view: AnyView(CrewView().floatingSOSClearance())),
@@ -53,7 +53,8 @@ struct ProtectedTabView: View {
         .id("\(coordinator.effectiveHomeStyle)-\(homeStyle)")
         // One place presents the SOS screen for every trigger path (floating
         // button, home slider, widget, lock screen, dead-man switch…)
-        .onChange(of: homeStyle) { _, style in
+        // The style in use changes with Settings and with the Work / My safety switch
+        .onChange(of: coordinator.effectiveHomeStyle, initial: true) { _, style in
             // Tabs 2 and 3 don't exist in the simple style, tab 3 not in the rider style
             if style == HomeStyle.simple.rawValue, selectedTab == 2 || selectedTab == 3 { selectedTab = 0 }
             if style == HomeStyle.rider.rawValue, selectedTab == 2 || selectedTab == 3 { selectedTab = 0 }
