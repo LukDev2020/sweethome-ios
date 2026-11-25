@@ -2043,16 +2043,6 @@ final class AppCoordinator: ObservableObject {
         )) { _ in }
     }
 
-    // MARK: - Duress Code SOS
-
-    func triggerDuressSOS() {
-        // Silently trigger SOS with duress method — no on-screen alerts
-        triggerSOS(method: .duressPassword)
-        #if DEBUG
-        print("[AppCoordinator] Duress code triggered — silent SOS activated")
-        #endif
-    }
-
     func confirmPendingSOS() {
         guard let method = pendingSOSConfirmation else { return }
         pendingSOSConfirmation = nil

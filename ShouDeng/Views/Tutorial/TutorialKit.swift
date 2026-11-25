@@ -236,6 +236,28 @@ struct TutorialGuide: Identifiable {
 
 // MARK: - Player
 
+/// Which guides this phone has watched to the end ("Watch again" on Home and in the list).
+/// Its own store, not @AppStorage: demo mode swaps the views' AppStorage for a sandbox.
+@MainActor
+final class TutorialHistory: ObservableObject {
+    static let shared = TutorialHistory()
+    private static let key = "tut.watched"
+    @Published private(set) var watched: Set<String>
+
+    private init() {
+        watched = Set((UserDefaults.standard.string(forKey: Self.key) ?? "").split(separator: ",").map(String.init))
+    }
+
+    func mark(_ id: String) {
+        guard watched.insert(id).inserted else { return }
+        UserDefaults.standard.set(watched.sorted().joined(separator: ","), forKey: Self.key)
+    }
+
+    func hasWatched(any guides: [TutorialGuide]) -> Bool {
+        !watched.isDisjoint(with: guides.map(\.id))
+    }
+}
+
 @MainActor
 final class TutorialPlayer: ObservableObject {
     @Published private(set) var step = 0
@@ -248,6 +270,8 @@ final class TutorialPlayer: ObservableObject {
     @Published private(set) var playing = false
     /// Steps already played through (ticked in the list)
     @Published private(set) var seen: Set<Int> = []
+    /// Played to the last step: the play button becomes "Watch again"
+    @Published private(set) var finished = false
     @Published var speaks = false {
         didSet { if !speaks { voice.stopSpeaking(at: .immediate) } else { say(step) } }
     }
@@ -264,7 +288,8 @@ final class TutorialPlayer: ObservableObject {
     func play(from index: Int? = nil) {
         task?.cancel()
         playing = true
-        let start = index ?? step
+        let start = finished && index == nil ? 0 : (index ?? step)
+        finished = false
         task = Task { [weak self] in await self?.run(from: start) }
     }
 
@@ -289,11 +314,13 @@ final class TutorialPlayer: ObservableObject {
             if i + 1 < guide.steps.count {
                 i += 1
             } else {
-                // The end: hold the result a moment, then play it again
-                await wait(2.6)
+                // The end: keep the last screen and offer "Watch again"
+                await wait(1.2)
                 guard !Task.isCancelled else { return }
-                withAnimation { fingerShown = false }
-                i = 0
+                withAnimation { fingerShown = false; playing = false; finished = true }
+                TutorialHistory.shared.mark(guide.id)
+                task = nil
+                return
             }
         }
     }

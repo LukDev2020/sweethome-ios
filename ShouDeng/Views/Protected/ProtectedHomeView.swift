@@ -210,6 +210,11 @@ struct ProtectedHomeView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 4)
 
+                // How to use: always on Home so guides can be watched again
+                TutorialHelpButton(role: .protected, style: .card, tint: safe)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+
                 if coordinator.myGuardians.isEmpty, let tip = AppTips.available(InviteGuardianTip()) {
                     TipView(tip) { action in
                         if action.id == "invite" { showInviteGuardian = true }
@@ -327,6 +332,9 @@ struct ProtectedHomeView: View {
                     liveTrackingBanner
                         .padding(.horizontal, 16)
                         .padding(.top, 4)
+                    TutorialHelpButton(role: .protected, style: .card, tint: safe)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
 
                     globeSection
                     worldClocks

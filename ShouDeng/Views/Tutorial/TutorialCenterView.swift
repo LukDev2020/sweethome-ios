@@ -18,6 +18,7 @@ struct TutorialCenterView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
     @State private var path: [String] = []
+    @ObservedObject private var history = TutorialHistory.shared
 
     private var guides: [TutorialGuide] { TutorialCatalog.guides(for: role) }
     private var results: [TutorialGuide] { guides.filter { $0.matches(query) } }
@@ -83,7 +84,8 @@ struct TutorialCenterView: View {
                                     .font(.system(size: 22, weight: .semibold))
                                     .foregroundStyle(g.tint)
                                 Spacer()
-                                Image(systemName: "play.circle.fill")
+                                Image(systemName: history.watched.contains(g.id)
+                                      ? "arrow.counterclockwise.circle.fill" : "play.circle.fill")
                                     .font(.system(size: 20))
                                     .foregroundStyle(g.tint.opacity(0.8))
                             }
@@ -122,7 +124,9 @@ struct TutorialCenterView: View {
         Button { path.append(g.id) } label: {
             SettingsRow(icon: g.icon, tint: g.tint, title: lang.localized(g.titleKey),
                         subtitle: lang.localized(g.summaryKey),
-                        value: String(format: lang.localized("tut.length"), g.steps.count))
+                        value: history.watched.contains(g.id)
+                            ? lang.localized("tut.watchAgain")
+                            : String(format: lang.localized("tut.length"), g.steps.count))
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("tutorial.guide.\(g.id)")
@@ -312,7 +316,10 @@ struct TutorialGuideView: View {
             if sizeClass == .regular {
                 HStack(alignment: .top, spacing: 24) {
                     TutorialPhone(player: player).frame(maxWidth: 360)
-                    ScrollView { steps.padding(.vertical, 8) }
+                    VStack(spacing: 0) {
+                        controls
+                        ScrollView { steps.padding(.vertical, 8) }
+                    }
                 }
                 .padding(20)
             } else {
@@ -352,11 +359,24 @@ struct TutorialGuideView: View {
                 Image(systemName: "backward.fill")
             }
             .accessibilityLabel(lang.localized("tut.prev"))
-            Button { player.playing ? player.pause() : player.play() } label: {
-                Image(systemName: player.playing ? "pause.circle.fill" : "play.circle.fill").font(.system(size: 34))
+            if player.finished {
+                // Played to the end: one clear button to see it again from step 1
+                Button { player.play(from: 0) } label: {
+                    Label(lang.localized("tut.watchAgain"), systemImage: "arrow.counterclockwise")
+                        .font(.scaled(size: 15, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 9)
+                        .background(Capsule().fill(guide.tint))
+                }
+                .accessibilityIdentifier("tutorial.watchAgain")
+            } else {
+                Button { player.playing ? player.pause() : player.play() } label: {
+                    Image(systemName: player.playing ? "pause.circle.fill" : "play.circle.fill").font(.system(size: 34))
+                }
+                .accessibilityLabel(lang.localized(player.playing ? "tut.pause" : "tut.play"))
+                .accessibilityIdentifier("tutorial.playPause")
             }
-            .accessibilityLabel(lang.localized(player.playing ? "tut.pause" : "tut.play"))
-            .accessibilityIdentifier("tutorial.playPause")
             Button { player.play(from: min(guide.steps.count - 1, player.step + 1)) } label: {
                 Image(systemName: "forward.fill")
             }
@@ -541,17 +561,52 @@ private struct TutorialActionSheet: View {
 /// "How to use" on the homes. `.icon` for a toolbar, `.label` for the simple home
 /// (a larger capsule with text), `.row` for Settings → About.
 struct TutorialHelpButton: View {
-    enum Style { case icon, label, row }
+    enum Style { case icon, label, row, card }
     let role: TutorialRole
     var style: Style = .icon
     var tint: Color = SettingsTint.safe
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
     @State private var open = false
+    @ObservedObject private var history = TutorialHistory.shared
+
+    private var watchedAny: Bool {
+        history.hasWatched(any: TutorialCatalog.guides(for: role))
+    }
 
     var body: some View {
         Button { open = true } label: {
             switch style {
+            case .card:
+                // On Home: always visible, says "Watch again" once a guide was watched
+                HStack(spacing: 12) {
+                    Image(systemName: "play.rectangle.fill")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 44, height: 44)
+                        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(tint))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(lang.localized("tut.button"))
+                            .font(.scaled(size: 16, weight: .bold))
+                            .foregroundStyle(Color.appInk)
+                        Text(lang.localized("tut.row.subtitle"))
+                            .font(.scaled(size: 13))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: 8)
+                    Text(lang.localized(watchedAny ? "tut.watchAgain" : "tut.watch"))
+                        .font(.scaled(size: 14, weight: .semibold))
+                        .foregroundStyle(tint)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(Capsule().fill(tint.opacity(0.12)))
+                        .fixedSize()
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color(.secondarySystemGroupedBackground)))
+                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(tint.opacity(0.3), lineWidth: 1))
             case .icon:
                 Image(systemName: "questionmark.circle")
                     .font(.system(size: 17, weight: .semibold))
@@ -571,7 +626,7 @@ struct TutorialHelpButton: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(lang.localized("tut.button"))
-        .accessibilityIdentifier("home.tutorial")
+        .accessibilityIdentifier(style == .card ? "home.tutorialCard" : "home.tutorial")
         .sheet(isPresented: $open) {
             TutorialCenterView(role: role).environmentObject(coordinator)
         }

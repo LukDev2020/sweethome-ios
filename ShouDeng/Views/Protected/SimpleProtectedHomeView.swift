@@ -116,6 +116,9 @@ struct SimpleProtectedHomeView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
 
+                // How to use: always on Home so guides can be watched again
+                TutorialHelpButton(role: .protected, style: .card, tint: teal)
+
                 Button {
                     coordinator.setHomeStyle(.standard)
                 } label: {

@@ -2,9 +2,11 @@ import SwiftUI
 
 // MARK: - Duress Code Settings
 //
-// Allows the user to set a "fake" unlock code. When entered on the login screen,
-// the app appears to load normally but silently triggers an SOS with
-// .duressPassword trigger method. The escalation engine already handles this.
+// A secret code for when someone forces you. It works in two places:
+//  - "End the SOS?" → "Enter code instead": the SOS looks ended but keeps going
+//    (EndSOSSheet → AppCoordinator.concealSOS).
+//  - Disguise Mode calculator: code + "=" opens the app and always sends a silent
+//    SOS (.duressPassword), whatever the "silent SOS on reveal" setting says.
 
 struct DuressCodeSettingsView: View {
     @EnvironmentObject var coordinator: AppCoordinator
@@ -245,7 +247,8 @@ struct DuressCodeSettingsView: View {
     }
 
     private func saveDuressCode() {
-        guard newCode.count >= 4 else {
+        // Digits only: the End-SOS field and the disguise calculator can only type digits
+        guard newCode.count >= 4, newCode.allSatisfy({ $0.isASCII && $0.isNumber }) else {
             errorMessage = langManager.localized("duress.error.short")
             return
         }

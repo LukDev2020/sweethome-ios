@@ -260,21 +260,21 @@ final class DisguiseModeService: ObservableObject {
 
     /// Called by a disguise view when the secret gesture is detected.
     /// Reveals the real app and, if configured, fires a silent SOS.
+    /// `duress`: the duress code opened it, meaning someone is forcing the user,
+    /// so a silent SOS goes out whatever the "silent SOS on reveal" setting says.
     @MainActor
-    func handleSecretGestureDetected() {
+    func handleSecretGestureDetected(duress: Bool = false) {
         // Reveal the app first — do this synchronously so the UI responds instantly.
         // Temporary: disguise stays enabled and returns when the app is backgrounded.
         revealTemporarily()
 
-        // Optionally fire silent SOS — dispatched asynchronously so it doesn't
-        // block the UI transition.
-        if silentSOSOnReveal {
+        if duress || silentSOSOnReveal {
             silentSOSTrigger()
         }
     }
 
     /// Fire a silent SOS via the duressPassword trigger method.
-    /// This is identical to the duress code path used at login:
+    /// Same as the duress code at "end SOS":
     ///   — looks like normal app usage from the outside
     ///   — silently alerts all guardians
     @MainActor
@@ -302,6 +302,14 @@ final class DisguiseModeService: ObservableObject {
             return true
         }
         return false
+    }
+
+    /// True only for the user's duress code (not 911 / 999): opening the app with
+    /// it always sends a silent SOS.
+    func isDuressCode(_ input: String) -> Bool {
+        let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let duress = KeychainHelper.shared.read(.duressCode), !duress.isEmpty else { return false }
+        return trimmed == duress
     }
 
     /// Returns true if the given text (lowercased, trimmed) matches the configured

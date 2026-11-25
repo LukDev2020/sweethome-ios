@@ -174,6 +174,10 @@ struct GuardianHomeView: View {
     private var compactLayout: some View {
         ScrollView {
             VStack(spacing: 0) {
+                // How to use: always on Home so guides can be watched again
+                TutorialHelpButton(role: .guardian, style: .card, tint: pro)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
                 globeSection
                 worldClocks
                     .coachMark(CoachAnchor.clocks)
@@ -245,6 +249,9 @@ struct GuardianHomeView: View {
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
+                    TutorialHelpButton(role: .guardian, style: .card, tint: pro)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
 
                     globeSection
                     worldClocks

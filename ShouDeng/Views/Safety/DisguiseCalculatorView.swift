@@ -320,7 +320,7 @@ struct DisguiseCalculatorView: View {
             // (user typed "911" then "=" without any operator)
             let directCode = display.trimmingCharacters(in: .whitespacesAndNewlines)
             if disguise.isSecretCalculatorCode(directCode) {
-                triggerReveal()
+                triggerReveal(duress: disguise.isDuressCode(directCode))
                 return
             }
             justEvaluated = true
@@ -337,7 +337,7 @@ struct DisguiseCalculatorView: View {
             shouldResetDisplay = true
             inputSequence = ""
             justEvaluated = true
-            triggerReveal()
+            triggerReveal(duress: disguise.isDuressCode(code))
             return
         }
 
@@ -436,7 +436,7 @@ struct DisguiseCalculatorView: View {
 
     // MARK: - Secret Reveal
 
-    private func triggerReveal() {
+    private func triggerReveal(duress: Bool) {
         // Fade the calculator out, then hand off to DisguiseModeService.
         withAnimation(.easeIn(duration: 0.2)) {
             isRevealing = true
@@ -444,7 +444,7 @@ struct DisguiseCalculatorView: View {
         // Short delay so the animation can play before state changes.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
             Task { @MainActor in
-                disguise.handleSecretGestureDetected()
+                disguise.handleSecretGestureDetected(duress: duress)
             }
         }
     }

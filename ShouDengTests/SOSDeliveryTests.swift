@@ -432,6 +432,33 @@ final class SafetyPathTests: XCTestCase {
         XCTAssertEqual(KeychainHelper.shared.read(.duressCode), "4321")
     }
 
+    /// Forced to open the disguised app: the duress code (not 911/999) always sends
+    /// a silent SOS, even with "silent SOS on reveal" turned off.
+    @MainActor
+    func testDuressCodeOnTheDisguiseCalculatorAlwaysSendsSilentSOS() {
+        final class Spy: SOSTriggerTarget { var methods: [SOSTriggerMethod] = []
+            func triggerSOS(method: SOSTriggerMethod) { methods.append(method) } }
+        let service = DisguiseModeService.shared
+        let had = KeychainHelper.shared.read(.duressCode)
+        let hadSilent = service.silentSOSOnReveal
+        defer {
+            if let had { KeychainHelper.shared.save(had, for: .duressCode) } else { KeychainHelper.shared.delete(.duressCode) }
+            service.setSilentSOSOnReveal(hadSilent)
+        }
+        KeychainHelper.shared.save("4321", for: .duressCode)
+        XCTAssertTrue(service.isDuressCode("4321"))
+        XCTAssertFalse(service.isDuressCode("911"))
+        XCTAssertTrue(service.isSecretCalculatorCode("4321"))
+
+        let spy = Spy()
+        service.configure(coordinator: spy)
+        service.setSilentSOSOnReveal(false)
+        service.handleSecretGestureDetected(duress: false)
+        XCTAssertTrue(spy.methods.isEmpty, "911= with the setting off only opens the app")
+        service.handleSecretGestureDetected(duress: true)
+        XCTAssertEqual(spy.methods, [.duressPassword])
+    }
+
     func testMedicalCardCacheRoundTripAndClear() {
         let previous = MedicalCardCache.fileURL
         MedicalCardCache.fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("mc-\(UUID().uuidString).enc")

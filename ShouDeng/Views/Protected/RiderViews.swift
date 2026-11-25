@@ -54,6 +54,8 @@ struct RiderHomeView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 4)
                 handsFreeRow
+                // How to use: always on Home so guides can be watched again
+                TutorialHelpButton(role: .rider, style: .card, tint: RC.safe)
                 Text(lang.localized("rider.quick")).font(.scaled(size: 13, weight: .semibold)).foregroundStyle(.secondary)
                 quickAction("car.side.rear.and.collision.and.car.side.front", lang.localized("rider.crash.title"),
                             lang.localized("rider.crash.short"), RC.alert) {

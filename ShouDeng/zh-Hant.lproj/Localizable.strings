@@ -166,7 +166,7 @@
 "duress.code.placeholder" = "至少 4 位數字";
 "duress.save" = "儲存";
 "duress.active.desc" = "結束求助時輸入此密碼，求助看起來已結束，實際仍會悄悄提醒你的守護者。";
-"duress.saved.message" = "請保密。只在被人強迫解鎖 App 時使用。";
+"duress.saved.message" = "請保密。只在有人逼你結束 SOS 或打開 App 時使用。";
 "duress.error.short" = "至少需要 4 位數字";
 
 /* 沉默即報警 */
@@ -1102,7 +1102,7 @@
 "disguise.notes" = "備忘錄";
 "disguise.activate" = "啟用偽裝";
 "disguise.deactivate" = "關閉偽裝";
-"disguise.secret.calculator" = "輸入 911= 或脅迫碼+= 解除偽裝";
+"disguise.secret.calculator" = "輸入 911= 解除偽裝；輸入脅迫碼再按 = 會解除偽裝並悄悄發出 SOS";
 "disguise.secret.weather" = "三擊溫度數字解除偽裝";
 "disguise.secret.notes" = "在筆記中輸入密語解除偽裝";
 
@@ -2369,7 +2369,7 @@
 "guardian.records.shift.gap" = "無人值守";
 "claim.medicalEmpty" = "尚未填寫醫療卡。";
 "timeline.sosEnded" = "SOS 已結束";
-"duress.how.step5" = "它也能「假裝」結束 SOS：在「結束 SOS？」裡點「改用密碼」並輸入此密碼。螢幕上 SOS 看起來已結束，但守護者仍會繼續收到警報";
+"duress.how.step5" = "開啟偽裝模式後，在計算機裡輸入此密碼再按「=」，App 會打開，同時悄悄向守護者發出 SOS";
 
 /* Rider onboarding */
 "signup.start.rider" = "我做外賣或網約車";
@@ -3153,5 +3153,7 @@
 "tut.textSize.s2" = "點一個更大的「Aa」，所有頁面的字馬上變大。";
 "tut.textSize.s3" = "點一種語言，整個應用就會切換。";
 "tut.row.subtitle" = "每一步都在畫面上示範的指南";
+"tut.watch" = "觀看";
+"tut.watchAgain" = "再看一遍";
 "tut.sample.sosTimerGuardian" = "求助 00:12 · 正在分享她的位置";
 "tut.sample.rider" = "小林";

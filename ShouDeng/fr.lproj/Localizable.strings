@@ -166,7 +166,7 @@
 "duress.code.placeholder" = "Au moins 4 chiffres";
 "duress.save" = "Enregistrer";
 "duress.active.desc" = "Saisir ce code en arrêtant un SOS le fait paraître terminé, alors qu'il continue d'alerter discrètement vos gardiens.";
-"duress.saved.message" = "Gardez-le secret. Utilisez-le seulement si quelqu'un vous force à déverrouiller l'app.";
+"duress.saved.message" = "Gardez-le secret. Utilisez-le seulement si quelqu'un vous force à arrêter un SOS ou à ouvrir l'app.";
 "duress.error.short" = "Au moins 4 chiffres";
 
 /* Alarme silencieuse */
@@ -1102,7 +1102,7 @@
 "disguise.notes" = "Notes";
 "disguise.activate" = "Activer le déguisement";
 "disguise.deactivate" = "Désactiver";
-"disguise.secret.calculator" = "Tapez 911= ou votre code de contrainte + = pour révéler";
+"disguise.secret.calculator" = "Tapez 911= pour révéler. Votre code de contrainte + = révèle et envoie discrètement un SOS";
 "disguise.secret.weather" = "Triple-tap sur la température pour révéler";
 "disguise.secret.notes" = "Tapez votre phrase secrète dans une note pour révéler";
 
@@ -2369,7 +2369,7 @@
 "guardian.records.shift.gap" = "Personne de garde";
 "claim.medicalEmpty" = "Aucune fiche médicale n'a encore été remplie.";
 "timeline.sosEnded" = "SOS terminé";
-"duress.how.step5" = "Il permet aussi de terminer un SOS en apparence : dans « Terminer le SOS ? », touchez « Saisir un code » et tapez ce code. Le SOS semble terminé à l'écran, mais vos gardiens continuent de recevoir l'alerte";
+"duress.how.step5" = "Avec le mode discret, taper ce code puis « = » sur la calculatrice ouvre l'app et envoie discrètement un SOS à vos gardiens";
 
 /* Rider onboarding */
 "signup.start.rider" = "Je livre ou je conduis pour le travail";
@@ -3153,5 +3153,7 @@
 "tut.textSize.s2" = "Touchez un « Aa » plus grand : tout le texte grandit aussitôt.";
 "tut.textSize.s3" = "Touchez une langue pour changer toute l'app.";
 "tut.row.subtitle" = "Des guides qui montrent chaque étape à l'écran";
+"tut.watch" = "Regarder";
+"tut.watchAgain" = "Revoir";
 "tut.sample.sosTimerGuardian" = "SOS 00:12 · elle partage sa position";
 "tut.sample.rider" = "Sam";

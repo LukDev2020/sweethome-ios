@@ -166,7 +166,7 @@
 "duress.code.placeholder" = "4桁以上の数字";
 "duress.save" = "保存";
 "duress.active.desc" = "SOSを終了するときにこのコードを入力すると、終了したように見えますが、見守る人へのSOSはひそかに続きます。";
-"duress.saved.message" = "他人に知られないようにしてください。アプリのロック解除を強要されたときだけ使います。";
+"duress.saved.message" = "他人に知られないようにしてください。SOSの終了やアプリを開くよう強要されたときだけ使います。";
 "duress.error.short" = "4桁以上入力してください";
 
 /* Silent Alarm */
@@ -1102,7 +1102,7 @@
 "disguise.notes" = "メモ";
 "disguise.activate" = "偽装を有効にする";
 "disguise.deactivate" = "偽装を解除";
-"disguise.secret.calculator" = "911= または強要時コード + = を入力すると解除されます";
+"disguise.secret.calculator" = "911= で解除。脅迫コード+= で解除し、ひそかにSOSを送信";
 "disguise.secret.weather" = "気温をトリプルタップすると解除されます";
 "disguise.secret.notes" = "メモに秘密のフレーズを入力すると解除されます";
 
@@ -2369,7 +2369,7 @@
 "guardian.records.shift.gap" = "担当者なし";
 "claim.medicalEmpty" = "医療カードはまだ入力されていません。";
 "timeline.sosEnded" = "SOSは終了しました";
-"duress.how.step5" = "SOSを「終了したように見せる」こともできます：「SOS を終了しますか？」で「コードを入力」をタップしてこのコードを入力すると、画面ではSOSが終了したように見えますが、見守る人には通報が続きます";
+"duress.how.step5" = "偽装モード中は、電卓でこのコードを入力して「=」を押すと、アプリが開き、見守る人にひそかにSOSが送られます";
 
 /* Rider onboarding */
 "signup.start.rider" = "配達やライドシェアの仕事をしている";
@@ -3153,5 +3153,7 @@
 "tut.textSize.s2" = "大きい「Aa」をタップすると、すぐに全画面の文字が大きくなります。";
 "tut.textSize.s3" = "言語をタップするとアプリ全体が切り替わります。";
 "tut.row.subtitle" = "手順を画面で見せるガイド";
+"tut.watch" = "見る";
+"tut.watchAgain" = "もう一度見る";
 "tut.sample.sosTimerGuardian" = "SOS 00:12・位置を共有中";
 "tut.sample.rider" = "拓也";

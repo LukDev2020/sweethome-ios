@@ -166,7 +166,7 @@
 "duress.code.placeholder" = "At least 4 digits";
 "duress.save" = "Save";
 "duress.active.desc" = "Entering this code when ending an SOS makes it look ended, while it quietly keeps alerting your guardians.";
-"duress.saved.message" = "Keep it secret. Use it only if someone forces you to unlock the app.";
+"duress.saved.message" = "Keep it secret. Use it only if someone forces you to end an SOS or to open the app.";
 "duress.error.short" = "Use at least 4 digits";
 
 /* Silent Alarm */
@@ -1102,7 +1102,7 @@
 "disguise.notes" = "Notes";
 "disguise.activate" = "Activate Disguise";
 "disguise.deactivate" = "Deactivate";
-"disguise.secret.calculator" = "Type 911= or your duress code + = to reveal";
+"disguise.secret.calculator" = "Type 911= to reveal. Your duress code + = reveals and quietly sends an SOS";
 "disguise.secret.weather" = "Triple-tap the temperature to reveal";
 "disguise.secret.notes" = "Type your secret phrase in a note to reveal";
 
@@ -2369,7 +2369,7 @@
 "guardian.records.shift.gap" = "No one on duty";
 "claim.medicalEmpty" = "No medical card has been filled in yet.";
 "timeline.sosEnded" = "SOS ended";
-"duress.how.step5" = "It also ends an SOS for show: under “End the SOS?” tap “Enter code instead” and type this code. The SOS looks ended on your screen, but your guardians keep getting the alert";
+"duress.how.step5" = "With Disguise Mode on, typing this code and “=” on the calculator opens the app and quietly sends an SOS to your guardians";
 
 /* Rider onboarding */
 "signup.start.rider" = "I deliver or drive for work";
@@ -3153,5 +3153,7 @@
 "tut.textSize.s2" = "Tap a bigger “Aa” — every screen gets larger text straight away.";
 "tut.textSize.s3" = "Tap a language to switch the whole app.";
 "tut.row.subtitle" = "Guides that show each step on screen";
+"tut.watch" = "Watch";
+"tut.watchAgain" = "Watch again";
 "tut.sample.sosTimerGuardian" = "SOS 00:12 · sharing her location";
 "tut.sample.rider" = "Sam";
