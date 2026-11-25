@@ -36,7 +36,7 @@ struct TutorialCenterView: View {
                     } else if results.isEmpty {
                         noResults
                     } else {
-                        guideList(String(format: lang.localized("tut.search.count"), results.count), results)
+                        guideList(results.count == 1 ? lang.localized("tut.search.one") : String(format: lang.localized("tut.search.count"), results.count), results)
                     }
                 }
                 .padding(.horizontal, 16)

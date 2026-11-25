@@ -2948,6 +2948,7 @@
 "tut.title" = "How to use";
 "tut.search.prompt" = "Search: SOS, invite, hospital…";
 "tut.search.count" = "%d guides";
+"tut.search.one" = "1 guide";
 "tut.search.none" = "No guide for “%@”. In an emergency, use the buttons below.";
 "tut.length" = "%d steps";
 "tut.cat.emergency" = "In an emergency";

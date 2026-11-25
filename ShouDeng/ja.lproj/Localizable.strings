@@ -2948,6 +2948,7 @@
 "tut.title" = "使い方";
 "tut.search.prompt" = "検索：SOS、招待、病院…";
 "tut.search.count" = "%d 件のガイド";
+"tut.search.one" = "1 件のガイド";
 "tut.search.none" = "「%@」のガイドはありません。緊急時は下のボタンを使ってください。";
 "tut.length" = "%d ステップ";
 "tut.cat.emergency" = "緊急のとき";

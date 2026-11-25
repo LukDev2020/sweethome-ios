@@ -2948,6 +2948,7 @@
 "tut.title" = "使用指南";
 "tut.search.prompt" = "搜尋：求助、邀請、醫院…";
 "tut.search.count" = "%d 個指南";
+"tut.search.one" = "1 個指南";
 "tut.search.none" = "沒有找到「%@」的指南。緊急情況請直接用下面的按鈕。";
 "tut.length" = "%d 步";
 "tut.cat.emergency" = "緊急情況";
