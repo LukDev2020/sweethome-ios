@@ -278,6 +278,9 @@
 		CC33DD010000200E /* DisguiseNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD010000100E /* DisguiseNotesView.swift */; };
 		CC33DD010000200F /* DisguiseModeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33DD010000100F /* DisguiseModeSettingsView.swift */; };
 		DD44EE0100000005 /* LockScreenCardSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD44EE0100000004 /* LockScreenCardSettingsView.swift */; };
+		7A11C0DE0000000000000B01 /* TutorialKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A11C0DE0000000000000A01 /* TutorialKit.swift */; };
+		7A11C0DE0000000000000B02 /* TutorialCenterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A11C0DE0000000000000A02 /* TutorialCenterView.swift */; };
+		7A11C0DE0000000000000B03 /* TutorialCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A11C0DE0000000000000A03 /* TutorialCatalog.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -585,6 +588,9 @@
 		CC33DD010000100E /* DisguiseNotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisguiseNotesView.swift; sourceTree = "<group>"; };
 		CC33DD010000100F /* DisguiseModeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisguiseModeSettingsView.swift; sourceTree = "<group>"; };
 		DD44EE0100000004 /* LockScreenCardSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockScreenCardSettingsView.swift; sourceTree = "<group>"; };
+		7A11C0DE0000000000000A01 /* TutorialKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TutorialKit.swift; sourceTree = "<group>"; };
+		7A11C0DE0000000000000A02 /* TutorialCenterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TutorialCenterView.swift; sourceTree = "<group>"; };
+		7A11C0DE0000000000000A03 /* TutorialCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TutorialCatalog.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -600,6 +606,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7A11C0DE0000000000000C01 /* Tutorial */ = {
+			isa = PBXGroup;
+			children = (
+				7A11C0DE0000000000000A01 /* TutorialKit.swift */,
+				7A11C0DE0000000000000A02 /* TutorialCenterView.swift */,
+				7A11C0DE0000000000000A03 /* TutorialCatalog.swift */,
+			);
+			path = Tutorial;
+			sourceTree = "<group>";
+		};
 		B30F564173FDBCA8CE26D0F5 /* ExploreMode */ = {
 			isa = PBXGroup;
 			children = (
@@ -849,6 +865,7 @@
 				AA11BB2200003001 /* Settings */,
 				CC33DD0100003001 /* Safety */,
 				B30F564173FDBCA8CE26D0F5 /* ExploreMode */,
+				7A11C0DE0000000000000C01 /* Tutorial */,
 				77A7B02D23FB0255C4D07867 /* Shared */,
 			);
 			path = Views;
@@ -1423,6 +1440,9 @@
 				17ECF3A6FC58B3A276C95C92 /* DemoRootView.swift in Sources */,
 				20FAC7ED25D49535DDFDDC8B /* DemoOverlayView.swift in Sources */,
 				7B5C5ECEE97787F50A6FE3A0 /* CoachMark.swift in Sources */,
+				7A11C0DE0000000000000B01 /* TutorialKit.swift in Sources */,
+				7A11C0DE0000000000000B02 /* TutorialCenterView.swift in Sources */,
+				7A11C0DE0000000000000B03 /* TutorialCatalog.swift in Sources */,
 				34DFA3FDD630696D1C0C707C /* DemoRealTouchesViews.swift in Sources */,
 				57751E65320E1E419A71D91A /* DemoTour.swift in Sources */,
 				B79A812241363A1A3BDE880B /* DemoRealLocation.swift in Sources */,

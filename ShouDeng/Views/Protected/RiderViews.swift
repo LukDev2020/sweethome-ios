@@ -167,6 +167,7 @@ struct RiderHomeView: View {
             }
             Spacer()
             Image(systemName: coordinator.riderSettings.vehicle.symbol).font(.system(size: 28)).foregroundStyle(RC.safe)
+            TutorialHelpButton(role: .rider, style: .icon, tint: RC.ink)
             Button { showSettings = true } label: {
                 Image(systemName: "slider.horizontal.3").font(.system(size: 20)).foregroundStyle(RC.ink)
                     .frame(width: 40, height: 40)

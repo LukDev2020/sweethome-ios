@@ -543,6 +543,8 @@ struct ProtectedSettingsView: View {
 
     private var aboutSection: some View {
         SettingsSection(langManager.localized("settings.section.about")) {
+            TutorialHelpButton(role: coordinator.isRiderMode ? .rider : .protected, style: .row)
+            SettingsDivider()
             TipsSettingsPanel()
             SettingsDivider()
             Button { showPrivacy = true } label: {

@@ -59,9 +59,14 @@ struct SimpleProtectedHomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(greeting)
-                        .font(.scaled(size: 30, weight: .bold))
-                        .foregroundStyle(ink)
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(greeting)
+                            .font(.scaled(size: 30, weight: .bold))
+                            .foregroundStyle(ink)
+                        Spacer(minLength: 0)
+                        // How to use: guides that play the real screens, emergency actions first
+                        TutorialHelpButton(role: .protected, style: .label, tint: teal)
+                    }
                     if let watcher {
                         HStack(spacing: 8) {
                             Circle().fill(safe).frame(width: 12, height: 12)

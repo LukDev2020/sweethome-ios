@@ -78,6 +78,9 @@ struct GuardianHomeView: View {
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
+                    TutorialHelpButton(role: .guardian, tint: pro)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     // Tappable: the family page (who I protect, their guardians, add someone)
                     Button { showFamilySheet = true } label: {
                         HStack(spacing: 4) {
@@ -220,6 +223,7 @@ struct GuardianHomeView: View {
                             .padding(.vertical, 4)
                             .background(safe.opacity(0.1))
                             .clipShape(Capsule())
+                        TutorialHelpButton(role: .guardian, tint: pro)
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 12)

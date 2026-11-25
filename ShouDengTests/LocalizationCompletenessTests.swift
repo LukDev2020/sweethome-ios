@@ -300,3 +300,55 @@ final class LockScreenCardTextTests: XCTestCase {
         }
     }
 }
+
+/// The how-to guides read their texts through keys built at runtime ("tut.<id>.s1")
+/// and through the mock screens, which the literal scan does not see.
+final class TutorialGuideTests: XCTestCase {
+    func testEveryGuideTextExistsInEveryLanguage() throws {
+        let keys = Set(TutorialCatalog.all.flatMap(\.allKeys) + TutorialCategory.allCases.map(\.titleKey))
+        XCTAssertGreaterThan(keys.count, 150)
+        for language in ["en", "zh-Hans", "zh-Hant", "fr", "ja"] {
+            let path = try XCTUnwrap(Bundle.main.path(forResource: "Localizable", ofType: "strings",
+                                                      inDirectory: nil, forLocalization: language), language)
+            let table = try XCTUnwrap(NSDictionary(contentsOfFile: path) as? [String: String], language)
+            XCTAssertEqual(keys.filter { table[$0]?.isEmpty ?? true }.sorted(), [], language)
+        }
+    }
+
+    func testEveryRoleHasGuidesInEachPartAndIdsAreUnique() {
+        XCTAssertEqual(Set(TutorialCatalog.all.map(\.id)).count, TutorialCatalog.all.count)
+        for role in TutorialRole.allCases {
+            let guides = TutorialCatalog.guides(for: role)
+            XCTAssertTrue(guides.contains { $0.category == .emergency }, "\(role) has no emergency guide")
+            XCTAssertTrue(guides.contains { $0.category == .people || role == .guardian && $0.id == "addPerson" }, "\(role)")
+        }
+    }
+
+    /// A gesture must point at something on its screen, or the finger never shows
+    func testEveryGestureTargetIsOnItsScreen() {
+        for guide in TutorialCatalog.all {
+            for (i, step) in guide.steps.enumerated() {
+                guard let target = step.gesture.target else { continue }
+                let s = step.screen
+                var ids = Set((s.items + (s.sheet?.items ?? [])).map(\.id))
+                if let banner = s.banner { ids.insert(banner.id) }
+                if let tabs = s.tabs, s.sheet == nil { ids.formUnion(tabs.icons.indices.map { "tab.\($0)" }) }
+                let base = target.split(separator: ".").first.map(String.init) ?? target
+                XCTAssertTrue(ids.contains(target) || (!target.hasPrefix("tab.") && ids.contains(base)),
+                              "\(guide.id) step \(i + 1): nothing called \(target)")
+            }
+        }
+    }
+
+    func testSearchFindsGuidesByEverydayWords() {
+        let saved = LanguageManager.shared.current
+        LanguageManager.shared.current = .english
+        defer { LanguageManager.shared.current = saved }
+        let protected = TutorialCatalog.guides(for: .protected)
+        XCTAssertTrue(protected.filter { $0.matches("hospital") }.contains { $0.id == "nearby" })
+        XCTAssertTrue(protected.filter { $0.matches("fell") }.contains { $0.id == "fall" })
+        XCTAssertTrue(protected.filter { $0.matches("invite") }.contains { $0.id == "inviteGuardian" })
+        XCTAssertTrue(protected.filter { $0.matches("") }.count == protected.count)
+        XCTAssertTrue(protected.filter { $0.matches("zzzz") }.isEmpty)
+    }
+}

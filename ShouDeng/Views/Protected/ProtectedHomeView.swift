@@ -91,9 +91,12 @@ struct ProtectedHomeView: View {
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Text(toolbarBattery)
-                        .font(.scaled(size: 12))
-                        .foregroundStyle(ink.opacity(0.55))
+                    HStack(spacing: 8) {
+                        Text(toolbarBattery)
+                            .font(.scaled(size: 12))
+                            .foregroundStyle(ink.opacity(0.55))
+                        TutorialHelpButton(role: .protected, tint: safe)
+                    }
                 }
             }
             .navigationDestination(for: String.self) { guardianId in
@@ -295,6 +298,7 @@ struct ProtectedHomeView: View {
                             .padding(.vertical, 4)
                             .background(ink.opacity(0.06))
                             .clipShape(Capsule())
+                        TutorialHelpButton(role: .protected, tint: safe)
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 12)
