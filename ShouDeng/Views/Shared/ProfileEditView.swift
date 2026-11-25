@@ -37,6 +37,8 @@ struct AvatarView: View {
                     .lineLimit(1).minimumScaleFactor(0.4)
                     .font(.scaled(size: size * 0.38, weight: .medium))
                     .foregroundStyle(ink)
+                    // At the biggest text sizes two-character initials (秀兰) stay inside the circle
+                    .frame(maxWidth: size * 0.8)
             }
         }
     }

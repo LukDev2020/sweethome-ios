@@ -2917,3 +2917,28 @@
 "seats.switch.desc" = "追加した人の分だけ支払います。新しいプランが始まると現在のプランは終了します。";
 "seats.full.title" = "人数の上限に達しています";
 "seats.full.desc" = "招待する人のために人数を追加してください";
+
+/* Settings layout (SettingsKit) */
+"settings.section.display" = "表示と言語";
+"settings.section.featured" = "注目の機能";
+"settings.section.familyRole" = "家族と役割";
+"settings.section.accountSecurity" = "アカウントとセキュリティ";
+"settings.section.dataPrivacy" = "データとプライバシー";
+"settings.section.about" = "このアプリについて";
+"settings.featured.disguise.desc" = "電卓・天気・メモの画面の後ろにアプリを隠します";
+"settings.featured.fakeCall.desc" = "着信のふりをして、その場を離れられます";
+"lsc.customize.detail" = "文字サイズ・色・表示する内容";
+"plan.addPeople" = "人数を追加・プランを変更";
+"plan.free.title" = "人数分のプランで家族みんなを見守る";
+"plan.benefit.history" = "180 日間の位置履歴";
+"plan.benefit.reports" = "PDF レポートと履歴の書き出し";
+"plan.benefit.family" = "当番表と家族ダッシュボード";
+"plan.free.from" = "見守られる人 1 人 + 見守る人 1 人で月額 %@ から";
+"plan.free.cta" = "人数を選ぶ";
+"plan.free.floor" = "SOS・サイレント SOS・強要コード・安否報告はずっと無料";
+"plan.protected.title" = "家族がプランを始められます";
+"plan.protected.desc" = "ふつうは見守る家族が支払います。あなたを含め家族全員が使えます。";
+"plan.protected.invite" = "見守ってくれる人を招待";
+"plan.protected.ask" = "家族に頼む";
+"plan.protected.askMessage" = "Beaconify の家族プランを始めてもらえる？Beaconify の「設定」を開くと一番上にあります。";
+"plan.protected.self" = "自分で始める";

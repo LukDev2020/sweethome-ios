@@ -63,6 +63,7 @@ enum CheckInReminder {
 }
 
 /// "Daily check-in reminder" switch + time, and how long before family is alerted
+/// (rows; the Settings section gives the title and the overdue hint)
 struct CheckInSettingsPanel: View {
     @ObservedObject private var lang = LanguageManager.shared
     @AppStorage(CheckInReminder.enabledKey) private var enabled = true
@@ -70,7 +71,6 @@ struct CheckInSettingsPanel: View {
 
     /// Same as the server's check-in overdue job (scheduled/checkinOverdue.ts)
     static let familyAlertHours = 8
-    private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
 
     private var time: Binding<Date> {
         Binding(
@@ -84,36 +84,27 @@ struct CheckInSettingsPanel: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(lang.localized("protected.settings.section.checkIn"))
-                .font(.scaled(size: 12))
-                .foregroundStyle(.secondary)
-            HStack {
-                Text(lang.localized("protected.settings.checkIn.dailyReminder")).font(.scaled(size: 13))
-                Spacer()
-                Toggle("", isOn: $enabled).labelsHidden().tint(safe)
-                    .accessibilityLabel(lang.localized("protected.settings.checkIn.dailyReminder"))
-            }
-            .onChange(of: enabled) { _, _ in CheckInReminder.apply() }
+        VStack(alignment: .leading, spacing: 0) {
+            SettingsToggleRow(icon: "checkmark.circle.fill", tint: SettingsTint.safe,
+                              title: lang.localized("protected.settings.checkIn.dailyReminder"), isOn: $enabled)
+                .accessibilityLabel(lang.localized("protected.settings.checkIn.dailyReminder"))
+                .onChange(of: enabled) { _, _ in CheckInReminder.apply() }
             if enabled {
-                DatePicker(lang.localized("protected.settings.checkIn.time"), selection: time,
-                           displayedComponents: .hourAndMinute)
-                    .font(.scaled(size: 13))
+                SettingsDivider()
+                HStack(spacing: 12) {
+                    SettingsIcon(systemName: "alarm.fill", tint: SettingsTint.safe)
+                    DatePicker(lang.localized("protected.settings.checkIn.time"), selection: time,
+                               displayedComponents: .hourAndMinute)
+                        .font(.scaled(size: 15))
+                }
+                .padding(.vertical, 6)
             }
-            HStack(alignment: .firstTextBaseline) {
-                Text(lang.localized("protected.settings.checkIn.overdueThreshold")).font(.scaled(size: 13))
-                Spacer()
-                Text(String(format: lang.localized("protected.settings.checkIn.hours"), Self.familyAlertHours))
-                    .font(.scaled(size: 12))
-                    .foregroundStyle(.secondary)
-            }
-            Text(lang.localized("protected.settings.checkIn.overdueHint"))
-                .font(.scaled(size: 11))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            SettingsDivider()
+            SettingsRow(icon: "bell.badge.fill", tint: SettingsTint.safe,
+                        title: lang.localized("protected.settings.checkIn.overdueThreshold"),
+                        value: String(format: lang.localized("protected.settings.checkIn.hours"), Self.familyAlertHours),
+                        chevron: false)
         }
-        .padding(12)
-        .background(RoundedRectangle(cornerRadius: 12).stroke(Color(.separator).opacity(0.3), lineWidth: 1))
     }
 }
 
@@ -157,18 +148,23 @@ struct SOSNotificationRows: View {
                 .buttonStyle(.settingsRow)
                 .accessibilityIdentifier("settings.notifications.systemOff")
             }
-            HStack {
-                Text(lang.localized("settings.notification.sos")).font(.scaled(size: 13))
-                Spacer()
+            HStack(spacing: 12) {
+                SettingsIcon(systemName: "bell.badge.fill", tint: SettingsTint.sos)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(lang.localized("settings.notification.sos")).font(.scaled(size: 15))
+                    Text(lang.localized("settings.notification.sos.alwaysOnHint"))
+                        .font(.scaled(size: 12))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 8)
                 Label(lang.localized("settings.notification.sos.alwaysOn"), systemImage: "checkmark.circle.fill")
-                    .font(.scaled(size: 12, weight: .medium))
+                    .font(.scaled(size: 13, weight: .medium))
                     .foregroundStyle(systemOff ? Color.secondary : safe)
+                    .labelStyle(.iconOnly)
+                    .accessibilityLabel(lang.localized("settings.notification.sos.alwaysOn"))
             }
-            .padding(.vertical, 2)
-            Text(lang.localized("settings.notification.sos.alwaysOnHint"))
-                .font(.scaled(size: 11))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            .padding(.vertical, 3)
         }
         .task { await refresh() }
         .onChange(of: scenePhase) { _, phase in

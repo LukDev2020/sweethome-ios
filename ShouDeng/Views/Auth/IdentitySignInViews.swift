@@ -412,20 +412,7 @@ struct SignInMethodsRow: View {
             NavigationLink {
                 SignInMethodsView().environmentObject(coordinator)
             } label: {
-                HStack {
-                    Image(systemName: "person.badge.key")
-                        .font(.scaled(size: 14))
-                        .foregroundStyle(tint)
-                        .frame(width: 20)
-                    Text(lang.localized("auth.methods.title"))
-                        .font(.scaled(size: 13))
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.scaled(size: 12))
-                        .foregroundStyle(.tertiary)
-                }
-                .padding(.vertical, 2)
-                .contentShape(Rectangle())
+                SettingsRow(icon: "person.badge.key.fill", tint: tint, title: lang.localized("auth.methods.title"))
             }
             .buttonStyle(.settingsRow)
         }

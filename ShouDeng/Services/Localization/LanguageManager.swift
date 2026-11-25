@@ -28,6 +28,17 @@ enum AppLanguage: String, CaseIterable {
         }
     }
 
+    /// The language's name in that language (Settings: findable whatever the app is in)
+    var nativeName: String {
+        switch self {
+        case .english: return "English"
+        case .chinese: return "简体中文"
+        case .traditionalChinese: return "繁體中文"
+        case .french:  return "Français"
+        case .japanese: return "日本語"
+        }
+    }
+
     var isChinese: Bool { self == .chinese || self == .traditionalChinese }
 
     /// The app's name as shown in this language.

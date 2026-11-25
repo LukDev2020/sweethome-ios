@@ -19,7 +19,7 @@ struct LockScreenCardSettingsView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Pinned, so every change below can be seen on the card
-            preview
+            LockScreenCardPreview(style: style, showsTitle: true)
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
                 .padding(.bottom, 6)
@@ -95,13 +95,94 @@ struct LockScreenCardSettingsView: View {
         }
     }
 
-    // MARK: Preview
+    // MARK: Controls
 
-    private var preview: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(lang.localized("lsc.preview"))
-                .font(.scaled(size: 12))
+    private func section<C: View>(_ title: String, @ViewBuilder content: () -> C) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(.scaled(size: 13, weight: .semibold))
                 .foregroundStyle(.secondary)
+            content()
+        }
+        .padding(14)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color(.secondarySystemGroupedBackground)))
+    }
+
+    private func swatches<T: Hashable>(_ items: [T], selected: T, color: @escaping (T) -> Color,
+                                       label: @escaping (T) -> String, pick: @escaping (T) -> Void) -> some View {
+        HStack(spacing: 0) {
+            ForEach(items, id: \.self) { item in
+                Button { pick(item) } label: {
+                    VStack(spacing: 6) {
+                        Circle()
+                            .fill(color(item))
+                            .overlay(Circle().stroke(Color(.separator), lineWidth: 1))
+                            .overlay(Circle().stroke(safe, lineWidth: item == selected ? 3 : 0).padding(-4))
+                            .frame(width: 34, height: 34)
+                        Text(label(item))
+                            .font(.scaled(size: 11))
+                            .foregroundStyle(item == selected ? .primary : .secondary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 4)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(item == selected ? .isSelected : [])
+            }
+        }
+    }
+
+    private func rowToggle(_ row: LockScreenCardStyle.Section) -> some View {
+        Toggle(isOn: Binding(
+            get: { style.sections.contains(row) },
+            set: { on in
+                roomNote = nil
+                guard on else { style.sections.removeAll { $0 == row }; return }
+                // No room for one more row: turn off the least important other row
+                var rows = style.sections + [row]
+                var dropped: [LockScreenCardStyle.Section] = []
+                for other in [LockScreenCardStyle.Section.latest, .checkIn, .medical, .actions]
+                where other != row && rows.contains(other) && !style.fits(rows) {
+                    rows.removeAll { $0 == other }
+                    dropped.append(other)
+                }
+                style.sections = rows
+                if !dropped.isEmpty {
+                    roomNote = String(format: lang.localized("lsc.row.madeRoom"),
+                                      dropped.map { lang.localized("lsc.row.\($0.rawValue)") }.joined(separator: ", "))
+                }
+            }
+        )) {
+            Text(lang.localized("lsc.row.\(row.rawValue)"))
+                .font(.scaled(size: 15))
+        }
+        .tint(safe)
+    }
+}
+
+// MARK: - Preview
+
+/// The real card (the view the widget draws) on a lock-screen backdrop, with the line
+/// where the lock screen cuts it off. Customize pins it on top; Settings shows it as
+/// the lock screen card's tile.
+struct LockScreenCardPreview: View {
+    @EnvironmentObject var coordinator: AppCoordinator
+    @ObservedObject private var lang = LanguageManager.shared
+    let style: LockScreenCardStyle
+    var showsTitle = false
+
+    private var isGuardian: Bool { coordinator.userRole == .guardian }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if showsTitle {
+                Text(lang.localized("lsc.preview"))
+                    .font(.scaled(size: 12))
+                    .foregroundStyle(.secondary)
+            }
             GeometryReader { geo in
                 let width = geo.size.width - 20
                 ZStack(alignment: .top) {
@@ -174,72 +255,5 @@ struct LockScreenCardSettingsView: View {
             priorityPersonName: persons.first?.displayName ?? "",
             priorityPersonPhone: persons.isEmpty ? "" : "+1",
             updatedAt: Date())
-    }
-
-    // MARK: Controls
-
-    private func section<C: View>(_ title: String, @ViewBuilder content: () -> C) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(title)
-                .font(.scaled(size: 13, weight: .semibold))
-                .foregroundStyle(.secondary)
-            content()
-        }
-        .padding(14)
-        .background(RoundedRectangle(cornerRadius: 14).fill(Color(.secondarySystemGroupedBackground)))
-    }
-
-    private func swatches<T: Hashable>(_ items: [T], selected: T, color: @escaping (T) -> Color,
-                                       label: @escaping (T) -> String, pick: @escaping (T) -> Void) -> some View {
-        HStack(spacing: 0) {
-            ForEach(items, id: \.self) { item in
-                Button { pick(item) } label: {
-                    VStack(spacing: 6) {
-                        Circle()
-                            .fill(color(item))
-                            .overlay(Circle().stroke(Color(.separator), lineWidth: 1))
-                            .overlay(Circle().stroke(safe, lineWidth: item == selected ? 3 : 0).padding(-4))
-                            .frame(width: 34, height: 34)
-                        Text(label(item))
-                            .font(.scaled(size: 11))
-                            .foregroundStyle(item == selected ? .primary : .secondary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 4)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(item == selected ? .isSelected : [])
-            }
-        }
-    }
-
-    private func rowToggle(_ row: LockScreenCardStyle.Section) -> some View {
-        Toggle(isOn: Binding(
-            get: { style.sections.contains(row) },
-            set: { on in
-                roomNote = nil
-                guard on else { style.sections.removeAll { $0 == row }; return }
-                // No room for one more row: turn off the least important other row
-                var rows = style.sections + [row]
-                var dropped: [LockScreenCardStyle.Section] = []
-                for other in [LockScreenCardStyle.Section.latest, .checkIn, .medical, .actions]
-                where other != row && rows.contains(other) && !style.fits(rows) {
-                    rows.removeAll { $0 == other }
-                    dropped.append(other)
-                }
-                style.sections = rows
-                if !dropped.isEmpty {
-                    roomNote = String(format: lang.localized("lsc.row.madeRoom"),
-                                      dropped.map { lang.localized("lsc.row.\($0.rawValue)") }.joined(separator: ", "))
-                }
-            }
-        )) {
-            Text(lang.localized("lsc.row.\(row.rawValue)"))
-                .font(.scaled(size: 15))
-        }
-        .tint(safe)
     }
 }

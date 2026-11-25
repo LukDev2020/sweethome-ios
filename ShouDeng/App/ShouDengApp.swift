@@ -63,6 +63,14 @@ struct ShouDengApp: App {
                             .environmentObject(appDelegate.appCoordinator)
                     }
                 }
+                // `-settings-free-plan`: the Settings plan card of a family without a plan,
+                // for both roles (the demo family always has one)
+                .overlay {
+                    if ProcessInfo.processInfo.arguments.contains("-settings-free-plan") {
+                        SettingsPlanCardGallery()
+                            .environmentObject(appDelegate.appCoordinator)
+                    }
+                }
                 // `-liveTrackSim`: Live Track on its own, recording on this phone only (nothing
                 // sent) — drive it with `xcrun simctl location <udid> run "City Bicycle Ride"`
                 .overlay {

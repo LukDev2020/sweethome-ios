@@ -49,6 +49,7 @@
 		BB22CC3300001003 /* TripHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC3300002003 /* TripHistoryView.swift */; };
 		BB22CC3300001004 /* TripDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC3300002004 /* TripDetailView.swift */; };
 		5E77A1B2C3D4E5F6A7B8C9D1 /* SettingsSharedRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E77A1B2C3D4E5F6A7B8C9D0 /* SettingsSharedRows.swift */; };
+		5E77A1B2C3D4E5F6A7B8C9E1 /* SettingsKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E77A1B2C3D4E5F6A7B8C9E0 /* SettingsKit.swift */; };
 		E6335ACC9D5A1C7224F60BD5 /* LiveTrackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED429348EE07178B805D1C31 /* LiveTrackView.swift */; };
 		AA11BB2200001001 /* DuressCodeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB2200002001 /* DuressCodeSettingsView.swift */; };
 		AA11BB2200001002 /* SilentAlarmSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB2200002002 /* SilentAlarmSettingsView.swift */; };
@@ -537,6 +538,7 @@
 		BB22CC3300002003 /* TripHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripHistoryView.swift; sourceTree = "<group>"; };
 		BB22CC3300002004 /* TripDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripDetailView.swift; sourceTree = "<group>"; };
 		5E77A1B2C3D4E5F6A7B8C9D0 /* SettingsSharedRows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSharedRows.swift; sourceTree = "<group>"; };
+		5E77A1B2C3D4E5F6A7B8C9E0 /* SettingsKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsKit.swift; sourceTree = "<group>"; };
 		ED429348EE07178B805D1C31 /* LiveTrackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTrackView.swift; sourceTree = "<group>"; };
 		AA11BB2200002001 /* DuressCodeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuressCodeSettingsView.swift; sourceTree = "<group>"; };
 		AA11BB2200002002 /* SilentAlarmSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilentAlarmSettingsView.swift; sourceTree = "<group>"; };
@@ -889,6 +891,7 @@
 				BB22CC3300002004 /* TripDetailView.swift */,
 				ED429348EE07178B805D1C31 /* LiveTrackView.swift */,
 				5E77A1B2C3D4E5F6A7B8C9D0 /* SettingsSharedRows.swift */,
+				5E77A1B2C3D4E5F6A7B8C9E0 /* SettingsKit.swift */,
 				0879BC98D0B4991130725412 /* MedicalCardView.swift */,
 				3466851E2976AD062984576F /* OnboardingView.swift */,
 				5A999FE740978FB9A70C0B89 /* ProfileEditView.swift */,
@@ -1597,6 +1600,7 @@
 				BB22CC3300001004 /* TripDetailView.swift in Sources */,
 				E6335ACC9D5A1C7224F60BD5 /* LiveTrackView.swift in Sources */,
 				5E77A1B2C3D4E5F6A7B8C9D1 /* SettingsSharedRows.swift in Sources */,
+				5E77A1B2C3D4E5F6A7B8C9E1 /* SettingsKit.swift in Sources */,
 				0B1E36F80D59153D5A93D7BA /* FoldSplitView.swift in Sources */,
 				DD44EE010000000A /* AppColors.swift in Sources */,
 				42A6F0543B22E8DBB972EEBD /* WidgetDataStore.swift in Sources */,

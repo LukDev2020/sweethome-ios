@@ -2917,3 +2917,28 @@
 "seats.switch.desc" = "Ne payez que pour les personnes ajoutées. Votre formule actuelle prend fin au début de la nouvelle.";
 "seats.full.title" = "Toutes vos places sont prises";
 "seats.full.desc" = "Ajoutez une place pour la personne invitée";
+
+/* Settings layout (SettingsKit) */
+"settings.section.display" = "Affichage et langue";
+"settings.section.featured" = "À découvrir";
+"settings.section.familyRole" = "Famille et rôle";
+"settings.section.accountSecurity" = "Compte et sécurité";
+"settings.section.dataPrivacy" = "Données et confidentialité";
+"settings.section.about" = "À propos";
+"settings.featured.disguise.desc" = "Cachez l’app derrière une calculatrice, la météo ou des notes";
+"settings.featured.fakeCall.desc" = "Un faux appel entrant, pour vous éclipser";
+"lsc.customize.detail" = "Taille du texte, couleurs et contenu";
+"plan.addPeople" = "Ajouter des personnes ou changer d’offre";
+"plan.free.title" = "Veillez sur toute la famille";
+"plan.benefit.history" = "180 jours d’historique des positions";
+"plan.benefit.reports" = "Rapports PDF et export de l’historique";
+"plan.benefit.family" = "Planning de garde et tableau de bord familial";
+"plan.free.from" = "À partir de %@ par mois pour 1 proche suivi et 1 personne qui veille";
+"plan.free.cta" = "Choisir les personnes";
+"plan.free.floor" = "SOS, SOS silencieux, code de contrainte et check-in restent gratuits";
+"plan.protected.title" = "Votre famille peut activer l’offre";
+"plan.protected.desc" = "En général, c’est la personne qui veille sur vous qui paie. L’offre couvre toute la famille, vous compris.";
+"plan.protected.invite" = "Inviter quelqu’un à veiller sur vous";
+"plan.protected.ask" = "Demander à la famille";
+"plan.protected.askMessage" = "Peux-tu activer l’offre famille de Beaconify pour nous ? Ouvre Beaconify → Réglages, c’est tout en haut.";
+"plan.protected.self" = "Ou l’activer vous-même";

@@ -2917,3 +2917,28 @@
 "seats.switch.desc" = "Pay only for who you add. Your current plan ends when the new one starts.";
 "seats.full.title" = "All your seats are taken";
 "seats.full.desc" = "Add a seat so the person you invite is covered";
+
+/* Settings layout (SettingsKit) */
+"settings.section.display" = "Display and language";
+"settings.section.featured" = "Featured";
+"settings.section.familyRole" = "Family and role";
+"settings.section.accountSecurity" = "Account and security";
+"settings.section.dataPrivacy" = "Data and privacy";
+"settings.section.about" = "About";
+"settings.featured.disguise.desc" = "Hide the app behind a calculator, weather or notes screen";
+"settings.featured.fakeCall.desc" = "A pretend incoming call, to get away from someone";
+"lsc.customize.detail" = "Text size, colours and what it shows";
+"plan.addPeople" = "Add people or change plan";
+"plan.free.title" = "Look after the whole family";
+"plan.benefit.history" = "180 days of location history";
+"plan.benefit.reports" = "PDF reports and history export";
+"plan.benefit.family" = "Duty schedule and family dashboard";
+"plan.free.from" = "From %@ a month for 1 person looked after and 1 looking after";
+"plan.free.cta" = "Choose who’s included";
+"plan.free.floor" = "SOS, silent SOS, duress code and check-in stay free";
+"plan.protected.title" = "Your family can start the plan";
+"plan.protected.desc" = "Usually the person looking after you pays. It covers everyone in the family, you included.";
+"plan.protected.invite" = "Invite someone to look after you";
+"plan.protected.ask" = "Ask family to start it";
+"plan.protected.askMessage" = "Could you start the Beaconify family plan for us? Open Beaconify → Settings; it’s at the top.";
+"plan.protected.self" = "Or start it yourself";

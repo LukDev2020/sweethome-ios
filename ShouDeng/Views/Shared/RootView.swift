@@ -427,27 +427,18 @@ struct WorkRoleSettingsRow: View {
 
     var body: some View {
         if coordinator.isProtectedSide && coordinator.familyHomeStyle != HomeStyle.rider.rawValue {
-            Toggle(isOn: Binding(
+            SettingsDivider()
+            SettingsToggleRow(icon: "bicycle", tint: SettingsTint.safe,
+                              title: lang.localized("settings.workRole"),
+                              subtitle: lang.localized("settings.workRole.desc"),
+                              isOn: Binding(
                 get: { coordinator.hasWorkRole },
                 set: { on in
                     coordinator.setWorkRole(on)
                     // First time: where you ride, crew, the rider notice
                     if on && !coordinator.riderSetupDone { coordinator.beginRiderSetup(at: .ride) }
                 }
-            )) {
-                HStack(spacing: 8) {
-                    Image(systemName: "bicycle")
-                        .font(.scaled(size: 13))
-                        .foregroundStyle(.secondary)
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(lang.localized("settings.workRole")).font(.scaled(size: 13))
-                        Text(lang.localized("settings.workRole.desc"))
-                            .font(.scaled(size: 12))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-            .padding(.vertical, 2)
+            ))
             .accessibilityIdentifier("settings.workRole")
         }
     }
@@ -461,23 +452,13 @@ struct BothRolesSettingsRow: View {
     @State private var confirmOff = false
 
     var body: some View {
-        Toggle(isOn: Binding(
+        SettingsToggleRow(icon: "arrow.left.arrow.right", tint: SettingsTint.safe,
+                          title: lang.localized("settings.bothRoles"),
+                          subtitle: lang.localized("settings.bothRoles.desc"),
+                          isOn: Binding(
             get: { coordinator.hasBothRoles },
             set: { on in if on { coordinator.setBothRoles(true) } else { confirmOff = true } }
-        )) {
-            HStack(spacing: 8) {
-                Image(systemName: "arrow.left.arrow.right")
-                    .font(.scaled(size: 13))
-                    .foregroundStyle(.secondary)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(lang.localized("settings.bothRoles")).font(.scaled(size: 13))
-                    Text(lang.localized("settings.bothRoles.desc"))
-                        .font(.scaled(size: 12))
-                        .foregroundStyle(.secondary)
-                }
-            }
-        }
-        .padding(.vertical, 2)
+        ))
         .accessibilityIdentifier("settings.bothRoles")
         .alert(lang.localized("settings.bothRoles"), isPresented: $confirmOff) {
             Button(lang.localized("settings.bothRoles.offConfirm"), role: .destructive) {

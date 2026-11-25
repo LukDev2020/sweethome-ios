@@ -197,7 +197,7 @@ struct BigSOSButton: View {
 
 // MARK: - Settings panel
 
-/// Settings → Home style: simple (default), full, rider.
+/// Settings → Home style: simple (default), full, rider. Sits in a SettingsSection.
 struct HomeStylePanel: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
@@ -212,10 +212,7 @@ struct HomeStylePanel: View {
     @State private var showRiderSettings = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(lang.localized("homeStyle.section"))
-                .font(.scaled(size: 12))
-                .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 4) {
             ForEach(HomeStyle.allCases, id: \.self) { style in
                 Button {
                     coordinator.setHomeStyle(style)
@@ -244,8 +241,7 @@ struct HomeStylePanel: View {
             }
             riderSettingsRow
         }
-        .padding(12)
-        .background(RoundedRectangle(cornerRadius: 12).stroke(Color(.separator).opacity(0.3), lineWidth: 1))
+        .padding(.vertical, 6)
         .sheet(isPresented: $showRiderSettings) { RiderSettingsView().environmentObject(coordinator) }
     }
 

@@ -138,47 +138,28 @@ extension View {
 
 // MARK: - Settings
 
-/// Settings → Tips: on/off, and show them again.
+/// Settings → About: tips on/off, and show them again (rows on the About card).
 struct TipsSettingsPanel: View {
     @ObservedObject private var lang = LanguageManager.shared
     @State private var enabled = AppTips.isEnabledSetting
     @State private var showResetDone = false
-    private let safe = Color(red: 63/255, green: 143/255, blue: 110/255)
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(lang.localized("settings.tips.section"))
-                .font(.scaled(size: 12))
-                .foregroundStyle(.secondary)
-            HStack {
-                Text(lang.localized("settings.tips.show")).font(.scaled(size: 13))
-                Spacer()
-                Toggle("", isOn: $enabled)
-                    .labelsHidden()
-                    .tint(safe)
-                    .onChange(of: enabled) { _, on in AppTips.setEnabled(on) }
-            }
-            .padding(.vertical, 2)
+        VStack(alignment: .leading, spacing: 0) {
+            SettingsToggleRow(icon: "lightbulb.fill", tint: SettingsTint.amber,
+                              title: lang.localized("settings.tips.show"), isOn: $enabled)
+                .onChange(of: enabled) { _, on in AppTips.setEnabled(on) }
+            SettingsDivider()
             Button {
                 AppTips.showAgainOnNextLaunch()
                 enabled = true
                 showResetDone = true
             } label: {
-                HStack {
-                    Text(lang.localized("settings.tips.reset")).font(.scaled(size: 13))
-                    Spacer()
-                    Image(systemName: "arrow.counterclockwise").font(.scaled(size: 12))
-                }
-                .foregroundStyle(safe)
+                SettingsRow(icon: "arrow.counterclockwise", tint: SettingsTint.amber,
+                            title: lang.localized("settings.tips.reset"), chevron: false)
             }
-            .buttonStyle(.plain)
-            .padding(.vertical, 2)
+            .buttonStyle(.settingsRow)
         }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
-        )
         .alert(lang.localized("settings.tips.resetDone"), isPresented: $showResetDone) {
             Button(lang.localized("settings.action.ok")) {}
         }

@@ -2917,3 +2917,28 @@
 "seats.switch.desc" = "只为加入的人付费。新方案开始后，现在的订阅会自动结束。";
 "seats.full.title" = "席位已满";
 "seats.full.desc" = "再加一个席位，被邀请的人才能加入";
+
+/* Settings layout (SettingsKit) */
+"settings.section.display" = "显示与语言";
+"settings.section.featured" = "特色功能";
+"settings.section.familyRole" = "家人与角色";
+"settings.section.accountSecurity" = "账号与安全";
+"settings.section.dataPrivacy" = "数据与隐私";
+"settings.section.about" = "关于";
+"settings.featured.disguise.desc" = "把 App 藏在计算器、天气或备忘录界面后面";
+"settings.featured.fakeCall.desc" = "来一通假电话，帮你脱身";
+"lsc.customize.detail" = "字号、颜色和显示的内容";
+"plan.addPeople" = "增加人数或更改方案";
+"plan.free.title" = "按人数守护，全家放心";
+"plan.benefit.history" = "180 天位置轨迹";
+"plan.benefit.reports" = "PDF 报告和轨迹导出";
+"plan.benefit.family" = "值班表和家庭看板";
+"plan.free.from" = "1 位家人 + 1 位守护者，每月 %@ 起";
+"plan.free.cta" = "选择人数";
+"plan.free.floor" = "SOS、静默求助、胁迫密码和报平安永久免费";
+"plan.protected.title" = "让家人为你开通守护方案";
+"plan.protected.desc" = "一般由守护你的家人付费，开通后全家都能用，包括你。";
+"plan.protected.invite" = "邀请家人守护你";
+"plan.protected.ask" = "请家人开通";
+"plan.protected.askMessage" = "能帮我们开通守灯的家庭守护方案吗？打开守灯的「设置」，最上面就能开通。";
+"plan.protected.self" = "或者自己开通";

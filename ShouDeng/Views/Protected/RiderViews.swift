@@ -1150,6 +1150,8 @@ struct WatchBackPanel: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
     @State private var failed = false
+    /// Outlined card (home); false: on a Settings card
+    var framed = true
 
     private var isGuardian: Bool { coordinator.userRole == .guardian }
     private var entries: [WatchBackEntry] {
@@ -1169,8 +1171,15 @@ struct WatchBackPanel: View {
                     Text(lang.localized("rider.crew.failed")).font(.scaled(size: 12)).foregroundStyle(RC.alert)
                 }
             }
-            .padding(12)
-            .background(RoundedRectangle(cornerRadius: 12).stroke(Color(.separator).opacity(0.3), lineWidth: 1))
+            .padding(framed ? 12 : 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background {
+                if framed {
+                    RoundedRectangle(cornerRadius: 12).stroke(Color(.separator).opacity(0.3), lineWidth: 1)
+                } else {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color(.secondarySystemGroupedBackground))
+                }
+            }
             // While a request waits for an answer, check again every few seconds
             .task(id: hasPending) {
                 while hasPending && !Task.isCancelled {
