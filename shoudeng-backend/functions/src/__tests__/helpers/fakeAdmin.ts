@@ -300,6 +300,7 @@ export class FakeQuery {
     return docs;
   }
   async get() {
+    queryLog.push(this.collPath);
     const docs = this.run();
     return { docs, empty: docs.length === 0, size: docs.length, forEach: (fn: (d: FakeDocSnapshot) => void) => docs.forEach(fn) };
   }
@@ -327,6 +328,11 @@ export class FakeCollectionRef extends FakeQuery {
   constructor(collPath: string) { super(collPath); }
   get id() { return this.collPath.split("/").pop()!; }
   get path() { return this.collPath; }
+  /** The document this collection hangs off, or null for a top-level collection */
+  get parent(): FakeDocRef | null {
+    const parts = this.collPath.split("/");
+    return parts.length > 1 ? new FakeDocRef(parts.slice(0, -1).join("/")) : null;
+  }
   doc(id?: string) { return new FakeDocRef(`${this.collPath}/${id ?? `auto_${++autoId}`}`); }
   async add(data: Data) { const ref = this.doc(); writeDoc(ref.path, data, "set"); return ref; }
 }
@@ -462,7 +468,14 @@ export const fakeAdminModule = {
 /** Files written through admin.storage().bucket().file(name).save(). */
 export const savedFiles = new Map<string, Buffer>();
 
+/**
+ * Collection path of every query run (not single-document reads), in order: lets a
+ * test check that a list endpoint does not run one more query per item (N+1).
+ */
+export const queryLog: string[] = [];
+
 export function resetFakeAdmin() {
+  queryLog.length = 0;
   store.clear();
   savedFiles.clear();
   sentMessages.length = 0;

@@ -1,5 +1,7 @@
 import * as admin from "firebase-admin";
-import { onDutyGuardians } from "./escalation";
+import { dutySlotsByGuardian } from "./escalation";
+import { getDocsById } from "./batchRead";
+import { localTime, onDutyAt } from "./localTime";
 import { toIso } from "./time";
 
 /**
@@ -36,26 +38,26 @@ export async function guardiansOf(personId: string): Promise<Record<string, unkn
   if (linksSnapshot.empty) return [];
 
   const guardians: Record<string, unknown>[] = [];
-  const personTimeZone = (await db.collection("users").doc(personId).get()).data()?.timeZone;
+  const guardianIds = linksSnapshot.docs.map((d) => d.data().guardianId as string);
+  // Everyone's profile in one read, and every duty slot in one query
+  const [users, slotsOf] = await Promise.all([
+    getDocsById("users", [personId, ...guardianIds]),
+    dutySlotsByGuardian(personId),
+  ]);
+  const personTimeZone = users.get(personId)?.timeZone;
+  const t = localTime(new Date(), personTimeZone);
 
   for (const linkDoc of linksSnapshot.docs) {
     const link = linkDoc.data();
     const guardianId = link.guardianId;
 
-    const userDoc = await db.collection("users").doc(guardianId).get();
-    if (!userDoc.exists) continue;
-    const user = userDoc.data()!;
+    const user = users.get(guardianId);
+    if (!user) continue;
 
-    // Duty hours are the protected person's local hours (the server runs in UTC)
-    const isOnDuty = (await onDutyGuardians(personId, [guardianId], personTimeZone, new Date())).length > 0;
-
-    const scheduleSnapshot = await db
-      .collection("duty_schedules")
-      .where("guardianId", "==", guardianId)
-      .where("protectedPersonId", "==", personId)
-      .where("isActive", "==", true)
-      .get();
-    const dutySlots = scheduleSnapshot.docs.map((d) => d.data());
+    // Duty hours are the protected person's local hours (the server runs in UTC).
+    // No schedule = always on duty (as onDutyGuardians).
+    const dutySlots = slotsOf.get(guardianId) ?? [];
+    const isOnDuty = dutySlots.length === 0 || onDutyAt(dutySlots, t);
 
     guardians.push({
       id: guardianId,

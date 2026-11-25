@@ -28,15 +28,14 @@ router.get("/", async (req: Request, res: Response) => {
 
     const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
 
-    for (const linkDoc of linksSnap.docs) {
-      const personId = linkDoc.data().protectedPersonId;
-      const checkinSnap = await db
-        .collection("checkins")
-        .where("userId", "==", personId)
-        .orderBy("timestamp", "desc")
-        .limit(1)
-        .get();
-
+    // Each person's last check-in, all at once (one round trip, not one per person)
+    const lastCheckins = await Promise.all(linksSnap.docs.map((linkDoc) => db
+      .collection("checkins")
+      .where("userId", "==", linkDoc.data().protectedPersonId)
+      .orderBy("timestamp", "desc")
+      .limit(1)
+      .get()));
+    for (const checkinSnap of lastCheckins) {
       if (checkinSnap.empty) {
         overdueCheckins++;
       } else {

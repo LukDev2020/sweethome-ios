@@ -1,5 +1,6 @@
 import * as admin from "firebase-admin";
 import * as crypto from "crypto";
+import { chunk, getDocsById, IN_LIMIT } from "./batchRead";
 
 // ---------------------------------------------------------------------------
 // Partner organisations for riders (docs/rider-onboarding-plan.md, phases 2–3)
@@ -101,15 +102,20 @@ export async function riderStats(uid: string, at: Date = new Date()) {
   const weekAgo = at.getTime() - 7 * 24 * 3600_000;
   const monthAgo = admin.firestore.Timestamp.fromMillis(at.getTime() - 30 * 24 * 3600_000);
   let activeLast7d = 0, onShiftNow = 0, sosLast30d = 0;
-  for (const m of counted) {
-    const riderId = m.data().userId as string;
-    const user = (await db().collection("users").doc(riderId).get()).data() ?? {};
+  // All riders' profiles in one read; SOS counted 30 riders per query
+  const riderIds = counted.map((m) => m.data().userId as string).filter(Boolean);
+  const [users, sosCounts] = await Promise.all([
+    getDocsById("users", riderIds),
+    Promise.all(chunk([...new Set(riderIds)], IN_LIMIT).map((part) => db().collection("sos_events")
+      .where("protectedPersonId", "in", part).where("triggeredAt", ">=", monthAgo).count().get())),
+  ]);
+  for (const riderId of riderIds) {
+    const user = users.get(riderId) ?? {};
     const last = user.riderProfile?.lastShiftAt?.toMillis?.() ?? 0;
     if (last >= weekAgo) activeLast7d++;
     if (user.riderOnShift === true) onShiftNow++;
-    sosLast30d += (await db().collection("sos_events")
-      .where("protectedPersonId", "==", riderId).where("triggeredAt", ">=", monthAgo).get()).size;
   }
+  sosLast30d = sosCounts.reduce((sum, c) => sum + c.data().count, 0);
   return {
     orgName: org.data().name as string,
     partnerCode: (org.data().partnerCode as string) ?? null,

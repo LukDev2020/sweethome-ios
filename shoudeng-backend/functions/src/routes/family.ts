@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
+import { docsWhereIn } from "../services/batchRead";
 import { createRateLimiter, RATE_LIMITS } from "../middleware/rateLimit";
 
 const router = Router();
@@ -52,11 +53,15 @@ export async function getFamilyGroup(uid: string): Promise<string[]> {
   if (asProtected.length > 0) anchors.add(uid);
 
   const familyIds = new Set<string>([uid, ...anchors]);
-  // My own guardians are already known; the other anchors need a lookup each.
+  // My own guardians are already known.
   asProtected.forEach((l) => l.guardianId && familyIds.add(l.guardianId));
+  // The other anchors' guardians: one `in` query per 30 anchors, not one per anchor
   const others = [...anchors].filter((a) => a !== uid);
-  const guardiansOfOthers = await Promise.all(others.map((a) => activeLinks("protectedPersonId", a)));
-  guardiansOfOthers.flat().forEach((l) => l.guardianId && familyIds.add(l.guardianId));
+  const guardiansOfOthers = await docsWhereIn(others, (part) => db
+    .collection("guardian_links")
+    .where("protectedPersonId", "in", part)
+    .where("status", "==", "active"));
+  guardiansOfOthers.forEach((d) => { const g = d.get("guardianId"); if (g) familyIds.add(g); });
 
   return Array.from(familyIds);
 }
@@ -98,6 +103,33 @@ function finiteOrNull(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+interface StoredComment {
+  id: string;
+  authorId: string;
+  authorName?: string;
+  authorInitial?: string;
+  text?: string;
+  createdAt?: FirebaseFirestore.Timestamp;
+}
+
+/** A post's newest comments, newest first: the copy on the post, else the subcollection. */
+async function newestComments(post: FirebaseFirestore.DocumentData): Promise<StoredComment[]> {
+  if (Array.isArray(post.recentComments)) {
+    return (post.recentComments as StoredComment[]).slice(-COMMENTS_PER_POST).reverse();
+  }
+  const snap = await db
+    .collection("family_posts")
+    .doc(post.id)
+    .collection("comments")
+    .orderBy("createdAt", "desc")
+    .limit(COMMENTS_PER_POST)
+    .get();
+  return snap.docs.map((c) => ({ id: c.id, ...c.data() } as StoredComment));
+}
+
+/** The post was deleted while a comment was being added. */
+class PostGone extends Error {}
+
 /**
  * GET /v1/family/posts
  * Get the family feed (posts from everyone in the caller's family circle).
@@ -115,17 +147,14 @@ router.get("/posts", async (req: Request, res: Response) => {
       chunks.push(familyIds.slice(i, i + 30));
     }
 
-    const allPosts: FirebaseFirestore.DocumentData[] = [];
-
-    for (const chunk of chunks) {
-      const snapshot = await db
-        .collection("family_posts")
-        .where("authorId", "in", chunk)
-        .orderBy("createdAt", "desc")
-        .limit(50)
-        .get();
-      snapshot.docs.forEach((d) => allPosts.push({ id: d.id, ...d.data() }));
-    }
+    const snapshots = await Promise.all(chunks.map((chunk) => db
+      .collection("family_posts")
+      .where("authorId", "in", chunk)
+      .orderBy("createdAt", "desc")
+      .limit(50)
+      .get()));
+    const allPosts: FirebaseFirestore.DocumentData[] = snapshots
+      .flatMap((snapshot) => snapshot.docs.map((d) => ({ id: d.id, ...d.data() })));
 
     // Sort merged results by createdAt desc
     allPosts.sort((a, b) => {
@@ -134,32 +163,25 @@ router.get("/posts", async (req: Request, res: Response) => {
       return bTime.getTime() - aTime.getTime();
     });
 
-    // The newest comments of each post, oldest first (chat order)
+    // The newest comments of each post, oldest first (chat order). Posts carry them
+    // (`recentComments`), so the feed is one query, not one more per post; only
+    // posts from before that field existed still read their comments.
     const result = await Promise.all(
       allPosts.slice(0, 50).map(async (post) => {
-        const commentsSnap = await db
-          .collection("family_posts")
-          .doc(post.id)
-          .collection("comments")
-          .orderBy("createdAt", "desc")
-          .limit(COMMENTS_PER_POST)
-          .get();
+        const newest = await newestComments(post);
 
         // A carer who looks after two unrelated people is in both families; on the
         // carer's posts each family sees only its own members' comments.
-        const visibleDocs = commentsSnap.docs.filter((c) => family.has(c.data().authorId));
-        const someHidden = visibleDocs.length < commentsSnap.size;
-        const comments = visibleDocs.reverse().map((c) => {
-          const cd = c.data();
-          return {
-            id: c.id,
-            authorId: cd.authorId,
-            authorName: cd.authorName || "",
-            authorInitial: cd.authorInitial || "?",
-            text: cd.text || "",
-            createdAt: isoOrNow(cd.createdAt),
-          };
-        });
+        const visible = newest.filter((c) => family.has(c.authorId));
+        const someHidden = visible.length < newest.length;
+        const comments = visible.reverse().map((c) => ({
+          id: c.id,
+          authorId: c.authorId,
+          authorName: c.authorName || "",
+          authorInitial: c.authorInitial || "?",
+          text: c.text || "",
+          createdAt: isoOrNow(c.createdAt),
+        }));
 
         const latitude = finiteOrNull(post.latitude);
         const longitude = finiteOrNull(post.longitude);
@@ -271,6 +293,7 @@ router.post("/posts", createRateLimiter(RATE_LIMITS.general), async (req: Reques
       text: text || "",
       mediaURLs: media,
       commentCount: 0,
+      recentComments: [],
       createdAt: admin.firestore.Timestamp.now(),
     };
     if (hasLocation) {
@@ -341,15 +364,27 @@ router.post("/posts/:postId/comments", async (req: Request, res: Response) => {
       createdAt: admin.firestore.Timestamp.now(),
     };
 
-    const ref = await postRef.collection("comments").add(commentDoc);
-
-    // Increment comment count
-    await postRef.update({
-      commentCount: admin.firestore.FieldValue.increment(1),
+    const ref = postRef.collection("comments").doc();
+    await db.runTransaction(async (tx) => {
+      const fresh = await tx.get(postRef);
+      if (!fresh.exists) throw new PostGone();
+      const update: Record<string, unknown> = { commentCount: admin.firestore.FieldValue.increment(1) };
+      // The feed's copy of the newest comments. A post from before the copy existed
+      // keeps reading its subcollection until it is rebuilt from there.
+      const recent = fresh.data()!.recentComments;
+      if (Array.isArray(recent)) {
+        update.recentComments = [...recent, { id: ref.id, ...commentDoc }].slice(-COMMENTS_PER_POST);
+      }
+      tx.create(ref, commentDoc);
+      tx.update(postRef, update);
     });
 
     res.status(201).json({ commentId: ref.id });
   } catch (error) {
+    if (error instanceof PostGone) {
+      res.status(404).json({ error: "Post not found" });
+      return;
+    }
     console.error("[Family] add comment error:", error);
     res.status(500).json({ error: "Failed to add comment" });
   }

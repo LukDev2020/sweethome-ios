@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
+import { chunk, getDocsById, IN_LIMIT } from "../services/batchRead";
 import { sendPushToUser } from "../services/push";
 
 import { partnerCodeFor, previewPartner, joinPartner, riderStats, PartnerError } from "../services/partners";
@@ -133,16 +134,31 @@ router.get("/dashboard", async (req: Request, res: Response) => {
     const memberDetails = [];
     const cutoff = new Date(Date.now() - 8 * 60 * 60 * 1000);
 
-    for (const memberDoc of membersSnapshot.docs) {
-      const member = memberDoc.data();
-      if (isPartnerRider(member)) continue;
+    const members = membersSnapshot.docs.map((d) => d.data()).filter((m) => !isPartnerRider(m));
+    // Every member's profile in one read; then each activated member's last check-in
+    // and push token, all at once (was three reads per member, one member at a time)
+    const users = await getDocsById("users", members.map((m) => m.userId).filter(Boolean));
+    const lookups = await Promise.all(members.map(async (member) => {
+      const user = member.userId ? users.get(member.userId) : undefined;
+      if (!user) return { member, user: undefined, checkinSnapshot: undefined, tokenSnapshot: undefined };
+      const [checkinSnapshot, tokenSnapshot] = await Promise.all([
+        db.collection("checkins")
+          .where("userId", "==", member.userId)
+          .orderBy("timestamp", "desc")
+          .limit(1)
+          .get(),
+        db.collection("device_tokens")
+          .where("userId", "==", member.userId)
+          .limit(1)
+          .get(),
+      ]);
+      return { member, user, checkinSnapshot, tokenSnapshot };
+    }));
+
+    for (const { member, user, checkinSnapshot, tokenSnapshot } of lookups) {
       totalMembers++;
 
-      const userDoc = member.userId
-        ? await db.collection("users").doc(member.userId).get()
-        : null;
-
-      if (!userDoc || !userDoc.exists) {
+      if (!user || !checkinSnapshot || !tokenSnapshot) {
         notInstalled++;
         memberDetails.push({
           userId: member.userId,
@@ -154,14 +170,6 @@ router.get("/dashboard", async (req: Request, res: Response) => {
       }
 
       activated++;
-
-      // Check latest check-in
-      const checkinSnapshot = await db
-        .collection("checkins")
-        .where("userId", "==", member.userId)
-        .orderBy("timestamp", "desc")
-        .limit(1)
-        .get();
 
       let lastCheckIn = null;
       let memberStatus = "normal";
@@ -182,11 +190,6 @@ router.get("/dashboard", async (req: Request, res: Response) => {
       }
 
       // Check permissions
-      const tokenSnapshot = await db
-        .collection("device_tokens")
-        .where("userId", "==", member.userId)
-        .limit(1)
-        .get();
       if (tokenSnapshot.empty) {
         permissionsAbnormal++;
         memberStatus = "permissions_abnormal";
@@ -194,11 +197,11 @@ router.get("/dashboard", async (req: Request, res: Response) => {
 
       memberDetails.push({
         userId: member.userId,
-        displayName: userDoc.data()!.displayName,
+        displayName: user.displayName,
         status: memberStatus,
         lastCheckIn,
-        cityName: userDoc.data()!.cityName,
-        countryCode: userDoc.data()!.countryCode,
+        cityName: user.cityName,
+        countryCode: user.countryCode,
       });
     }
 
@@ -336,6 +339,11 @@ router.post("/alert", async (req: Request, res: Response) => {
 
     const membersSnapshot = await membersQuery.get();
 
+    // Only needed to filter by country: everyone's profile in one read
+    const memberUsers = countryCode
+      ? await getDocsById("users", membersSnapshot.docs.map((d) => d.data().userId).filter(Boolean))
+      : new Map<string, FirebaseFirestore.DocumentData>();
+
     let sentCount = 0;
     for (const memberDoc of membersSnapshot.docs) {
       const member = memberDoc.data();
@@ -343,14 +351,8 @@ router.post("/alert", async (req: Request, res: Response) => {
 
       // Filter by country if specified
       if (countryCode) {
-        const userDoc = await db
-          .collection("users")
-          .doc(member.userId)
-          .get();
-        if (
-          userDoc.exists &&
-          userDoc.data()!.countryCode !== countryCode
-        ) {
+        const user = memberUsers.get(member.userId);
+        if (user && user.countryCode !== countryCode) {
           continue;
         }
       }
@@ -580,16 +582,16 @@ router.get("/reports", async (req: Request, res: Response) => {
     let totalAlerts = 0;
     let totalSOSEvents = 0;
 
-    for (const memberId of memberIds) {
-      const checkins = await db
-        .collection("checkins")
-        .where("userId", "==", memberId)
-        .where("timestamp", ">=", start)
-        .where("timestamp", "<=", end)
-        .count()
-        .get();
-      totalCheckIns += checkins.data().count;
-    }
+    // Counted 30 members per query (an `in` filter), not one query per member
+    const groups = chunk([...new Set(memberIds as string[])], IN_LIMIT);
+    const checkinCounts = await Promise.all(groups.map((part) => db
+      .collection("checkins")
+      .where("userId", "in", part)
+      .where("timestamp", ">=", start)
+      .where("timestamp", "<=", end)
+      .count()
+      .get()));
+    totalCheckIns = checkinCounts.reduce((sum, c) => sum + c.data().count, 0);
 
     // Count org alerts
     const alertsSnapshot = await db
@@ -602,16 +604,14 @@ router.get("/reports", async (req: Request, res: Response) => {
     totalAlerts = alertsSnapshot.data().count;
 
     // Count SOS events for members
-    for (const memberId of memberIds) {
-      const sosSnapshot = await db
-        .collection("sos_events")
-        .where("protectedPersonId", "==", memberId)
-        .where("triggeredAt", ">=", start)
-        .where("triggeredAt", "<=", end)
-        .count()
-        .get();
-      totalSOSEvents += sosSnapshot.data().count;
-    }
+    const sosCounts = await Promise.all(groups.map((part) => db
+      .collection("sos_events")
+      .where("protectedPersonId", "in", part)
+      .where("triggeredAt", ">=", start)
+      .where("triggeredAt", "<=", end)
+      .count()
+      .get()));
+    totalSOSEvents = sosCounts.reduce((sum, c) => sum + c.data().count, 0);
 
     res.json({
       orgId,

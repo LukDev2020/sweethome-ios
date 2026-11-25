@@ -195,19 +195,31 @@ export async function onDutyGuardians(
   now: Date
 ): Promise<string[]> {
   const t = localTime(now, personTimeZone);
-  const result: string[] = [];
-  for (const gid of guardianIds) {
-    const schedules = await db
-      .collection("duty_schedules")
-      .where("guardianId", "==", gid)
-      .where("protectedPersonId", "==", personId)
-      .where("isActive", "==", true)
-      .get();
-    const slots = schedules.docs.map((d) => d.data() as { startHour: number; endHour: number; dayOfWeek: number });
-    // No schedule = always on duty
-    if (slots.length === 0 || onDutyAt(slots, t)) result.push(gid);
+  const slotsOf = await dutySlotsByGuardian(personId);
+  // No schedule = always on duty
+  return guardianIds.filter((gid) => {
+    const slots = slotsOf.get(gid) ?? [];
+    return slots.length === 0 || onDutyAt(slots, t);
+  });
+}
+
+export interface DutySlotDoc { startHour: number; endHour: number; dayOfWeek: number; [key: string]: unknown }
+
+/** Every active duty slot for this person, by guardian: one query for all guardians. */
+export async function dutySlotsByGuardian(personId: string): Promise<Map<string, DutySlotDoc[]>> {
+  const schedules = await db
+    .collection("duty_schedules")
+    .where("protectedPersonId", "==", personId)
+    .where("isActive", "==", true)
+    .get();
+  const byGuardian = new Map<string, DutySlotDoc[]>();
+  for (const d of schedules.docs) {
+    const slot = d.data() as DutySlotDoc;
+    const gid = slot.guardianId as string | undefined;
+    if (!gid) continue;
+    byGuardian.set(gid, [...(byGuardian.get(gid) ?? []), slot]);
   }
-  return result;
+  return byGuardian;
 }
 
 async function logEntry(sosId: string, entry: Record<string, unknown>, sentKey?: string) {

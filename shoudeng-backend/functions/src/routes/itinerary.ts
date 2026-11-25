@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
+import { getDocsById } from "../services/batchRead";
 
 const router = Router();
 const db = admin.firestore();
@@ -102,19 +103,24 @@ router.get("/", async (req: Request, res: Response) => {
       new Date(Date.now() - 24 * 60 * 60 * 1000)
     );
 
-    const results = [];
-    for (const personId of personIds) {
-      const snapshot = await db
+    // Everyone's itineraries and names at once, not one person after another
+    const [snapshots, users] = await Promise.all([
+      Promise.all(personIds.map((personId) => db
         .collection("itineraries")
         .where("userId", "==", personId)
         .where("departureTime", ">=", cutoff)
         .orderBy("departureTime", "asc")
         .limit(20)
-        .get();
+        .get())),
+      getDocsById("users", personIds),
+    ]);
 
-      const pUserDoc = await db.collection("users").doc(personId).get();
-      const displayName = pUserDoc.exists
-        ? pUserDoc.data()!.displayName
+    const results = [];
+    for (const [i, personId] of personIds.entries()) {
+      const snapshot = snapshots[i];
+      const pUser = users.get(personId);
+      const displayName = pUser
+        ? pUser.displayName
         : "未知";
 
       for (const doc of snapshot.docs) {

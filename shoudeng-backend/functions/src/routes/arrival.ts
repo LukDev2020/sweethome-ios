@@ -3,6 +3,7 @@ import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
 import { sendPushToUser } from "../services/push";
 import { alertCopyFor, nameOr } from "../services/pushCopy";
+import { getDocsById } from "../services/batchRead";
 
 const router = Router();
 const db = admin.firestore();
@@ -113,18 +114,22 @@ router.get("/recent", async (req: Request, res: Response) => {
       new Date(Date.now() - 24 * 60 * 60 * 1000)
     );
 
-    const reports = [];
-    for (const personId of personIds) {
-      const snapshot = await db
+    // Everyone's reports and names at once, not one person after another
+    const [snapshots, users] = await Promise.all([
+      Promise.all(personIds.map((personId) => db
         .collection("arrival_reports")
         .where("userId", "==", personId)
         .where("timestamp", ">=", cutoff)
         .orderBy("timestamp", "desc")
         .limit(10)
-        .get();
+        .get())),
+      getDocsById("users", personIds),
+    ]);
 
-      const userDoc = await db.collection("users").doc(personId).get();
-      const displayName = userDoc.data()?.displayName ?? "";
+    const reports = [];
+    for (const [i, personId] of personIds.entries()) {
+      const snapshot = snapshots[i];
+      const displayName = users.get(personId)?.displayName ?? "";
       const hide = hidesLocation.has(personId);
 
       for (const doc of snapshot.docs) {

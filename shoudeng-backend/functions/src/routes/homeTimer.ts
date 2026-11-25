@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import * as admin from "firebase-admin";
 import { authMiddleware } from "../middleware/auth";
+import { getDocsById } from "../services/batchRead";
 import { sendPushToUser } from "../services/push";
 import { alertCopyFor, nameOr } from "../services/pushCopy";
 
@@ -280,21 +281,23 @@ router.get("/guardian", async (req: Request, res: Response) => {
       .where("status", "==", "active")
       .get();
 
+    // Every person's timer in one read, then the names of those with one running
+    const personIds = linksSnapshot.docs.map((d) => d.data().protectedPersonId as string);
+    const timerDocs = await getDocsById("home_timers", personIds);
+    const running = [...new Set(personIds)].filter((id) => timerDocs.get(id)?.status === "active");
+    const users = await getDocsById("users", running);
+
     const timers = [];
-    for (const linkDoc of linksSnapshot.docs) {
-      const personId = linkDoc.data().protectedPersonId;
-      const timerDoc = await db.collection("home_timers").doc(personId).get();
-      if (timerDoc.exists && timerDoc.data()!.status === "active") {
-        const data = timerDoc.data()!;
-        const userDoc = await db.collection("users").doc(personId).get();
-        timers.push({
-          userId: personId,
-          displayName: userDoc.exists ? userDoc.data()!.displayName : "未知",
-          deadline: data.deadline.toDate().toISOString(),
-          label: data.label,
-          status: data.status,
-        });
-      }
+    for (const personId of running) {
+      const data = timerDocs.get(personId)!;
+      const user = users.get(personId);
+      timers.push({
+        userId: personId,
+        displayName: user ? user.displayName : "未知",
+        deadline: data.deadline.toDate().toISOString(),
+        label: data.label,
+        status: data.status,
+      });
     }
 
     res.json(timers);

@@ -8,6 +8,7 @@ import {
 } from "./fcm";
 import { activeSOSDoc } from "./escalation";
 import { localTime } from "./localTime";
+import { getDocsById } from "./batchRead";
 
 // ---------------------------------------------------------------------------
 // Rider crews
@@ -194,8 +195,9 @@ export async function crewView(uid: string, now: Date = new Date()) {
   const c = crew.data()!;
   const me = await positionOf(uid);
   const myWatchers = await watchersOf(uid);
+  const users = await getDocsById("users", c.memberIds as string[]);
   const members = await Promise.all((c.memberIds as string[]).map(async (id) => {
-    const user = (await db().collection("users").doc(id).get()).data() ?? {};
+    const user = users.get(id) ?? {};
     const theirWatchers: string[] = Array.isArray(user.riderWatchers) ? user.riderWatchers : [];
     const onShift = user.riderOnShift === true;
     const exact = onShift || id === uid ? await positionOf(id) : null;
@@ -363,11 +365,12 @@ export async function alertCrewOfSOS(sosId: string, sos: FirebaseFirestore.Docum
     const crew = (await db().collection("crews").doc(crewId).get()).data();
     const others = ((crew?.memberIds ?? []) as string[]).filter((m) => m !== personId);
     if (others.length === 0) return 0;
-    const person = (await db().collection("users").doc(personId).get()).data() ?? {};
+    const users = await getDocsById("users", [personId, ...others]);
+    const person = users.get(personId) ?? {};
     const at = isCoord(sos.latitude, sos.longitude) ? { latitude: sos.latitude, longitude: sos.longitude } : null;
     const all = await Promise.all(others.map(async (id) => {
       const pos = await positionOf(id);
-      const user = (await db().collection("users").doc(id).get()).data() ?? {};
+      const user = users.get(id) ?? {};
       const distanceM = at && pos ? Math.round(distanceMeters(at, pos)) : null;
       return { id, distanceM, wants: wantsCrewAlert(user, distanceM) };
     }));
@@ -407,13 +410,14 @@ export async function respondToCrewSOS(uid: string, sosEventId: unknown, respons
 /** What the rider's own SOS screen shows about the crew. */
 export async function crewResponsesFor(sos: FirebaseFirestore.DocumentData) {
   const responses = (sos.crewResponses ?? {}) as Record<string, { response: string; at: unknown; distanceM: number | null }>;
-  return Promise.all(Object.entries(responses).map(async ([memberId, r]) => ({
+  const users = await getDocsById("users", Object.keys(responses));
+  return Object.entries(responses).map(([memberId, r]) => ({
     memberId,
-    name: ((await db().collection("users").doc(memberId).get()).data()?.displayName as string) ?? "",
+    name: (users.get(memberId)?.displayName as string) ?? "",
     response: r.response,
     at: iso(r.at),
     distanceM: r.distanceM ?? null,
-  })));
+  }));
 }
 
 /** Open SOS events of the caller's crew mates (for the crew alert screen). */
@@ -422,13 +426,20 @@ export async function crewAlerts(uid: string) {
   if (!crewId) return [];
   const crew = (await db().collection("crews").doc(crewId).get()).data();
   const others = ((crew?.memberIds ?? []) as string[]).filter((m) => m !== uid);
-  const me = await positionOf(uid);
+  // Every mate's open SOS, their names and my position at once (was a query, and a
+  // profile read per SOS, one mate after another)
+  const [me, snaps, users] = await Promise.all([
+    positionOf(uid),
+    Promise.all(others.map((id) => db().collection("sos_events")
+      .where("protectedPersonId", "==", id).where("resolvedAt", "==", null).get())),
+    getDocsById("users", others),
+  ]);
   const out = [];
-  for (const id of others) {
-    const snap = await db().collection("sos_events").where("protectedPersonId", "==", id).where("resolvedAt", "==", null).get();
+  for (const [i, id] of others.entries()) {
+    const snap = snaps[i];
+    const name = (users.get(id)?.displayName as string) ?? "";
     for (const doc of snap.docs) {
       const s = doc.data();
-      const name = ((await db().collection("users").doc(id).get()).data()?.displayName as string) ?? "";
       const hasPos = isCoord(s.latitude, s.longitude);
       out.push({
         sosEventId: doc.id,

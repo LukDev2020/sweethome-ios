@@ -202,6 +202,24 @@ async function deleteWhere(query: FirebaseFirestore.Query): Promise<number> {
 }
 
 /**
+ * Delete someone's comments on family posts. Each post also keeps a copy of its newest
+ * comments for the feed; that copy is dropped, so the feed reads the (now cleaned)
+ * comments themselves for those posts.
+ */
+async function eraseComments(uid: string): Promise<number> {
+  const snap = await db.collectionGroup("comments").where("authorId", "==", uid).get();
+  const posts = new Map<string, FirebaseFirestore.DocumentReference>();
+  for (const doc of snap.docs) {
+    const post = doc.ref.parent.parent;
+    if (post) posts.set(post.path, post);
+  }
+  await Promise.all([...posts.values()].map((post) =>
+    post.update({ recentComments: admin.firestore.FieldValue.delete() }).catch(() => undefined)));
+  await Promise.all(snap.docs.map((doc) => db.recursiveDelete(doc.ref)));
+  return snap.size;
+}
+
+/**
  * Erase everything stored about this person. Kept on purpose (and said so in the policy):
  * consent_audit (legal record of consent), evidence_holds (legal holds; files expire in 90 days).
  */
@@ -252,8 +270,8 @@ export async function eraseAccount(uid: string): Promise<{ bigQueryComplete: boo
     deleteWhere(db.collection("claim_material_exports").where("userId", "==", uid)),
     deleteWhere(db.collection("org_members").where("userId", "==", uid)),
     deleteWhere(db.collection("org_roll_calls").where("userId", "==", uid)),
-    // Comments left on other people's family posts (name + text)
-    deleteWhere(db.collectionGroup("comments").where("authorId", "==", uid)),
+    // Comments left on other people's family posts (name + text), and the feed's copy
+    eraseComments(uid),
   ]);
 
   try {

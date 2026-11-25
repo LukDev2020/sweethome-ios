@@ -3,6 +3,7 @@ import { createSOSEvent, CLIENT_ID_RE } from "./sosTrigger";
 import { activeGuardianIds } from "./sosTracking";
 import { sendFallDismissed, sendCrashReported } from "./fcm";
 import { watchersOf, crewIdOf } from "./crew";
+import { getDocsById } from "./batchRead";
 
 // ---------------------------------------------------------------------------
 // Safety events: detected falls
@@ -238,8 +239,10 @@ export async function reportCrash(uid: string, body: Record<string, unknown>): P
   if (body.notifyCrew === true) {
     const crewId = await crewIdOf(uid);
     const crew = crewId ? (await db().collection("crews").doc(crewId).get()).data() : null;
-    for (const m of (crew?.memberIds ?? []) as string[]) {
-      if (m !== uid && (await db().collection("users").doc(m).get()).data()?.riderOnShift === true) recipients.add(m);
+    const mates = ((crew?.memberIds ?? []) as string[]).filter((m) => m !== uid);
+    const mateUsers = await getDocsById("users", mates);
+    for (const m of mates) {
+      if (mateUsers.get(m)?.riderOnShift === true) recipients.add(m);
     }
   }
   recipients.delete(uid);
