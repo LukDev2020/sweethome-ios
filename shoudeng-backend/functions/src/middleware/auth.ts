@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { getJwtSecret } from "../services/session";
+import { touchLastActive } from "../services/presence";
 
 
 // Extend Express Request with authenticated user info
@@ -58,6 +59,8 @@ export async function authMiddleware(
 
   try {
     req.uid = await decodeToken(token);
+    // "Who's online" for the family (throttled, never blocks the request)
+    touchLastActive(req.uid);
     next();
   } catch (error) {
     console.error("[Auth] Token verification failed:", error);

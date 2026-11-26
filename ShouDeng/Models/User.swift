@@ -48,6 +48,8 @@ struct User: Codable, Identifiable {
     var countryCode: String          // ISO 3166-1 alpha-2
     var cityName: String
     var createdAt: Date
+    /// Last time this person used the app (guardians, for "who's online" on the home)
+    var lastActiveAt: Date? = nil
 
     var localTime: Date {
         Date()  // Displayed in user's own time zone via formatting
@@ -57,7 +59,7 @@ struct User: Codable, Identifiable {
 extension User {
     private enum CodingKeys: String, CodingKey {
         case id, displayName, role, avatarInitial, avatarLocalPath, phone, email
-        case timeZone, countryCode, cityName, createdAt
+        case timeZone, countryCode, cityName, createdAt, lastActiveAt
     }
 
     /// The API sends `timeZone` as an IANA string ("Asia/Shanghai"); Foundation's
@@ -83,6 +85,7 @@ extension User {
         countryCode = c.lossy(String.self, .countryCode) ?? ""
         cityName = c.lossy(String.self, .cityName) ?? ""
         createdAt = c.lossy(Date.self, .createdAt) ?? Date(timeIntervalSince1970: 0)
+        lastActiveAt = c.lossy(Date.self, .lastActiveAt)
     }
 }
 

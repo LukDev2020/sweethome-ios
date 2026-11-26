@@ -845,7 +845,8 @@ private struct MockItemView: View {
                     }
                 }
             }
-            .frame(height: 150)
+            // "smap": the small map on the simple home
+            .frame(height: item.id == "smap" ? 92 : 150)
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .overlay {
                 // Pins as targets

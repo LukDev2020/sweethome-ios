@@ -9,7 +9,8 @@
       "timeZone": "Asia/Shanghai",
       "countryCode": "CN",
       "cityName": "Shanghai",
-      "createdAt": "2026-01-01T00:00:00.000Z"
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "lastActiveAt": "2026-10-30T11:56:00.000Z"
     },
     "permissions": {
       "canSeeLocation": true,
@@ -45,7 +46,8 @@
       "timeZone": null,
       "countryCode": "",
       "cityName": "",
-      "createdAt": null
+      "createdAt": null,
+      "lastActiveAt": null
     },
     "permissions": {
       "canSeeLocation": true,

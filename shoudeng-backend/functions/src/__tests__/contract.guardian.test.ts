@@ -192,7 +192,7 @@ describe("contract: GET /v1/protected/guardians", () => {
     resetFakeAdmin();
     jest.useFakeTimers({ now: NOW, doNotFake: ["nextTick", "setImmediate", "setTimeout", "setInterval", "queueMicrotask"] });
     seed("users/mom", { displayName: "Mom", role: "protected", timeZone: "Asia/Shanghai" });
-    seed("users/kevin", { displayName: "Kevin", role: "guardian", timeZone: "Asia/Shanghai", countryCode: "CN", cityName: "Shanghai", createdAt: ts("2026-01-01T00:00:00Z") });
+    seed("users/kevin", { displayName: "Kevin", role: "guardian", timeZone: "Asia/Shanghai", countryCode: "CN", cityName: "Shanghai", createdAt: ts("2026-01-01T00:00:00Z"), lastActiveAt: ts("2026-10-30T11:56:00Z") });
     // Incomplete profile (no timeZone / createdAt) must not break the list
     seed("users/lucy", { displayName: "Lucy", role: "guardian" });
     seed("guardian_links/kevin_mom", { guardianId: "kevin", protectedPersonId: "mom", status: "active", createdAt: ts("2026-02-01T00:00:00Z") });
@@ -213,6 +213,9 @@ describe("contract: GET /v1/protected/guardians", () => {
     expect(kevin.dutySchedule.slots[0].dayOfWeek).toEqual([2]); // Monday in Calendar terms
     // 2026-10-30 12:00Z is Friday 20:00 in Chengdu → Kevin (Mon only) off duty
     expect(kevin.isOnDuty).toBe(false);
+    // "Who's online" on her home; never used the app (Lucy) → null
+    expect(kevin.user.lastActiveAt).toBe("2026-10-30T11:56:00.000Z");
+    expect(res.body.find((g: any) => g.id === "lucy").user.lastActiveAt).toBeNull();
     expectMatchesFixture("protected_guardians.json", res.body);
   });
 });

@@ -70,6 +70,7 @@ import voiceRoutes from "./routes/voice";
 import safetyEventRoutes from "./routes/safetyEvents";
 import safetyTimerRoutes from "./routes/safetyTimer";
 import incidentReportRoutes from "./routes/incidentReports";
+import nearbyRoutes from "./routes/nearby";
 import { createRateLimiter, RATE_LIMITS } from "./middleware/rateLimit";
 
 // --- Mount Routes ---
@@ -163,6 +164,8 @@ app.use("/v1/watch-back", watchBackRoutes);
 app.use("/v1/safety-events", safetyEventRoutes);
 // Incident reports for police: data + hashes, sealed files, public verify
 app.use("/v1/incident-reports", incidentReportRoutes);
+// Disasters, traffic and crime around a point (public sources)
+app.use("/v1/nearby", nearbyRoutes);
 
 // --- Health check ---
 app.get("/health", (_req, res) => {

@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreLocation
 
 // MARK: - Home style (protected person)
 //
@@ -51,36 +52,28 @@ struct SimpleProtectedHomeView: View {
             ?? coordinator.myGuardians.first(where: { !($0.user.phone ?? "").isEmpty })
     }
 
-    private var watcher: Guardian? {
-        coordinator.myGuardians.first(where: \.isOnDuty) ?? coordinator.myGuardians.first
+
+    /// Where I am now: the device, else the last fix the location manager kept
+    private var myCoordinate: CLLocationCoordinate2D? {
+        if let loc = coordinator.locationManager.bestAvailableLocation { return loc.coordinate }
+        return coordinator.locationService.currentLocation
     }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(greeting)
-                            .font(.scaled(size: 30, weight: .bold))
-                            .foregroundStyle(ink)
-                        Spacer(minLength: 0)
-                        // How to use: guides that play the real screens, emergency actions first
-                        TutorialHelpButton(role: .protected, style: .label, tint: teal)
-                    }
-                    if let watcher {
-                        HStack(spacing: 8) {
-                            Circle().fill(safe).frame(width: 12, height: 12)
-                            Text(String(format: lang.localized("simple.watching"), watcher.user.displayName))
-                                .font(.scaled(size: 19))
-                        }
-                        .coachMark(CoachAnchor.guardiansGlobe)
-                    } else {
-                        Button { showInvite = true } label: {
-                            Label(lang.localized("simple.noGuardian"), systemImage: "person.badge.plus")
-                                .font(.scaled(size: 18, weight: .semibold))
-                                .foregroundStyle(teal)
-                        }
-                    }
+                // Simple | Full, and the guides
+                HStack(spacing: 8) {
+                    HomeStyleToggle(current: .simple)
+                    Spacer(minLength: 0)
+                    TutorialHelpButton(role: .protected, style: .label, tint: teal)
+                }
+                .padding(.top, 8)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(greeting)
+                        .font(.scaled(size: 30, weight: .bold))
+                        .foregroundStyle(ink)
                     if let last = WidgetDataStore.read().lastCheckInDate {
                         Text(String(format: lang.localized("simple.lastCheckIn"),
                                     last.formatted(.dateTime.hour().minute().locale(Locale(identifier: lang.current.rawValue)))))
@@ -88,7 +81,12 @@ struct SimpleProtectedHomeView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                .padding(.top, 12)
+
+                // Where I am: map, address, search, hospital / pharmacy / police
+                SimpleMapCard(coordinate: myCoordinate)
+
+                // Who in the family is online (tap to call)
+                WhoIsOnlineRow(onInvite: { showInvite = true })
 
                 bigButton(icon: checkedIn ? "checkmark.circle.fill" : "checkmark.circle",
                           title: lang.localized(checkedIn ? "simple.checkedIn" : "simple.checkIn"), color: safe) {
@@ -104,36 +102,23 @@ struct SimpleProtectedHomeView: View {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 4) { withAnimation { homeConfirmed = false } }
                 }
                 .coachMark(CoachAnchor.homeSafe)
-                if let caller, let phone = caller.user.phone {
-                    bigButton(icon: "phone.fill", title: String(format: lang.localized("simple.call"), caller.user.displayName), color: indigo) {
-                        let digits = phone.filter { $0.isNumber || $0 == "+" }
-                        if let url = URL(string: "tel:\(digits)") { ExternalURL.open(url) }
-                    }
-                }
 
-                BigSOSButton()
-                    .coachMark(CoachAnchor.sosButton)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                // Disasters, traffic, crime around me: one calm line each
+                NearbyAlertsCard(style: .compact, coordinate: myCoordinate)
 
                 // How to use: always on Home so guides can be watched again
                 TutorialHelpButton(role: .protected, style: .card, tint: teal)
 
-                Button {
-                    coordinator.setHomeStyle(.standard)
-                } label: {
-                    Text(lang.localized("simple.switchToStandard"))
-                        .font(.scaled(size: 15))
-                        .foregroundStyle(.secondary)
-                        .underline()
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.plain)
-                .padding(.bottom, 24)
+                SwitchHomeCard(target: .standard)
+                    .padding(.bottom, 12)
             }
             .padding(.horizontal, 18)
         }
         .background(cream)
+        // SOS and "call family" never scroll away
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            SimpleSOSBar(caller: caller)
+        }
         .sheet(isPresented: $showInvite) {
             InviteGuardianSheet(inviterRole: .protected_).environmentObject(coordinator)
         }
@@ -160,6 +145,8 @@ struct SimpleProtectedHomeView: View {
 
 /// Same hold as the floating button, drawn large.
 struct BigSOSButton: View {
+    /// The red circle; 166 on the rider home, smaller in the simple home's bottom bar
+    var diameter: CGFloat = 166
     @EnvironmentObject var coordinator: AppCoordinator
     @ObservedObject private var lang = LanguageManager.shared
     @State private var progress: Double = 0
@@ -167,17 +154,20 @@ struct BigSOSButton: View {
     private let alert = Color(red: 196/255, green: 69/255, blue: 60/255)
 
     var body: some View {
+        let k = diameter / 166
         ZStack {
-            Circle().fill(alert.opacity(0.18)).frame(width: 196, height: 196)
+            Circle().fill(alert.opacity(0.18)).frame(width: diameter + 30 * k, height: diameter + 30 * k)
             Circle().trim(from: 0, to: progress)
-                .stroke(alert, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                .stroke(alert, style: StrokeStyle(lineWidth: max(5, 8 * k), lineCap: .round))
                 .rotationEffect(.degrees(-90))
-                .frame(width: 186, height: 186)
-            Circle().fill(alert).frame(width: 166, height: 166)
+                .frame(width: diameter + 20 * k, height: diameter + 20 * k)
+            Circle().fill(alert).frame(width: diameter, height: diameter)
                 .overlay(
-                    VStack(spacing: 4) {
-                        Text("SOS").font(.system(size: 42, weight: .black))
-                        Text(lang.localized("simple.sosHold")).font(.scaled(size: 15, weight: .medium))
+                    VStack(spacing: 4 * k) {
+                        Text("SOS").font(.system(size: max(24, 42 * k), weight: .black))
+                        if diameter >= 120 {
+                            Text(lang.localized("simple.sosHold")).font(.scaled(size: 15, weight: .medium))
+                        }
                     }
                     .foregroundStyle(.white)
                 )

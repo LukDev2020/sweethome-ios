@@ -213,8 +213,9 @@ private struct DemoTipLayer: View {
     }
 
     /// Lower left, clear of the SOS button (bottom right) and the tab bar.
+    /// Above the simple home's pinned SOS bar (it used to sit on the SOS button)
     private var tipButtonHome: CGPoint {
-        CGPoint(x: column.lowerBound + 80, y: screen.height - safeBottom - 150)
+        CGPoint(x: column.lowerBound + 80, y: screen.height - safeBottom - 270)
     }
 
     /// Keeps the dragged button on screen.

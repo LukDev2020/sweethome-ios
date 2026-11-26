@@ -258,6 +258,13 @@ final class DynamicLocalizationKeyTests: XCTestCase {
         keys += LockScreenCardStyle.Accent.allCases.map { "lsc.accent.\($0.rawValue)" }
         keys += LockScreenCardStyle.Section.allCases.map { "lsc.row.\($0.rawValue)" }
         keys += HomeStyle.allCases.flatMap { ["homeStyle.\($0.rawValue)", "homeStyle.\($0.rawValue).desc"] }
+        // Simple ⇄ Full switch (only these two styles have it)
+        keys += [HomeStyle.simple, .standard].flatMap { ["homeStyle.short.\($0.rawValue)", "homeStyle.switchTo.\($0.rawValue)", "homeStyle.switchHint.\($0.rawValue)"] }
+        // Nearby alerts: every kind the server sends, each category's states
+        keys += ["earthquake", "cyclone", "flood", "volcano", "wildfire", "drought", "tsunami", "weather",
+                 "accident", "closure", "roadworks", "jam", "hazard"].map { "nearby.kind.\($0)" }
+        keys += NearbyCategory.allCases.flatMap { ["nearby.cat.\($0.rawValue)", "nearby.clear.\($0.rawValue)", "nearby.noData.\($0.rawValue)"] }
+        keys += ["online.count", "online.minutes", "online.hours", "online.days", "simple.map.sharedWith", "nearby.crime.summary"].flatMap { [$0, "\($0).one"] }
         keys += ["morning", "afternoon", "evening"].flatMap { ["simple.greeting.\($0)", "simple.greeting.\($0).plain"] }
         for language in ["en", "zh-Hans", "zh-Hant", "fr", "ja"] {
             let path = try XCTUnwrap(Bundle.main.path(forResource: "Localizable", ofType: "strings",

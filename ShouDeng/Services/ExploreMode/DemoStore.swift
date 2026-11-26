@@ -361,6 +361,31 @@ final class DemoStore {
         return ISO8601DateFormatter().string(from: d)
     }
 
+    /// Nearby alerts for the sample family, shaped like the server's. Chengdu: a small
+    /// earthquake ~21 km away (a flood too from 50 km), no public traffic or crime data —
+    /// so the card shows all three kinds of line.
+    /// Melbourne (Kai): nothing reported, no public traffic / crime data.
+    private func nearbyAlerts(me: String, radiusKm: Int) -> [String: Any] {
+        let iso = ISO8601DateFormatter()
+        func ago(_ h: Double) -> String { iso.string(from: Date().addingTimeInterval(-h * 3600)) }
+        var alerts: [[String: Any]] = []
+        if me != DemoDataset.kaiId {
+            alerts.append(["id": "demo-quake-1", "category": "disaster", "kind": "earthquake", "severity": 1,
+                           "distanceKm": 21.4, "occurredAt": ago(5), "place": "20 km E of Chengdu, China",
+                           "magnitude": 3.1, "source": "USGS"])
+            if radiusKm >= 50 {
+                alerts.append(["id": "demo-flood-1", "category": "disaster", "kind": "flood", "severity": 2,
+                               "distanceKm": 46.0, "occurredAt": ago(30), "place": "Flood in China",
+                               "source": "GDACS"])
+            }
+        }
+        let disaster: [String: Any] = ["status": alerts.isEmpty ? "clear" : "found", "sources": ["USGS", "GDACS"]]
+        let none: [String: Any] = ["status": "noData", "sources": [String]()]
+        return ["radiusKm": radiusKm, "updatedAt": iso.string(from: Date()),
+                "coverage": ["disaster": disaster, "traffic": none, "crime": none],
+                "alerts": alerts]
+    }
+
     private func json(_ object: Any) -> Data {
         (try? JSONSerialization.data(withJSONObject: object)) ?? Data("null".utf8)
     }
@@ -418,6 +443,9 @@ final class DemoStore {
 
         case ("POST", "/v1/insurance/claim-materials"):
             return claimMaterials(for: me, body: bodyObject(body))
+
+        case ("GET", "/v1/nearby/alerts"):
+            return (200, json(nearbyAlerts(me: me, radiusKm: Int(query["radiusKm"] ?? "") ?? 30)))
 
         case ("GET", "/v1/protected/guardians"):
             let guardians = lock.withLock {

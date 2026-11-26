@@ -50,14 +50,19 @@ private let guardianTabs = (icons: ["eye.fill", "bubble.left.and.bubble.right", 
 // MARK: Shared screens
 
 /// Simple home (SimpleProtectedHomeView)
+/// The simple home (SimpleProtectedHomeView): search, a small map, the two check-in
+/// buttons, and SOS at the bottom
 private func simpleHome(checked: Bool = false, home: Bool = false, noGuardian: Bool = false) -> MockScreen {
-    var items: [MockItem] = [I("greet", .greeting(.f("simple.greeting.morning", me),
-                                                   noGuardian ? nil : .f("simple.watching", family)))]
-    if noGuardian { items.append(I("invite", .row("person.badge.plus", teal, "simple.noGuardian", nil, .chevron))) }
+    var items: [MockItem] = [I("greet", .greeting(.f("simple.greeting.morning", me), nil))]
+    if noGuardian {
+        items.append(I("invite", .row("person.badge.plus", teal, "simple.noGuardian", nil, .chevron)))
+    } else {
+        items.append(I("search", .field("magnifyingglass", "simple.map.search", nil)))
+    }
     items += [
+        I("smap", .map([MockPin(initial: "tut.sample.meInitial", color: teal, x: 0.5, y: 0.5)])),
         I("ok", .bigButton(checked ? "checkmark.circle.fill" : "checkmark.circle", checked ? "simple.checkedIn" : "simple.checkIn", safe)),
         I("home", .bigButton("house.fill", home ? "simple.homeSent" : "simple.home", teal)),
-        I("call", .bigButton("phone.fill", .f("simple.call", family), indigo)),
         I("sos", .sos("simple.sosHold")),
     ]
     return MockScreen(background: cream, items: items, tabs: simpleTabs)

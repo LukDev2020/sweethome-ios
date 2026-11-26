@@ -281,6 +281,9 @@
 		7A11C0DE0000000000000B01 /* TutorialKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A11C0DE0000000000000A01 /* TutorialKit.swift */; };
 		7A11C0DE0000000000000B02 /* TutorialCenterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A11C0DE0000000000000A02 /* TutorialCenterView.swift */; };
 		7A11C0DE0000000000000B03 /* TutorialCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A11C0DE0000000000000A03 /* TutorialCatalog.swift */; };
+		7A11C0DE0000000000000B11 /* NearbyAlertsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A11C0DE0000000000000A11 /* NearbyAlertsService.swift */; };
+		7A11C0DE0000000000000B12 /* NearbyAlertsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A11C0DE0000000000000A12 /* NearbyAlertsCard.swift */; };
+		7A11C0DE0000000000000B13 /* SimpleHomeParts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A11C0DE0000000000000A13 /* SimpleHomeParts.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -591,6 +594,9 @@
 		7A11C0DE0000000000000A01 /* TutorialKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TutorialKit.swift; sourceTree = "<group>"; };
 		7A11C0DE0000000000000A02 /* TutorialCenterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TutorialCenterView.swift; sourceTree = "<group>"; };
 		7A11C0DE0000000000000A03 /* TutorialCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TutorialCatalog.swift; sourceTree = "<group>"; };
+		7A11C0DE0000000000000A11 /* NearbyAlertsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbyAlertsService.swift; sourceTree = "<group>"; };
+		7A11C0DE0000000000000A12 /* NearbyAlertsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbyAlertsCard.swift; sourceTree = "<group>"; };
+		7A11C0DE0000000000000A13 /* SimpleHomeParts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleHomeParts.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -794,6 +800,7 @@
 				7B0EDC951BBE8EFAEF2D7042 /* RiderSettingsView.swift */,
 				76E05482553D2E33FC06A1FB /* RiderSetupView.swift */,
 				CC33DD0100001102 /* SimpleProtectedHomeView.swift */,
+				7A11C0DE0000000000000A13 /* SimpleHomeParts.swift */,
 				78733745F4A30EAE16699215 /* TripPreflightView.swift */,
 				D199DA3C341478E8441C8FED /* ProtectedRecordsView.swift */,
 				9BEAFFBD653265D29795FC10 /* ProtectedSettingsView.swift */,
@@ -875,6 +882,7 @@
 			isa = PBXGroup;
 			children = (
 				DD670A9F667544F38781B41A /* FloatingSOSButton.swift */,
+				7A11C0DE0000000000000A12 /* NearbyAlertsCard.swift */,
 				9C54FBFA48A54BBFA4C1B499 /* BatteryIndicatorView.swift */,
 				DB50B08C37D14BD88EBFE063 /* AppTips.swift */,
 				1C0C843D3C714D578DFF5690 /* HomeSafePill.swift */,
@@ -1273,6 +1281,7 @@
 			isa = PBXGroup;
 			children = (
 				AA11BB2200002003 /* SilentAlarmService.swift */,
+				7A11C0DE0000000000000A11 /* NearbyAlertsService.swift */,
 				DD44EE0100000015 /* RiderIntents.swift */,
 				CC33DD0100001001 /* FakeCallService.swift */,
 				CC33DD0100001002 /* DeadManSwitchService.swift */,
@@ -1456,6 +1465,9 @@
 				DD4C82603D4B0B8218838586 /* AppLifecycleRouter.swift in Sources */,
 				7B8394707B2287C3F89699D2 /* BuildChannel.swift in Sources */,
 				27B0B7CDEE2B49B18E8FDE32 /* FloatingSOSButton.swift in Sources */,
+				7A11C0DE0000000000000B11 /* NearbyAlertsService.swift in Sources */,
+				7A11C0DE0000000000000B12 /* NearbyAlertsCard.swift in Sources */,
+				7A11C0DE0000000000000B13 /* SimpleHomeParts.swift in Sources */,
 				1D0F0A554877406A9B2D7355 /* BatteryIndicatorView.swift in Sources */,
 				F06797BB85BA4C7EB6D94A9A /* AppTips.swift in Sources */,
 				862F35BC5650451AB0F25C79 /* HomeSafePill.swift in Sources */,

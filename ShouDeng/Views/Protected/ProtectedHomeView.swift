@@ -205,6 +205,15 @@ struct ProtectedHomeView: View {
     private var compactLayout: some View {
         ScrollView {
             VStack(spacing: 0) {
+                // Simple | Full
+                HStack {
+                    HomeStyleToggle(current: .standard)
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 6)
+                .padding(.bottom, 4)
+
                 liveTrackingBanner
                     .coachMark(CoachAnchor.tracking)
                     .padding(.horizontal, 16)
@@ -246,6 +255,10 @@ struct ProtectedHomeView: View {
                         .padding(.horizontal, 16)
                         .padding(.top, 6)
                 }
+                // Disasters, traffic, crime around me (distance chips, up to five)
+                NearbyAlertsCard(style: .full, coordinate: familyMapPins.myCoord)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 10)
                 tripRecordingSection
                     .padding(.horizontal, 16)
                     .padding(.top, 6)
@@ -268,17 +281,10 @@ struct ProtectedHomeView: View {
                 WatchBackPanel()
                     .padding(.horizontal, 16)
                     .padding(.top, 12)
-                Button {
-                    coordinator.setHomeStyle(.simple)
-                } label: {
-                    Text(lang.localized("simple.switchToSimple"))
-                        .font(.scaled(size: 14))
-                        .foregroundStyle(.secondary)
-                        .underline()
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                }
-                .buttonStyle(.plain)
+                // What the simple home is, one tap to compare and switch
+                SwitchHomeCard(target: .simple)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 16)
             }
         }
         .background(Color(.systemBackground))
@@ -355,6 +361,9 @@ struct ProtectedHomeView: View {
                             .padding(.horizontal, 16)
                             .padding(.top, 6)
                     }
+                    NearbyAlertsCard(style: .full, coordinate: familyMapPins.myCoord)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 10)
                     sendLocationButton
                         .padding(.horizontal, 16)
                         .padding(.top, 6)

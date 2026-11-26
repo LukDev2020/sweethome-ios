@@ -70,6 +70,8 @@ export async function guardiansOf(personId: string): Promise<Record<string, unkn
         countryCode: user.countryCode ?? "",
         cityName: user.cityName ?? "",
         createdAt: toIso(user.createdAt),
+        // Last time they used the app ("who's online" on the person's home)
+        lastActiveAt: toIso(user.lastActiveAt),
       },
       permissions: link.permissions || DEFAULT_LINK_PERMISSIONS,
       isOnDuty,

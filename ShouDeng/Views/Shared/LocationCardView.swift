@@ -609,12 +609,20 @@ struct FullScreenMapView: View {
     }
 
 
+    /// Opened from the simple home: start on a category ("hospital") or with the
+    /// search box ready to type
+    private let startCategoryId: String?
+    private let startTyping: Bool
+
     init(pins: [LocationPin], label: String? = nil, focusedPinId: Binding<String?>,
-         locationService: ReactiveLocationService = ReactiveLocationService()) {
+         locationService: ReactiveLocationService = ReactiveLocationService(),
+         startCategoryId: String? = nil, startTyping: Bool = false) {
         self.pins = pins
         self.label = label
         self._focusedPinId = focusedPinId
         self.locationService = locationService
+        self.startCategoryId = startCategoryId
+        self.startTyping = startTyping
 
         let center = pins.first?.coordinate
             ?? CLLocationCoordinate2D(latitude: 39.9, longitude: 116.4)
@@ -847,6 +855,15 @@ struct FullScreenMapView: View {
         .animation(.easeInOut(duration: 0.3), value: selectedPin?.id)
         // Globe sits in black space: white status bar there
         .preferredColorScheme(mapMode == .globe ? .dark : nil)
+        .task {
+            if let id = startCategoryId,
+               let category = (MapPlaceCategory.emergency + MapPlaceCategory.daily).first(where: { $0.id == id }) {
+                searchNearby(category)
+            } else if startTyping {
+                try? await Task.sleep(nanoseconds: 450_000_000)   // after the sheet has settled
+                searchFieldFocused = true
+            }
+        }
     }
 
     private func selectedPinPanel(_ pin: LocationPin) -> some View {

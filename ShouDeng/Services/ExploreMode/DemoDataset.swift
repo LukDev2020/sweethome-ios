@@ -103,9 +103,11 @@ struct DemoDataset {
 
         let mom   = user(momId,   t.momName,   .protected_, "Asia/Shanghai",   "CN", t.chengdu,  "+8613800000001")
         let dad   = user(dadId,   t.dadName,   .protected_, "Asia/Shanghai",   "CN", t.chengdu,  "+8613800000002")
-        let sarah = user(sarahId, t.sarahName, .guardian,   "America/Toronto", "CA", t.toronto,  "+14165550101")
-        let kevin = user(kevinId, t.kevinName, .guardian,   "Asia/Shanghai",   "CN", t.shanghai, "+8613900000003")
-        let lucy  = user(lucyId,  t.lucyName,  .guardian,   "Europe/Paris",    "FR", t.paris,    "+33600000004")
+        // "Who's online" on Mom's home: Sarah just now, Kevin a while ago, Lucy asleep in Paris
+        func active(_ u: User, _ minutesAgo: Double) -> User { var u = u; u.lastActiveAt = ago(minutesAgo); return u }
+        let sarah = active(user(sarahId, t.sarahName, .guardian,   "America/Toronto", "CA", t.toronto,  "+14165550101"), 2)
+        let kevin = active(user(kevinId, t.kevinName, .guardian,   "Asia/Shanghai",   "CN", t.shanghai, "+8613900000003"), 45)
+        let lucy  = active(user(lucyId,  t.lucyName,  .guardian,   "Europe/Paris",    "FR", t.paris,    "+33600000004"), 60 * 7)
 
         // Duty hours are in the protected person's (Chengdu) time zone
         func guardian(_ u: User, slots: [(Int, Int)], rt: Double) -> Guardian {
@@ -183,7 +185,7 @@ struct DemoDataset {
         let wei   = user(weiId,   "Wei Liu",   .protected_, "Australia/Melbourne", "AU", t.melbourne, "+61400000102")
         let ahmed = user(ahmedId, "Ahmed Khan", .protected_, "Australia/Melbourne", "AU", t.melbourne, "+61400000103")
         let lina  = user(linaId,  "Li Na",     .protected_, "Australia/Melbourne", "AU", t.melbourne, "+61400000104")
-        let mei   = user(meiId,   t.meiName,   .guardian,   "Asia/Shanghai",       "CN", t.guangzhou, "+8613800000105")
+        let mei   = active(user(meiId,   t.meiName,   .guardian,   "Asia/Shanghai",       "CN", t.guangzhou, "+8613800000105"), 8)
         var gMei = guardian(mei, slots: [(0, 24)], rt: 120)
         gMei.isOnDuty = true
         let guardiansOfKai = [gMei]

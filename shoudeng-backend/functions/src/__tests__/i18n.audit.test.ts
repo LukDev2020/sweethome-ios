@@ -365,6 +365,9 @@ const SAME_IN_ZH = new Set([
 ]);
 const SAME_IN_FR = new Set([
   ...SAME_IN_ZH,
+  // How-to guides: the same words in French ("Pause", "Allergies", "mobile", "1 guide") and sample names
+  "tut.search.count", "tut.search.one", "tut.pause", "tut.sample.family", "tut.sample.mate",
+  "tut.sample.mobile", "tut.medical.allergy",
   // "1 min", "+5 min" are French too
   "fake_call_delay_60s", "dms.action.extend5",
   // A brand name

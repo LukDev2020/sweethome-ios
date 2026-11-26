@@ -459,6 +459,49 @@ final class SafetyPathTests: XCTestCase {
         XCTAssertEqual(spy.methods, [.duressPassword])
     }
 
+    /// Nearby alerts: the simple home shows one line per category — the most serious
+    /// item, "nothing reported", or "no public information here" — never a blank.
+    func testNearbyCardShowsOneLinePerCategoryAndTheMostSeriousFirst() throws {
+        let json = """
+        {"radiusKm":30,"updatedAt":"2026-11-26T00:00:00Z",
+         "coverage":{"disaster":{"status":"found","sources":["USGS"]},
+                     "traffic":{"status":"noData","sources":[]},
+                     "crime":{"status":"clear","sources":["police.uk"]}},
+         "alerts":[{"id":"a","category":"disaster","kind":"earthquake","severity":1,"distanceKm":5,"source":"USGS","magnitude":3.1},
+                   {"id":"b","category":"disaster","kind":"flood","severity":3,"distanceKm":40,"source":"GDACS","occurredAt":"2026-11-20T00:00:00"}]}
+        """
+        let r = try JSONDecoder().decode(NearbyAlertsResponse.self, from: Data(json.utf8))
+        let rows = NearbyRows.rows(for: r, style: .compact)
+        XCTAssertEqual(rows.count, 3)
+        guard case .alert(let first) = rows[0].kind else { return XCTFail("disaster line should be an alert") }
+        XCTAssertEqual(first.id, "b", "the serious flood beats the nearer small quake")
+        guard case .state(.traffic, .noData, _) = rows[1].kind else { return XCTFail("traffic: no public data") }
+        guard case .state(.crime, .clear, _) = rows[2].kind else { return XCTFail("crime: covered, nothing reported") }
+        XCTAssertNotNil(NearbyAlert.parseDate("2026-11-20T00:00:00"))
+        XCTAssertNotNil(NearbyAlert.parseDate("2026-09-30T04:00:00.000Z"))
+        XCTAssertNotNil(NearbyAlert.parseDate("2026-09-01"))
+    }
+
+    /// "Who's online": green within 15 minutes; an older server without the field still decodes.
+    func testWhoIsOnlineUsesLastActive() throws {
+        func guardian(_ lastActive: String?) throws -> Guardian {
+            let extra = lastActive.map { ",\"lastActiveAt\":\"\($0)\"" } ?? ""
+            let json = """
+            {"id":"g","user":{"id":"g","displayName":"Sarah","role":"guardian","timeZone":"America/Toronto"\(extra)},
+             "permissions":{"canSeeLocation":true,"canSeeBattery":true,"canSeeHealth":false,"canSeePhoneActivity":false,"canHearEmergencyAudio":false},
+             "isOnDuty":false,"averageResponseTime":60,"linkedSince":"2026-01-01T00:00:00Z"}
+            """
+            let d = JSONDecoder(); d.dateDecodingStrategy = .iso8601
+            return try d.decode(Guardian.self, from: Data(json.utf8))
+        }
+        let now = ISO8601DateFormatter().date(from: "2026-11-26T12:00:00Z")!
+        XCTAssertTrue(WhoIsOnlineRow.isOnline(try guardian("2026-11-26T11:50:00Z"), now: now))
+        XCTAssertFalse(WhoIsOnlineRow.isOnline(try guardian("2026-11-26T11:30:00Z"), now: now))
+        let old = try guardian(nil)
+        XCTAssertNil(old.user.lastActiveAt)
+        XCTAssertFalse(WhoIsOnlineRow.isOnline(old, now: now))
+    }
+
     func testMedicalCardCacheRoundTripAndClear() {
         let previous = MedicalCardCache.fileURL
         MedicalCardCache.fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("mc-\(UUID().uuidString).enc")

@@ -16,11 +16,12 @@ extension AppCoordinator {
     }
 
     /// The home in use on the protected side: the rider home while the Work side is on
-    /// screen, else the one chosen. The demo keeps its own (Kai's phone starts on Rider),
+    /// screen, else the one chosen. The demo keeps its own (Kai's phone starts on Rider,
+    /// Mom's on the simple home like a new user),
     /// so trying the setting there never changes the real one.
     var effectiveHomeStyle: String {
         if isDemo {
-            return demoHomeStyle ?? (currentUser?.id == DemoDataset.kaiId ? HomeStyle.rider.rawValue : HomeStyle.standard.rawValue)
+            return demoHomeStyle ?? (currentUser?.id == DemoDataset.kaiId ? HomeStyle.rider.rawValue : HomeStyle.defaultStyle.rawValue)
         }
         if hasWorkSide && workSideActive { return HomeStyle.rider.rawValue }
         return familyHomeStyle
